@@ -137,8 +137,10 @@ fields to data files or components.
 ## Key conventions
 
 - **Brazilian Portuguese copy** — all user-facing text and error messages are pt-BR in the
-  football-broadcast voice. Define domain terms in `CONTEXT.md` before introducing a new
-  label, so one concept doesn't acquire two names.
+  football-broadcast voice. `CONTEXT.md` is the domain glossary: read it before naming a new
+  concept, and add the term there in the same commit that introduces it. Each entry carries
+  an `_Avoid_` line recording names that were considered and rejected, so a rejected name
+  does not quietly come back.
 - **Path alias `@/*` maps to the repo root**, declared in both `tsconfig.json` and
   `vite.config.ts`. Imports read `@/standings-core`, `@/src/types`.
 - **Server dependencies go in `dependencies`, not `devDependencies`** — the build bundles
@@ -186,7 +188,9 @@ mapping needs coverage, add a unit test with a captured payload.
 
 ## Not built yet
 
-No `CONTEXT.md`. Port the deploy scripts
+Nothing structural is missing. The one unexercised path is deployment: no EC2 host
+has ever received this payload, so the remote half of `deploy.sh` and all of
+`shell_scripts/` remain unverified. Port the deploy scripts
 from the sibling repo when shipping, including its constraint that the production host is
 too small to build on (it pulls a prebuilt payload rather than running `npm run build`).
 

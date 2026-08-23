@@ -309,7 +309,7 @@ async function startServer() {
     }
     console.log(
       `Portal Brasileirão running on port ${port} ` +
-        `(fonte: ${providerEnabled() ? "football-data.org" : "dados de demonstração"})`,
+        `(fonte: ${providerEnabled() ? "football-data.org" : "dados congelados"})`,
     );
   });
 }

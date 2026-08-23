@@ -99,10 +99,11 @@ circuit breaker opens after 3 consecutive failures and stays open for 60s.
 
 ## Working with Claude Code
 
-This repository is developed by directing Claude Code rather than by hand. Project
-conventions, domain glossary, and agent instructions live in `CLAUDE.md` and `CONTEXT.md`
-at the repo root — read those first before changing behaviour, and update them in the same
-commit when a convention changes.
+This repository is developed by directing Claude Code rather than by hand.
+[CLAUDE.md](CLAUDE.md) carries the architecture and conventions;
+[CONTEXT.md](CONTEXT.md) is the domain glossary — what each Portuguese term means in
+this codebase, and which near-synonyms were rejected and why. Read both before changing
+behaviour, and update them in the same commit when a convention or a term changes.
 
 ## License
 
