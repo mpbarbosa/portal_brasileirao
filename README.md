@@ -6,9 +6,10 @@ club data for the Campeonato Brasileiro Série A.
 **React 19 · TypeScript · Express · AWS.** Built end-to-end by directing the AI coding
 agent Claude Code.
 
-> **Status:** early scaffolding. The stack below is the target architecture; the
-> production deployment is not up yet. This section gets replaced with the live URL
-> once it ships.
+> **Status:** working scaffold. The app builds and runs, but it serves **placeholder
+> fixtures** (`src/data/matches.ts`) rather than real results — no data provider is
+> connected yet, and there is no production deployment. This section gets replaced with
+> the live URL once it ships.
 
 ## Stack
 
@@ -18,7 +19,7 @@ agent Claude Code.
 | Styling | Tailwind CSS |
 | API / SSR host | Express (TypeScript, bundled with esbuild for production) |
 | Hosting | AWS |
-| Tests | `node --test` for unit logic, Playwright for end-to-end |
+| Tests | `node --test` for unit logic |
 
 The Express server owns the data-sync layer (fetching and normalizing match, table, and
 club data) and serves the built React bundle, so development and production run the same
@@ -49,17 +50,32 @@ The dev server listens on port `3000`, or the next free port if `3000` is taken.
 - `npm start` — run the production build
 - `npm run lint` — type-check with TypeScript
 - `npm run test:unit` — run the Node unit test suite
-- `npm run test:e2e` — run the Playwright end-to-end suite
+- `npm run clean` — remove `dist`
+
+Run a single test file with `node --import tsx --test tests/standings-core.test.ts`.
 
 ## Layout
 
 ```
-src/         React application
-server.ts    Express host: API routes, data sync, static serving
-tests/       unit and end-to-end tests
-scripts/     build, deploy, and data-sync helpers
-docs/        design notes and architecture decisions
+src/                React application, shared types, seed data
+standings-core.ts   pure table computation (no I/O)
+matches-core.ts     pure round filtering and feed ordering (no I/O)
+server.ts           Express host: API routes, Vite in dev, static serving in prod
+tests/              unit tests for the core modules
 ```
+
+Calculation logic lives in root-level `*-core.ts` modules that do no I/O, so it can be
+unit-tested without mocking HTTP. `server.ts` does any fetching and passes payloads in.
+
+## API
+
+Every data endpoint returns `{ source, note, updatedAt, data }`. While seed fixtures are
+the only source, `source` is `"placeholder"` and the UI renders `note` as a banner.
+
+- `GET /api/health` — status, version, uptime
+- `GET /api/clubs` — the 20 Série A clubs
+- `GET /api/standings` — the computed table
+- `GET /api/matches[?round=N]` — fixtures, defaulting to the whole feed
 
 ## Working with Claude Code
 
