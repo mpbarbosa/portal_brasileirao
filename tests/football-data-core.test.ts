@@ -194,23 +194,3 @@ test("an empty standings payload yields an empty table", () => {
 test("maps the explicit LIVE status", () => {
   assert.equal(mapStatus("LIVE"), "LIVE");
 });
-
-test("accepts the legacy homeTeam/awayTeam score keys", () => {
-  const mapped = mapMatch({
-    ...FIXTURE,
-    score: { fullTime: { homeTeam: 3, awayTeam: 1 } },
-  });
-
-  assert.equal(mapped?.homeGoals, 3);
-  assert.equal(mapped?.awayGoals, 1);
-});
-
-test("prefers the v4 home/away keys when both spellings are present", () => {
-  const mapped = mapMatch({
-    ...FIXTURE,
-    score: { fullTime: { home: 2, away: 0, homeTeam: 9, awayTeam: 9 } },
-  });
-
-  assert.equal(mapped?.homeGoals, 2);
-  assert.equal(mapped?.awayGoals, 0);
-});

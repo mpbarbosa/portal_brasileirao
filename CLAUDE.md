@@ -133,7 +133,16 @@ No Playwright/e2e suite, no deploy scripts, and no `CONTEXT.md`. Port the deploy
 from the sibling repo when shipping, including its constraint that the production host is
 too small to build on (it pulls a prebuilt payload rather than running `npm run build`).
 
-**The live provider path has never run against a real token.** The three degraded paths
-(no token, upstream failure, kill switch) are verified end to end, and the mapping is
-covered by unit tests built from the documented shapes — but nobody has yet seen this app
-render a real Série A table. Verify that first when a token exists.
+The live provider path is verified: with a real token the app renders the current Série A
+table from football-data.org. Verified against a live payload, v4 reports scores as
+`fullTime.home`/`away`.
+
+**No deploy has ever run against a real host.** The preflight, every argument-validation
+path, and the rsync semantics (including that the remote `.env` survives) are verified
+locally, but no EC2 instance has received this payload — the remote half of `deploy.sh` and
+all of `shell_scripts/` are unexercised.
+
+One known data mismatch: upstream club codes are not always the local seed codes — São
+Paulo is `PAU` upstream, not `SAO`, and the real 2026 division includes clubs absent from
+`src/data/clubs.ts`. This is why `/api/matches` ships the clubs it saw; do not reintroduce
+a dependency on the seed codes for name resolution.

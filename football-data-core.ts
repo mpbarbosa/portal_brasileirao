@@ -40,19 +40,9 @@ interface RawMatch {
   matchday?: number | null;
   homeTeam?: RawTeam;
   awayTeam?: RawTeam;
-  /**
-   * v4 reports `fullTime.home` / `fullTime.away`; older payloads and parts of
-   * the published docs show `homeTeam` / `awayTeam`. Both are accepted because
-   * getting this wrong silently blanks every scoreline.
-   */
-  score?: {
-    fullTime?: {
-      home?: number | null;
-      away?: number | null;
-      homeTeam?: number | null;
-      awayTeam?: number | null;
-    };
-  };
+  /** v4 reports `fullTime.home` / `fullTime.away` — verified against a live
+   *  payload. Note `0` is a real score; only `null` means unplayed. */
+  score?: { fullTime?: { home?: number | null; away?: number | null } };
 }
 
 interface RawTableEntry {
@@ -131,8 +121,6 @@ export const mapMatch = (raw: RawMatch): Match | null => {
   if (!isNumber(raw.id) || !raw.utcDate || !home || !away) return null;
 
   const fullTime = raw.score?.fullTime;
-  const homeGoals = fullTime?.home ?? fullTime?.homeTeam;
-  const awayGoals = fullTime?.away ?? fullTime?.awayTeam;
 
   return {
     id: String(raw.id),
@@ -141,8 +129,8 @@ export const mapMatch = (raw: RawMatch): Match | null => {
     status: mapStatus(raw.status),
     homeCode: home.code,
     awayCode: away.code,
-    homeGoals: isNumber(homeGoals) ? homeGoals : null,
-    awayGoals: isNumber(awayGoals) ? awayGoals : null,
+    homeGoals: isNumber(fullTime?.home) ? fullTime.home : null,
+    awayGoals: isNumber(fullTime?.away) ? fullTime.away : null,
   };
 };
 
