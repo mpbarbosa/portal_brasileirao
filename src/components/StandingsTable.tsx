@@ -32,7 +32,10 @@ export function StandingsTable({ rows }: { rows: StandingsRow[] }) {
             >
               <td className="px-3 py-2 tabular-nums text-slate-400">{row.position}</td>
               <td className="px-3 py-2 font-medium">
-                {row.club.shortName}
+                {/* Name and state are separate elements: they are distinct data,
+                    and running them together reads as one string to assistive
+                    tech and to any text-based assertion. */}
+                <span>{row.club.shortName}</span>
                 {row.club.state && (
                   <span className="ml-2 text-xs text-slate-500">{row.club.state}</span>
                 )}

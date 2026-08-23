@@ -147,6 +147,14 @@ export const CLUBS_BY_CODE = new Map(CLUBS.map((club) => [club.code, club]));
 const seedMatches: Match[] = (matchesPayload.matches ?? [])
   .map(mapMatch)
   .filter((match): match is Match => match !== null)
+  // A frozen snapshot must not claim a match is in progress — the badge would
+  // read "Ao vivo" forever. At snapshot time these had not concluded, so record
+  // them as not-yet-played rather than inventing a final score.
+  .map((match) =>
+    match.status === "LIVE"
+      ? { ...match, status: "SCHEDULED" as const, homeGoals: null, awayGoals: null }
+      : match,
+  )
   .sort((a, b) => a.kickoff.localeCompare(b.kickoff));
 
 const playedRounds = seedMatches

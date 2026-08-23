@@ -21,7 +21,8 @@ implementation — read it rather than inventing a new pattern.
 - `npm start` — run the production build (`NODE_ENV=production node dist/server.cjs`).
 - `npm run lint` — `tsc --noEmit` over the whole project. There is no ESLint; this is the
   lint gate.
-- `npm run test:unit` — Node's built-in test runner over the core-module tests (44 tests).
+- `npm run test:unit` — Node's built-in test runner over the core-module tests.
+- `npm run test:e2e` — Playwright, booting its own server on port 3100.
 - One test file: `node --import tsx --test tests/standings-core.test.ts`
 - One test by name: `node --import tsx --test --test-name-pattern "tie-breakers" tests/standings-core.test.ts`
 
@@ -146,9 +147,28 @@ fields to data files or components.
 - **New env vars must work when unset** — the production `.env` is not updated
   automatically on deploy, so every new variable needs a safe in-code default.
 
+## End-to-end tests
+
+`tests/e2e/` runs against a server the config boots itself with
+`DISABLE_FOOTBALL_DATA=true`, so the suite always sees the **frozen snapshot**.
+This is deliberate and load-bearing: live scores, table positions and the current
+round all change mid-match, so asserting against live data makes every run a coin
+flip. It also keeps the suite from spending the 10 req/min budget.
+
+Rules that follow from that:
+
+- Never assert a specific round number or scoreline — the snapshot ages, and
+  `currentRound` advances with the calendar. Assert shape (`/\d+ª rodada/`), not value.
+- `allInnerTexts()` and `locator.all()` query immediately and do **not** auto-wait,
+  unlike `expect(locator)`. Wait for the table to populate first, or they sample a
+  half-rendered DOM — this produced a real flake.
+- `getByText("...")` is case-insensitive substring matching by default. A bare
+  `getByText("Ao vivo")` also matches the banner's "…para dados ao vivo". Scope the
+  locator and pass `exact: true`.
+
 ## Not built yet
 
-No Playwright/e2e suite, no deploy scripts, and no `CONTEXT.md`. Port the deploy scripts
+No `CONTEXT.md`. Port the deploy scripts
 from the sibling repo when shipping, including its constraint that the production host is
 too small to build on (it pulls a prebuilt payload rather than running `npm run build`).
 

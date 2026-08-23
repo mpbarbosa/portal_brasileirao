@@ -15,7 +15,7 @@
 #   - curl on PATH.
 #
 # What it does:
-#   1. Type-checks (npm run lint) and runs the unit suite.
+#   1. Type-checks (npm run lint), runs the unit suite and the e2e suite.
 #   2. Builds dist/ (frontend bundle + dist/server.cjs).
 #   3. Verifies the expected payload files exist.
 #   4. Boots dist/server.cjs on a scratch port with NODE_ENV=production and no
@@ -25,7 +25,9 @@
 #   6. Stops the server and reports the payload size.
 #
 # Environment variables:
-#   PREFLIGHT_PORT   Port for the smoke-test server. Default: 3399.
+#   PREFLIGHT_PORT       Port for the smoke-test server. Default: 3399.
+#   PREFLIGHT_SKIP_E2E   Set to 1 to skip the Playwright suite (e.g. on a host
+#                        with no browser installed).
 #
 # Exit codes:
 #   0  Payload built and verified.
@@ -58,6 +60,15 @@ npm run lint
 
 echo "==> Running unit tests..."
 npm run test:unit
+
+# The e2e suite boots its own server against the frozen snapshot, so it needs
+# no token and cannot be broken by a live upstream.
+if [[ "${PREFLIGHT_SKIP_E2E:-}" == "1" ]]; then
+    echo "==> Skipping e2e (PREFLIGHT_SKIP_E2E=1)"
+else
+    echo "==> Running e2e tests..."
+    npm run test:e2e
+fi
 
 echo "==> Building production payload..."
 npm run build

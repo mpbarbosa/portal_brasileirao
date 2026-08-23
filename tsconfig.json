@@ -36,6 +36,7 @@
     "football-data-core.ts",
     "cache-core.ts",
     "vite.config.ts",
-    "scripts"
+    "scripts",
+    "playwright.config.ts"
   ]
 }

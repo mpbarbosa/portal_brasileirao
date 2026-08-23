@@ -21,7 +21,7 @@ agent Claude Code.
 | API / SSR host | Express (TypeScript, bundled with esbuild for production) |
 | Data | [football-data.org](https://www.football-data.org) v4, competition `BSA` |
 | Hosting | AWS |
-| Tests | `node --test` for unit logic |
+| Tests | `node --test` for unit logic, Playwright for end-to-end |
 
 The Express server owns the data-sync layer (fetching and normalizing match, table, and
 club data) and serves the built React bundle, so development and production run the same
@@ -54,6 +54,7 @@ The dev server listens on port `3000`, or the next free port if `3000` is taken.
 - `npm start` — run the production build
 - `npm run lint` — type-check with TypeScript
 - `npm run test:unit` — run the Node unit test suite
+- `npm run test:e2e` — run the Playwright end-to-end suite (boots its own server)
 - `npm run clean` — remove `dist`
 - `npx tsx scripts/sync-seed-data.ts` — regenerate the offline seed data from the live API
 - `npm run deploy:preflight` — build and verify the production payload locally
