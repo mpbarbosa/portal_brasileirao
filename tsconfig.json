@@ -35,6 +35,7 @@
     "matches-core.ts",
     "football-data-core.ts",
     "cache-core.ts",
-    "vite.config.ts"
+    "vite.config.ts",
+    "scripts"
   ]
 }

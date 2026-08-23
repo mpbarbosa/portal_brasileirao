@@ -26,7 +26,7 @@ import {
 import { compareForFeed, currentRound, matchesForRound, roundsOf } from "@/matches-core";
 import { computeStandings } from "@/standings-core";
 import { CLUBS } from "@/src/data/clubs";
-import { SEED_MATCHES } from "@/src/data/matches";
+import { SEED_MATCHES, SNAPSHOT_DATE } from "@/src/data/matches";
 import type { ApiEnvelope, Club, Match, StandingsRow } from "@/src/types";
 
 const DEFAULT_PORT = Number(process.env.PORT ?? 3000);
@@ -43,11 +43,14 @@ const FETCH_TIMEOUT_MS = Number(process.env.FOOTBALL_DATA_TIMEOUT_MS ?? 6000);
 
 const providerEnabled = (): boolean => Boolean(FOOTBALL_DATA_TOKEN) && !PROVIDER_DISABLED;
 
+/** ISO snapshot date as dd/mm/aaaa, for pt-BR copy. */
+const snapshotLabel = SNAPSHOT_DATE.split("-").reverse().join("/");
+
 const NOTE_LIVE = "Dados do football-data.org (Campeonato Brasileiro Série A).";
 const NOTE_PLACEHOLDER =
-  "Dados de demonstração — defina FOOTBALL_DATA_TOKEN para carregar dados reais.";
+  `Dados congelados de ${snapshotLabel} — defina FOOTBALL_DATA_TOKEN para dados ao vivo.`;
 const NOTE_FALLBACK =
-  "Dados de demonstração — a fonte de dados está indisponível no momento.";
+  `Dados congelados de ${snapshotLabel} — a fonte ao vivo está indisponível no momento.`;
 
 const cache = new TtlCache();
 const breaker = new CircuitBreaker();
@@ -135,7 +138,7 @@ interface MatchesPayload {
 
 const seedMatchesPayload = (): MatchesPayload => ({
   rounds: roundsOf(SEED_MATCHES),
-  currentRound: currentRound(SEED_MATCHES),
+  currentRound: currentRound(SEED_MATCHES, Date.now()),
   matches: [...SEED_MATCHES].sort(compareForFeed),
   clubs: CLUBS,
 });
@@ -175,7 +178,7 @@ const loadMatches = async (): Promise<ApiEnvelope<MatchesPayload>> => {
     const matches = mapMatches(raw);
     const payload: MatchesPayload = {
       rounds: roundsOf(matches),
-      currentRound: currentRound(matches),
+      currentRound: currentRound(matches, Date.now()),
       matches: [...matches].sort(compareForFeed),
       clubs: clubsFromMatches(raw),
     };

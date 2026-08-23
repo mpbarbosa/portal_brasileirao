@@ -97,18 +97,35 @@ const isNumber = (value: unknown): value is number =>
   typeof value === "number" && Number.isFinite(value);
 
 /**
- * Club code, in preference order: the upstream three-letter abbreviation, else
- * a synthetic `FD-<id>`. The abbreviation is what lines up with the local seed
- * codes (FLA, PAL, …), so the UI keeps resolving names across a provider swap.
+ * Upstream `shortName` is sometimes not what a Brazilian reader calls the club
+ * ("Mineiro" for Atlético-MG). Display-only corrections keyed by the stable
+ * upstream id. Applied here rather than in the seed generator so the live and
+ * fallback paths show the same names.
+ */
+export const DISPLAY_NAME_OVERRIDES: Record<number, string> = {
+  1766: "Atlético-MG", // upstream: "Mineiro"
+  1768: "Athletico-PR", // upstream: "Paranaense"
+};
+
+/**
+ * Identity comes from the upstream numeric id, never from `tla`. The
+ * abbreviation is not unique — Corinthians and Coritiba both report "COR" —
+ * so keying on it silently merges two clubs' rows. `tla` is carried along for
+ * display only. Falls back to the abbreviation only when there is no id.
  */
 export const clubFromTeam = (team: RawTeam | undefined): Club | null => {
   if (!team || !team.name) return null;
 
-  const tla = team.tla?.trim();
-  const code = tla || (isNumber(team.id) ? `FD-${team.id}` : null);
+  const tla = team.tla?.trim() || undefined;
+  const code = isNumber(team.id) ? String(team.id) : tla;
   if (!code) return null;
 
-  return { code, name: team.name, shortName: team.shortName?.trim() || team.name };
+  const shortName =
+    (isNumber(team.id) ? DISPLAY_NAME_OVERRIDES[team.id] : undefined) ??
+    team.shortName?.trim() ??
+    team.name;
+
+  return { code, name: team.name, shortName, tla };
 };
 
 /**

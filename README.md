@@ -55,6 +55,7 @@ The dev server listens on port `3000`, or the next free port if `3000` is taken.
 - `npm run lint` — type-check with TypeScript
 - `npm run test:unit` — run the Node unit test suite
 - `npm run clean` — remove `dist`
+- `npx tsx scripts/sync-seed-data.ts` — regenerate the offline seed data from the live API
 - `npm run deploy:preflight` — build and verify the production payload locally
 - `DEPLOY_HOST=ubuntu@host npm run deploy` — deploy to EC2 (see `scripts/README.md`)
 

@@ -40,19 +40,32 @@ test("an unknown or missing status degrades to SCHEDULED", () => {
   assert.equal(mapStatus(undefined), "SCHEDULED");
 });
 
-test("prefers the upstream abbreviation as the club code", () => {
+test("identifies a club by upstream id, carrying the abbreviation for display", () => {
   assert.deepEqual(clubFromTeam({ id: 1783, name: "CR Flamengo", shortName: "Flamengo", tla: "FLA" }), {
-    code: "FLA",
+    code: "1783",
     name: "CR Flamengo",
     shortName: "Flamengo",
+    tla: "FLA",
   });
 });
 
-test("falls back to a synthetic code when the abbreviation is missing", () => {
-  assert.deepEqual(clubFromTeam({ id: 999, name: "Clube Sem Sigla", tla: null }), {
-    code: "FD-999",
-    name: "Clube Sem Sigla",
-    shortName: "Clube Sem Sigla",
+test("two clubs sharing an abbreviation stay distinct", () => {
+  // Real upstream data: Corinthians and Coritiba both report tla "COR".
+  // Keying on the abbreviation would merge them into one standings row.
+  const corinthians = clubFromTeam({ id: 1779, name: "SC Corinthians Paulista", tla: "COR" });
+  const coritiba = clubFromTeam({ id: 4241, name: "Coritiba FBC", tla: "COR" });
+
+  assert.notEqual(corinthians?.code, coritiba?.code);
+  assert.equal(corinthians?.code, "1779");
+  assert.equal(coritiba?.code, "4241");
+});
+
+test("falls back to the abbreviation when there is no id", () => {
+  assert.deepEqual(clubFromTeam({ name: "Clube Sem Id", tla: "XYZ" }), {
+    code: "XYZ",
+    name: "Clube Sem Id",
+    shortName: "Clube Sem Id",
+    tla: "XYZ",
   });
 });
 
@@ -77,8 +90,8 @@ test("maps a fixture onto the app's match shape", () => {
     round: 24,
     kickoff: "2026-08-23T19:00:00Z",
     status: "FINISHED",
-    homeCode: "FLA",
-    awayCode: "PAL",
+    homeCode: "1783",
+    awayCode: "1776",
     homeGoals: 2,
     awayGoals: 1,
   });
@@ -129,7 +142,7 @@ test("collects each club once from a fixture list, ordered by name", () => {
   const clubs = clubsFromMatches({ matches: [FIXTURE, { ...FIXTURE, id: 400022 }] });
 
   assert.deepEqual(
-    clubs.map((club) => club.code),
+    clubs.map((club) => club.tla),
     ["FLA", "PAL"],
   );
 });
@@ -161,7 +174,7 @@ test("reads the TOTAL table, not the home/away splits", () => {
   const rows = mapStandings(STANDINGS);
 
   assert.equal(rows.length, 1);
-  assert.equal(rows[0].club.code, "FLA");
+  assert.equal(rows[0].club.tla, "FLA");
   assert.equal(rows[0].points, 50);
   assert.equal(rows[0].played, 24);
   assert.equal(rows[0].goalDifference, 22);
@@ -170,7 +183,7 @@ test("reads the TOTAL table, not the home/away splits", () => {
 test("falls back to the first group when nothing is labelled TOTAL", () => {
   const rows = mapStandings({ standings: [{ type: "HOME", table: STANDINGS.standings[0].table }] });
 
-  assert.equal(rows[0]?.club.code, "FLA");
+  assert.equal(rows[0]?.club.tla, "FLA");
 });
 
 test("derives goal difference when the upstream omits it", () => {
@@ -193,4 +206,18 @@ test("an empty standings payload yields an empty table", () => {
 
 test("maps the explicit LIVE status", () => {
   assert.equal(mapStatus("LIVE"), "LIVE");
+});
+
+test("applies the display-name override so live and fallback agree", () => {
+  // Upstream calls these "Mineiro" and "Paranaense", which is not what a
+  // Brazilian reader calls them.
+  assert.equal(clubFromTeam({ id: 1766, name: "CA Mineiro", shortName: "Mineiro" })?.shortName, "Atlético-MG");
+  assert.equal(
+    clubFromTeam({ id: 1768, name: "CA Paranaense", shortName: "Paranaense" })?.shortName,
+    "Athletico-PR",
+  );
+});
+
+test("a club with no override keeps its upstream short name", () => {
+  assert.equal(clubFromTeam({ id: 1783, name: "CR Flamengo", shortName: "Flamengo" })?.shortName, "Flamengo");
 });

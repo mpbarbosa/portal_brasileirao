@@ -43,16 +43,33 @@ export const roundsOf = (matches: Match[]): number[] =>
   [...new Set(matches.map((match) => match.round))].sort((a, b) => a - b);
 
 /**
- * The round to show by default: the earliest one still holding an unfinished
- * match, else the last round played. Returns null for an empty fixture list.
+ * The round to show by default, given the current time.
+ *
+ * Takes `now` rather than reading the clock so it stays pure and testable.
+ *
+ * Deliberately NOT "the earliest round with an unfinished match": a postponed
+ * fixture can sit unplayed for months, which pinned the default view to round 4
+ * in August against real data. Precedence:
+ *   1. a round with a match in progress — that is the round being played;
+ *   2. the round of the next fixture still to come;
+ *   3. the last round that produced a result (season over, or every remaining
+ *      fixture is a stale postponement).
  */
-export const currentRound = (matches: Match[]): number | null => {
+export const currentRound = (matches: Match[], now: number): number | null => {
   const rounds = roundsOf(matches);
   if (rounds.length === 0) return null;
 
-  const pending = rounds.find((round) =>
-    matches.some((match) => match.round === round && !isConcluded(match)),
-  );
+  const live = matches.find((match) => match.status === "LIVE");
+  if (live) return live.round;
 
-  return pending ?? rounds[rounds.length - 1];
+  const upcoming = matches
+    .filter((match) => !isConcluded(match) && kickoffValue(match) >= now)
+    .sort(compareByKickoff)[0];
+  if (upcoming) return upcoming.round;
+
+  const played = matches
+    .filter((match) => match.status === "FINISHED")
+    .map((match) => match.round);
+
+  return played.length ? Math.max(...played) : rounds[rounds.length - 1];
 };

@@ -80,6 +80,14 @@ Mapping notes, all covered by tests:
   codes, falling back to a synthetic `FD-<id>`.
 - Standings read the `TOTAL` group only, never the HOME/AWAY splits.
 
+**Known difference, deliberate:** football-data counts `IN_PLAY` matches in its standings
+table — a club leading 1-0 at half-time is already credited 3 points. `computeStandings`
+excludes them (`countsTowardStandings` requires FINISHED), because a league table should
+move on the final whistle. So while matches are in progress, the live table (upstream) and
+the fallback table (computed) legitimately differ. Verified against a live payload: the
+entire delta was exactly the three in-play matches. Do not "fix" this by counting live
+matches.
+
 ### Caching and failure handling
 
 `cache-core.ts` holds a TTL cache and a circuit breaker. Both take `now` as a parameter
@@ -105,11 +113,22 @@ Current routes: `/api/health`, `/api/clubs`, `/api/standings`, `/api/matches` (o
 
 ### Data
 
-`src/data/clubs.ts` holds the 20 Série A clubs; the `code` field (e.g. `"FLA"`) is the
-stable key used by fixtures, `CLUBS_BY_CODE`, and the UI. `src/data/matches.ts` is
-**placeholder fixtures with invented scorelines**, now used only as the offline fallback.
-`/api/matches` ships the clubs it saw alongside the fixtures so the UI resolves names from
-the payload rather than the seed — provider codes need not match the local ones.
+`src/data/clubs.ts` and `src/data/matches.ts` are **generated files** — a frozen snapshot of
+the real division and season, serving as the offline fallback. Regenerate with:
+
+```sh
+npx tsx scripts/sync-seed-data.ts   # costs 2 calls against the 10/min budget
+```
+
+Do not hand-edit them; hand-maintenance is what let the original list drift to the wrong
+division. The generator validates its own output: it rejects duplicate club codes, rejects
+duplicate display names, and rejects a duplicate display name, which is what an override keyed to the
+wrong club id produces.
+
+**Club identity is the upstream numeric id, never `tla`.** The abbreviation is not unique:
+Corinthians and Coritiba both report `tla: "COR"`, so keying on it merges two clubs into
+one standings row. `tla` rides along on `Club` for display only. `/api/matches` ships the
+clubs it saw alongside the fixtures so the UI resolves names from the payload.
 
 `src/types.ts` is the single source of truth for shared shapes. Extend it before adding
 fields to data files or components.

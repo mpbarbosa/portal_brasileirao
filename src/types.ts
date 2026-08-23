@@ -6,10 +6,17 @@
 export type ClubCode = string;
 
 export interface Club {
-  /** Short uppercase code used as the stable key everywhere (e.g. "FLA"). */
+  /**
+   * Stable unique key. For provider-derived clubs this is the upstream numeric
+   * id as a string — NOT the three-letter abbreviation, which is not unique:
+   * Corinthians and Coritiba both report `tla: "COR"`, so keying on it merges
+   * two clubs into one row.
+   */
   code: ClubCode;
   name: string;
   shortName: string;
+  /** Three-letter abbreviation for badges/compact display. Not an identity. */
+  tla?: string;
   /** Home state (e.g. "RJ"). Absent for clubs derived from a provider that
    *  doesn't carry it — render it conditionally. */
   state?: string;
