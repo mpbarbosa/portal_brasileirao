@@ -33,7 +33,8 @@ export function App() {
 
         setStandings(standingsResponse.data);
         setMatches(matchesResponse.data);
-        setNote(standingsResponse.source === "placeholder" ? standingsResponse.note : null);
+        // Only flag non-live sources; live data needs no disclaimer banner.
+        setNote(standingsResponse.source === "football-data" ? null : standingsResponse.note);
       } catch (cause) {
         if (!cancelled) {
           setError(cause instanceof Error ? cause.message : "Falha ao carregar os dados.");
@@ -97,6 +98,7 @@ export function App() {
               matches={
                 matches && round !== null ? matchesForRound(matches.matches, round) : []
               }
+              clubs={matches?.clubs}
             />
           </>
         )}

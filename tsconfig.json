@@ -2,7 +2,11 @@
   "compilerOptions": {
     "target": "ES2022",
     "module": "ESNext",
-    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "lib": [
+      "ES2022",
+      "DOM",
+      "DOM.Iterable"
+    ],
     "skipLibCheck": true,
     "moduleResolution": "bundler",
     "isolatedModules": true,
@@ -12,10 +16,25 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
-    "types": ["node"],
-    "paths": { "@/*": ["./*"] },
+    "types": [
+      "node"
+    ],
+    "paths": {
+      "@/*": [
+        "./*"
+      ]
+    },
     "allowImportingTsExtensions": true,
     "noEmit": true
   },
-  "include": ["src", "tests", "server.ts", "standings-core.ts", "matches-core.ts", "vite.config.ts"]
+  "include": [
+    "src",
+    "tests",
+    "server.ts",
+    "standings-core.ts",
+    "matches-core.ts",
+    "football-data-core.ts",
+    "cache-core.ts",
+    "vite.config.ts"
+  ]
 }

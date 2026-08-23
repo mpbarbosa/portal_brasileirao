@@ -21,7 +21,7 @@ implementation — read it rather than inventing a new pattern.
 - `npm start` — run the production build (`NODE_ENV=production node dist/server.cjs`).
 - `npm run lint` — `tsc --noEmit` over the whole project. There is no ESLint; this is the
   lint gate.
-- `npm run test:unit` — Node's built-in test runner over the core-module tests.
+- `npm run test:unit` — Node's built-in test runner over the core-module tests (44 tests).
 - One test file: `node --import tsx --test tests/standings-core.test.ts`
 - One test by name: `node --import tsx --test --test-name-pattern "tie-breakers" tests/standings-core.test.ts`
 
@@ -58,13 +58,47 @@ what makes the logic testable without mocking HTTP.
 
 Extract to a core module before logic in `server.ts` grows a branch worth testing.
 
+### Data provider
+
+`football-data-core.ts` adapts football-data.org v4. Série A is competition `BSA`
+(TIER_ONE, i.e. free); Série B is TIER_THREE and Série C/D are TIER_FOUR with data frozen
+at 2020, so **only Série A is reachable on a free token** — a request for other divisions
+means changing provider, not just the competition code.
+
+Auth is `X-Auth-Token` (a bare token, not a bearer scheme), read from `FOOTBALL_DATA_TOKEN`.
+Unset is a supported state: the app serves seed fixtures so a fresh clone runs without a
+signup. `DISABLE_FOOTBALL_DATA=true` is the incident kill switch.
+
+Mapping notes, all covered by tests:
+- Upstream status vocabulary is wider than the app's — `TIMED`→SCHEDULED, `PAUSED`→LIVE
+  (half-time is still live), `SUSPENDED`→POSTPONED, `AWARDED`→FINISHED. Unknown statuses
+  degrade to SCHEDULED rather than dropping the fixture.
+- Scores are read from `fullTime.home`/`away` **and** the legacy `homeTeam`/`awayTeam`
+  spelling, because the published docs disagree with the v4 payload and guessing wrong
+  silently blanks every scoreline. Note `0` is a real score — only `null` means unplayed.
+- Club codes prefer the upstream `tla` (FLA, PAL, …), which lines up with the local seed
+  codes, falling back to a synthetic `FD-<id>`.
+- Standings read the `TOTAL` group only, never the HOME/AWAY splits.
+
+### Caching and failure handling
+
+`cache-core.ts` holds a TTL cache and a circuit breaker. Both take `now` as a parameter
+instead of reading the clock, so expiry and recovery are tested without sleeping.
+
+The free tier allows **10 requests/minute** — caching is what makes it viable in
+production, not a nicety. Standings cache 60s, fixtures 60s, dropping to 15s while any
+match is LIVE, capping the app at roughly 5 upstream calls/minute at any traffic level.
+The breaker opens after 3 consecutive failures for 60s, so a downed upstream gets one
+probe a minute rather than one per request.
+
 ### API envelope
 
 Every data endpoint returns `ApiEnvelope<T>`: `source`, a human-readable pt-BR `note`, and
-`updatedAt` alongside `data`. While seed fixtures are the only source, everything reports
-`source: "placeholder"` and the UI renders the note as a banner — demo numbers are never
-presented as live. New endpoints keep this shape and degrade to local data rather than
-returning a 500 when an upstream fails.
+`updatedAt` alongside `data`. `source` distinguishes `football-data` (live) from
+`placeholder` (no token configured) and `fallback` (configured but failing) — the last two
+look identical to a reader but only `fallback` is worth alerting on. The UI banners the
+note for anything that isn't live. New endpoints keep this shape and degrade to local data
+rather than returning a 500.
 
 Current routes: `/api/health`, `/api/clubs`, `/api/standings`, `/api/matches` (optional
 `?round=` — a non-integer or `< 1` is a 400).
@@ -73,8 +107,9 @@ Current routes: `/api/health`, `/api/clubs`, `/api/standings`, `/api/matches` (o
 
 `src/data/clubs.ts` holds the 20 Série A clubs; the `code` field (e.g. `"FLA"`) is the
 stable key used by fixtures, `CLUBS_BY_CODE`, and the UI. `src/data/matches.ts` is
-**placeholder fixtures with invented scorelines** — two rounds, kept only so the pipeline
-and UI have something to render. Delete it when a real provider lands.
+**placeholder fixtures with invented scorelines**, now used only as the offline fallback.
+`/api/matches` ships the clubs it saw alongside the fixtures so the UI resolves names from
+the payload rather than the seed — provider codes need not match the local ones.
 
 `src/types.ts` is the single source of truth for shared shapes. Extend it before adding
 fields to data files or components.
@@ -94,7 +129,11 @@ fields to data files or components.
 
 ## Not built yet
 
-No Playwright/e2e suite, no deploy scripts, no `CONTEXT.md`, and no real data provider —
-the app runs entirely on the placeholder fixtures. Port the deploy scripts from the sibling
-repo when shipping, including its constraint that the production host is too small to build
-on (it pulls a prebuilt payload rather than running `npm run build`).
+No Playwright/e2e suite, no deploy scripts, and no `CONTEXT.md`. Port the deploy scripts
+from the sibling repo when shipping, including its constraint that the production host is
+too small to build on (it pulls a prebuilt payload rather than running `npm run build`).
+
+**The live provider path has never run against a real token.** The three degraded paths
+(no token, upstream failure, kill switch) are verified end to end, and the mapping is
+covered by unit tests built from the documented shapes — but nobody has yet seen this app
+render a real Série A table. Verify that first when a token exists.

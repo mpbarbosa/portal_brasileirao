@@ -33,7 +33,9 @@ export function StandingsTable({ rows }: { rows: StandingsRow[] }) {
               <td className="px-3 py-2 tabular-nums text-slate-400">{row.position}</td>
               <td className="px-3 py-2 font-medium">
                 {row.club.shortName}
-                <span className="ml-2 text-xs text-slate-500">{row.club.state}</span>
+                {row.club.state && (
+                  <span className="ml-2 text-xs text-slate-500">{row.club.state}</span>
+                )}
               </td>
               <td className="px-2 py-2 text-right font-semibold tabular-nums">{row.points}</td>
               <td className="px-2 py-2 text-right tabular-nums text-slate-400">{row.played}</td>

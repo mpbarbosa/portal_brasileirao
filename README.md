@@ -6,10 +6,11 @@ club data for the Campeonato Brasileiro Série A.
 **React 19 · TypeScript · Express · AWS.** Built end-to-end by directing the AI coding
 agent Claude Code.
 
-> **Status:** working scaffold. The app builds and runs, but it serves **placeholder
-> fixtures** (`src/data/matches.ts`) rather than real results — no data provider is
-> connected yet, and there is no production deployment. This section gets replaced with
-> the live URL once it ships.
+> **Status:** working scaffold. Live Série A data comes from
+> [football-data.org](https://www.football-data.org) when `FOOTBALL_DATA_TOKEN` is set;
+> without a token the app serves seed fixtures so a fresh clone runs with no signup.
+> There is no production deployment yet — this section gets replaced with the live URL
+> once it ships.
 
 ## Stack
 
@@ -18,6 +19,7 @@ agent Claude Code.
 | UI | React 19 + TypeScript, Vite dev server and build |
 | Styling | Tailwind CSS |
 | API / SSR host | Express (TypeScript, bundled with esbuild for production) |
+| Data | [football-data.org](https://www.football-data.org) v4, competition `BSA` |
 | Hosting | AWS |
 | Tests | `node --test` for unit logic |
 
@@ -33,7 +35,9 @@ single process.
 npm install
 ```
 
-2. Copy `.env.example` to `.env` and fill in the values.
+2. Copy `.env.example` to `.env`. For live data, register a free token at
+   [football-data.org](https://www.football-data.org/client/register) and set
+   `FOOTBALL_DATA_TOKEN`. Skip it to run on seed fixtures.
 
 3. Start the development server:
 
@@ -57,11 +61,13 @@ Run a single test file with `node --import tsx --test tests/standings-core.test.
 ## Layout
 
 ```
-src/                React application, shared types, seed data
-standings-core.ts   pure table computation (no I/O)
-matches-core.ts     pure round filtering and feed ordering (no I/O)
-server.ts           Express host: API routes, Vite in dev, static serving in prod
-tests/              unit tests for the core modules
+src/                    React application, shared types, seed data
+standings-core.ts       pure table computation (no I/O)
+matches-core.ts         pure round filtering and feed ordering (no I/O)
+football-data-core.ts   pure football-data.org adapter: URLs + response mapping
+cache-core.ts           TTL cache and circuit breaker
+server.ts               Express host: API routes, Vite in dev, static serving in prod
+tests/                  unit tests for the core modules
 ```
 
 Calculation logic lives in root-level `*-core.ts` modules that do no I/O, so it can be
@@ -69,8 +75,16 @@ unit-tested without mocking HTTP. `server.ts` does any fetching and passes paylo
 
 ## API
 
-Every data endpoint returns `{ source, note, updatedAt, data }`. While seed fixtures are
-the only source, `source` is `"placeholder"` and the UI renders `note` as a banner.
+Every data endpoint returns `{ source, note, updatedAt, data }`, where `source` is one of:
+
+- `football-data` — live upstream data
+- `placeholder` — seed fixtures, because no token is configured
+- `fallback` — seed fixtures, because the upstream failed or was disabled
+
+The UI banners the `note` for anything that isn't live. The free tier allows 10
+requests/minute; standings cache for 60s and fixtures for 60s (15s while a match is live),
+so the app makes at most ~5 upstream calls/minute no matter how much traffic it serves. A
+circuit breaker opens after 3 consecutive failures and stays open for 60s.
 
 - `GET /api/health` — status, version, uptime
 - `GET /api/clubs` — the 20 Série A clubs

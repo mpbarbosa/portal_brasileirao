@@ -10,10 +10,22 @@ export interface Club {
   code: ClubCode;
   name: string;
   shortName: string;
-  state: string;
+  /** Home state (e.g. "RJ"). Absent for clubs derived from a provider that
+   *  doesn't carry it — render it conditionally. */
+  state?: string;
 }
 
-export type MatchStatus = "SCHEDULED" | "LIVE" | "FINISHED";
+/**
+ * Postponed and cancelled are first-class here rather than folded into
+ * SCHEDULED: Série A rounds get moved often enough that collapsing them would
+ * misreport a round as still playable.
+ */
+export type MatchStatus =
+  | "SCHEDULED"
+  | "LIVE"
+  | "FINISHED"
+  | "POSTPONED"
+  | "CANCELLED";
 
 export interface Match {
   id: string;
@@ -47,7 +59,15 @@ export interface StandingsRow {
  * of silently presenting stale numbers as live ones.
  */
 export interface ApiEnvelope<T> {
-  source: "placeholder" | "fallback";
+  /**
+   * - `football-data` — live upstream data.
+   * - `placeholder` — seed fixtures, because no provider token is configured.
+   * - `fallback` — seed fixtures, because the upstream failed or is disabled.
+   *
+   * The last two are deliberately distinct: one is "not set up", the other is
+   * "set up and currently broken", and only the second is worth alerting on.
+   */
+  source: "football-data" | "placeholder" | "fallback";
   note: string;
   updatedAt: string;
   data: T;

@@ -85,3 +85,38 @@ test("current round falls back to the last round when the season is over", () =>
 test("current round is null with no fixtures", () => {
   assert.equal(currentRound([]), null);
 });
+
+test("a postponed match keeps its round current — it is still coming", () => {
+  const matches = [
+    match({ id: "r1a", round: 1, status: "FINISHED" }),
+    match({ id: "r1b", round: 1, status: "POSTPONED" }),
+    match({ id: "r2", round: 2, status: "SCHEDULED" }),
+  ];
+
+  assert.equal(currentRound(matches), 1);
+});
+
+test("a cancelled match does not pin its round as current", () => {
+  const matches = [
+    match({ id: "r1a", round: 1, status: "FINISHED" }),
+    match({ id: "r1b", round: 1, status: "CANCELLED" }),
+    match({ id: "r2", round: 2, status: "SCHEDULED" }),
+  ];
+
+  assert.equal(currentRound(matches), 2);
+});
+
+test("feed order places postponed after scheduled and cancelled last", () => {
+  const feed = [
+    match({ id: "cancelled", status: "CANCELLED" }),
+    match({ id: "finished", status: "FINISHED" }),
+    match({ id: "postponed", status: "POSTPONED" }),
+    match({ id: "scheduled" }),
+    match({ id: "live", status: "LIVE" }),
+  ].sort(compareForFeed);
+
+  assert.deepEqual(
+    feed.map((entry) => entry.id),
+    ["live", "scheduled", "postponed", "finished", "cancelled"],
+  );
+});

@@ -6,8 +6,19 @@ import type { Match, MatchStatus } from "@/src/types";
 const STATUS_ORDER: Record<MatchStatus, number> = {
   LIVE: 0,
   SCHEDULED: 1,
-  FINISHED: 2,
+  POSTPONED: 2,
+  FINISHED: 3,
+  CANCELLED: 4,
 };
+
+/**
+ * A match that will never be played again. Distinct from "not finished":
+ * a postponed match is still coming, a cancelled one is not — so only
+ * CANCELLED joins FINISHED here, otherwise a cancelled fixture would pin
+ * `currentRound` to its round forever.
+ */
+export const isConcluded = (match: Match): boolean =>
+  match.status === "FINISHED" || match.status === "CANCELLED";
 
 /** Chronological within a round; invalid kickoff strings sort last. */
 const kickoffValue = (match: Match): number => {
@@ -40,7 +51,7 @@ export const currentRound = (matches: Match[]): number | null => {
   if (rounds.length === 0) return null;
 
   const pending = rounds.find((round) =>
-    matches.some((match) => match.round === round && match.status !== "FINISHED"),
+    matches.some((match) => match.round === round && !isConcluded(match)),
   );
 
   return pending ?? rounds[rounds.length - 1];

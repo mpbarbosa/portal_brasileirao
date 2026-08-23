@@ -1,19 +1,21 @@
 import { CLUBS_BY_CODE } from "@/src/data/clubs";
-import type { Match } from "@/src/types";
+import type { Club, Match } from "@/src/types";
 
 const STATUS_LABEL: Record<Match["status"], string> = {
   SCHEDULED: "A realizar",
   LIVE: "Ao vivo",
   FINISHED: "Encerrado",
+  POSTPONED: "Adiado",
+  CANCELLED: "Cancelado",
 };
 
 const STATUS_CLASS: Record<Match["status"], string> = {
   SCHEDULED: "bg-slate-800 text-slate-300",
   LIVE: "bg-emerald-500/20 text-emerald-300",
   FINISHED: "bg-slate-800 text-slate-400",
+  POSTPONED: "bg-amber-500/20 text-amber-300",
+  CANCELLED: "bg-rose-500/20 text-rose-300",
 };
-
-const clubName = (code: string) => CLUBS_BY_CODE.get(code)?.shortName ?? code;
 
 const kickoffLabel = (kickoff: string): string => {
   const parsed = new Date(kickoff);
@@ -33,10 +35,14 @@ const score = (match: Match): string =>
     ? "×"
     : `${match.homeGoals} × ${match.awayGoals}`;
 
-export function MatchList({ matches }: { matches: Match[] }) {
+export function MatchList({ matches, clubs }: { matches: Match[]; clubs?: Club[] }) {
   if (matches.length === 0) {
     return <p className="text-sm text-slate-400">Nenhuma partida nesta rodada.</p>;
   }
+
+  const byCode = new Map(clubs?.map((club) => [club.code, club]));
+  const clubName = (code: string) =>
+    byCode.get(code)?.shortName ?? CLUBS_BY_CODE.get(code)?.shortName ?? code;
 
   return (
     <ul className="space-y-2">
