@@ -166,6 +166,24 @@ Rules that follow from that:
   `getByText("Ao vivo")` also matches the banner's "…para dados ao vivo". Scope the
   locator and pass `exact: true`.
 
+## CI
+
+`.github/workflows/ci.yml` runs on every push to `main` and every pull request,
+in two parallel jobs:
+
+- **check** — `tsc --noEmit`, unit tests, build, then boots `dist/server.cjs` and
+  smoke-tests it, plus shellcheck over the deploy scripts. The boot step is the
+  one that catches a runtime dependency stranded in `devDependencies`.
+- **e2e** — Playwright, with the browser cached on the exact `@playwright/test`
+  version. A version bump needs a matching browser build, so the cache key must
+  include it or the run fails with "Executable doesn't exist".
+
+**CI needs no secrets.** Both jobs run against the frozen snapshot with no token,
+so a red build always means the code broke — never that the upstream had a bad
+minute or the free-tier budget ran out. Keep it that way: do not add
+`FOOTBALL_DATA_TOKEN` as a repository secret to "test the live path". If the live
+mapping needs coverage, add a unit test with a captured payload.
+
 ## Not built yet
 
 No `CONTEXT.md`. Port the deploy scripts

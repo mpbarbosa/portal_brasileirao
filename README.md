@@ -1,5 +1,7 @@
 # Portal Brasileirão
 
+[![CI](https://github.com/mpbarbosa/portal_brasileirao/actions/workflows/ci.yml/badge.svg)](https://github.com/mpbarbosa/portal_brasileirao/actions/workflows/ci.yml)
+
 Companion app for the Brazilian football championship — live match detail, standings, and
 club data for the Campeonato Brasileiro Série A.
 
