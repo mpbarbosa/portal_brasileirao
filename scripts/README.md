@@ -75,13 +75,18 @@ regardless of IP or security group:
 AWS_PROFILE=mpb aws ssm start-session --target i-03a9afc8a469edc89
 ```
 
-## Monitoring
+## Monitoring — currently OFF
+
+Monitoring was built and then removed for cost; nothing watches either site today.
+To re-enable:
 
 ```sh
 AWS_PROFILE=mpb ./scripts/aws-setup-monitoring.sh
 ```
 
-Idempotent — re-run it to change a threshold. Alerts go to an SNS topic per region;
+Idempotent — re-run it to change a threshold. Re-enabling memory/disk alarms also needs
+`CloudWatchAgentServerPolicy` re-attached to the `portal-brasileirao-ssm` role and the
+agent restarted on the host (`08_install_cloudwatch_agent.sh`). Alerts go to an SNS topic per region;
 **the email subscription must be confirmed from the inbox** before AWS delivers anything.
 
 Check current state:
