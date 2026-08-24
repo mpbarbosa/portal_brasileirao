@@ -35,6 +35,13 @@ export interface Club {
  * SCHEDULED: Série A rounds get moved often enough that collapsing them would
  * misreport a round as still playable.
  */
+/** A highlights package, and the channel that published it. */
+export interface GoalVideo {
+  url: string;
+  /** Publisher, shown as the link's label — "ge tv", "CazéTV". */
+  channel: string;
+}
+
 /** Where a match is played. Not from the data provider — merged from the CBF
  *  sync, which reports it as "Stadium - City - UF". */
 export interface Venue {
@@ -71,11 +78,12 @@ export interface Match {
   /** Where it is played. Merged from `src/data/venues.ts`; also absent for most. */
   venue?: Venue;
   /**
-   * A direct link to the match's goals, merged from `src/data/goal-videos.ts`.
-   * Absent for nearly every match, in which case the page offers a search
-   * instead.
+   * Links to the match's highlights, merged from `src/data/goal-videos.ts`.
+   * Several broadcasters publish their own package for the same match, so this
+   * is a list. Absent for nearly every match, in which case the page offers a
+   * search instead.
    */
-  goalsVideoUrl?: string;
+  goalsVideos?: GoalVideo[];
 }
 
 export interface StandingsRow {

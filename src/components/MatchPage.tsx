@@ -1,7 +1,7 @@
 import {
   clubsOf,
   goalsSearchUrl,
-  goalsVideoUrl,
+  goalsVideos,
   hasGoalsToShow,
   venueLabel,
 } from "@/match-core";
@@ -96,7 +96,7 @@ export function MatchPage({ match, clubs, onBack, onNavigate }: MatchPageProps) 
 
   const { home, away } = clubsOf(match, clubs);
   const venue = venueLabel(match);
-  const video = goalsVideoUrl(match);
+  const videos = goalsVideos(match);
   const played = match.homeGoals !== null && match.awayGoals !== null;
 
   return (
@@ -153,24 +153,37 @@ export function MatchPage({ match, clubs, onBack, onNavigate }: MatchPageProps) 
 
       {hasGoalsToShow(match) && (
         <section className="mt-6">
-          <h3 className="mb-2 text-sm font-medium text-ink-muted">Gols</h3>
+          <h3 className="mb-2 text-sm font-medium text-ink-muted">Melhores momentos</h3>
 
-          {/* A curated link beats the search: it points at the rights holder's
-              own highlights rather than whatever a query happens to surface. */}
-          {video ? (
+          {/* Curated links beat the search: they point at the rights holders'
+              own packages rather than whatever a query happens to surface.
+              Several broadcasters cover the same match, so all are offered and
+              labelled by channel — the reader picks. */}
+          {videos.length > 0 ? (
             <>
-              <a
-                href={video}
-                target="_blank"
-                rel="noopener noreferrer"
-                className={controlClasses("md", "inline-flex items-center gap-2")}
-              >
-                <span aria-hidden="true">▶</span>
-                Ver os gols
-                <span className="sr-only"> (abre em nova aba)</span>
-              </a>
+              <ul className="flex flex-wrap gap-2">
+                {videos.map((video) => (
+                  <li key={video.url}>
+                    <a
+                      href={video.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={controlClasses("md", "inline-flex items-center gap-2")}
+                    >
+                      <span aria-hidden="true">▶</span>
+                      {video.channel}
+                      <span className="sr-only">
+                        {" "}
+                        — melhores momentos no YouTube (abre em nova aba)
+                      </span>
+                    </a>
+                  </li>
+                ))}
+              </ul>
               <p className="mt-2 text-xs text-ink-faint">
-                Melhores momentos no YouTube.
+                {videos.length === 1
+                  ? "Melhores momentos no YouTube."
+                  : "Melhores momentos no YouTube, por emissora."}
               </p>
             </>
           ) : (

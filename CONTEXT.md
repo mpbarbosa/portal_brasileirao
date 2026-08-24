@@ -103,13 +103,17 @@ mean guessing at proper names.
 _Avoid_: title-casing or re-accenting CBF's values, expecting football-data to
 supply a venue.
 
-**Gols (link)**:
-On a finished match that had goals, a link to *search* YouTube for them. It is a
-search, not a chosen video: no provider we use exposes highlight links, and
-guessing a video id would eventually point at the wrong match or someone's
-reupload. The page says so in as many words.
-_Avoid_: presenting it as an official video, offering it for a fixture that has
-not finished or ended goalless.
+**Melhores momentos**:
+The highlights section of a **Página da partida**, shown only for a match that
+finished with goals. When `src/data/goal-videos.ts` has entries, it lists one
+link per broadcaster, labelled by channel — several publish their own package
+for the same match, and the reader picks. With no entry it falls back to a
+YouTube *search* and says so, because no provider we use exposes highlight links
+and guessing a video id would eventually point at the wrong match or a reupload.
+_Avoid_: "Gols" as the heading (that is the count, as in the artilharia column),
+labelling several links with the same generic verb, presenting the search as an
+official video, offering either for a fixture that has not finished or ended
+goalless.
 
 **Status da partida**:
 The five values of `MatchStatus`, shown as badges: `SCHEDULED` → "A realizar",

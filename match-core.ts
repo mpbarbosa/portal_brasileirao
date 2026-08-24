@@ -2,7 +2,7 @@
  * Pure helpers for a single match page. No I/O (tests/match-core.test.ts).
  */
 import { countsTowardStandings } from "@/standings-core";
-import type { Club, Match } from "@/src/types";
+import type { Club, GoalVideo, Match } from "@/src/types";
 
 export const findMatch = (matches: Match[], id: string): Match | null =>
   matches.find((match) => match.id === id) ?? null;
@@ -45,18 +45,21 @@ export const isGoalsVideoUrl = (value: string | undefined): boolean => {
   );
 };
 
-/** The curated link for a match, or null when there is none worth trusting. */
-export const goalsVideoUrl = (match: Match): string | null =>
-  isGoalsVideoUrl(match.goalsVideoUrl) ? match.goalsVideoUrl! : null;
+/**
+ * The curated highlights for a match, dropping any entry whose URL does not
+ * survive validation — a typo in one line should not take the others with it.
+ */
+export const goalsVideos = (match: Match): GoalVideo[] =>
+  (match.goalsVideos ?? []).filter((video) => isGoalsVideoUrl(video.url));
 
-/** Attach curated goal links to the matches that have one. */
+/** Attach curated highlights to the matches that have any. */
 export const withGoalVideos = (
   matches: Match[],
-  videos: Record<string, string>,
+  videos: Record<string, GoalVideo[]>,
 ): Match[] =>
   matches.map((match) => {
-    const url = videos[match.id];
-    return isGoalsVideoUrl(url) ? { ...match, goalsVideoUrl: url } : match;
+    const valid = (videos[match.id] ?? []).filter((video) => isGoalsVideoUrl(video.url));
+    return valid.length > 0 ? { ...match, goalsVideos: valid } : match;
   });
 
 /**

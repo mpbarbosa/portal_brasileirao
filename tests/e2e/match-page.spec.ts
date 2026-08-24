@@ -143,15 +143,26 @@ test.describe("Página da partida", () => {
     await expect(page.getByRole("combobox", { name: "Rodada" })).toBeVisible();
   });
 
-  test("a match with a curated video links straight to it", async ({ page }) => {
-    // Fluminense 2 x 1 Clube do Remo, the one entry in goal-videos.ts.
+  test("a curated match links to every channel that covered it", async ({ page }) => {
+    // Fluminense 2 x 1 Clube do Remo: ge tv and CazéTV both published one.
     await page.goto("/partida/554975");
 
-    const link = page.getByRole("link", { name: /Ver os gols/ });
-    await expect(link).toBeVisible();
-    await expect(link).toHaveAttribute("href", /youtube\.com\/watch\?v=/);
-    await expect(link).toHaveAttribute("target", "_blank");
-    await expect(link).toHaveAttribute("rel", /noopener/);
+    await expect(page.getByRole("heading", { name: "Melhores momentos" })).toBeVisible();
+
+    const links = page.locator("section a[href*='youtube.com/watch']");
+    await expect(links).toHaveCount(2);
+    for (const link of await links.all()) {
+      await expect(link).toHaveAttribute("target", "_blank");
+      await expect(link).toHaveAttribute("rel", /noopener/);
+    }
+  });
+
+  test("each link is labelled by its channel, not a generic verb", async ({ page }) => {
+    await page.goto("/partida/554975");
+
+    // Two identical labels would give the reader nothing to choose between.
+    await expect(page.getByRole("link", { name: /ge tv/ })).toBeVisible();
+    await expect(page.getByRole("link", { name: /CazéTV/ })).toBeVisible();
   });
 
   test("a curated video suppresses the search fallback", async ({ page }) => {
