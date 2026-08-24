@@ -188,12 +188,17 @@ mapping needs coverage, add a unit test with a captured payload.
 
 ## Not built yet
 
-- **No domain, so no TLS.** `05_setup_tls.sh` needs a real hostname with DNS pointing at
-  `54.232.242.45` before certbot can validate. The app is HTTP-only until then. nginx
-  currently runs with `server_name _` (accept any Host), which is right for bare-IP
-  access; re-run `04_setup_nginx.sh` with the real hostname once DNS exists, since
-  certbot needs a named server block to attach the certificate to.
-- **No CI deploy.** Deploys are run by hand from a workstation. Port the deploy scripts
+- **No CI deploy.** Deploys are run by hand from a workstation.
+
+### TLS
+
+Certbot holds the certificate for `brasileirao.mpbarbosa.com` and rewrote the nginx site in
+place to add the 443 listener and the HTTP→HTTPS redirect. `certbot.timer` runs twice daily
+and `certbot renew --dry-run` passes, so renewal is unattended.
+
+Because certbot owns that file, **re-running `04_setup_nginx.sh` overwrites its edits** and
+drops the site back to plain HTTP. That is recoverable — re-run `05_setup_tls.sh` — but the
+site serves HTTP in between, so do not run `04` casually on a host that already has TLS. Port the deploy scripts
 from the sibling repo when shipping, including its constraint that the production host is
 too small to build on (it pulls a prebuilt payload rather than running `npm run build`).
 

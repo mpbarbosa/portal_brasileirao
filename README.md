@@ -8,9 +8,9 @@ club data for the Campeonato Brasileiro Série A.
 **React 19 · TypeScript · Express · AWS.** Built end-to-end by directing the AI coding
 agent Claude Code.
 
-> **Live:** http://54.232.242.45 — a t3.micro in sa-east-1 running the bundle as a
-> systemd service behind nginx, on a static Elastic IP. HTTP only for now; TLS needs a
-> domain.
+> **Live:** https://brasileirao.mpbarbosa.com — a t3.micro in sa-east-1 running the bundle as a
+> systemd service behind nginx, on a static Elastic IP, with an auto-renewing Let's
+> Encrypt certificate.
 >
 > Live Série A data comes from [football-data.org](https://www.football-data.org) when
 > `FOOTBALL_DATA_TOKEN` is set; without a token the app serves a frozen snapshot, so a

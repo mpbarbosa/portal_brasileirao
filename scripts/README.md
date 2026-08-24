@@ -15,15 +15,18 @@ step 3 needs a payload, so it comes after.
 ./shell_scripts/02_create_env.sh              # write .env (prompts for the token)
 # ... run scripts/deploy.sh from your workstation now ...
 ./shell_scripts/03_install_systemd_service.sh # install + start the service
-SERVER_NAME=brasileirao.example.com ./shell_scripts/04_setup_nginx.sh
-SERVER_NAME=brasileirao.example.com CERTBOT_EMAIL=you@example.com \
+SERVER_NAME=brasileirao.mpbarbosa.com ./shell_scripts/04_setup_nginx.sh
+SERVER_NAME=brasileirao.mpbarbosa.com CERTBOT_EMAIL=you@example.com \
     ./shell_scripts/05_setup_tls.sh
+
+# Careful: 04 rewrites the site file that certbot edited, dropping TLS back to
+# plain HTTP. On a host that already has a certificate, re-run 05 afterwards.
 ```
 
 ## The live host
 
 Instance `i-03a9afc8a469edc89` (t3.micro, sa-east-1a) at `54.232.242.45`, serving
-http://54.232.242.45. The address is an Elastic IP (`eipalloc-07c282fdbbf3a18f6`), so it survives a stop/start.
+https://brasileirao.mpbarbosa.com. The address is an Elastic IP (`eipalloc-07c282fdbbf3a18f6`), so it survives a stop/start.
 
 ## Deploying
 
