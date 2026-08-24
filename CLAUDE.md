@@ -202,6 +202,9 @@ Rules that follow from that:
 - `allInnerTexts()` and `locator.all()` query immediately and do **not** auto-wait,
   unlike `expect(locator)`. Wait for the table to populate first, or they sample a
   half-rendered DOM — this produced a real flake.
+- **Never assert how much curated data exists.** `broadcasts.ts` grows on every sync,
+  so a test counting curated fixtures fails the next time the script runs. Assert the
+  *shape* of a rendered line instead. This broke CI once already.
 - **Turning text into a control changes its element.** Making a club or player name
   clickable turned a `span` into a `button` (later an `<a>`), which silently broke every
   spec selecting `span:first-child`. Select the cell's element children (`td > *`) rather
