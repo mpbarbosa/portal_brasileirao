@@ -143,8 +143,35 @@ the place to look if CBF news were ever wanted.
 
 ## How broadcast data actually reaches the app
 
-Hand-curated in `src/data/broadcasts.ts`, transcribed from the CBF page and keyed
-by **our match id**. See the header of that file for transcription rules, and the
+`scripts/sync-broadcasts.ts` reads CBF's Onde Assistir API on a workstation and
+writes `src/data/broadcasts.ts`. Production only ever reads the committed file.
+
+```sh
+npm run sync-broadcasts                       # today
+npm run sync-broadcasts 2026-08-30            # one day
+npm run sync-broadcasts 2026-08-30 2026-09-15 # a range
+npm run sync-broadcasts 2026-08-30 -- --replace
+```
+
+It merges by default, so hand-added entries survive and a narrow range tops the
+file up. Transcribing from a screenshot is still supported.
+
+Three things the script had to solve, each found by running it:
+
+- **CBF's broken TLS chain.** It reads the `caIssuers` URI from the leaf
+  certificate, downloads that intermediate and trusts it *alongside* the real
+  roots — completing the chain CBF should have sent, rather than disabling
+  verification.
+- **Pagination.** CBF ignores `per_page` and serves 15 per page, so the script
+  walks pages. A first-page-only read would have looked exactly like "no
+  broadcast listed".
+- **Club names.** Most resolve by slug or a prefix (`Santos FC`, `Coritiba SAF`),
+  but four are structurally different and need the alias map in
+  `broadcast-core.ts`: `Atlético Mineiro`, `Athletico Paranaense`, `Remo`,
+  `Red Bull Bragantino`. An unresolvable name is reported loudly and skipped —
+  never guessed, since a wrong join mislabels a match.
+
+The join itself is kickoff instant plus home club, keyed by **our match id**. See the header of that file for transcription rules, and the
 **Onde assistir** entry in `CONTEXT.md` for the domain terms.
 
 The key must not be a team abbreviation. A single day's CBF page showed `ATH` as

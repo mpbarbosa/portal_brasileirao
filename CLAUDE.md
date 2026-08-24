@@ -144,7 +144,9 @@ and both are real clubs.
 
 ### Data
 
-`src/data/broadcasts.ts` is **hand-maintained** — the sole exception in `src/data/`.
+`src/data/broadcasts.ts` holds "onde assistir" channels. Regenerate with
+`npm run sync-broadcasts [from] [to]`, which reads CBF's API **on a workstation** and
+merges into the file — production never calls CBF. Hand-editing stays supported.
 It holds "onde assistir" channels keyed by our match id, because no provider we use
 carries broadcast data. `docs/data-sources.md` records what every candidate source
 actually provides, including CBF's undocumented broadcast API and why it is not a
