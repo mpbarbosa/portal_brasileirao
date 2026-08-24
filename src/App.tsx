@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react";
 
 import { fetchMatches, fetchScorers, fetchStandings, type MatchesPayload } from "@/src/api";
+import { ClubView } from "@/src/components/ClubView";
 import { NavBar } from "@/src/components/NavBar";
 import { RoundBrowser } from "@/src/components/RoundBrowser";
 import { ScorersTable } from "@/src/components/ScorersTable";
 import { StandingsTable } from "@/src/components/StandingsTable";
 import { DEFAULT_SECTION, type SectionId } from "@/src/navigation";
-import type { Scorer, StandingsRow } from "@/src/types";
+import type { ClubCode, Scorer, StandingsRow } from "@/src/types";
 
 export function App() {
   const [section, setSection] = useState<SectionId>(DEFAULT_SECTION);
@@ -15,6 +16,7 @@ export function App() {
   const [scorers, setScorers] = useState<Scorer[]>([]);
   /** Null until the payload lands; then it follows the round the reader picks. */
   const [round, setRound] = useState<number | null>(null);
+  const [clubCode, setClubCode] = useState<ClubCode | null>(null);
   const [note, setNote] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -68,7 +70,15 @@ export function App() {
         )}
 
         <main>
-          {section === "classificacao" && <StandingsTable rows={standings} />}
+          {section === "classificacao" && (
+            <StandingsTable
+              rows={standings}
+              onSelectClub={(code) => {
+                setClubCode(code);
+                setSection("clube");
+              }}
+            />
+          )}
 
           {section === "jogos" && (
             <RoundBrowser
@@ -77,6 +87,17 @@ export function App() {
               matches={matches?.matches ?? []}
               clubs={matches?.clubs}
               onSelectRound={setRound}
+            />
+          )}
+
+          {section === "clube" && clubCode && (
+            <ClubView
+              code={clubCode}
+              standings={standings}
+              matches={matches?.matches ?? []}
+              clubs={matches?.clubs}
+              scorers={scorers}
+              onBack={() => setSection("classificacao")}
             />
           )}
 

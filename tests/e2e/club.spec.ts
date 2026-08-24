@@ -1,0 +1,105 @@
+import { expect, test, type Page } from "@playwright/test";
+
+const SM_BREAKPOINT = 640;
+const isCollapsed = (page: Page) => (page.viewportSize()?.width ?? 0) < SM_BREAKPOINT;
+
+/** Open the club sitting at a given standings position. */
+const openClubAt = async (page: Page, position: number) => {
+  const row = page.locator("table tbody tr").nth(position - 1);
+  const name = (await row.locator("td:nth-child(2) button").innerText()).trim();
+  await row.locator("td:nth-child(2) button").click();
+  await expect(page.getByRole("heading", { level: 2 })).toHaveText(name);
+  return name;
+};
+
+test.describe("Clube", () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto("/");
+    await expect(page.locator("table tbody tr")).toHaveCount(20);
+  });
+
+  test("club names in the table are actionable", async ({ page }) => {
+    const buttons = page.locator("table tbody tr td:nth-child(2) button");
+
+    await expect(buttons).toHaveCount(20);
+    await expect(buttons.first()).toBeEnabled();
+  });
+
+  test("choosing a club opens its page", async ({ page }) => {
+    const name = await openClubAt(page, 1);
+
+    await expect(page.getByRole("heading", { level: 2 })).toHaveText(name);
+    await expect(page.locator("table")).toHaveCount(0);
+  });
+
+  test("the club page shows its standings summary", async ({ page }) => {
+    await openClubAt(page, 1);
+
+    // Scoped to main: "Jogos" is also a nav entry, so an unscoped lookup
+    // matches the menu as well as the stat tile.
+    const main = page.locator("main");
+    for (const label of ["Posição", "Pontos", "Jogos", "Saldo"]) {
+      await expect(main.getByText(label, { exact: true })).toBeVisible();
+    }
+    // Leader of the table.
+    await expect(main.getByText("1º", { exact: true })).toBeVisible();
+  });
+
+  test("the form guide uses at most five results", async ({ page }) => {
+    await openClubAt(page, 1);
+
+    const chips = page.locator("main ul li").filter({ hasText: /^[VED]$/ });
+    const count = await chips.count();
+
+    expect(count).toBeGreaterThan(0);
+    expect(count).toBeLessThanOrEqual(5);
+    for (const chip of await chips.all()) {
+      await expect(chip).toHaveText(/^[VED]$/);
+    }
+  });
+
+  test("the club page lists matches it actually played", async ({ page }) => {
+    const name = await openClubAt(page, 1);
+
+    const played = page.getByRole("heading", { name: "Jogos disputados" });
+    await expect(played).toBeVisible();
+
+    // Every listed fixture must involve this club.
+    const fixtures = page.locator("main ul > li").filter({ hasText: "×" });
+    expect(await fixtures.count()).toBeGreaterThan(0);
+    for (const fixture of (await fixtures.all()).slice(0, 6)) {
+      await expect(fixture).toContainText(name);
+    }
+  });
+
+  test("going back returns to the table", async ({ page }) => {
+    await openClubAt(page, 3);
+    await page.getByRole("button", { name: "← Voltar" }).click();
+
+    await expect(page.locator("table tbody tr")).toHaveCount(20);
+  });
+
+  test("a different club shows different data", async ({ page }) => {
+    const first = await openClubAt(page, 1);
+    await page.getByRole("button", { name: "← Voltar" }).click();
+    const second = await openClubAt(page, 20);
+
+    expect(second).not.toBe(first);
+    await expect(page.locator("main").getByText("20º", { exact: true })).toBeVisible();
+  });
+
+  test("the nav still works from a club page", async ({ page }) => {
+    await openClubAt(page, 5);
+
+    if (isCollapsed(page)) await page.getByRole("button", { name: /menu/i }).click();
+    await page.getByRole("button", { name: /^Artilharia/ }).click();
+
+    await expect(page.locator("table thead th").nth(1)).toHaveText(/jogador/i);
+  });
+
+  test("no nav entry points at the club section", async ({ page }) => {
+    // It is a drill-down: without a selected club it would render nothing.
+    if (isCollapsed(page)) await page.getByRole("button", { name: /menu/i }).click();
+    await expect(page.getByRole("button", { name: /^Clube$/ })).toHaveCount(0);
+  });
+});

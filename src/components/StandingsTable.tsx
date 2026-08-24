@@ -1,4 +1,4 @@
-import type { StandingsRow } from "@/src/types";
+import type { ClubCode, StandingsRow } from "@/src/types";
 
 /** Libertadores places (G4) and the relegation zone (Z4) get a rail colour. */
 const zoneClass = (position: number, total: number): string => {
@@ -7,7 +7,13 @@ const zoneClass = (position: number, total: number): string => {
   return "border-l-2 border-l-transparent";
 };
 
-export function StandingsTable({ rows }: { rows: StandingsRow[] }) {
+interface StandingsTableProps {
+  rows: StandingsRow[];
+  /** Omit to render plain text — the table stays useful without a drill-down. */
+  onSelectClub?: (code: ClubCode) => void;
+}
+
+export function StandingsTable({ rows, onSelectClub }: StandingsTableProps) {
   return (
     <div className="overflow-x-auto rounded-lg border border-slate-800">
       <table className="w-full min-w-[34rem] text-sm">
@@ -35,7 +41,17 @@ export function StandingsTable({ rows }: { rows: StandingsRow[] }) {
                 {/* Name and state are separate elements: they are distinct data,
                     and running them together reads as one string to assistive
                     tech and to any text-based assertion. */}
-                <span>{row.club.shortName}</span>
+                {onSelectClub ? (
+                  <button
+                    type="button"
+                    onClick={() => onSelectClub(row.club.code)}
+                    className="rounded underline decoration-slate-600 underline-offset-2 hover:decoration-slate-300"
+                  >
+                    {row.club.shortName}
+                  </button>
+                ) : (
+                  <span>{row.club.shortName}</span>
+                )}
                 {row.club.state && (
                   <span className="ml-2 text-xs text-slate-500">{row.club.state}</span>
                 )}

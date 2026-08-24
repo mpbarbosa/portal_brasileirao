@@ -4,7 +4,11 @@
  * Single source of truth for navigation: adding a section means adding an entry
  * here and a case in `App`'s view switch — the nav bar itself needs no change.
  */
-export type SectionId = "classificacao" | "jogos" | "artilharia";
+/**
+ * `clube` is a detail view reached by choosing a club, not a menu entry — it has
+ * no meaning without a selection, so it is absent from NAV_ITEMS on purpose.
+ */
+export type SectionId = "classificacao" | "jogos" | "artilharia" | "clube";
 
 export interface NavItem {
   id: SectionId;

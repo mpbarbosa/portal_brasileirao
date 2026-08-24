@@ -38,14 +38,18 @@ test.describe("Classificação", () => {
   test("lists Corinthians and Coritiba as separate clubs", async ({ page }) => {
     // Regression: both report tla "COR" upstream. Keying club identity on the
     // abbreviation merged them into a single row.
-    const names = page.locator("table tbody tr td:nth-child(2) > span:first-child");
+    // First element child of the club cell: a button when the drill-down is
+    // enabled, a span when it is not.
+    const names = page.locator("table tbody tr td:nth-child(2) > :first-child");
 
     await expect(names.filter({ hasText: /^Corinthians$/ })).toHaveCount(1);
     await expect(names.filter({ hasText: /^Coritiba$/ })).toHaveCount(1);
   });
 
   test("uses the corrected club display names, not the upstream ones", async ({ page }) => {
-    const names = page.locator("table tbody tr td:nth-child(2) > span:first-child");
+    // First element child of the club cell: a button when the drill-down is
+    // enabled, a span when it is not.
+    const names = page.locator("table tbody tr td:nth-child(2) > :first-child");
 
     await expect(names.filter({ hasText: /^Atlético-MG$/ })).toHaveCount(1);
     await expect(names.filter({ hasText: /^Athletico-PR$/ })).toHaveCount(1);

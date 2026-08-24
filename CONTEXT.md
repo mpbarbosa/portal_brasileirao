@@ -29,7 +29,10 @@ The fixtures section, replacing the older fixed "Rodada" view. It opens on
 the arrows or the picker. It needs no extra request: `/api/matches` already ships
 the whole fixture list, so switching rounds is a client-side filter.
 _Avoid_: a second section that shows only the current round (that is this
-section's default), "Partidas" (reserved for the singular **Partida**).
+section's default), "Partidas" (reserved for the singular **Partida**). Note the
+word is overloaded on purpose: the nav entry means "fixtures", while the `Jogos`
+stat on a club page means *jogos disputados*, a count. Both are standard; scope
+any lookup that must tell them apart.
 
 **Rodada atual**:
 The round the app opens the Rodada tab on, computed by `currentRound(matches, now)`.
@@ -132,6 +135,22 @@ are different claims and only one is supported by the data.
 _Avoid_: "goleadores" as the section label ("Artilharia" is the term a Brazilian
 reader expects), coercing a null count to zero anywhere between the mapper and
 the cell.
+
+**Clube** (a página do clube):
+The per-club drill-down, reached by choosing a club in the **Classificação** —
+never from the menu, because without a selection it has nothing to show. Composes
+data the client already holds: standing, form, next fixture, the club's scorers
+and its played matches. Needs no request of its own; the slicing rules live in
+`club-core.ts` so they are testable outside a component.
+_Avoid_: adding it to `NAV_ITEMS`, fetching per-club data (everything it needs is
+already on the page), "time" for the entity — see **Clube** above.
+
+**Forma**:
+The last five *finished* results from one club's point of view, oldest first:
+`V` vitória, `E` empate, `D` derrota. Only finished matches count, so a postponed
+fixture mid-run does not punch a hole in the guide, and a live match never
+appears — consistent with **Conta para a classificação**.
+_Avoid_: "W/D/L" (English initials), counting a live scoreline as a result.
 
 **Menu de seções**:
 The navigation in the sticky header. Its entries come from `NAV_ITEMS`
