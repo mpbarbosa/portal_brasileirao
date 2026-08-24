@@ -160,6 +160,20 @@ jobs:
           tar -czf release.tar.gz dist package.json package-lock.json shell_scripts
           ls -lh release.tar.gz
 
+      - name: TEMPORARY - show OIDC claims
+        # Prints only the sub/aud claims so the trust policy can be matched to
+        # what GitHub actually sends. The token itself is never printed.
+        run: |
+          set -euo pipefail
+          token=$(curl -sH "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+            "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=sts.amazonaws.com" | jq -r '.value')
+          payload=$(echo "$token" | cut -d. -f2)
+          # base64url -> base64, pad to a multiple of 4
+          pad=$(( (4 - ${#payload} % 4) % 4 ))
+          payload="${payload}$(printf '=%.0s' $(seq 1 $pad))"
+          echo "$payload" | tr '_-' '/+' | base64 -d 2>/dev/null \
+            | jq '{sub, aud, repository, ref, workflow_ref, event_name}'
+
       # OIDC: no long-lived AWS keys live in GitHub. The role trusts only
       # refs/heads/main of this repository.
       - name: Assume the deploy role
