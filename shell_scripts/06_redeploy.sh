@@ -35,6 +35,10 @@ cd "$DEPLOY_DIR"
 echo "==> Installing production dependencies..."
 npm ci --omit=dev --no-audit --no-fund
 
+# Pick up any unit-file change shipped with this release, and silence the
+# "unit file changed on disk" warning that otherwise masks a real one.
+sudo systemctl daemon-reload
+
 echo "==> Restarting ${SERVICE_NAME}..."
 sudo systemctl restart "$SERVICE_NAME"
 

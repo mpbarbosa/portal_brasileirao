@@ -188,7 +188,7 @@ mapping needs coverage, add a unit test with a captured payload.
 
 ## Not built yet
 
-- **No CI deploy.** Deploys are run by hand from a workstation.
+*(Nothing outstanding — deploys are automated; see below.)*
 
 ### TLS
 

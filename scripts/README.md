@@ -30,7 +30,8 @@ https://brasileirao.mpbarbosa.com. The address is an Elastic IP (`eipalloc-07c28
 
 ## Deploying
 
-From your workstation:
+Pushing to `main` deploys automatically once CI is green — see the `deploy` job in
+`.github/workflows/ci.yml`. To deploy by hand from your workstation:
 
 ```sh
 DEPLOY_HOST=ubuntu@54.232.242.45 DEPLOY_SSH_KEY=~/.ssh/portal-brasileirao.pem npm run deploy
