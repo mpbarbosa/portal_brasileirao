@@ -42,6 +42,48 @@ test.describe("Rotas", () => {
     await expect(page.getByRole("combobox", { name: "Rodada" })).toHaveValue("7");
   });
 
+  test("club addresses read as names, not ids", async ({ page }) => {
+    await page.goto("/");
+    // evaluateAll queries immediately — wait for the rows or it sees none.
+    await expect(page.locator("table tbody tr")).toHaveCount(20);
+
+    const hrefs = await page
+      .locator("table tbody tr td:nth-child(2) a")
+      .evaluateAll((links) => links.map((link) => link.getAttribute("href")));
+
+    expect(hrefs).toContain("/clube/flamengo");
+    expect(hrefs).toContain("/clube/sao-paulo");
+    // No link should fall back to a bare numeric id.
+    for (const href of hrefs) {
+      expect(href).not.toMatch(/^\/clube\/\d+$/);
+    }
+  });
+
+  test("a slug opens the right club", async ({ page }) => {
+    await page.goto("/clube/flamengo");
+
+    await expect(page.getByRole("heading", { level: 2 })).toHaveText("Flamengo");
+  });
+
+  test("a slug with an accent in the name still resolves", async ({ page }) => {
+    await page.goto("/clube/sao-paulo");
+
+    await expect(page.getByRole("heading", { level: 2 })).toHaveText("São Paulo");
+  });
+
+  test("a numeric code still resolves, so published links do not rot", async ({ page }) => {
+    // /clube/1783 was the address before slugs existed.
+    await page.goto("/clube/1783");
+
+    await expect(page.getByRole("heading", { level: 2 })).toHaveText("Flamengo");
+  });
+
+  test("an unknown club key says so instead of erroring", async ({ page }) => {
+    await page.goto("/clube/nao-existe");
+
+    await expect(page.getByText("Clube não encontrado.")).toBeVisible();
+  });
+
   test("a club has a shareable address", async ({ page }) => {
     await page.goto("/");
     const row = page.locator("table tbody tr").first();

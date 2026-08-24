@@ -48,6 +48,7 @@ test("identifies a club by upstream id, carrying the abbreviation for display", 
     name: "CR Flamengo",
     shortName: "Flamengo",
     tla: "FLA",
+    slug: "flamengo",
   });
 });
 
@@ -68,6 +69,7 @@ test("falls back to the abbreviation when there is no id", () => {
     name: "Clube Sem Id",
     shortName: "Clube Sem Id",
     tla: "XYZ",
+    slug: "clube-sem-id",
   });
 });
 

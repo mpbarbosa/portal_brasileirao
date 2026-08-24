@@ -134,6 +134,13 @@ in both dev (Vite middleware, `appType: "spa"`) and the production bundle.
 Unrecognised paths and nonsense rounds resolve to something useful rather than 404 — a
 stale link should still land somewhere.
 
+Club URLs use a **slug** (`/clube/flamengo`), derived from the short name by `slugify` in
+`club-core.ts`. The route carries a `key`, not a code, because the segment may be either:
+`findClub` resolves a slug first and then a raw code, so `/clube/1783` — published before
+slugs existed — still works. The seed generator rejects duplicate slugs the same way it
+rejects duplicate codes and names; `atletico-mg` and `athletico-pr` differ by one letter
+and both are real clubs.
+
 ### Data
 
 `src/data/clubs.ts` and `src/data/matches.ts` are **generated files** — a frozen snapshot of

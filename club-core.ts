@@ -5,7 +5,40 @@
  */
 import { compareByKickoff, isConcluded } from "@/matches-core";
 import { countsTowardStandings } from "@/standings-core";
-import type { ClubCode, Match, Scorer, StandingsRow } from "@/src/types";
+import type { Club, ClubCode, Match, Scorer, StandingsRow } from "@/src/types";
+
+/**
+ * URL-safe form of a club name: "Atlético-MG" becomes "atletico-mg".
+ *
+ * Accents are stripped rather than percent-encoded so the address stays
+ * readable and typeable. Returns "" when a name has nothing alphanumeric in it,
+ * which the caller must treat as "no slug" — never as a valid empty path
+ * segment.
+ */
+export const slugify = (name: string): string =>
+  name
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+
+/** What a club's URL should say. Falls back to the code when it has no slug. */
+export const clubKey = (club: Club): string => club.slug || club.code;
+
+/**
+ * Resolve a club from a URL segment, accepting either a slug or a raw code.
+ * Codes are still honoured because links to `/clube/1783` were published before
+ * slugs existed, and a shared link should not rot.
+ */
+export const findClub = (clubs: Club[], key: string): Club | null => {
+  const needle = key.toLowerCase();
+  return (
+    clubs.find((club) => club.slug === needle) ??
+    clubs.find((club) => club.code === key) ??
+    null
+  );
+};
 
 export type FormResult = "V" | "E" | "D";
 

@@ -52,6 +52,16 @@ _Avoid_: "team"/"time" for the entity (`Club` is the domain word here; "team" is
 what the upstream API calls it, which is why the adapter type is `RawTeam`),
 "sigla" as an identifier (see **tla**).
 
+**slug**:
+URL-safe form of a club's short name — `Atlético-MG` → `atletico-mg` — used for
+readable addresses like `/clube/flamengo`. Accents are stripped rather than
+percent-encoded so the address stays typeable. Derived, not upstream, and
+absent when a name yields nothing usable, in which case the URL falls back to
+`code`. `findClub` accepts either form, so `/clube/1783` still resolves.
+_Avoid_: treating it as identity (that is `code`), assuming it is unique without
+the generator's duplicate check — `atletico-mg` and `athletico-pr` differ by one
+letter and both are real clubs.
+
 **tla**:
 The three-letter abbreviation upstream reports for a club (`FLA`, `PAL`, `CAP`).
 Carried on `Club` for compact display only. **Not an identity** — see **Clube**.
@@ -144,7 +154,7 @@ and its played matches. Needs no request of its own; the slicing rules live in
 `club-core.ts` so they are testable outside a component.
 _Avoid_: adding it to `NAV_ITEMS`, fetching per-club data (everything it needs is
 already on the page), "time" for the entity — see **Clube** above. Its address is
-`/clube/<code>`, so it is shareable and Back returns to the table.
+`/clube/<slug>`, so it is shareable and Back returns to the table.
 
 **Forma**:
 The last five *finished* results from one club's point of view, oldest first:
@@ -155,7 +165,7 @@ _Avoid_: "W/D/L" (English initials), counting a live scoreline as a result.
 
 **Rota**:
 The URL is the source of truth for which section is showing: `/` classificação,
-`/jogos` (current round) or `/jogos/N`, `/artilharia`, `/clube/<code>`. Parsing
+`/jogos` (current round) or `/jogos/N`, `/artilharia`, `/clube/<slug>`. Parsing
 and formatting live in `route-core.ts` as total functions — an unrecognised path
 or a nonsense round degrades to something useful rather than erroring, because a
 stale link should still land somewhere. `useRoute` only binds them to the History

@@ -17,6 +17,12 @@ export interface Club {
   shortName: string;
   /** Three-letter abbreviation for badges/compact display. Not an identity. */
   tla?: string;
+  /**
+   * URL-safe name for readable addresses (`/clube/flamengo`). Derived, not
+   * upstream — absent when the name yields nothing usable, in which case the
+   * URL falls back to `code`.
+   */
+  slug?: string;
   /** Home state (e.g. "RJ"). Absent for clubs derived from a provider that
    *  doesn't carry it — render it conditionally. */
   state?: string;

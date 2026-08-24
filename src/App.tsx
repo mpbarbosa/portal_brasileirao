@@ -72,7 +72,7 @@ export function App() {
           {route.section === "classificacao" && (
             <StandingsTable
               rows={standings}
-              onSelectClub={(code) => navigate({ section: "clube", code })}
+              onSelectClub={(key) => navigate({ section: "clube", key })}
             />
           )}
 
@@ -90,7 +90,7 @@ export function App() {
 
           {route.section === "clube" && (
             <ClubView
-              code={route.code}
+              clubKey={route.key}
               standings={standings}
               matches={matches?.matches ?? []}
               clubs={matches?.clubs}

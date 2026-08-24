@@ -94,10 +94,10 @@ const clubs: SeedClub[] = rawTeams
 
 // Validate the output rather than trusting it. A display-name override keyed to
 // the wrong id renames the wrong club, which reads as perfectly plausible data.
-const duplicatesOf = (key: "code" | "shortName") =>
+const duplicatesOf = (key: "code" | "shortName" | "slug") =>
   clubs.map((club) => club[key]).filter((value, i, all) => value && all.indexOf(value) !== i);
 
-for (const key of ["code", "shortName"] as const) {
+for (const key of ["code", "shortName", "slug"] as const) {
   const dupes = duplicatesOf(key);
   if (dupes.length) {
     console.error(`Error: duplicate club ${key}:`, dupes);
@@ -133,6 +133,7 @@ ${clubs
     (club) =>
       `  { code: ${ts(club.code)}, name: ${ts(club.name)}, shortName: ${ts(club.shortName)}` +
       (club.tla ? `, tla: ${ts(club.tla)}` : "") +
+      (club.slug ? `, slug: ${ts(club.slug)}` : "") +
       (club.state ? `, state: ${ts(club.state)}` : "") +
       ` },`,
   )

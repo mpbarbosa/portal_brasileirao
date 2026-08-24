@@ -2,13 +2,16 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import {
+  clubKey,
   clubMatches,
+  findClub,
   lastFixture,
   nextFixture,
   playsIn,
   recentForm,
   resultFor,
   scorersFor,
+  slugify,
   standingFor,
 } from "@/club-core";
 import type { Match, Scorer, StandingsRow } from "@/src/types";
@@ -134,4 +137,65 @@ test("standing and scorers are looked up by club code", () => {
 
   assert.deepEqual(scorersFor(all, "A").map((s) => s.playerName), ["Um", "Três"]);
   assert.deepEqual(scorersFor(all, "Z"), []);
+});
+
+test("slugify makes a name URL-safe and readable", () => {
+  assert.equal(slugify("Flamengo"), "flamengo");
+  assert.equal(slugify("São Paulo"), "sao-paulo");
+  assert.equal(slugify("Grêmio"), "gremio");
+  assert.equal(slugify("Vitória"), "vitoria");
+  assert.equal(slugify("Clube do Remo"), "clube-do-remo");
+});
+
+test("slugify keeps Atlético-MG and Athletico-PR apart", () => {
+  // The H is the only thing distinguishing two real Série A clubs.
+  assert.equal(slugify("Atlético-MG"), "atletico-mg");
+  assert.equal(slugify("Athletico-PR"), "athletico-pr");
+  assert.notEqual(slugify("Atlético-MG"), slugify("Athletico-PR"));
+});
+
+test("slugify collapses punctuation without leaving stray hyphens", () => {
+  assert.equal(slugify("  A. B./C  "), "a-b-c");
+  assert.equal(slugify("--Santos--"), "santos");
+});
+
+test("a name with nothing alphanumeric yields no slug", () => {
+  assert.equal(slugify("!!!"), "");
+  assert.equal(slugify(""), "");
+});
+
+const club = (code: string, shortName: string, slug?: string) => ({
+  code,
+  name: `${shortName} FC`,
+  shortName,
+  ...(slug ? { slug } : {}),
+});
+
+test("clubKey prefers the slug and falls back to the code", () => {
+  assert.equal(clubKey(club("1783", "Flamengo", "flamengo")), "flamengo");
+  assert.equal(clubKey(club("9999", "???")), "9999");
+});
+
+test("findClub resolves a slug", () => {
+  const clubs = [club("1783", "Flamengo", "flamengo"), club("1769", "Palmeiras", "palmeiras")];
+
+  assert.equal(findClub(clubs, "palmeiras")?.code, "1769");
+});
+
+test("findClub still resolves a raw code, so old links keep working", () => {
+  // /clube/1783 was published before slugs existed.
+  const clubs = [club("1783", "Flamengo", "flamengo")];
+
+  assert.equal(findClub(clubs, "1783")?.slug, "flamengo");
+});
+
+test("findClub is case-insensitive on slugs", () => {
+  const clubs = [club("1783", "Flamengo", "flamengo")];
+
+  assert.equal(findClub(clubs, "Flamengo")?.code, "1783");
+});
+
+test("findClub returns null for an unknown key", () => {
+  assert.equal(findClub([club("1783", "Flamengo", "flamengo")], "nao-existe"), null);
+  assert.equal(findClub([], "flamengo"), null);
 });

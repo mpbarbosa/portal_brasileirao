@@ -3,7 +3,7 @@
  * formatting are total functions over strings, so every path shape is testable
  * without a browser (tests/route-core.test.ts).
  */
-import type { ClubCode } from "@/src/types";
+
 
 export type Route =
   | { section: "classificacao" }
@@ -11,7 +11,12 @@ export type Route =
    *  useful next week, which `/jogos/24` does not. */
   | { section: "jogos"; round: number | null }
   | { section: "artilharia" }
-  | { section: "clube"; code: ClubCode };
+  /**
+   * `key` is what the URL says — a slug like "flamengo", or a raw club code for
+   * links published before slugs existed. Resolving it to a club is the view's
+   * job (`findClub`), not the router's.
+   */
+  | { section: "clube"; key: string };
 
 export const HOME: Route = { section: "classificacao" };
 
@@ -38,7 +43,7 @@ export const parseRoute = (pathname: string): Route => {
       return { section: "artilharia" };
 
     case "clube":
-      return second ? { section: "clube", code: second } : HOME;
+      return second ? { section: "clube", key: second } : HOME;
 
     default:
       return HOME;
@@ -55,7 +60,7 @@ export const formatRoute = (route: Route): string => {
     case "artilharia":
       return "/artilharia";
     case "clube":
-      return `/clube/${encodeURIComponent(route.code)}`;
+      return `/clube/${encodeURIComponent(route.key)}`;
   }
 };
 

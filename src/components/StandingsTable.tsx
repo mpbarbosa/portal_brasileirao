@@ -1,5 +1,6 @@
+import { clubKey } from "@/club-core";
 import { formatRoute } from "@/route-core";
-import type { ClubCode, StandingsRow } from "@/src/types";
+import type { StandingsRow } from "@/src/types";
 
 /** Libertadores places (G4) and the relegation zone (Z4) get a rail colour. */
 const zoneClass = (position: number, total: number): string => {
@@ -10,8 +11,9 @@ const zoneClass = (position: number, total: number): string => {
 
 interface StandingsTableProps {
   rows: StandingsRow[];
-  /** Omit to render plain text — the table stays useful without a drill-down. */
-  onSelectClub?: (code: ClubCode) => void;
+  /** Receives the club's URL key (slug, or code as a fallback). Omit to render
+   *  plain text — the table stays useful without a drill-down. */
+  onSelectClub?: (key: string) => void;
 }
 
 export function StandingsTable({ rows, onSelectClub }: StandingsTableProps) {
@@ -44,7 +46,7 @@ export function StandingsTable({ rows, onSelectClub }: StandingsTableProps) {
                     tech and to any text-based assertion. */}
                 {onSelectClub ? (
                   <a
-                    href={formatRoute({ section: "clube", code: row.club.code })}
+                    href={formatRoute({ section: "clube", key: clubKey(row.club) })}
                     onClick={(event) => {
                       // Let modified clicks open a new tab, as any link should.
                       if (
@@ -54,7 +56,7 @@ export function StandingsTable({ rows, onSelectClub }: StandingsTableProps) {
                         return;
                       }
                       event.preventDefault();
-                      onSelectClub(row.club.code);
+                      onSelectClub(clubKey(row.club));
                     }}
                     className="rounded underline decoration-slate-600 underline-offset-2 hover:decoration-slate-300"
                   >

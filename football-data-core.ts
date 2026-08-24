@@ -9,6 +9,7 @@
  *
  * Upstream docs: https://www.football-data.org/documentation/quickstart
  */
+import { slugify } from "@/club-core";
 import type { Club, Match, MatchStatus, Scorer, StandingsRow } from "@/src/types";
 
 export const FOOTBALL_DATA_BASE = "https://api.football-data.org/v4";
@@ -146,7 +147,9 @@ export const clubFromTeam = (team: RawTeam | undefined): Club | null => {
     team.shortName?.trim() ??
     team.name;
 
-  return { code, name: team.name, shortName, tla };
+  const slug = slugify(shortName) || undefined;
+
+  return { code, name: team.name, shortName, tla, slug };
 };
 
 /**

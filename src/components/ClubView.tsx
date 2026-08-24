@@ -1,5 +1,6 @@
 import {
   clubMatches,
+  findClub,
   nextFixture,
   recentForm,
   resultFor,
@@ -8,10 +9,11 @@ import {
   type FormResult,
 } from "@/club-core";
 import { MatchList } from "@/src/components/MatchList";
-import type { Club, ClubCode, Match, Scorer, StandingsRow } from "@/src/types";
+import type { Club, Match, Scorer, StandingsRow } from "@/src/types";
 
 interface ClubViewProps {
-  code: ClubCode;
+  /** Slug or code, straight from the URL. */
+  clubKey: string;
   standings: StandingsRow[];
   matches: Match[];
   clubs?: Club[];
@@ -39,16 +41,17 @@ const stat = (label: string, value: string) => (
 );
 
 export function ClubView({
-  code,
+  clubKey: key,
   standings,
   matches,
   clubs,
   scorers,
   onBack,
 }: ClubViewProps) {
-  const row = standingFor(standings, code);
-  const fixtures = clubMatches(matches, code);
-  const club = row?.club ?? clubs?.find((entry) => entry.code === code);
+  // The URL may name the club by slug or by code, and the club itself may only
+  // appear in one of the two lists, so search both before giving up.
+  const club =
+    findClub(standings.map((entry) => entry.club), key) ?? findClub(clubs ?? [], key);
 
   if (!club) {
     return (
@@ -61,6 +64,9 @@ export function ClubView({
     );
   }
 
+  const code = club.code;
+  const row = standingFor(standings, code);
+  const fixtures = clubMatches(matches, code);
   const form = recentForm(matches, code);
   const next = nextFixture(matches, code);
   // Most recent first: on a club page the latest result is the headline, which
