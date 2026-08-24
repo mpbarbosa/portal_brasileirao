@@ -4,7 +4,7 @@
  * Single source of truth for navigation: adding a section means adding an entry
  * here and a case in `App`'s view switch — the nav bar itself needs no change.
  */
-export type SectionId = "classificacao" | "rodada" | "artilharia";
+export type SectionId = "classificacao" | "jogos" | "artilharia";
 
 export interface NavItem {
   id: SectionId;
@@ -20,9 +20,9 @@ export const NAV_ITEMS: NavItem[] = [
     description: "Tabela do Campeonato Brasileiro Série A",
   },
   {
-    id: "rodada",
-    label: "Rodada",
-    description: "Jogos da rodada atual",
+    id: "jogos",
+    label: "Jogos",
+    description: "Partidas de qualquer rodada",
   },
   {
     id: "artilharia",

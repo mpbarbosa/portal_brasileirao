@@ -23,6 +23,14 @@ adapter boundary and is `rodada` everywhere the reader can see.
 _Avoid_: "matchday" in user-facing copy (upstream's word, not the reader's),
 "jornada" (Portugal, not Brazil), "week".
 
+**Jogos**:
+The fixtures section, replacing the older fixed "Rodada" view. It opens on
+**Rodada atual** and lets the reader step through any round of the season with
+the arrows or the picker. It needs no extra request: `/api/matches` already ships
+the whole fixture list, so switching rounds is a client-side filter.
+_Avoid_: a second section that shows only the current round (that is this
+section's default), "Partidas" (reserved for the singular **Partida**).
+
 **Rodada atual**:
 The round the app opens the Rodada tab on, computed by `currentRound(matches, now)`.
 Precedence: a round with a match in progress, else the round of the next fixture

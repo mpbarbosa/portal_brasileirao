@@ -1,12 +1,11 @@
 import { useEffect, useState } from "react";
 
 import { fetchMatches, fetchScorers, fetchStandings, type MatchesPayload } from "@/src/api";
-import { MatchList } from "@/src/components/MatchList";
 import { NavBar } from "@/src/components/NavBar";
+import { RoundBrowser } from "@/src/components/RoundBrowser";
 import { ScorersTable } from "@/src/components/ScorersTable";
 import { StandingsTable } from "@/src/components/StandingsTable";
 import { DEFAULT_SECTION, type SectionId } from "@/src/navigation";
-import { matchesForRound } from "@/matches-core";
 import type { Scorer, StandingsRow } from "@/src/types";
 
 export function App() {
@@ -14,6 +13,8 @@ export function App() {
   const [standings, setStandings] = useState<StandingsRow[]>([]);
   const [matches, setMatches] = useState<MatchesPayload | null>(null);
   const [scorers, setScorers] = useState<Scorer[]>([]);
+  /** Null until the payload lands; then it follows the round the reader picks. */
+  const [round, setRound] = useState<number | null>(null);
   const [note, setNote] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -32,6 +33,7 @@ export function App() {
         setStandings(standingsResponse.data);
         setMatches(matchesResponse.data);
         setScorers(scorersResponse.data);
+        setRound(matchesResponse.data.currentRound);
         // Only flag non-live sources; live data needs no disclaimer banner.
         setNote(standingsResponse.source === "football-data" ? null : standingsResponse.note);
       } catch (cause) {
@@ -45,8 +47,6 @@ export function App() {
       cancelled = true;
     };
   }, []);
-
-  const round = matches?.currentRound ?? null;
 
   return (
     <div className="min-h-screen">
@@ -70,18 +70,14 @@ export function App() {
         <main>
           {section === "classificacao" && <StandingsTable rows={standings} />}
 
-          {section === "rodada" && (
-            <>
-              <h2 className="mb-3 text-sm font-medium text-slate-400">
-                {round === null ? "Rodada" : `${round}ª rodada`}
-              </h2>
-              <MatchList
-                matches={
-                  matches && round !== null ? matchesForRound(matches.matches, round) : []
-                }
-                clubs={matches?.clubs}
-              />
-            </>
+          {section === "jogos" && (
+            <RoundBrowser
+              rounds={matches?.rounds ?? []}
+              round={round}
+              matches={matches?.matches ?? []}
+              clubs={matches?.clubs}
+              onSelectRound={setRound}
+            />
           )}
 
           {section === "artilharia" && (

@@ -47,8 +47,8 @@ test.describe("Navegação", () => {
     ).toHaveAttribute("aria-current", "page");
   });
 
-  test("switching to Rodada replaces the table with fixtures", async ({ page }) => {
-    await goToSection(page, "Rodada");
+  test("switching to Jogos replaces the table with fixtures", async ({ page }) => {
+    await goToSection(page, "Jogos");
 
     await expect(page.locator("table")).toHaveCount(0);
     // Round number is deliberately not asserted: it advances with the calendar.
@@ -56,14 +56,14 @@ test.describe("Navegação", () => {
   });
 
   test("switching back to Classificação restores the table", async ({ page }) => {
-    await goToSection(page, "Rodada");
+    await goToSection(page, "Jogos");
     await goToSection(page, "Classificação");
 
     await expect(page.locator("table tbody tr")).toHaveCount(20);
   });
 
   test("the round view lists fixtures with a status badge each", async ({ page }) => {
-    await goToSection(page, "Rodada");
+    await goToSection(page, "Jogos");
 
     const fixtures = page.locator("main ul > li");
     await expect(fixtures.first()).toBeVisible();
@@ -77,7 +77,7 @@ test.describe("Navegação", () => {
   test("a frozen snapshot never shows a match as in progress", async ({ page }) => {
     // Scoped to the fixture list and exact: a bare getByText("Ao vivo") also
     // matches the banner's "...para dados ao vivo." (substring, case-insensitive).
-    await goToSection(page, "Rodada");
+    await goToSection(page, "Jogos");
 
     await expect(
       page.locator("main ul > li").getByText("Ao vivo", { exact: true }),
@@ -128,7 +128,7 @@ test.describe("Menu de seções", () => {
     test.skip(!isCollapsed(page), "no toggle at this width");
 
     await menuToggle(page).click();
-    await page.getByRole("button", { name: /^Rodada/ }).click();
+    await page.getByRole("button", { name: /^Jogos/ }).click();
 
     await expect(menuToggle(page)).toHaveAttribute("aria-expanded", "false");
     await expect(page.getByRole("heading", { level: 2 })).toHaveText(/\d+ª rodada/);
@@ -158,7 +158,7 @@ test.describe("Menu de seções", () => {
   });
 
   test("every section in the nav model is reachable", async ({ page }) => {
-    for (const label of ["Classificação", "Rodada", "Artilharia"]) {
+    for (const label of ["Classificação", "Jogos", "Artilharia"]) {
       await goToSection(page, label);
       if (isCollapsed(page)) await menuToggle(page).click();
       await expect(
