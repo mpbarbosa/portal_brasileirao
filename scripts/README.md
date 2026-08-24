@@ -22,15 +22,15 @@ SERVER_NAME=brasileirao.example.com CERTBOT_EMAIL=you@example.com \
 
 ## The live host
 
-Instance `i-03a9afc8a469edc89` (t3.micro, sa-east-1a) at `18.230.61.114`, serving
-http://18.230.61.114. The public IP is not elastic: a stop/start changes it.
+Instance `i-03a9afc8a469edc89` (t3.micro, sa-east-1a) at `54.232.242.45`, serving
+http://54.232.242.45. The address is an Elastic IP (`eipalloc-07c282fdbbf3a18f6`), so it survives a stop/start.
 
 ## Deploying
 
 From your workstation:
 
 ```sh
-DEPLOY_HOST=ubuntu@18.230.61.114 DEPLOY_SSH_KEY=~/.ssh/portal-brasileirao.pem npm run deploy
+DEPLOY_HOST=ubuntu@54.232.242.45 DEPLOY_SSH_KEY=~/.ssh/portal-brasileirao.pem npm run deploy
 ```
 
 Preview exactly what would change without touching the host:

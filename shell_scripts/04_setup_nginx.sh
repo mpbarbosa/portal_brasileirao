@@ -11,7 +11,8 @@
 # Prerequisites: nginx installed; sudo access.
 #
 # Environment variables:
-#   SERVER_NAME   Required. The public hostname.
+#   SERVER_NAME   Required. The public hostname, or "_" to accept any Host —
+#                 which is what you want while the site is reached by bare IP.
 #   APP_PORT      Upstream Node port. Default: 3000.
 #
 # Note: this writes a plain HTTP server block. Run 05_setup_tls.sh afterwards —
@@ -41,8 +42,11 @@ fi
 echo "==> Writing $SITE_FILE (requires sudo)..."
 sudo tee "$SITE_FILE" > /dev/null <<EOF
 server {
-    listen 80;
-    listen [::]:80;
+    # default_server, and the packaged default site is removed below: without
+    # both, a request whose Host matches no server_name lands on nginx's welcome
+    # page instead of the app — which is exactly what a bare-IP request does.
+    listen 80 default_server;
+    listen [::]:80 default_server;
     server_name ${SERVER_NAME};
 
     access_log /var/log/nginx/${SITE_NAME}.access.log;
@@ -73,6 +77,13 @@ server {
 EOF
 
 sudo ln -sfn "$SITE_FILE" "/etc/nginx/sites-enabled/${SITE_NAME}"
+
+# Two default_server blocks on the same port is a hard nginx config error, so the
+# packaged default has to go rather than merely losing precedence.
+if [[ -e /etc/nginx/sites-enabled/default ]]; then
+    echo "==> Removing the packaged default site..."
+    sudo rm -f /etc/nginx/sites-enabled/default
+fi
 
 echo "==> Testing nginx configuration..."
 sudo nginx -t
