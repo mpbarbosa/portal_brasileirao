@@ -7,6 +7,34 @@ import { expect, test, type Page } from "@playwright/test";
 const PLAYED_ROUND = "24";
 const UPCOMING_ROUND = "25";
 
+/** The one entry in goal-videos.ts, so the fallback tests must avoid it. */
+const CURATED_MATCH = "554975";
+
+/**
+ * Open a finished fixture that has goals but no curated video, so the search
+ * fallback is what renders. Curating another match must not silently turn these
+ * into tests of the wrong branch — hence walking rather than hard-coding an id.
+ */
+const openMatchWithoutVideo = async (page: Page) => {
+  await page.goto(`/jogos/${PLAYED_ROUND}`);
+  const links = page.locator("main ul > li a[href^='/partida/']");
+  // evaluateAll queries immediately — without this it reads an empty list and
+  // the loop below concludes, wrongly, that every fixture is curated.
+  await expect(links.first()).toBeVisible();
+
+  const hrefs = await links.evaluateAll((all) =>
+    all.map((a) => a.getAttribute("href") ?? ""),
+  );
+
+  for (const href of hrefs) {
+    if (href.endsWith(`/${CURATED_MATCH}`)) continue;
+    await page.goto(href);
+    if (await page.getByRole("link", { name: /Procurar os gols/ }).count()) return;
+  }
+
+  throw new Error("no finished fixture without a curated video was found");
+};
+
 const openFirstMatch = async (page: Page, round: string) => {
   await page.goto(`/jogos/${round}`);
   const first = page.locator("main ul > li a").first();
@@ -54,7 +82,7 @@ test.describe("Página da partida", () => {
   });
 
   test("a finished match offers a goals link", async ({ page }) => {
-    await openFirstMatch(page, PLAYED_ROUND);
+    await openMatchWithoutVideo(page);
 
     const goals = page.getByRole("link", { name: /Procurar os gols/ });
     await expect(goals).toBeVisible();
@@ -62,7 +90,7 @@ test.describe("Página da partida", () => {
   });
 
   test("the goals link opens safely in a new tab", async ({ page }) => {
-    await openFirstMatch(page, PLAYED_ROUND);
+    await openMatchWithoutVideo(page);
 
     const goals = page.getByRole("link", { name: /Procurar os gols/ });
     await expect(goals).toHaveAttribute("target", "_blank");
@@ -71,7 +99,7 @@ test.describe("Página da partida", () => {
   });
 
   test("the goals link is honest about being a search", async ({ page }) => {
-    await openFirstMatch(page, PLAYED_ROUND);
+    await openMatchWithoutVideo(page);
 
     await expect(page.getByText(/não é um vídeo oficial/)).toBeVisible();
   });
@@ -113,5 +141,23 @@ test.describe("Página da partida", () => {
     await page.getByRole("button", { name: "← Voltar" }).click();
 
     await expect(page.getByRole("combobox", { name: "Rodada" })).toBeVisible();
+  });
+
+  test("a match with a curated video links straight to it", async ({ page }) => {
+    // Fluminense 2 x 1 Clube do Remo, the one entry in goal-videos.ts.
+    await page.goto("/partida/554975");
+
+    const link = page.getByRole("link", { name: /Ver os gols/ });
+    await expect(link).toBeVisible();
+    await expect(link).toHaveAttribute("href", /youtube\.com\/watch\?v=/);
+    await expect(link).toHaveAttribute("target", "_blank");
+    await expect(link).toHaveAttribute("rel", /noopener/);
+  });
+
+  test("a curated video suppresses the search fallback", async ({ page }) => {
+    await page.goto("/partida/554975");
+
+    await expect(page.getByRole("link", { name: /Procurar os gols/ })).toHaveCount(0);
+    await expect(page.getByText(/não é um vídeo oficial/)).toHaveCount(0);
   });
 });

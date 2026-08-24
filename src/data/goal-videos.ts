@@ -22,5 +22,6 @@
  *   curl -s https://brasileirao.mpbarbosa.com/api/matches?round=24 | jq
  */
 export const GOAL_VIDEOS: Record<string, string> = {
-  // "554975": "https://www.youtube.com/watch?v=...",
+  // Fluminense 2 x 1 Clube do Remo, rodada 24 — ge tv (Globo, rights holder).
+  "554975": "https://www.youtube.com/watch?v=o-_hD5Q8f4Q",
 };

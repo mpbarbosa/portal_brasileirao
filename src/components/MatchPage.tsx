@@ -1,4 +1,10 @@
-import { clubsOf, goalsSearchUrl, hasGoalsToShow, venueLabel } from "@/match-core";
+import {
+  clubsOf,
+  goalsSearchUrl,
+  goalsVideoUrl,
+  hasGoalsToShow,
+  venueLabel,
+} from "@/match-core";
 import { controlClasses } from "@/src/components/Button";
 import { ClubCrest } from "@/src/components/ClubCrest";
 import { clubKey } from "@/club-core";
@@ -90,6 +96,7 @@ export function MatchPage({ match, clubs, onBack, onNavigate }: MatchPageProps) 
 
   const { home, away } = clubsOf(match, clubs);
   const venue = venueLabel(match);
+  const video = goalsVideoUrl(match);
   const played = match.homeGoals !== null && match.awayGoals !== null;
 
   return (
@@ -147,22 +154,47 @@ export function MatchPage({ match, clubs, onBack, onNavigate }: MatchPageProps) 
       {hasGoalsToShow(match) && (
         <section className="mt-6">
           <h3 className="mb-2 text-sm font-medium text-ink-muted">Gols</h3>
-          <a
-            href={goalsSearchUrl(home?.shortName ?? match.homeCode, away?.shortName ?? match.awayCode)}
-            target="_blank"
-            rel="noopener noreferrer"
-            className={controlClasses("md", "inline-flex items-center gap-2")}
-          >
-            <span aria-hidden="true">▶</span>
-            Procurar os gols no YouTube
-            <span className="sr-only"> (abre em nova aba)</span>
-          </a>
-          {/* Honest about what this is: no provider we use exposes highlight
-              links, so this opens a search rather than pretending to know the
-              official video. */}
-          <p className="mt-2 text-xs text-ink-faint">
-            Abre uma busca no YouTube — não é um vídeo oficial escolhido por nós.
-          </p>
+
+          {/* A curated link beats the search: it points at the rights holder's
+              own highlights rather than whatever a query happens to surface. */}
+          {video ? (
+            <>
+              <a
+                href={video}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={controlClasses("md", "inline-flex items-center gap-2")}
+              >
+                <span aria-hidden="true">▶</span>
+                Ver os gols
+                <span className="sr-only"> (abre em nova aba)</span>
+              </a>
+              <p className="mt-2 text-xs text-ink-faint">
+                Melhores momentos no YouTube.
+              </p>
+            </>
+          ) : (
+            <>
+              <a
+                href={goalsSearchUrl(
+                  home?.shortName ?? match.homeCode,
+                  away?.shortName ?? match.awayCode,
+                )}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={controlClasses("md", "inline-flex items-center gap-2")}
+              >
+                <span aria-hidden="true">▶</span>
+                Procurar os gols no YouTube
+                <span className="sr-only"> (abre em nova aba)</span>
+              </a>
+              {/* Honest about what this is: without a curated link we do not
+                  know the official video, so this opens a search and says so. */}
+              <p className="mt-2 text-xs text-ink-faint">
+                Abre uma busca no YouTube — não é um vídeo oficial escolhido por nós.
+              </p>
+            </>
+          )}
         </section>
       )}
     </>
