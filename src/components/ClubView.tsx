@@ -21,6 +21,8 @@ interface ClubViewProps {
   clubs?: Club[];
   scorers: Scorer[];
   onBack: () => void;
+  /** Omit to render fixtures as plain text — the page stands on its own. */
+  onSelectMatch?: (id: string) => void;
 }
 
 const FORM_CLASS: Record<FormResult, string> = {
@@ -49,6 +51,7 @@ export function ClubView({
   clubs,
   scorers,
   onBack,
+  onSelectMatch,
 }: ClubViewProps) {
   // The URL may name the club by slug or by code, and the club itself may only
   // appear in one of the two lists, so search both before giving up.
@@ -128,7 +131,7 @@ export function ClubView({
       {next && (
         <section className="mt-6">
           <h3 className="mb-2 text-sm font-medium text-ink-muted">Próximo jogo</h3>
-          <MatchList matches={[next]} clubs={clubs} />
+          <MatchList matches={[next]} clubs={clubs} onSelectMatch={onSelectMatch} />
         </section>
       )}
 
@@ -157,7 +160,7 @@ export function ClubView({
 
       <section className="mt-6">
         <h3 className="mb-2 text-sm font-medium text-ink-muted">Jogos disputados</h3>
-        <MatchList matches={played} clubs={clubs} />
+        <MatchList matches={played} clubs={clubs} onSelectMatch={onSelectMatch} />
       </section>
     </>
   );

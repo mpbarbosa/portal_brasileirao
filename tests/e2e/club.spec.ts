@@ -103,4 +103,31 @@ test.describe("Clube", () => {
     if (isCollapsed(page)) await page.getByRole("button", { name: /menu/i }).click();
     await expect(page.getByRole("link", { name: /^Clube$/ })).toHaveCount(0);
   });
+
+  test("the next fixture links to its match page", async ({ page }) => {
+    await openClubAt(page, 1);
+
+    const next = page.locator("main ul > li a").first();
+    await expect(next).toHaveAttribute("href", /^\/partida\/\d+$/);
+  });
+
+  test("a played fixture links to its match page", async ({ page }) => {
+    await openClubAt(page, 1);
+
+    const played = page.getByRole("heading", { name: "Jogos disputados" });
+    await expect(played).toBeVisible();
+
+    // Every fixture on the page is reachable, not only the upcoming one.
+    const links = page.locator("main ul > li a[href^='/partida/']");
+    expect(await links.count()).toBeGreaterThan(1);
+  });
+
+  test("choosing a fixture opens the match page", async ({ page }) => {
+    const name = await openClubAt(page, 1);
+    await page.locator("main ul > li a[href^='/partida/']").first().click();
+
+    await expect(page).toHaveURL(/\/partida\/\d+$/);
+    // The match involves the club we came from.
+    await expect(page.locator("article")).toContainText(name);
+  });
 });

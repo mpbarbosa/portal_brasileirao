@@ -118,6 +118,7 @@ export function App() {
               clubs={matches?.clubs}
               scorers={scorers}
               onBack={() => navigate({ section: "classificacao" })}
+              onSelectMatch={(id) => navigate({ section: "partida", id })}
             />
           )}
 
