@@ -138,12 +138,17 @@ const buildAgent = async (): Promise<https.Agent> => {
   return new https.Agent({ ca: [...tls.rootCertificates, pem] });
 };
 
-const getJson = <T>(url: string, agent: https.Agent): Promise<T> =>
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+const getJsonOnce = <T>(url: string, agent: https.Agent): Promise<T> =>
   new Promise((resolve, reject) => {
     https
       .get(url, { agent, headers: { Accept: "application/json" } }, (response) => {
         if (response.statusCode !== 200) {
-          reject(new Error(`${url} responded ${response.statusCode}`));
+          const error = new Error(`${url} responded ${response.statusCode}`);
+          // Mark 5xx as worth retrying; a 4xx will not fix itself.
+          (error as { retryable?: boolean }).retryable = (response.statusCode ?? 0) >= 500;
+          reject(error);
           return;
         }
         let body = "";
@@ -159,6 +164,31 @@ const getJson = <T>(url: string, agent: https.Agent): Promise<T> =>
       })
       .on("error", reject);
   });
+
+/**
+ * CBF's endpoint returns an occasional 502 under sequential requests — a real
+ * run walked six pages and failed on the seventh. Without a retry a single
+ * blip aborts the whole sync, so transient failures back off and try again.
+ */
+const getJson = async <T>(url: string, agent: https.Agent, attempts = 4): Promise<T> => {
+  let lastError: unknown;
+
+  for (let attempt = 1; attempt <= attempts; attempt += 1) {
+    try {
+      return await getJsonOnce<T>(url, agent);
+    } catch (error) {
+      lastError = error;
+      const retryable = (error as { retryable?: boolean }).retryable ?? true;
+      if (!retryable || attempt === attempts) break;
+
+      const wait = 1000 * 2 ** (attempt - 1);
+      console.warn(`    ${(error as Error).message} — retrying in ${wait}ms`);
+      await sleep(wait);
+    }
+  }
+
+  throw lastError;
+};
 
 // ---------------------------------------------------------------------------
 // Existing file
@@ -248,6 +278,10 @@ do {
   jogos.push(...(body.jogos ?? []));
   lastPage = Number(body.meta?.last_page ?? 1);
   page += 1;
+
+  // Pace the walk. This is someone else's undocumented endpoint, and hammering
+  // it sequentially is what provoked the 502 in the first place.
+  if (page <= lastPage) await sleep(400);
 } while (page <= lastPage && page <= MAX_PAGES);
 
 if (lastPage > MAX_PAGES) {
