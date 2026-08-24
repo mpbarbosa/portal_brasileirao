@@ -34,6 +34,8 @@ import {
 import { withBroadcasters, withVenues } from "@/broadcast-core";
 import { withGoalVideos } from "@/match-core";
 import { compareForFeed, currentRound, matchesForRound, roundsOf } from "@/matches-core";
+import { injectMeta, pageMeta } from "@/page-meta-core";
+import { parseRoute } from "@/route-core";
 import { computeStandings } from "@/standings-core";
 import { CLUBS } from "@/src/data/clubs";
 import { BROADCASTS } from "@/src/data/broadcasts";
@@ -347,9 +349,35 @@ async function startServer() {
     app.use(express.static(distPath, { index: false }));
 
     const indexHtml = readFileSync(path.join(distPath, "index.html"), "utf8");
-    app.get("*", (_req, res) => {
+
+    // Per-route metadata, injected server-side. A link preview never runs
+    // JavaScript, so the client-side title alone would leave every shared URL
+    // unfurling as the generic site name.
+    app.get("*", async (req, res) => {
+      const route = parseRoute(req.path);
+
+      // Only the routes that name something need data, and both come from the
+      // same cached payload the API serves — no extra upstream request.
+      let context = {};
+      if (route.section === "clube" || route.section === "partida") {
+        try {
+          const [matchesEnvelope, standingsEnvelope] = await Promise.all([
+            loadMatches(),
+            loadStandings(),
+          ]);
+          context = {
+            clubs: matchesEnvelope.data.clubs,
+            matches: matchesEnvelope.data.matches,
+            standings: standingsEnvelope.data,
+          };
+        } catch {
+          // Metadata is a nicety; never fail the page over it.
+        }
+      }
+
+      const canonical = `${(process.env.APP_URL ?? "").replace(/\/$/, "")}${req.path}`;
       res.set("Content-Type", "text/html; charset=utf-8");
-      res.send(indexHtml);
+      res.send(injectMeta(indexHtml, pageMeta(route, context), canonical || undefined));
     });
   } else {
     const { createServer: createViteServer } = await import("vite");

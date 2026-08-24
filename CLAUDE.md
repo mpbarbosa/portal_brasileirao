@@ -118,6 +118,25 @@ parse/format cases in `route-core.ts`, a case in `App`'s view switch, and — if
 data — a pure mapper in `football-data-core.ts`, a seed snapshot in
 `scripts/sync-seed-data.ts`, and a cached route in `server.ts`. `NavBar` never changes.
 
+### Page metadata
+
+`page-meta-core.ts` maps a route plus loaded data to a title, description and preview
+image. It is used **twice on purpose**: `usePageMeta` sets `document.title` on the client,
+and the production SPA handler injects the same values into the HTML it serves.
+
+Both halves are needed. The client half updates the browser tab; **link previews never run
+JavaScript**, so without the server half every shared URL unfurls as the generic site
+name. `injectMeta` replaces the existing title and description rather than appending, so
+the document never carries two, and escapes every value it writes.
+
+The server only loads data for routes that name something (`clube`, `partida`), and takes
+it from the same cached payload the API serves — no extra upstream request. If that load
+fails the page still renders with generic metadata: metadata is a nicety, never a reason to
+fail a page.
+
+Canonical and `og:url` come from **`APP_URL`** in the host's `.env`. If that is stale,
+every canonical points at the wrong origin.
+
 ### Routing
 
 The URL is the source of truth for the visible section; `App` holds no section state.

@@ -10,6 +10,7 @@ import { ScorersTable } from "@/src/components/ScorersTable";
 import { StandingsTable } from "@/src/components/StandingsTable";
 import { findMatch } from "@/match-core";
 import { parseRoute } from "@/route-core";
+import { usePageMeta } from "@/src/usePageMeta";
 import { useRoute } from "@/src/useRoute";
 import type { Scorer, StandingsRow } from "@/src/types";
 
@@ -25,6 +26,12 @@ export function App() {
   const [openScorer, setOpenScorer] = useState<Scorer | null>(null);
   const [note, setNote] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  usePageMeta(route, {
+    clubs: matches?.clubs,
+    matches: matches?.matches,
+    standings,
+  });
 
   useEffect(() => {
     let cancelled = false;
