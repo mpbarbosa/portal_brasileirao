@@ -16,6 +16,11 @@ agent Claude Code.
 > `FOOTBALL_DATA_TOKEN` is set; without a token the app serves a frozen snapshot, so a
 > fresh clone runs with no signup.
 
+![Classificação do Campeonato Brasileiro Série A no tema claro: os 20 clubes com escudo, pontos, jogos, vitórias, empates, derrotas e saldo de gols. Os quatro primeiros trazem uma faixa verde (G4) e os quatro últimos uma faixa vermelha (Z4).](docs/screenshots/classificacao-light.png)
+
+*Classificação in the light theme. The app follows your system setting and remembers an
+explicit choice; the control in the header switches between them.*
+
 ## Stack
 
 | Layer | Choice |
@@ -61,6 +66,7 @@ The dev server listens on port `3000`, or the next free port if `3000` is taken.
 - `npm run test:e2e` — run the Playwright end-to-end suite (boots its own server)
 - `npm run clean` — remove `dist`
 - `npx tsx scripts/sync-seed-data.ts` — regenerate the offline seed data from the live API
+- `npm run screenshot [url] [light|dark]` — refresh the README screenshot from the live site
 - `npm run deploy:preflight` — build and verify the production payload locally
 - `DEPLOY_HOST=ubuntu@host npm run deploy` — deploy to EC2 (see `scripts/README.md`)
 
