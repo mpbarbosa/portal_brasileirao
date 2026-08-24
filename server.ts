@@ -32,10 +32,12 @@ import {
   type StandingsResponse,
 } from "@/football-data-core";
 import { withBroadcasters, withVenues } from "@/broadcast-core";
+import { withGoalVideos } from "@/match-core";
 import { compareForFeed, currentRound, matchesForRound, roundsOf } from "@/matches-core";
 import { computeStandings } from "@/standings-core";
 import { CLUBS } from "@/src/data/clubs";
 import { BROADCASTS } from "@/src/data/broadcasts";
+import { GOAL_VIDEOS } from "@/src/data/goal-videos";
 import { VENUES } from "@/src/data/venues";
 import { SEED_MATCHES, SNAPSHOT_DATE } from "@/src/data/matches";
 import { SEED_SCORERS } from "@/src/data/scorers";
@@ -151,9 +153,9 @@ interface MatchesPayload {
 const seedMatchesPayload = (): MatchesPayload => ({
   rounds: roundsOf(SEED_MATCHES),
   currentRound: currentRound(SEED_MATCHES, Date.now()),
-  matches: withVenues(
-    withBroadcasters([...SEED_MATCHES].sort(compareForFeed), BROADCASTS),
-    VENUES,
+  matches: withGoalVideos(
+    withVenues(withBroadcasters([...SEED_MATCHES].sort(compareForFeed), BROADCASTS), VENUES),
+    GOAL_VIDEOS,
   ),
   clubs: CLUBS,
 });
@@ -196,9 +198,9 @@ const loadMatches = async (): Promise<ApiEnvelope<MatchesPayload>> => {
       currentRound: currentRound(matches, Date.now()),
       // Curated channels and venues ride along with live fixtures too — the
       // provider supplies neither.
-      matches: withVenues(
-        withBroadcasters([...matches].sort(compareForFeed), BROADCASTS),
-        VENUES,
+      matches: withGoalVideos(
+        withVenues(withBroadcasters([...matches].sort(compareForFeed), BROADCASTS), VENUES),
+        GOAL_VIDEOS,
       ),
       clubs: clubsFromMatches(raw),
     };

@@ -70,6 +70,12 @@ export interface Match {
   broadcasters?: string[];
   /** Where it is played. Merged from `src/data/venues.ts`; also absent for most. */
   venue?: Venue;
+  /**
+   * A direct link to the match's goals, merged from `src/data/goal-videos.ts`.
+   * Absent for nearly every match, in which case the page offers a search
+   * instead.
+   */
+  goalsVideoUrl?: string;
 }
 
 export interface StandingsRow {

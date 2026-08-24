@@ -1,5 +1,6 @@
 import { formatRoute } from "@/route-core";
 import { CLUBS_BY_CODE } from "@/src/data/clubs";
+import { Surface } from "@/src/components/Surface";
 import type { Club, Match } from "@/src/types";
 
 const STATUS_LABEL: Record<Match["status"], string> = {
@@ -11,11 +12,11 @@ const STATUS_LABEL: Record<Match["status"], string> = {
 };
 
 const STATUS_CLASS: Record<Match["status"], string> = {
-  SCHEDULED: "bg-slate-800 text-slate-300",
-  LIVE: "bg-emerald-500/20 text-emerald-300",
-  FINISHED: "bg-slate-800 text-slate-400",
-  POSTPONED: "bg-amber-500/20 text-amber-300",
-  CANCELLED: "bg-rose-500/20 text-rose-300",
+  SCHEDULED: "bg-raised text-ink-soft",
+  LIVE: "bg-positive/20 text-positive-ink",
+  FINISHED: "bg-raised text-ink-muted",
+  POSTPONED: "bg-warning/20 text-warning-ink",
+  CANCELLED: "bg-negative/20 text-negative-ink",
 };
 
 const kickoffLabel = (kickoff: string): string => {
@@ -45,7 +46,7 @@ interface MatchListProps {
 
 export function MatchList({ matches, clubs, onSelectMatch }: MatchListProps) {
   if (matches.length === 0) {
-    return <p className="text-sm text-slate-400">Nenhuma partida nesta rodada.</p>;
+    return <p className="text-sm text-ink-muted">Nenhuma partida nesta rodada.</p>;
   }
 
   const byCode = new Map(clubs?.map((club) => [club.code, club]));
@@ -55,9 +56,11 @@ export function MatchList({ matches, clubs, onSelectMatch }: MatchListProps) {
   return (
     <ul className="space-y-2">
       {matches.map((match) => (
-        <li
+        <Surface
+          as="li"
+          filled
           key={match.id}
-          className="flex items-center justify-between gap-4 rounded-lg border border-slate-800 bg-slate-900/50 px-4 py-3"
+          className="flex items-center justify-between gap-4 px-4 py-3"
         >
           <div className="min-w-0">
             {onSelectMatch ? (
@@ -73,22 +76,22 @@ export function MatchList({ matches, clubs, onSelectMatch }: MatchListProps) {
                   event.preventDefault();
                   onSelectMatch(match.id);
                 }}
-                className="block truncate font-medium underline decoration-slate-700 underline-offset-2 hover:decoration-slate-400"
+                className="block truncate font-medium underline decoration-line-strong underline-offset-2 hover:decoration-ink-muted"
               >
                 {clubName(match.homeCode)}{" "}
-                <span className="font-semibold tabular-nums text-slate-300">{score(match)}</span>{" "}
+                <span className="font-semibold tabular-nums text-ink-soft">{score(match)}</span>{" "}
                 {clubName(match.awayCode)}
               </a>
             ) : (
               <p className="truncate font-medium">
                 {clubName(match.homeCode)}{" "}
-                <span className="font-semibold tabular-nums text-slate-300">{score(match)}</span>{" "}
+                <span className="font-semibold tabular-nums text-ink-soft">{score(match)}</span>{" "}
                 {clubName(match.awayCode)}
               </p>
             )}
-            <p className="mt-0.5 text-xs text-slate-500">{kickoffLabel(match.kickoff)}</p>
+            <p className="mt-0.5 text-xs text-ink-faint">{kickoffLabel(match.kickoff)}</p>
             {match.broadcasters && (
-              <p className="mt-0.5 truncate text-xs text-slate-400">
+              <p className="mt-0.5 truncate text-xs text-ink-muted">
                 <span className="mr-1" aria-hidden="true">
                   📺
                 </span>
@@ -102,7 +105,7 @@ export function MatchList({ matches, clubs, onSelectMatch }: MatchListProps) {
           >
             {STATUS_LABEL[match.status]}
           </span>
-        </li>
+        </Surface>
       ))}
     </ul>
   );

@@ -25,7 +25,7 @@ export function RoundBrowser({
   onSelectMatch,
 }: RoundBrowserProps) {
   if (round === null || rounds.length === 0) {
-    return <p className="text-sm text-slate-400">Nenhuma rodada disponível.</p>;
+    return <p className="text-sm text-ink-muted">Nenhuma rodada disponível.</p>;
   }
 
   const index = rounds.indexOf(round);
@@ -33,8 +33,8 @@ export function RoundBrowser({
   const next = index >= 0 && index < rounds.length - 1 ? rounds[index + 1] : null;
 
   const stepClass =
-    "rounded-lg border border-slate-700 px-3 py-1.5 text-sm text-slate-200 " +
-    "hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-40";
+    "rounded-lg border border-line-strong px-3 py-1.5 text-sm text-ink-soft " +
+    "hover:bg-raised disabled:cursor-not-allowed disabled:opacity-40";
 
   return (
     <>
@@ -50,12 +50,12 @@ export function RoundBrowser({
         </button>
 
         <div className="flex items-center gap-2">
-          <label htmlFor="seletor-rodada" className="text-sm text-slate-400">
+          <label htmlFor="seletor-rodada" className="text-sm text-ink-muted">
             Rodada
           </label>
           <select
             id="seletor-rodada"
-            className="rounded-lg border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm"
+            className="rounded-lg border border-line-strong bg-surface px-2 py-1.5 text-sm"
             value={round}
             onChange={(event) => onSelectRound(Number(event.target.value))}
           >
@@ -78,7 +78,7 @@ export function RoundBrowser({
         </button>
       </div>
 
-      <h2 className="mb-3 text-sm font-medium text-slate-400">{round}ª rodada</h2>
+      <h2 className="mb-3 text-sm font-medium text-ink-muted">{round}ª rodada</h2>
       <MatchList
         matches={matchesForRound(matches, round)}
         clubs={clubs}

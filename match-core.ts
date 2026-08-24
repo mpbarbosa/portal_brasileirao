@@ -17,6 +17,49 @@ export const clubsOf = (
 };
 
 /**
+ * Whether a curated link is safe to render.
+ *
+ * HTTPS and YouTube only. The file is hand-maintained, so this is not defending
+ * against an attacker so much as against a typo or a paste of the wrong thing —
+ * a bad entry degrades to the search rather than rendering a broken or
+ * unexpected destination.
+ */
+export const isGoalsVideoUrl = (value: string | undefined): boolean => {
+  if (!value) return false;
+
+  let url: URL;
+  try {
+    url = new URL(value);
+  } catch {
+    return false;
+  }
+
+  if (url.protocol !== "https:") return false;
+
+  const host = url.hostname.toLowerCase();
+  return (
+    host === "youtu.be" ||
+    host === "youtube.com" ||
+    host === "www.youtube.com" ||
+    host === "m.youtube.com"
+  );
+};
+
+/** The curated link for a match, or null when there is none worth trusting. */
+export const goalsVideoUrl = (match: Match): string | null =>
+  isGoalsVideoUrl(match.goalsVideoUrl) ? match.goalsVideoUrl! : null;
+
+/** Attach curated goal links to the matches that have one. */
+export const withGoalVideos = (
+  matches: Match[],
+  videos: Record<string, string>,
+): Match[] =>
+  matches.map((match) => {
+    const url = videos[match.id];
+    return isGoalsVideoUrl(url) ? { ...match, goalsVideoUrl: url } : match;
+  });
+
+/**
  * A YouTube **search** URL for a finished match's goals.
  *
  * Deliberately a search, not a video: no provider we use exposes highlight

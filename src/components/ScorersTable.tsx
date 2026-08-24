@@ -1,3 +1,4 @@
+import { Surface } from "@/src/components/Surface";
 import type { Scorer } from "@/src/types";
 
 /** Null means the upstream did not report the figure — not that it is zero. */
@@ -11,16 +12,16 @@ interface ScorersTableProps {
 
 export function ScorersTable({ rows, onSelectPlayer }: ScorersTableProps) {
   if (rows.length === 0) {
-    return <p className="text-sm text-slate-400">Artilharia indisponível no momento.</p>;
+    return <p className="text-sm text-ink-muted">Artilharia indisponível no momento.</p>;
   }
 
   return (
-    <div className="overflow-x-auto rounded-lg border border-slate-800">
+    <Surface className="overflow-x-auto">
       <table className="w-full min-w-[32rem] text-sm">
         <caption className="sr-only">
           Artilharia do Campeonato Brasileiro Série A
         </caption>
-        <thead className="bg-slate-900 text-xs uppercase tracking-wide text-slate-400">
+        <thead className="bg-surface text-xs uppercase tracking-wide text-ink-muted">
           <tr>
             <th scope="col" className="px-3 py-2 text-left">#</th>
             <th scope="col" className="px-3 py-2 text-left">Jogador</th>
@@ -32,39 +33,39 @@ export function ScorersTable({ rows, onSelectPlayer }: ScorersTableProps) {
         </thead>
         <tbody>
           {rows.map((row) => (
-            <tr key={row.playerId} className="border-t border-slate-800">
-              <td className="px-3 py-2 tabular-nums text-slate-400">{row.position}</td>
+            <tr key={row.playerId} className="border-t border-line">
+              <td className="px-3 py-2 tabular-nums text-ink-muted">{row.position}</td>
               <td className="px-3 py-2">
                 {onSelectPlayer ? (
                   <button
                     type="button"
                     onClick={() => onSelectPlayer(row)}
-                    className="block rounded font-medium underline decoration-slate-600 underline-offset-2 hover:decoration-slate-300"
+                    className="block rounded font-medium underline decoration-ink-ghost underline-offset-2 hover:decoration-ink-soft"
                   >
                     {row.playerName}
                   </button>
                 ) : (
                   <span className="block font-medium">{row.playerName}</span>
                 )}
-                <span className="block text-xs text-slate-500">{row.club.shortName}</span>
+                <span className="block text-xs text-ink-faint">{row.club.shortName}</span>
               </td>
               <td className="px-2 py-2 text-right font-semibold tabular-nums">{row.goals}</td>
-              <td className="px-2 py-2 text-right tabular-nums text-slate-400">
+              <td className="px-2 py-2 text-right tabular-nums text-ink-muted">
                 {count(row.assists)}
               </td>
-              <td className="px-2 py-2 text-right tabular-nums text-slate-400">
+              <td className="px-2 py-2 text-right tabular-nums text-ink-muted">
                 {count(row.penalties)}
               </td>
-              <td className="px-2 py-2 text-right tabular-nums text-slate-400">
+              <td className="px-2 py-2 text-right tabular-nums text-ink-muted">
                 {count(row.playedMatches)}
               </td>
             </tr>
           ))}
         </tbody>
       </table>
-      <p className="border-t border-slate-800 px-3 py-2 text-xs text-slate-500">
+      <p className="border-t border-line px-3 py-2 text-xs text-ink-faint">
         G gols · A assistências · P pênaltis · J jogos · — não informado
       </p>
-    </div>
+    </Surface>
   );
 }

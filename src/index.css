@@ -1,9 +1,54 @@
 @import "tailwindcss";
 
+/**
+ * Semantic colour tokens.
+ *
+ * Components name what a colour *means* — `border-line`, `text-ink-muted` —
+ * rather than which slate shade it happens to be. Before this, 32 distinct
+ * colour utilities were spread across nine components with five shades of grey
+ * text alone; changing the palette meant a find-and-replace and hoping.
+ *
+ * Tailwind v4 reads these as first-class colours, so opacity modifiers work as
+ * usual: `bg-surface/50`, `border-warning/30`.
+ *
+ * Two tokens share a value on purpose: `line` matches `raised`, and
+ * `line-strong` matches `raised-strong`. A border and a filled chip look the
+ * same today but are different decisions, and splitting them now costs nothing.
+ */
+@theme {
+  /* Surfaces, darkest first. */
+  --color-canvas: #020617;
+  --color-surface: #0f172a;
+  --color-raised: #1e293b;
+  --color-raised-strong: #334155;
+
+  /* Borders. */
+  --color-line: #1e293b;
+  --color-line-strong: #334155;
+
+  /* Text, brightest first. `ink-muted` carries most of the secondary copy. */
+  --color-ink: #f1f5f9;
+  --color-ink-soft: #cbd5e1;
+  --color-ink-muted: #94a3b8;
+  --color-ink-faint: #64748b;
+  --color-ink-ghost: #475569;
+  /* For text on a light chip, e.g. the current nav entry. */
+  --color-ink-inverted: #0f172a;
+
+  /* Status. Each has a base for fills and rails, and a lighter ink for text:
+     the base is not readable as text on a dark background. */
+  --color-positive: #34d399;
+  --color-positive-ink: #6ee7b7;
+  --color-negative: #f43f5e;
+  --color-negative-ink: #fda4af;
+  --color-warning: #f59e0b;
+  --color-warning-ink: #fcd34d;
+}
+
 :root {
   color-scheme: dark;
 }
 
 body {
-  @apply bg-slate-950 text-slate-100 antialiased;
+  @apply bg-canvas text-ink antialiased;
 }

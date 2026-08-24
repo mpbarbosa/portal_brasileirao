@@ -10,6 +10,7 @@ import {
 } from "@/club-core";
 import { ClubCrest } from "@/src/components/ClubCrest";
 import { MatchList } from "@/src/components/MatchList";
+import { Surface } from "@/src/components/Surface";
 import type { Club, Match, Scorer, StandingsRow } from "@/src/types";
 
 interface ClubViewProps {
@@ -23,9 +24,9 @@ interface ClubViewProps {
 }
 
 const FORM_CLASS: Record<FormResult, string> = {
-  V: "bg-emerald-500/20 text-emerald-300",
-  E: "bg-slate-700 text-slate-300",
-  D: "bg-rose-500/20 text-rose-300",
+  V: "bg-positive/20 text-positive-ink",
+  E: "bg-raised-strong text-ink-soft",
+  D: "bg-negative/20 text-negative-ink",
 };
 
 const FORM_TITLE: Record<FormResult, string> = {
@@ -35,10 +36,10 @@ const FORM_TITLE: Record<FormResult, string> = {
 };
 
 const stat = (label: string, value: string) => (
-  <div key={label} className="rounded-lg border border-slate-800 bg-slate-900/50 px-3 py-2">
-    <p className="text-xs text-slate-500">{label}</p>
+  <Surface key={label} filled className="px-3 py-2">
+    <p className="text-xs text-ink-faint">{label}</p>
     <p className="font-semibold tabular-nums">{value}</p>
-  </div>
+  </Surface>
 );
 
 export function ClubView({
@@ -57,10 +58,10 @@ export function ClubView({
   if (!club) {
     return (
       <>
-        <button type="button" onClick={onBack} className="text-sm text-slate-400 hover:text-slate-200">
+        <button type="button" onClick={onBack} className="text-sm text-ink-muted hover:text-ink-soft">
           ← Voltar
         </button>
-        <p className="mt-4 text-sm text-slate-400">Clube não encontrado.</p>
+        <p className="mt-4 text-sm text-ink-muted">Clube não encontrado.</p>
       </>
     );
   }
@@ -80,7 +81,7 @@ export function ClubView({
       <button
         type="button"
         onClick={onBack}
-        className="text-sm text-slate-400 hover:text-slate-200"
+        className="text-sm text-ink-muted hover:text-ink-soft"
       >
         ← Voltar
       </button>
@@ -89,7 +90,7 @@ export function ClubView({
         <ClubCrest club={club} size={44} />
         <div className="min-w-0">
           <h2 className="truncate text-xl font-bold tracking-tight">{club.shortName}</h2>
-          <p className="truncate text-sm text-slate-400">
+          <p className="truncate text-sm text-ink-muted">
             {club.name}
             {club.state ? ` · ${club.state}` : ""}
           </p>
@@ -106,9 +107,9 @@ export function ClubView({
       )}
 
       <section className="mt-6">
-        <h3 className="mb-2 text-sm font-medium text-slate-400">Últimos resultados</h3>
+        <h3 className="mb-2 text-sm font-medium text-ink-muted">Últimos resultados</h3>
         {form.length === 0 ? (
-          <p className="text-sm text-slate-400">Nenhum jogo disputado ainda.</p>
+          <p className="text-sm text-ink-muted">Nenhum jogo disputado ainda.</p>
         ) : (
           <ul className="flex gap-1.5">
             {form.map((result, index) => (
@@ -126,34 +127,36 @@ export function ClubView({
 
       {next && (
         <section className="mt-6">
-          <h3 className="mb-2 text-sm font-medium text-slate-400">Próximo jogo</h3>
+          <h3 className="mb-2 text-sm font-medium text-ink-muted">Próximo jogo</h3>
           <MatchList matches={[next]} clubs={clubs} />
         </section>
       )}
 
       {clubScorers.length > 0 && (
         <section className="mt-6">
-          <h3 className="mb-2 text-sm font-medium text-slate-400">
+          <h3 className="mb-2 text-sm font-medium text-ink-muted">
             Artilheiros do clube
           </h3>
           <ul className="space-y-1">
             {clubScorers.map((scorer) => (
-              <li
+              <Surface
+                as="li"
+                filled
                 key={scorer.playerId}
-                className="flex items-center justify-between rounded-lg border border-slate-800 bg-slate-900/50 px-3 py-2 text-sm"
+                className="flex items-center justify-between px-3 py-2 text-sm"
               >
                 <span>{scorer.playerName}</span>
-                <span className="tabular-nums text-slate-400">
+                <span className="tabular-nums text-ink-muted">
                   {scorer.goals} {scorer.goals === 1 ? "gol" : "gols"}
                 </span>
-              </li>
+              </Surface>
             ))}
           </ul>
         </section>
       )}
 
       <section className="mt-6">
-        <h3 className="mb-2 text-sm font-medium text-slate-400">Jogos disputados</h3>
+        <h3 className="mb-2 text-sm font-medium text-ink-muted">Jogos disputados</h3>
         <MatchList matches={played} clubs={clubs} />
       </section>
     </>

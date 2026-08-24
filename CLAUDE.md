@@ -175,6 +175,17 @@ fields to data files or components.
 
 ## Key conventions
 
+- **Colours are semantic tokens, never palette shades.** `src/index.css` defines the
+  full set under `@theme` — `canvas`/`surface`/`raised`, `line`/`line-strong`,
+  `ink` through `ink-ghost`, and `positive`/`negative`/`warning` each with a lighter
+  `-ink` for text. Components say `text-ink-muted`, not `text-slate-400`. A raw
+  `slate-*`, `emerald-*`, `rose-*` or `amber-*` utility in a component is a regression:
+  before tokens there were 32 distinct colour utilities and five shades of grey text.
+- **Raised panels use `Surface`.** It owns the rounded-border chrome that was
+  hand-repeated in five components. Padding and layout stay with the caller, since those
+  genuinely differ. `filled` adds the card background; table containers stay unfilled
+  because the table header supplies its own. Buttons and the round selector are *control*
+  chrome, a separate pattern, and deliberately not folded in.
 - **Brazilian Portuguese copy** — all user-facing text and error messages are pt-BR in the
   football-broadcast voice. `CONTEXT.md` is the domain glossary: read it before naming a new
   concept, and add the term there in the same commit that introduces it. Each entry carries

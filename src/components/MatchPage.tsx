@@ -20,11 +20,11 @@ const STATUS_LABEL: Record<Match["status"], string> = {
 };
 
 const STATUS_CLASS: Record<Match["status"], string> = {
-  SCHEDULED: "bg-slate-800 text-slate-300",
-  LIVE: "bg-emerald-500/20 text-emerald-300",
-  FINISHED: "bg-slate-800 text-slate-400",
-  POSTPONED: "bg-amber-500/20 text-amber-300",
-  CANCELLED: "bg-rose-500/20 text-rose-300",
+  SCHEDULED: "bg-raised text-ink-soft",
+  LIVE: "bg-positive/20 text-positive-ink",
+  FINISHED: "bg-raised text-ink-muted",
+  POSTPONED: "bg-warning/20 text-warning-ink",
+  CANCELLED: "bg-negative/20 text-negative-ink",
 };
 
 const kickoffLabel = (kickoff: string): string => {
@@ -56,7 +56,7 @@ function Side({ club, code, onNavigate }: { club: Club | null; code: string; onN
             event.preventDefault();
             onNavigate(formatRoute({ section: "clube", key: clubKey(club) }));
           }}
-          className="truncate font-semibold underline decoration-slate-600 underline-offset-2 hover:decoration-slate-300"
+          className="truncate font-semibold underline decoration-ink-ghost underline-offset-2 hover:decoration-ink-soft"
         >
           {label}
         </a>
@@ -79,10 +79,10 @@ export function MatchPage({ match, clubs, onBack, onNavigate }: MatchPageProps) 
   if (!match) {
     return (
       <>
-        <button type="button" onClick={onBack} className="text-sm text-slate-400 hover:text-slate-200">
+        <button type="button" onClick={onBack} className="text-sm text-ink-muted hover:text-ink-soft">
           ← Voltar
         </button>
-        <p className="mt-4 text-sm text-slate-400">Partida não encontrada.</p>
+        <p className="mt-4 text-sm text-ink-muted">Partida não encontrada.</p>
       </>
     );
   }
@@ -93,12 +93,12 @@ export function MatchPage({ match, clubs, onBack, onNavigate }: MatchPageProps) 
 
   return (
     <>
-      <button type="button" onClick={onBack} className="text-sm text-slate-400 hover:text-slate-200">
+      <button type="button" onClick={onBack} className="text-sm text-ink-muted hover:text-ink-soft">
         ← Voltar
       </button>
 
-      <article className="mt-3 rounded-xl border border-slate-800 bg-slate-900/50 p-5">
-        <div className="flex items-center justify-between gap-2 text-xs text-slate-500">
+      <article className="mt-3 rounded-xl border border-line bg-surface/50 p-5">
+        <div className="flex items-center justify-between gap-2 text-xs text-ink-faint">
           <span>{match.round}ª rodada</span>
           <span className={`rounded px-2 py-1 font-medium ${STATUS_CLASS[match.status]}`}>
             {STATUS_LABEL[match.status]}
@@ -111,10 +111,10 @@ export function MatchPage({ match, clubs, onBack, onNavigate }: MatchPageProps) 
           <div className="shrink-0 text-center">
             {played ? (
               <p className="text-3xl font-bold tabular-nums">
-                {match.homeGoals} <span className="text-slate-600">×</span> {match.awayGoals}
+                {match.homeGoals} <span className="text-ink-ghost">×</span> {match.awayGoals}
               </p>
             ) : (
-              <p className="text-2xl font-bold text-slate-600">×</p>
+              <p className="text-2xl font-bold text-ink-ghost">×</p>
             )}
           </div>
 
@@ -124,20 +124,20 @@ export function MatchPage({ match, clubs, onBack, onNavigate }: MatchPageProps) 
 
       <dl className="mt-4 space-y-3 text-sm">
         <div>
-          <dt className="text-xs text-slate-500">Data e hora</dt>
+          <dt className="text-xs text-ink-faint">Data e hora</dt>
           <dd className="font-medium first-letter:uppercase">{kickoffLabel(match.kickoff)}</dd>
         </div>
 
         {venue && (
           <div>
-            <dt className="text-xs text-slate-500">Estádio</dt>
+            <dt className="text-xs text-ink-faint">Estádio</dt>
             <dd className="font-medium">{venue}</dd>
           </div>
         )}
 
         {match.broadcasters && (
           <div>
-            <dt className="text-xs text-slate-500">Onde assistir</dt>
+            <dt className="text-xs text-ink-faint">Onde assistir</dt>
             <dd className="font-medium">{match.broadcasters.join(" · ")}</dd>
           </div>
         )}
@@ -145,12 +145,12 @@ export function MatchPage({ match, clubs, onBack, onNavigate }: MatchPageProps) 
 
       {hasGoalsToShow(match) && (
         <section className="mt-6">
-          <h3 className="mb-2 text-sm font-medium text-slate-400">Gols</h3>
+          <h3 className="mb-2 text-sm font-medium text-ink-muted">Gols</h3>
           <a
             href={goalsSearchUrl(home?.shortName ?? match.homeCode, away?.shortName ?? match.awayCode)}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 rounded-lg border border-slate-700 px-3 py-2 text-sm text-slate-200 hover:bg-slate-800"
+            className="inline-flex items-center gap-2 rounded-lg border border-line-strong px-3 py-2 text-sm text-ink-soft hover:bg-raised"
           >
             <span aria-hidden="true">▶</span>
             Procurar os gols no YouTube
@@ -159,7 +159,7 @@ export function MatchPage({ match, clubs, onBack, onNavigate }: MatchPageProps) 
           {/* Honest about what this is: no provider we use exposes highlight
               links, so this opens a search rather than pretending to know the
               official video. */}
-          <p className="mt-2 text-xs text-slate-500">
+          <p className="mt-2 text-xs text-ink-faint">
             Abre uma busca no YouTube — não é um vídeo oficial escolhido por nós.
           </p>
         </section>

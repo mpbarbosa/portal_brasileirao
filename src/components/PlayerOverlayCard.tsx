@@ -14,7 +14,7 @@ interface PlayerOverlayCardProps {
 const detail = (label: string, value: string | null) =>
   value === null ? null : (
     <div key={label}>
-      <dt className="text-xs text-slate-500">{label}</dt>
+      <dt className="text-xs text-ink-faint">{label}</dt>
       <dd className="font-medium">{value}</dd>
     </div>
   );
@@ -74,7 +74,7 @@ export function PlayerOverlayCard({ player, scorer, onClose }: PlayerOverlayCard
 
   return (
     <div
-      className="fixed inset-0 z-30 flex items-end justify-center bg-slate-950/70 p-4 backdrop-blur-sm sm:items-center"
+      className="fixed inset-0 z-30 flex items-end justify-center bg-canvas/70 p-4 backdrop-blur-sm sm:items-center"
       // A click on the backdrop dismisses; a click that started inside the card
       // and ended here must not.
       onMouseDown={(event) => {
@@ -85,19 +85,19 @@ export function PlayerOverlayCard({ player, scorer, onClose }: PlayerOverlayCard
         role="dialog"
         aria-modal="true"
         aria-labelledby="jogador-nome"
-        className="w-full max-w-md rounded-xl border border-slate-700 bg-slate-900 p-5 shadow-xl"
+        className="w-full max-w-md rounded-xl border border-line-strong bg-surface p-5 shadow-xl"
       >
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0">
             <h2 id="jogador-nome" className="truncate text-lg font-bold tracking-tight">
               {enriched.shirtNumber !== undefined && (
-                <span className="mr-2 text-slate-500 tabular-nums">
+                <span className="mr-2 text-ink-faint tabular-nums">
                   {enriched.shirtNumber}
                 </span>
               )}
               {enriched.name}
             </h2>
-            {club && <p className="truncate text-sm text-slate-400">{club.shortName}</p>}
+            {club && <p className="truncate text-sm text-ink-muted">{club.shortName}</p>}
           </div>
 
           <button
@@ -105,7 +105,7 @@ export function PlayerOverlayCard({ player, scorer, onClose }: PlayerOverlayCard
             type="button"
             onClick={onClose}
             aria-label="Fechar"
-            className="shrink-0 rounded-lg border border-slate-700 px-2.5 py-1 text-sm text-slate-300 hover:bg-slate-800"
+            className="shrink-0 rounded-lg border border-line-strong px-2.5 py-1 text-sm text-ink-soft hover:bg-raised"
           >
             <span aria-hidden="true">✕</span>
           </button>
@@ -118,25 +118,25 @@ export function PlayerOverlayCard({ player, scorer, onClose }: PlayerOverlayCard
         </dl>
 
         {scorer && (
-          <section className="mt-5 border-t border-slate-800 pt-4">
-            <h3 className="mb-2 text-xs uppercase tracking-wide text-slate-500">
+          <section className="mt-5 border-t border-line pt-4">
+            <h3 className="mb-2 text-xs uppercase tracking-wide text-ink-faint">
               No campeonato
             </h3>
             <dl className="grid grid-cols-4 gap-3 text-sm">
               <div>
-                <dt className="text-xs text-slate-500">Gols</dt>
+                <dt className="text-xs text-ink-faint">Gols</dt>
                 <dd className="font-semibold tabular-nums">{scorer.goals}</dd>
               </div>
               <div>
-                <dt className="text-xs text-slate-500">Assist.</dt>
+                <dt className="text-xs text-ink-faint">Assist.</dt>
                 <dd className="tabular-nums">{countOrDash(scorer.assists)}</dd>
               </div>
               <div>
-                <dt className="text-xs text-slate-500">Pênaltis</dt>
+                <dt className="text-xs text-ink-faint">Pênaltis</dt>
                 <dd className="tabular-nums">{countOrDash(scorer.penalties)}</dd>
               </div>
               <div>
-                <dt className="text-xs text-slate-500">Jogos</dt>
+                <dt className="text-xs text-ink-faint">Jogos</dt>
                 <dd className="tabular-nums">{countOrDash(scorer.playedMatches)}</dd>
               </div>
             </dl>

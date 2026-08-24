@@ -71,18 +71,18 @@ export function NavBar({ current, onNavigate }: NavBarProps) {
       "rounded-lg px-3 py-2 text-sm font-medium transition",
       block ? "block w-full text-left" : "",
       id === current
-        ? "bg-slate-100 text-slate-900"
-        : "text-slate-300 hover:bg-slate-800 hover:text-slate-100",
+        ? "bg-ink text-ink-inverted"
+        : "text-ink-soft hover:bg-raised hover:text-ink",
     ]
       .filter(Boolean)
       .join(" ");
 
   return (
-    <header className="sticky top-0 z-20 border-b border-slate-800 bg-slate-950/90 backdrop-blur">
+    <header className="sticky top-0 z-20 border-b border-line bg-canvas/90 backdrop-blur">
       <div className="mx-auto flex max-w-3xl items-center justify-between gap-4 px-4 py-3">
         <div className="min-w-0">
           <p className="truncate text-base font-bold tracking-tight">Portal Brasileirão</p>
-          <p className="truncate text-xs text-slate-400">Campeonato Brasileiro Série A</p>
+          <p className="truncate text-xs text-ink-muted">Campeonato Brasileiro Série A</p>
         </div>
 
         {/* Desktop: the sections sit inline. No `title` — a tooltip never
@@ -107,7 +107,7 @@ export function NavBar({ current, onNavigate }: NavBarProps) {
         <button
           ref={toggleRef}
           type="button"
-          className="rounded-lg border border-slate-700 px-3 py-2 text-sm text-slate-200 hover:bg-slate-800 sm:hidden"
+          className="rounded-lg border border-line-strong px-3 py-2 text-sm text-ink-soft hover:bg-raised sm:hidden"
           aria-expanded={open}
           aria-controls="menu-secoes"
           aria-label={open ? "Fechar menu" : "Abrir menu"}
@@ -121,7 +121,7 @@ export function NavBar({ current, onNavigate }: NavBarProps) {
         id="menu-secoes"
         ref={panelRef}
         hidden={!open}
-        className="border-t border-slate-800 sm:hidden"
+        className="border-t border-line sm:hidden"
       >
         <nav className="mx-auto max-w-3xl space-y-1 px-4 py-3" aria-label="Seções">
           {NAV_ITEMS.map((item) => (
@@ -133,7 +133,7 @@ export function NavBar({ current, onNavigate }: NavBarProps) {
               className={itemClass(item.id, true)}
             >
               <span className="block">{item.label}</span>
-              <span className="block text-xs font-normal text-slate-400">
+              <span className="block text-xs font-normal text-ink-muted">
                 {item.description}
               </span>
             </a>
