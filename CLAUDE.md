@@ -200,6 +200,20 @@ fields to data files or components.
   `-ink` for text. Components say `text-ink-muted`, not `text-slate-400`. A raw
   `slate-*`, `emerald-*`, `rose-*` or `amber-*` utility in a component is a regression:
   before tokens there were 32 distinct colour utilities and five shades of grey text.
+- **Two themes, one set of tokens.** `src/index.css` defines the palette under
+  `@theme` (dark, the fallback) and again under `:root[data-theme="dark"]` and
+  `:root[data-theme="light"]`. Components never change: only the values do. An inline
+  script in `index.html` stamps `data-theme` **before first paint** — without it the page
+  renders dark then repaints light, a flash no CSS ordering can fix because the choice
+  lives in `localStorage`. `useTheme` seeds its state from that attribute rather than
+  recomputing, for the same reason.
+  The light palette is not the dark one inverted: status colours go *darker* to stay
+  readable on a light page. Contrast was measured, not eyeballed — every text token clears
+  AA (worst 4.55) and `ink-ghost`, used only for underline decoration and the large score
+  separator, clears the 3:1 non-text floor. Fixing this also lifted **dark**'s `ink-faint`,
+  which had been shipping at 4.24.
+  `scrim` is deliberately dark in both themes: a near-white veil over a light page does not
+  read as "the content behind is inactive".
 - **Raised panels use `Surface`.** It owns the rounded-border chrome that was
   hand-repeated in five components. Padding and layout stay with the caller, since those
   genuinely differ. `filled` adds the card background; table containers stay unfilled

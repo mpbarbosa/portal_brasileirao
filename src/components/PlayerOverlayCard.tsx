@@ -74,7 +74,7 @@ export function PlayerOverlayCard({ player, scorer, onClose }: PlayerOverlayCard
 
   return (
     <div
-      className="fixed inset-0 z-30 flex items-end justify-center bg-canvas/70 p-4 backdrop-blur-sm sm:items-center"
+      className="fixed inset-0 z-30 flex items-end justify-center bg-scrim/70 p-4 backdrop-blur-sm sm:items-center"
       // A click on the backdrop dismisses; a click that started inside the card
       // and ended here must not.
       onMouseDown={(event) => {

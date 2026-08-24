@@ -11,11 +11,13 @@ import { StandingsTable } from "@/src/components/StandingsTable";
 import { findMatch } from "@/match-core";
 import { parseRoute } from "@/route-core";
 import { usePageMeta } from "@/src/usePageMeta";
+import { useTheme } from "@/src/useTheme";
 import { useRoute } from "@/src/useRoute";
 import type { Scorer, StandingsRow } from "@/src/types";
 
 export function App() {
   const { route, navigate } = useRoute();
+  const { theme, toggle: toggleTheme } = useTheme();
   const [standings, setStandings] = useState<StandingsRow[]>([]);
   const [matches, setMatches] = useState<MatchesPayload | null>(null);
   const [scorers, setScorers] = useState<Scorer[]>([]);
@@ -65,7 +67,12 @@ export function App() {
 
   return (
     <div className="min-h-screen">
-      <NavBar current={route.section} onNavigate={navigate} />
+      <NavBar
+        current={route.section}
+        onNavigate={navigate}
+        theme={theme}
+        onToggleTheme={toggleTheme}
+      />
 
       <div className="mx-auto max-w-3xl px-4 py-6">
         <h1 className="sr-only">Portal Brasileirão — Campeonato Brasileiro Série A</h1>

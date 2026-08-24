@@ -36,6 +36,7 @@
     "match-core.ts",
     "club-core.ts",
     "route-core.ts",
+    "theme-core.ts",
     "page-meta-core.ts",
     "player-core.ts",
     "broadcast-core.ts",

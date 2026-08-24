@@ -13,6 +13,22 @@
       name="description"
       content="Acompanhe o Campeonato Brasileiro Série A: classificação, rodadas e detalhes das partidas em um só lugar."
     />
+    <script>
+      // Runs before first paint so the correct palette is applied immediately.
+      // Without this the page renders dark, then repaints light — a flash that
+      // no amount of CSS ordering fixes, because the choice lives in storage.
+      (function () {
+        try {
+          var stored = localStorage.getItem("portal-brasileirao:theme");
+          var pref = stored === "light" || stored === "dark" ? stored : null;
+          var light = window.matchMedia("(prefers-color-scheme: light)").matches;
+          document.documentElement.dataset.theme = pref || (light ? "light" : "dark");
+        } catch (e) {
+          // Private mode can throw on localStorage; dark is the fallback.
+          document.documentElement.dataset.theme = "dark";
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

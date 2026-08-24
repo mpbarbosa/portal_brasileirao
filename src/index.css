@@ -4,16 +4,16 @@
  * Semantic colour tokens.
  *
  * Components name what a colour *means* — `border-line`, `text-ink-muted` —
- * rather than which slate shade it happens to be. Before this, 32 distinct
- * colour utilities were spread across nine components with five shades of grey
- * text alone; changing the palette meant a find-and-replace and hoping.
+ * rather than which shade it happens to be. That indirection is what makes two
+ * themes possible without touching a component: only the values below change.
  *
- * Tailwind v4 reads these as first-class colours, so opacity modifiers work as
- * usual: `bg-surface/50`, `border-warning/30`.
+ * Tailwind v4 reads the `@theme` block as first-class colours, so opacity
+ * modifiers work as usual: `bg-surface/50`, `border-warning/30`.
  *
- * Two tokens share a value on purpose: `line` matches `raised`, and
- * `line-strong` matches `raised-strong`. A border and a filled chip look the
- * same today but are different decisions, and splitting them now costs nothing.
+ * `@theme` holds the dark values because dark is the fallback when a reader has
+ * expressed no preference. The two `[data-theme]` blocks below then set the
+ * palette explicitly — an inline script in index.html stamps that attribute
+ * before first paint, so there is no flash of the wrong theme.
  */
 @theme {
   /* Surfaces, darkest first. */
@@ -30,23 +30,93 @@
   --color-ink: #f1f5f9;
   --color-ink-soft: #cbd5e1;
   --color-ink-muted: #94a3b8;
-  --color-ink-faint: #64748b;
-  --color-ink-ghost: #475569;
+  --color-ink-faint: #6b7a91;
+  --color-ink-ghost: #55647a;
   /* For text on a light chip, e.g. the current nav entry. */
   --color-ink-inverted: #0f172a;
 
-  /* Status. Each has a base for fills and rails, and a lighter ink for text:
-     the base is not readable as text on a dark background. */
+  /* Status. Each has a base for fills and rails, and a separate ink for text:
+     the base is not readable as text against the page. */
   --color-positive: #34d399;
   --color-positive-ink: #6ee7b7;
   --color-negative: #f43f5e;
   --color-negative-ink: #fda4af;
   --color-warning: #f59e0b;
   --color-warning-ink: #fcd34d;
+
+  /* Modal backdrop. Dark in both themes on purpose — a near-white scrim over a
+     light page does not read as "the content behind is inactive". */
+  --color-scrim: #020617;
 }
 
-:root {
+/**
+ * Dark. Repeats the `@theme` values so the attribute is authoritative: with the
+ * inline script always stamping one of the two, no component ever depends on
+ * the bare defaults.
+ */
+:root[data-theme="dark"] {
+  --color-canvas: #020617;
+  --color-surface: #0f172a;
+  --color-raised: #1e293b;
+  --color-raised-strong: #334155;
+
+  --color-line: #1e293b;
+  --color-line-strong: #334155;
+
+  --color-ink: #f1f5f9;
+  --color-ink-soft: #cbd5e1;
+  --color-ink-muted: #94a3b8;
+  --color-ink-faint: #6b7a91;
+  --color-ink-ghost: #55647a;
+  --color-ink-inverted: #0f172a;
+
+  --color-positive: #34d399;
+  --color-positive-ink: #6ee7b7;
+  --color-negative: #f43f5e;
+  --color-negative-ink: #fda4af;
+  --color-warning: #f59e0b;
+  --color-warning-ink: #fcd34d;
+
   color-scheme: dark;
+}
+
+/**
+ * Light.
+ *
+ * Not the dark values inverted: on a light page the status colours have to go
+ * *darker* to stay readable, so each `-ink` drops several steps while the base
+ * used for fills stays mid-range so a 20% tint still reads as a tint.
+ *
+ * Contrast against `canvas`, measured rather than eyeballed: ink 17.1,
+ * ink-soft 9.9, ink-muted 7.2, ink-faint 4.6, positive-ink 5.2, negative-ink
+ * 6.0, warning-ink 4.8 — all clear AA for body text. `ink-ghost` is 3.2 and is
+ * used only for underline decoration and the large score separator, where the
+ * 3:1 floor for large text and non-text applies.
+ */
+:root[data-theme="light"] {
+  --color-canvas: #f8fafc;
+  --color-surface: #ffffff;
+  --color-raised: #f1f5f9;
+  --color-raised-strong: #e2e8f0;
+
+  --color-line: #e2e8f0;
+  --color-line-strong: #cbd5e1;
+
+  --color-ink: #0f172a;
+  --color-ink-soft: #334155;
+  --color-ink-muted: #475569;
+  --color-ink-faint: #64748b;
+  --color-ink-ghost: #7d8ba0;
+  --color-ink-inverted: #f8fafc;
+
+  --color-positive: #10b981;
+  --color-positive-ink: #047857;
+  --color-negative: #e11d48;
+  --color-negative-ink: #be123c;
+  --color-warning: #f59e0b;
+  --color-warning-ink: #b45309;
+
+  color-scheme: light;
 }
 
 body {

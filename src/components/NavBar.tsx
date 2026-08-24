@@ -2,10 +2,13 @@ import { useEffect, useRef, useState } from "react";
 
 import { NAV_ITEMS, type SectionId } from "@/src/navigation";
 import { formatRoute, type Route } from "@/route-core";
+import { themeToggleLabel, type Theme } from "@/theme-core";
 
 interface NavBarProps {
   current: SectionId;
   onNavigate: (route: Route) => void;
+  theme: Theme;
+  onToggleTheme: () => void;
 }
 
 /** The route a menu entry points at. Sections other than these are drill-downs. */
@@ -20,7 +23,7 @@ const routeFor = (id: SectionId): Route =>
  * reachable at any width — the difference is only whether the list is visible
  * without a tap.
  */
-export function NavBar({ current, onNavigate }: NavBarProps) {
+export function NavBar({ current, onNavigate, theme, onToggleTheme }: NavBarProps) {
   const [open, setOpen] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
   const toggleRef = useRef<HTMLButtonElement>(null);
@@ -79,7 +82,7 @@ export function NavBar({ current, onNavigate }: NavBarProps) {
 
   return (
     <header className="sticky top-0 z-20 border-b border-line bg-canvas/90 backdrop-blur">
-      <div className="mx-auto flex max-w-3xl items-center justify-between gap-4 px-4 py-3">
+      <div className="mx-auto flex max-w-3xl items-center justify-between gap-3 px-4 py-3">
         <div className="min-w-0">
           <p className="truncate text-base font-bold tracking-tight">Portal Brasileirão</p>
           <p className="truncate text-xs text-ink-muted">Campeonato Brasileiro Série A</p>
@@ -102,6 +105,16 @@ export function NavBar({ current, onNavigate }: NavBarProps) {
             </a>
           ))}
         </nav>
+
+        <button
+          type="button"
+          onClick={onToggleTheme}
+          aria-label={themeToggleLabel(theme)}
+          title={themeToggleLabel(theme)}
+          className="rounded-lg border border-line-strong px-3 py-2 text-sm text-ink-soft hover:bg-raised"
+        >
+          <span aria-hidden="true">{theme === "light" ? "\u263D" : "\u2600"}</span>
+        </button>
 
         {/* Mobile: the same sections behind a toggle. */}
         <button
