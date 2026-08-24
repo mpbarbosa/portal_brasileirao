@@ -1,0 +1,104 @@
+name: Sync broadcasts
+
+# CBF publishes broadcast information roughly two to three weeks ahead, so a
+# weekly pass keeps the app current. Tuesday morning: after the weekend round
+# has finished and while the next one is being announced.
+on:
+  schedule:
+    - cron: "0 9 * * 2" # Tuesdays, 09:00 UTC (06:00 BRT)
+  workflow_dispatch:
+    inputs:
+      days_ahead:
+        description: "How many days ahead to sync"
+        required: false
+        default: "28"
+
+concurrency:
+  group: sync-broadcasts
+  cancel-in-progress: false
+
+permissions:
+  contents: write # to commit the refreshed data back
+
+jobs:
+  sync:
+    name: Refresh src/data/broadcasts.ts
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "22"
+          cache: npm
+
+      - run: npm ci
+
+      - name: Check the token is configured
+        # Without this the sync fails deep inside the script with a 400 from
+        # football-data, which reads like an upstream problem rather than a
+        # missing secret.
+        env:
+          FOOTBALL_DATA_TOKEN: ${{ secrets.FOOTBALL_DATA_TOKEN }}
+        run: |
+          if [ -z "$FOOTBALL_DATA_TOKEN" ]; then
+            echo "::error::FOOTBALL_DATA_TOKEN is not set. Add it with:"
+            echo "::error::  gh secret set FOOTBALL_DATA_TOKEN --repo ${{ github.repository }}"
+            exit 1
+          fi
+
+      - name: Sync the next few weeks
+        env:
+          FOOTBALL_DATA_TOKEN: ${{ secrets.FOOTBALL_DATA_TOKEN }}
+        run: |
+          set -euo pipefail
+          days="${{ github.event.inputs.days_ahead || '28' }}"
+          from="$(date -u +%Y-%m-%d)"
+          to="$(date -u -d "+${days} days" +%Y-%m-%d)"
+
+          echo "Syncing ${from} .. ${to}"
+          # Merges rather than replaces, so past rounds already in the file stay.
+          npx tsx scripts/sync-broadcasts.ts "$from" "$to"
+
+      - name: Verify the result still type-checks and passes its tests
+        # A malformed write would otherwise be committed and only caught by the
+        # push-triggered run, after the bad data is already on main.
+        run: |
+          npm run lint
+          npm run test:unit
+
+      - name: Commit if anything changed
+        id: commit
+        run: |
+          set -euo pipefail
+          if git diff --quiet -- src/data/broadcasts.ts; then
+            echo "No new broadcasts published — nothing to commit."
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          added=$(git diff --numstat -- src/data/broadcasts.ts | awk '{print $1}')
+          removed=$(git diff --numstat -- src/data/broadcasts.ts | awk '{print $2}')
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/data/broadcasts.ts
+          git commit -m "Sync broadcast channels from CBF
+
+          Automated weekly sync (+${added}/-${removed} lines). CBF publishes
+          roughly two to three weeks ahead, so this tops the file up rather
+          than replacing it."
+
+          git push
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+
+      - name: Summary
+        run: |
+          if [ "${{ steps.commit.outputs.changed }}" = "true" ]; then
+            echo "### Broadcasts updated" >> "$GITHUB_STEP_SUMMARY"
+            echo "The push will trigger CI, which deploys once tests pass." >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "### No change" >> "$GITHUB_STEP_SUMMARY"
+            echo "CBF has published nothing new since the last run." >> "$GITHUB_STEP_SUMMARY"
+          fi
+          git --no-pager log --oneline -1 >> "$GITHUB_STEP_SUMMARY"
