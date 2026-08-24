@@ -17,6 +17,15 @@
  */
 export const BROADCASTS: Record<string, string[]> = {
   "554970": ["Premiere", "SporTV"],
+  "554971": ["Globo", "Premiere"],
+  "554972": ["Premiere", "Record", "YouTube", "Cazé TV"],
+  "554973": ["Premiere"],
+  "554974": ["Amazon Prime"],
+  "554975": ["Premiere"],
+  "554976": ["Premiere", "SporTV"],
+  "554977": ["Globo", "Premiere"],
+  "554978": ["Premiere"],
+  "554979": ["Globo", "Premiere"],
   "554980": ["Premiere"],
   "554981": ["Premiere"],
   "554982": ["Globo", "Premiere"],

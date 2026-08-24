@@ -171,7 +171,27 @@ Three things the script had to solve, each found by running it:
   `Red Bull Bragantino`. An unresolvable name is reported loudly and skipped —
   never guessed, since a wrong join mislabels a match.
 
-The join itself is kickoff instant plus home club, keyed by **our match id**. See the header of that file for transcription rules, and the
+The join itself is kickoff instant plus home club, keyed by **our match id**.
+
+### How far ahead the data exists
+
+Two independent limits, both upstream, both confirmed on 2026-08-24:
+
+- **CBF publishes broadcasts about two to three weeks out.** A sync of
+  16–30 Sep returned Série B only; October and November returned *nothing at all*
+  (0 fixtures, 0 pages). There is no season-long broadcast feed to fetch.
+- **football-data leaves kickoff times provisional for later rounds.** Rounds
+  1–26 carry 5–8 distinct kickoff times each; rounds 27–38 carry exactly one,
+  `T00:00:00Z` — its marker for "date known, time to be confirmed".
+
+So the season cannot be synced in one pass. Re-run the script every week or two
+as CBF publishes; it merges, so repeated runs accumulate.
+
+The second limit would break the join even once CBF publishes, since no instant
+can match `T00:00:00Z`. `joinMatch` therefore falls back to calendar date plus
+home club **only** for fixtures whose time is still provisional — a club plays at
+most once a day. Confirmed fixtures are never matched by date alone, so a wrong
+kickoff cannot quietly attach channels to the wrong match. See the header of that file for transcription rules, and the
 **Onde assistir** entry in `CONTEXT.md` for the domain terms.
 
 The key must not be a team abbreviation. A single day's CBF page showed `ATH` as

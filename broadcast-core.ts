@@ -137,7 +137,22 @@ export const channelsOf = (fixture: CbfFixture): string[] =>
     .map((name) => (name.toLowerCase() === "sportv" ? "SporTV" : name))
     .filter((name, index, all) => all.indexOf(name) === index);
 
-/** Our match id for a CBF fixture, or null when it cannot be identified. */
+/**
+ * football-data marks "date known, kickoff time not yet confirmed" by setting
+ * the time to midnight UTC. Whole future rounds look like this — every fixture
+ * of rounds 27-38 currently sits at T00:00:00Z.
+ */
+export const hasProvisionalKickoff = (match: Match): boolean =>
+  match.kickoff.slice(11, 19) === "00:00:00";
+
+/**
+ * Our match id for a CBF fixture, or null when it cannot be identified.
+ *
+ * Normally the join is the kickoff instant plus the home club. When our fixture
+ * still carries a provisional time, the instant cannot match anything, so the
+ * join falls back to the calendar date plus the home club — enough to identify
+ * a fixture, since a club plays at most once a day. Ambiguity still yields null.
+ */
 export const joinMatch = (
   matches: Match[],
   clubs: Club[],
@@ -151,12 +166,18 @@ export const joinMatch = (
   const home = matchClub(clubs, fixture.mandante.nome);
   if (!home) return null;
 
+  const atHome = matches.filter((match) => match.homeCode === home.code);
+
   // Compare instants, not strings: football-data returns "…T23:00:00Z" while
   // toISOString() produces "…T23:00:00.000Z". Same moment, different text.
   const wanted = Date.parse(kickoff);
-  const found = matches.filter(
-    (match) => Date.parse(match.kickoff) === wanted && match.homeCode === home.code,
+  const exact = atHome.filter((match) => Date.parse(match.kickoff) === wanted);
+  if (exact.length === 1) return exact[0].id;
+
+  const day = kickoff.slice(0, 10);
+  const sameDay = atHome.filter(
+    (match) => hasProvisionalKickoff(match) && match.kickoff.slice(0, 10) === day,
   );
 
-  return found.length === 1 ? found[0].id : null;
+  return sameDay.length === 1 ? sameDay[0].id : null;
 };

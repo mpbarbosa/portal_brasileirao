@@ -236,6 +236,7 @@ console.log(`==> Fetching CBF broadcasts for ${from} .. ${to}`);
 
 // CBF ignores per_page and serves 15 at a time, so walk the pages. A silent
 // first-page-only read would look identical to "no broadcast listed".
+const MAX_PAGES = 60;
 const jogos: CbfJogo[] = [];
 let page = 1;
 let lastPage = 1;
@@ -247,7 +248,17 @@ do {
   jogos.push(...(body.jogos ?? []));
   lastPage = Number(body.meta?.last_page ?? 1);
   page += 1;
-} while (page <= lastPage && page <= 20);
+} while (page <= lastPage && page <= MAX_PAGES);
+
+if (lastPage > MAX_PAGES) {
+  // Never truncate quietly: a short read is indistinguishable from a quiet
+  // weekend, and the missing fixtures would simply show no channels.
+  console.error(
+    `Error: CBF reports ${lastPage} pages but the cap is ${MAX_PAGES}. ` +
+      `Narrow the date range and run again — a partial read would silently drop fixtures.`,
+  );
+  process.exit(1);
+}
 
 const serieA = jogos.filter((jogo) => jogo.competicao?.categoria_id === SERIE_A_CATEGORIA_ID);
 console.log(

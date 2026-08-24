@@ -4,6 +4,7 @@ import { test } from "node:test";
 import {
   channelsFor,
   channelsOf,
+  hasProvisionalKickoff,
   joinMatch,
   kickoffToIso,
   matchClub,
@@ -227,4 +228,60 @@ test("an unresolvable club does not join", () => {
 test("an incomplete fixture does not join", () => {
   assert.equal(joinMatch(OURS, CLUBS, { hora: "20:00", mandante: { nome: "Botafogo" } }), null);
   assert.equal(joinMatch(OURS, CLUBS, { data: "24/08/2026", hora: "20:00" }), null);
+});
+
+test("a provisional kickoff is recognised by its midnight time", () => {
+  assert.equal(hasProvisionalKickoff(match("x")), false);
+  assert.equal(
+    hasProvisionalKickoff({ ...match("x"), kickoff: "2026-09-19T00:00:00Z" }),
+    true,
+  );
+});
+
+test("a fixture whose time is not yet confirmed still joins by date", () => {
+  // Rounds 27-38 all sit at T00:00:00Z until the times are set. Without this
+  // the join would fail for most of the remaining season.
+  const provisional: Match[] = [
+    { ...match("555010"), kickoff: "2026-09-19T00:00:00Z", homeCode: "1770" },
+  ];
+
+  const id = joinMatch(provisional, CLUBS, {
+    data: "19/09/2026",
+    hora: "16:00",
+    mandante: { nome: "Botafogo" },
+  });
+
+  assert.equal(id, "555010");
+});
+
+test("an exact instant wins over a same-day provisional fixture", () => {
+  const mixed: Match[] = [
+    { ...match("exact"), kickoff: "2026-08-24T23:00:00Z", homeCode: "1770" },
+    { ...match("provisional"), kickoff: "2026-08-24T00:00:00Z", homeCode: "1770" },
+  ];
+
+  const id = joinMatch(mixed, CLUBS, {
+    data: "24/08/2026",
+    hora: "20:00",
+    mandante: { nome: "Botafogo" },
+  });
+
+  assert.equal(id, "exact");
+});
+
+test("a confirmed fixture on the same day is never matched by date alone", () => {
+  // Only provisional fixtures are eligible for the date fallback; otherwise a
+  // wrong kickoff would quietly attach channels to the wrong match.
+  const confirmed: Match[] = [
+    { ...match("555011"), kickoff: "2026-09-19T22:00:00Z", homeCode: "1770" },
+  ];
+
+  assert.equal(
+    joinMatch(confirmed, CLUBS, {
+      data: "19/09/2026",
+      hora: "16:00",
+      mandante: { nome: "Botafogo" },
+    }),
+    null,
+  );
 });
