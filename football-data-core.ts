@@ -10,7 +10,7 @@
  * Upstream docs: https://www.football-data.org/documentation/quickstart
  */
 import { slugify } from "@/club-core";
-import type { Club, Match, MatchStatus, Scorer, StandingsRow } from "@/src/types";
+import type { Club, Match, MatchStatus, Player, Scorer, StandingsRow } from "@/src/types";
 
 export const FOOTBALL_DATA_BASE = "https://api.football-data.org/v4";
 export const BSA_COMPETITION = "BSA";
@@ -25,6 +25,10 @@ export const standingsUrl = (competition: string = BSA_COMPETITION): string =>
 
 export const matchesUrl = (competition: string = BSA_COMPETITION): string =>
   `${FOOTBALL_DATA_BASE}/competitions/${competition}/matches`;
+
+/** A single person. One request each, so callers must cache. */
+export const personUrl = (id: string): string =>
+  `${FOOTBALL_DATA_BASE}/persons/${encodeURIComponent(id)}`;
 
 /** Upstream defaults to 10 scorers; the table shows more than that. */
 export const SCORERS_LIMIT = 20;
@@ -263,4 +267,39 @@ export const mapScorers = (payload: ScorersResponse): Scorer[] => {
   }
 
   return rows;
+};
+
+interface RawPerson {
+  id?: number;
+  name?: string;
+  position?: string | null;
+  nationality?: string | null;
+  dateOfBirth?: string | null;
+  shirtNumber?: number | null;
+  currentTeam?: RawTeam;
+}
+
+export type PersonResponse = RawPerson;
+
+/**
+ * Map the person endpoint onto `Player`. Everything past id and name is
+ * optional upstream — `position` is null for most scorers, `shirtNumber` for
+ * most squad members — so absent fields are simply omitted rather than filled
+ * with placeholders the card would have to detect again.
+ */
+export const mapPerson = (raw: PersonResponse): Player | null => {
+  const name = raw.name?.trim();
+  if (!isNumber(raw.id) || !name) return null;
+
+  const club = clubFromTeam(raw.currentTeam) ?? undefined;
+
+  return {
+    id: String(raw.id),
+    name,
+    ...(isNumber(raw.shirtNumber) ? { shirtNumber: raw.shirtNumber } : {}),
+    ...(raw.position?.trim() ? { position: raw.position.trim() } : {}),
+    ...(raw.nationality?.trim() ? { nationality: raw.nationality.trim() } : {}),
+    ...(raw.dateOfBirth?.trim() ? { dateOfBirth: raw.dateOfBirth.trim() } : {}),
+    ...(club ? { club } : {}),
+  };
 };

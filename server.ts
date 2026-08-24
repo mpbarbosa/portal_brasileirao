@@ -10,6 +10,7 @@ import {
   CircuitBreaker,
   LIVE_MATCHES_CACHE_TTL_MS,
   MATCHES_CACHE_TTL_MS,
+  PLAYER_CACHE_TTL_MS,
   SCORERS_CACHE_TTL_MS,
   STANDINGS_CACHE_TTL_MS,
   TtlCache,
@@ -18,12 +19,15 @@ import {
   authHeaders,
   clubsFromMatches,
   mapMatches,
+  mapPerson,
   mapScorers,
   mapStandings,
   matchesUrl,
+  personUrl,
   scorersUrl,
   standingsUrl,
   type MatchesResponse,
+  type PersonResponse,
   type ScorersResponse,
   type StandingsResponse,
 } from "@/football-data-core";
@@ -32,7 +36,7 @@ import { computeStandings } from "@/standings-core";
 import { CLUBS } from "@/src/data/clubs";
 import { SEED_MATCHES, SNAPSHOT_DATE } from "@/src/data/matches";
 import { SEED_SCORERS } from "@/src/data/scorers";
-import type { ApiEnvelope, Club, Match, Scorer, StandingsRow } from "@/src/types";
+import type { ApiEnvelope, Club, Match, Player, Scorer, StandingsRow } from "@/src/types";
 
 const DEFAULT_PORT = Number(process.env.PORT ?? 3000);
 const HOST = process.env.HOST ?? "0.0.0.0";
@@ -223,6 +227,30 @@ const loadScorers = (): Promise<ApiEnvelope<Scorer[]>> =>
 app.get("/api/scorers", async (_req, res) => {
   const payload = await loadScorers();
   res.set("Cache-Control", "public, max-age=300");
+  res.json(payload);
+});
+
+/**
+ * Enrichment for the player card: shirt number, position, nationality, birth
+ * date. There is no seed for this — the card is built from data already on the
+ * page and this only fills gaps — so the offline answer is an honest null
+ * rather than invented detail.
+ */
+app.get("/api/players/:id", async (req, res) => {
+  const id = req.params.id;
+  if (!/^\d+$/.test(id)) {
+    res.status(400).json({ error: "O identificador do jogador deve ser numérico." });
+    return;
+  }
+
+  const payload = await loadCached<Player | null>(
+    `player:${id}`,
+    PLAYER_CACHE_TTL_MS,
+    async () => mapPerson(await fetchFromProvider<PersonResponse>(personUrl(id))),
+    () => null,
+  );
+
+  res.set("Cache-Control", "public, max-age=3600");
   res.json(payload);
 });
 

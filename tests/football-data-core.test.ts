@@ -8,9 +8,11 @@ import {
   mapMatch,
   mapMatches,
   mapStandings,
+  mapPerson,
   mapScorers,
   mapStatus,
   matchesUrl,
+  personUrl,
   scorersUrl,
   standingsUrl,
 } from "@/football-data-core";
@@ -312,4 +314,61 @@ test("drops entries with no name, no club, or no goal count", () => {
 test("an empty scorers payload yields an empty table", () => {
   assert.deepEqual(mapScorers({}), []);
   assert.deepEqual(mapScorers({ scorers: [] }), []);
+});
+
+test("builds the person URL", () => {
+  assert.equal(personUrl("1077"), "https://api.football-data.org/v4/persons/1077");
+});
+
+test("maps a person, keeping only the fields that are present", () => {
+  assert.deepEqual(
+    mapPerson({
+      id: 1077,
+      name: "Pedro",
+      position: "Offence",
+      nationality: "Brazil",
+      dateOfBirth: "1997-06-20",
+      shirtNumber: 9,
+    }),
+    {
+      id: "1077",
+      name: "Pedro",
+      shirtNumber: 9,
+      position: "Offence",
+      nationality: "Brazil",
+      dateOfBirth: "1997-06-20",
+    },
+  );
+});
+
+test("absent person fields are omitted, not filled with placeholders", () => {
+  const player = mapPerson({
+    id: 1077,
+    name: "Pedro",
+    position: null,
+    nationality: null,
+    dateOfBirth: null,
+    shirtNumber: null,
+  });
+
+  assert.deepEqual(player, { id: "1077", name: "Pedro" });
+  assert.equal("shirtNumber" in player!, false);
+  assert.equal("position" in player!, false);
+});
+
+test("a person carries their current club when the upstream names one", () => {
+  const player = mapPerson({
+    id: 1077,
+    name: "Pedro",
+    currentTeam: { id: 1783, name: "CR Flamengo", shortName: "Flamengo", tla: "FLA" },
+  });
+
+  assert.equal(player?.club?.code, "1783");
+  assert.equal(player?.club?.slug, "flamengo");
+});
+
+test("a person with no id or no name is not a player", () => {
+  assert.equal(mapPerson({ name: "Sem Id" }), null);
+  assert.equal(mapPerson({ id: 1 }), null);
+  assert.equal(mapPerson({ id: 1, name: "   " }), null);
 });

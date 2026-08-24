@@ -110,6 +110,7 @@ note for anything that isn't live. New endpoints keep this shape and degrade to 
 rather than returning a 500.
 
 Current routes: `/api/health`, `/api/clubs`, `/api/standings`, `/api/scorers`,
+`/api/players/:id` (numeric id, else 400 — enrichment only, answers `null` offline),
 `/api/matches` (optional `?round=` — a non-integer or `< 1` is a 400).
 
 Adding a section is: a `NAV_ITEMS` entry in `src/navigation.ts`, a `Route` variant plus
@@ -193,6 +194,10 @@ Rules that follow from that:
 - `allInnerTexts()` and `locator.all()` query immediately and do **not** auto-wait,
   unlike `expect(locator)`. Wait for the table to populate first, or they sample a
   half-rendered DOM — this produced a real flake.
+- **Turning text into a control changes its element.** Making a club or player name
+  clickable turned a `span` into a `button` (later an `<a>`), which silently broke every
+  spec selecting `span:first-child`. Select the cell's element children (`td > *`) rather
+  than a tag name.
 - `getByText("...")` is case-insensitive substring matching by default. A bare
   `getByText("Ao vivo")` also matches the banner's "…para dados ao vivo". Scope the
   locator and pass `exact: true`.

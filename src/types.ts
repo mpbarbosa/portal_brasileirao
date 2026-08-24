@@ -67,6 +67,23 @@ export interface StandingsRow {
 }
 
 /**
+ * A player, as much as the provider knows. Every field beyond id and name is
+ * optional: squad listings, the person endpoint and the scorer table each carry
+ * a different subset, and the card renders whatever it has.
+ */
+export interface Player {
+  id: string;
+  name: string;
+  shirtNumber?: number;
+  /** Raw upstream position, in English — translate with `positionLabel`. */
+  position?: string;
+  nationality?: string;
+  /** ISO date, used to derive an age. */
+  dateOfBirth?: string;
+  club?: Club;
+}
+
+/**
  * A row of the top-scorer table (artilharia).
  *
  * `assists` and `penalties` are nullable because the upstream reports them

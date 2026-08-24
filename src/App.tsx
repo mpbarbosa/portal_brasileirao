@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { fetchMatches, fetchScorers, fetchStandings, type MatchesPayload } from "@/src/api";
 import { ClubView } from "@/src/components/ClubView";
 import { NavBar } from "@/src/components/NavBar";
+import { PlayerOverlayCard } from "@/src/components/PlayerOverlayCard";
 import { RoundBrowser } from "@/src/components/RoundBrowser";
 import { ScorersTable } from "@/src/components/ScorersTable";
 import { StandingsTable } from "@/src/components/StandingsTable";
@@ -16,6 +17,9 @@ export function App() {
   const [scorers, setScorers] = useState<Scorer[]>([]);
   /** The round the URL asks for; null means "whatever is current". */
   const [currentRound, setCurrentRound] = useState<number | null>(null);
+  /** The scorer whose card is open. Not a route: a card is a transient overlay,
+   *  and a URL for it would survive a reload that the overlay should not. */
+  const [openScorer, setOpenScorer] = useState<Scorer | null>(null);
   const [note, setNote] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -102,11 +106,23 @@ export function App() {
           {route.section === "artilharia" && (
             <>
               <h2 className="mb-3 text-sm font-medium text-slate-400">Artilharia</h2>
-              <ScorersTable rows={scorers} />
+              <ScorersTable rows={scorers} onSelectPlayer={setOpenScorer} />
             </>
           )}
         </main>
       </div>
+
+      {openScorer && (
+        <PlayerOverlayCard
+          player={{
+            id: openScorer.playerId,
+            name: openScorer.playerName,
+            club: openScorer.club,
+          }}
+          scorer={openScorer}
+          onClose={() => setOpenScorer(null)}
+        />
+      )}
     </div>
   );
 }

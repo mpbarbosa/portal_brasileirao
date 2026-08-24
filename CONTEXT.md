@@ -173,6 +173,25 @@ API.
 _Avoid_: keeping section state in `App` alongside the URL (they drift), a route
 that 404s, adding a router dependency for four routes.
 
+**Cartão do jogador**:
+The overlay opened by choosing a player in **Artilharia**. It renders
+immediately from the row it was opened from (name, club, season figures), then
+fills in shirt number, position, nationality and age from `/api/players/:id`.
+That request is an *enrichment*, not a dependency — when it fails or the app is
+offline the card omits those fields rather than showing blanks. Deliberately not
+a route: an overlay should not survive a reload.
+_Avoid_: blocking the card on the fetch, rendering an empty label for a detail
+the provider did not supply, giving it a URL.
+
+**Posição**:
+A player's position. The upstream reports it in English, at two levels of detail
+— broad lines (`Offence`) and specific roles (`Centre-Back`) — so `positionLabel`
+maps both to pt-BR. An unmapped value is shown **verbatim** rather than replaced
+by a guess or a dash: a reader seeing the English word is better served than one
+seeing nothing.
+_Avoid_: inventing a translation for a value the map does not cover, collapsing
+specific roles into their broad line.
+
 **Menu de seções**:
 The navigation in the sticky header. Its entries come from `NAV_ITEMS`
 (`src/navigation.ts`), which is the single source of truth for what sections exist

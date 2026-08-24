@@ -20,6 +20,10 @@ export const LIVE_MATCHES_CACHE_TTL_MS = 15 * 1000;
  *  are invisible, and it is the least time-critical view in the app. */
 export const SCORERS_CACHE_TTL_MS = 5 * 60 * 1000;
 
+/** A name, birth date and shirt number change at most once a season, and each
+ *  lookup costs a request against a 10/minute budget. */
+export const PLAYER_CACHE_TTL_MS = 60 * 60 * 1000;
+
 export const CIRCUIT_BREAKER_FAILURE_THRESHOLD = 3;
 export const CIRCUIT_BREAKER_OPEN_MS = 60 * 1000;
 

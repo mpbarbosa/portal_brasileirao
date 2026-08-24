@@ -3,7 +3,13 @@ import type { Scorer } from "@/src/types";
 /** Null means the upstream did not report the figure — not that it is zero. */
 const count = (value: number | null) => (value === null ? "—" : String(value));
 
-export function ScorersTable({ rows }: { rows: Scorer[] }) {
+interface ScorersTableProps {
+  rows: Scorer[];
+  /** Omit to render plain names — the table stands on its own. */
+  onSelectPlayer?: (scorer: Scorer) => void;
+}
+
+export function ScorersTable({ rows, onSelectPlayer }: ScorersTableProps) {
   if (rows.length === 0) {
     return <p className="text-sm text-slate-400">Artilharia indisponível no momento.</p>;
   }
@@ -29,7 +35,17 @@ export function ScorersTable({ rows }: { rows: Scorer[] }) {
             <tr key={row.playerId} className="border-t border-slate-800">
               <td className="px-3 py-2 tabular-nums text-slate-400">{row.position}</td>
               <td className="px-3 py-2">
-                <span className="block font-medium">{row.playerName}</span>
+                {onSelectPlayer ? (
+                  <button
+                    type="button"
+                    onClick={() => onSelectPlayer(row)}
+                    className="block rounded font-medium underline decoration-slate-600 underline-offset-2 hover:decoration-slate-300"
+                  >
+                    {row.playerName}
+                  </button>
+                ) : (
+                  <span className="block font-medium">{row.playerName}</span>
+                )}
                 <span className="block text-xs text-slate-500">{row.club.shortName}</span>
               </td>
               <td className="px-2 py-2 text-right font-semibold tabular-nums">{row.goals}</td>

@@ -46,9 +46,11 @@ test.describe("Artilharia", () => {
 
   test("every row names a player and a club", async ({ page }) => {
     for (const row of await page.locator("table tbody tr").all()) {
-      const cell = row.locator("td:nth-child(2)");
-      await expect(cell.locator("span").first()).not.toBeEmpty();
-      await expect(cell.locator("span").nth(1)).not.toBeEmpty();
+      // Element children, not spans: the name is a button when the card
+      // drill-down is enabled and a span when it is not.
+      const parts = row.locator("td:nth-child(2) > *");
+      await expect(parts.nth(0)).not.toBeEmpty();
+      await expect(parts.nth(1)).not.toBeEmpty();
     }
   });
 
