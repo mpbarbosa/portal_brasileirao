@@ -1,4 +1,5 @@
 import { clubKey } from "@/club-core";
+import { ClubCrest } from "@/src/components/ClubCrest";
 import { formatRoute } from "@/route-core";
 import type { StandingsRow } from "@/src/types";
 
@@ -41,6 +42,9 @@ export function StandingsTable({ rows, onSelectClub }: StandingsTableProps) {
             >
               <td className="px-3 py-2 tabular-nums text-slate-400">{row.position}</td>
               <td className="px-3 py-2 font-medium">
+                <span className="mr-2 inline-flex align-middle">
+                  <ClubCrest club={row.club} size={18} />
+                </span>
                 {/* Name and state are separate elements: they are distinct data,
                     and running them together reads as one string to assistive
                     tech and to any text-based assertion. */}

@@ -134,6 +134,7 @@ ${clubs
       `  { code: ${ts(club.code)}, name: ${ts(club.name)}, shortName: ${ts(club.shortName)}` +
       (club.tla ? `, tla: ${ts(club.tla)}` : "") +
       (club.slug ? `, slug: ${ts(club.slug)}` : "") +
+      (club.crest ? `, crest: ${ts(club.crest)}` : "") +
       (club.state ? `, state: ${ts(club.state)}` : "") +
       ` },`,
   )

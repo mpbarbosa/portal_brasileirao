@@ -8,6 +8,7 @@ import {
   standingFor,
   type FormResult,
 } from "@/club-core";
+import { ClubCrest } from "@/src/components/ClubCrest";
 import { MatchList } from "@/src/components/MatchList";
 import type { Club, Match, Scorer, StandingsRow } from "@/src/types";
 
@@ -84,12 +85,15 @@ export function ClubView({
         ← Voltar
       </button>
 
-      <header className="mt-3">
-        <h2 className="text-xl font-bold tracking-tight">{club.shortName}</h2>
-        <p className="text-sm text-slate-400">
-          {club.name}
-          {club.state ? ` · ${club.state}` : ""}
-        </p>
+      <header className="mt-3 flex items-center gap-3">
+        <ClubCrest club={club} size={44} />
+        <div className="min-w-0">
+          <h2 className="truncate text-xl font-bold tracking-tight">{club.shortName}</h2>
+          <p className="truncate text-sm text-slate-400">
+            {club.name}
+            {club.state ? ` · ${club.state}` : ""}
+          </p>
+        </div>
       </header>
 
       {row && (

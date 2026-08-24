@@ -372,3 +372,21 @@ test("a person with no id or no name is not a player", () => {
   assert.equal(mapPerson({ id: 1 }), null);
   assert.equal(mapPerson({ id: 1, name: "   " }), null);
 });
+
+test("a club carries its crest when the upstream supplies one", () => {
+  const club = clubFromTeam({
+    id: 1783,
+    name: "CR Flamengo",
+    shortName: "Flamengo",
+    crest: "https://crests.football-data.org/1783.png",
+  });
+
+  assert.equal(club?.crest, "https://crests.football-data.org/1783.png");
+});
+
+test("a club with no crest simply has none", () => {
+  const club = clubFromTeam({ id: 1783, name: "CR Flamengo", crest: null });
+
+  assert.equal(club?.crest, undefined);
+  assert.equal("crest" in club!, false);
+});

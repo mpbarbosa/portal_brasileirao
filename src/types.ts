@@ -23,6 +23,8 @@ export interface Club {
    * URL falls back to `code`.
    */
   slug?: string;
+  /** Crest image URL, hosted by the data provider. Transparent PNG. */
+  crest?: string;
   /** Home state (e.g. "RJ"). Absent for clubs derived from a provider that
    *  doesn't carry it — render it conditionally. */
   state?: string;

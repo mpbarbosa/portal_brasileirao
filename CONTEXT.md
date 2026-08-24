@@ -62,6 +62,16 @@ _Avoid_: treating it as identity (that is `code`), assuming it is unique without
 the generator's duplicate check — `atletico-mg` and `athletico-pr` differ by one
 letter and both are real clubs.
 
+**Escudo**:
+A club's crest, shown beside its name in the **Classificação** and on its page.
+Comes from the data provider's CDN (`crests.football-data.org`) as a transparent
+PNG of two to four kilobytes, which is why it sits correctly on the dark
+background. Purely decorative — the club's name is always beside it, so the
+image is `alt=""` and `aria-hidden`, and announcing it would say the club twice.
+_Avoid_: CBF's `conteudo.cbf.com.br/clubes/<id>/escudo.jpg` (ten times larger, a
+JPEG so no transparency, and needs CBF club ids the app does not hold), giving
+the crest descriptive alt text.
+
 **tla**:
 The three-letter abbreviation upstream reports for a club (`FLA`, `PAL`, `CAP`).
 Carried on `Club` for compact display only. **Not an identity** — see **Clube**.

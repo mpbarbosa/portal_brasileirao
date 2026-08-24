@@ -38,18 +38,22 @@ test.describe("Classificação", () => {
   test("lists Corinthians and Coritiba as separate clubs", async ({ page }) => {
     // Regression: both report tla "COR" upstream. Keying club identity on the
     // abbreviation merged them into a single row.
-    // First element child of the club cell: a link when the drill-down is
-    // enabled, a span when it is not.
-    const names = page.locator("table tbody tr td:nth-child(2) > :first-child");
+    // Second element child of the club cell: the first is the crest wrapper,
+    // which always renders even when a club has no crest, so the name is always
+    // at position 2. The name itself is a link when the drill-down is enabled
+    // and a span when it is not.
+    const names = page.locator("table tbody tr td:nth-child(2) > :nth-child(2)");
 
     await expect(names.filter({ hasText: /^Corinthians$/ })).toHaveCount(1);
     await expect(names.filter({ hasText: /^Coritiba$/ })).toHaveCount(1);
   });
 
   test("uses the corrected club display names, not the upstream ones", async ({ page }) => {
-    // First element child of the club cell: a link when the drill-down is
-    // enabled, a span when it is not.
-    const names = page.locator("table tbody tr td:nth-child(2) > :first-child");
+    // Second element child of the club cell: the first is the crest wrapper,
+    // which always renders even when a club has no crest, so the name is always
+    // at position 2. The name itself is a link when the drill-down is enabled
+    // and a span when it is not.
+    const names = page.locator("table tbody tr td:nth-child(2) > :nth-child(2)");
 
     await expect(names.filter({ hasText: /^Atlético-MG$/ })).toHaveCount(1);
     await expect(names.filter({ hasText: /^Athletico-PR$/ })).toHaveCount(1);
@@ -75,5 +79,28 @@ test.describe("Classificação", () => {
     for (const value of values) {
       expect(value.trim()).toMatch(/^[+-]?\d+$/);
     }
+  });
+
+  test("each club row shows a crest", async ({ page }) => {
+    const crests = page.locator("table tbody tr td:nth-child(2) img");
+
+    await expect(crests).toHaveCount(20);
+    await expect(crests.first()).toHaveAttribute("src", /crests\.football-data\.org\/\d+\.png/);
+  });
+
+  test("crests are decorative, not announced twice", async ({ page }) => {
+    // The club name sits beside every crest, so describing the image would make
+    // a screen reader say the club twice.
+    for (const crest of await page.locator("table tbody tr td:nth-child(2) img").all()) {
+      await expect(crest).toHaveAttribute("alt", "");
+      await expect(crest).toHaveAttribute("aria-hidden", "true");
+    }
+  });
+
+  test("crests load lazily so twenty rows do not block paint", async ({ page }) => {
+    await expect(page.locator("table tbody tr td:nth-child(2) img").first()).toHaveAttribute(
+      "loading",
+      "lazy",
+    );
   });
 });

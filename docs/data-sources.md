@@ -141,6 +141,19 @@ fixtures and no channels, so it does not solve the broadcast problem. Recorded
 because it is the only structured, openly readable CBF API found, and would be
 the place to look if CBF news were ever wanted.
 
+## Club crests
+
+Taken from `crest` on football-data's team objects — already in every payload we
+fetch, so no extra request and no id mapping. Transparent PNG, 2-4 KB.
+
+CBF also publishes crests at
+`https://conteudo.cbf.com.br/clubes/<cbf_club_id>/escudo.jpg` (that host, unlike
+`www` and `cms`, has a *valid* certificate chain). Not used: the images are ~30 KB
+JPEGs, so ten times larger and without transparency, and they are keyed by CBF's
+club ids, which the app does not store. The `www.cbf.com.br/_next/image?url=…`
+form seen on their pages is their own Next.js optimiser and is unusable from
+outside a browser anyway, since `www` serves the broken chain.
+
 ## How broadcast data actually reaches the app
 
 `scripts/sync-broadcasts.ts` reads CBF's Onde Assistir API on a workstation and

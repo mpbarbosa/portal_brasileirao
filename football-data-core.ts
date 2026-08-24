@@ -44,6 +44,7 @@ interface RawTeam {
   name?: string;
   shortName?: string;
   tla?: string | null;
+  crest?: string | null;
 }
 
 interface RawMatch {
@@ -152,8 +153,11 @@ export const clubFromTeam = (team: RawTeam | undefined): Club | null => {
     team.name;
 
   const slug = slugify(shortName) || undefined;
+  const crest = team.crest?.trim() || undefined;
 
-  return { code, name: team.name, shortName, tla, slug };
+  // Conditional so an absent crest means the key is missing, not present-and-
+  // undefined — otherwise `"crest" in club` lies.
+  return { code, name: team.name, shortName, tla, slug, ...(crest ? { crest } : {}) };
 };
 
 /**
