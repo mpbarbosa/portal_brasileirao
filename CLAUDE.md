@@ -219,6 +219,16 @@ fields to data files or components.
   genuinely differ. `filled` adds the card background; table containers stay unfilled
   because the table header supplies its own. Buttons and the round selector are *control*
   chrome, a separate pattern, and deliberately not folded in.
+- **Controls use `Button` or `controlClasses`.** The bordered chrome was hand-written in
+  six places, which is how a stepper ends up with a `transition` its neighbour lacks.
+  `Button` also defaults `type="button"` — the HTML default is `"submit"`, which silently
+  submits any enclosing form. `controlClasses` exists separately because not every control
+  is a `<button>`: the goals link is an anchor and the round picker a `<select>`, and both
+  should look identical to the buttons beside them.
+  **Do not pass a utility through `extra` that the base already sets.** Two utilities of
+  equal specificity are resolved by *stylesheet* order, not class order, so an override
+  like `text-ink` against the base's `text-ink-soft` is a coin flip. Change the base, or
+  live with it.
 - **Brazilian Portuguese copy** — all user-facing text and error messages are pt-BR in the
   football-broadcast voice. `CONTEXT.md` is the domain glossary: read it before naming a new
   concept, and add the term there in the same commit that introduces it. Each entry carries

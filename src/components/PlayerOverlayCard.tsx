@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 
 import { ageOn, mergePlayer, positionLabel } from "@/player-core";
+import { Button } from "@/src/components/Button";
 import type { Player, Scorer } from "@/src/types";
 
 interface PlayerOverlayCardProps {
@@ -100,15 +101,9 @@ export function PlayerOverlayCard({ player, scorer, onClose }: PlayerOverlayCard
             {club && <p className="truncate text-sm text-ink-muted">{club.shortName}</p>}
           </div>
 
-          <button
-            ref={closeRef}
-            type="button"
-            onClick={onClose}
-            aria-label="Fechar"
-            className="shrink-0 rounded-lg border border-line-strong px-2.5 py-1 text-sm text-ink-soft hover:bg-raised"
-          >
+          <Button ref={closeRef} size="sm" onClick={onClose} aria-label="Fechar" className="shrink-0">
             <span aria-hidden="true">✕</span>
-          </button>
+          </Button>
         </div>
 
         <dl className="mt-4 grid grid-cols-2 gap-3 text-sm sm:grid-cols-3">

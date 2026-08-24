@@ -1,3 +1,4 @@
+import { Button, controlClasses } from "@/src/components/Button";
 import { MatchList } from "@/src/components/MatchList";
 import { matchesForRound } from "@/matches-core";
 import type { Club, Match } from "@/src/types";
@@ -32,22 +33,17 @@ export function RoundBrowser({
   const previous = index > 0 ? rounds[index - 1] : null;
   const next = index >= 0 && index < rounds.length - 1 ? rounds[index + 1] : null;
 
-  const stepClass =
-    "rounded-lg border border-line-strong px-3 py-1.5 text-sm text-ink-soft " +
-    "hover:bg-raised disabled:cursor-not-allowed disabled:opacity-40";
-
   return (
     <>
       <div className="mb-4 flex items-center justify-between gap-3">
-        <button
-          type="button"
-          className={stepClass}
+        <Button
+          size="xs"
           onClick={() => previous !== null && onSelectRound(previous)}
           disabled={previous === null}
           aria-label="Rodada anterior"
         >
           <span aria-hidden="true">←</span>
-        </button>
+        </Button>
 
         <div className="flex items-center gap-2">
           <label htmlFor="seletor-rodada" className="text-sm text-ink-muted">
@@ -55,7 +51,11 @@ export function RoundBrowser({
           </label>
           <select
             id="seletor-rodada"
-            className="rounded-lg border border-line-strong bg-surface px-2 py-1.5 text-sm"
+            /* No text-colour override: two utilities of equal specificity are
+               resolved by stylesheet order, not class order, so an override
+               here would be a coin flip. The base tone matches the steppers
+               either side, which is what this should look like anyway. */
+            className={controlClasses("xs", "bg-surface")}
             value={round}
             onChange={(event) => onSelectRound(Number(event.target.value))}
           >
@@ -67,15 +67,14 @@ export function RoundBrowser({
           </select>
         </div>
 
-        <button
-          type="button"
-          className={stepClass}
+        <Button
+          size="xs"
           onClick={() => next !== null && onSelectRound(next)}
           disabled={next === null}
           aria-label="Próxima rodada"
         >
           <span aria-hidden="true">→</span>
-        </button>
+        </Button>
       </div>
 
       <h2 className="mb-3 text-sm font-medium text-ink-muted">{round}ª rodada</h2>

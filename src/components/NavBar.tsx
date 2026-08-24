@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 
+import { Button } from "@/src/components/Button";
 import { NAV_ITEMS, type SectionId } from "@/src/navigation";
 import { formatRoute, type Route } from "@/route-core";
 import { themeToggleLabel, type Theme } from "@/theme-core";
@@ -106,28 +107,25 @@ export function NavBar({ current, onNavigate, theme, onToggleTheme }: NavBarProp
           ))}
         </nav>
 
-        <button
-          type="button"
+        <Button
           onClick={onToggleTheme}
           aria-label={themeToggleLabel(theme)}
           title={themeToggleLabel(theme)}
-          className="rounded-lg border border-line-strong px-3 py-2 text-sm text-ink-soft hover:bg-raised"
         >
           <span aria-hidden="true">{theme === "light" ? "\u263D" : "\u2600"}</span>
-        </button>
+        </Button>
 
         {/* Mobile: the same sections behind a toggle. */}
-        <button
+        <Button
           ref={toggleRef}
-          type="button"
-          className="rounded-lg border border-line-strong px-3 py-2 text-sm text-ink-soft hover:bg-raised sm:hidden"
+          className="sm:hidden"
           aria-expanded={open}
           aria-controls="menu-secoes"
           aria-label={open ? "Fechar menu" : "Abrir menu"}
           onClick={() => setOpen((value) => !value)}
         >
           <span aria-hidden="true">{open ? "✕" : "☰"}</span>
-        </button>
+        </Button>
       </div>
 
       <div

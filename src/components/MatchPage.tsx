@@ -1,4 +1,5 @@
 import { clubsOf, goalsSearchUrl, hasGoalsToShow, venueLabel } from "@/match-core";
+import { controlClasses } from "@/src/components/Button";
 import { ClubCrest } from "@/src/components/ClubCrest";
 import { clubKey } from "@/club-core";
 import { formatRoute } from "@/route-core";
@@ -150,7 +151,7 @@ export function MatchPage({ match, clubs, onBack, onNavigate }: MatchPageProps) 
             href={goalsSearchUrl(home?.shortName ?? match.homeCode, away?.shortName ?? match.awayCode)}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 rounded-lg border border-line-strong px-3 py-2 text-sm text-ink-soft hover:bg-raised"
+            className={controlClasses("md", "inline-flex items-center gap-2")}
           >
             <span aria-hidden="true">▶</span>
             Procurar os gols no YouTube
