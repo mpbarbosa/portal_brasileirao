@@ -10,6 +10,7 @@ import {
   CircuitBreaker,
   LIVE_MATCHES_CACHE_TTL_MS,
   MATCHES_CACHE_TTL_MS,
+  SCORERS_CACHE_TTL_MS,
   STANDINGS_CACHE_TTL_MS,
   TtlCache,
 } from "@/cache-core";
@@ -17,17 +18,21 @@ import {
   authHeaders,
   clubsFromMatches,
   mapMatches,
+  mapScorers,
   mapStandings,
   matchesUrl,
+  scorersUrl,
   standingsUrl,
   type MatchesResponse,
+  type ScorersResponse,
   type StandingsResponse,
 } from "@/football-data-core";
 import { compareForFeed, currentRound, matchesForRound, roundsOf } from "@/matches-core";
 import { computeStandings } from "@/standings-core";
 import { CLUBS } from "@/src/data/clubs";
 import { SEED_MATCHES, SNAPSHOT_DATE } from "@/src/data/matches";
-import type { ApiEnvelope, Club, Match, StandingsRow } from "@/src/types";
+import { SEED_SCORERS } from "@/src/data/scorers";
+import type { ApiEnvelope, Club, Match, Scorer, StandingsRow } from "@/src/types";
 
 const DEFAULT_PORT = Number(process.env.PORT ?? 3000);
 const HOST = process.env.HOST ?? "0.0.0.0";
@@ -205,6 +210,20 @@ app.get("/api/health", (_req, res) => {
 app.get("/api/clubs", async (_req, res) => {
   const matches = await loadMatches();
   res.json(envelope(matches.data.clubs, matches.source, Date.parse(matches.updatedAt)));
+});
+
+const loadScorers = (): Promise<ApiEnvelope<Scorer[]>> =>
+  loadCached<Scorer[]>(
+    "scorers",
+    SCORERS_CACHE_TTL_MS,
+    async () => mapScorers(await fetchFromProvider<ScorersResponse>(scorersUrl())),
+    () => SEED_SCORERS,
+  );
+
+app.get("/api/scorers", async (_req, res) => {
+  const payload = await loadScorers();
+  res.set("Cache-Control", "public, max-age=300");
+  res.json(payload);
 });
 
 app.get("/api/standings", async (_req, res) => {

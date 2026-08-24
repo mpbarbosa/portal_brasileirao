@@ -109,8 +109,13 @@ look identical to a reader but only `fallback` is worth alerting on. The UI bann
 note for anything that isn't live. New endpoints keep this shape and degrade to local data
 rather than returning a 500.
 
-Current routes: `/api/health`, `/api/clubs`, `/api/standings`, `/api/matches` (optional
-`?round=` — a non-integer or `< 1` is a 400).
+Current routes: `/api/health`, `/api/clubs`, `/api/standings`, `/api/scorers`,
+`/api/matches` (optional `?round=` — a non-integer or `< 1` is a 400).
+
+Adding a section is: a `NAV_ITEMS` entry in `src/navigation.ts`, a case in `App`'s view
+switch, and — if it needs new data — a pure mapper in `football-data-core.ts`, a seed
+snapshot in `scripts/sync-seed-data.ts`, and a cached route in `server.ts`. `NavBar` never
+changes.
 
 ### Data
 

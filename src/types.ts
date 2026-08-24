@@ -61,6 +61,25 @@ export interface StandingsRow {
 }
 
 /**
+ * A row of the top-scorer table (artilharia).
+ *
+ * `assists` and `penalties` are nullable because the upstream reports them
+ * inconsistently — most entries carry no penalty count at all. Null means "not
+ * reported", which is not the same as zero, and the UI must not render it as 0.
+ */
+export interface Scorer {
+  /** Rank in the list, 1-based. */
+  position: number;
+  playerId: string;
+  playerName: string;
+  club: Club;
+  goals: number;
+  assists: number | null;
+  penalties: number | null;
+  playedMatches: number | null;
+}
+
+/**
  * Envelope every externally-backed endpoint returns. `source` names the
  * provider that actually answered, so a client can label degraded data instead
  * of silently presenting stale numbers as live ones.

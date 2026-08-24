@@ -8,8 +8,10 @@ import {
   mapMatch,
   mapMatches,
   mapStandings,
+  mapScorers,
   mapStatus,
   matchesUrl,
+  scorersUrl,
   standingsUrl,
 } from "@/football-data-core";
 
@@ -220,4 +222,92 @@ test("applies the display-name override so live and fallback agree", () => {
 
 test("a club with no override keeps its upstream short name", () => {
   assert.equal(clubFromTeam({ id: 1783, name: "CR Flamengo", shortName: "Flamengo" })?.shortName, "Flamengo");
+});
+
+const SCORERS = {
+  scorers: [
+    {
+      player: { id: 7811, name: "Pedro" },
+      team: { id: 1783, name: "CR Flamengo", shortName: "Flamengo", tla: "FLA" },
+      goals: 15,
+      assists: 5,
+      penalties: 3,
+      playedMatches: 22,
+    },
+    {
+      player: { id: 9001, name: "Kevin Viveros" },
+      team: { id: 1768, name: "CA Paranaense", shortName: "Paranaense", tla: "CAP" },
+      goals: 14,
+      assists: null,
+      penalties: null,
+      playedMatches: 21,
+    },
+  ],
+};
+
+test("builds the scorers URL with an explicit limit", () => {
+  assert.equal(
+    scorersUrl(),
+    "https://api.football-data.org/v4/competitions/BSA/scorers?limit=20",
+  );
+  assert.equal(
+    scorersUrl("BSA", 5),
+    "https://api.football-data.org/v4/competitions/BSA/scorers?limit=5",
+  );
+});
+
+test("ranks scorers by their upstream order", () => {
+  const rows = mapScorers(SCORERS);
+
+  assert.equal(rows.length, 2);
+  assert.deepEqual(
+    rows.map((row) => [row.position, row.playerName, row.goals]),
+    [
+      [1, "Pedro", 15],
+      [2, "Kevin Viveros", 14],
+    ],
+  );
+});
+
+test("a missing assist or penalty count stays null, never zero", () => {
+  // "no penalties reported" and "scored no penalties" are different claims.
+  const [, viveros] = mapScorers(SCORERS);
+
+  assert.equal(viveros.assists, null);
+  assert.equal(viveros.penalties, null);
+});
+
+test("a reported zero is preserved as zero", () => {
+  const [row] = mapScorers({
+    scorers: [{ ...SCORERS.scorers[0], assists: 0, penalties: 0 }],
+  });
+
+  assert.equal(row.assists, 0);
+  assert.equal(row.penalties, 0);
+});
+
+test("scorers carry the corrected club display name", () => {
+  const [, viveros] = mapScorers(SCORERS);
+
+  assert.equal(viveros.club.shortName, "Athletico-PR");
+});
+
+test("drops entries with no name, no club, or no goal count", () => {
+  const rows = mapScorers({
+    scorers: [
+      { ...SCORERS.scorers[0], player: { id: 1, name: "  " } },
+      { ...SCORERS.scorers[0], team: undefined },
+      { ...SCORERS.scorers[0], goals: null },
+      SCORERS.scorers[1],
+    ],
+  });
+
+  assert.deepEqual(rows.map((row) => row.playerName), ["Kevin Viveros"]);
+  // Rank is dense: dropping rows must not leave a gap at the top.
+  assert.equal(rows[0].position, 1);
+});
+
+test("an empty scorers payload yields an empty table", () => {
+  assert.deepEqual(mapScorers({}), []);
+  assert.deepEqual(mapScorers({ scorers: [] }), []);
 });

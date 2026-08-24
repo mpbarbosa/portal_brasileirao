@@ -6,12 +6,12 @@ import type { Match } from "@/src/types";
  *
  * A frozen snapshot of the 2026 season
  * (380 fixtures, played through round 24), taken
- * 2026-08-23 from football-data.org. This is the offline fallback the app
+ * 2026-08-24 from football-data.org. This is the offline fallback the app
  * serves when no token is configured or the upstream is unreachable — real
  * historical data rather than invented scorelines, but **frozen**: it does not
  * reflect anything that happened after the snapshot date.
  */
-export const SNAPSHOT_DATE = "2026-08-23";
+export const SNAPSHOT_DATE = "2026-08-24";
 
 export const SEED_MATCHES: Match[] = [
   { id: "554740", round: 1, kickoff: "2026-01-28T22:00:00Z", status: "FINISHED", homeCode: "1766", awayCode: "1769", homeGoals: 2, awayGoals: 2 },
@@ -250,9 +250,9 @@ export const SEED_MATCHES: Match[] = [
   { id: "554971", round: 24, kickoff: "2026-08-23T19:00:00Z", status: "FINISHED", homeCode: "4286", awayCode: "1767", homeGoals: 1, awayGoals: 0 },
   { id: "554977", round: 24, kickoff: "2026-08-23T19:00:00Z", status: "FINISHED", homeCode: "1769", awayCode: "1780", homeGoals: 4, awayGoals: 1 },
   { id: "554979", round: 24, kickoff: "2026-08-23T19:00:00Z", status: "FINISHED", homeCode: "1782", awayCode: "1777", homeGoals: 0, awayGoals: 2 },
-  { id: "554972", round: 24, kickoff: "2026-08-23T21:30:00Z", status: "SCHEDULED", homeCode: "1772", awayCode: "1776", homeGoals: null, awayGoals: null },
-  { id: "554978", round: 24, kickoff: "2026-08-23T21:30:00Z", status: "SCHEDULED", homeCode: "6685", awayCode: "4364", homeGoals: null, awayGoals: null },
-  { id: "554973", round: 24, kickoff: "2026-08-23T22:30:00Z", status: "SCHEDULED", homeCode: "4241", awayCode: "1779", homeGoals: null, awayGoals: null },
+  { id: "554972", round: 24, kickoff: "2026-08-23T21:30:00Z", status: "FINISHED", homeCode: "1772", awayCode: "1776", homeGoals: 1, awayGoals: 0 },
+  { id: "554978", round: 24, kickoff: "2026-08-23T21:30:00Z", status: "FINISHED", homeCode: "6685", awayCode: "4364", homeGoals: 1, awayGoals: 1 },
+  { id: "554973", round: 24, kickoff: "2026-08-23T22:30:00Z", status: "FINISHED", homeCode: "4241", awayCode: "1779", homeGoals: 2, awayGoals: 1 },
   { id: "554970", round: 24, kickoff: "2026-08-24T23:00:00Z", status: "SCHEDULED", homeCode: "1770", awayCode: "1768", homeGoals: null, awayGoals: null },
   { id: "554981", round: 25, kickoff: "2026-08-29T21:30:00Z", status: "SCHEDULED", homeCode: "1766", awayCode: "1782", homeGoals: null, awayGoals: null },
   { id: "554988", round: 25, kickoff: "2026-08-29T23:00:00Z", status: "SCHEDULED", homeCode: "1776", awayCode: "4286", homeGoals: null, awayGoals: null },

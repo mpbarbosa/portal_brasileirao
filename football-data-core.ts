@@ -9,7 +9,7 @@
  *
  * Upstream docs: https://www.football-data.org/documentation/quickstart
  */
-import type { Club, Match, MatchStatus, StandingsRow } from "@/src/types";
+import type { Club, Match, MatchStatus, Scorer, StandingsRow } from "@/src/types";
 
 export const FOOTBALL_DATA_BASE = "https://api.football-data.org/v4";
 export const BSA_COMPETITION = "BSA";
@@ -24,6 +24,14 @@ export const standingsUrl = (competition: string = BSA_COMPETITION): string =>
 
 export const matchesUrl = (competition: string = BSA_COMPETITION): string =>
   `${FOOTBALL_DATA_BASE}/competitions/${competition}/matches`;
+
+/** Upstream defaults to 10 scorers; the table shows more than that. */
+export const SCORERS_LIMIT = 20;
+
+export const scorersUrl = (
+  competition: string = BSA_COMPETITION,
+  limit: number = SCORERS_LIMIT,
+): string => `${FOOTBALL_DATA_BASE}/competitions/${competition}/scorers?limit=${limit}`;
 
 /** Upstream shapes, narrowed to the fields this app reads. */
 interface RawTeam {
@@ -69,6 +77,19 @@ export interface StandingsResponse {
 
 export interface MatchesResponse {
   matches?: RawMatch[];
+}
+
+interface RawScorer {
+  player?: { id?: number; name?: string };
+  team?: RawTeam;
+  goals?: number | null;
+  assists?: number | null;
+  penalties?: number | null;
+  playedMatches?: number | null;
+}
+
+export interface ScorersResponse {
+  scorers?: RawScorer[];
 }
 
 /**
@@ -206,4 +227,37 @@ export const mapStandings = (payload: StandingsResponse): StandingsRow[] => {
     .map(tableEntryToRow)
     .filter((row): row is StandingsRow => row !== null)
     .sort((a, b) => a.position - b.position);
+};
+
+/**
+ * Build the top-scorer table. Upstream returns the list already ordered by
+ * goals, so rank comes from position in the response rather than being
+ * recomputed — the provider knows how it breaks ties.
+ *
+ * A nullable count stays null rather than collapsing to 0: "no penalties
+ * reported" and "scored no penalties" are different claims, and only one of
+ * them is supported by the data.
+ */
+export const mapScorers = (payload: ScorersResponse): Scorer[] => {
+  const rows: Scorer[] = [];
+
+  for (const raw of payload.scorers ?? []) {
+    const club = clubFromTeam(raw.team);
+    const name = raw.player?.name?.trim();
+    // A scorer with no name or no goal count is not a row worth rendering.
+    if (!club || !name || !isNumber(raw.goals)) continue;
+
+    rows.push({
+      position: rows.length + 1,
+      playerId: isNumber(raw.player?.id) ? String(raw.player.id) : name,
+      playerName: name,
+      club,
+      goals: raw.goals,
+      assists: isNumber(raw.assists) ? raw.assists : null,
+      penalties: isNumber(raw.penalties) ? raw.penalties : null,
+      playedMatches: isNumber(raw.playedMatches) ? raw.playedMatches : null,
+    });
+  }
+
+  return rows;
 };

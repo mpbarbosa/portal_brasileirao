@@ -16,7 +16,7 @@
  * Usage:  npx tsx scripts/sync-seed-data.ts
  *         (reads FOOTBALL_DATA_TOKEN from the environment, else from .env)
  *
- * Costs 2 requests against the 10/minute free-tier budget.
+ * Costs 3 requests against the 10/minute free-tier budget.
  */
 import { readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
@@ -24,10 +24,13 @@ import path from "node:path";
 import {
   clubFromTeam,
   mapMatch,
+  mapScorers,
   matchesUrl,
+  scorersUrl,
   type MatchesResponse,
+  type ScorersResponse,
 } from "@/football-data-core";
-import type { Club, Match } from "@/src/types";
+import type { Club, Match, Scorer } from "@/src/types";
 
 const ROOT = process.cwd();
 const COMPETITION = "BSA";
@@ -70,6 +73,7 @@ const ts = (value: string) => JSON.stringify(value);
 const teamsUrl = `https://api.football-data.org/v4/competitions/${COMPETITION}/teams`;
 const teamsPayload = await get<TeamsResponse>(teamsUrl);
 const matchesPayload = await get<MatchesResponse>(matchesUrl(COMPETITION));
+const scorersPayload = await get<ScorersResponse>(scorersUrl(COMPETITION));
 
 /** Club plus the state parsed from the address, which the API has no field for. */
 interface SeedClub extends Omit<Club, "state"> {
@@ -192,6 +196,33 @@ ${seedMatches
 `,
 );
 
+const seedScorers: Scorer[] = mapScorers(scorersPayload);
+
+const scorerLiteral = (row: Scorer) =>
+  `  { position: ${row.position}, playerId: ${ts(row.playerId)}, playerName: ${ts(row.playerName)}, ` +
+  `club: { code: ${ts(row.club.code)}, name: ${ts(row.club.name)}, shortName: ${ts(row.club.shortName)}` +
+  (row.club.tla ? `, tla: ${ts(row.club.tla)}` : "") +
+  ` }, goals: ${row.goals}, assists: ${row.assists}, penalties: ${row.penalties}, ` +
+  `playedMatches: ${row.playedMatches} },`;
+
+writeFileSync(
+  path.join(ROOT, "src/data/scorers.ts"),
+  `import type { Scorer } from "@/src/types";
+
+/**
+ * GENERATED FILE — do not edit by hand.
+ * Regenerate with: npx tsx scripts/sync-seed-data.ts
+ *
+ * Frozen top-scorer table, taken ${generatedOn} from football-data.org. Serves
+ * as the offline fallback, so it goes stale the moment anyone scores.
+ */
+export const SEED_SCORERS: Scorer[] = [
+${seedScorers.map(scorerLiteral).join("\n")}
+];
+`,
+);
+
 console.log(`Wrote src/data/clubs.ts    — ${clubs.length} clubs`);
 console.log(`Wrote src/data/matches.ts  — ${seedMatches.length} fixtures (through round ${lastPlayed})`);
+console.log(`Wrote src/data/scorers.ts  — ${seedScorers.length} scorers`);
 console.log(`Snapshot date: ${generatedOn}`);

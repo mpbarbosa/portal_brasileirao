@@ -158,7 +158,7 @@ test.describe("Menu de seções", () => {
   });
 
   test("every section in the nav model is reachable", async ({ page }) => {
-    for (const label of ["Classificação", "Rodada"]) {
+    for (const label of ["Classificação", "Rodada", "Artilharia"]) {
       await goToSection(page, label);
       if (isCollapsed(page)) await menuToggle(page).click();
       await expect(

@@ -114,6 +114,17 @@ _Avoid_: "dados de demonstração" and "mock data" (these are real results, not
 invented ones — the old copy said "demonstração" and was wrong), hand-editing
 either file.
 
+**Artilharia**:
+The top-scorer table: `Scorer[]` from `/api/scorers`, ordered by the provider
+rather than recomputed, since it knows how it breaks ties. Columns are G (gols),
+A (assistências), P (pênaltis) and J (jogos). `assists`, `penalties` and
+`playedMatches` are **nullable** — the upstream omits penalties for most players
+— and null renders as an em dash, never as `0`: "not reported" and "scored none"
+are different claims and only one is supported by the data.
+_Avoid_: "goleadores" as the section label ("Artilharia" is the term a Brazilian
+reader expects), coercing a null count to zero anywhere between the mapper and
+the cell.
+
 **Menu de seções**:
 The navigation in the sticky header. Its entries come from `NAV_ITEMS`
 (`src/navigation.ts`), which is the single source of truth for what sections exist
