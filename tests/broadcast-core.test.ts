@@ -9,7 +9,9 @@ import {
   kickoffToIso,
   matchClub,
   parseChannels,
+  venueFromLocal,
   withBroadcasters,
+  withVenues,
 } from "@/broadcast-core";
 import type { Club, Match } from "@/src/types";
 
@@ -284,4 +286,52 @@ test("a confirmed fixture on the same day is never matched by date alone", () =>
     }),
     null,
   );
+});
+
+test("a venue string splits into stadium, city and state", () => {
+  assert.deepEqual(venueFromLocal("Nilton Santos - Rio de Janeiro - RJ"), {
+    stadium: "Nilton Santos",
+    city: "Rio de Janeiro",
+    state: "RJ",
+  });
+});
+
+test("stray whitespace around the parts is trimmed", () => {
+  // A real CBF row arrived as " Cícero de Souza Marques - Braganca Paulista - SP".
+  assert.deepEqual(venueFromLocal("  Cícero de Souza Marques - Braganca Paulista - SP "), {
+    stadium: "Cícero de Souza Marques",
+    city: "Braganca Paulista",
+    state: "SP",
+  });
+});
+
+test("CBF's own casing and missing accents are preserved, not corrected", () => {
+  // Correcting these would mean guessing at proper names.
+  assert.deepEqual(venueFromLocal("ARENA MRV - Belo Horizonte - MG"), {
+    stadium: "ARENA MRV",
+    city: "Belo Horizonte",
+    state: "MG",
+  });
+  assert.equal(venueFromLocal("Morumbi - Sao Paulo - SP")?.city, "Sao Paulo");
+});
+
+test("a state code is normalised to upper case", () => {
+  assert.equal(venueFromLocal("Maracanã - Rio de Janeiro - rj")?.state, "RJ");
+});
+
+test("anything not in the expected shape yields no venue", () => {
+  assert.equal(venueFromLocal("Maracanã - Rio de Janeiro"), null);
+  assert.equal(venueFromLocal("Maracanã - Rio de Janeiro - Brasil"), null);
+  assert.equal(venueFromLocal(" - - "), null);
+  assert.equal(venueFromLocal(undefined), null);
+});
+
+test("venues attach only to the matches that have one", () => {
+  const venue = { stadium: "Nilton Santos", city: "Rio de Janeiro", state: "RJ" };
+  const [withVenue, without] = withVenues([match("554970"), match("999999")], {
+    "554970": venue,
+  });
+
+  assert.deepEqual(withVenue.venue, venue);
+  assert.equal("venue" in without, false);
 });

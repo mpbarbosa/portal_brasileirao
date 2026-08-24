@@ -2,11 +2,14 @@ import { useEffect, useState } from "react";
 
 import { fetchMatches, fetchScorers, fetchStandings, type MatchesPayload } from "@/src/api";
 import { ClubView } from "@/src/components/ClubView";
+import { MatchPage } from "@/src/components/MatchPage";
 import { NavBar } from "@/src/components/NavBar";
 import { PlayerOverlayCard } from "@/src/components/PlayerOverlayCard";
 import { RoundBrowser } from "@/src/components/RoundBrowser";
 import { ScorersTable } from "@/src/components/ScorersTable";
 import { StandingsTable } from "@/src/components/StandingsTable";
+import { findMatch } from "@/match-core";
+import { parseRoute } from "@/route-core";
 import { useRoute } from "@/src/useRoute";
 import type { Scorer, StandingsRow } from "@/src/types";
 
@@ -89,6 +92,7 @@ export function App() {
               matches={matches?.matches ?? []}
               clubs={matches?.clubs}
               onSelectRound={(value) => navigate({ section: "jogos", round: value })}
+              onSelectMatch={(id) => navigate({ section: "partida", id })}
             />
           )}
 
@@ -100,6 +104,15 @@ export function App() {
               clubs={matches?.clubs}
               scorers={scorers}
               onBack={() => navigate({ section: "classificacao" })}
+            />
+          )}
+
+          {route.section === "partida" && (
+            <MatchPage
+              match={findMatch(matches?.matches ?? [], route.id)}
+              clubs={matches?.clubs ?? []}
+              onBack={() => navigate({ section: "jogos", round: null })}
+              onNavigate={(path) => navigate(parseRoute(path))}
             />
           )}
 

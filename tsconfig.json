@@ -33,6 +33,7 @@
     "server.ts",
     "standings-core.ts",
     "matches-core.ts",
+    "match-core.ts",
     "club-core.ts",
     "route-core.ts",
     "player-core.ts",

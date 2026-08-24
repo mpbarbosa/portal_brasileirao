@@ -3,7 +3,7 @@
  * their channels come out (tests/broadcast-core.test.ts).
  */
 import { findClub, slugify } from "@/club-core";
-import type { Club, Match } from "@/src/types";
+import type { Club, Match, Venue } from "@/src/types";
 
 /**
  * Channels for one match, or null when none are recorded.
@@ -61,6 +61,7 @@ export const parseChannels = (raw: string): string[] =>
 export interface CbfFixture {
   data?: string;
   hora?: string;
+  local?: string;
   mandante?: { nome?: string };
   transmissoes?: { nome?: string }[];
   competicao?: { categoria_id?: string };
@@ -181,3 +182,32 @@ export const joinMatch = (
 
   return sameDay.length === 1 ? sameDay[0].id : null;
 };
+
+
+/**
+ * Parse CBF's venue string, which is consistently three ` - ` separated parts:
+ * `Nilton Santos - Rio de Janeiro - RJ`.
+ *
+ * Values are kept verbatim apart from trimming. CBF's casing and accents drift
+ * — `ARENA MRV`, `Sao Paulo` without the tilde — but correcting them would mean
+ * guessing at names, and a wrong stadium reads worse than an unstyled one.
+ */
+export const venueFromLocal = (local: string | undefined): Venue | null => {
+  const parts = (local ?? "").split(" - ").map((part) => part.trim());
+  if (parts.length !== 3) return null;
+
+  const [stadium, city, state] = parts;
+  if (!stadium || !city || !/^[A-Za-z]{2}$/.test(state)) return null;
+
+  return { stadium, city, state: state.toUpperCase() };
+};
+
+/** Attach venues to the matches that have one, leaving the rest untouched. */
+export const withVenues = (
+  matches: Match[],
+  venues: Record<string, Venue>,
+): Match[] =>
+  matches.map((match) => {
+    const venue = venues[match.id];
+    return venue ? { ...match, venue } : match;
+  });

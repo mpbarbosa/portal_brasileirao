@@ -35,6 +35,15 @@ export interface Club {
  * SCHEDULED: Série A rounds get moved often enough that collapsing them would
  * misreport a round as still playable.
  */
+/** Where a match is played. Not from the data provider — merged from the CBF
+ *  sync, which reports it as "Stadium - City - UF". */
+export interface Venue {
+  stadium: string;
+  city: string;
+  /** Two-letter state code, e.g. "RJ". */
+  state: string;
+}
+
 export type MatchStatus =
   | "SCHEDULED"
   | "LIVE"
@@ -55,10 +64,12 @@ export interface Match {
   awayGoals: number | null;
   /**
    * Where to watch. Not from the data provider — none of them carry it — but
-   * merged in from the hand-curated map in `src/data/broadcasts.ts`. Absent
-   * means unknown, which is the common case.
+   * merged in from `src/data/broadcasts.ts`. Absent means unknown, which is the
+   * common case.
    */
   broadcasters?: string[];
+  /** Where it is played. Merged from `src/data/venues.ts`; also absent for most. */
+  venue?: Venue;
 }
 
 export interface StandingsRow {

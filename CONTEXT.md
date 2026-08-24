@@ -84,6 +84,33 @@ and goals that are `null` until there is a score to report.
 _Avoid_: "game"/"jogo" for the entity (`J` in the table means *jogos disputados*,
 a count, not a fixture), "event".
 
+**Página da partida**:
+The detail page for one fixture, at `/partida/<id>`, reached from the fixture
+list. Shows the scoreboard, round, status, kickoff, **Estádio** and — depending
+on state — either **Onde assistir** or a link to the goals. Every field beyond
+the score is optional, since the provider supplies neither venue nor channels,
+so each section renders only when its data exists.
+_Avoid_: rendering an empty row for a field the sync has not filled, showing a
+goals link before a match has been played.
+
+**Estádio**:
+Where a match is played: stadium, city and two-letter state, from
+`src/data/venues.ts`. The data provider has **no venue field at any tier**, so
+this comes from CBF's Onde Assistir feed, which reports it as
+`Stadium - City - UF`. Values are stored verbatim — CBF's casing and accents
+drift (`ARENA MRV`, `Sao Paulo` without the tilde) and correcting them would
+mean guessing at proper names.
+_Avoid_: title-casing or re-accenting CBF's values, expecting football-data to
+supply a venue.
+
+**Gols (link)**:
+On a finished match that had goals, a link to *search* YouTube for them. It is a
+search, not a chosen video: no provider we use exposes highlight links, and
+guessing a video id would eventually point at the wrong match or someone's
+reupload. The page says so in as many words.
+_Avoid_: presenting it as an official video, offering it for a fixture that has
+not finished or ended goalless.
+
 **Status da partida**:
 The five values of `MatchStatus`, shown as badges: `SCHEDULED` → "A realizar",
 `LIVE` → "Ao vivo", `FINISHED` → "Encerrado", `POSTPONED` → "Adiado",

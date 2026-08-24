@@ -16,7 +16,9 @@ export type Route =
    * links published before slugs existed. Resolving it to a club is the view's
    * job (`findClub`), not the router's.
    */
-  | { section: "clube"; key: string };
+  | { section: "clube"; key: string }
+  /** A single fixture, addressed by our match id. */
+  | { section: "partida"; id: string };
 
 export const HOME: Route = { section: "classificacao" };
 
@@ -45,6 +47,9 @@ export const parseRoute = (pathname: string): Route => {
     case "clube":
       return second ? { section: "clube", key: second } : HOME;
 
+    case "partida":
+      return second ? { section: "partida", id: second } : HOME;
+
     default:
       return HOME;
   }
@@ -61,6 +66,8 @@ export const formatRoute = (route: Route): string => {
       return "/artilharia";
     case "clube":
       return `/clube/${encodeURIComponent(route.key)}`;
+    case "partida":
+      return `/partida/${encodeURIComponent(route.id)}`;
   }
 };
 

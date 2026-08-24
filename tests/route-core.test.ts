@@ -76,3 +76,18 @@ test("sameRoute compares by canonical path", () => {
   assert.equal(sameRoute({ section: "jogos", round: 3 }, { section: "jogos", round: 3 }), true);
   assert.equal(sameRoute({ section: "jogos", round: 3 }, { section: "jogos", round: 4 }), false);
 });
+
+test("a match has its own address", () => {
+  assert.deepEqual(parseRoute("/partida/554970"), { section: "partida", id: "554970" });
+  assert.equal(formatRoute({ section: "partida", id: "554970" }), "/partida/554970");
+});
+
+test("a match path with no id falls back home", () => {
+  assert.deepEqual(parseRoute("/partida"), HOME);
+  assert.deepEqual(parseRoute("/partida/"), HOME);
+});
+
+test("a match route round-trips", () => {
+  const route: Route = { section: "partida", id: "554970" };
+  assert.deepEqual(parseRoute(formatRoute(route)), route);
+});

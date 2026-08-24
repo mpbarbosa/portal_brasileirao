@@ -8,7 +8,12 @@
  * `clube` is a detail view reached by choosing a club, not a menu entry — it has
  * no meaning without a selection, so it is absent from NAV_ITEMS on purpose.
  */
-export type SectionId = "classificacao" | "jogos" | "artilharia" | "clube";
+export type SectionId =
+  | "classificacao"
+  | "jogos"
+  | "artilharia"
+  | "clube"
+  | "partida";
 
 export interface NavItem {
   id: SectionId;

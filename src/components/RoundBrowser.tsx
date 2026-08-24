@@ -8,6 +8,7 @@ interface RoundBrowserProps {
   matches: Match[];
   clubs?: Club[];
   onSelectRound: (round: number) => void;
+  onSelectMatch?: (id: string) => void;
 }
 
 /**
@@ -21,6 +22,7 @@ export function RoundBrowser({
   matches,
   clubs,
   onSelectRound,
+  onSelectMatch,
 }: RoundBrowserProps) {
   if (round === null || rounds.length === 0) {
     return <p className="text-sm text-slate-400">Nenhuma rodada disponível.</p>;
@@ -77,7 +79,11 @@ export function RoundBrowser({
       </div>
 
       <h2 className="mb-3 text-sm font-medium text-slate-400">{round}ª rodada</h2>
-      <MatchList matches={matchesForRound(matches, round)} clubs={clubs} />
+      <MatchList
+        matches={matchesForRound(matches, round)}
+        clubs={clubs}
+        onSelectMatch={onSelectMatch}
+      />
     </>
   );
 }

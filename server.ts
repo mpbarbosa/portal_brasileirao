@@ -31,11 +31,12 @@ import {
   type ScorersResponse,
   type StandingsResponse,
 } from "@/football-data-core";
-import { withBroadcasters } from "@/broadcast-core";
+import { withBroadcasters, withVenues } from "@/broadcast-core";
 import { compareForFeed, currentRound, matchesForRound, roundsOf } from "@/matches-core";
 import { computeStandings } from "@/standings-core";
 import { CLUBS } from "@/src/data/clubs";
 import { BROADCASTS } from "@/src/data/broadcasts";
+import { VENUES } from "@/src/data/venues";
 import { SEED_MATCHES, SNAPSHOT_DATE } from "@/src/data/matches";
 import { SEED_SCORERS } from "@/src/data/scorers";
 import type { ApiEnvelope, Club, Match, Player, Scorer, StandingsRow } from "@/src/types";
@@ -150,7 +151,10 @@ interface MatchesPayload {
 const seedMatchesPayload = (): MatchesPayload => ({
   rounds: roundsOf(SEED_MATCHES),
   currentRound: currentRound(SEED_MATCHES, Date.now()),
-  matches: withBroadcasters([...SEED_MATCHES].sort(compareForFeed), BROADCASTS),
+  matches: withVenues(
+    withBroadcasters([...SEED_MATCHES].sort(compareForFeed), BROADCASTS),
+    VENUES,
+  ),
   clubs: CLUBS,
 });
 
@@ -190,9 +194,12 @@ const loadMatches = async (): Promise<ApiEnvelope<MatchesPayload>> => {
     const payload: MatchesPayload = {
       rounds: roundsOf(matches),
       currentRound: currentRound(matches, Date.now()),
-      // Curated channels ride along with live fixtures too — the provider will
-      // never supply them.
-      matches: withBroadcasters([...matches].sort(compareForFeed), BROADCASTS),
+      // Curated channels and venues ride along with live fixtures too — the
+      // provider supplies neither.
+      matches: withVenues(
+        withBroadcasters([...matches].sort(compareForFeed), BROADCASTS),
+        VENUES,
+      ),
       clubs: clubsFromMatches(raw),
     };
 
