@@ -7,7 +7,7 @@ const goToArtilharia = async (page: Page) => {
   if (isCollapsed(page)) {
     await page.getByRole("button", { name: /menu/i }).click();
   }
-  await page.getByRole("button", { name: /^Artilharia/ }).click();
+  await page.getByRole("link", { name: /^Artilharia/ }).click();
   await expect(page.locator("table tbody tr").first()).toBeVisible();
 };
 
@@ -72,7 +72,7 @@ test.describe("Artilharia", () => {
 
   test("switching away and back keeps the table", async ({ page }) => {
     if (isCollapsed(page)) await page.getByRole("button", { name: /menu/i }).click();
-    await page.getByRole("button", { name: /^Classificação/ }).click();
+    await page.getByRole("link", { name: /^Classificação/ }).click();
     await expect(page.locator("table tbody tr")).toHaveCount(20);
 
     await goToArtilharia(page);

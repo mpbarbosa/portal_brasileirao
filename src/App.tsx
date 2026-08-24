@@ -6,17 +6,16 @@ import { NavBar } from "@/src/components/NavBar";
 import { RoundBrowser } from "@/src/components/RoundBrowser";
 import { ScorersTable } from "@/src/components/ScorersTable";
 import { StandingsTable } from "@/src/components/StandingsTable";
-import { DEFAULT_SECTION, type SectionId } from "@/src/navigation";
-import type { ClubCode, Scorer, StandingsRow } from "@/src/types";
+import { useRoute } from "@/src/useRoute";
+import type { Scorer, StandingsRow } from "@/src/types";
 
 export function App() {
-  const [section, setSection] = useState<SectionId>(DEFAULT_SECTION);
+  const { route, navigate } = useRoute();
   const [standings, setStandings] = useState<StandingsRow[]>([]);
   const [matches, setMatches] = useState<MatchesPayload | null>(null);
   const [scorers, setScorers] = useState<Scorer[]>([]);
-  /** Null until the payload lands; then it follows the round the reader picks. */
-  const [round, setRound] = useState<number | null>(null);
-  const [clubCode, setClubCode] = useState<ClubCode | null>(null);
+  /** The round the URL asks for; null means "whatever is current". */
+  const [currentRound, setCurrentRound] = useState<number | null>(null);
   const [note, setNote] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -35,7 +34,7 @@ export function App() {
         setStandings(standingsResponse.data);
         setMatches(matchesResponse.data);
         setScorers(scorersResponse.data);
-        setRound(matchesResponse.data.currentRound);
+        setCurrentRound(matchesResponse.data.currentRound);
         // Only flag non-live sources; live data needs no disclaimer banner.
         setNote(standingsResponse.source === "football-data" ? null : standingsResponse.note);
       } catch (cause) {
@@ -52,7 +51,7 @@ export function App() {
 
   return (
     <div className="min-h-screen">
-      <NavBar current={section} onSelect={setSection} />
+      <NavBar current={route.section} onNavigate={navigate} />
 
       <div className="mx-auto max-w-3xl px-4 py-6">
         <h1 className="sr-only">Portal Brasileirão — Campeonato Brasileiro Série A</h1>
@@ -70,38 +69,37 @@ export function App() {
         )}
 
         <main>
-          {section === "classificacao" && (
+          {route.section === "classificacao" && (
             <StandingsTable
               rows={standings}
-              onSelectClub={(code) => {
-                setClubCode(code);
-                setSection("clube");
-              }}
+              onSelectClub={(code) => navigate({ section: "clube", code })}
             />
           )}
 
-          {section === "jogos" && (
+          {route.section === "jogos" && (
             <RoundBrowser
               rounds={matches?.rounds ?? []}
-              round={round}
+              // The URL wins when it names a round; otherwise fall back to the
+              // current one, so /jogos stays a link that ages well.
+              round={route.round ?? currentRound}
               matches={matches?.matches ?? []}
               clubs={matches?.clubs}
-              onSelectRound={setRound}
+              onSelectRound={(value) => navigate({ section: "jogos", round: value })}
             />
           )}
 
-          {section === "clube" && clubCode && (
+          {route.section === "clube" && (
             <ClubView
-              code={clubCode}
+              code={route.code}
               standings={standings}
               matches={matches?.matches ?? []}
               clubs={matches?.clubs}
               scorers={scorers}
-              onBack={() => setSection("classificacao")}
+              onBack={() => navigate({ section: "classificacao" })}
             />
           )}
 
-          {section === "artilharia" && (
+          {route.section === "artilharia" && (
             <>
               <h2 className="mb-3 text-sm font-medium text-slate-400">Artilharia</h2>
               <ScorersTable rows={scorers} />

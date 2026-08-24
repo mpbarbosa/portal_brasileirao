@@ -38,7 +38,7 @@ test.describe("Classificação", () => {
   test("lists Corinthians and Coritiba as separate clubs", async ({ page }) => {
     // Regression: both report tla "COR" upstream. Keying club identity on the
     // abbreviation merged them into a single row.
-    // First element child of the club cell: a button when the drill-down is
+    // First element child of the club cell: a link when the drill-down is
     // enabled, a span when it is not.
     const names = page.locator("table tbody tr td:nth-child(2) > :first-child");
 
@@ -47,7 +47,7 @@ test.describe("Classificação", () => {
   });
 
   test("uses the corrected club display names, not the upstream ones", async ({ page }) => {
-    // First element child of the club cell: a button when the drill-down is
+    // First element child of the club cell: a link when the drill-down is
     // enabled, a span when it is not.
     const names = page.locator("table tbody tr td:nth-child(2) > :first-child");
 

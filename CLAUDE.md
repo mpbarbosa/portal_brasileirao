@@ -112,10 +112,27 @@ rather than returning a 500.
 Current routes: `/api/health`, `/api/clubs`, `/api/standings`, `/api/scorers`,
 `/api/matches` (optional `?round=` — a non-integer or `< 1` is a 400).
 
-Adding a section is: a `NAV_ITEMS` entry in `src/navigation.ts`, a case in `App`'s view
-switch, and — if it needs new data — a pure mapper in `football-data-core.ts`, a seed
-snapshot in `scripts/sync-seed-data.ts`, and a cached route in `server.ts`. `NavBar` never
-changes.
+Adding a section is: a `NAV_ITEMS` entry in `src/navigation.ts`, a `Route` variant plus
+parse/format cases in `route-core.ts`, a case in `App`'s view switch, and — if it needs new
+data — a pure mapper in `football-data-core.ts`, a seed snapshot in
+`scripts/sync-seed-data.ts`, and a cached route in `server.ts`. `NavBar` never changes.
+
+### Routing
+
+The URL is the source of truth for the visible section; `App` holds no section state.
+`route-core.ts` is pure parse/format with no History API and no React, so every path shape
+is unit-tested without a browser. `src/useRoute.ts` binds it to `pushState`/`popstate`.
+
+Nav entries and club names are real `<a href>` elements, so middle-click and "open in new
+tab" behave. Their click handlers bail out on modified clicks rather than swallowing them.
+
+**Deep links depend on the server's SPA catch-all.** `/clube/1783` is not a file, so
+`express.static` misses and the `app.get("*")` handler serves `index.html`. That handler
+must stay registered *after* the API routes, or `/api/*` would be swallowed by it. Verified
+in both dev (Vite middleware, `appType: "spa"`) and the production bundle.
+
+Unrecognised paths and nonsense rounds resolve to something useful rather than 404 — a
+stale link should still land somewhere.
 
 ### Data
 

@@ -6,8 +6,8 @@ const isCollapsed = (page: Page) => (page.viewportSize()?.width ?? 0) < SM_BREAK
 /** Open the club sitting at a given standings position. */
 const openClubAt = async (page: Page, position: number) => {
   const row = page.locator("table tbody tr").nth(position - 1);
-  const name = (await row.locator("td:nth-child(2) button").innerText()).trim();
-  await row.locator("td:nth-child(2) button").click();
+  const name = (await row.locator("td:nth-child(2) a").innerText()).trim();
+  await row.locator("td:nth-child(2) a").click();
   await expect(page.getByRole("heading", { level: 2 })).toHaveText(name);
   return name;
 };
@@ -18,11 +18,12 @@ test.describe("Clube", () => {
     await expect(page.locator("table tbody tr")).toHaveCount(20);
   });
 
-  test("club names in the table are actionable", async ({ page }) => {
-    const buttons = page.locator("table tbody tr td:nth-child(2) button");
+  test("club names are real links, not click handlers", async ({ page }) => {
+    const links = page.locator("table tbody tr td:nth-child(2) a");
 
-    await expect(buttons).toHaveCount(20);
-    await expect(buttons.first()).toBeEnabled();
+    await expect(links).toHaveCount(20);
+    // A real href is what makes middle-click and "open in new tab" work.
+    await expect(links.first()).toHaveAttribute("href", /^\/clube\/.+/);
   });
 
   test("choosing a club opens its page", async ({ page }) => {
@@ -92,7 +93,7 @@ test.describe("Clube", () => {
     await openClubAt(page, 5);
 
     if (isCollapsed(page)) await page.getByRole("button", { name: /menu/i }).click();
-    await page.getByRole("button", { name: /^Artilharia/ }).click();
+    await page.getByRole("link", { name: /^Artilharia/ }).click();
 
     await expect(page.locator("table thead th").nth(1)).toHaveText(/jogador/i);
   });
@@ -100,6 +101,6 @@ test.describe("Clube", () => {
   test("no nav entry points at the club section", async ({ page }) => {
     // It is a drill-down: without a selected club it would render nothing.
     if (isCollapsed(page)) await page.getByRole("button", { name: /menu/i }).click();
-    await expect(page.getByRole("button", { name: /^Clube$/ })).toHaveCount(0);
+    await expect(page.getByRole("link", { name: /^Clube$/ })).toHaveCount(0);
   });
 });

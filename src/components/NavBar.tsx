@@ -1,11 +1,16 @@
 import { useEffect, useRef, useState } from "react";
 
 import { NAV_ITEMS, type SectionId } from "@/src/navigation";
+import { formatRoute, type Route } from "@/route-core";
 
 interface NavBarProps {
   current: SectionId;
-  onSelect: (id: SectionId) => void;
+  onNavigate: (route: Route) => void;
 }
+
+/** The route a menu entry points at. Sections other than these are drill-downs. */
+const routeFor = (id: SectionId): Route =>
+  id === "jogos" ? { section: "jogos", round: null } : ({ section: id } as Route);
 
 /**
  * Sticky header with the brand and the section menu.
@@ -15,7 +20,7 @@ interface NavBarProps {
  * reachable at any width — the difference is only whether the list is visible
  * without a tap.
  */
-export function NavBar({ current, onSelect }: NavBarProps) {
+export function NavBar({ current, onNavigate }: NavBarProps) {
   const [open, setOpen] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
   const toggleRef = useRef<HTMLButtonElement>(null);
@@ -47,8 +52,17 @@ export function NavBar({ current, onSelect }: NavBarProps) {
     };
   }, [open]);
 
-  const select = (id: SectionId) => {
-    onSelect(id);
+  /**
+   * Entries are real links, so middle-click and "open in new tab" work. Only a
+   * plain left-click is intercepted; modified clicks fall through to the
+   * browser.
+   */
+  const select = (event: React.MouseEvent, id: SectionId) => {
+    if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0) {
+      return;
+    }
+    event.preventDefault();
+    onNavigate(routeFor(id));
     setOpen(false);
   };
 
@@ -77,15 +91,15 @@ export function NavBar({ current, onSelect }: NavBarProps) {
             description is shown as real text in the collapsed panel instead. */}
         <nav className="hidden gap-1 sm:flex" aria-label="Seções">
           {NAV_ITEMS.map((item) => (
-            <button
+            <a
               key={item.id}
-              type="button"
-              onClick={() => select(item.id)}
+              href={formatRoute(routeFor(item.id))}
+              onClick={(event) => select(event, item.id)}
               aria-current={item.id === current ? "page" : undefined}
               className={itemClass(item.id, false)}
             >
               {item.label}
-            </button>
+            </a>
           ))}
         </nav>
 
@@ -111,10 +125,10 @@ export function NavBar({ current, onSelect }: NavBarProps) {
       >
         <nav className="mx-auto max-w-3xl space-y-1 px-4 py-3" aria-label="Seções">
           {NAV_ITEMS.map((item) => (
-            <button
+            <a
               key={item.id}
-              type="button"
-              onClick={() => select(item.id)}
+              href={formatRoute(routeFor(item.id))}
+              onClick={(event) => select(event, item.id)}
               aria-current={item.id === current ? "page" : undefined}
               className={itemClass(item.id, true)}
             >
@@ -122,7 +136,7 @@ export function NavBar({ current, onSelect }: NavBarProps) {
               <span className="block text-xs font-normal text-slate-400">
                 {item.description}
               </span>
-            </button>
+            </a>
           ))}
         </nav>
       </div>

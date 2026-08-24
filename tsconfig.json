@@ -34,6 +34,7 @@
     "standings-core.ts",
     "matches-core.ts",
     "club-core.ts",
+    "route-core.ts",
     "football-data-core.ts",
     "cache-core.ts",
     "vite.config.ts",

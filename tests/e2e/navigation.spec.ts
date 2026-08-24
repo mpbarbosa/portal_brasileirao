@@ -16,7 +16,7 @@ const goToSection = async (page: Page, label: string) => {
   if (isCollapsed(page)) {
     await menuToggle(page).click();
   }
-  await page.getByRole("button", { name: new RegExp(`^${label}`) }).click();
+  await page.getByRole("link", { name: new RegExp(`^${label}`) }).click();
 };
 
 test.describe("Navegação", () => {
@@ -43,7 +43,7 @@ test.describe("Navegação", () => {
     await expect(page.locator("table")).toBeVisible();
     if (isCollapsed(page)) await menuToggle(page).click();
     await expect(
-      page.getByRole("button", { name: /^Classificação/ }),
+      page.getByRole("link", { name: /^Classificação/ }),
     ).toHaveAttribute("aria-current", "page");
   });
 
@@ -101,7 +101,7 @@ test.describe("Menu de seções", () => {
     } else {
       // On a wide viewport the sections are inline; a toggle would be noise.
       await expect(menuToggle(page)).toBeHidden();
-      await expect(page.getByRole("button", { name: /^Classificação/ })).toBeVisible();
+      await expect(page.getByRole("link", { name: /^Classificação/ })).toBeVisible();
     }
   });
 
@@ -128,7 +128,7 @@ test.describe("Menu de seções", () => {
     test.skip(!isCollapsed(page), "no toggle at this width");
 
     await menuToggle(page).click();
-    await page.getByRole("button", { name: /^Jogos/ }).click();
+    await page.getByRole("link", { name: /^Jogos/ }).click();
 
     await expect(menuToggle(page)).toHaveAttribute("aria-expanded", "false");
     await expect(page.getByRole("heading", { level: 2 })).toHaveText(/\d+ª rodada/);
@@ -162,7 +162,7 @@ test.describe("Menu de seções", () => {
       await goToSection(page, label);
       if (isCollapsed(page)) await menuToggle(page).click();
       await expect(
-        page.getByRole("button", { name: new RegExp(`^${label}`) }),
+        page.getByRole("link", { name: new RegExp(`^${label}`) }),
       ).toHaveAttribute("aria-current", "page");
       if (isCollapsed(page)) await page.keyboard.press("Escape");
     }

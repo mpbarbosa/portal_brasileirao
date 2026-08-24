@@ -5,7 +5,7 @@ const isCollapsed = (page: Page) => (page.viewportSize()?.width ?? 0) < SM_BREAK
 
 const goToJogos = async (page: Page) => {
   if (isCollapsed(page)) await page.getByRole("button", { name: /menu/i }).click();
-  await page.getByRole("button", { name: /^Jogos/ }).click();
+  await page.getByRole("link", { name: /^Jogos/ }).click();
   await expect(page.getByRole("combobox", { name: "Rodada" })).toBeVisible();
 };
 
@@ -84,14 +84,19 @@ test.describe("Jogos", () => {
     await expect(page.locator("main ul > li").first()).toContainText("A realizar");
   });
 
-  test("the chosen round survives leaving and returning to the section", async ({ page }) => {
+  test("the nav entry always lands on the current round", async ({ page }) => {
+    // /jogos means "whatever is current", so the menu is a fixed destination
+    // rather than a way back to the round you were last looking at. That is
+    // what Back is for — see the routing spec.
+    const current = await currentRound(page);
     await page.getByRole("combobox", { name: "Rodada" }).selectOption("3");
+    await expect(page).toHaveURL(/\/jogos\/3$/);
 
     if (isCollapsed(page)) await page.getByRole("button", { name: /menu/i }).click();
-    await page.getByRole("button", { name: /^Classificação/ }).click();
-    await expect(page.locator("table tbody tr")).toHaveCount(20);
-
+    await page.getByRole("link", { name: /^Classificação/ }).click();
     await goToJogos(page);
-    await expect(page.getByRole("heading", { level: 2 })).toHaveText("3ª rodada");
+
+    await expect(page).toHaveURL(/\/jogos$/);
+    await expect(page.getByRole("heading", { level: 2 })).toHaveText(`${current}ª rodada`);
   });
 });

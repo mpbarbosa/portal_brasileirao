@@ -1,3 +1,4 @@
+import { formatRoute } from "@/route-core";
 import type { ClubCode, StandingsRow } from "@/src/types";
 
 /** Libertadores places (G4) and the relegation zone (Z4) get a rail colour. */
@@ -42,13 +43,23 @@ export function StandingsTable({ rows, onSelectClub }: StandingsTableProps) {
                     and running them together reads as one string to assistive
                     tech and to any text-based assertion. */}
                 {onSelectClub ? (
-                  <button
-                    type="button"
-                    onClick={() => onSelectClub(row.club.code)}
+                  <a
+                    href={formatRoute({ section: "clube", code: row.club.code })}
+                    onClick={(event) => {
+                      // Let modified clicks open a new tab, as any link should.
+                      if (
+                        event.metaKey || event.ctrlKey || event.shiftKey ||
+                        event.altKey || event.button !== 0
+                      ) {
+                        return;
+                      }
+                      event.preventDefault();
+                      onSelectClub(row.club.code);
+                    }}
                     className="rounded underline decoration-slate-600 underline-offset-2 hover:decoration-slate-300"
                   >
                     {row.club.shortName}
-                  </button>
+                  </a>
                 ) : (
                   <span>{row.club.shortName}</span>
                 )}
