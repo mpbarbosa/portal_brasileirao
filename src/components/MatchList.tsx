@@ -58,6 +58,15 @@ export function MatchList({ matches, clubs }: { matches: Match[]; clubs?: Club[]
               {clubName(match.awayCode)}
             </p>
             <p className="mt-0.5 text-xs text-slate-500">{kickoffLabel(match.kickoff)}</p>
+            {match.broadcasters && (
+              <p className="mt-0.5 truncate text-xs text-slate-400">
+                <span className="mr-1" aria-hidden="true">
+                  📺
+                </span>
+                <span className="sr-only">Onde assistir: </span>
+                {match.broadcasters.join(" · ")}
+              </p>
+            )}
           </div>
           <span
             className={`shrink-0 rounded px-2 py-1 text-xs font-medium ${STATUS_CLASS[match.status]}`}

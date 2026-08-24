@@ -51,6 +51,12 @@ export interface Match {
   /** Null until the match has a score to report. */
   homeGoals: number | null;
   awayGoals: number | null;
+  /**
+   * Where to watch. Not from the data provider — none of them carry it — but
+   * merged in from the hand-curated map in `src/data/broadcasts.ts`. Absent
+   * means unknown, which is the common case.
+   */
+  broadcasters?: string[];
 }
 
 export interface StandingsRow {

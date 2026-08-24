@@ -192,6 +192,17 @@ seeing nothing.
 _Avoid_: inventing a translation for a value the map does not cover, collapsing
 specific roles into their broad line.
 
+**Onde assistir**:
+The channels showing a match, rendered under its kickoff in the fixture list.
+Comes from `src/data/broadcasts.ts` — the one hand-maintained file in
+`src/data/`, everything else there being generated — keyed by **our match id**.
+Absent means unknown, which is the common case, and renders nothing rather than
+an empty line.
+_Avoid_: keying on a team abbreviation (CBF's own codes collide across divisions:
+one day's page showed `ATH` as both Athletic Club and Athletico-PR), editing the
+generated `matches.ts` to add channels, calling any CBF endpoint at request time
+— see `docs/data-sources.md`.
+
 **Menu de seções**:
 The navigation in the sticky header. Its entries come from `NAV_ITEMS`
 (`src/navigation.ts`), which is the single source of truth for what sections exist

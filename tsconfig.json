@@ -36,6 +36,7 @@
     "club-core.ts",
     "route-core.ts",
     "player-core.ts",
+    "broadcast-core.ts",
     "football-data-core.ts",
     "cache-core.ts",
     "vite.config.ts",

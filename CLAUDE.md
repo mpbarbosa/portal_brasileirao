@@ -144,6 +144,12 @@ and both are real clubs.
 
 ### Data
 
+`src/data/broadcasts.ts` is **hand-maintained** — the sole exception in `src/data/`.
+It holds "onde assistir" channels keyed by our match id, because no provider we use
+carries broadcast data. `docs/data-sources.md` records what every candidate source
+actually provides, including CBF's undocumented broadcast API and why it is not a
+request-time dependency.
+
 `src/data/clubs.ts` and `src/data/matches.ts` are **generated files** — a frozen snapshot of
 the real division and season, serving as the offline fallback. Regenerate with:
 
