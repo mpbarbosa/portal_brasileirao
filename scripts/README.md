@@ -75,6 +75,23 @@ regardless of IP or security group:
 AWS_PROFILE=mpb aws ssm start-session --target i-03a9afc8a469edc89
 ```
 
+## Monitoring
+
+```sh
+AWS_PROFILE=mpb ./scripts/aws-setup-monitoring.sh
+```
+
+Idempotent — re-run it to change a threshold. Alerts go to an SNS topic per region;
+**the email subscription must be confirmed from the inbox** before AWS delivers anything.
+
+Check current state:
+
+```sh
+AWS_PROFILE=mpb aws cloudwatch describe-alarms --region sa-east-1 \
+    --alarm-name-prefix portal-brasileirao \
+    --query 'MetricAlarms[].{Name:AlarmName,State:StateValue}' --output table
+```
+
 ## Recovering a broken service
 
 On the host:
