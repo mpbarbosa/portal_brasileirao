@@ -138,6 +138,19 @@ fi
 echo "--> npm ci --omit=dev"
 npm ci --omit=dev --no-audit --no-fund
 
+# First deploy of a new host: the payload has to land before the unit can be
+# installed (03 refuses to run without dist/server.cjs), so the unit legitimately
+# does not exist yet. Deliver the payload and say what to do next rather than
+# failing on a restart that could never have worked.
+if ! systemctl list-unit-files --type=service --no-legend "${DEPLOY_SERVICE}.service" \
+        | grep -q "${DEPLOY_SERVICE}.service"; then
+    echo ""
+    echo "Payload delivered, but the ${DEPLOY_SERVICE} service is not installed yet."
+    echo "Finish the first-time setup on the host:"
+    echo "    ./shell_scripts/03_install_systemd_service.sh"
+    exit 0
+fi
+
 echo "--> restarting ${DEPLOY_SERVICE}"
 sudo systemctl restart "$DEPLOY_SERVICE"
 

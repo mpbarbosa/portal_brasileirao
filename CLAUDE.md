@@ -188,9 +188,10 @@ mapping needs coverage, add a unit test with a captured payload.
 
 ## Not built yet
 
-Nothing structural is missing. The one unexercised path is deployment: no EC2 host
-has ever received this payload, so the remote half of `deploy.sh` and all of
-`shell_scripts/` remain unverified. Port the deploy scripts
+- **No domain, so no TLS.** `05_setup_tls.sh` needs a real hostname with DNS pointing at
+  the instance before certbot can validate. The app is HTTP-only until then.
+- **No Elastic IP.** The public IP survives a reboot but not a stop/start.
+- **No CI deploy.** Deploys are run by hand from a workstation. Port the deploy scripts
 from the sibling repo when shipping, including its constraint that the production host is
 too small to build on (it pulls a prebuilt payload rather than running `npm run build`).
 

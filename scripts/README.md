@@ -20,12 +20,17 @@ SERVER_NAME=brasileirao.example.com CERTBOT_EMAIL=you@example.com \
     ./shell_scripts/05_setup_tls.sh
 ```
 
+## The live host
+
+Instance `i-03a9afc8a469edc89` (t3.micro, sa-east-1a) at `18.230.61.114`, serving
+http://18.230.61.114. The public IP is not elastic: a stop/start changes it.
+
 ## Deploying
 
 From your workstation:
 
 ```sh
-DEPLOY_HOST=ubuntu@1.2.3.4 npm run deploy
+DEPLOY_HOST=ubuntu@18.230.61.114 DEPLOY_SSH_KEY=~/.ssh/portal-brasileirao.pem npm run deploy
 ```
 
 Preview exactly what would change without touching the host:
@@ -49,6 +54,22 @@ Deploys never transfer or delete it: `dist/` syncs with `--delete` because it is
 fully regenerated, while the app root syncs without `--delete` precisely so
 `.env` and `node_modules/` survive. Rotating the token means editing that file
 and running `06_redeploy.sh` — no rebuild.
+
+## Locked out?
+
+SSH is authorized only from the deployer's current public IP, which on a home
+connection changes without warning. Re-point the rule:
+
+```sh
+AWS_PROFILE=mpb ./scripts/aws-allow-my-ip.sh
+```
+
+If that still fails, the instance carries an SSM instance profile, so this works
+regardless of IP or security group:
+
+```sh
+AWS_PROFILE=mpb aws ssm start-session --target i-03a9afc8a469edc89
+```
 
 ## Recovering a broken service
 

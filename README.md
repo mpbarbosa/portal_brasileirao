@@ -8,11 +8,12 @@ club data for the Campeonato Brasileiro Série A.
 **React 19 · TypeScript · Express · AWS.** Built end-to-end by directing the AI coding
 agent Claude Code.
 
-> **Status:** working scaffold. Live Série A data comes from
-> [football-data.org](https://www.football-data.org) when `FOOTBALL_DATA_TOKEN` is set;
-> without a token the app serves seed fixtures so a fresh clone runs with no signup.
-> There is no production deployment yet — this section gets replaced with the live URL
-> once it ships.
+> **Live:** http://18.230.61.114 — a t3.micro in sa-east-1 running the bundle as a
+> systemd service behind nginx. HTTP only for now; TLS needs a domain.
+>
+> Live Série A data comes from [football-data.org](https://www.football-data.org) when
+> `FOOTBALL_DATA_TOKEN` is set; without a token the app serves a frozen snapshot, so a
+> fresh clone runs with no signup.
 
 ## Stack
 
