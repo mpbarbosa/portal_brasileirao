@@ -114,6 +114,18 @@ _Avoid_: "dados de demonstração" and "mock data" (these are real results, not
 invented ones — the old copy said "demonstração" and was wrong), hand-editing
 either file.
 
+**Menu de seções**:
+The navigation in the sticky header. Its entries come from `NAV_ITEMS`
+(`src/navigation.ts`), which is the single source of truth for what sections exist
+— adding one means an entry there plus a case in `App`'s view switch; `NavBar`
+itself needs no change. Below Tailwind's `sm` breakpoint the entries collapse
+behind a toggle labelled "Abrir menu" / "Fechar menu"; the same entries render
+either way, so every section stays reachable at any width.
+_Avoid_: "abas"/"tabs" (these are sections of one page, and the collapsed form is
+a menu rather than a tab strip), "hambúrguer" in user-facing copy, `title`
+tooltips on the entries (they never appear on touch and they compete with the
+visible label for the accessible name).
+
 **Módulo core**:
 A root-level `*-core.ts` module holding pure logic with **no I/O** — data in, data
 out. `server.ts` performs every fetch and passes payloads in, which is what makes

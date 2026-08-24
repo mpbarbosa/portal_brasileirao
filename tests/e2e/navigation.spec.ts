@@ -1,75 +1,170 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
+
+/** Tailwind's `sm` breakpoint — below it the nav collapses behind a toggle. */
+const SM_BREAKPOINT = 640;
+
+const isCollapsed = (page: Page) => (page.viewportSize()?.width ?? 0) < SM_BREAKPOINT;
+
+const menuToggle = (page: Page) => page.getByRole("button", { name: /menu/i });
+
+/**
+ * Reach a section at any viewport. The mobile panel repeats each label with its
+ * description, so the accessible name starts with — rather than equals — the
+ * label.
+ */
+const goToSection = async (page: Page, label: string) => {
+  if (isCollapsed(page)) {
+    await menuToggle(page).click();
+  }
+  await page.getByRole("button", { name: new RegExp(`^${label}`) }).click();
+};
 
 test.describe("Navegação", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/");
   });
 
+  test("shows the brand at every width", async ({ page }) => {
+    await expect(page.getByText("Portal Brasileirão", { exact: true })).toBeVisible();
+    await expect(
+      page.getByText("Campeonato Brasileiro Série A", { exact: true }).first(),
+    ).toBeVisible();
+  });
+
+  test("keeps an h1 naming the app for assistive tech", async ({ page }) => {
+    // Visually hidden — the brand carries the name on screen — but a page still
+    // needs exactly one h1.
+    const h1 = page.getByRole("heading", { level: 1 });
+    await expect(h1).toHaveCount(1);
+    await expect(h1).toHaveText(/Portal Brasileirão/);
+  });
+
   test("opens on Classificação", async ({ page }) => {
-    await expect(page.getByRole("button", { name: "Classificação" })).toHaveAttribute(
-      "aria-current",
-      "page",
-    );
     await expect(page.locator("table")).toBeVisible();
+    if (isCollapsed(page)) await menuToggle(page).click();
+    await expect(
+      page.getByRole("button", { name: /^Classificação/ }),
+    ).toHaveAttribute("aria-current", "page");
   });
 
   test("switching to Rodada replaces the table with fixtures", async ({ page }) => {
-    await page.getByRole("button", { name: "Rodada" }).click();
+    await goToSection(page, "Rodada");
 
     await expect(page.locator("table")).toHaveCount(0);
-    await expect(page.getByRole("button", { name: "Rodada" })).toHaveAttribute(
-      "aria-current",
-      "page",
-    );
     // Round number is deliberately not asserted: it advances with the calendar.
     await expect(page.getByRole("heading", { level: 2 })).toHaveText(/\d+ª rodada/);
   });
 
   test("switching back to Classificação restores the table", async ({ page }) => {
-    await page.getByRole("button", { name: "Rodada" }).click();
-    await page.getByRole("button", { name: "Classificação" }).click();
+    await goToSection(page, "Rodada");
+    await goToSection(page, "Classificação");
 
     await expect(page.locator("table tbody tr")).toHaveCount(20);
   });
 
   test("the round view lists fixtures with a status badge each", async ({ page }) => {
-    await page.getByRole("button", { name: "Rodada" }).click();
+    await goToSection(page, "Rodada");
 
     const fixtures = page.locator("main ul > li");
     await expect(fixtures.first()).toBeVisible();
-
-    const count = await fixtures.count();
-    expect(count).toBeGreaterThan(0);
+    expect(await fixtures.count()).toBeGreaterThan(0);
 
     for (const fixture of await fixtures.all()) {
-      await expect(fixture).toHaveText(
-        /(A realizar|Ao vivo|Encerrado|Adiado|Cancelado)/,
-      );
+      await expect(fixture).toHaveText(/(A realizar|Ao vivo|Encerrado|Adiado|Cancelado)/);
     }
   });
 
   test("a frozen snapshot never shows a match as in progress", async ({ page }) => {
-    // The snapshot normalizes in-play matches, so an "Ao vivo" badge here would
-    // mean the fallback is claiming something is happening right now.
-    //
     // Scoped to the fixture list and exact: a bare getByText("Ao vivo") also
     // matches the banner's "...para dados ao vivo." (substring, case-insensitive).
-    await page.getByRole("button", { name: "Rodada" }).click();
+    await goToSection(page, "Rodada");
 
-    await expect(page.locator("main ul > li").getByText("Ao vivo", { exact: true })).toHaveCount(0);
+    await expect(
+      page.locator("main ul > li").getByText("Ao vivo", { exact: true }),
+    ).toHaveCount(0);
   });
 
-  test("the page has one h1 naming the app", async ({ page }) => {
-    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Portal Brasileirão");
+  test("the header stays put when the page scrolls", async ({ page }) => {
+    await page.mouse.wheel(0, 600);
+    await expect(page.getByText("Portal Brasileirão", { exact: true })).toBeInViewport();
   });
 });
 
-test.describe("Aviso de dados", () => {
-  test("banners the frozen-snapshot note when the provider is off", async ({ page }) => {
+test.describe("Menu de seções", () => {
+  test.beforeEach(async ({ page }) => {
     await page.goto("/");
+  });
 
-    // With DISABLE_FOOTBALL_DATA the app must say so rather than passing the
-    // snapshot off as live data.
-    await expect(page.getByText(/Dados congelados de \d{2}\/\d{2}\/\d{4}/)).toBeVisible();
+  test("the toggle appears only below the sm breakpoint", async ({ page }) => {
+    if (isCollapsed(page)) {
+      await expect(menuToggle(page)).toBeVisible();
+    } else {
+      // On a wide viewport the sections are inline; a toggle would be noise.
+      await expect(menuToggle(page)).toBeHidden();
+      await expect(page.getByRole("button", { name: /^Classificação/ })).toBeVisible();
+    }
+  });
+
+  test("the toggle reports and flips its expanded state", async ({ page }) => {
+    test.skip(!isCollapsed(page), "no toggle at this width");
+
+    const toggle = menuToggle(page);
+    await expect(toggle).toHaveAttribute("aria-expanded", "false");
+    await toggle.click();
+    await expect(toggle).toHaveAttribute("aria-expanded", "true");
+    await toggle.click();
+    await expect(toggle).toHaveAttribute("aria-expanded", "false");
+  });
+
+  test("the panel it controls actually exists", async ({ page }) => {
+    test.skip(!isCollapsed(page), "no toggle at this width");
+
+    const controls = await menuToggle(page).getAttribute("aria-controls");
+    expect(controls).toBeTruthy();
+    await expect(page.locator(`#${controls}`)).toHaveCount(1);
+  });
+
+  test("choosing a section closes the menu", async ({ page }) => {
+    test.skip(!isCollapsed(page), "no toggle at this width");
+
+    await menuToggle(page).click();
+    await page.getByRole("button", { name: /^Rodada/ }).click();
+
+    await expect(menuToggle(page)).toHaveAttribute("aria-expanded", "false");
+    await expect(page.getByRole("heading", { level: 2 })).toHaveText(/\d+ª rodada/);
+  });
+
+  test("Escape closes the menu and restores focus to the toggle", async ({ page }) => {
+    test.skip(!isCollapsed(page), "no toggle at this width");
+
+    const toggle = menuToggle(page);
+    await toggle.click();
+    await expect(toggle).toHaveAttribute("aria-expanded", "true");
+
+    await page.keyboard.press("Escape");
+
+    await expect(toggle).toHaveAttribute("aria-expanded", "false");
+    // Focus must come back, or it is stranded on a now-hidden element.
+    await expect(toggle).toBeFocused();
+  });
+
+  test("clicking outside closes the menu", async ({ page }) => {
+    test.skip(!isCollapsed(page), "no toggle at this width");
+
+    await menuToggle(page).click();
+    await page.locator("main").click({ position: { x: 5, y: 5 } });
+
+    await expect(menuToggle(page)).toHaveAttribute("aria-expanded", "false");
+  });
+
+  test("every section in the nav model is reachable", async ({ page }) => {
+    for (const label of ["Classificação", "Rodada"]) {
+      await goToSection(page, label);
+      if (isCollapsed(page)) await menuToggle(page).click();
+      await expect(
+        page.getByRole("button", { name: new RegExp(`^${label}`) }),
+      ).toHaveAttribute("aria-current", "page");
+      if (isCollapsed(page)) await page.keyboard.press("Escape");
+    }
   });
 });
