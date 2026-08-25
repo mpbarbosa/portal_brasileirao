@@ -208,12 +208,28 @@ marks still sit on a light backing in both themes.
 
 **Read the gate's margin report before retoning anything.** MD3 expresses
 elevation as tonal surface tint, so this phase moves the very surface tones the
-text tokens are measured against. `npm run test:tokens` prints the five tightest
-pairings with their headroom; at the end of M1 the thinnest is `light: ink-faint
-on raised` at **+0.09** above AA, followed by `ink-ghost on raised` at +0.22
-against the 3:1 non-text floor. Those fail first. Headroom is the number to read
-rather than the ratio — a text pairing and a graphic pairing at the same ratio
-are not equally safe, because their floors differ.
+text tokens are measured against. `npm run test:tokens` prints the tightest
+pairings with their headroom, split into what components actually render and
+what is merely latent.
+
+Headroom is the number to read, not the ratio: a text pairing and a graphic
+pairing at the same ratio are not equally safe, because their floors differ
+(4.5 against 3:1). At the end of M1 the tightest *rendered* pairing is
+`light: ink-faint on surface` at **+0.33**; the tightest overall is
+`light: ink-faint on raised` at +0.09, but nothing paints it — every
+`bg-raised` call site pairs with `ink-soft` or `ink-muted`. Spend the scarce
+headroom on the first, not the second.
+
+**Backgrounds are not the same thing as background tokens.** A filled `Surface`
+is `bg-surface/50`, so the colour behind a card's text is a composite of
+`surface` over `canvas`, and measuring against the solid token measures a colour
+the app never paints. The gate composites it (`blend` in `md3-color-core.ts`).
+Note the direction of that correction flipped with the migration: the old
+palette's `canvas` was lighter than its `surface`, so compositing cost contrast;
+under MD3 the page is tone 98 and the card tone 96, so it gains a little. Do not
+carry the old intuition forward — `surface/50 over canvas` currently measures
++0.46, safer than the solid token, and that relationship is a property of the
+tone ordering rather than a fact about alpha.
 
 - **Shape scale.** Replace the three ad-hoc radii (`rounded-lg`, `rounded-xl`,
   `rounded`) with MD3's extra-small through extra-large tokens. Small surface

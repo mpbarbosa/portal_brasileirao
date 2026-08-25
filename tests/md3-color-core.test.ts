@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import {
+  blend,
   contrastRatio,
   hctFromHex,
   hexFromHct,
@@ -144,4 +145,31 @@ test("contrastRatio matches the WCAG definition at its bounds", () => {
     contrastRatio("#10b981", "#111318"),
     contrastRatio("#111318", "#10b981"),
   );
+});
+
+test("blend composites a translucent fill over its backdrop", () => {
+  // The endpoints must be exact: alpha 1 is the fill, alpha 0 is the backdrop.
+  assert.equal(blend("#ffffff", "#000000", 1), "#ffffff");
+  assert.equal(blend("#ffffff", "#000000", 0), "#000000");
+  assert.equal(blend("#ffffff", "#000000", 0.5), "#808080");
+  // A fill over itself is itself, at any alpha.
+  assert.equal(blend("#f2f3fa", "#f2f3fa", 0.5), "#f2f3fa");
+});
+
+test("a 50% fill sits between its own colour and the backdrop", () => {
+  // This is why the gate measures it rather than the solid token: a filled
+  // Surface is `bg-surface/50`, so the colour behind its text is neither. Whether
+  // that helps or hurts depends on which of the two is lighter — under MD3 the
+  // card is darker than the page, so the composite lands lighter and contrast
+  // improves. Under the pre-migration palette the ordering was reversed and the
+  // same compositing cost contrast instead.
+  const card = "#f2f3fa";
+  const page = "#f8f9ff";
+  const composite = blend(card, page, 0.5);
+  const ink = "#676b73";
+
+  const between =
+    contrastRatio(ink, card) <= contrastRatio(ink, composite) &&
+    contrastRatio(ink, composite) <= contrastRatio(ink, page);
+  assert.ok(between, `${composite} did not land between the two`);
 });

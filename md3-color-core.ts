@@ -303,3 +303,24 @@ export const contrastRatio = (a: string, b: string): number => {
   const lb = relativeLuminance(b);
   return (Math.max(la, lb) + 0.05) / (Math.min(la, lb) + 0.05);
 };
+
+/**
+ * The colour a translucent fill actually paints over a backdrop.
+ *
+ * Needed because several backgrounds in this app are not solid tokens. A filled
+ * `Surface` is `bg-surface/50`, so the colour behind its text is a composite of
+ * `surface` over `canvas` — measuring contrast against the solid token would be
+ * measuring a colour the app never paints. The error is small but it runs in the
+ * unsafe direction in the light theme, where there is least headroom.
+ *
+ * Compositing is done in 8-bit sRGB because that is where the browser does it.
+ * Tailwind v4 compiles `bg-surface/50` to `color-mix(in oklab, …, transparent)`,
+ * which per spec premultiplies and so yields the token at alpha 0.5 rather than
+ * a shifted hue; the blend against the backdrop then happens in sRGB.
+ */
+export const blend = (fg: string, bg: string, alpha: number): string => {
+  const [fr, fgn, fb] = hexToRgb(fg);
+  const [br, bgn, bb] = hexToRgb(bg);
+  const mix = (f: number, b: number) => Math.round(alpha * f + (1 - alpha) * b);
+  return rgbToHex(mix(fr, br), mix(fgn, bgn), mix(fb, bb));
+};
