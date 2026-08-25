@@ -21,6 +21,19 @@ test.describe("API", () => {
     expect(body).toHaveProperty("uptime");
     // The kill switch is on for this suite.
     expect(body.provider).toBe("seed");
+
+    // Build identity: what is actually running. Bundled builds carry the commit;
+    // running from source there is no bundler to inject it, hence "dev".
+    expect(typeof body.sha).toBe("string");
+    expect(body.sha.length).toBeGreaterThan(0);
+    expect(body).toHaveProperty("builtAt");
+  });
+
+  test("/api/health no longer reports a version that never changed", async ({ request }) => {
+    // It sat at 0.1.0 for every deploy ever made and answered nothing.
+    const body = await (await request.get("/api/health")).json();
+
+    expect(body.version).toBeUndefined();
   });
 
   test("/api/standings returns 20 rows in an envelope", async ({ request }) => {

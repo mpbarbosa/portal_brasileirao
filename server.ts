@@ -46,6 +46,17 @@ import { SEED_MATCHES, SNAPSHOT_DATE } from "@/src/data/matches";
 import { SEED_SCORERS } from "@/src/data/scorers";
 import type { ApiEnvelope, Club, Match, Player, Scorer, StandingsRow } from "@/src/types";
 
+/**
+ * Injected by scripts/build.sh at bundle time. Running from source (tsx in
+ * development) there is no bundler to define them, hence the guarded reads
+ * below rather than a bare reference that would throw.
+ */
+declare const __BUILD_SHA__: string;
+declare const __BUILD_TIME__: string;
+
+const BUILD_SHA = typeof __BUILD_SHA__ === "string" ? __BUILD_SHA__ : "dev";
+const BUILD_TIME = typeof __BUILD_TIME__ === "string" ? __BUILD_TIME__ : null;
+
 const DEFAULT_PORT = Number(process.env.PORT ?? 3000);
 const HOST = process.env.HOST ?? "0.0.0.0";
 const STRICT_PORT = process.env.STRICT_PORT === "true";
@@ -230,7 +241,10 @@ const loadMatches = async (): Promise<ApiEnvelope<MatchesPayload>> => {
 app.get("/api/health", (_req, res) => {
   res.json({
     status: "ok",
-    version: process.env.npm_package_version ?? "0.1.0",
+    // What is actually running. `version` stayed at 0.1.0 for every deploy ever
+    // made and answered nothing; the commit does.
+    sha: BUILD_SHA,
+    builtAt: BUILD_TIME,
     uptime: process.uptime(),
     provider: providerEnabled() ? "football-data" : "seed",
   });

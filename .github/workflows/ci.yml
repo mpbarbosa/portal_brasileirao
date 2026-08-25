@@ -232,23 +232,30 @@ jobs:
             exit 1
           fi
 
-      - name: Verify the live site
+      - name: Verify the live site is this commit
         # The host health-checks itself during redeploy; this proves the result
-        # is reachable from outside, and that the process actually restarted.
+        # is reachable from outside *and* that it is the build we just made.
+        # Comparing the commit is strictly stronger than the uptime heuristic it
+        # replaces: a fast restart of the previous bundle would pass that check
+        # and fail this one.
         run: |
           set -euo pipefail
+          expected="${GITHUB_SHA:0:7}"
+
           for _ in $(seq 1 20); do
             if curl -sf --max-time 10 "${SITE_URL}/api/health" > health.json; then break; fi
             sleep 5
           done
           cat health.json
+
           jq -e '.status == "ok"' health.json > /dev/null
 
-          uptime=$(jq -r '.uptime' health.json)
-          echo "Reported uptime: ${uptime}s"
-          # A long uptime means the old process is still serving — the restart
-          # silently did not happen.
-          awk -v u="$uptime" 'BEGIN { if (u > 300) { print "::error::Service did not restart (uptime " u "s)"; exit 1 } }'
+          live=$(jq -r '.sha' health.json)
+          if [ "$live" != "$expected" ]; then
+            echo "::error::Live site reports ${live}, expected ${expected} — the deploy did not take"
+            exit 1
+          fi
+          echo "Live commit: ${live} (built $(jq -r '.builtAt' health.json))"
 
           curl -sf --max-time 10 "${SITE_URL}/api/standings" | jq -e '.source' > /dev/null
           echo "Live at ${SITE_URL}"
