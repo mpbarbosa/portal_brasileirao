@@ -22,6 +22,7 @@ implementation — read it rather than inventing a new pattern.
 - `npm run lint` — `tsc --noEmit` over the whole project. There is no ESLint; this is the
   lint gate.
 - `npm run test:unit` — Node's built-in test runner over the core-module tests.
+- `npm run sync-og-image` — redraw `public/og-default.png`, the link-preview card.
 - `npm run test:e2e` — Playwright, booting its own server on port 3100.
 - One test file: `node --import tsx --test tests/standings-core.test.ts`
 - One test by name: `node --import tsx --test --test-name-pattern "tie-breakers" tests/standings-core.test.ts`
@@ -173,6 +174,105 @@ fail a page.
 Canonical and `og:url` come from **`APP_URL`** in the host's `.env`. If that is stale,
 every canonical points at the wrong origin.
 
+### Crawlers and structured data
+
+`seo-core.ts` and `structured-data-core.ts` are pure, like every other core module, and
+cover the three things `page-meta-core.ts` does not: the canonical address of a route,
+whether that address is worth indexing, and the JSON-LD that lets a fixture page be read
+as a fixture rather than as prose about one.
+
+**The app answers something for every path, and that is right for a reader and wrong for a
+crawler.** `parseRoute` sends anything unrecognised to the table, so `/qualquer-coisa`
+served a 200 was an indexable duplicate of the home page — and there are infinitely many
+of those. `pageStatus` is where the two audiences part company: the body stays friendly,
+the status code and `noindex` tell the truth. Unknown sections, a club or fixture that does
+not resolve, a round outside the season and an undecodable path are all 404 + noindex with
+the classificação still rendered beneath.
+
+**Absent data is not proof of absence.** `pageStatus` only declares a club missing when the
+club list actually arrived. Otherwise a provider outage would 404 all 380 fixture pages at
+once and a crawler would drop them over an incident lasting minutes.
+
+**The sitemap is load-bearing, not a nicety.** The round picker is a `<select>`, not a set
+of links, so every round but the current one — and with it nearly every fixture page — has
+no inbound link anywhere on the site. `/sitemap.xml` is the only way a crawler reaches
+them. 442 URLs at full season, against a 50,000 limit, so no sitemap index is needed. A
+finished match takes its kickoff as `lastmod`, because that is when the page stopped
+changing; claiming today's date for a fixture played in April trains a crawler to stop
+believing the field.
+
+**The origin comes from `APP_URL` first and the request second.** The request fallback
+keeps a fresh clone emitting working canonicals with no `.env`, and `resolveOrigin`
+validates the host against a strict pattern before using it — the value lands in
+`<link rel="canonical">`, so an unvalidated `Host` header lets a third party claim
+ownership of this site's content. `X-Forwarded-*` is consulted only when `TRUST_PROXY=true`.
+
+**The client half must not overwrite the server half before its data lands.** `usePageMeta`
+now maintains canonical, `og:url` and robots as well as the title — an in-app navigation
+otherwise leaves the canonical claiming the entry page owns every later one. But it renders
+before its fetch resolves, and writing then would replace `/clube/athletico-pr` with
+`/clube/1768` and strip the `noindex` off a page that really is missing. `subjectResolved`
+gates it: where it is false, the server's tags stand.
+
+Two traps, both found by their own tests rather than by reading:
+
+- **`app.get("*")` matches through a wildcard *parameter*, and Express percent-decodes
+  parameters while matching.** So `/clube/%` throws `URIError` inside the router and
+  Express answers its own 400 error page before any handler runs. The guard registered by
+  `registerSpaFallback` decodes first and hands the request to the normal renderer.
+- **`vite.transformIndexHtml` decodes the URL it is given**, to resolve which HTML file is
+  being asked for. Passing an undecodable `originalUrl` turns that 400 into a 500 from our
+  own handler, which is why the dev branch passes `/` when the request URL will not decode.
+
+**The dev server injects metadata too, and `appType` is `"custom"` for that reason.**
+Vite's `"spa"` fallback serves `index.html` itself with a 200 and an untouched head, which
+took the handler out of the loop and hid the metadata, the JSON-LD and every 404 rule from
+the whole e2e suite. Assets still resolve because `vite.middlewares` runs first.
+
+schema.org's event statuses describe **whether an event happened as announced**, not where
+it is in its lifecycle: there is no "in progress" and no "finished". LIVE and FINISHED are
+therefore both `EventScheduled`, and only POSTPONED and CANCELLED get a value of their own.
+
+`jsonLdScript` escapes `<` as `\u003c`, not as `&lt;`: a `script` element's contents are
+not HTML-parsed, so an entity would reach the JSON parser literally and break it, while an
+unescaped `</script>` in a club name would close the tag and spill the payload into the
+document.
+
+### Link previews
+
+`public/og-default.png` is the 1200×630 card, drawn by `npm run sync-og-image`
+(`scripts/generate-og-image.ts`) and **committed**, because a preview has to resolve on a
+host that only ever runs `npm ci --omit=dev`.
+
+**It has to be a raster image.** No platform that matters renders SVG for `og:image` —
+Facebook, X, LinkedIn and WhatsApp all reject or blank it — so the card is drawn with the
+same headless Chromium `scripts/screenshot.ts` already uses rather than by adding an image
+dependency. The colours are read out of `src/index.css` at generation time rather than
+written into the script: every value in that file is emitted by `sync-md3-tokens`, and a
+second hand-kept copy is how the card ends up a shade off the site it advertises. A token
+that has been renamed away fails the run instead of drawing in black.
+
+There is deliberately **no `--check` mode**, unlike `test:tokens`: the bytes vary with the
+Chromium build and the host's fonts, so a byte-comparison gate would go red on an unrelated
+browser bump. Regenerate by hand when the palette or the wording changes.
+
+**Which image a page gets is a judgement, not a default.** A club page takes its crest,
+because that is genuinely what the page is about. Everything else — including a fixture —
+takes the site card: a match is *two* clubs, and illustrating it with the home crest asserts
+the page is about that one, which is also how the away side's supporters read it.
+
+**`twitter:card` follows the image's shape**, which is what its two values mean. It used to
+be inverted — `summary` whenever an image existed and `summary_large_image` when none did,
+declaring the wide layout precisely when there was nothing to fill it. A square crest in a
+wide card is a logo adrift in whitespace, so a crest takes `summary` and the site card takes
+`summary_large_image`.
+
+`og:image:width`/`height` ride along only for the site card. A crest arrives from the
+provider at an unspecified size, and guessing would tell a scraper to reserve a box the
+image does not fill. As with the canonical tag and the sitemap, no origin means **no
+image tag at all** rather than a root-relative URL — a scraper fetches from its own host, so
+`/og-default.png` resolves nowhere and renders as a broken preview rather than a plain one.
+
 ### Routing
 
 The URL is the source of truth for the visible section; `App` holds no section state.
@@ -185,7 +285,8 @@ tab" behave. Their click handlers bail out on modified clicks rather than swallo
 **Deep links depend on the server's SPA catch-all.** `/clube/1783` is not a file, so
 `express.static` misses and the `app.get("*")` handler serves `index.html`. That handler
 must stay registered *after* the API routes, or `/api/*` would be swallowed by it. Verified
-in both dev (Vite middleware, `appType: "spa"`) and the production bundle.
+in both dev (Vite middleware, `appType: "custom"` — see **Crawlers and structured data**
+for why) and the production bundle.
 
 Unrecognised paths and nonsense rounds resolve to something useful rather than 404 — a
 stale link should still land somewhere.

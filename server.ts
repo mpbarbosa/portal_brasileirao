@@ -35,8 +35,17 @@ import { withBroadcasters, withVenues } from "@/broadcast-core";
 import { withHighlights } from "@/match-core";
 import { withClubDetails, withHymns, withInstagram } from "@/club-core";
 import { compareForFeed, currentRound, matchesForRound, roundsOf } from "@/matches-core";
-import { injectMeta, pageMeta } from "@/page-meta-core";
-import { parseRoute } from "@/route-core";
+import { injectMeta, pageMeta, type MetaContext } from "@/page-meta-core";
+import { parseRoute, type Route } from "@/route-core";
+import {
+  canonicalUrl,
+  pageStatus,
+  resolveOrigin,
+  robotsTxt,
+  sitemapEntries,
+  sitemapXml,
+} from "@/seo-core";
+import { jsonLdScript, structuredData } from "@/structured-data-core";
 import { computeStandings } from "@/standings-core";
 import { CLUBS as SEED_CLUBS } from "@/src/data/clubs";
 import { CLUB_HYMNS } from "@/src/data/club-hymns";
@@ -63,6 +72,14 @@ const DEFAULT_PORT = Number(process.env.PORT ?? 3000);
 const HOST = process.env.HOST ?? "0.0.0.0";
 const STRICT_PORT = process.env.STRICT_PORT === "true";
 const IS_PRODUCTION = process.env.NODE_ENV === "production";
+/**
+ * Believe `X-Forwarded-Proto` / `X-Forwarded-Host` when a reverse proxy
+ * terminates TLS in front of us. Off unless asked, because those headers are
+ * attacker-controlled on a directly-exposed port and they feed the canonical
+ * tag. They only matter at all when `APP_URL` is unset — which it is not on
+ * any deployed host — so the safe default costs nothing.
+ */
+const TRUST_PROXY = process.env.TRUST_PROXY === "true";
 
 /** Free-tier token from football-data.org. Unset is a supported state: the app
  *  runs on seed fixtures so a fresh clone works with no signup. */
@@ -244,6 +261,163 @@ const loadMatches = async (): Promise<ApiEnvelope<MatchesPayload>> => {
   }
 };
 
+/** A forwarded header may carry a chain — `client, proxy1` — and only the
+ *  client-most value describes the origin the reader typed. */
+const firstHeaderValue = (raw: string | undefined): string | undefined =>
+  raw?.split(",")[0]?.trim() || undefined;
+
+/** The absolute origin to build canonical and sitemap URLs from. */
+const originFor = (req: express.Request): string =>
+  resolveOrigin(process.env.APP_URL, {
+    protocol: (TRUST_PROXY ? firstHeaderValue(req.get("x-forwarded-proto")) : undefined)
+      ?? req.protocol,
+    host: (TRUST_PROXY ? firstHeaderValue(req.get("x-forwarded-host")) : undefined)
+      ?? req.get("host"),
+  });
+
+/**
+ * Crawl directives. Registered here, with the API routes, so they are matched
+ * before the SPA fallback — served from the fallback they would be HTML.
+ */
+app.get("/robots.txt", (req, res) => {
+  res.type("text/plain; charset=utf-8");
+  res.set("Cache-Control", "public, max-age=3600");
+  res.send(robotsTxt(originFor(req)));
+});
+
+/**
+ * Every crawlable address, built from the payload the API already holds.
+ *
+ * This file is load-bearing rather than a nicety: the round picker is a
+ * `<select>`, not a set of links, so every round but the current one — and with
+ * it nearly every fixture page — has no inbound link anywhere on the site.
+ *
+ * Failure degrades to the four section URLs rather than a 500, on the same
+ * reasoning as the API envelope.
+ */
+app.get("/sitemap.xml", async (req, res) => {
+  let context: { clubs?: Club[]; matches?: Match[]; updatedAt?: string } = {};
+
+  try {
+    const payload = await loadMatches();
+    context = {
+      clubs: payload.data.clubs,
+      matches: payload.data.matches,
+      updatedAt: payload.updatedAt,
+    };
+  } catch (cause) {
+    console.error("sitemap: dados indisponíveis:", cause);
+  }
+
+  res.type("application/xml; charset=utf-8");
+  res.set("Cache-Control", "public, max-age=3600");
+  res.send(sitemapXml(originFor(req), sitemapEntries(context)));
+});
+
+/** Which routes name something that has to be looked up before the page can be
+ *  titled, canonicalised or judged to exist. The rest need no data at all. */
+const needsData = (route: Route): boolean =>
+  route.section === "clube" ||
+  route.section === "partida" ||
+  (route.section === "jogos" && route.round !== null);
+
+/**
+ * Render the SPA shell for one request: per-route metadata, structured data and
+ * an honest status code.
+ *
+ * Shared by both halves of the fallback — the production static server and the
+ * Vite dev middleware — rather than living only in the production branch. The
+ * 404 rules and the JSON-LD are the parts most worth testing, and a dev server
+ * that answered a cheerful 200 with a bare shell would put both beyond the
+ * reach of the e2e suite.
+ */
+const renderShell = async (
+  req: express.Request,
+  res: express.Response,
+  shell: string,
+): Promise<void> => {
+  const route = parseRoute(req.path);
+
+  // Both come from the same cached payload the API serves — no extra upstream
+  // request, and no call at all for the sections that name nothing.
+  let context: MetaContext = {};
+  if (needsData(route)) {
+    try {
+      const [matchesEnvelope, standingsEnvelope] = await Promise.all([
+        loadMatches(),
+        loadStandings(),
+      ]);
+      context = {
+        clubs: matchesEnvelope.data.clubs,
+        matches: matchesEnvelope.data.matches,
+        standings: standingsEnvelope.data,
+      };
+    } catch (cause) {
+      // Metadata is a nicety; never fail the page over it. `pageStatus` reads
+      // an absent list as "cannot prove this is missing" and answers 200, so a
+      // provider outage degrades the metadata without 404-ing the catalogue.
+      console.error("metadados: dados indisponíveis:", cause);
+    }
+  }
+
+  const status = pageStatus(req.path, context);
+  const origin = originFor(req);
+  const meta = pageMeta(route, context, origin);
+
+  res.status(status.status);
+  res.set("Content-Type", "text/html; charset=utf-8");
+  res.send(
+    injectMeta(shell, meta, {
+      canonicalUrl: canonicalUrl(origin, route, context) ?? undefined,
+      noindex: !status.index,
+      // A page that does not exist gets no structured data: describing a
+      // SportsEvent on a 404 asserts the fixture is real.
+      jsonLd: status.index
+        ? jsonLdScript(structuredData(route, context, origin, meta.description))
+        : undefined,
+    }),
+  );
+};
+
+/** Whether a URL survives percent-decoding. Both the router and Vite decode
+ *  what they are handed, and neither is prepared for a malformed escape. */
+const decodable = (value: string): boolean => {
+  try {
+    decodeURIComponent(value);
+    return true;
+  } catch {
+    return false;
+  }
+};
+
+/**
+ * Register the SPA fallback, and the guard that has to come before it.
+ *
+ * `app.get("*")` matches through a wildcard **parameter**, and Express
+ * percent-decodes parameters while matching — so `/clube/%` throws `URIError`
+ * inside the router and Express answers its own 400 error page before any
+ * handler runs. A crawler will send one of those eventually. The guard decodes
+ * first and, when it cannot, hands the request to the same renderer as any
+ * other address that names nothing: the app, and a 404.
+ */
+const registerSpaFallback = (shellFor: (req: express.Request) => Promise<string>): void => {
+  const serve: express.RequestHandler = async (req, res, next) => {
+    try {
+      await renderShell(req, res, await shellFor(req));
+    } catch (cause) {
+      next(cause);
+    }
+  };
+
+  app.use((req, res, next) => {
+    if (req.method !== "GET" && req.method !== "HEAD") return next();
+
+    return decodable(req.path) ? next() : serve(req, res, next);
+  });
+
+  app.get("*", serve);
+};
+
 app.get("/api/health", (_req, res) => {
   res.json({
     status: "ok",
@@ -383,32 +557,7 @@ async function startServer() {
     // Per-route metadata, injected server-side. A link preview never runs
     // JavaScript, so the client-side title alone would leave every shared URL
     // unfurling as the generic site name.
-    app.get("*", async (req, res) => {
-      const route = parseRoute(req.path);
-
-      // Only the routes that name something need data, and both come from the
-      // same cached payload the API serves — no extra upstream request.
-      let context = {};
-      if (route.section === "clube" || route.section === "partida") {
-        try {
-          const [matchesEnvelope, standingsEnvelope] = await Promise.all([
-            loadMatches(),
-            loadStandings(),
-          ]);
-          context = {
-            clubs: matchesEnvelope.data.clubs,
-            matches: matchesEnvelope.data.matches,
-            standings: standingsEnvelope.data,
-          };
-        } catch {
-          // Metadata is a nicety; never fail the page over it.
-        }
-      }
-
-      const canonical = `${(process.env.APP_URL ?? "").replace(/\/$/, "")}${req.path}`;
-      res.set("Content-Type", "text/html; charset=utf-8");
-      res.send(injectMeta(indexHtml, pageMeta(route, context), canonical || undefined));
-    });
+    registerSpaFallback(async () => indexHtml);
   } else {
     const { createServer: createViteServer } = await import("vite");
     const vite = await createViteServer({
@@ -416,9 +565,33 @@ async function startServer() {
         middlewareMode: true,
         hmr: process.env.DISABLE_HMR === "true" ? false : { server: httpServer },
       },
-      appType: "spa",
+      // "custom", not "spa": Vite's SPA fallback would serve index.html itself
+      // for every unmatched path, with a 200 and an untouched head — taking the
+      // handler below out of the loop and hiding the metadata, the JSON-LD and
+      // the 404 rules from the whole e2e suite. Assets still resolve, because
+      // `vite.middlewares` runs first and only unmatched paths fall through.
+      appType: "custom",
     });
     app.use(vite.middlewares);
+
+    const shellPath = path.join(process.cwd(), "index.html");
+
+    registerSpaFallback(async (req) => {
+      try {
+        // Read per request rather than once: the shell is an editable source
+        // file in development, and HMR does not reach a string captured at boot.
+        // Vite percent-decodes this URL to resolve which HTML file is being
+        // asked for, so a path that could not be decoded in the first place has
+        // to arrive as the shell's own address. It is the same document either
+        // way — only the lookup differs — and without this the guard above
+        // turns a 400 from the router into a 500 from here.
+        const url = decodable(req.originalUrl) ? req.originalUrl : "/";
+        return await vite.transformIndexHtml(url, readFileSync(shellPath, "utf8"));
+      } catch (cause) {
+        vite.ssrFixStacktrace(cause as Error);
+        throw cause;
+      }
+    });
   }
 
   httpServer.listen(port, HOST, () => {
