@@ -362,7 +362,7 @@ const renderShell = async (
 
   const status = pageStatus(req.path, context);
   const origin = originFor(req);
-  const meta = pageMeta(route, context);
+  const meta = pageMeta(route, context, origin);
 
   res.status(status.status);
   res.set("Content-Type", "text/html; charset=utf-8");

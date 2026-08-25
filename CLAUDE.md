@@ -22,6 +22,7 @@ implementation — read it rather than inventing a new pattern.
 - `npm run lint` — `tsc --noEmit` over the whole project. There is no ESLint; this is the
   lint gate.
 - `npm run test:unit` — Node's built-in test runner over the core-module tests.
+- `npm run sync-og-image` — redraw `public/og-default.png`, the link-preview card.
 - `npm run test:e2e` — Playwright, booting its own server on port 3100.
 - One test file: `node --import tsx --test tests/standings-core.test.ts`
 - One test by name: `node --import tsx --test --test-name-pattern "tie-breakers" tests/standings-core.test.ts`
@@ -237,9 +238,40 @@ not HTML-parsed, so an entity would reach the JSON parser literally and break it
 unescaped `</script>` in a club name would close the tag and spill the payload into the
 document.
 
-**Still open:** there is no default `og:image`, so section pages unfurl imageless, and
-`twitter:card` is `summary` when an image exists and `summary_large_image` when none does —
-a card type declared with nothing to fill it. Both belong with a 1200×630 preview image.
+### Link previews
+
+`public/og-default.png` is the 1200×630 card, drawn by `npm run sync-og-image`
+(`scripts/generate-og-image.ts`) and **committed**, because a preview has to resolve on a
+host that only ever runs `npm ci --omit=dev`.
+
+**It has to be a raster image.** No platform that matters renders SVG for `og:image` —
+Facebook, X, LinkedIn and WhatsApp all reject or blank it — so the card is drawn with the
+same headless Chromium `scripts/screenshot.ts` already uses rather than by adding an image
+dependency. The colours are read out of `src/index.css` at generation time rather than
+written into the script: every value in that file is emitted by `sync-md3-tokens`, and a
+second hand-kept copy is how the card ends up a shade off the site it advertises. A token
+that has been renamed away fails the run instead of drawing in black.
+
+There is deliberately **no `--check` mode**, unlike `test:tokens`: the bytes vary with the
+Chromium build and the host's fonts, so a byte-comparison gate would go red on an unrelated
+browser bump. Regenerate by hand when the palette or the wording changes.
+
+**Which image a page gets is a judgement, not a default.** A club page takes its crest,
+because that is genuinely what the page is about. Everything else — including a fixture —
+takes the site card: a match is *two* clubs, and illustrating it with the home crest asserts
+the page is about that one, which is also how the away side's supporters read it.
+
+**`twitter:card` follows the image's shape**, which is what its two values mean. It used to
+be inverted — `summary` whenever an image existed and `summary_large_image` when none did,
+declaring the wide layout precisely when there was nothing to fill it. A square crest in a
+wide card is a logo adrift in whitespace, so a crest takes `summary` and the site card takes
+`summary_large_image`.
+
+`og:image:width`/`height` ride along only for the site card. A crest arrives from the
+provider at an unspecified size, and guessing would tell a scraper to reserve a box the
+image does not fill. As with the canonical tag and the sitemap, no origin means **no
+image tag at all** rather than a root-relative URL — a scraper fetches from its own host, so
+`/og-default.png` resolves nowhere and renders as a broken preview rather than a plain one.
 
 ### Routing
 

@@ -54,7 +54,10 @@ const canonicalOrigin = (): string => {
  * pointing at the entry page is worse than none at all.
  */
 export function usePageMeta(route: Route, context: MetaContext): void {
-  const { title, description } = pageMeta(route, context);
+  // Read at render rather than inside the effect: `pageMeta` needs it to build
+  // an absolute preview-image URL, and the value is a stable DOM read.
+  const origin = canonicalOrigin();
+  const { title, description, image } = pageMeta(route, context, origin);
   const path = canonicalPath(route, context);
   // Before the fetch lands there is nothing here the server did not already
   // know better. Writing anyway would replace a resolved canonical with the raw
@@ -74,9 +77,16 @@ export function usePageMeta(route: Route, context: MetaContext): void {
     setMetaTag("name", "twitter:title", title);
     setMetaTag("name", "twitter:description", description);
 
+    if (image) {
+      setMetaTag("property", "og:image", image.url);
+      setMetaTag("property", "og:image:alt", image.alt);
+      setMetaTag("name", "twitter:image", image.url);
+      setMetaTag("name", "twitter:image:alt", image.alt);
+    }
+
     if (!resolved) return;
 
-    const href = `${canonicalOrigin()}${path}`;
+    const href = `${origin}${path}`;
 
     let link = document.head.querySelector<HTMLLinkElement>('link[rel="canonical"]');
     if (!link) {
@@ -99,5 +109,5 @@ export function usePageMeta(route: Route, context: MetaContext): void {
     } else {
       setMetaTag("name", "robots", "noindex, follow");
     }
-  }, [title, description, path, resolved, clubs, matches]);
+  }, [title, description, path, resolved, origin, image?.url, image?.alt, clubs, matches]);
 }

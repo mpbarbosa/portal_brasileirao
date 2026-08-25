@@ -20,6 +20,7 @@
     "sync-marks": "tsx scripts/sync-broadcaster-marks.ts",
     "sync-rank-history": "tsx scripts/sync-rank-history.ts",
     "sync-md3-tokens": "tsx scripts/generate-md3-tokens.ts",
+    "sync-og-image": "tsx scripts/generate-og-image.ts",
     "test:tokens": "tsx scripts/generate-md3-tokens.ts --check"
   },
   "dependencies": {

@@ -16,11 +16,31 @@ export const SITE_NAME = "Portal Brasileirão";
 export const SITE_DESCRIPTION =
   "Classificação, jogos, artilharia e onde assistir o Campeonato Brasileiro Série A.";
 
+/** The card image drawn by `scripts/generate-og-image.ts`, served from `public/`. */
+export const OG_IMAGE_PATH = "/og-default.png";
+export const OG_IMAGE_WIDTH = 1200;
+export const OG_IMAGE_HEIGHT = 630;
+
+export interface PreviewImage {
+  /** Absolute. A scraper fetches this from its own host, so a root-relative
+   *  path resolves against the wrong origin or not at all. */
+  url: string;
+  /**
+   * Which Twitter card the image suits. `wide` is the 1200x630 card; `square`
+   * is a club crest, which inside a wide card is a logo adrift in whitespace.
+   */
+  shape: "wide" | "square";
+  /** Only when known. The provider's crests arrive at unspecified sizes, and
+   *  guessing would tell a scraper to lay out a box the image does not fill. */
+  width?: number;
+  height?: number;
+  alt: string;
+}
+
 export interface PageMeta {
   title: string;
   description: string;
-  /** Absolute URL for a preview image, when the page has an obvious one. */
-  image?: string;
+  image?: PreviewImage;
 }
 
 /** Whatever the caller happens to have loaded. Every field is optional: the
@@ -32,6 +52,31 @@ export interface MetaContext {
 }
 
 const suffix = (headline: string): string => `${headline} · ${SITE_NAME}`;
+
+/**
+ * The site's own card.
+ *
+ * Omitted rather than emitted relative when no origin is known, on the same
+ * reasoning as the canonical tag and the sitemap: a URL a scraper cannot fetch
+ * is worse than no tag, because it renders as a broken preview instead of a
+ * plain one.
+ */
+const siteImage = (origin: string): PreviewImage | undefined =>
+  origin
+    ? {
+        url: `${origin}${OG_IMAGE_PATH}`,
+        shape: "wide",
+        width: OG_IMAGE_WIDTH,
+        height: OG_IMAGE_HEIGHT,
+        alt: `${SITE_NAME} — Campeonato Brasileiro Série A`,
+      }
+    : undefined;
+
+/** A club's crest, which is genuinely what its page is about. */
+const crestImage = (club: Club): PreviewImage | undefined =>
+  club.crest
+    ? { url: club.crest, shape: "square", alt: `Escudo do ${club.shortName}` }
+    : undefined;
 
 const clubDescription = (club: Club, standings: StandingsRow[] | undefined): string => {
   const row = standings?.find((entry) => entry.club.code === club.code);
@@ -60,12 +105,19 @@ const matchDescription = (match: Match, home: string, away: string): string => {
  * section's generic wording otherwise — a page whose data has not arrived still
  * gets a truthful title rather than a blank or a placeholder like "undefined".
  */
-export const pageMeta = (route: Route, context: MetaContext = {}): PageMeta => {
+export const pageMeta = (
+  route: Route,
+  context: MetaContext = {},
+  origin = "",
+): PageMeta => {
+  const site = siteImage(origin);
+
   switch (route.section) {
     case "classificacao":
       return {
         title: `${SITE_NAME} — Campeonato Brasileiro Série A`,
         description: SITE_DESCRIPTION,
+        image: site,
       };
 
     case "ao-vivo":
@@ -74,6 +126,7 @@ export const pageMeta = (route: Route, context: MetaContext = {}): PageMeta => {
         description:
           "Jogos em andamento do Campeonato Brasileiro Série A, com placar, " +
           "próximos jogos e onde assistir.",
+        image: site,
       };
 
     case "jogos":
@@ -81,16 +134,19 @@ export const pageMeta = (route: Route, context: MetaContext = {}): PageMeta => {
         ? {
             title: suffix("Jogos"),
             description: "Partidas de cada rodada do Campeonato Brasileiro Série A.",
+            image: site,
           }
         : {
             title: suffix(`${route.round}ª rodada`),
             description: `Jogos da ${route.round}ª rodada do Campeonato Brasileiro Série A.`,
+            image: site,
           };
 
     case "artilharia":
       return {
         title: suffix("Artilharia"),
         description: "Os maiores goleadores do Campeonato Brasileiro Série A.",
+        image: site,
       };
 
     case "clube": {
@@ -99,20 +155,21 @@ export const pageMeta = (route: Route, context: MetaContext = {}): PageMeta => {
         return {
           title: suffix("Clube"),
           description: SITE_DESCRIPTION,
+          image: site,
         };
       }
 
       return {
         title: suffix(club.shortName),
         description: clubDescription(club, context.standings),
-        image: club.crest,
+        image: crestImage(club) ?? site,
       };
     }
 
     case "partida": {
       const match = findMatch(context.matches ?? [], route.id);
       if (!match) {
-        return { title: suffix("Partida"), description: SITE_DESCRIPTION };
+        return { title: suffix("Partida"), description: SITE_DESCRIPTION, image: site };
       }
 
       const byCode = new Map((context.clubs ?? []).map((club) => [club.code, club]));
@@ -127,11 +184,23 @@ export const pageMeta = (route: Route, context: MetaContext = {}): PageMeta => {
       return {
         title: suffix(`${home}${score}${away}`.replace(/\s+/g, " ").trim()),
         description: matchDescription(match, home, away),
-        image: byCode.get(match.homeCode)?.crest,
+        // The site's card, not the home club's crest. A fixture is two clubs,
+        // and illustrating it with one of them asserts the page is about that
+        // one — which is also how the away side's supporters read it.
+        image: site,
       };
     }
   }
 };
+
+/**
+ * The card type follows the image's shape, which is exactly what the two values
+ * mean. This used to be inverted: `summary` whenever an image existed, and
+ * `summary_large_image` when none did — declaring the wide layout precisely
+ * when there was nothing to fill it, and cramping the one case that had art.
+ */
+const twitterCard = (image: PreviewImage | undefined): string =>
+  image?.shape === "wide" ? "summary_large_image" : "summary";
 
 const escapeHtml = (value: string): string =>
   value
@@ -185,17 +254,27 @@ export const injectMeta = (
       `<meta name="description" content="${description}" />`,
     );
 
+  const image = meta.image;
+
   const tags = [
     `<meta property="og:type" content="website" />`,
     `<meta property="og:site_name" content="${escapeHtml(SITE_NAME)}" />`,
+    `<meta property="og:locale" content="pt_BR" />`,
     `<meta property="og:title" content="${title}" />`,
     `<meta property="og:description" content="${description}" />`,
-    meta.image ? `<meta property="og:image" content="${escapeHtml(meta.image)}" />` : "",
+    image ? `<meta property="og:image" content="${escapeHtml(image.url)}" />` : "",
+    // Dimensions let a scraper reserve the right box before it has fetched the
+    // file, so the preview does not reflow. Emitted only when actually known.
+    image?.width ? `<meta property="og:image:width" content="${image.width}" />` : "",
+    image?.height ? `<meta property="og:image:height" content="${image.height}" />` : "",
+    image ? `<meta property="og:image:alt" content="${escapeHtml(image.alt)}" />` : "",
     canonicalUrl ? `<meta property="og:url" content="${escapeHtml(canonicalUrl)}" />` : "",
     canonicalUrl ? `<link rel="canonical" href="${escapeHtml(canonicalUrl)}" />` : "",
-    `<meta name="twitter:card" content="${meta.image ? "summary" : "summary_large_image"}" />`,
+    `<meta name="twitter:card" content="${twitterCard(image)}" />`,
     `<meta name="twitter:title" content="${title}" />`,
     `<meta name="twitter:description" content="${description}" />`,
+    image ? `<meta name="twitter:image" content="${escapeHtml(image.url)}" />` : "",
+    image ? `<meta name="twitter:image:alt" content="${escapeHtml(image.alt)}" />` : "",
     // `noindex` without `nofollow`: the page is not worth an index entry, but
     // its links still lead to pages that are, and a stale link is the common
     // way a crawler reaches this branch at all.

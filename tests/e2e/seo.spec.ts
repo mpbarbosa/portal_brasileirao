@@ -174,3 +174,52 @@ test.describe("Páginas que não existem", () => {
     await expect(page.locator("table tbody tr")).toHaveCount(20);
   });
 });
+
+test.describe("Prévia de link", () => {
+  test("the card the tags point at is actually served", async ({ page, request }) => {
+    // The real integration risk: og-default.png lives in public/, which Vite
+    // copies to dist/ at build time. A tag naming a 404 is a blank preview.
+    await page.goto("/");
+    const src = await page.locator('meta[property="og:image"]').getAttribute("content");
+
+    expect(src).toMatch(/^https?:\/\/[^/]+\/og-default\.png$/);
+
+    const image = await request.get(new URL(src!).pathname);
+    expect(image.status()).toBe(200);
+    expect(image.headers()["content-type"]).toContain("image/png");
+  });
+
+  test("a section declares the wide card with the dimensions to lay it out", async ({ page }) => {
+    await page.goto("/artilharia");
+
+    await expect(page.locator('meta[name="twitter:card"]')).toHaveAttribute(
+      "content",
+      "summary_large_image",
+    );
+    await expect(page.locator('meta[property="og:image:width"]')).toHaveAttribute("content", "1200");
+    await expect(page.locator('meta[property="og:image:height"]')).toHaveAttribute("content", "630");
+    await expect(page.locator('meta[property="og:locale"]')).toHaveAttribute("content", "pt_BR");
+  });
+
+  test("a club page uses its crest, and the square card that suits it", async ({ page, request }) => {
+    const body = await (await request.get("/api/clubs")).json();
+    const club = body.data.find((entry: { slug?: string; crest?: string }) => entry.slug && entry.crest);
+
+    await page.goto(`/clube/${club.slug}`);
+
+    await expect(page.locator('meta[property="og:image"]')).toHaveAttribute("content", club.crest);
+    await expect(page.locator('meta[name="twitter:card"]')).toHaveAttribute("content", "summary");
+  });
+
+  test("a fixture is illustrated by the site, not by one of the two clubs", async ({ page, request }) => {
+    const body = await (await request.get("/api/matches")).json();
+    const match = body.data.matches[0];
+
+    await page.goto(`/partida/${match.id}`);
+
+    await expect(page.locator('meta[property="og:image"]')).toHaveAttribute(
+      "content",
+      /\/og-default\.png$/,
+    );
+  });
+});
