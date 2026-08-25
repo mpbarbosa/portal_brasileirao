@@ -163,7 +163,12 @@ const cropHeight = async (): Promise<number> =>
     const main = document.querySelector("main");
     if (!main) return max;
 
-    const candidates = [...main.children, ...main.querySelectorAll("li")];
+    // An open dialog lives in the browser's top layer, outside `main` and
+    // outside normal flow, so a crop derived only from `main` cannot see it —
+    // it cuts above the overlay and omits the one thing worth photographing.
+    // Measured on the player card: dialog bottom 640px, crop 109px.
+    const dialogs = [...document.querySelectorAll("dialog[open]")];
+    const candidates = [...main.children, ...main.querySelectorAll("li"), ...dialogs];
     const edges = candidates.map((el) => {
       const rect = el.getBoundingClientRect();
       return { top: rect.top + window.scrollY, bottom: rect.bottom + window.scrollY };
