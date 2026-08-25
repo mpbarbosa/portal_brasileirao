@@ -119,9 +119,43 @@ reviewable rather than described.
 **Exit criteria:** the seed colour and typeface decision are recorded in
 `CONTEXT.md`.
 
-### M1 — Colour roles and tonal palettes
+**Decided, 2026-08-25:**
+
+- **A, not B.** MD3 as a design system in our own tokens. No new runtime
+  dependency; the generator runs on a workstation and commits hexes. Confirmed
+  by the measured result — the client bundle is unchanged at 231.35 kB.
+- **Seed: `#10b981`**, the emerald the app already used as its accent. Recorded
+  in `CONTEXT.md` under **Semente**.
+- **Bundle budget:** no JS increase at all. CSS may grow by the size of the role
+  vocabulary; M1 spent 1.83 kB raw / 0.41 kB gzipped, part of which returns in
+  M2 when the legacy aliases are deleted.
+- **Typeface: still open**, and deliberately not decided here — it belongs to
+  M3, and nothing in M1 depends on it. The type *scale* remains separable from
+  the typeface.
+
+### M1 — Colour roles and tonal palettes — **done**
 
 The largest phase, and the one that carries the most value.
+
+Implemented by `scripts/md3-color-core.ts` (HCT: the CAM16 transform and the
+gamut solver) and `scripts/generate-md3-tokens.ts` (palettes, role mapping,
+contrast gate). Regenerate with `npm run sync-md3-tokens`; verify with
+`npm run test:tokens`, which fails if `src/index.css` has drifted from the
+generator or if any pairing falls below its floor.
+
+Two departures from a naive reading of the spec, both deliberate:
+
+- **The neutral palettes do not follow the seed.** MD3 derives neutrals from the
+  seed hue, which here would tint every surface green — a *larger* change than
+  the migration was asked to make, since the app's surfaces are slate and the
+  seed is 90 degrees away. The neutral hue is pinned to the existing slate;
+  Material's own `DynamicScheme` accepts explicit neutral palettes, so this is a
+  supported configuration rather than a departure from the system.
+- **`surface` is not emitted under its MD3 name.** MD3 spells the page
+  `surface`; this codebase spells the page `canvas` and a *card* `surface`.
+  Emitting both would declare `--color-surface` twice and leave the winner to
+  source order. `canvas` carries the role until M2 renames the call sites, which
+  keeps M1's promise that no component changes in the phase that changes colour.
 
 - Generate tonal palettes (0–100) from the seed.
 - Introduce MD3 role tokens: `primary`/`on-primary`/`primary-container`,
@@ -140,6 +174,24 @@ The largest phase, and the one that carries the most value.
 current light theme was deliberately *not* the dark one inverted — status
 colours were darkened to stay readable on a light page. Check that generated
 palettes preserve that, and override where they do not.
+
+**How that risk landed.** It was real, and the generated tones did not preserve
+it on their own. Light's faint tones had to be pulled darker than the mirrored
+dark tones would suggest, because the two themes' backgrounds are not mirror
+images: `raised` sits at tone 94 on light but tone 12 on dark, so light has far
+less room beneath it before AA fails. Tone 50 measured 3.86:1 against `raised`
+and now sits at 45.
+
+The gate also caught a pre-existing defect rather than one the migration
+introduced. The 4.55 worst case recorded above was measured against `canvas`
+only; `ink-faint` on `bg-raised` was already at about 4.37 in the light theme
+and had never been checked. The generator tests every text token against all
+three backgrounds, which is why the number moved. **Worst text pairing is now
+4.59:1 across 70 pairings, both themes.**
+
+The theme-invariant tokens survived: `scrim` is MD3's own neutral tone 0, and
+the `plate` trio is excluded from the tonal system by name, so the broadcaster
+marks still sit on a light backing in both themes.
 
 ### M2 — Shape, elevation and state layers
 
