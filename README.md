@@ -69,9 +69,9 @@ the marks under each fixture say which broadcaster showed it. The marks keep a l
 in both themes on purpose — Globo's circle and the Premiere wordmark are dark artwork on a
 transparent ground, and they vanish against a dark page without it.*
 
-![Página do estádio Maracanã no tema claro: o nome popular em destaque, "Rio de Janeiro – RJ" abaixo, o nome oficial "Estádio Jornalista Mário Filho" e uma ligação para o artigo na Wikipédia; dois números lado a lado — capacidade de 78.838 e inaugurado em 1950; os mandantes Fluminense e Flamengo, cada um com escudo e ligação para a sua página; e os jogos disputados no estádio, cada um com placar ou horário, as emissoras e a situação.](docs/screenshots/estadio-maracana-light.png)
+![Página do estádio Maracanã no tema claro: o nome popular em destaque, "Rio de Janeiro – RJ" abaixo, o nome oficial "Estádio Jornalista Mário Filho" e uma ligação para o artigo na Wikipédia; uma fotografia aérea do estádio ao anoitecer, com a cidade e os morros do Rio ao fundo, e sob ela o crédito ao fotógrafo e a licença Creative Commons; dois números lado a lado — capacidade de 78.838 e inaugurado em 1950; os mandantes Fluminense e Flamengo, cada um com escudo e ligação para a sua página; e os jogos disputados no estádio, cada um com placar ou horário, as emissoras e a situação.](docs/screenshots/estadio-maracana-light.png)
 
-![A mesma página do estádio no tema escuro, com o mesmo nome popular e oficial, a mesma capacidade e ano de inauguração, os mesmos dois mandantes e a mesma lista de jogos, e as marcas das emissoras mantendo o fundo claro.](docs/screenshots/estadio-maracana-dark.png)
+![A mesma página do estádio no tema escuro, com o mesmo nome popular e oficial, a mesma fotografia aérea e a mesma linha de crédito, a mesma capacidade e ano de inauguração, os mesmos dois mandantes e a mesma lista de jogos, e as marcas das emissoras mantendo o fundo claro.](docs/screenshots/estadio-maracana-dark.png)
 
 *A stadium page, light and dark, reached from a match's **Estádio** line or a club's
 **Mandante** tile — it has no nav entry, because a ground is somewhere you arrive at from a
@@ -81,7 +81,10 @@ per match, so the roster is derived by grouping fixtures on the slug of that str
 slug is the identity, which is what makes CBF's `ARENA MRV` and `Arena MRV` one ground
 rather than two. **Mandantes** falls out of who actually hosted there — nobody had to say
 the Maracanã has two tenants. Capacity, the official name and the year are hand-curated, and
-each is left out rather than guessed where the source is silent.*
+each is left out rather than guessed where the source is silent. So is the **photograph**,
+which no feed carries either — it is named by its file title on Wikimedia Commons and
+fetched from there, and it always ships with the photographer and the licence, because
+every licence in use but one requires the credit wherever the picture appears.*
 
 ## Stack
 
