@@ -20,7 +20,13 @@ export type Route =
    */
   | { section: "clube"; key: string }
   /** A single fixture, addressed by our match id. */
-  | { section: "partida"; id: string };
+  | { section: "partida"; id: string }
+  /**
+   * One ground, addressed by its slug ("maracana"). A detail view reached from
+   * a match or a club, not a nav destination — there is no stadium without a
+   * fixture that names one, exactly as there is no `clube` without a club.
+   */
+  | { section: "estadio"; key: string };
 
 export const HOME: Route = { section: "classificacao" };
 
@@ -55,6 +61,9 @@ export const parseRoute = (pathname: string): Route => {
     case "partida":
       return second ? { section: "partida", id: second } : HOME;
 
+    case "estadio":
+      return second ? { section: "estadio", key: second } : HOME;
+
     default:
       return HOME;
   }
@@ -75,6 +84,8 @@ export const formatRoute = (route: Route): string => {
       return `/clube/${encodeURIComponent(route.key)}`;
     case "partida":
       return `/partida/${encodeURIComponent(route.id)}`;
+    case "estadio":
+      return `/estadio/${encodeURIComponent(route.key)}`;
   }
 };
 

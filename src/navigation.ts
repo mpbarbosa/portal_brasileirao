@@ -16,8 +16,12 @@ import {
  * `NavBar`; see the note on `Icon` below.
  */
 /**
- * `clube` is a detail view reached by choosing a club, not a menu entry — it has
- * no meaning without a selection, so it is absent from NAV_ITEMS on purpose.
+ * `clube`, `partida` and `estadio` are detail views reached by choosing
+ * something, not menu entries — none has meaning without a selection, so all
+ * three are absent from NAV_ITEMS on purpose. `estadio` in particular could
+ * have been a fifth destination and deliberately is not: the bar has room for
+ * exactly one more, and a stadium is something you arrive at from a match, not
+ * a section you set out to browse.
  */
 export type SectionId =
   | "classificacao"
@@ -25,7 +29,8 @@ export type SectionId =
   | "jogos"
   | "artilharia"
   | "clube"
-  | "partida";
+  | "partida"
+  | "estadio";
 
 export interface NavItem {
   id: SectionId;

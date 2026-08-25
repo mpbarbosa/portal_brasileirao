@@ -36,6 +36,8 @@ import { withHighlights } from "@/match-core";
 import { withClubDetails, withHymns, withInstagram } from "@/club-core";
 import { compareForFeed, currentRound, matchesForRound, roundsOf } from "@/matches-core";
 import { injectMeta, pageMeta } from "@/page-meta-core";
+import { buildStadiums } from "@/venue-core";
+import { STADIUMS } from "@/src/data/stadiums";
 import { parseRoute } from "@/route-core";
 import { computeStandings } from "@/standings-core";
 import { CLUBS as SEED_CLUBS } from "@/src/data/clubs";
@@ -389,7 +391,11 @@ async function startServer() {
       // Only the routes that name something need data, and both come from the
       // same cached payload the API serves — no extra upstream request.
       let context = {};
-      if (route.section === "clube" || route.section === "partida") {
+      if (
+        route.section === "clube" ||
+        route.section === "partida" ||
+        route.section === "estadio"
+      ) {
         try {
           const [matchesEnvelope, standingsEnvelope] = await Promise.all([
             loadMatches(),
@@ -399,6 +405,13 @@ async function startServer() {
             clubs: matchesEnvelope.data.clubs,
             matches: matchesEnvelope.data.matches,
             standings: standingsEnvelope.data,
+            // Derived from the same payload rather than fetched: no provider
+            // has a stadium entity, so grouping the fixtures is what makes one.
+            stadiums: buildStadiums(
+              matchesEnvelope.data.matches,
+              matchesEnvelope.data.clubs,
+              STADIUMS,
+            ),
           };
         } catch {
           // Metadata is a nicety; never fail the page over it.

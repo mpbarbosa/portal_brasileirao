@@ -8,10 +8,13 @@ import { NavBar } from "@/src/components/NavBar";
 import { PlayerOverlayCard } from "@/src/components/PlayerOverlayCard";
 import { RoundBrowser } from "@/src/components/RoundBrowser";
 import { ScorersTable } from "@/src/components/ScorersTable";
+import { StadiumView } from "@/src/components/StadiumView";
 import { StandingsTable } from "@/src/components/StandingsTable";
 import { hasLiveMatch } from "@/live-core";
 import { findMatch } from "@/match-core";
 import { computeRankHistory } from "@/rank-history-core";
+import { buildStadiums } from "@/venue-core";
+import { STADIUMS } from "@/src/data/stadiums";
 import { parseRoute } from "@/route-core";
 import { usePageMeta } from "@/src/usePageMeta";
 import { useTheme } from "@/src/useTheme";
@@ -54,10 +57,22 @@ export function App() {
     [matches],
   );
 
+  /**
+   * Every ground the season's fixtures name, derived here for the same reason
+   * the campanha is: `/api/matches` already ships the whole season, so a second
+   * endpoint would buy nothing. A stadium is not an entity in any payload —
+   * this grouping is what makes one.
+   */
+  const stadiums = useMemo(
+    () => (matches ? buildStadiums(matches.matches, matches.clubs, STADIUMS) : []),
+    [matches],
+  );
+
   usePageMeta(route, {
     clubs: matches?.clubs,
     matches: matches?.matches,
     standings,
+    stadiums,
   });
 
   useEffect(() => {
@@ -215,6 +230,19 @@ export function App() {
               rankHistory={rankHistory}
               onBack={() => navigate({ section: "jogos", round: null })}
               onNavigate={(path) => navigate(parseRoute(path))}
+            />
+          )}
+
+          {route.section === "estadio" && (
+            <StadiumView
+              stadiumKey={route.key}
+              stadiums={stadiums}
+              loading={loading}
+              matches={matches?.matches ?? []}
+              clubs={matches?.clubs}
+              onBack={() => navigate({ section: "jogos", round: null })}
+              onSelectMatch={(id) => navigate({ section: "partida", id })}
+              onSelectClub={(key) => navigate({ section: "clube", key })}
             />
           )}
 

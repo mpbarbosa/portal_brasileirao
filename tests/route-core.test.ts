@@ -98,3 +98,18 @@ test("a match route round-trips", () => {
   const route: Route = { section: "partida", id: "554970" };
   assert.deepEqual(parseRoute(formatRoute(route)), route);
 });
+
+test("a stadium has its own address", () => {
+  assert.deepEqual(parseRoute("/estadio/maracana"), { section: "estadio", key: "maracana" });
+  assert.equal(formatRoute({ section: "estadio", key: "maracana" }), "/estadio/maracana");
+});
+
+test("a stadium path with no slug falls back home", () => {
+  assert.deepEqual(parseRoute("/estadio"), HOME);
+  assert.deepEqual(parseRoute("/estadio/"), HOME);
+});
+
+test("a stadium route round-trips", () => {
+  const route: Route = { section: "estadio", key: "arena-do-gremio" };
+  assert.deepEqual(parseRoute(formatRoute(route)), route);
+});

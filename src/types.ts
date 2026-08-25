@@ -64,6 +64,59 @@ export interface Venue {
   state: string;
 }
 
+/**
+ * Facts about a stadium that no data provider carries and CBF's feed does not
+ * either: the official name, how many it holds, when it opened, and where to
+ * read more. Hand-maintained in `src/data/stadiums.ts`, keyed by the stadium's
+ * slug, and every field beyond `name` is optional — the page renders what it
+ * has rather than an empty row.
+ */
+export interface StadiumFacts {
+  /**
+   * The name to display: the popular one a reader would say out loud, properly
+   * cased. Deliberately *not* CBF's string, which is stored verbatim in
+   * `venues.ts` and drifts (`ARENA MRV`), nor the official name below, which
+   * almost nobody uses — "Estádio Jornalista Mário Filho" is the Maracanã.
+   */
+  name: string;
+  /** The formal name, when it differs from `name` enough to be worth saying. */
+  officialName?: string;
+  /** Seated capacity for football, as reported by the source that was checked. */
+  capacity?: number;
+  /** Year of inauguration. Absent where the source does not state one. */
+  opened?: number;
+  /**
+   * The stadium's article on the Portuguese Wikipedia, stored as the **title
+   * alone**, exactly as `Club.wikipedia` is. The address is derived by
+   * `wikipediaUrl`, which is shared rather than reimplemented.
+   */
+  wikipedia?: string;
+}
+
+/**
+ * A stadium as the app knows it: identity and location derived from the
+ * fixtures played there, enriched by the curated facts above.
+ *
+ * `slug` is the identity, derived from CBF's venue string. It has to be, because
+ * that string is all that ties a fixture to a stadium — there is no venue id
+ * anywhere in the data.
+ */
+export interface Stadium {
+  slug: string;
+  name: string;
+  city: string;
+  state: string;
+  officialName?: string;
+  capacity?: number;
+  opened?: number;
+  wikipedia?: string;
+  /** Clubs that hosted a match here, most fixtures first. Usually one; the
+   *  Maracanã has two, which is why this is a list and not a field. */
+  homeClubs: Club[];
+  /** How many fixtures in the loaded season name this stadium. */
+  matchCount: number;
+}
+
 export type MatchStatus =
   | "SCHEDULED"
   | "LIVE"

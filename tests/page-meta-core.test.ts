@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import { injectMeta, pageMeta, SITE_NAME } from "@/page-meta-core";
+import { buildStadiums } from "@/venue-core";
 import type { Club, Match, StandingsRow } from "@/src/types";
 
 const club = (code: string, shortName: string, slug: string, crest?: string): Club => ({
@@ -187,4 +188,38 @@ test("a document with no head is returned unchanged rather than blanked", () => 
   const fragment = "<p>no head here</p>";
 
   assert.equal(injectMeta(fragment, { title: "t", description: "d" }), fragment);
+});
+
+test("a stadium page names the ground and who plays there", () => {
+  const stadiums = buildStadiums(
+    [
+      {
+        id: "1",
+        round: 24,
+        kickoff: "2026-08-01T20:00:00Z",
+        status: "FINISHED",
+        homeCode: "1783",
+        awayCode: "1770",
+        homeGoals: 1,
+        awayGoals: 0,
+        venue: { stadium: "Maracanã", city: "Rio de Janeiro", state: "RJ" },
+      },
+    ],
+    CLUBS,
+    { maracana: { name: "Maracanã", capacity: 78838 } },
+  );
+
+  const meta = pageMeta({ section: "estadio", key: "maracana" }, { stadiums });
+
+  assert.match(meta.title, /Maracanã/);
+  assert.match(meta.description, /Rio de Janeiro – RJ/);
+  assert.match(meta.description, /Casa do Flamengo/);
+  assert.match(meta.description, /78\.838/);
+});
+
+test("an unknown stadium still gets a truthful title, not undefined", () => {
+  const meta = pageMeta({ section: "estadio", key: "nao-existe" }, {});
+
+  assert.match(meta.title, /Estádio/);
+  assert.ok(!meta.title.includes("undefined"));
 });
