@@ -337,6 +337,19 @@ Rules that follow from sharing a repository:
   the document outline and because an end-to-end spec selects `main article`. This is the
   rule that drifted once already — that card was hand-rolled with a *different* radius
   than every other card until M2 folded it back in.
+- **The Classificação freezes `#` and Clube.** Both are `sticky`, so the numbers scroll
+  out from under the club name on a narrow screen rather than taking the name with them.
+  Three things had to move together, and each is invisible until someone scrolls:
+  the table is **`border-separate border-spacing-0`**, because in the collapsed model a
+  cell's borders belong to the table and slide out from under a sticky cell — which means
+  the row separator lives on every cell (`ROW_LINE`) rather than on the `<tr>`, since the
+  separated model does not paint row borders at all; and the **G4/Z4 rail rides on the
+  first cell, not the row**, because a row scrolls and would carry its rail away.
+  The trap: `STICKY_CLUB`'s `left-12` must equal `STICKY_POSITION`'s `w-12`. Widen the
+  position column alone and the two frozen columns overlap or gap — and only while
+  scrolled, because ordinary table layout puts them adjacent either way. Three specs in
+  `tests/e2e/standings.spec.ts` scroll a 380px viewport and check exactly these three
+  things; nothing else would catch any of them.
 - **Motion is MD3's, and `prefers-reduced-motion` is honoured.** A bare `transition`
   already means MD3 standard easing at 200ms, because `--default-transition-duration`
   and `--default-transition-timing-function` are overridden in `src/index.css` — do not

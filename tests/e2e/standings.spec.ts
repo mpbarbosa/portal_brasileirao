@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 
 /**
  * The suite runs against the frozen snapshot (DISABLE_FOOTBALL_DATA=true), so
@@ -139,5 +139,68 @@ test.describe("Classificação", () => {
       "loading",
       "lazy",
     );
+  });
+
+  /**
+   * Scroll the table container fully right and report how far it moved.
+   * The container is the table's parent — `Surface` supplies the
+   * `overflow-x-auto` box the sticky columns are pinned against.
+   */
+  const scrollTableRight = (page: Page) =>
+    page.locator("table").evaluate((table) => {
+      const container = table.parentElement as HTMLElement;
+      container.scrollLeft = container.scrollWidth;
+      return container.scrollLeft;
+    });
+
+  /** Narrow enough that the table must scroll. On a desktop viewport it fits
+   *  the container outright, sticky positioning never engages, and an
+   *  assertion about frozen columns would pass without testing anything. */
+  const NARROW = { width: 380, height: 800 };
+
+  test("the club column stays put while the numbers scroll", async ({ page }) => {
+    await page.setViewportSize(NARROW);
+
+    const cells = page.locator("table tbody tr").first().locator("td");
+    const leftOf = async (nth: number) => (await cells.nth(nth).boundingBox())!.x;
+
+    const clubBefore = await leftOf(1);
+    const pointsBefore = await leftOf(2);
+
+    expect(await scrollTableRight(page)).toBeGreaterThan(0);
+
+    // Clube held its ground; the first number column slid away beneath it.
+    expect(await leftOf(1)).toBeCloseTo(clubBefore, 0);
+    expect(await leftOf(2)).toBeLessThan(pointsBefore);
+  });
+
+  test("the frozen columns stay flush against each other", async ({ page }) => {
+    await page.setViewportSize(NARROW);
+    await scrollTableRight(page);
+
+    // Once pinned, Clube sits at a hard-coded offset that has to equal the
+    // width of the position column. Change one without the other and the two
+    // overlap or leave a gap — unscrolled they look fine either way, because
+    // ordinary table layout puts them adjacent regardless.
+    const cells = page.locator("table tbody tr").first().locator("td");
+    const position = (await cells.nth(0).boundingBox())!;
+    const club = (await cells.nth(1).boundingBox())!;
+
+    expect(club.x).toBeCloseTo(position.x + position.width, 0);
+  });
+
+  test("the zone rail scrolls with the club, not away from it", async ({ page }) => {
+    // The G4/Z4 rail rides on the position cell rather than the row: a row
+    // scrolls, so a rail drawn on it would vanish under the frozen columns.
+    await page.setViewportSize(NARROW);
+    await scrollTableRight(page);
+
+    const first = page.locator("table tbody tr").first().locator("td").first();
+
+    await expect(first).toHaveCSS("border-left-width", "2px");
+    // Still inside the visible box rather than scrolled off to its left.
+    const container = (await page.locator("table").locator("..").boundingBox())!;
+    const rail = (await first.boundingBox())!;
+    expect(rail.x).toBeGreaterThanOrEqual(container.x - 1);
   });
 });
