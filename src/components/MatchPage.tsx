@@ -3,8 +3,9 @@ import {
   highlightsSearchUrl,
   highlights,
   hasHighlights,
-  venueLabel,
 } from "@/match-core";
+import { stadiumSlug, venueName } from "@/venue-core";
+import { STADIUMS } from "@/src/data/stadiums";
 import { BroadcasterMark } from "@/src/components/BroadcasterMark";
 import { controlClasses } from "@/src/components/Button";
 import { ClubCrest } from "@/src/components/ClubCrest";
@@ -167,7 +168,7 @@ export function MatchPage({
   // that the other has not played, rather than that we lack its history.
   const showCampaigns =
     lastRound > 0 && homeCampaign.length > 0 && awayCampaign.length > 0;
-  const venue = venueLabel(match);
+  const venue = match.venue;
   const videos = highlights(match);
   const played = match.homeGoals !== null && match.awayGoals !== null;
 
@@ -211,7 +212,24 @@ export function MatchPage({
         {venue && (
           <div>
             <dt className="text-body-small text-ink-faint">Estádio</dt>
-            <dd className="font-medium">{venue}</dd>
+            {/* Only the ground is a link; the city and state stay text, because
+                they describe the ground rather than leading anywhere of their
+                own. The name comes from `venueName` so it matches the heading
+                of the page it opens — CBF writes "ARENA MRV". */}
+            <dd className="font-medium">
+              <a
+                href={formatRoute({ section: "estadio", key: stadiumSlug(venue.stadium) })}
+                onClick={(event) => {
+                  if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+                  event.preventDefault();
+                  onNavigate(formatRoute({ section: "estadio", key: stadiumSlug(venue.stadium) }));
+                }}
+                className={LINK_UNDERLINE}
+              >
+                {venueName(venue, STADIUMS)}
+              </a>
+              {` · ${venue.city} – ${venue.state}`}
+            </dd>
           </div>
         )}
 

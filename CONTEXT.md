@@ -274,6 +274,32 @@ mean guessing at proper names.
 _Avoid_: title-casing or re-accenting CBF's values, expecting football-data to
 supply a venue.
 
+**Página do estádio**:
+The detail page for one ground, at `/estadio/<slug>`, reached from a **Página da
+partida**'s **Estádio** line or from a club's **Mandante** tile — never from the
+navigation bar. Shows the name, city and state, the official name where it
+differs, capacity, year of inauguration, the clubs that host there, and every
+fixture of the season played there.
+A stadium is **not an entity in any payload**: `buildStadiums` in `venue-core.ts`
+derives the roster by grouping fixtures on the slug of their venue string, which
+is the only thing tying a fixture to a ground. The slug is therefore the
+identity, and it is what absorbs CBF's casing drift — `ARENA MRV` and `Arena MRV`
+are one stadium, not two.
+_Avoid_: a nav-bar entry for it (MD3's bar holds five and four are spent, and a
+ground is somewhere you arrive at from a fixture rather than a section you set
+out to browse), keying stadiums on the raw venue string, treating the absence of
+a curated fact as a zero.
+
+**Nome oficial**:
+The formal name of a ground, shown under its popular one only where the two
+differ — the Maracanã is *Estádio Jornalista Mário Filho*, and almost nobody says
+so. Held in `src/data/stadiums.ts` alongside capacity and year of inauguration,
+all hand-curated from the Portuguese Wikipedia because no provider in the
+pipeline carries any of them.
+_Avoid_: printing it when it merely restates the popular name ("Arena MRV /
+Arena MRV"), calling it "apelido" — the nickname is the *popular* name here, and
+naming both the same thing is how one row ends up rendering twice.
+
 **Melhores momentos**:
 The highlights section of a **Página da partida**, shown for **any** match that
 has finished with a score — a 0-0 included, since it still has chances and saves

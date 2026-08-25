@@ -15,10 +15,11 @@
  */
 import { clubKey, findClub } from "@/club-core";
 import { findMatch } from "@/match-core";
+import { findStadium } from "@/venue-core";
 import { roundsOf } from "@/matches-core";
 import type { MetaContext } from "@/page-meta-core";
 import { formatRoute, type Route } from "@/route-core";
-import type { Match } from "@/src/types";
+import type { Match, Stadium } from "@/src/types";
 
 /** Sections that name a real page. Anything else is a 404, not a redirect to
  *  the table — see the module note. */
@@ -29,6 +30,7 @@ const SECTIONS = new Set([
   "artilharia",
   "clube",
   "partida",
+  "estadio",
 ]);
 
 /**
@@ -111,6 +113,8 @@ export const subjectResolved = (route: Route, context: MetaContext = {}): boolea
       return Boolean(findClub(context.clubs ?? [], route.key));
     case "partida":
       return Boolean(findMatch(context.matches ?? [], route.id));
+    case "estadio":
+      return Boolean(findStadium(context.stadiums ?? [], route.key));
     case "jogos":
       // A round is judged against the season's round list, so it needs one.
       return route.round === null || (context.matches?.length ?? 0) > 0;
@@ -126,7 +130,8 @@ export type StatusReason =
   | "unnamed-detail"
   | "unknown-round"
   | "unknown-club"
-  | "unknown-match";
+  | "unknown-match"
+  | "unknown-stadium";
 
 export interface PageStatus {
   status: 200 | 404;
@@ -202,6 +207,16 @@ export const pageStatus = (pathname: string, context: MetaContext = {}): PageSta
       return FOUND;
     }
 
+    case "estadio": {
+      if (second === undefined) return missing("unnamed-detail");
+      // Same rule as the others: an absent list is not an empty one, so a
+      // stadium is only declared missing once the roster actually arrived.
+      if (context.stadiums?.length && !findStadium(context.stadiums, second)) {
+        return missing("unknown-stadium");
+      }
+      return FOUND;
+    }
+
     default:
       // A section that takes no argument does not acquire one.
       return second === undefined ? FOUND : missing("unknown-section");
@@ -254,6 +269,7 @@ const isoDate = (value: string): string => value.slice(0, 10);
 export const sitemapEntries = (context: {
   clubs?: MetaContext["clubs"];
   matches?: Match[];
+  stadiums?: Stadium[];
   updatedAt?: string;
 }): SitemapEntry[] => {
   const updatedAt = context.updatedAt ? isoDate(context.updatedAt) : undefined;
@@ -280,6 +296,17 @@ export const sitemapEntries = (context: {
       lastmod: updatedAt,
       changefreq: "weekly",
       priority: 0.6,
+    });
+  }
+
+  // Below the clubs: a ground changes less often than anything else on the
+  // site, and its page is largely a view onto fixtures listed elsewhere.
+  for (const stadium of context.stadiums ?? []) {
+    entries.push({
+      path: `/estadio/${stadium.slug}`,
+      lastmod: updatedAt,
+      changefreq: "monthly",
+      priority: 0.4,
     });
   }
 
