@@ -193,6 +193,56 @@ export const hymnUrl = (raw: string | undefined): string | null => {
   return `https://www.youtube.com/watch?v=${id}`;
 };
 
+/**
+ * The canonical article address for a Wikipedia title.
+ *
+ * Accepts what a person is likely to paste — a bare title with spaces or with
+ * underscores, or a full `pt.wikipedia.org/wiki/…` link — because the list is
+ * hand-maintained and being strict about the input format buys nothing. Only
+ * the title is kept, so a link copied from the article's edit view or from a
+ * section heading does not carry `?action=edit` or `#História` into the file.
+ *
+ * The edition is fixed to **pt**, and a URL naming another one returns null
+ * rather than being rewritten: `Grêmio Foot-Ball Porto Alegrense` is not an
+ * article on the English Wikipedia, so rewriting an `en.` link would produce a
+ * plausible address that 404s, and the whole app is pt-BR anyway.
+ *
+ * Underscores are what the address uses and spaces are what the file reads, so
+ * the title is stored with spaces and converted here. The rest is
+ * percent-encoded rather than transliterated — unlike a club **slug**, where
+ * stripping accents keeps the address typeable, `Gremio…` is simply a different
+ * article title and would not resolve.
+ *
+ * Returns null for anything that is not a plausible title — Wikipedia forbids
+ * `#<>[]|{}` in one — which the UI renders as no link rather than a broken one.
+ */
+export const wikipediaUrl = (raw: string | undefined): string | null => {
+  const value = raw?.trim();
+  if (!value) return null;
+
+  let title = value;
+  if (value.includes("/")) {
+    let url: URL;
+    try {
+      url = new URL(value);
+    } catch {
+      return null;
+    }
+    if (url.hostname !== "pt.wikipedia.org") return null;
+    if (!url.pathname.startsWith("/wiki/")) return null;
+    try {
+      title = decodeURIComponent(url.pathname.slice("/wiki/".length));
+    } catch {
+      return null;
+    }
+  }
+
+  title = title.replace(/_/g, " ").trim();
+  if (!title || /[#<>[\]|{}]/.test(title)) return null;
+
+  return `https://pt.wikipedia.org/wiki/${encodeURIComponent(title.replace(/ /g, "_"))}`;
+};
+
 /** Attach curated handles to a club list, keyed by code. */
 export const withInstagram = (clubs: Club[], handles: Record<string, string>): Club[] =>
   clubs.map((club) => {
@@ -207,13 +257,21 @@ export const withHymns = (clubs: Club[], hymns: Record<string, string>): Club[] 
     return hymn && !club.hymn ? { ...club, hymn } : club;
   });
 
+/** Attach curated Wikipedia article titles to a club list, keyed by code. */
+export const withWikipedia = (clubs: Club[], articles: Record<string, string>): Club[] =>
+  clubs.map((club) => {
+    const wikipedia = articles[club.code];
+    return wikipedia && !club.wikipedia ? { ...club, wikipedia } : club;
+  });
+
 /**
  * Fill in details the live payloads omit.
  *
  * Club objects embedded in standings and fixtures carry only id, name, crest
  * and abbreviation — the website comes from the teams endpoint, which only the
- * seed generator calls, and the Instagram handle and the hymn from no endpoint
- * at all. So the committed club list supplies all three at request time.
+ * seed generator calls, and the Instagram handle, the hymn and the Wikipedia
+ * article from no endpoint at all. So the committed club list supplies all four
+ * at request time.
  */
 export const withClubDetails = (clubs: Club[], known: Club[]): Club[] => {
   const byCode = new Map(known.map((club) => [club.code, club]));
@@ -223,12 +281,14 @@ export const withClubDetails = (clubs: Club[], known: Club[]): Club[] => {
     const website = club.website ?? source?.website;
     const instagram = club.instagram ?? source?.instagram;
     const hymn = club.hymn ?? source?.hymn;
+    const wikipedia = club.wikipedia ?? source?.wikipedia;
 
     return {
       ...club,
       ...(website ? { website } : {}),
       ...(instagram ? { instagram } : {}),
       ...(hymn ? { hymn } : {}),
+      ...(wikipedia ? { wikipedia } : {}),
     };
   });
 };

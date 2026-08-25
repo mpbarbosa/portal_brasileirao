@@ -15,6 +15,7 @@ const FLAMENGO: Club = {
   crest: "https://crests.football-data.org/1783.png",
   website: "https://www.flamengo.com.br/",
   instagram: "flamengo",
+  wikipedia: "Clube de Regatas do Flamengo",
 };
 
 const BOTAFOGO: Club = {
@@ -63,13 +64,26 @@ test("a club is a SportsTeam, addressed by its slug", () => {
   assert.deepEqual(team?.memberOf, { "@type": "SportsOrganization", name: COMPETITION });
 });
 
-test("a club's own addresses are linked as sameAs", () => {
+test("the addresses that identify the club are linked as sameAs", () => {
+  // Own addresses first, then the third-party reference. The Wikipedia article
+  // is schema.org's own example of the property, and the one a parser is most
+  // likely to already hold a node for.
   const team = teamNode(FLAMENGO, ORIGIN, false);
 
   assert.deepEqual(team.sameAs, [
     "https://www.flamengo.com.br/",
     "https://www.instagram.com/flamengo/",
+    "https://pt.wikipedia.org/wiki/Clube_de_Regatas_do_Flamengo",
   ]);
+});
+
+test("the hymn is not a sameAs, however it looks in the header", () => {
+  // It sits beside the other three links on the club page, which is exactly why
+  // this is worth pinning: a recording about the club is not an address that
+  // identifies it, and asserting otherwise claims the club *is* the video.
+  const team = teamNode({ ...FLAMENGO, hymn: "gESWI9ZlXzo" }, ORIGIN, false);
+
+  assert.equal((team.sameAs as string[]).some((entry) => entry.includes("youtube")), false);
 });
 
 test("fields the club does not have are omitted, never emitted empty", () => {

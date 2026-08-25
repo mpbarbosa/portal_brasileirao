@@ -191,6 +191,29 @@ channel, YouTube's own mark (that names the host, not the hymn), an embedded
 player on the club page (a hymn that can start playing is a hymn nobody asked
 for).
 
+**Wikipédia**:
+The club's encyclopedia article, linked from its page as a fourth external link
+beside the **Site oficial**, the **Instagram do clube** and the **Hino do
+clube**, under the same rules: a monochrome outline drawn inline in `ClubView`,
+`currentColor`, `inline-block`, `aria-hidden`. The mark is an open book rather
+than Wikipedia's puzzle globe — the article is what the link is for, and a globe
+would read as a second official site beside the one already in the row. Like the
+hymn the link reads as a *name* rather than an address, but the name is the
+host: "Wikipédia" is what a reader recognises, where the club's full legal name
+is not. Always the **pt** edition, and a link naming another one is dropped
+rather than rewritten: the pt title is rarely the en one, so rewriting would
+produce a plausible address that 404s. No provider carries an article at any
+tier, so `src/data/club-wikipedia.ts` is hand-curated and keyed by club code.
+Stored as the **title alone** with spaces; `wikipediaUrl` converts to
+underscores and percent-encodes, so `?action=edit` and `#História` do not
+persist. Every title was confirmed through the MediaWiki API, which reports
+whether a page exists, whether it redirects and what its first sentence says.
+_Avoid_: keying on **tla**, deriving the title from `name` or `shortName` (the
+article is at the full legal name and no rule maps between the three), storing
+the full URL, showing the title or the address as the link text, stripping
+accents the way a **slug** does (`Gremio…` is not an article), Wikipedia's own
+mark, an English-edition link.
+
 **slug**:
 URL-safe form of a club's short name — `Atlético-MG` → `atletico-mg` — used for
 readable addresses like `/clube/flamengo`. Accents are stripped rather than
