@@ -21,7 +21,8 @@
  * clicking the toggle after load would capture a repaint. A screenshot showing
  * that flash would be documenting a bug the app does not have.
  */
-import { mkdirSync } from "node:fs";
+import { execFileSync } from "node:child_process";
+import { mkdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 
 import { chromium, type Page } from "@playwright/test";
@@ -30,7 +31,8 @@ import { THEME_STORAGE_KEY, type Theme } from "@/theme-core";
 
 const SITE = "https://brasileirao.mpbarbosa.com";
 const OUT_DIR = path.join(process.cwd(), "docs/screenshots");
-/** Captures of anything that is not the live site. Gitignored. */
+/** Captures that failed the identity check below. Gitignored, so a rejected
+ *  shot is still there to look at without being committable. */
 const LOCAL_DIR = path.join(OUT_DIR, "local");
 
 const url = process.argv[2] ?? SITE;
@@ -65,22 +67,103 @@ try {
 }
 
 /**
- * A shot of a dev server never overwrites a committed one.
+ * Whether this capture may be committed as documentation.
  *
- * The filename comes from the route, so running this against localhost writes
- * exactly the path a README image already occupies — silently replacing a
- * picture of production with one of whatever is checked out. That is not
- * hypothetical: another session checking the match page against its own build
- * overwrote a committed shot, deleted it as a stray, and only noticed because
- * `git status` said `D` rather than nothing.
+ * "Shoot production" used to be the rule, and it was always a proxy for the
+ * real requirement: *the image must depict this commit, with real data*. The
+ * proxy failed in both directions. It let three stale captures through today,
+ * because production can be behind the commit being documented and the rule
+ * could not tell. And it forbade the one honest way out of the deadlock the
+ * staleness check created, where the only reachable build of the current commit
+ * is a local one.
  *
- * So only the live site writes to docs/screenshots. Everything else lands in
- * docs/screenshots/local, which is ignored — which also makes a before/after
- * comparison natural, since the committed shot and the local one sit side by
- * side under different roots.
+ * So ask the build directly. `/api/health` already reports both facts —
+ * build.sh injects the commit, and `source` distinguishes live data from the
+ * frozen seed — so this reads what is there rather than inferring:
+ *
+ * - **the captured build must have HEAD's appearance.** Not the same commit:
+ *   the same *appearance*. Requiring equal shas is stricter than the property
+ *   it protects and refuses correct captures — a commit that touches only
+ *   CLAUDE.md and playwright.config.ts cannot move a pixel, yet it would put
+ *   production one commit behind HEAD and block a capture that depicts the app
+ *   exactly. So this asks whether any appearance path differs between the
+ *   captured build and HEAD, which is the same question `check-screenshots.sh`
+ *   asks about ancestry, and reads its list from the same file.
+ * - **provider must be football-data.** A worktree without `.env` boots on the
+ *   seed snapshot and renders a frozen table that looks entirely plausible.
+ *   `git worktree add` never brings `.env` — it is gitignored — so building a
+ *   fresh tree for a clean capture is precisely the move that loses it. Worse,
+ *   the resulting images differ from production in a way that reads as ordinary
+ *   data drift, which is the one difference this project has taught itself to
+ *   expect.
+ *
+ * A capture that fails either test still gets written, to docs/screenshots/local,
+ * so it can be looked at. It just cannot be committed.
  */
-const isLive = url.startsWith(SITE);
-const outDir = isLive ? OUT_DIR : LOCAL_DIR;
+const health = async (): Promise<{ sha: string; provider: string }> => {
+  const response = await fetch(new URL("/api/health", url), {
+    signal: AbortSignal.timeout(15_000),
+  });
+  if (!response.ok) throw new Error(`${response.status} from /api/health`);
+
+  return response.json() as Promise<{ sha: string; provider: string }>;
+};
+
+const git = (...args: string[]) =>
+  execFileSync("git", args, { encoding: "utf8" }).trim();
+
+/** Paths whose contents decide how a page looks. Read from disk, the same way
+ *  check-screenshots.sh reads it, so the two cannot disagree — including when
+ *  someone is in the middle of editing the list. */
+const APPEARANCE = readFileSync(path.join(process.cwd(), "scripts/appearance-paths.txt"), "utf8")
+  .split("\n")
+  .filter(Boolean);
+
+/**
+ * Whether a build's appearance matches HEAD's.
+ *
+ * Returns a reason when it does not, so the caller can say which of the two
+ * failure modes happened — an unknown commit and a diverged one need different
+ * advice.
+ */
+const appearanceMatches = (sha: string): string | null => {
+  if (sha.endsWith("-dirty")) {
+    return `built from a dirty tree (${sha}) — commit first, a dirty build is not reproducible`;
+  }
+  try {
+    git("cat-file", "-e", `${sha}^{commit}`);
+  } catch {
+    return `serves ${sha}, which is not a commit in this repository — fetch, or it is not ours`;
+  }
+
+  const changed = git("diff", "--name-only", `${sha}..HEAD`, "--", ...APPEARANCE);
+  return changed ? `appearance differs from HEAD in:\n    ${changed.split("\n").join("\n    ")}` : null;
+};
+
+let served: { sha: string; provider: string };
+try {
+  served = await health();
+} catch (error) {
+  console.error(`Error: could not read ${url}/api/health — ${(error as Error).message}`);
+  process.exit(1);
+}
+
+const appearanceProblem = appearanceMatches(served.sha);
+const hasRealData = served.provider === "football-data";
+const committable = appearanceProblem === null && hasRealData;
+const outDir = committable ? OUT_DIR : LOCAL_DIR;
+
+if (!committable) {
+  console.error("This capture cannot be committed:");
+  if (appearanceProblem) {
+    console.error(`  ${appearanceProblem}`);
+  }
+  if (!hasRealData) {
+    console.error(`  provider is "${served.provider}", not "football-data" — frozen seed data`);
+    console.error("  a worktree without .env boots on the seed snapshot; copy it in");
+  }
+  console.error("  writing to docs/screenshots/local instead");
+}
 
 /** `/` is the classificação; anything else names itself after its path. */
 const slug =
@@ -168,7 +251,7 @@ await context.addInitScript(
 );
 
 const page = await context.newPage();
-console.log(`==> ${url} (${theme}, ${device})${isLive ? "" : " — local build, writing to docs/screenshots/local"}`);
+console.log(`==> ${url} (${theme}, ${device}) — ${served.sha}, ${served.provider}`);
 await page.goto(url, { waitUntil: "networkidle" });
 
 await settle(page);

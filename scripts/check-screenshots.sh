@@ -34,7 +34,11 @@ cd "$(cd "$SCRIPT_DIR/.." && pwd)"
 # What changes how a page looks. Deliberately not src/data: the data moves with
 # every match and every sync, and the README does not claim its numbers are
 # current — it claims the app looks like this.
-SURFACE=(src/components src/index.css src/App.tsx index.html)
+#
+# Shared with scripts/screenshot.ts, which refuses to commit a capture of a
+# build whose appearance differs from HEAD's. Two copies of this list would
+# drift, and the drift would be silent in both directions at once.
+mapfile -t SURFACE < scripts/appearance-paths.txt
 
 if [ "$(git rev-parse --is-shallow-repository)" = "true" ]; then
     echo "Error: shallow clone — cannot compare commit ancestry."
