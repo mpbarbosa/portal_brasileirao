@@ -33,7 +33,17 @@ The **Partida** page carries both clubs' campanhas, stacked rather than overlaid
 two colours: the app has semantic tokens and no series palette, so a second hue
 would need a CVD-safe pair and a legend. Stacked, the two share one scale and their
 rounds line up vertically, so "who was above whom in the 12ª rodada" is read by
-looking straight down. The y axis is inverted — 1st at the top, so a climbing line
+looking straight down.
+
+The mark is **better on a phone than on a desktop**, which is the opposite of the
+instinct. Measured on the deployed match page: the sparklines render 317px wide at
+375px viewport and 710px at 1280px, and at the larger size the line is sparse with
+a lot of empty box, while at the smaller it is compact and dense. Carrying both
+clubs costs 277px on the densest page in the app — it goes from 1.00 to 1.10
+screens at 375×812, with no horizontal overflow at either width. So a mobile
+conditional would buy back a tenth of a screen by hiding the version of the
+component that reads best, and would leave a phone reader with less than a laptop
+reader. Read the measurement before reaching for the media query. The y axis is inverted — 1st at the top, so a climbing line
 means a climbing club — and both axes are shared by every row: the rows are small
 multiples, and auto-fitting each club to its own range would draw a side rattling
 between 1st and 3rd as dramatically as one climbing from 20th to 5th.
