@@ -347,7 +347,19 @@ id alone; `hymnUrl` in `club-core.ts` builds the address. Every id was checked
 through YouTube's oEmbed endpoint (`/oembed?url=…&format=json`, which reports
 title and channel) before being written down, because a search for a club's hymn
 returns near-misses that the URL does not distinguish — the hymn of the *city* of
-Santos among the club's, for one.
+Santos among the club's, for one. That check is now a script:
+
+```sh
+npm run check-hymns                                  # every id resolves and names its club
+npm run check-hymns https://brasileirao.mpbarbosa.com # …and the deploy serves the same ids
+```
+
+It talks to YouTube only, so it costs nothing from the football-data budget, and
+it prints the whole table rather than only the failures — a title match narrows
+what a human reads, it does not prove the recording is the right one. Nothing
+runs it automatically: CI has no network dependency on a third party by design,
+and a link that rots on someone else's server is not a reason for a red build on
+a commit that did not touch it.
 
 `src/data/club-wikipedia.ts` holds each club's article on the **Portuguese**
 Wikipedia, hand-maintained for the same reason. It stores the title alone
