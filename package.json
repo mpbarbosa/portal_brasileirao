@@ -16,6 +16,7 @@
     "test:e2e:ui": "playwright test --ui",
     "sync-broadcasts": "tsx scripts/sync-broadcasts.ts",
     "screenshot": "tsx scripts/screenshot.ts",
+    "check-hymns": "tsx scripts/check-hymns.ts",
     "find-highlights": "tsx scripts/find-highlights.ts",
     "sync-marks": "tsx scripts/sync-broadcaster-marks.ts",
     "sync-rank-history": "tsx scripts/sync-rank-history.ts",
