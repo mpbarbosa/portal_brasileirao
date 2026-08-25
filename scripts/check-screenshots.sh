@@ -40,6 +40,9 @@ cd "$(cd "$SCRIPT_DIR/.." && pwd)"
 # drift, and the drift would be silent in both directions at once.
 mapfile -t SURFACE < scripts/appearance-paths.txt
 
+SITE="https://brasileirao.mpbarbosa.com"
+SHOT_DIR="docs/screenshots"
+
 if [ "$(git rev-parse --is-shallow-repository)" = "true" ]; then
     echo "Error: shallow clone — cannot compare commit ancestry."
     echo "  actions/checkout needs fetch-depth: 0 for this check."
@@ -67,16 +70,36 @@ echo "  last screenshot refresh: $(git log -1 --format='%h %s' "$last_shot")"
 echo "  appearance changed since, in:"
 git log --format='    %h %s' "$last_shot..$last_ui" -- "${SURFACE[@]}"
 echo
-echo "  Refresh against the deployed build, then commit docs/screenshots:"
-echo "    S=https://brasileirao.mpbarbosa.com"
-echo "    npx tsx scripts/screenshot.ts \"\$S/\" light"
-echo "    npx tsx scripts/screenshot.ts \"\$S/\" dark"
-echo "    npx tsx scripts/screenshot.ts \"\$S/\" light mobile"
-echo "    npx tsx scripts/screenshot.ts \"\$S/\" dark mobile"
-echo "    npx tsx scripts/screenshot.ts \"\$S/jogos\" light         # and dark"
-echo "    npx tsx scripts/screenshot.ts \"\$S/clube/palmeiras\" light   # and dark"
-echo "    npx tsx scripts/screenshot.ts \"\$S/partida/554972\" light    # and dark"
+# What to tell the reader, and why it is not a fixed recipe.
+#
+# This block used to print a literal list of commands against the live site,
+# ending "shoot the deployed build, not a dev server". Both halves rotted. The
+# advice stopped being true when screenshot.ts began checking what the build it
+# captured actually is, and the fixture id in the list outlived the image it
+# named — following it wrote a PNG the README no longer referenced, which is a
+# quieter failure than an error because the file looks perfectly correct.
+#
+# So: state the rule, and derive the file list from what is committed. A recipe
+# built from `ls` cannot name an image that does not exist.
+echo "  Refresh docs/screenshots, then commit them."
 echo
-echo "  Shoot the deployed build, not a dev server: a local capture goes to"
-echo "  docs/screenshots/local and will not satisfy this check."
+echo "  The rule is that the images must depict THIS commit — not that they come"
+echo "  from production. scripts/screenshot.ts enforces it: it reads /api/health"
+echo "  from whatever it captured and writes into docs/screenshots only if that"
+echo "  build carries the same appearance as HEAD and is serving real provider"
+echo "  data. Anything else lands in docs/screenshots/local, which is gitignored."
+echo
+echo "  So capture from either:"
+echo "    - a local production build of HEAD (npm run build && npm start) — the"
+echo "      normal case, and the only one available while a change is unreleased"
+echo "    - $SITE, but only once it already carries the change"
+echo
+echo "  The committed set, each needing its light and dark pair:"
+for shot in "$SHOT_DIR"/*.png; do
+    [ -e "$shot" ] || continue
+    echo "    $(basename "$shot")"
+done
+echo
+echo "  A refusal into docs/screenshots/local is the tool working, not a fault:"
+echo "  it means the build you captured is not the one you are documenting."
 exit 1
