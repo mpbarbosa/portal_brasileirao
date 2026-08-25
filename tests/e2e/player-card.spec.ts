@@ -1,8 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
 
-const SM_BREAKPOINT = 640;
-const isCollapsed = (page: Page) => (page.viewportSize()?.width ?? 0) < SM_BREAKPOINT;
-
 const card = (page: Page) => page.getByRole("dialog");
 
 const openFirstPlayer = async (page: Page) => {
@@ -206,7 +203,6 @@ test.describe("Cartão do jogador", () => {
     await openFirstPlayer(page);
     await page.keyboard.press("Escape");
 
-    if (isCollapsed(page)) await page.getByRole("button", { name: /menu/i }).click();
     await page.getByRole("link", { name: /^Classificação/ }).click();
     await expect(page.locator("table tbody tr")).toHaveCount(20);
   });

@@ -345,17 +345,28 @@ it), hotlinking Commons, letting a control's accessible name rest on an image's
 asserting a mark's `src` instead of whether it painted, showing a mark with no
 plate, treating a missing mark as an error.
 
-**Menu de seções**:
-The navigation in the sticky header. Its entries come from `NAV_ITEMS`
-(`src/navigation.ts`), which is the single source of truth for what sections exist
-— adding one means an entry there plus a case in `App`'s view switch; `NavBar`
-itself needs no change. Below Tailwind's `sm` breakpoint the entries collapse
-behind a toggle labelled "Abrir menu" / "Fechar menu"; the same entries render
-either way, so every section stays reachable at any width.
-_Avoid_: "abas"/"tabs" (these are sections of one page, and the collapsed form is
-a menu rather than a tab strip), "hambúrguer" in user-facing copy, `title`
-tooltips on the entries (they never appear on touch and they compete with the
-visible label for the accessible name).
+**Barra de navegação**:
+The app's sections, wherever they are shown. Entries come from `NAV_ITEMS`
+(`src/navigation.ts`), the single source of truth for what sections exist —
+adding one means an entry there plus a case in `App`'s view switch; `NavBar`
+itself needs no change, which is why the entry carries its own icon rather than
+`NavBar` looking one up.
+
+Two presentations of the one model. Above Tailwind's `sm` breakpoint the entries
+sit inline in the sticky header. Below it they are a Material Design 3
+navigation bar fixed to the bottom edge, each an icon above its label, the
+current one marked by a pill behind the *icon*. Both render from the same list,
+so every section is reachable at any width and neither can drift.
+
+**Three to five destinations.** That is MD3's bound for this pattern and there
+are three, so two more sections fit. A sixth does not fail — it crowds, silently
+— and wants a different pattern rather than a sixth entry. This bound replaced a
+toggle that hid the entries behind a hamburger, which is the arrangement the
+pattern exists to correct.
+_Avoid_: "menu" (nothing opens or closes any more), "hambúrguer" (gone as of the
+MD3 migration), "abas"/"tabs" for the mobile form (a bar is not a tab strip),
+`title` tooltips on the entries — they never appear on touch and compete with
+the visible label for the accessible name.
 
 **Módulo core**:
 A root-level `*-core.ts` module holding pure logic with **no I/O** — data in, data
@@ -433,7 +444,7 @@ jogador**'s scrim), "highlight".
 The keyboard focus indicator: a two-pixel `primary` outline, offset so it sits
 outside the control rather than on its fill. `FOCUS_RING` in
 `src/components/interaction.ts`, kept deliberately separate from **Camada de
-estado** — they were one constant at first, and the current **Menu de seções**
+estado** — they were one constant at first, and the current **Barra de navegação**
 entry, a filled chip that takes no veil, silently lost its ring along with it.
 Anything focusable takes the ring; only things with a container take the veil.
 _Avoid_: "outline" on its own (it collides with the `outline`/`outline-variant`

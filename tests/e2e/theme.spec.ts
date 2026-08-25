@@ -192,11 +192,8 @@ test.describe("Foco do teclado", () => {
   }) => {
     await page.goto("/");
 
-    // Below `sm` the entries collapse behind a toggle, so the link exists but is
-    // not focusable until the panel is open. Both layouts render the same entry.
-    const menu = page.getByRole("button", { name: "Abrir menu" });
-    if (await menu.isVisible()) await menu.click();
-
+    // No menu to open any more: the destinations are visible at every width,
+    // in the header above `sm` and in the navigation bar below it.
     const current = page
       .getByRole("link", { name: "Classificação" })
       .filter({ visible: true })

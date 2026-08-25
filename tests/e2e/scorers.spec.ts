@@ -1,12 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 
-const SM_BREAKPOINT = 640;
-const isCollapsed = (page: Page) => (page.viewportSize()?.width ?? 0) < SM_BREAKPOINT;
-
 const goToArtilharia = async (page: Page) => {
-  if (isCollapsed(page)) {
-    await page.getByRole("button", { name: /menu/i }).click();
-  }
   await page.getByRole("link", { name: /^Artilharia/ }).click();
   await expect(page.locator("table tbody tr").first()).toBeVisible();
 };
@@ -73,7 +67,6 @@ test.describe("Artilharia", () => {
   });
 
   test("switching away and back keeps the table", async ({ page }) => {
-    if (isCollapsed(page)) await page.getByRole("button", { name: /menu/i }).click();
     await page.getByRole("link", { name: /^Classificação/ }).click();
     await expect(page.locator("table tbody tr")).toHaveCount(20);
 

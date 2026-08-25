@@ -133,6 +133,17 @@ parse/format cases in `route-core.ts`, a case in `App`'s view switch, and — if
 data — a pure mapper in `football-data-core.ts`, a seed snapshot in
 `scripts/sync-seed-data.ts`, and a cached route in `server.ts`. `NavBar` never changes.
 
+The `NAV_ITEMS` entry carries its own `Icon`, which is *why* `NavBar` never changes — an
+icon looked up by id inside `NavBar` would break that promise the first time anyone added
+a section.
+
+**The promise is bounded, and the bound is not enforced by anything.** Material Design 3's
+navigation bar carries **three to five** destinations, and there are three. Two more fit.
+At the sixth the bar is off-spec — crowded rather than broken, so no build fails, no test
+goes red, and nobody notices. A sixth section wants MD3's navigation *drawer*, not a sixth
+entry here. Read that as a real limit rather than a style note: it is the one constraint in
+this file that the tooling cannot check for you.
+
 ### Page metadata
 
 `page-meta-core.ts` maps a route plus loaded data to a title, description and preview
