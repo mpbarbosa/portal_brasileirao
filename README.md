@@ -16,10 +16,13 @@ agent Claude Code.
 > `FOOTBALL_DATA_TOKEN` is set; without a token the app serves a frozen snapshot, so a
 > fresh clone runs with no signup.
 
-![Classificação do Campeonato Brasileiro Série A no tema claro: os 20 clubes com escudo, pontos, jogos, vitórias, empates, derrotas e saldo de gols. Os quatro primeiros trazem uma faixa verde (G4) e os quatro últimos uma faixa vermelha (Z4).](docs/screenshots/classificacao-light.png)
+![Classificação do Campeonato Brasileiro Série A no tema claro: os 20 clubes com escudo, pontos, jogos, vitórias, empates, derrotas, saldo de gols e o gráfico da campanha. Os quatro primeiros trazem uma faixa verde (G4) e os quatro últimos uma faixa vermelha (Z4).](docs/screenshots/classificacao-light.png)
 
-*Classificação in the light theme. The app follows your system setting and remembers an
-explicit choice; the control in the header switches between them.*
+![A mesma classificação no tema escuro, com as mesmas 20 posições, faixas do G4 e do Z4 e gráficos da campanha.](docs/screenshots/classificacao-dark.png)
+
+*Classificação, light and dark. The app follows your system setting and remembers an explicit
+choice; the control in the header switches between them. **Campanha** is the club's position
+after each round — the season behind a single row.*
 
 ![Página do clube Palmeiras no tema claro: escudo, site oficial e perfil no Instagram, os números da temporada (1º lugar, 51 pontos, 24 jogos, saldo +24), o gráfico da campanha da 1ª à 24ª rodada, os últimos cinco resultados, o próximo jogo e os artilheiros do clube.](docs/screenshots/clube-palmeiras-light.png)
 
