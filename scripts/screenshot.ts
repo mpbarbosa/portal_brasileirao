@@ -271,6 +271,19 @@ const settle = async (page: Page) => {
     // The round picker renders before the fixtures do, so waiting on it alone
     // would photograph an empty round.
     await page.locator("main ul > li").first().waitFor({ timeout: 30_000 });
+  } else if (route === "/jogadores") {
+    // The panels are closed on arrival, which is right for a reader and wrong
+    // for a photograph: twenty collapsed rows document the index and say
+    // nothing about what the page is for. Opening the first one puts a real
+    // elenco in the frame, and the crop below lands on a player row inside it.
+    //
+    // `click`, not `open = true`: the disclosure is the browser's, and driving
+    // it through the property would capture a state no reader can reach by the
+    // route the page actually offers.
+    const first = page.locator("[data-squad] summary").first();
+    await first.waitFor({ timeout: 30_000 });
+    await first.click();
+    await page.locator("[data-squad] section h4").first().waitFor({ timeout: 30_000 });
   } else if (route === "/ao-vivo") {
     // "Agora" renders before any data arrives — it has to, since "nothing is
     // being played" is an answer rather than an empty state. So the heading is
