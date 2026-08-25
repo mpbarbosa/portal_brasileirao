@@ -146,20 +146,39 @@ test.describe("the stadium photograph", () => {
     expect((await image.getAttribute("alt"))?.trim()).not.toBe(name);
   });
 
-  test("asks Commons for a width rather than hardcoding a CDN path", async ({ page }) => {
+  test("is served from our own origin, never hotlinked from Commons", async ({ page }) => {
     const figure = await openStadiumWithPhoto(page);
     const image = figure.locator("img");
 
-    // Special:FilePath survives a file being renamed; the upload.wikimedia.org
-    // address embeds a hash of the filename and does not.
-    await expect(image).toHaveAttribute("src", /commons\.wikimedia\.org\/wiki\/Special:FilePath\//);
-    await expect(image).toHaveAttribute("src", /[?&]width=\d+/);
+    // The regression this guards is the one that shipped: Commons answers a
+    // browser's third or fourth request with 429, so hotlinking works in
+    // development and degrades in production. `sync-stadium-photos` vendors the
+    // files; this asserts the page actually asks for them.
+    await expect(image).toHaveAttribute("src", /^\/stadiums\/[a-z0-9-]+-\d+\.jpg$/);
+    await expect(image).not.toHaveAttribute("src", /commons\.wikimedia\.org/);
 
-    // One srcSet entry per offered width, so a phone is not sent the desktop
-    // rendering of an eight-megapixel original.
+    // One srcSet entry per vendored width, so a phone is not sent the 2x file.
     const srcset = (await image.getAttribute("srcset")) ?? "";
     expect(srcset.split(",").length).toBeGreaterThan(1);
     expect(srcset).toMatch(/\s\d+w$/);
+    expect(srcset).not.toMatch(/commons\.wikimedia\.org/);
+  });
+
+  test("every width the page offers actually resolves", async ({ page }) => {
+    const figure = await openStadiumWithPhoto(page);
+    const srcset = (await figure.locator("img").getAttribute("srcset")) ?? "";
+
+    // A srcSet entry with no file behind it fails as a missing image on
+    // whichever devices happen to pick that candidate — invisible on the
+    // machine that wrote it. Fetch every one.
+    const urls = srcset.split(",").map((entry) => entry.trim().split(/\s+/)[0]);
+    expect(urls.length).toBeGreaterThan(1);
+
+    for (const url of urls) {
+      const response = await page.request.get(url);
+      expect(response.status(), `${url} should be served`).toBe(200);
+      expect(response.headers()["content-type"]).toMatch(/^image\//);
+    }
   });
 
   test("credits the photographer and names the licence", async ({ page }) => {

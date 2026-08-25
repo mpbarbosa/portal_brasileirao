@@ -300,34 +300,35 @@ It always ships with its **crédito da foto** — photographer, licence and a li
 back to Commons — because every licence in use but CC0 requires the photographer
 to be named wherever the picture appears. That caption is a condition of showing
 the image, not a caption in the editorial sense.
-**It is hotlinked from Commons, which the marca da emissora entry forbids.** That
-is a deliberate exception and not an oversight, so it is written down here rather
-than left for the next reader to discover as a contradiction. The prohibition
-exists because a dozen marks on one page earned a 429 — Commons is an archive
-with rate limits, not a CDN. **The variable is images per page view, and a
-stadium page loads exactly one**: the browser picks a single entry from the
-`srcSet`, and `/estadio/<slug>` is the only page that shows a photograph at all.
-Fifteen rapid requests to `Special:FilePath` were made by hand without a 429, at
-every width in the `srcSet`.
+**The files are served from our own origin**, vendored into `public/stadiums/`
+by `npm run sync-stadium-photos`, exactly as the broadcaster marks are. They
+shipped hotlinked from Commons and were vendored afterwards: Commons answers a
+browser's third or fourth request with 429 because it is an archive rather than
+a CDN, and a single image per page had not tripped that only because the page
+happens to show one. That is a property of today's layout rather than of the
+code — a gallery, a second photograph, or an index of grounds each showing one
+would all restore the shape that produced the 429, and none would look like a
+performance decision to whoever wrote them.
 
-Two things that check does **not** establish, and which are the reason to keep
-this entry rather than close the question: it was one client rather than real
-traffic, and `Special:FilePath` answers with two redirects through
-`commons.wikimedia.org` before reaching `upload.wikimedia.org`, so each view
-costs two requests to the rate-limited host and one to the CDN. If Commons does
-refuse, the `<img>` has no `onError` and the reader gets the browser's
-broken-image box inside the fixed 16/9 frame — the rest of the page is unharmed.
+Unlike the marks, these are **not public domain**, and the sync's licence rule
+is looser to match: `redistributable` in `commons-core.ts` admits CC0, CC BY and
+CC BY-SA, because the app renders the credit as a condition of display and so
+can meet the obligation. It refuses any licence it cannot *name* rather than
+anything on a blocklist — an unrecognised licence is one nobody has checked. The
+credit is re-read from Commons on every sync and must still match, because
+hosting our own copy makes this app the publisher of it.
 
-The bound that follows: **one Commons image per page view.** A second photograph
-on the same page, a gallery, or a list of grounds each showing its own, all put
-this back into the shape that produced the 429, and want vendoring into
-`public/` the way `sync-marks` does it — not another exception.
+The Commons file title stays in the data as the **source**, and the credit line
+still links to the file page: vendoring the bytes does not vendor the
+attribution.
 
 _Avoid_: calling it "imagem" or "capa" (it is a photograph of a real ground, and
 "capa" would suggest the link-preview card, which is `og-default.png`), showing
 one without its credit, tidying a credit string into house style — the wording
-Commons publishes is the wording with legal force, extending the hotlink to a
-page that shows more than one Commons image.
+Commons publishes is the wording with legal force, hotlinking Commons instead
+of syncing (that is what `sync-stadium-photos` is for), adding a photograph to
+`stadiums.ts` without re-running the sync — the page would ask for a file that
+does not exist.
 
 **Nome oficial**:
 The formal name of a ground, shown under its popular one only where the two
@@ -555,9 +556,8 @@ against a dark page. A broadcaster with no mark is rendered as its own name on
 the same plate: that is the ordinary case, not a defect, since CBF's feed already
 names ESPN/Disney+, Band and a dozen others we curate nothing for.
 _Avoid_: copying logo artwork from a broadcaster's site (no licence comes with
-it), hotlinking Commons **for these** — the one deliberate exception is the single
-photograph on a **Página do estádio**, and the reasoning and its bound are recorded
-under **Foto do estádio**; letting a control's accessible name rest on an image's
+it), hotlinking Commons — stadium photographs are vendored the same way, see
+**Foto do estádio**; letting a control's accessible name rest on an image's
 `alt` (they load lazily — carry the name in text and mark the image decorative),
 asserting a mark's `src` instead of whether it painted, showing a mark with no
 plate, treating a missing mark as an error.

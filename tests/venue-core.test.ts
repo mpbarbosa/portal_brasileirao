@@ -9,6 +9,7 @@ import {
   stadiumMatches,
   stadiumPhotoPage,
   stadiumPhotoUrl,
+  PHOTO_WIDTHS,
   stadiumSlug,
   venueName,
 } from "@/venue-core";
@@ -254,14 +255,24 @@ test("a curated photo reaches the built stadium, and an uncurated one is absent"
   assert.equal(bare.photo, undefined);
 });
 
-test("a photo address asks Commons for the width the page will draw", () => {
-  assert.equal(
-    stadiumPhotoUrl(PHOTO, 736),
-    "https://commons.wikimedia.org/wiki/Special:FilePath/Aerea2%20maracana.jpg?width=736",
-  );
-  // Different widths are different addresses, which is what makes a srcSet
-  // worth writing — one entry per width the browser may choose.
-  assert.notEqual(stadiumPhotoUrl(PHOTO, 480), stadiumPhotoUrl(PHOTO, 1472));
+test("a photo is served from our own origin, keyed by stadium slug", () => {
+  // Not Commons. Hotlinking it is what sync-stadium-photos exists to undo, and
+  // an absolute address here would be the regression that reintroduces it.
+  assert.equal(stadiumPhotoUrl("maracana", 736), "/stadiums/maracana-736.jpg");
+  assert.ok(!stadiumPhotoUrl("maracana", 736).includes("commons"));
+
+  // Different widths are different files, which is what makes a srcSet worth
+  // writing — one entry per width the browser may choose.
+  assert.notEqual(stadiumPhotoUrl("maracana", 736), stadiumPhotoUrl("maracana", 1472));
+});
+
+test("every width the page offers is one the sync writes", () => {
+  // The list is shared precisely so these cannot drift: a width in the srcSet
+  // that no file exists for fails as a missing image, not as a build error.
+  assert.ok(PHOTO_WIDTHS.length > 0);
+  for (const width of PHOTO_WIDTHS) {
+    assert.equal(stadiumPhotoUrl("maracana", width), `/stadiums/maracana-${width}.jpg`);
+  }
 });
 
 test("a file page keeps its underscores, and encodes only the accents", () => {
