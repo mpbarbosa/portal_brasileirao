@@ -175,51 +175,21 @@ test.describe("Tema", () => {
 });
 
 /**
- * Keyboard focus.
+ * The one control the specs above cannot reach.
  *
- * Lives here because this file already exercises both palettes, and the ring is
- * drawn in `primary` — a ring that is invisible in one theme is the failure
- * worth catching.
+ * They tab to the *first* focusable thing and sweep `:visible` selectors, which
+ * covers every control that shares the state layer. The current section entry
+ * does not share it: it is a filled chip, so it deliberately takes no hover
+ * veil. That exclusion is exactly how it lost its focus ring — the ring lived
+ * inside the state layer, and skipping one took the other with it.
  *
- * Nothing else in the suite would notice if these disappeared: Playwright
- * clicks, it does not tab, so every other spec passes on an app with no focus
- * styles at all. That was the app's actual state until M2.
+ * Kept separate rather than folded above because it guards a specific past
+ * mistake rather than the general rule, and the two fail for different reasons.
  */
 test.describe("Foco do teclado", () => {
-  for (const theme of ["dark", "light"] as const) {
-    test(`controls show a visible focus ring in the ${theme} theme`, async ({ page }) => {
-      await page.addInitScript(
-        ([key, value]) => localStorage.setItem(key as string, value as string),
-        ["portal-brasileirao:theme", theme],
-      );
-      await page.goto("/");
-      await expect(toggle(page)).toBeVisible();
-
-      await toggle(page).focus();
-      // `transition` covers outline-color, so reading immediately samples the
-      // ring mid-fade from currentColor and reports the wrong colour.
-      await page.waitForTimeout(400);
-
-      const ring = await toggle(page).evaluate((el) => {
-        const s = getComputedStyle(el);
-        return { width: s.outlineWidth, style: s.outlineStyle, color: s.outlineColor };
-      });
-      const primary = await page.evaluate(() =>
-        getComputedStyle(document.documentElement).getPropertyValue("--color-primary").trim(),
-      );
-
-      expect(ring.style).not.toBe("none");
-      expect(parseFloat(ring.width)).toBeGreaterThanOrEqual(2);
-      expect(primary).not.toBe("");
-      expect(ring.color).not.toBe("rgb(0, 0, 0)");
-    });
-  }
-
   test("the current section keeps its ring even though it takes no state layer", async ({
     page,
   }) => {
-    // Regression guard: folding the ring into the state layer left this entry —
-    // a filled chip that deliberately has no hover veil — on the browser default.
     await page.goto("/");
 
     // Below `sm` the entries collapse behind a toggle, so the link exists but is
@@ -236,7 +206,7 @@ test.describe("Foco do teclado", () => {
     // Reach it by Tab rather than `.focus()`. `:focus-visible` is a heuristic:
     // after a pointer interaction — and opening the menu above is one — Chrome
     // does not treat a programmatic focus as keyboard focus, so the ring would
-    // correctly not draw and the test would be measuring the wrong thing.
+    // correctly not draw and this would be measuring the wrong thing.
     let reached = false;
     for (let i = 0; i < 12 && !reached; i++) {
       await page.keyboard.press("Tab");
@@ -245,13 +215,24 @@ test.describe("Foco do teclado", () => {
       );
     }
     expect(reached, "never tabbed to the current section").toBe(true);
+
+    // `transition` covers outline-color, so an immediate read samples the ring
+    // mid-fade from currentColor rather than the colour it settles on.
     await page.waitForTimeout(400);
 
-    const ring = await page.evaluate(() => {
-      const s = getComputedStyle(document.activeElement as Element);
-      return { width: s.outlineWidth, style: s.outlineStyle };
+    const state = await page.evaluate(() => {
+      const node = document.activeElement as HTMLElement;
+      const style = getComputedStyle(node);
+      return {
+        focusVisible: node.matches(":focus-visible"),
+        outline: style.outlineStyle !== "none" && style.outlineWidth !== "0px",
+        ring: style.boxShadow !== "none" && style.boxShadow !== "",
+      };
     });
-    expect(ring.style).not.toBe("none");
-    expect(parseFloat(ring.width)).toBeGreaterThanOrEqual(2);
+
+    expect(state.focusVisible).toBe(true);
+    // Agnostic about the mechanism, matching the specs above: an outline and a
+    // box-shadow ring are both fine, having neither is not.
+    expect(state.outline || state.ring).toBe(true);
   });
 });
