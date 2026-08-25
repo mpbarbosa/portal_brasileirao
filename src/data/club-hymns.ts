@@ -30,10 +30,10 @@ import type { ClubCode } from "@/src/types";
  * then a channel whose upload is titled as the club's official hymn. A reupload
  * can vanish; the label's own cannot without the label.
  *
- * Palmeiras, Botafogo and Flamengo are not chosen by that rule: all three are
- * videos supplied by hand, and all three are the same channel. Left as given.
- * The rule exists to pick between candidates nobody has an opinion about, and
- * it yields to somebody who does.
+ * Palmeiras, Botafogo, Flamengo and Santos are not chosen by that rule: all
+ * four are videos supplied by hand, and all four are the same channel. Left as
+ * given. The rule exists to pick between candidates nobody has an opinion
+ * about, and it yields to somebody who does.
  */
 export const CLUB_HYMNS: Record<ClubCode, string> = {
   // Hino Oficial do Fluminense (Lyric Video) — Gravadora Cid
@@ -74,6 +74,6 @@ export const CLUB_HYMNS: Record<ClubCode, string> = {
   "4364": "yqxnaQM1Mwk",
   // HINO OFICIAL DO INTERNACIONAL — Gravadora Cid
   "6684": "AoLFJxM3deg",
-  // Hino Oficial do Santos (Leão do Mar) - (Lyric Video) — Gravadora Cid
-  "6685": "Mu5y4lL59l4",
+  // HINO DO SANTOS-SP — golaudio
+  "6685": "9jqN0bnuHLc",
 };
