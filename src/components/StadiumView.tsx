@@ -4,8 +4,15 @@ import { ClubCrest } from "@/src/components/ClubCrest";
 import { BACK_LINK, LINK_UNDERLINE } from "@/src/components/interaction";
 import { MatchList } from "@/src/components/MatchList";
 import { Surface } from "@/src/components/Surface";
-import { capacityLabel, findStadium, stadiumLocation, stadiumMatches } from "@/venue-core";
-import type { Club, Match, Stadium } from "@/src/types";
+import {
+  capacityLabel,
+  findStadium,
+  stadiumLocation,
+  stadiumMatches,
+  stadiumPhotoPage,
+  stadiumPhotoUrl,
+} from "@/venue-core";
+import type { Club, Match, Stadium, StadiumPhoto } from "@/src/types";
 
 interface StadiumViewProps {
   /** Slug, straight from the URL. */
@@ -58,6 +65,84 @@ function WikipediaGlyph() {
       <path d="M4 17h16" />
       <path d="M9 11h6" />
     </svg>
+  );
+}
+
+/**
+ * Widths offered to the browser, in CSS pixels.
+ *
+ * The column is at most 736px wide (`max-w-3xl` less its padding), so the
+ * largest entry covers a 2× display at full width and the smallest covers a
+ * phone at 1×. Commons renders each on demand from an original that routinely
+ * runs to eight megapixels — without this the page would ship a 4000px JPEG to
+ * a 390px screen, which is the whole reason `stadiumPhotoUrl` takes a width.
+ */
+const PHOTO_WIDTHS = [480, 736, 1104, 1472];
+
+/**
+ * The ground itself.
+ *
+ * Local to this file, like `WikipediaGlyph` above and for the same stated
+ * reason: one call site. It moves into `src/components/` the day a second view
+ * shows a stadium photograph, not before.
+ *
+ * The credit line is **not** optional chrome that a redesign may quietly drop.
+ * Every licence in `stadiums.ts` except CC0 requires the photographer to be
+ * named wherever the picture is shown, so the caption is a condition of
+ * displaying the image at all — which is why it renders from required fields
+ * rather than from optional ones that could be absent.
+ *
+ * `aspect-[16/9]` with `object-cover` fixes the box before the bytes arrive.
+ * These files vary from 4:3 to a 4096×1808 panorama, and a container sized by
+ * the image would reflow the whole page on load — the stat tiles, the mandantes
+ * and the fixture list all sit below it.
+ */
+function StadiumPhotoFigure({ photo }: { photo: StadiumPhoto }) {
+  return (
+    <figure className="mt-4" data-stadium-photo={photo.file}>
+      <Surface className="overflow-hidden">
+        {/* Eager, unlike `ClubCrest`. That component defers twenty small crests
+            inside a scrolling table; this is one large image at the top of the
+            page, and deferring the element a reader is already looking at only
+            delays the thing they came for. */}
+        <img
+          src={stadiumPhotoUrl(photo, 1104)}
+          srcSet={PHOTO_WIDTHS.map((w) => `${stadiumPhotoUrl(photo, w)} ${w}w`).join(", ")}
+          sizes="(min-width: 768px) 736px, 100vw"
+          alt={photo.alt}
+          width={1104}
+          height={621}
+          decoding="async"
+          className="aspect-[16/9] w-full object-cover"
+        />
+      </Surface>
+      <figcaption className="mt-1.5 text-body-small text-ink-muted">
+        Foto:{" "}
+        <a
+          href={stadiumPhotoPage(photo)}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={LINK_UNDERLINE}
+        >
+          {photo.credit}
+        </a>
+        {" · "}
+        <a
+          href={photo.licenseUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={LINK_UNDERLINE}
+        >
+          {photo.license}
+        </a>
+        {" · via Wikimedia Commons"}
+        {/* No stadium name here on purpose. The heading two elements up already
+            gave it, and pt-BR would need the article agreed per ground — "da
+            Arena MRV" but "do Maracanã" — which is a gender no field in
+            `stadiums.ts` carries. */}
+        <span className="sr-only"> (os links abrem em nova aba)</span>
+      </figcaption>
+    </figure>
   );
 }
 
@@ -134,6 +219,8 @@ export function StadiumView({
           </p>
         )}
       </header>
+
+      {stadium.photo && <StadiumPhotoFigure photo={stadium.photo} />}
 
       {(capacity || stadium.opened !== undefined) && (
         <div className="mt-4 grid grid-cols-2 gap-2">

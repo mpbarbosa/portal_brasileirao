@@ -7,10 +7,12 @@ import {
   findStadium,
   stadiumLocation,
   stadiumMatches,
+  stadiumPhotoPage,
+  stadiumPhotoUrl,
   stadiumSlug,
   venueName,
 } from "@/venue-core";
-import type { Club, Match, StadiumFacts, Venue } from "@/src/types";
+import type { Club, Match, StadiumFacts, StadiumPhoto, Venue } from "@/src/types";
 
 const club = (code: string, shortName: string): Club => ({
   code,
@@ -42,6 +44,14 @@ const match = (over: Partial<Match> & { id: string }): Match => ({
   ...over,
 });
 
+const PHOTO: StadiumPhoto = {
+  file: "Aerea2 maracana.jpg",
+  alt: "Vista aérea do Maracanã",
+  credit: "Erica Ramalho/Portal da Copa/Março de 2013",
+  license: "CC BY 3.0 BR",
+  licenseUrl: "https://creativecommons.org/licenses/by/3.0/br/",
+};
+
 const FACTS: Record<string, StadiumFacts> = {
   maracana: {
     name: "Maracanã",
@@ -49,6 +59,7 @@ const FACTS: Record<string, StadiumFacts> = {
     capacity: 78838,
     opened: 1950,
     wikipedia: "Estádio Jornalista Mário Filho",
+    photo: PHOTO,
   },
   "arena-mrv": { name: "Arena MRV", capacity: 44892 },
 };
@@ -223,4 +234,44 @@ test("capacity is grouped pt-BR, and absent when uncurated", () => {
   assert.equal(capacityLabel(curated), "78.838");
   // Not "0" and not "—": the caller leaves the tile out entirely.
   assert.equal(capacityLabel(bare), null);
+});
+
+test("a curated photo reaches the built stadium, and an uncurated one is absent", () => {
+  const [curated] = buildStadiums(
+    [match({ id: "a", venue: venue("Maracanã") })],
+    CLUBS,
+    FACTS,
+  );
+  const [bare] = buildStadiums(
+    [match({ id: "b", venue: venue("Arena MRV", "Belo Horizonte", "MG") })],
+    CLUBS,
+    FACTS,
+  );
+
+  assert.deepEqual(curated.photo, PHOTO);
+  // Absent, not an empty object: the view keys the whole figure off this, and
+  // an empty one would render an image with no source and no credit.
+  assert.equal(bare.photo, undefined);
+});
+
+test("a photo address asks Commons for the width the page will draw", () => {
+  assert.equal(
+    stadiumPhotoUrl(PHOTO, 736),
+    "https://commons.wikimedia.org/wiki/Special:FilePath/Aerea2%20maracana.jpg?width=736",
+  );
+  // Different widths are different addresses, which is what makes a srcSet
+  // worth writing — one entry per width the browser may choose.
+  assert.notEqual(stadiumPhotoUrl(PHOTO, 480), stadiumPhotoUrl(PHOTO, 1472));
+});
+
+test("a file page keeps its underscores, and encodes only the accents", () => {
+  const accented: StadiumPhoto = { ...PHOTO, file: "Estádio Cícero de Souza Marques (3).jpg" };
+
+  // Spaces become underscores first, so the encoder never sees them — an
+  // encoded underscore (%5F) is a different Commons title and 404s.
+  assert.equal(
+    stadiumPhotoPage(accented),
+    "https://commons.wikimedia.org/wiki/File:Est%C3%A1dio_C%C3%ADcero_de_Souza_Marques_(3).jpg",
+  );
+  assert.ok(!stadiumPhotoPage(accented).includes("%5F"));
 });

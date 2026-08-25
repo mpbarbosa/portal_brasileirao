@@ -78,6 +78,45 @@ export interface Venue {
  * slug, and every field beyond `name` is optional — the page renders what it
  * has rather than an empty row.
  */
+/**
+ * A photograph of a ground, hosted on Wikimedia Commons.
+ *
+ * Stored as the file's **title alone** — "ARENA MRV.jpg" — exactly as
+ * `wikipedia` stores an article title, for the same reason: the address is one
+ * function's business rather than nineteen copies of a CDN path. The bytes are
+ * fetched from Commons at render time rather than committed, which is what
+ * `Club.crest` already does with the provider's CDN.
+ *
+ * The last three fields are **not decoration**. Every licence Commons issues
+ * except CC0 requires the photographer to be named wherever the picture is
+ * shown, so a photo without its credit line is a photo we are not entitled to
+ * publish. That is why `credit`, `license` and `licenseUrl` are required while
+ * everything else about a stadium is optional: an image can be absent, but it
+ * cannot be present and unattributed.
+ *
+ * `credit` is what Commons says to write, not who Commons says took it. Where a
+ * file carries an explicit `Attribution` field the photographer has dictated a
+ * form — "Arne Müseler / www.arne-mueseler.com" — and that form is the one with
+ * legal force, so it is copied verbatim rather than reduced to a name.
+ */
+export interface StadiumPhoto {
+  /** Commons file title, without the `File:` prefix. */
+  file: string;
+  /**
+   * What the photograph shows, in pt-BR. Written by hand after looking at the
+   * image, because this is the page's only content image and the heading above
+   * it already says the stadium's name — an alt reading "Arena MRV" would tell
+   * a screen-reader user nothing they had not just been told.
+   */
+  alt: string;
+  /** The attribution line, verbatim from Commons. */
+  credit: string;
+  /** Licence short name, as Commons spells it: "CC BY-SA 4.0". */
+  license: string;
+  /** Where that licence is written down. */
+  licenseUrl: string;
+}
+
 export interface StadiumFacts {
   /**
    * The name to display: the popular one a reader would say out loud, properly
@@ -98,6 +137,9 @@ export interface StadiumFacts {
    * `wikipediaUrl`, which is shared rather than reimplemented.
    */
   wikipedia?: string;
+  /** A photograph of the ground. Absent where none was found under a licence
+   *  that allows republishing. */
+  photo?: StadiumPhoto;
 }
 
 /**
@@ -117,6 +159,7 @@ export interface Stadium {
   capacity?: number;
   opened?: number;
   wikipedia?: string;
+  photo?: StadiumPhoto;
   /** Clubs that hosted a match here, most fixtures first. Usually one; the
    *  Maracanã has two, which is why this is a list and not a field. */
   homeClubs: Club[];

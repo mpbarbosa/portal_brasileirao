@@ -278,8 +278,9 @@ supply a venue.
 The detail page for one ground, at `/estadio/<slug>`, reached from a **Página da
 partida**'s **Estádio** line or from a club's **Mandante** tile — never from the
 navigation bar. Shows the name, city and state, the official name where it
-differs, capacity, year of inauguration, the clubs that host there, and every
-fixture of the season played there.
+differs, a **foto do estádio** where one is curated, capacity, year of
+inauguration, the clubs that host there, and every fixture of the season played
+there.
 A stadium is **not an entity in any payload**: `buildStadiums` in `venue-core.ts`
 derives the roster by grouping fixtures on the slug of their venue string, which
 is the only thing tying a fixture to a ground. The slug is therefore the
@@ -289,6 +290,20 @@ _Avoid_: a nav-bar entry for it (MD3's bar holds five and four are spent, and a
 ground is somewhere you arrive at from a fixture rather than a section you set
 out to browse), keying stadiums on the raw venue string, treating the absence of
 a curated fact as a zero.
+
+**Foto do estádio**:
+The photograph at the top of a **Página do estádio**, under the name and above
+the capacity tiles. Comes from Wikimedia Commons, named in `src/data/stadiums.ts`
+by its **file title alone** and fetched through `Special:FilePath` so the address
+survives a rename.
+It always ships with its **crédito da foto** — photographer, licence and a link
+back to Commons — because every licence in use but CC0 requires the photographer
+to be named wherever the picture appears. That caption is a condition of showing
+the image, not a caption in the editorial sense.
+_Avoid_: calling it "imagem" or "capa" (it is a photograph of a real ground, and
+"capa" would suggest the link-preview card, which is `og-default.png`), showing
+one without its credit, tidying a credit string into house style — the wording
+Commons publishes is the wording with legal force.
 
 **Nome oficial**:
 The formal name of a ground, shown under its popular one only where the two

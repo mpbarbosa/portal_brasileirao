@@ -104,3 +104,100 @@ test.describe("the stadium page", () => {
     await expect(page).toHaveTitle(new RegExp(name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
   });
 });
+
+/**
+ * The photograph and its credit line.
+ *
+ * Split into its own block because these tests must **not** assert that a
+ * photo exists. `stadiums.ts` is curated, `venues.ts` grows on every sync, and
+ * a ground entering the snapshot before anyone has found a freely licensed
+ * picture of it is the ordinary case — a test counting curated photos is the
+ * mistake `broadcasts.ts` already taught this suite once. So each one finds the
+ * figure or skips loudly, and asserts shape where it is there.
+ *
+ * Nothing here waits on the image's bytes. The file lives on Wikimedia Commons,
+ * and CI deliberately has no network dependency on a third party: a red build
+ * must mean the code broke, never that somebody else's CDN had a bad minute.
+ * What is asserted is the markup this repo controls — the address requested,
+ * the alt text, and the attribution.
+ */
+test.describe("the stadium photograph", () => {
+  /** Walk the stadium pages the snapshot offers until one carries a photo. */
+  const openStadiumWithPhoto = async (page: Page) => {
+    await openStadiumFromMatch(page);
+
+    const figure = page.locator("figure[data-stadium-photo]");
+    if ((await figure.count()) === 0) {
+      test.skip(true, "no stadium reachable from this round has a curated photo");
+    }
+
+    return figure;
+  };
+
+  test("shows the ground, described rather than merely named", async ({ page }) => {
+    const figure = await openStadiumWithPhoto(page);
+    const image = figure.locator("img");
+
+    await expect(image).toHaveAttribute("alt", /\S/);
+
+    // The heading directly above already gives the name, so an alt that only
+    // repeats it tells a screen-reader user nothing new.
+    const name = (await page.locator("main h2").innerText()).trim();
+    expect((await image.getAttribute("alt"))?.trim()).not.toBe(name);
+  });
+
+  test("asks Commons for a width rather than hardcoding a CDN path", async ({ page }) => {
+    const figure = await openStadiumWithPhoto(page);
+    const image = figure.locator("img");
+
+    // Special:FilePath survives a file being renamed; the upload.wikimedia.org
+    // address embeds a hash of the filename and does not.
+    await expect(image).toHaveAttribute("src", /commons\.wikimedia\.org\/wiki\/Special:FilePath\//);
+    await expect(image).toHaveAttribute("src", /[?&]width=\d+/);
+
+    // One srcSet entry per offered width, so a phone is not sent the desktop
+    // rendering of an eight-megapixel original.
+    const srcset = (await image.getAttribute("srcset")) ?? "";
+    expect(srcset.split(",").length).toBeGreaterThan(1);
+    expect(srcset).toMatch(/\s\d+w$/);
+  });
+
+  test("credits the photographer and names the licence", async ({ page }) => {
+    const figure = await openStadiumWithPhoto(page);
+    const caption = figure.locator("figcaption");
+
+    await expect(caption).toBeVisible();
+
+    // Both links are the condition of showing the picture at all, not
+    // decoration: every licence in use but CC0 requires the credit, and a
+    // reader has to be able to reach the licence it is granted under.
+    await expect(
+      caption.locator("a[href^='https://commons.wikimedia.org/wiki/File:']"),
+    ).toHaveCount(1);
+    await expect(
+      caption.locator("a[href^='https://creativecommons.org/']"),
+    ).toHaveCount(1);
+
+    // Copied links drop these, and a missing rel="noopener" looks identical on
+    // the page — the same drift ClubLinks exists to prevent.
+    for (const link of await caption.locator("a").all()) {
+      await expect(link).toHaveAttribute("target", "_blank");
+      await expect(link).toHaveAttribute("rel", /noopener/);
+    }
+  });
+
+  test("reserves the image's box before its bytes arrive", async ({ page }) => {
+    const figure = await openStadiumWithPhoto(page);
+
+    // The files run from 4:3 to a panorama, so the box is fixed by CSS rather
+    // than by the image. Without this the stat tiles, the mandantes and the
+    // whole fixture list below jump on load.
+    const ratio = await figure.locator("img").evaluate((node) => {
+      const box = node.getBoundingClientRect();
+      return box.width / box.height;
+    });
+
+    expect(ratio).toBeGreaterThan(1.7);
+    expect(ratio).toBeLessThan(1.85);
+  });
+});

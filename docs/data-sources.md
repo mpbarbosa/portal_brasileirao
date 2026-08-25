@@ -154,6 +154,50 @@ club ids, which the app does not store. The `www.cbf.com.br/_next/image?url=…`
 form seen on their pages is their own Next.js optimiser and is unusable from
 outside a browser anyway, since `www` serves the broken chain.
 
+## Stadium photographs
+
+No provider carries one. football-data has no venue field at any tier, so it has
+no venue imagery either, and CBF's Onde Assistir feed stops at a
+`Stadium - City - UF` string. CBF's site does show photos, but they are
+all-rights-reserved and served from `www`, which has the broken chain described
+above — unusable twice over.
+
+So the pictures come from **Wikimedia Commons**, curated per ground in
+`src/data/stadiums.ts` and fetched by the reader's browser at render time, the
+same arrangement as the club crests above. What is stored is the **file title**
+("ARENA MRV.jpg"), not a URL:
+
+- `https://commons.wikimedia.org/wiki/Special:FilePath/<title>?width=<n>` is the
+  documented way to reach a file by name. It 302s to the CDN and follows a
+  rename. The direct `upload.wikimedia.org/.../thumb/b/b5/...` form embeds a hash
+  of the filename, so it is unreadable, uncheckable by eye and dead on rename.
+- `?width=` returns a thumbnail. The originals routinely run to eight megapixels;
+  the page draws a strip at most 736 CSS pixels wide.
+- `https://commons.wikimedia.org/wiki/File:<title>` is the description page, and
+  the link the licences ask a reuser to point back at.
+
+**Attribution is the constraint, not the bandwidth.** Every licence in the file
+except one CC0 upload requires the photographer to be named wherever the image
+appears, so `credit`, `license` and `licenseUrl` sit beside the filename and the
+page renders all three. Where Commons publishes an explicit `Attribution` field
+the photographer has dictated the wording — the Morumbi's is
+`Arne Müseler / www.arne-mueseler.com` — and that wording is copied verbatim
+rather than reduced to a name.
+
+**Finding a photo is not the same as picking one.** The obvious automation is to
+take the lead image of the ground's Wikipedia article, and it is wrong often
+enough to be a trap: the Maracanã, the Mineirão and the Arena do Grêmio all lead
+with the stadium's *logo*, and a well-titled Commons file for the Nilton Santos
+turns out to be described as a journalist posing outside it. Every file in the
+data was opened and looked at.
+
+`npm run check-stadium-photos` re-asks Commons whether each file still exists,
+still renders at the width the page requests, and still carries the credit and
+licence recorded here. Like `check-hymns`, it prints the whole table rather than
+only the failures, and it cannot tell you the photograph is of the right ground —
+that part stays with whoever looks. Nothing runs it automatically: CI has no
+network dependency on a third party by design.
+
 ## How broadcast data actually reaches the app
 
 `scripts/sync-broadcasts.ts` reads CBF's Onde Assistir API on a workstation and

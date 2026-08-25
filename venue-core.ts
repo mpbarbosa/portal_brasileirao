@@ -18,7 +18,7 @@
  */
 import { slugify } from "@/club-core";
 import { compareByKickoff } from "@/matches-core";
-import type { Club, Match, Stadium, StadiumFacts, Venue } from "@/src/types";
+import type { Club, Match, Stadium, StadiumFacts, StadiumPhoto, Venue } from "@/src/types";
 
 /**
  * Identity for a venue string. Returns "" for a name with nothing alphanumeric
@@ -42,6 +42,38 @@ export const venueName = (
   venue: Venue,
   facts: Record<string, StadiumFacts> = {},
 ): string => facts[stadiumSlug(venue.stadium)]?.name ?? venue.stadium;
+
+/**
+ * Where to fetch a stadium photograph, at a given rendered width.
+ *
+ * `Special:FilePath` is Commons' documented way to reach a file by **title**,
+ * and the reason the data file stores a title rather than a URL. The direct
+ * address on `upload.wikimedia.org` embeds a hash of the filename
+ * (`.../thumb/b/b5/ARENA_MRV.jpg/1280px-ARENA_MRV.jpg`), so it is unreadable,
+ * unverifiable by eye against Commons, and dead the moment a file is renamed —
+ * whereas this endpoint follows the rename. It answers a 302 to the CDN, which
+ * costs one redirect on the single largest image of the page and buys a data
+ * file a human can check.
+ *
+ * `width` asks Commons for a thumbnail rather than the original. That matters:
+ * these files run to eight megapixels, and the page shows a strip a few hundred
+ * pixels tall.
+ */
+export const stadiumPhotoUrl = (photo: StadiumPhoto, width: number): string =>
+  `https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(photo.file)}?width=${width}`;
+
+/**
+ * The file's description page — where the licence, the photographer and the
+ * upload history actually live.
+ *
+ * Every Creative Commons licence in use here asks that the reuser point back at
+ * the work, and this is that link. Spaces become underscores because a Commons
+ * page title is written that way in a URL; `encodeURIComponent` then handles
+ * the accents, and deliberately runs **after** the substitution so it does not
+ * percent-encode the underscores it just introduced.
+ */
+export const stadiumPhotoPage = (photo: StadiumPhoto): string =>
+  `https://commons.wikimedia.org/wiki/File:${encodeURIComponent(photo.file.replace(/ /g, "_"))}`;
 
 /** Fixtures played at one stadium, in kickoff order. */
 export const stadiumMatches = (matches: Match[], slug: string): Match[] =>
@@ -121,6 +153,7 @@ export const buildStadiums = (
         ...(curated?.capacity !== undefined ? { capacity: curated.capacity } : {}),
         ...(curated?.opened !== undefined ? { opened: curated.opened } : {}),
         ...(curated?.wikipedia ? { wikipedia: curated.wikipedia } : {}),
+        ...(curated?.photo ? { photo: curated.photo } : {}),
         homeClubs,
         matchCount: bucket.count,
       };
