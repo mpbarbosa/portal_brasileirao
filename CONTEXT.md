@@ -79,6 +79,46 @@ which once pinned the view to round 4 in August.
 _Avoid_: "próxima rodada" (it is often the round being played right now, not the
 next one), "última rodada" (that is the fallback branch only).
 
+**Ao vivo** (the section):
+The page that answers "o que está acontecendo agora?" — `LiveView`, at
+`/ao-vivo`. Three parts, in the order a reader asks them: **Agora** (matches in
+progress, as cards), **A seguir** (the next fixtures, each with a **contagem
+regressiva**) and **Últimos resultados** (the most recent scorelines). Grouped by
+`liveBoard` in `live-core.ts`, which takes `now` as a parameter like every other
+pure module here. It is the only page that refetches on its own, because it is
+the only one whose data changes while it is being read.
+It deliberately shows **no match minute**: the provider reports a status and a
+score, never an elapsed clock, and minutes-since-kickoff stops being the true
+minute at half-time. "Bola rolando" is what we can say and mean.
+_Avoid_: "Agora" as the section's own name (that is one of its three headings),
+"Tempo real" (promises a push feed; this polls), duplicating **Jogos** — that
+section answers a different question, the fixtures of a round you name, and Ao
+vivo therefore never grows a round picker. Note the name is overloaded on
+purpose: this is the *section*, while "Ao vivo" is also the label of the `LIVE`
+**Status da partida**. Scope any lookup that must tell them apart.
+
+**Bola rolando**:
+That a specific match is being played right now, shown on the Ao vivo cards as a
+pulsing dot **and** the words. The dot alone carries nothing to a screen reader
+and nothing to a reader who cannot separate its colour from the chip beside it,
+so the words are the statement and the dot is decoration.
+_Avoid_: a bare red dot with no text, "em andamento" in the card (it is the
+prose form, fine in a description, but flat where the page wants the commentator's
+voice), and any minute or stoppage figure beside it — see **Ao vivo**.
+
+**Contagem regressiva**:
+The time left until a fixture kicks off, written by `countdownLabel` as "Começa
+em 45 minutos" / "1h30" / "2 dias". Minute granularity, recomputed on a 30-second
+tick. Once the instant passes it stops rather than going negative and reads
+"Deve começar a qualquer momento", because a fixture whose kickoff has passed
+while upstream still calls it `SCHEDULED` may be late *or* already underway and
+not yet reported — and we cannot tell which. Such a fixture keeps its place under
+**A seguir** for three hours (`LATE_GRACE_MS`) rather than vanishing during
+exactly the window the page exists for.
+_Avoid_: counting up after kickoff (that would be a match clock, which we do not
+have), a seconds display (sixty renders for a number nobody reads that closely),
+dropping a fixture the instant its kickoff passes.
+
 **Clube**:
 A Série A club. Modelled as `Club`, whose `code` is the **upstream numeric id as a
 string** — never the three-letter abbreviation, because abbreviations are not

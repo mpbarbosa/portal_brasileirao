@@ -56,6 +56,16 @@ what makes the logic testable without mocking HTTP.
 - `matches-core.ts` — round filtering and feed ordering. `compareForFeed` puts LIVE first,
   then SCHEDULED, then FINISHED. `currentRound` is the earliest round holding an unfinished
   match, else the last round.
+- `live-core.ts` — the **Ao vivo** board: `liveBoard` splits the season into what is being
+  played, what is next and what just finished, and `countdownLabel` writes the contagem
+  regressiva. Takes `now` as a parameter, like `currentRound`. It computes **no match
+  minute**, deliberately: the provider reports a status and a score and never an elapsed
+  clock, and minutes-since-kickoff stops being the true minute at half-time — a page
+  reading "73'" when the truth is "somewhere in the second half" is worse than one reading
+  "bola rolando". A fixture whose kickoff has passed while upstream still calls it
+  SCHEDULED keeps its place under "A seguir" for `LATE_GRACE_MS`, because upstream is
+  polled rather than pushed and dropping it would hide a match during exactly the window
+  the page exists for.
 
 - `rank-history-core.ts` — every club's position after each round (the **campanha**),
   plus the sparkline geometry that draws it in the Classificação. The **client** computes
@@ -138,8 +148,8 @@ icon looked up by id inside `NavBar` would break that promise the first time any
 a section.
 
 **The promise is bounded, and the bound is not enforced by anything.** Material Design 3's
-navigation bar carries **three to five** destinations, and there are three. Two more fit.
-At the sixth the bar is off-spec — crowded rather than broken, so no build fails, no test
+navigation bar carries **three to five** destinations, and there are four — Ao vivo made
+it four. **One** more fits. At the sixth the bar is off-spec — crowded rather than broken, so no build fails, no test
 goes red, and nobody notices. A sixth section wants MD3's navigation *drawer*, not a sixth
 entry here. Read that as a real limit rather than a style note: it is the one constraint in
 this file that the tooling cannot check for you.

@@ -35,6 +35,13 @@ test("the table is the site's own title, not a suffixed section", () => {
   assert.ok(meta.description.length > 0);
 });
 
+test("ao vivo is a titled section, and says what it is", () => {
+  const meta = pageMeta({ section: "ao-vivo" });
+
+  assert.equal(meta.title, `Ao vivo · ${SITE_NAME}`);
+  assert.match(meta.description, /Série A/);
+});
+
 test("a round names itself in the title", () => {
   assert.equal(pageMeta({ section: "jogos", round: 25 }).title, `25ª rodada · ${SITE_NAME}`);
   assert.equal(pageMeta({ section: "jogos", round: null }).title, `Jogos · ${SITE_NAME}`);

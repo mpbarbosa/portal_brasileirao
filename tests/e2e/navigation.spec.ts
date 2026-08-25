@@ -100,7 +100,7 @@ test.describe("Barra de navegação", () => {
   });
 
   test("every section is reachable and marked, at this width", async ({ page }) => {
-    for (const label of ["Classificação", "Jogos", "Artilharia"]) {
+    for (const label of ["Classificação", "Ao vivo", "Jogos", "Artilharia"]) {
       await page.getByRole("link", { name: new RegExp(`^${label}`) }).click();
       await expect(
         page.getByRole("link", { name: new RegExp(`^${label}`) }),
@@ -112,7 +112,7 @@ test.describe("Barra de navegação", () => {
     // Both render from NAV_ITEMS and one is always `display: none`. Were both
     // ever visible, every `getByRole("link")` in the suite would hit a strict
     // mode violation — so this guards the whole suite, not only itself.
-    for (const label of ["Classificação", "Jogos", "Artilharia"]) {
+    for (const label of ["Classificação", "Ao vivo", "Jogos", "Artilharia"]) {
       await expect(page.getByRole("link", { name: new RegExp(`^${label}`) })).toHaveCount(1);
     }
   });

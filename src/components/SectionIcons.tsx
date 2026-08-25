@@ -2,8 +2,8 @@
  * One icon per section, for the navigation bar.
  *
  * Drawn here rather than pulled from an icon set. The app ships no UI
- * dependency and draws its own sparkline already; three 24px glyphs do not
- * justify a package, and a package would arrive with several hundred more.
+ * dependency and draws its own sparkline already; a handful of 24px glyphs do
+ * not justify a package, and a package would arrive with several hundred more.
  *
  * Stroke rather than fill, in `currentColor`, so a single element re-themes and
  * takes its colour from the nav item's own state — the same trick
@@ -49,6 +49,23 @@ export function MatchesIcon({ className }: IconProps) {
     <svg {...base} className={className}>
       <rect x="3" y="5" width="18" height="16" rx="2" />
       <path d="M3 10h18M8 3v4M16 3v4" />
+    </svg>
+  );
+}
+
+/**
+ * Ao vivo: a broadcast — a point with signal arcs leaving it.
+ *
+ * Not a red dot, which is the other convention: the dot only reads as "live"
+ * once it is red, and colour is not something a nav glyph gets to rely on here.
+ * The page's own cards carry the pulsing mark, where a label sits beside it.
+ */
+export function LiveIcon({ className }: IconProps) {
+  return (
+    <svg {...base} className={className}>
+      <circle cx="12" cy="12" r="2" />
+      <path d="M8.2 15.8a5.4 5.4 0 0 1 0-7.6M15.8 8.2a5.4 5.4 0 0 1 0 7.6" />
+      <path d="M5.3 18.7a9.5 9.5 0 0 1 0-13.4M18.7 5.3a9.5 9.5 0 0 1 0 13.4" />
     </svg>
   );
 }

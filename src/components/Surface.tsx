@@ -1,6 +1,6 @@
-import type { ElementType, ReactNode } from "react";
+import type { ComponentPropsWithoutRef, ElementType, ReactNode } from "react";
 
-interface SurfaceProps {
+interface SurfaceProps extends Omit<ComponentPropsWithoutRef<"div">, "className"> {
   children: ReactNode;
   /**
    * Element to render. Defaults to `div`; pass `"li"` inside a list so the
@@ -22,12 +22,28 @@ interface SurfaceProps {
  * a border ends up `line` in four places and `line-strong` in the fifth. Padding
  * and layout stay with the caller — those genuinely differ per use, and folding
  * them in here would mean a prop per variant.
+ *
+ * Anything else the caller passes reaches the element. Without that, an
+ * attribute set on a `Surface` is *silently* dropped: the component renders,
+ * the page looks right, and only the selector that depended on the attribute
+ * knows. That is how the Ao vivo cards shipped their `data-live-match` hook to
+ * nowhere for the length of one test run.
  */
-export function Surface({ children, as, filled = false, className = "" }: SurfaceProps) {
+export function Surface({
+  children,
+  as,
+  filled = false,
+  className = "",
+  ...rest
+}: SurfaceProps) {
   const Tag = as ?? "div";
   const classes = ["rounded-small border border-line", filled ? "bg-surface-container-low" : "", className]
     .filter(Boolean)
     .join(" ");
 
-  return <Tag className={classes}>{children}</Tag>;
+  return (
+    <Tag className={classes} {...rest}>
+      {children}
+    </Tag>
+  );
 }

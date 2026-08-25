@@ -7,6 +7,8 @@
 
 export type Route =
   | { section: "classificacao" }
+  /** What is being played right now, plus what is next and what just ended. */
+  | { section: "ao-vivo" }
   /** `round: null` means "whatever the current round is" — a link that stays
    *  useful next week, which `/jogos/24` does not. */
   | { section: "jogos"; round: number | null }
@@ -36,6 +38,9 @@ export const parseRoute = (pathname: string): Route => {
     case "classificacao":
       return HOME;
 
+    case "ao-vivo":
+      return { section: "ao-vivo" };
+
     case "jogos":
       // A non-numeric or zero round is treated as "current" rather than 404 —
       // /jogos/abc still shows fixtures.
@@ -60,6 +65,8 @@ export const formatRoute = (route: Route): string => {
   switch (route.section) {
     case "classificacao":
       return "/";
+    case "ao-vivo":
+      return "/ao-vivo";
     case "jogos":
       return route.round === null ? "/jogos" : `/jogos/${route.round}`;
     case "artilharia":
