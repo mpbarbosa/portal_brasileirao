@@ -167,6 +167,30 @@ colour (it would then need a plate in one theme, which is a lot of chrome for on
 mark beside a word), letting the link's underline run under it — an atomic inline
 box is not decorated, which is why the glyph is `inline-block`.
 
+**Hino do clube**:
+The club's hymn, linked from its page as a third external link beside the **Site
+oficial** and the **Instagram do clube**, under the same rules: a monochrome
+outline drawn inline in `ClubView`, `currentColor`, `inline-block`,
+`aria-hidden`. The mark is a pair of quavers rather than YouTube's play button —
+the song is what the link is for, and the platform is where it happens to live.
+Unlike its two neighbours the link reads as a *name* rather than an address:
+"Hino do clube", because a video id is nothing a reader recognises, and the
+screen-reader suffix names the host. No provider carries a hymn at any tier, so
+`src/data/club-hymns.ts` is hand-curated and keyed by club code. Stored as the
+**video id alone**; `hymnUrl` derives the watch address, so a link copied while
+the video played inside a mix loses its `&list=RD…&start_radio=1` rather than
+dropping the reader into autoplaying radio. Every id was confirmed through
+YouTube's oEmbed endpoint, which reports the title and the uploading channel: a
+search for the Santos hymn returns the hymn of the *city* of Santos alongside
+the club's, and nothing in the URL tells them apart. Source preference follows
+**Melhores momentos** — the rights-holder first, which for hymns is Gravadora
+Cid and its `Orquestra e Coro Cid - Topic` channel.
+_Avoid_: keying on **tla**, storing the full URL, showing the URL or the video
+title as the link text, taking a search result on trust without reading the
+channel, YouTube's own mark (that names the host, not the hymn), an embedded
+player on the club page (a hymn that can start playing is a hymn nobody asked
+for).
+
 **slug**:
 URL-safe form of a club's short name — `Atlético-MG` → `atletico-mg` — used for
 readable addresses like `/clube/flamengo`. Accents are stripped rather than
