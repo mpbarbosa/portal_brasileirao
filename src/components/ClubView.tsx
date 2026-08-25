@@ -2,6 +2,7 @@ import {
   clubMatches,
   findClub,
   nextFixture,
+  instagramUrl,
   recentForm,
   resultFor,
   scorersFor,
@@ -78,6 +79,7 @@ export function ClubView({
   // is the opposite of the round view's chronological order.
   const played = fixtures.filter((match) => resultFor(match, code) !== null).reverse();
   const clubScorers = scorersFor(scorers, code);
+  const instagram = instagramUrl(club.instagram);
 
   return (
     <>
@@ -97,19 +99,33 @@ export function ClubView({
             {club.name}
             {club.state ? ` · ${club.state}` : ""}
           </p>
-          {club.website && (
-            <a
-              href={club.website}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mt-0.5 inline-block truncate text-sm underline decoration-ink-ghost underline-offset-2 hover:decoration-ink-soft"
-            >
-              {/* The bare host reads better than the full URL and is what a
-                  reader recognises as "the club's site". */}
-              {club.website.replace(/^https:\/\//, "").replace(/\/$/, "")}
-              <span className="sr-only"> — site oficial (abre em nova aba)</span>
-            </a>
-          )}
+          {/* Both links read as the thing itself — a bare host, a bare handle —
+              rather than a full URL, which is what a reader recognises and what
+              keeps the pair on one line. */}
+          <div className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-sm">
+            {club.website && (
+              <a
+                href={club.website}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="truncate underline decoration-ink-ghost underline-offset-2 hover:decoration-ink-soft"
+              >
+                {club.website.replace(/^https:\/\//, "").replace(/\/$/, "")}
+                <span className="sr-only"> — site oficial (abre em nova aba)</span>
+              </a>
+            )}
+            {instagram && (
+              <a
+                href={instagram}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="truncate underline decoration-ink-ghost underline-offset-2 hover:decoration-ink-soft"
+              >
+                @{club.instagram}
+                <span className="sr-only"> — Instagram oficial (abre em nova aba)</span>
+              </a>
+            )}
+          </div>
         </div>
       </header>
 

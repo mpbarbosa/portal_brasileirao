@@ -33,12 +33,13 @@ import {
 } from "@/football-data-core";
 import { withBroadcasters, withVenues } from "@/broadcast-core";
 import { withHighlights } from "@/match-core";
-import { withWebsites } from "@/club-core";
+import { withClubDetails, withInstagram } from "@/club-core";
 import { compareForFeed, currentRound, matchesForRound, roundsOf } from "@/matches-core";
 import { injectMeta, pageMeta } from "@/page-meta-core";
 import { parseRoute } from "@/route-core";
 import { computeStandings } from "@/standings-core";
-import { CLUBS } from "@/src/data/clubs";
+import { CLUBS as SEED_CLUBS } from "@/src/data/clubs";
+import { CLUB_INSTAGRAM } from "@/src/data/club-instagram";
 import { BROADCASTS } from "@/src/data/broadcasts";
 import { HIGHLIGHTS } from "@/src/data/highlights";
 import { VENUES } from "@/src/data/venues";
@@ -82,6 +83,10 @@ const NOTE_FALLBACK =
 
 const cache = new TtlCache();
 const breaker = new CircuitBreaker();
+
+/** The committed club list, plus the handles no provider supplies. Enriching
+ *  once here means every payload built from CLUBS carries them. */
+const CLUBS = withInstagram(SEED_CLUBS, CLUB_INSTAGRAM);
 
 const app = express();
 
@@ -181,7 +186,7 @@ const loadStandings = (): Promise<ApiEnvelope<StandingsRow[]>> =>
     async () => {
       const rows = mapStandings(await fetchFromProvider<StandingsResponse>(standingsUrl()));
       // Same gap as fixtures: the standings payload has no website either.
-      const enriched = withWebsites(
+      const enriched = withClubDetails(
         rows.map((row) => row.club),
         CLUBS,
       );
@@ -224,8 +229,8 @@ const loadMatches = async (): Promise<ApiEnvelope<MatchesPayload>> => {
         withVenues(withBroadcasters([...matches].sort(compareForFeed), BROADCASTS), VENUES),
         HIGHLIGHTS,
       ),
-      // Fixtures carry no website; the committed club list does.
-      clubs: withWebsites(clubsFromMatches(raw), CLUBS),
+      // Fixtures carry no website or handle; the committed club list does.
+      clubs: withClubDetails(clubsFromMatches(raw), CLUBS),
     };
 
     breaker.recordSuccess();

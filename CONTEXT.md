@@ -64,6 +64,19 @@ club's home, not a section of it), assuming standings or fixtures carry it —
 only the teams endpoint does, so the committed club list supplies it at request
 time via `withWebsites`.
 
+**Instagram do clube**:
+The club's official Instagram profile, linked from its page beside the **Site
+oficial** and shown as the bare handle (`@palmeiras`). No provider carries
+social accounts at any tier, so `src/data/club-instagram.ts` is hand-curated and
+keyed by club code. Stored as the handle alone; `instagramUrl` derives the
+address, so a pasted URL loses Instagram's `?hl=pt-br` locale hint rather than
+persisting it. Every handle was confirmed against the live profile, because
+Wikidata lists Palmeiras as `sepalmeiras` — not the club's account — and a club
+site advertises its sponsors' handles beside its own.
+_Avoid_: keying on **tla** (Corinthians and Coritiba share `COR`, so one club's
+readers land on another's profile), storing the full URL, showing the URL rather
+than the handle, trusting a single source for a handle.
+
 **slug**:
 URL-safe form of a club's short name — `Atlético-MG` → `atletico-mg` — used for
 readable addresses like `/clube/flamengo`. Accents are stripped rather than

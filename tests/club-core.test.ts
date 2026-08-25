@@ -14,7 +14,9 @@ import {
   scorersFor,
   slugify,
   standingFor,
-  withWebsites,
+  withClubDetails,
+  withInstagram,
+  instagramUrl,
 } from "@/club-core";
 import type { Match, Scorer, StandingsRow } from "@/src/types";
 
@@ -228,18 +230,64 @@ test("websites are filled in from the committed club list", () => {
   const live = [club("1769", "Palmeiras", "palmeiras")];
   const known = [{ ...club("1769", "Palmeiras", "palmeiras"), website: "https://www.palmeiras.com.br/" }];
 
-  assert.equal(withWebsites(live, known)[0].website, "https://www.palmeiras.com.br/");
+  assert.equal(withClubDetails(live, known)[0].website, "https://www.palmeiras.com.br/");
 });
 
 test("a website already present is left alone", () => {
   const live = [{ ...club("1769", "Palmeiras", "palmeiras"), website: "https://already.example/" }];
   const known = [{ ...club("1769", "Palmeiras", "palmeiras"), website: "https://other.example/" }];
 
-  assert.equal(withWebsites(live, known)[0].website, "https://already.example/");
+  assert.equal(withClubDetails(live, known)[0].website, "https://already.example/");
 });
 
 test("a club the seed does not know keeps no website", () => {
   const live = [club("9999", "Desconhecido", "desconhecido")];
 
-  assert.equal(withWebsites(live, [])[0].website, undefined);
+  assert.equal(withClubDetails(live, [])[0].website, undefined);
+});
+
+test("a handle becomes the canonical profile address", () => {
+  assert.equal(instagramUrl("palmeiras"), "https://www.instagram.com/palmeiras/");
+  assert.equal(instagramUrl("@palmeiras"), "https://www.instagram.com/palmeiras/");
+});
+
+test("a pasted profile URL is reduced to the handle", () => {
+  // What a person actually copies out of the address bar. The locale hint is
+  // Instagram's, means nothing to the next reader, and should not be stored.
+  assert.equal(
+    instagramUrl("https://www.instagram.com/palmeiras/?hl=pt-br"),
+    "https://www.instagram.com/palmeiras/",
+  );
+  assert.equal(instagramUrl("instagram.com/ecbahia"), "https://www.instagram.com/ecbahia/");
+});
+
+test("anything that is not a handle yields no link", () => {
+  // Renders as no link at all, rather than a broken one.
+  assert.equal(instagramUrl("with spaces"), null);
+  assert.equal(instagramUrl("https://www.instagram.com/"), null);
+  assert.equal(instagramUrl("a".repeat(31)), null);
+  assert.equal(instagramUrl(""), null);
+  assert.equal(instagramUrl(undefined), null);
+});
+
+test("curated handles attach to the club list by code", () => {
+  const clubs = [club("1769", "Palmeiras", "palmeiras"), club("9999", "Outro", "outro")];
+
+  const [palmeiras, outro] = withInstagram(clubs, { "1769": "palmeiras" });
+
+  assert.equal(palmeiras.instagram, "palmeiras");
+  assert.equal(outro.instagram, undefined);
+});
+
+test("the handle rides along with the website into live payloads", () => {
+  // Fixtures and standings carry neither; both come from the committed list.
+  const live = [club("1769", "Palmeiras", "palmeiras")];
+  const known = [
+    { ...club("1769", "Palmeiras", "palmeiras"), website: "https://www.palmeiras.com.br/", instagram: "palmeiras" },
+  ];
+
+  const [merged] = withClubDetails(live, known);
+
+  assert.equal(merged.instagram, "palmeiras");
+  assert.equal(merged.website, "https://www.palmeiras.com.br/");
 });

@@ -127,18 +127,62 @@ export const officialSiteUrl = (raw: string | undefined): string | null => {
 };
 
 /**
+ * The canonical profile address for a handle.
+ *
+ * Accepts what a person is likely to paste — a bare handle, an `@handle`, or a
+ * full URL carrying Instagram's `?hl=pt-br` locale hint — because the handle
+ * list is hand-maintained and being strict about the input format buys nothing.
+ * Only the handle is kept, so the stored data does not accumulate query strings
+ * that mean nothing to another reader.
+ *
+ * Returns null for anything that is not a plausible handle, which the UI
+ * renders as no link rather than a broken one.
+ */
+export const instagramUrl = (raw: string | undefined): string | null => {
+  const value = raw?.trim();
+  if (!value) return null;
+
+  // Take the first path segment of a URL, or the value itself.
+  const handle = (value.includes("instagram.com/")
+    ? (value.split("instagram.com/")[1] ?? "")
+    : value
+  )
+    .split(/[/?#]/)[0]
+    .replace(/^@/, "");
+
+  // Instagram's own rule: letters, digits, dots and underscores, up to 30.
+  if (!/^[A-Za-z0-9._]{1,30}$/.test(handle)) return null;
+
+  return `https://www.instagram.com/${handle}/`;
+};
+
+/** Attach curated handles to a club list, keyed by code. */
+export const withInstagram = (clubs: Club[], handles: Record<string, string>): Club[] =>
+  clubs.map((club) => {
+    const handle = handles[club.code];
+    return handle && !club.instagram ? { ...club, instagram: handle } : club;
+  });
+
+/**
  * Fill in details the live payloads omit.
  *
  * Club objects embedded in standings and fixtures carry only id, name, crest
  * and abbreviation — the website comes from the teams endpoint, which only the
- * seed generator calls. So the committed club list supplies it at request time.
+ * seed generator calls, and the Instagram handle from no endpoint at all. So
+ * the committed club list supplies both at request time.
  */
-export const withWebsites = (clubs: Club[], known: Club[]): Club[] => {
+export const withClubDetails = (clubs: Club[], known: Club[]): Club[] => {
   const byCode = new Map(known.map((club) => [club.code, club]));
 
   return clubs.map((club) => {
-    if (club.website) return club;
-    const site = byCode.get(club.code)?.website;
-    return site ? { ...club, website: site } : club;
+    const source = byCode.get(club.code);
+    const website = club.website ?? source?.website;
+    const instagram = club.instagram ?? source?.instagram;
+
+    return {
+      ...club,
+      ...(website ? { website } : {}),
+      ...(instagram ? { instagram } : {}),
+    };
   });
 };

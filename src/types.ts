@@ -25,6 +25,11 @@ export interface Club {
   slug?: string;
   /** Crest image URL, hosted by the data provider. Transparent PNG. */
   crest?: string;
+  /**
+   * Instagram handle, without the `@` and without the profile URL around it.
+   * The address is derived by `instagramUrl`, so it is written once.
+   */
+  instagram?: string;
   /** The club's official site, normalised to an HTTPS origin. */
   website?: string;
   /** Home state (e.g. "RJ"). Absent for clubs derived from a provider that

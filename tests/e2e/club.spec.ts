@@ -131,10 +131,17 @@ test.describe("Clube", () => {
     await expect(page.locator("article")).toContainText(name);
   });
 
+  /* Selected by destination rather than position: the header now holds two
+     external links, and picking one by index is what broke these specs when a
+     name first became a control. */
+  const siteLink = (page: Page) =>
+    page.locator("main header a[target='_blank']:not([href*='instagram'])");
+  const instagramLink = (page: Page) => page.locator("main header a[href*='instagram.com']");
+
   test("the club page links to its official site", async ({ page }) => {
     await openClubAt(page, 1);
 
-    const site = page.locator("main a[target='_blank']").first();
+    const site = siteLink(page);
     await expect(site).toBeVisible();
     // Always HTTPS: the provider lists most clubs as http.
     await expect(site).toHaveAttribute("href", /^https:\/\/[^/]+\/$/);
@@ -144,9 +151,43 @@ test.describe("Clube", () => {
   test("the official site link shows the host, not the whole URL", async ({ page }) => {
     await openClubAt(page, 1);
 
-    const site = page.locator("main a[target='_blank']").first();
-    const text = (await site.innerText()).trim();
+    const text = (await siteLink(page).innerText()).trim();
     expect(text).not.toContain("https://");
     expect(text).toMatch(/\.[a-z]{2,}/);
+  });
+
+  test("the club page links to its Instagram profile", async ({ page }) => {
+    await openClubAt(page, 1);
+
+    const instagram = instagramLink(page);
+    await expect(instagram).toBeVisible();
+    // Canonical profile address — no locale hint or other query riding along.
+    await expect(instagram).toHaveAttribute("href", /^https:\/\/www\.instagram\.com\/[A-Za-z0-9._]+\/$/);
+    await expect(instagram).toHaveAttribute("target", "_blank");
+    await expect(instagram).toHaveAttribute("rel", /noopener/);
+  });
+
+  test("the Instagram link reads as the handle", async ({ page }) => {
+    await openClubAt(page, 1);
+
+    // "@palmeiras" is what a reader recognises; the full URL is noise. The
+    // trailing screen-reader text is deliberate, so match the start rather than
+    // the whole string.
+    const text = (await instagramLink(page).innerText()).trim();
+    expect(text).toMatch(/^@[A-Za-z0-9._]+/);
+    expect(text).not.toContain("instagram.com");
+  });
+
+  test("every club carries both links", async ({ page }) => {
+    // A missing handle renders as no link at all rather than a broken one, so
+    // this would pass silently if the merge stopped working — hence checking
+    // that the club actually named in the URL is the one that has it.
+    await page.goto("/clube/palmeiras");
+
+    await expect(instagramLink(page)).toHaveAttribute(
+      "href",
+      "https://www.instagram.com/palmeiras/",
+    );
+    await expect(siteLink(page)).toHaveAttribute("href", "https://www.palmeiras.com.br/");
   });
 });
