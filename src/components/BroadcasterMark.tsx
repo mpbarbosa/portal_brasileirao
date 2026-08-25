@@ -32,7 +32,7 @@ interface BroadcasterMarkProps {
 export function BroadcasterMark({ name, size = "md", decorative = false }: BroadcasterMarkProps) {
   const src = broadcasterMarkUrl(name);
   const plate =
-    "inline-flex items-center rounded bg-plate ring-1 ring-plate-line align-middle";
+    "inline-flex items-center rounded-x-small bg-plate ring-1 ring-plate-line align-middle";
 
   if (!src) {
     // The wordmark is real text, so it needs no alt and hiding it would drop

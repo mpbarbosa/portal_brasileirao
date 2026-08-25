@@ -1,5 +1,7 @@
 import type { ButtonHTMLAttributes, Ref } from "react";
 
+import { STATE_LAYER } from "./interaction";
+
 /**
  * Sizes actually in use, rather than a speculative scale.
  *
@@ -28,8 +30,11 @@ const PADDING: Record<ControlSize, string> = {
  */
 export const controlClasses = (size: ControlSize = "md", extra = ""): string =>
   [
-    "rounded-lg border border-line-strong text-sm text-ink-soft transition",
-    "hover:bg-raised disabled:cursor-not-allowed disabled:opacity-40",
+    "rounded-small border border-line-strong text-sm text-ink-soft",
+    // Hover, focus and pressed all come from one place — see `interaction.ts`.
+    // Before M2 this was a bare `hover:bg-raised` with no focus state at all.
+    STATE_LAYER,
+    "disabled:cursor-not-allowed disabled:opacity-40",
     PADDING[size],
     extra,
   ]

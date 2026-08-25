@@ -407,3 +407,35 @@ still `canvas` and `surface` means a card, until M2 renames the call sites.
 _Avoid_: "variante" on its own (`on-surface-variant` is a text role, not a
 variant of anything), naming a role after its value ("verde", "cinza-claro") —
 that is exactly the coupling the tokens exist to break.
+
+**Escala de forma**:
+Material Design 3's five corner radii — `rounded-x-small` (4dp) through
+`rounded-x-large` (28dp) — defined in `src/index.css` and used in place of
+Tailwind's own `rounded-*`. Spelled out in full rather than abbreviated because
+the two scales share the names `sm`/`md`/`lg` and disagree about what they mean:
+Tailwind's `rounded-lg` is 8px where MD3's large is 16dp. The app currently uses
+only the first three, which is why adopting the scale changed nothing visually.
+_Avoid_: "border radius" in prose (the token is the unit of meaning, not the CSS
+property), "arredondamento" (accurate but nobody says it), reusing Tailwind's
+`sm`/`md`/`lg` names for MD3 sizes.
+
+**Camada de estado**:
+The veil a control paints over itself when hovered, focused or pressed: MD3's
+state layer, at 8% for hover and 10% for focus and pressed, in the container's
+`on-` colour. Lives in `src/components/interaction.ts` as `STATE_LAYER`. Exists
+so two controls side by side cannot hover to slightly different greys, which is
+what a hand-written `hover:` colour per component produces.
+_Avoid_: "hover" alone (the layer covers three states, and naming it after one
+is how focus and pressed get forgotten), "overlay" (that is the **Cartão do
+jogador**'s scrim), "highlight".
+
+**Anel de foco**:
+The keyboard focus indicator: a two-pixel `primary` outline, offset so it sits
+outside the control rather than on its fill. `FOCUS_RING` in
+`src/components/interaction.ts`, kept deliberately separate from **Camada de
+estado** — they were one constant at first, and the current **Menu de seções**
+entry, a filled chip that takes no veil, silently lost its ring along with it.
+Anything focusable takes the ring; only things with a container take the veil.
+_Avoid_: "outline" on its own (it collides with the `outline`/`outline-variant`
+colour roles, which are borders and not focus), folding it back into the state
+layer.

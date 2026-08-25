@@ -25,7 +25,7 @@ interface SurfaceProps {
  */
 export function Surface({ children, as, filled = false, className = "" }: SurfaceProps) {
   const Tag = as ?? "div";
-  const classes = ["rounded-lg border border-line", filled ? "bg-surface/50" : "", className]
+  const classes = ["rounded-small border border-line", filled ? "bg-surface-container-low" : "", className]
     .filter(Boolean)
     .join(" ");
 

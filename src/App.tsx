@@ -105,13 +105,13 @@ export function App() {
         <h1 className="sr-only">Portal Brasileirão — Campeonato Brasileiro Série A</h1>
 
         {note && (
-          <p className="mb-4 rounded-lg border border-warning/30 bg-warning/10 px-3 py-2 text-xs text-warning-ink">
+          <p className="mb-4 rounded-small border border-warning/30 bg-warning/10 px-3 py-2 text-xs text-warning-ink">
             {note}
           </p>
         )}
 
         {error && (
-          <p className="mb-4 rounded-lg border border-negative/30 bg-negative/10 px-3 py-2 text-sm text-negative-ink">
+          <p className="mb-4 rounded-small border border-negative/30 bg-negative/10 px-3 py-2 text-sm text-negative-ink">
             {error}
           </p>
         )}

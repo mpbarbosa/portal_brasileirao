@@ -55,7 +55,7 @@ export function RoundBrowser({
                resolved by stylesheet order, not class order, so an override
                here would be a coin flip. The base tone matches the steppers
                either side, which is what this should look like anyway. */
-            className={controlClasses("xs", "bg-surface")}
+            className={controlClasses("xs", "bg-surface-container-low")}
             value={round}
             onChange={(event) => onSelectRound(Number(event.target.value))}
           >

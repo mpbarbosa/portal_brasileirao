@@ -11,6 +11,7 @@ import {
 } from "@/club-core";
 import { lastRecordedRound } from "@/rank-history-core";
 import { ClubCrest } from "@/src/components/ClubCrest";
+import { BACK_LINK, LINK_UNDERLINE } from "@/src/components/interaction";
 import { MatchList } from "@/src/components/MatchList";
 import { RankSparkline } from "@/src/components/RankSparkline";
 import { Surface } from "@/src/components/Surface";
@@ -35,7 +36,7 @@ interface ClubViewProps {
 
 const FORM_CLASS: Record<FormResult, string> = {
   V: "bg-positive/20 text-positive-ink",
-  E: "bg-raised-strong text-ink-soft",
+  E: "bg-surface-container-high text-ink-soft",
   D: "bg-negative/20 text-negative-ink",
 };
 
@@ -71,7 +72,7 @@ export function ClubView({
   if (!club) {
     return (
       <>
-        <button type="button" onClick={onBack} className="text-sm text-ink-muted hover:text-ink-soft">
+        <button type="button" onClick={onBack} className={BACK_LINK}>
           ← Voltar
         </button>
         <p className="mt-4 text-sm text-ink-muted" role={loading ? "status" : undefined}>
@@ -106,7 +107,7 @@ export function ClubView({
       <button
         type="button"
         onClick={onBack}
-        className="text-sm text-ink-muted hover:text-ink-soft"
+        className={BACK_LINK}
       >
         ← Voltar
       </button>
@@ -128,7 +129,7 @@ export function ClubView({
                 href={club.website}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="truncate underline decoration-ink-ghost underline-offset-2 hover:decoration-ink-soft"
+                className={`truncate ${LINK_UNDERLINE}`}
               >
                 {club.website.replace(/^https:\/\//, "").replace(/\/$/, "")}
                 <span className="sr-only"> — site oficial (abre em nova aba)</span>
@@ -139,7 +140,7 @@ export function ClubView({
                 href={instagram}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="truncate underline decoration-ink-ghost underline-offset-2 hover:decoration-ink-soft"
+                className={`truncate ${LINK_UNDERLINE}`}
               >
                 @{club.instagram}
                 <span className="sr-only"> — Instagram oficial (abre em nova aba)</span>
@@ -192,7 +193,7 @@ export function ClubView({
               <li
                 key={index}
                 title={FORM_TITLE[result]}
-                className={`flex h-7 w-7 items-center justify-center rounded text-xs font-bold ${FORM_CLASS[result]}`}
+                className={`flex h-7 w-7 items-center justify-center rounded-x-small text-xs font-bold ${FORM_CLASS[result]}`}
               >
                 {result}
               </li>

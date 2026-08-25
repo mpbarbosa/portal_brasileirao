@@ -9,9 +9,11 @@ import { BroadcasterMark } from "@/src/components/BroadcasterMark";
 import { controlClasses } from "@/src/components/Button";
 import { ClubCrest } from "@/src/components/ClubCrest";
 import { clubKey } from "@/club-core";
+import { BACK_LINK, LINK_UNDERLINE } from "@/src/components/interaction";
 import { lastRecordedRound } from "@/rank-history-core";
 import { RankSparkline } from "@/src/components/RankSparkline";
 import { formatRoute } from "@/route-core";
+import { Surface } from "@/src/components/Surface";
 import type { Club, ClubRankHistory, Match, RankAtRound } from "@/src/types";
 
 interface MatchPageProps {
@@ -35,9 +37,9 @@ const STATUS_LABEL: Record<Match["status"], string> = {
 };
 
 const STATUS_CLASS: Record<Match["status"], string> = {
-  SCHEDULED: "bg-raised text-ink-soft",
+  SCHEDULED: "bg-surface-container text-ink-soft",
   LIVE: "bg-positive/20 text-positive-ink",
-  FINISHED: "bg-raised text-ink-muted",
+  FINISHED: "bg-surface-container text-ink-muted",
   POSTPONED: "bg-warning/20 text-warning-ink",
   CANCELLED: "bg-negative/20 text-negative-ink",
 };
@@ -118,7 +120,7 @@ function Side({ club, code, onNavigate }: { club: Club | null; code: string; onN
             event.preventDefault();
             onNavigate(formatRoute({ section: "clube", key: clubKey(club) }));
           }}
-          className="truncate font-semibold underline decoration-ink-ghost underline-offset-2 hover:decoration-ink-soft"
+          className={`truncate font-semibold ${LINK_UNDERLINE}`}
         >
           {label}
         </a>
@@ -148,7 +150,7 @@ export function MatchPage({
   if (!match) {
     return (
       <>
-        <button type="button" onClick={onBack} className="text-sm text-ink-muted hover:text-ink-soft">
+        <button type="button" onClick={onBack} className={BACK_LINK}>
           ← Voltar
         </button>
         <p className="mt-4 text-sm text-ink-muted" role={loading ? "status" : undefined}>
@@ -174,14 +176,16 @@ export function MatchPage({
 
   return (
     <>
-      <button type="button" onClick={onBack} className="text-sm text-ink-muted hover:text-ink-soft">
+      <button type="button" onClick={onBack} className={BACK_LINK}>
         ← Voltar
       </button>
 
-      <article className="mt-3 rounded-xl border border-line bg-surface/50 p-5">
+      {/* `as="article"` on purpose: this is the page's main card, and rendering
+          it as a bare div would change the document outline. */}
+      <Surface as="article" filled className="mt-3 p-5">
         <div className="flex items-center justify-between gap-2 text-xs text-ink-faint">
           <span>{match.round}ª rodada</span>
-          <span className={`rounded px-2 py-1 font-medium ${STATUS_CLASS[match.status]}`}>
+          <span className={`rounded-x-small px-2 py-1 font-medium ${STATUS_CLASS[match.status]}`}>
             {STATUS_LABEL[match.status]}
           </span>
         </div>
@@ -201,7 +205,7 @@ export function MatchPage({
 
           <Side club={away} code={match.awayCode} onNavigate={onNavigate} />
         </div>
-      </article>
+      </Surface>
 
       <dl className="mt-4 space-y-3 text-sm">
         <div>
@@ -233,7 +237,7 @@ export function MatchPage({
           <h3 className="mb-2 text-sm font-medium text-ink-muted">Campanha</h3>
           {/* Stacked, not side by side: the rounds line up vertically, so "who
               was above whom in round 12" is read by looking straight down. */}
-          <div className="space-y-4 rounded-lg border border-line bg-surface/50 px-3 py-3">
+          <Surface filled className="space-y-4 px-3 py-3">
             <Campaign
               club={home}
               code={match.homeCode}
@@ -248,7 +252,7 @@ export function MatchPage({
               clubCount={rankHistory?.length ?? 0}
               lastRound={lastRound}
             />
-          </div>
+          </Surface>
         </section>
       )}
 

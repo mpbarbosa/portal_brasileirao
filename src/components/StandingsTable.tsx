@@ -2,6 +2,7 @@ import { useMemo } from "react";
 
 import { clubKey } from "@/club-core";
 import { ClubCrest } from "@/src/components/ClubCrest";
+import { LINK_UNDERLINE } from "@/src/components/interaction";
 import { lastRecordedRound } from "@/rank-history-core";
 import { RankSparkline } from "@/src/components/RankSparkline";
 import { formatRoute } from "@/route-core";
@@ -42,7 +43,7 @@ export function StandingsTable({ rows, onSelectClub, rankHistory }: StandingsTab
     <Surface className="overflow-x-auto">
       <table className={`w-full text-sm ${showCampaign ? "min-w-[40rem]" : "min-w-[34rem]"}`}>
         <caption className="sr-only">Classificação do Campeonato Brasileiro Série A</caption>
-        <thead className="bg-surface text-xs uppercase tracking-wide text-ink-muted">
+        <thead className="bg-surface-container-low text-xs uppercase tracking-wide text-ink-muted">
           <tr>
             <th scope="col" className="px-3 py-2 text-left">#</th>
             <th scope="col" className="px-3 py-2 text-left">Clube</th>
@@ -85,7 +86,7 @@ export function StandingsTable({ rows, onSelectClub, rankHistory }: StandingsTab
                       event.preventDefault();
                       onSelectClub(clubKey(row.club));
                     }}
-                    className="rounded underline decoration-ink-ghost underline-offset-2 hover:decoration-ink-soft"
+                    className={`rounded-x-small ${LINK_UNDERLINE}`}
                   >
                     {row.club.shortName}
                   </a>

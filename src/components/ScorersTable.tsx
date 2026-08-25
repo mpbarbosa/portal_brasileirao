@@ -1,3 +1,4 @@
+import { LINK_UNDERLINE } from "@/src/components/interaction";
 import { Surface } from "@/src/components/Surface";
 import type { Scorer } from "@/src/types";
 
@@ -21,7 +22,7 @@ export function ScorersTable({ rows, onSelectPlayer }: ScorersTableProps) {
         <caption className="sr-only">
           Artilharia do Campeonato Brasileiro Série A
         </caption>
-        <thead className="bg-surface text-xs uppercase tracking-wide text-ink-muted">
+        <thead className="bg-surface-container-low text-xs uppercase tracking-wide text-ink-muted">
           <tr>
             <th scope="col" className="px-3 py-2 text-left">#</th>
             <th scope="col" className="px-3 py-2 text-left">Jogador</th>
@@ -40,7 +41,7 @@ export function ScorersTable({ rows, onSelectPlayer }: ScorersTableProps) {
                   <button
                     type="button"
                     onClick={() => onSelectPlayer(row)}
-                    className="block rounded font-medium underline decoration-ink-ghost underline-offset-2 hover:decoration-ink-soft"
+                    className={`block rounded-x-small font-medium ${LINK_UNDERLINE}`}
                   >
                     {row.playerName}
                   </button>

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 
 import { Button } from "@/src/components/Button";
+import { FOCUS_RING, STATE_LAYER } from "@/src/components/interaction";
 import { NAV_ITEMS, type SectionId } from "@/src/navigation";
 import { formatRoute, type Route } from "@/route-core";
 import { themeToggleLabel, type Theme } from "@/theme-core";
@@ -72,17 +73,20 @@ export function NavBar({ current, onNavigate, theme, onToggleTheme }: NavBarProp
 
   const itemClass = (id: SectionId, block: boolean) =>
     [
-      "rounded-lg px-3 py-2 text-sm font-medium transition",
+      "rounded-small px-3 py-2 text-sm font-medium",
       block ? "block w-full text-left" : "",
+      // The current entry is a filled chip and needs no veil — but it is still
+      // focusable, so it takes the ring on its own. Folding the ring into the
+      // state layer left this one entry with the browser's 1px default.
       id === current
-        ? "bg-ink text-ink-inverted"
-        : "text-ink-soft hover:bg-raised hover:text-ink",
+        ? `bg-ink text-ink-inverted ${FOCUS_RING}`
+        : `text-ink-soft ${STATE_LAYER}`,
     ]
       .filter(Boolean)
       .join(" ");
 
   return (
-    <header className="sticky top-0 z-20 border-b border-line bg-canvas/90 backdrop-blur">
+    <header className="sticky top-0 z-20 border-b border-line bg-surface/90 backdrop-blur">
       <div className="mx-auto flex max-w-3xl items-center justify-between gap-3 px-4 py-3">
         <div className="min-w-0">
           <p className="truncate text-base font-bold tracking-tight">Portal Brasileirão</p>
