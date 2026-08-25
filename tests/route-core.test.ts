@@ -98,3 +98,12 @@ test("a match route round-trips", () => {
   const route: Route = { section: "partida", id: "554970" };
   assert.deepEqual(parseRoute(formatRoute(route)), route);
 });
+
+test("a malformed percent escape resolves rather than throwing", () => {
+  // decodeURIComponent throws URIError on these, and a crawler will send one.
+  // Unhandled it surfaced as a 500 from the SPA handler — the one failure shape
+  // this module exists to rule out. `pageStatus` gives it the 404.
+  for (const path of ["/clube/%", "/clube/%E0%A4%A", "/jogos/%zz"]) {
+    assert.deepEqual(parseRoute(path), HOME, path);
+  }
+});
