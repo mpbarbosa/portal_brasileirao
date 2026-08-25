@@ -31,7 +31,7 @@ test.describe("Classificação", () => {
     const headers = await page.locator("table thead th").allInnerTexts();
 
     expect(headers.map((header) => header.trim())).toEqual([
-      "#", "CLUBE", "P", "J", "V", "E", "D", "SG",
+      "#", "CLUBE", "P", "J", "V", "E", "D", "SG", "CAMPANHA",
     ]);
   });
 
@@ -74,11 +74,48 @@ test.describe("Classificação", () => {
   });
 
   test("goal difference is signed", async ({ page }) => {
-    const values = await page.locator("table tbody tr td:last-child").allInnerTexts();
+    // Addressed by index, not :last-child — the campanha column now sits after
+    // SG, and :last-child would sample a cell holding a drawing.
+    const values = await page.locator("table tbody tr td:nth-child(8)").allInnerTexts();
 
     for (const value of values) {
       expect(value.trim()).toMatch(/^[+-]?\d+$/);
     }
+  });
+
+  test("every club row draws its campanha", async ({ page }) => {
+    const sparklines = page.locator("table tbody tr td:last-child svg");
+
+    await expect(sparklines).toHaveCount(20);
+  });
+
+  test("the campanha is stated in words as well as drawn", async ({ page }) => {
+    // The drawing is unreadable to a screen reader and may not render at all
+    // under forced colours, so the same fact has to exist as text.
+    const first = page.locator("table tbody tr td:last-child svg").first();
+
+    // Never assert a position or a round number: the snapshot ages and the
+    // table reorders. The shape of the sentence is what is being fixed here.
+    await expect(first).toHaveAttribute(
+      "aria-label",
+      /^Campanha: \d+º na \d+ª rodada, \d+º na \d+ª rodada/,
+    );
+  });
+
+  test("first place is drawn above last place", async ({ page }) => {
+    // The y axis is inverted, and getting that backwards is invisible unless
+    // something checks it: a climbing line has to mean a climbing club.
+    const yOfLastPoint = async (nth: number) => {
+      const points = await page
+        .locator("table tbody tr")
+        .nth(nth)
+        .locator("td:last-child svg polyline")
+        .getAttribute("points");
+      const pairs = (points ?? "").trim().split(" ");
+      return Number(pairs[pairs.length - 1].split(",")[1]);
+    };
+
+    expect(await yOfLastPoint(0)).toBeLessThan(await yOfLastPoint(19));
   });
 
   test("each club row shows a crest", async ({ page }) => {

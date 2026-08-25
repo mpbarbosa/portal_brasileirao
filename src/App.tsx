@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { fetchMatches, fetchScorers, fetchStandings, type MatchesPayload } from "@/src/api";
 import { ClubView } from "@/src/components/ClubView";
@@ -9,6 +9,7 @@ import { RoundBrowser } from "@/src/components/RoundBrowser";
 import { ScorersTable } from "@/src/components/ScorersTable";
 import { StandingsTable } from "@/src/components/StandingsTable";
 import { findMatch } from "@/match-core";
+import { computeRankHistory } from "@/rank-history-core";
 import { parseRoute } from "@/route-core";
 import { usePageMeta } from "@/src/usePageMeta";
 import { useTheme } from "@/src/useTheme";
@@ -33,6 +34,23 @@ export function App() {
    *  since both look like an empty list, and answering "não encontrado" while
    *  the request is still in flight tells the reader something untrue. */
   const [loading, setLoading] = useState(true);
+
+  /**
+   * The campanha behind every row of the Classificação, computed here rather
+   * than fetched: `/api/matches` already ships the whole season, so the client
+   * holds everything the calculation needs and a second endpoint would buy
+   * nothing. Recomputed only when the fixtures change.
+   *
+   * Note this is derived from the fixture list, while the table's own positions
+   * come from `/api/standings`. With a live provider the two can disagree by a
+   * place mid-round, because football-data counts IN_PLAY matches in its table
+   * and `computeStandings` does not — the documented, deliberate difference.
+   * The sparkline is a trajectory, not a restatement of the position column.
+   */
+  const rankHistory = useMemo(
+    () => (matches ? computeRankHistory(matches.clubs, matches.matches) : []),
+    [matches],
+  );
 
   usePageMeta(route, {
     clubs: matches?.clubs,
@@ -103,6 +121,7 @@ export function App() {
             <StandingsTable
               rows={standings}
               onSelectClub={(key) => navigate({ section: "clube", key })}
+              rankHistory={rankHistory}
             />
           )}
 
