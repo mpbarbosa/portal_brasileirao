@@ -1,6 +1,7 @@
 import type { ReactElement } from "react";
 
 import {
+  LiveIcon,
   MatchesIcon,
   ScorersIcon,
   StandingsIcon,
@@ -20,6 +21,7 @@ import {
  */
 export type SectionId =
   | "classificacao"
+  | "ao-vivo"
   | "jogos"
   | "artilharia"
   | "clube"
@@ -42,8 +44,8 @@ export interface NavItem {
 
 /**
  * Material Design 3's navigation bar carries **three to five** destinations.
- * There are three. Two more can be added before the pattern stops fitting, and
- * at the sixth the bar is off-spec — crowded rather than broken, so nothing
+ * There are four. **One** more can be added before the pattern stops fitting,
+ * and at the sixth the bar is off-spec — crowded rather than broken, so nothing
  * fails and nobody notices. A sixth section wants a different pattern (MD3's
  * navigation drawer), not a sixth entry here.
  */
@@ -53,6 +55,16 @@ export const NAV_ITEMS: NavItem[] = [
     label: "Classificação",
     description: "Tabela do Campeonato Brasileiro Série A",
     Icon: StandingsIcon,
+  },
+  {
+    // Second rather than first: "/" is the Classificação, and a destination
+    // that is not the home page should not sit where the home page's tab does.
+    // It is still ahead of Jogos, because "what is being played now" is the
+    // more urgent question of the two.
+    id: "ao-vivo",
+    label: "Ao vivo",
+    description: "Jogos em andamento, próximos e resultados recentes",
+    Icon: LiveIcon,
   },
   {
     id: "jogos",

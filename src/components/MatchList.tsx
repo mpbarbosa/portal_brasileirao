@@ -29,11 +29,28 @@ interface MatchListProps {
   clubs?: Club[];
   /** Omit to render plain rows — the list stands on its own. */
   onSelectMatch?: (id: string) => void;
+  /**
+   * An extra line under the kickoff, computed per match — the **Ao vivo**
+   * page's contagem regressiva. Return null to leave a row without one.
+   *
+   * A callback rather than a prepared string per row, because the caller ticks:
+   * the countdown is recomputed on every render from the page's clock, and a
+   * map keyed by match id would have to be rebuilt each tick anyway.
+   */
+  note?: (match: Match) => string | null;
+  /** What to say when there is nothing to list. */
+  emptyLabel?: string;
 }
 
-export function MatchList({ matches, clubs, onSelectMatch }: MatchListProps) {
+export function MatchList({
+  matches,
+  clubs,
+  onSelectMatch,
+  note,
+  emptyLabel = "Nenhuma partida nesta rodada.",
+}: MatchListProps) {
   if (matches.length === 0) {
-    return <p className="text-body-medium text-ink-muted">Nenhuma partida nesta rodada.</p>;
+    return <p className="text-body-medium text-ink-muted">{emptyLabel}</p>;
   }
 
   const byCode = new Map(clubs?.map((club) => [club.code, club]));
@@ -77,6 +94,9 @@ export function MatchList({ matches, clubs, onSelectMatch }: MatchListProps) {
               </p>
             )}
             <p className="mt-0.5 text-body-small text-ink-faint">{kickoffLabel(match.kickoff)}</p>
+            {note?.(match) && (
+              <p className="mt-0.5 text-body-small text-ink-muted">{note(match)}</p>
+            )}
             {match.broadcasters && (
               <p className="mt-1 flex flex-wrap items-center gap-1">
                 <span className="sr-only">Onde assistir: </span>

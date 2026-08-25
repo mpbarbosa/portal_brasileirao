@@ -68,6 +68,14 @@ export const pageMeta = (route: Route, context: MetaContext = {}): PageMeta => {
         description: SITE_DESCRIPTION,
       };
 
+    case "ao-vivo":
+      return {
+        title: suffix("Ao vivo"),
+        description:
+          "Jogos em andamento do Campeonato Brasileiro Série A, com placar, " +
+          "próximos jogos e onde assistir.",
+      };
+
     case "jogos":
       return route.round === null
         ? {

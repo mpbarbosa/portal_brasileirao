@@ -9,6 +9,11 @@ test("the root path is the table", () => {
   assert.deepEqual(parseRoute("/classificacao"), HOME);
 });
 
+test("ao vivo has its own address", () => {
+  assert.deepEqual(parseRoute("/ao-vivo"), { section: "ao-vivo" });
+  assert.equal(formatRoute({ section: "ao-vivo" }), "/ao-vivo");
+});
+
 test("jogos without a round means the current one", () => {
   assert.deepEqual(parseRoute("/jogos"), { section: "jogos", round: null });
 });
@@ -46,6 +51,7 @@ test("trailing and duplicate slashes are tolerated", () => {
 
 test("formatting produces the canonical path", () => {
   assert.equal(formatRoute(HOME), "/");
+  assert.equal(formatRoute({ section: "ao-vivo" }), "/ao-vivo");
   assert.equal(formatRoute({ section: "jogos", round: null }), "/jogos");
   assert.equal(formatRoute({ section: "jogos", round: 12 }), "/jogos/12");
   assert.equal(formatRoute({ section: "artilharia" }), "/artilharia");
@@ -60,6 +66,7 @@ test("a club code needing escaping survives a round trip", () => {
 test("parse and format round-trip for every shape", () => {
   const routes: Route[] = [
     HOME,
+    { section: "ao-vivo" },
     { section: "jogos", round: null },
     { section: "jogos", round: 38 },
     { section: "artilharia" },

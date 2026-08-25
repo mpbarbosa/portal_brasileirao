@@ -2,12 +2,14 @@ import { useEffect, useMemo, useState } from "react";
 
 import { fetchMatches, fetchScorers, fetchStandings, type MatchesPayload } from "@/src/api";
 import { ClubView } from "@/src/components/ClubView";
+import { LiveView } from "@/src/components/LiveView";
 import { MatchPage } from "@/src/components/MatchPage";
 import { NavBar } from "@/src/components/NavBar";
 import { PlayerOverlayCard } from "@/src/components/PlayerOverlayCard";
 import { RoundBrowser } from "@/src/components/RoundBrowser";
 import { ScorersTable } from "@/src/components/ScorersTable";
 import { StandingsTable } from "@/src/components/StandingsTable";
+import { hasLiveMatch } from "@/live-core";
 import { findMatch } from "@/match-core";
 import { computeRankHistory } from "@/rank-history-core";
 import { parseRoute } from "@/route-core";
@@ -92,6 +94,45 @@ export function App() {
     };
   }, []);
 
+  /**
+   * The **Ao vivo** page refetches; every other view is a snapshot of what
+   * arrived once, which is right for a table and wrong for a scoreboard.
+   *
+   * Only while that page is open, and only while the tab is visible. The
+   * cadence follows the server's own fixture cache — 15s while anything is
+   * LIVE, 60s otherwise — so polling faster would spend requests re-reading a
+   * cache entry, and the free tier allows ten a minute in total. A failed
+   * refresh is swallowed on purpose: the last good payload keeps rendering
+   * rather than the page blanking or growing an error banner over a score that
+   * is merely a minute old.
+   */
+  const refreshMs = matches && hasLiveMatch(matches.matches) ? 30_000 : 60_000;
+
+  useEffect(() => {
+    if (route.section !== "ao-vivo") return;
+
+    let cancelled = false;
+    const timer = setInterval(() => {
+      if (document.hidden) return;
+
+      void (async () => {
+        try {
+          const response = await fetchMatches();
+          if (cancelled) return;
+          setMatches(response.data);
+          setCurrentRound(response.data.currentRound);
+        } catch {
+          // Keep what we have; see above.
+        }
+      })();
+    }, refreshMs);
+
+    return () => {
+      cancelled = true;
+      clearInterval(timer);
+    };
+  }, [route.section, refreshMs]);
+
   return (
     <div className="min-h-screen">
       <NavBar
@@ -126,6 +167,16 @@ export function App() {
               rows={standings}
               onSelectClub={(key) => navigate({ section: "clube", key })}
               rankHistory={rankHistory}
+            />
+          )}
+
+          {route.section === "ao-vivo" && (
+            <LiveView
+              matches={matches?.matches ?? []}
+              clubs={matches?.clubs}
+              loading={loading}
+              onSelectMatch={(id) => navigate({ section: "partida", id })}
+              onBrowseRounds={() => navigate({ section: "jogos", round: null })}
             />
           )}
 
