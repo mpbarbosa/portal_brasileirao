@@ -25,34 +25,41 @@ test.describe("Onde assistir", () => {
     expect(labelled).toBeGreaterThan(0);
   });
 
-  test("every broadcast line is announced, not left as a bare emoji", async ({ page }) => {
+  test("every broadcast line is announced", async ({ page }) => {
     await goToRound(page, CURATED_ROUND);
 
-    // The 📺 is decorative; each line needs the visually hidden label.
-    const lines = page.locator("main ul > li").filter({ hasText: "📺" });
+    // The marks are pictures; the visually hidden label is what says what they
+    // are. One label per line that carries marks.
+    const lines = page.locator("main ul > li").filter({ has: page.locator("[data-mark]") });
     const labels = page.getByText("Onde assistir:");
 
+    expect(await lines.count()).toBeGreaterThan(0);
     expect(await labels.count()).toBe(await lines.count());
   });
 
   test("no broadcast line is empty", async ({ page }) => {
     await goToRound(page, CURATED_ROUND);
 
-    for (const line of await page.locator("main ul > li").filter({ hasText: "📺" }).all()) {
-      const text = (await line.innerText()).replace(/📺/g, "").trim();
-      expect(text.length).toBeGreaterThan(0);
-      // A channel name, not a stray separator.
-      expect(text).toMatch(/[A-Za-zÀ-ÿ0-9+]/);
+    const lines = await page.locator("main ul > li").filter({ has: page.locator("[data-mark]") }).all();
+    for (const line of lines) {
+      // Every mark names its broadcaster, whether it is a logo or a wordmark.
+      const names = await line.locator("[data-mark]").evaluateAll((all) =>
+        all.map((m) => m.getAttribute("data-mark") ?? ""),
+      );
+      expect(names.length).toBeGreaterThan(0);
+      expect(names.every((n) => n.trim().length > 0)).toBe(true);
     }
   });
 
-  test("channels are separated readably when there are several", async ({ page }) => {
+  test("several channels render as several marks", async ({ page }) => {
     await goToRound(page, CURATED_ROUND);
 
-    const multi = page.locator("main ul > li").filter({ hasText: " · " });
-    if ((await multi.count()) > 0) {
-      await expect(multi.first()).toContainText(/\S\s·\s\S/);
-    }
+    const lines = await page.locator("main ul > li").filter({ has: page.locator("[data-mark]") }).all();
+    const counts = await Promise.all(lines.map((l) => l.locator("[data-mark]").count()));
+
+    // Each is its own mark rather than one run of text, so a fixture on two
+    // channels shows two.
+    expect(counts.some((n) => n > 1)).toBe(true);
   });
 
   test("an uncurated round shows no broadcast lines at all", async ({ page }) => {
@@ -60,7 +67,7 @@ test.describe("Onde assistir", () => {
     await goToRound(page, UNCURATED_ROUND);
 
     await expect(page.getByText("Onde assistir:")).toHaveCount(0);
-    await expect(page.getByText("📺")).toHaveCount(0);
+    await expect(page.locator("[data-mark]")).toHaveCount(0);
   });
 
   test("a broadcaster is shown as its own mark", async ({ page }) => {

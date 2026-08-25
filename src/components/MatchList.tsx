@@ -93,9 +93,6 @@ export function MatchList({ matches, clubs, onSelectMatch }: MatchListProps) {
             <p className="mt-0.5 text-xs text-ink-faint">{kickoffLabel(match.kickoff)}</p>
             {match.broadcasters && (
               <p className="mt-1 flex flex-wrap items-center gap-1">
-                <span className="mr-0.5 text-xs" aria-hidden="true">
-                  📺
-                </span>
                 <span className="sr-only">Onde assistir: </span>
                 {match.broadcasters.map((name) => (
                   <BroadcasterMark key={name} name={name} size="sm" />

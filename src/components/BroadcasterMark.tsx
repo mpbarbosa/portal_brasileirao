@@ -39,8 +39,9 @@ export function BroadcasterMark({ name, size = "md", decorative = false }: Broad
     // the name entirely when the caller is not supplying one.
     return (
       <span
+        data-mark={name}
         aria-hidden={decorative || undefined}
-        className={`${plate} px-1.5 ${size === "sm" ? "py-px text-[10px]" : "py-0.5 text-xs"} font-semibold text-plate-ink`}
+        className={`${plate} px-1.5 ${size === "sm" ? "py-0.5 text-[11px]" : "py-0.5 text-xs"} font-semibold text-plate-ink`}
       >
         {name}
       </span>
@@ -48,14 +49,14 @@ export function BroadcasterMark({ name, size = "md", decorative = false }: Broad
   }
 
   return (
-    <span className={`${plate} ${size === "sm" ? "px-1 py-0.5" : "px-1.5 py-1"}`}>
+    <span data-mark={name} className={`${plate} ${size === "sm" ? "px-1.5 py-0.5" : "px-2 py-1"}`}>
       <img
         src={src}
         alt={decorative ? "" : name}
         loading="lazy"
         // Contained rather than stretched: these marks differ wildly in aspect
         // ratio, from Globo's circle to the prime video wordmark.
-        className={`w-auto object-contain ${size === "sm" ? "h-3 max-w-14" : "h-4 max-w-20"}`}
+        className={`w-auto object-contain ${size === "sm" ? "h-4 max-w-16" : "h-5 max-w-24"}`}
       />
     </span>
   );

@@ -7,32 +7,31 @@ import { expect, test, type Page } from "@playwright/test";
 const PLAYED_ROUND = "24";
 const UPCOMING_ROUND = "25";
 
-/** The one entry in goal-videos.ts, so the fallback tests must avoid it. */
-const CURATED_MATCH = "554975";
-
 /**
- * Open a finished fixture that has goals but no curated video, so the search
- * fallback is what renders. Curating another match must not silently turn these
- * into tests of the wrong branch — hence walking rather than hard-coding an id.
+ * Open a finished fixture with the curated links stripped from the payload, so
+ * the search fallback is what renders.
+ *
+ * This used to walk the round hunting for a fixture nobody had curated yet,
+ * which made the tests a hostage to how much data existed: curate every match
+ * in the round and the walk finds nothing and throws. The fallback is a branch
+ * of the component, so it is tested by producing the state that reaches it
+ * rather than by hoping the season still contains one.
  */
 const openMatchWithoutVideo = async (page: Page) => {
+  await page.route("**/api/matches*", async (route) => {
+    const response = await route.fetch();
+    const body = await response.json();
+    body.data.matches = body.data.matches.map(
+      ({ highlights: _dropped, ...match }: Record<string, unknown>) => match,
+    );
+    await route.fulfill({ response, json: body });
+  });
+
   await page.goto(`/jogos/${PLAYED_ROUND}`);
-  const links = page.locator("main ul > li a[href^='/partida/']");
-  // evaluateAll queries immediately — without this it reads an empty list and
-  // the loop below concludes, wrongly, that every fixture is curated.
-  await expect(links.first()).toBeVisible();
-
-  const hrefs = await links.evaluateAll((all) =>
-    all.map((a) => a.getAttribute("href") ?? ""),
-  );
-
-  for (const href of hrefs) {
-    if (href.endsWith(`/${CURATED_MATCH}`)) continue;
-    await page.goto(href);
-    if (await page.getByRole("link", { name: /Procurar melhores momentos/ }).count()) return;
-  }
-
-  throw new Error("no finished fixture without a curated video was found");
+  const link = page.locator("main ul > li a[href^='/partida/']").first();
+  await expect(link).toBeVisible();
+  await link.click();
+  await expect(page).toHaveURL(/\/partida\/\d+/);
 };
 
 const openFirstMatch = async (page: Page, round: string) => {

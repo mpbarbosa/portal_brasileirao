@@ -74,13 +74,37 @@ if (round === null && ids.length === 0) {
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-const get = async (url: string): Promise<string> => {
-  const response = await fetch(url, {
-    headers: { "User-Agent": UA, "Accept-Language": "pt-BR,pt;q=0.9" },
-  });
-  if (!response.ok) throw new Error(`${response.status} ${response.statusText} for ${url}`);
+/**
+ * Fetch with retries.
+ *
+ * A backfill makes a few thousand requests, so the rare failure is a certainty
+ * rather than a risk: one run died on "redirect count exceeded" after two
+ * fixtures and lost everything before it. Transient faults are retried with
+ * backoff, and the caller decides what an exhausted retry means.
+ */
+const get = async (url: string, attempts = 3): Promise<string> => {
+  let last: unknown;
 
-  return response.text();
+  for (let attempt = 1; attempt <= attempts; attempt += 1) {
+    try {
+      const response = await fetch(url, {
+        headers: { "User-Agent": UA, "Accept-Language": "pt-BR,pt;q=0.9" },
+        signal: AbortSignal.timeout(25_000),
+      });
+      // 4xx other than 429 will not improve on a retry.
+      if (!response.ok && response.status !== 429 && response.status < 500) {
+        throw new Error(`${response.status} ${response.statusText} for ${url}`);
+      }
+      if (response.ok) return await response.text();
+      last = new Error(`${response.status} ${response.statusText}`);
+    } catch (error) {
+      last = error;
+      if (attempt === attempts) break;
+    }
+    await sleep(attempt * 1500);
+  }
+
+  throw last instanceof Error ? last : new Error(String(last));
 };
 
 /** YouTube ships the results as JSON inside the HTML; there is no free API and
@@ -217,6 +241,7 @@ const skipped = wanted.length - playable.length;
 if (skipped) console.log(`Skipping ${skipped} fixture(s) that have not finished.`);
 
 const entries: string[] = [];
+const failed: string[] = [];
 for (const match of playable) {
   const home = byCode.get(match.homeCode);
   const away = byCode.get(match.awayCode);
@@ -230,13 +255,25 @@ for (const match of playable) {
     homeCodeName: home.shortName,
     awayCodeName: away.shortName,
   };
-  const picked = await investigate(fixture);
-  if (picked.length) entries.push(entryFor(fixture, picked));
+
+  try {
+    const picked = await investigate(fixture);
+    if (picked.length) entries.push(entryFor(fixture, picked));
+  } catch (error) {
+    // One fixture's bad luck is not the run's. Name it loudly so it can be
+    // retried on its own rather than silently missing from the season.
+    failed.push(match.id);
+    console.error(`\n! ${label(fixture)} — ${(error as Error).message}`);
+  }
 
   await sleep(700);
 }
 
 console.log(`\n${"=".repeat(60)}`);
+if (failed.length) {
+  console.log(`${failed.length} fixture(s) failed and were skipped. Retry with:`);
+  console.log(`  npx tsx scripts/find-highlights.ts ${failed.join(" ")}\n`);
+}
 if (entries.length === 0) {
   console.log("No entries found.");
   process.exit(0);
