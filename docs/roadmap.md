@@ -237,6 +237,35 @@ tone ordering rather than a fact about alpha.
 - **Elevation.** MD3 expresses elevation as *tonal* surface tint, not shadow.
   This suits the app, which already distinguishes `surface`/`raised` by colour
   rather than shadow, and it is what makes MD3 dark themes legible.
+
+  **Open question: should `Surface`'s filled variant stop being `bg-surface/50`?**
+  MD3 encodes elevation in the token, so applying 50% alpha to it halves the
+  system's own signal. Worth deciding deliberately rather than inheriting.
+
+  Measure before deciding, because the intuitive argument overstates it. The
+  alpha halves the separation in *every* palette — that is what 50% does — so
+  this is not something the migration introduced. Tone separation between page
+  and card, solid then composited:
+
+  | | solid | after `/50` |
+  |---|---|---|
+  | MD3 light | −2.06 | −1.01 |
+  | pre-migration light | +1.82 | +1.09 |
+  | MD3 dark | +4.24 | +2.22 |
+  | pre-migration dark | +6.11 | +2.75 |
+
+  Light is essentially unchanged (1.01 against 1.09). The sign flips — MD3's
+  card is *darker* than its page, so the composite moves it lighter, toward the
+  page — but the magnitude does not. Dark is where MD3 differs: its ladder is
+  deliberately tighter, compensated by having more rungs.
+
+  And tone is not the only cue. A filled `Surface` is `rounded-lg border
+  border-line` before it is a fill, and MD3 strengthens that border
+  considerably — `line` against `canvas` goes from 1.18:1 to **1.62:1** in
+  light and 1.38:1 to **1.99:1** in dark. The card reads as a card mostly
+  through its outline, which the migration improved by about 40%. So this is a
+  design call about honouring the elevation model, not a legibility defect.
+  `MatchPage`'s article uses the same 50% fill and should be decided with it.
 - **State layers.** The seven hand-written `hover:` utilities become a
   consistent overlay at MD3's prescribed opacities for hover, focus and pressed.
   This fixes a known inconsistency — a stepper with a `transition` its neighbour
