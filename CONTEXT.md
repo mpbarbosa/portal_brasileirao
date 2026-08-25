@@ -300,10 +300,34 @@ It always ships with its **crédito da foto** — photographer, licence and a li
 back to Commons — because every licence in use but CC0 requires the photographer
 to be named wherever the picture appears. That caption is a condition of showing
 the image, not a caption in the editorial sense.
+**It is hotlinked from Commons, which the marca da emissora entry forbids.** That
+is a deliberate exception and not an oversight, so it is written down here rather
+than left for the next reader to discover as a contradiction. The prohibition
+exists because a dozen marks on one page earned a 429 — Commons is an archive
+with rate limits, not a CDN. **The variable is images per page view, and a
+stadium page loads exactly one**: the browser picks a single entry from the
+`srcSet`, and `/estadio/<slug>` is the only page that shows a photograph at all.
+Fifteen rapid requests to `Special:FilePath` were made by hand without a 429, at
+every width in the `srcSet`.
+
+Two things that check does **not** establish, and which are the reason to keep
+this entry rather than close the question: it was one client rather than real
+traffic, and `Special:FilePath` answers with two redirects through
+`commons.wikimedia.org` before reaching `upload.wikimedia.org`, so each view
+costs two requests to the rate-limited host and one to the CDN. If Commons does
+refuse, the `<img>` has no `onError` and the reader gets the browser's
+broken-image box inside the fixed 16/9 frame — the rest of the page is unharmed.
+
+The bound that follows: **one Commons image per page view.** A second photograph
+on the same page, a gallery, or a list of grounds each showing its own, all put
+this back into the shape that produced the 429, and want vendoring into
+`public/` the way `sync-marks` does it — not another exception.
+
 _Avoid_: calling it "imagem" or "capa" (it is a photograph of a real ground, and
 "capa" would suggest the link-preview card, which is `og-default.png`), showing
 one without its credit, tidying a credit string into house style — the wording
-Commons publishes is the wording with legal force.
+Commons publishes is the wording with legal force, extending the hotlink to a
+page that shows more than one Commons image.
 
 **Nome oficial**:
 The formal name of a ground, shown under its popular one only where the two
@@ -491,7 +515,9 @@ against a dark page. A broadcaster with no mark is rendered as its own name on
 the same plate: that is the ordinary case, not a defect, since CBF's feed already
 names ESPN/Disney+, Band and a dozen others we curate nothing for.
 _Avoid_: copying logo artwork from a broadcaster's site (no licence comes with
-it), hotlinking Commons, letting a control's accessible name rest on an image's
+it), hotlinking Commons **for these** — the one deliberate exception is the single
+photograph on a **Página do estádio**, and the reasoning and its bound are recorded
+under **Foto do estádio**; letting a control's accessible name rest on an image's
 `alt` (they load lazily — carry the name in text and mark the image decorative),
 asserting a mark's `src` instead of whether it painted, showing a mark with no
 plate, treating a missing mark as an error.
