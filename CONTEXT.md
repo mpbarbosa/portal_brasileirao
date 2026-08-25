@@ -208,11 +208,20 @@ Stored as the **title alone** with spaces; `wikipediaUrl` converts to
 underscores and percent-encodes, so `?action=edit` and `#História` do not
 persist. Every title was confirmed through the MediaWiki API, which reports
 whether a page exists, whether it redirects and what its first sentence says.
+It appears a second time on the **partida** page, under each club's name on the
+scoreboard, and it is the only *external* link there. It sits a type step below
+the name on purpose: the scoreboard's job is the score, and a second link at the
+same weight would read as two equal destinations. The club's other three links
+stay on the club page, one tap away through the name above — repeating all four
+per side would put eight external links around a scoreline. Both call sites
+render `WikipediaLink` from `src/components/ClubLinks.tsx` rather than their own
+anchor, so `target`, `rel` and the screen-reader suffix have one definition.
 _Avoid_: keying on **tla**, deriving the title from `name` or `shortName` (the
 article is at the full legal name and no rule maps between the three), storing
 the full URL, showing the title or the address as the link text, stripping
 accents the way a **slug** does (`Gremio…` is not an article), Wikipedia's own
-mark, an English-edition link.
+mark, an English-edition link, a second hand-written copy of the anchor, and
+carrying the site/Instagram/hino links onto the scoreboard beside it.
 
 **slug**:
 URL-safe form of a club's short name — `Atlético-MG` → `atletico-mg` — used for
