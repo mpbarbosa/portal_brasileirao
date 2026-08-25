@@ -5,6 +5,25 @@ const toggle = (page: Page) => page.getByRole("button", { name: /Ativar tema/ })
 const canvas = (page: Page) =>
   page.evaluate(() => getComputedStyle(document.body).backgroundColor);
 
+
+/**
+ * Whether a focused element draws something a keyboard user can see.
+ *
+ * Deliberately agnostic about how: the browser's own ring is `outline-style:
+ * auto`, Tailwind's `ring-*` is a box-shadow, and MD3 may use either. Asserting
+ * a particular utility would pin the test to today's implementation and tell us
+ * nothing about whether a ring is actually drawn.
+ */
+const focusIndicator = (page: Page, selector: string) =>
+  page.locator(selector).first().evaluate((node) => {
+    const style = getComputedStyle(node);
+    return {
+      focusVisible: node.matches(":focus-visible"),
+      outline: style.outlineStyle !== "none" && style.outlineWidth !== "0px",
+      ring: style.boxShadow !== "none" && style.boxShadow !== "",
+    };
+  });
+
 test.describe("Tema", () => {
   test("a theme is applied before anything renders", async ({ page }) => {
     await page.goto("/");
@@ -71,6 +90,68 @@ test.describe("Tema", () => {
     };
     // Light page, dark ink: a wide gap either way, but specifically inverted.
     expect(luminance(bg)).toBeGreaterThan(luminance(fg) + 100);
+  });
+
+  test("a keyboard-focused control is visibly focused, in both themes", async ({ page }) => {
+    // Lives here because it is a theming concern as much as an accessibility
+    // one: a ring the same colour as the surface behind it is no ring at all,
+    // and the two themes have different surfaces.
+    await page.goto("/");
+    await expect(page.locator("table tbody tr")).toHaveCount(20);
+
+    for (const theme of ["light", "dark"]) {
+      if ((await themeAttr(page)) !== theme) await toggle(page).click();
+      await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
+
+      // Tab rather than .focus(): :focus-visible is what decides whether the
+      // browser draws a ring, and it is what tells a keyboard user apart from
+      // someone who just clicked.
+      await page.keyboard.press("Tab");
+      const focused = await page.evaluate(() => document.activeElement?.tagName ?? "BODY");
+      expect(focused).not.toBe("BODY");
+
+      const state = await page.evaluate(() => {
+        const node = document.activeElement as HTMLElement;
+        const style = getComputedStyle(node);
+        return {
+          focusVisible: node.matches(":focus-visible"),
+          outline: style.outlineStyle !== "none" && style.outlineWidth !== "0px",
+          ring: style.boxShadow !== "none" && style.boxShadow !== "",
+        };
+      });
+
+      expect(state.focusVisible).toBe(true);
+      // Either mechanism is fine; having neither is not.
+      expect(state.outline || state.ring).toBe(true);
+    }
+  });
+
+  test("no control removes its focus ring without replacing it", async ({ page }) => {
+    // The regression this guards is specific: `outline-none` added for looks,
+    // with nothing put back. It reads as a tidier control and silently makes
+    // the app unnavigable by keyboard — which no other spec would catch,
+    // because Playwright clicks rather than tabs.
+    await page.goto("/");
+    await expect(page.locator("table tbody tr")).toHaveCount(20);
+
+    // `:visible` matters: NavBar renders the sections twice, inline for desktop
+    // and inside a collapsed panel for narrow screens, so the plain selector
+    // picks a link inside a `display: none` container on mobile. A hidden
+    // element having no ring is correct, and asserting otherwise tests the
+    // viewport rather than the styling.
+    const checked: string[] = [];
+    for (const selector of ["header button:visible", "header a:visible", "main table tbody a:visible"]) {
+      if ((await page.locator(selector).count()) === 0) continue;
+
+      await page.locator(selector).first().focus();
+      const state = await focusIndicator(page, selector);
+      expect(state.outline || state.ring, `${selector} has no focus indicator`).toBe(true);
+      checked.push(selector);
+    }
+
+    // Without this the test passes by checking nothing the day a selector stops
+    // matching — the failure mode that makes a green suite worse than none.
+    expect(checked.length).toBeGreaterThan(0);
   });
 
   test("the light theme is declared to the browser", async ({ page }) => {
