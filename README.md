@@ -54,9 +54,9 @@ guessing a number.*
 fixture carries the broadcasters showing it — ge, Globo, Premiere, SporTV, Cazé TV, YouTube
 and Prime Video, with anyone we have no mark for rendered as their own name.*
 
-![Página da partida Palmeiras 4 x 1 Vasco da Gama no tema claro: placar com escudos, data, estádio, as emissoras que transmitiram, as campanhas dos dois clubes empilhadas — o líder reto no alto e o adversário caindo — e os links dos melhores momentos por emissora.](docs/screenshots/partida-554977-light.png)
+![Página da partida Palmeiras 4 x 1 Vasco da Gama no tema claro: placar com escudos e, sob o nome de cada clube, uma ligação para o seu artigo na Wikipédia; a data; o estádio, com o nome "Nubank Parque" ligado à página do próprio estádio e a cidade e o estado em texto simples ao lado; as emissoras que transmitiram; as campanhas dos dois clubes empilhadas — o líder reto no alto e o adversário caindo — e os links dos melhores momentos por emissora.](docs/screenshots/partida-554977-light.png)
 
-![A mesma página da partida no tema escuro, com o mesmo placar, emissoras, campanhas dos dois clubes e melhores momentos, e as marcas das emissoras mantendo o fundo claro.](docs/screenshots/partida-554977-dark.png)
+![A mesma página da partida no tema escuro, com o mesmo placar, as mesmas ligações para a Wikipédia sob cada clube, o mesmo estádio ligado à sua página, emissoras, campanhas dos dois clubes e melhores momentos, e as marcas das emissoras mantendo o fundo claro.](docs/screenshots/partida-554977-dark.png)
 
 *A match page, light and dark. Both clubs' campanhas are stacked rather than overlaid, so
 they share one scale and their rounds line up — the app has no series palette, and inventing
