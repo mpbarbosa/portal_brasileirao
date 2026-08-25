@@ -223,3 +223,29 @@ test.describe("Prévia de link", () => {
     );
   });
 });
+
+test.describe("Verificação do Search Console", () => {
+  /**
+   * Google's own instruction is "do not remove the file, even after successful
+   * verification" — it re-checks periodically and silently unverifies the
+   * property when the file stops answering. Nothing else in the suite would
+   * notice a tidy-up of `public/` taking it, and the failure surfaces weeks
+   * later as vanished Search Console data rather than as a broken page.
+   */
+  const VERIFICATION_FILE = "/google33bb6c442ef9ed29.html";
+
+  test("the verification file is still served", async ({ request }) => {
+    const response = await request.get(VERIFICATION_FILE);
+
+    expect(response.status()).toBe(200);
+    expect(await response.text()).toContain("google-site-verification:");
+  });
+
+  test("it is served as a file, not swallowed by the SPA fallback", async ({ request }) => {
+    // express.static runs before the catch-all, so a real file in dist/ never
+    // reaches `pageStatus` — which would 404 it, since it names no section.
+    const body = await (await request.get(VERIFICATION_FILE)).text();
+
+    expect(body).not.toContain("<div id=\"root\">");
+  });
+});
