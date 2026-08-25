@@ -24,6 +24,12 @@ agent Claude Code.
 choice; the control in the header switches between them. **Campanha** is the club's position
 after each round — the season behind a single row.*
 
+<img src="docs/screenshots/classificacao-mobile-light.png" alt="A classificação num telemóvel no tema claro: a barra de navegação fixa no rodapé com Classificação, Jogos e Artilharia, cada uma com ícone e rótulo, e a secção atual marcada por uma pílula atrás do ícone." width="300"> <img src="docs/screenshots/classificacao-mobile-dark.png" alt="A mesma classificação num telemóvel no tema escuro, com a mesma barra de navegação no rodapé." width="300">
+
+*On a phone the three sections move to a navigation bar fixed at the bottom, icon above label,
+the current one marked by a pill. Above `sm` they stay inline in the header — which is why the
+desktop shots above look no different.*
+
 ![Página do clube Palmeiras no tema claro: escudo, site oficial e perfil no Instagram, os números da temporada (1º lugar, 51 pontos, 24 jogos, saldo +24), o gráfico da campanha da 1ª à 24ª rodada, os últimos cinco resultados, o próximo jogo e os artilheiros do clube.](docs/screenshots/clube-palmeiras-light.png)
 
 ![A mesma página do clube Palmeiras no tema escuro: os mesmos escudo, links, números da temporada, gráfico da campanha e jogos, com as marcas das emissoras mantendo o fundo claro para continuarem legíveis.](docs/screenshots/clube-palmeiras-dark.png)

@@ -11,6 +11,7 @@
  *   npx tsx scripts/screenshot.ts                                   # classificação, light
  *   npx tsx scripts/screenshot.ts http://localhost:3000 dark
  *   npx tsx scripts/screenshot.ts https://brasileirao.mpbarbosa.com/clube/palmeiras
+ *   npx tsx scripts/screenshot.ts https://brasileirao.mpbarbosa.com/ dark mobile
  *
  * The output name comes from the path, so `/clube/palmeiras` writes
  * `clube-palmeiras-light.png` and `/` writes `classificacao-light.png`.
@@ -34,6 +35,21 @@ const LOCAL_DIR = path.join(OUT_DIR, "local");
 
 const url = process.argv[2] ?? SITE;
 const theme = (process.argv[3] ?? "light") as Theme;
+const device = process.argv[4] ?? "desktop";
+
+if (device !== "desktop" && device !== "mobile") {
+  console.error(`Error: device must be "desktop" or "mobile", got "${device}"`);
+  process.exit(1);
+}
+
+/**
+ * A phone, rather than a narrow desktop window.
+ *
+ * `isMobile` and `hasTouch` matter: the layout below `sm` is not merely the
+ * desktop one squeezed, and hover states do not exist on touch. 375x812 is the
+ * viewport the navigation bar was measured against.
+ */
+const mobile = device === "mobile";
 
 if (theme !== "light" && theme !== "dark") {
   console.error(`Error: theme must be "light" or "dark", got "${theme}"`);
@@ -68,14 +84,26 @@ const outDir = isLive ? OUT_DIR : LOCAL_DIR;
 
 /** `/` is the classificação; anything else names itself after its path. */
 const slug =
-  route === "/" ? "classificacao" : route.replace(/^\/|\/$/g, "").replace(/\//g, "-");
+  (route === "/" ? "classificacao" : route.replace(/^\/|\/$/g, "").replace(/\//g, "-")) +
+  (mobile ? "-mobile" : "");
 
 /**
  * A whole-page shot suits the table, whose point is that it has twenty rows and
  * coloured rails at both ends. The club page runs to every fixture of the
  * season, so a full-page capture would be mostly a list.
  */
-const fullPage = route === "/";
+/**
+ * A phone shot is exactly one screen.
+ *
+ * The boundary-aware crop below exists so a capture taller than a viewport does
+ * not slice a card in half. On a phone there is nothing to decide: the image is
+ * the screen, and it ends where the screen ends. It also settles the question
+ * the fixed navigation bar raises — the bar sits *over* the last stretch of
+ * content rather than ending it, so treating it as a crop boundary would cut at
+ * whatever it happens to cover. Capturing the viewport puts it exactly where a
+ * reader sees it.
+ */
+const fullPage = !mobile && route === "/";
 
 /** Roughly how tall a cropped shot may be, before it is trimmed to a boundary. */
 const MAX_HEIGHT = 1040;
@@ -124,10 +152,12 @@ const context = await browser.newContext({
   // The layout is capped at max-w-3xl, so a very wide shot is mostly empty
   // background. This is wide enough to show the full table without padding it
   // out with dead space.
-  viewport: { width: 960, height: fullPage ? 900 : 1040 },
+  viewport: mobile ? { width: 375, height: 812 } : { width: 960, height: fullPage ? 900 : 1040 },
+  ...(mobile ? { isMobile: true, hasTouch: true } : {}),
   // 2x would make a full-page shot of a 20-row table needlessly heavy for a
-  // README; 1.5 still looks sharp on a high-density display.
-  deviceScaleFactor: 1.5,
+  // README; 1.5 still looks sharp on a high-density display. A phone shot is a
+  // third of the width, so it can afford 2.
+  deviceScaleFactor: mobile ? 2 : 1.5,
   locale: "pt-BR",
   timezoneId: "America/Sao_Paulo",
 });
@@ -138,7 +168,7 @@ await context.addInitScript(
 );
 
 const page = await context.newPage();
-console.log(`==> ${url} (${theme})${isLive ? "" : " — local build, writing to docs/screenshots/local"}`);
+console.log(`==> ${url} (${theme}, ${device})${isLive ? "" : " — local build, writing to docs/screenshots/local"}`);
 await page.goto(url, { waitUntil: "networkidle" });
 
 await settle(page);
@@ -189,7 +219,9 @@ const cropHeight = async (): Promise<number> =>
   }, MAX_HEIGHT);
 
 const file = path.join(outDir, `${slug}-${theme}.png`);
-if (fullPage) {
+if (mobile) {
+  await page.screenshot({ path: file });
+} else if (fullPage) {
   await page.screenshot({ path: file, fullPage: true });
 } else {
   const height = await cropHeight();
