@@ -11,7 +11,7 @@
  * Server-injected, like the rest of `page-meta-core`: a rich-result parser is
  * not obliged to run JavaScript, and the ones that do run it late.
  */
-import { clubKey, findClub, instagramUrl, officialSiteUrl } from "@/club-core";
+import { clubKey, findClub, instagramUrl, officialSiteUrl, wikipediaUrl } from "@/club-core";
 import { findMatch } from "@/match-core";
 import { SITE_DESCRIPTION, SITE_NAME, type MetaContext } from "@/page-meta-core";
 import { canonicalPath } from "@/seo-core";
@@ -58,8 +58,22 @@ const ORGANIZATION: JsonLd = {
   name: COMPETITION,
 };
 
-/** A club as a `SportsTeam`. `nested` omits the context, which belongs only on
- *  a document's top-level node. */
+/**
+ * A club as a `SportsTeam`. `nested` omits the context, which belongs only on
+ * a document's top-level node.
+ *
+ * `sameAs` is not "the club's links" — it is the set of addresses that identify
+ * *this entity* unambiguously, which is what lets a parser reconcile our node
+ * with the one it already holds. schema.org names the Wikipedia article as the
+ * example of that, alongside the official site, so it belongs here more
+ * squarely than either of the two that were here first. Own addresses lead, the
+ * third-party reference follows.
+ *
+ * The **hino** is deliberately absent, though it sits beside the other three in
+ * the club header. A recording of the anthem is a work *about* the club, not an
+ * address that identifies it; asserting `sameAs` of a YouTube video claims the
+ * club and that video are the same thing.
+ */
 export const teamNode = (club: Club, origin: string, nested = true): JsonLd =>
   compact({
     ...(nested ? {} : { "@context": "https://schema.org" }),
@@ -70,7 +84,11 @@ export const teamNode = (club: Club, origin: string, nested = true): JsonLd =>
     logo: club.crest,
     sport: "Futebol",
     memberOf: ORGANIZATION,
-    sameAs: [officialSiteUrl(club.website), instagramUrl(club.instagram)].filter(Boolean),
+    sameAs: [
+      officialSiteUrl(club.website),
+      instagramUrl(club.instagram),
+      wikipediaUrl(club.wikipedia),
+    ].filter(Boolean),
   });
 
 const placeNode = (match: Match): JsonLd | undefined =>
