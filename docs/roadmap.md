@@ -1,7 +1,8 @@
 # Roadmap
 
-Where Portal Brasileirão is, what is next, and a phased plan for adopting
-Material Design 3. Written 2026-08-25.
+Where Portal Brasileirão is, what is next, and the phased plan for adopting
+Material Design 3 — which is now **complete and deployed**. Written 2026-08-25;
+the migration ran the same day.
 
 This is a planning document, not a specification. Anything here that contradicts
 `CLAUDE.md` or `CONTEXT.md` is wrong — those describe what the code actually
@@ -18,13 +19,16 @@ and the deploy asserts that the live commit is the one it just built.
   60s/15s with a circuit breaker. Everything the provider does not carry is
   curated on a workstation and committed: broadcasts, venues, highlights, club
   Instagram handles, broadcaster marks.
-- **Shape** — 12 pure `*-core.ts` modules (no I/O, unit-tested), 12 components,
+- **Shape** — 14 pure `*-core.ts` modules (no I/O, unit-tested), 15 components,
   one Express process serving the API and the SPA.
-- **Tests** — 224 unit, 283 end-to-end across desktop and mobile, all against a
+- **Tests** — 256 unit, 316 end-to-end across desktop and mobile, all against a
   frozen snapshot so a red build always means the code broke.
-- **Design** — Tailwind v4 with 64 semantic colour tokens, two themes, measured
-  contrast (worst text token 4.55 against AA's 4.5), and two primitives:
-  `Surface` and `Button`.
+- **Design** — Tailwind v4 with **Material Design 3** throughout: 47 colour
+  tokens generated from one seed, a shape scale, a type scale, state layers and
+  motion, in two themes. Contrast is **enforced rather than recorded** —
+  `npm run test:tokens` runs in CI and refuses a palette whose text pairings
+  fall below AA. Worst text pairing 4.59 across 70 pairings. Primitives:
+  `Surface`, `Button`, `StatusChip`, and the interaction constants.
 
 ## In progress
 
@@ -64,6 +68,29 @@ Recorded here because they are easy to undo by accident:
 
 # Migrating to Material Design 3
 
+**Complete, and deployed.** All six phases shipped between M0 and NavBar; the
+plan below is kept as written, with each phase carrying a note on what it
+actually did and what it cost. Where a phase departed from this plan — and
+several did — the departure and its reason sit under that phase rather than
+being edited out, because the reasoning is the part worth keeping.
+
+**Three things it did that were not on the plan**, each an accessibility gap
+that no test in the suite would have failed on:
+
+1. The app had **no focus styles at all** — no `focus:`, no `focus-visible:`, no
+   ring anywhere. Found in M2.
+2. The player card was **modal in name only**: it carried `aria-modal="true"`
+   while Tab walked straight out of it. Fixed in M4.
+3. **`prefers-reduced-motion` was honoured nowhere.** That gap *grew* during the
+   migration rather than shrinking — M2 added state layers and M4 added a
+   dialog, both motion, while nothing checked the preference. Closed in M5.
+
+**One documentation gap it exposed and did not close.** Every image in the
+README is a 960px capture, which is above the `sm` breakpoint — so the
+migration's single most visible change, a navigation bar replacing a hamburger
+below that width, appears in none of them. Whether the README documents one
+viewport or two is a product question, not a bug.
+
 ## The decision that comes first
 
 "Adopting MD3" can mean two quite different things, and they have very different
@@ -95,6 +122,12 @@ The reasoning is specific to this project rather than a general preference:
 
 Option B is worth revisiting for `PlayerOverlayCard`, where MD3's dialog gets
 focus trapping, scrim behaviour and motion right and ours is hand-rolled.
+
+**It was not needed.** M4 rebuilt that card on the browser's own `<dialog>` with
+`showModal()`, which supplies the focus trap, `inert` behind, the top layer and
+focus restoration — everything the library would have been imported for, at no
+bundle cost. So option B was never adopted anywhere, and the app still ships no
+UI dependency.
 
 ## Phases
 
@@ -556,11 +589,26 @@ Data, routing, caching, the provider integration, the deploy pipeline, and every
 `src/components/`, which is the strongest argument that it is safe to attempt
 incrementally — and the reason each phase can ship on its own.
 
-## Open questions
+## Open questions — answered, except one
 
-- Does the seed colour come from the competition, the app's own identity, or
-  stay neutral so 20 club colours do not clash with it?
-- Is a bundle increase acceptable at all, given the app currently ships no UI
-  dependency?
-- Should MD3 dynamic colour (palette derived from the club being viewed) be
-  explored, or is a stable palette better for a scoreboard people scan quickly?
+- ~~Does the seed colour come from the competition, the app's own identity, or
+  stay neutral?~~ **The app's own identity.** `#10b981`, the emerald already in
+  use, so the migration re-derived the palette the reader knew rather than
+  rebranding underneath them. Recorded in M0.
+- ~~Is a bundle increase acceptable at all?~~ **None was needed.** JS did not
+  grow at any phase. HCT is implemented in-repo, the icons are drawn in-repo, and
+  the dialog uses the browser's own `<dialog>` — each a place a dependency would
+  normally arrive. CSS is up about 4 kB raw for the token vocabulary.
+- **Still open: MD3 dynamic colour** — a palette derived from the club being
+  viewed. Not attempted, and the argument against is unchanged: this is a
+  scoreboard people scan in seconds, and a palette that shifts per club trades
+  recognition for novelty. The machinery would be cheap now that
+  `md3-color-core.ts` exists, which is exactly why it deserves a deliberate no
+  rather than a drift into yes.
+
+## What is left
+
+Nothing in this migration. The remaining items are the pre-existing ones under
+**Near term** above — the highlights backfill and the weekly broadcast sync —
+plus the README viewport question noted at the top of this section, which is a
+product decision rather than work.
