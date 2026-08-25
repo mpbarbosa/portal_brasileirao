@@ -285,7 +285,8 @@ tab" behave. Their click handlers bail out on modified clicks rather than swallo
 **Deep links depend on the server's SPA catch-all.** `/clube/1783` is not a file, so
 `express.static` misses and the `app.get("*")` handler serves `index.html`. That handler
 must stay registered *after* the API routes, or `/api/*` would be swallowed by it. Verified
-in both dev (Vite middleware, `appType: "spa"`) and the production bundle.
+in both dev (Vite middleware, `appType: "custom"` — see **Crawlers and structured data**
+for why) and the production bundle.
 
 Unrecognised paths and nonsense rounds resolve to something useful rather than 404 — a
 stale link should still land somewhere.
