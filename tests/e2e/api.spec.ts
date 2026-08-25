@@ -104,10 +104,14 @@ test.describe("API", () => {
     expect(body.data).toHaveLength(20);
   });
 
-  test("an unknown route falls through to the SPA, not a 404", async ({ request }) => {
+  test("an unknown route falls through to the SPA rather than the API", async ({ request }) => {
+    // Still the app shell, not a JSON error: the catch-all is registered after
+    // the API routes and neither swallows the other. The status is 404 because
+    // the path names nothing — see the routing spec for why the body stays.
     const response = await request.get("/rodada/qualquer-coisa");
 
-    expect(response.status()).toBe(200);
+    expect(response.status()).toBe(404);
+    expect(response.headers()["content-type"]).toContain("text/html");
     expect(await response.text()).toContain("Portal Brasileirão");
   });
 });

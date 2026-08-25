@@ -129,11 +129,18 @@ test.describe("Rotas", () => {
     await expect(page.locator("table tbody tr")).toHaveCount(20);
   });
 
-  test("an unknown path falls back to the table instead of erroring", async ({ page }) => {
+  test("an unknown path answers 404 but still lands on the table", async ({ page }) => {
+    // The two audiences are served differently on purpose. A reader following a
+    // stale link gets the classificação rather than an error page; a crawler
+    // gets the status code that stops it indexing infinitely many copies of it.
     const response = await page.goto("/rota-que-nao-existe");
 
-    expect(response?.status()).toBe(200);
+    expect(response?.status()).toBe(404);
     await expect(page.locator("table tbody tr")).toHaveCount(20);
+    await expect(page.locator('meta[name="robots"]')).toHaveAttribute(
+      "content",
+      "noindex, follow",
+    );
   });
 
   test("a nonsense round still shows fixtures", async ({ page }) => {
