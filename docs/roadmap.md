@@ -119,9 +119,43 @@ reviewable rather than described.
 **Exit criteria:** the seed colour and typeface decision are recorded in
 `CONTEXT.md`.
 
-### M1 — Colour roles and tonal palettes
+**Decided, 2026-08-25:**
+
+- **A, not B.** MD3 as a design system in our own tokens. No new runtime
+  dependency; the generator runs on a workstation and commits hexes. Confirmed
+  by the measured result — the client bundle is unchanged at 231.35 kB.
+- **Seed: `#10b981`**, the emerald the app already used as its accent. Recorded
+  in `CONTEXT.md` under **Semente**.
+- **Bundle budget:** no JS increase at all. CSS may grow by the size of the role
+  vocabulary; M1 spent 1.83 kB raw / 0.41 kB gzipped, part of which returns in
+  M2 when the legacy aliases are deleted.
+- **Typeface: still open**, and deliberately not decided here — it belongs to
+  M3, and nothing in M1 depends on it. The type *scale* remains separable from
+  the typeface.
+
+### M1 — Colour roles and tonal palettes — **done**
 
 The largest phase, and the one that carries the most value.
+
+Implemented by `scripts/md3-color-core.ts` (HCT: the CAM16 transform and the
+gamut solver) and `scripts/generate-md3-tokens.ts` (palettes, role mapping,
+contrast gate). Regenerate with `npm run sync-md3-tokens`; verify with
+`npm run test:tokens`, which fails if `src/index.css` has drifted from the
+generator or if any pairing falls below its floor.
+
+Two departures from a naive reading of the spec, both deliberate:
+
+- **The neutral palettes do not follow the seed.** MD3 derives neutrals from the
+  seed hue, which here would tint every surface green — a *larger* change than
+  the migration was asked to make, since the app's surfaces are slate and the
+  seed is 90 degrees away. The neutral hue is pinned to the existing slate;
+  Material's own `DynamicScheme` accepts explicit neutral palettes, so this is a
+  supported configuration rather than a departure from the system.
+- **`surface` is not emitted under its MD3 name.** MD3 spells the page
+  `surface`; this codebase spells the page `canvas` and a *card* `surface`.
+  Emitting both would declare `--color-surface` twice and leave the winner to
+  source order. `canvas` carries the role until M2 renames the call sites, which
+  keeps M1's promise that no component changes in the phase that changes colour.
 
 - Generate tonal palettes (0–100) from the seed.
 - Introduce MD3 role tokens: `primary`/`on-primary`/`primary-container`,
@@ -141,7 +175,61 @@ current light theme was deliberately *not* the dark one inverted — status
 colours were darkened to stay readable on a light page. Check that generated
 palettes preserve that, and override where they do not.
 
+**How that risk landed.** It was real, and the generated tones did not preserve
+it on their own. Light's faint tones had to be pulled darker than the mirrored
+dark tones would suggest, because the two themes' backgrounds are not mirror
+images: `raised` sits at tone 94 on light but tone 12 on dark, so light has far
+less room beneath it before AA fails. Tone 50 measured 3.86:1 against `raised`
+and now sits at 45.
+
+The gate also caught a pre-existing hazard rather than one the migration
+introduced. The 4.55 worst case recorded above was measured against `canvas`
+only, and stated as though it covered everything; light's `ink-faint` on
+`bg-raised` sat at about 4.35 and had never been checked.
+
+Be precise about the severity, because it is easy to overstate: that pairing is
+**latent, not shipped**. Every `bg-raised` call site pairs with `ink-soft` or
+`ink-muted`, and `ink-faint` appears only inside filled surfaces, where
+`bg-surface/50` over `canvas` resolves to about 4.64. Nothing renders the
+failing combination today.
+
+That makes it worth fixing rather than less so. A latent pairing below AA is a
+trap that springs the first time someone puts faint text on a badge, a hover
+state or a dialog — and it would ship silently, because a contrast figure
+recorded in a comment ages the moment anyone adds a background token. The
+generator now tests every text token against all three backgrounds on every
+run. **Worst text pairing is 4.59:1 across 70 pairings, both themes.**
+
+The theme-invariant tokens survived: `scrim` is MD3's own neutral tone 0, and
+the `plate` trio is excluded from the tonal system by name, so the broadcaster
+marks still sit on a light backing in both themes.
+
 ### M2 — Shape, elevation and state layers
+
+**Read the gate's margin report before retoning anything.** MD3 expresses
+elevation as tonal surface tint, so this phase moves the very surface tones the
+text tokens are measured against. `npm run test:tokens` prints the tightest
+pairings with their headroom, split into what components actually render and
+what is merely latent.
+
+Headroom is the number to read, not the ratio: a text pairing and a graphic
+pairing at the same ratio are not equally safe, because their floors differ
+(4.5 against 3:1). At the end of M1 the tightest *rendered* pairing is
+`light: ink-faint on surface` at **+0.33**; the tightest overall is
+`light: ink-faint on raised` at +0.09, but nothing paints it — every
+`bg-raised` call site pairs with `ink-soft` or `ink-muted`. Spend the scarce
+headroom on the first, not the second.
+
+**Backgrounds are not the same thing as background tokens.** A filled `Surface`
+is `bg-surface/50`, so the colour behind a card's text is a composite of
+`surface` over `canvas`, and measuring against the solid token measures a colour
+the app never paints. The gate composites it (`blend` in `md3-color-core.ts`).
+Note the direction of that correction flipped with the migration: the old
+palette's `canvas` was lighter than its `surface`, so compositing cost contrast;
+under MD3 the page is tone 98 and the card tone 96, so it gains a little. Do not
+carry the old intuition forward — `surface/50 over canvas` currently measures
++0.46, safer than the solid token, and that relationship is a property of the
+tone ordering rather than a fact about alpha.
 
 - **Shape scale.** Replace the three ad-hoc radii (`rounded-lg`, `rounded-xl`,
   `rounded`) with MD3's extra-small through extra-large tokens. Small surface
@@ -149,6 +237,41 @@ palettes preserve that, and override where they do not.
 - **Elevation.** MD3 expresses elevation as *tonal* surface tint, not shadow.
   This suits the app, which already distinguishes `surface`/`raised` by colour
   rather than shadow, and it is what makes MD3 dark themes legible.
+
+  **Open question: should `Surface`'s filled variant stop being `bg-surface/50`?**
+  MD3 encodes elevation in the token, so applying 50% alpha to it halves the
+  system's own signal. Worth deciding deliberately rather than inheriting.
+
+  Measure before deciding, because the intuitive argument overstates it. The
+  alpha halves the separation in *every* palette — that is what 50% does — so
+  this is not something the migration introduced. Tone separation between page
+  and card, solid then composited:
+
+  | | solid | after `/50` |
+  |---|---|---|
+  | MD3 light | −2.06 | −1.01 |
+  | pre-migration light | +1.82 | +1.09 |
+  | MD3 dark | +4.24 | +2.22 |
+  | pre-migration dark | +6.11 | +2.75 |
+
+  Light is essentially unchanged (1.01 against 1.09). The sign flips — MD3's
+  card is *darker* than its page, so the composite moves it lighter, toward the
+  page — but the magnitude does not. Dark is where MD3 differs: its ladder is
+  deliberately tighter, compensated by having more rungs.
+
+  Both palettes landing within a hundredth of one tone unit is the useful part:
+  "is one tone unit of separation enough?" was never an MD3 question. The
+  migration inherited it, unchanged, from what shipped before. So M2 decides
+  this on the merits — there is no previous behaviour worth preserving, and no
+  regression to weigh against the elevation model.
+
+  And tone is not the only cue. A filled `Surface` is `rounded-lg border
+  border-line` before it is a fill, and MD3 strengthens that border
+  considerably — `line` against `canvas` goes from 1.18:1 to **1.62:1** in
+  light and 1.38:1 to **1.99:1** in dark. The card reads as a card mostly
+  through its outline, which the migration improved by about 40%. So this is a
+  design call about honouring the elevation model, not a legibility defect.
+  `MatchPage`'s article uses the same 50% fill and should be decided with it.
 - **State layers.** The seven hand-written `hover:` utilities become a
   consistent overlay at MD3's prescribed opacities for hover, focus and pressed.
   This fixes a known inconsistency — a stepper with a `transition` its neighbour

@@ -257,6 +257,17 @@ Rules that follow from sharing a repository:
   `-ink` for text. Components say `text-ink-muted`, not `text-slate-400`. A raw
   `slate-*`, `emerald-*`, `rose-*` or `amber-*` utility in a component is a regression:
   before tokens there were 32 distinct colour utilities and five shades of grey text.
+- **The token *values* are generated, not chosen.** Since the Material Design 3
+  migration (`docs/roadmap.md`, phase M1) everything between the `MD3-TOKENS`
+  markers in `src/index.css` comes from `npm run sync-md3-tokens`. Do not hand-edit
+  inside those markers — `npm run test:tokens` fails if the file has drifted from
+  the generator, and it also re-runs the contrast gate. Each value is a *tone* from
+  a tonal palette seeded by `#10b981`, so contrast is a property of the tone pair
+  rather than something checked afterwards. The MD3 role names (`primary`,
+  `on-surface`, `outline`, the `surface-container` ladder) are emitted alongside the
+  names above, which are aliases onto them until M2 renames the call sites. One trap:
+  MD3 spells the page `surface`, but here that is still `canvas` and `surface` means
+  a card. `scripts/md3-color-core.ts` implements HCT so no runtime dependency is added.
 - **Two themes, one set of tokens.** `src/index.css` defines the palette under
   `@theme` (dark, the fallback) and again under `:root[data-theme="dark"]` and
   `:root[data-theme="light"]`. Components never change: only the values do. An inline
@@ -265,10 +276,19 @@ Rules that follow from sharing a repository:
   lives in `localStorage`. `useTheme` seeds its state from that attribute rather than
   recomputing, for the same reason.
   The light palette is not the dark one inverted: status colours go *darker* to stay
-  readable on a light page. Contrast was measured, not eyeballed — every text token clears
-  AA (worst 4.55) and `ink-ghost`, used only for underline decoration and the large score
-  separator, clears the 3:1 non-text floor. Fixing this also lifted **dark**'s `ink-faint`,
-  which had been shipping at 4.24.
+  readable on a light page, and the faint inks go darker still. This is not symmetry for
+  its own sake — `raised` sits at tone 94 on light but tone 12 on dark, so light has far
+  less room beneath it before AA fails. Contrast was measured, not eyeballed, and is now
+  enforced rather than recorded: `npm run test:tokens` checks every text token against
+  `canvas`, `surface` **and** `raised` in both themes and refuses to emit a palette that
+  falls below AA. Worst text pairing is 4.59 across 70 pairings; `ink-ghost`, used only
+  for underline decoration and the large score separator, clears the 3:1 non-text floor.
+  Checking all three backgrounds rather than `canvas` alone is what caught light's
+  `ink-faint` on `bg-raised` at about 4.35. That pairing is **latent, not shipped** — every
+  `bg-raised` call site today pairs with `ink-soft` or `ink-muted`, and `ink-faint` only
+  appears inside filled surfaces. Which is the point: it is a trap that springs the first
+  time someone puts faint text on a badge, a hover state or a dialog, and nothing would
+  have flagged it. Enforcing the floor beats recording a number that was true when written.
   `scrim` is deliberately dark in both themes: a near-white veil over a light page does not
   read as "the content behind is inactive". `plate` is its mirror — light in both themes,
   because the broadcaster marks it backs are dark artwork on a transparent ground and
