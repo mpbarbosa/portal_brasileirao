@@ -38,6 +38,13 @@ export interface Club {
    * `&list=RD…&start_radio=1` radio parameters instead of persisting them.
    */
   hymn?: string;
+  /**
+   * The club's article on the Portuguese Wikipedia, stored as the **title
+   * alone** ("Sociedade Esportiva Palmeiras"). The address is derived by
+   * `wikipediaUrl`, so the edition is written once and a pasted link's
+   * `?action=…` or `#História` does not persist.
+   */
+  wikipedia?: string;
   /** Home state (e.g. "RJ"). Absent for clubs derived from a provider that
    *  doesn't carry it — render it conditionally. */
   state?: string;

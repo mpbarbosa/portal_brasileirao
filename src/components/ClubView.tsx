@@ -8,6 +8,7 @@ import {
   resultFor,
   scorersFor,
   standingFor,
+  wikipediaUrl,
   type FormResult,
 } from "@/club-core";
 import { lastRecordedRound } from "@/rank-history-core";
@@ -62,10 +63,12 @@ const stat = (label: string, value: string) => (
  * to this file because they have one call site each, the same way `MatchPage`
  * keeps `Campaign` and `Side`.
  *
- * All three are monochrome outlines — Instagram's rather than Meta's gradient
- * mark, a plain globe for the club's own site, and a pair of quavers for the
- * hymn rather than YouTube's play button, which is the *host* and not the
- * thing. They take their colour from the link through `currentColor`, so they
+ * All four are monochrome outlines — Instagram's rather than Meta's gradient
+ * mark, a plain globe for the club's own site, a pair of quavers for the hymn
+ * rather than YouTube's play button, and an open book for the article rather
+ * than Wikipedia's puzzle globe: each names the *thing* and not the host that
+ * happens to keep it. The book also has to differ from the site's globe, which
+ * is the one pair a reader could otherwise confuse. They take their colour from the link through `currentColor`, so they
  * warm on hover with the rest of the text and need nothing of their own in
  * either theme; a fixed-colour logo would want a **Placa da emissora** the way
  * the broadcaster marks do, which is a lot of chrome for one glyph beside a
@@ -124,6 +127,19 @@ function HymnGlyph() {
   );
 }
 
+/** An open book: the club's article. Wikipedia's own mark is a *globe*, which
+ *  would read as a second official site beside the one already there — and it
+ *  is artwork with a fixed form rather than an outline that takes
+ *  `currentColor`. */
+function WikipediaGlyph() {
+  return (
+    <svg {...glyph}>
+      <path d="M12 7v13" />
+      <path d="M12 7C10.5 5 8 4.5 4 4.5v13C8 17.5 10.5 18 12 20c1.5-2 4-2.5 8-2.5v-13c-4 0-6.5.5-8 2.5" />
+    </svg>
+  );
+}
+
 export function ClubView({
   clubKey: key,
   loading = false,
@@ -164,6 +180,7 @@ export function ClubView({
   const clubScorers = scorersFor(scorers, code);
   const instagram = instagramUrl(club.instagram);
   const hymn = hymnUrl(club.hymn);
+  const wikipedia = wikipediaUrl(club.wikipedia);
 
   // Same domains as the Classificação, so the shape a reader recognises in the
   // table is the shape they find here — only the box is bigger. `clubCount`
@@ -192,9 +209,9 @@ export function ClubView({
             {club.name}
             {club.state ? ` · ${club.state}` : ""}
           </p>
-          {/* Both links read as the thing itself — a bare host, a bare handle —
-              rather than a full URL, which is what a reader recognises and what
-              keeps the pair on one line. */}
+          {/* Each link reads as the thing itself — a bare host, a bare handle,
+              a name — rather than a full URL, which is what a reader recognises
+              and what keeps the row from wrapping. */}
           <div className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-body-medium">
             {club.website && (
               <a
@@ -221,7 +238,8 @@ export function ClubView({
               </a>
             )}
             {/* Named for what it is rather than for its address: a video id is
-                nothing a reader recognises, unlike a host or a handle. */}
+                nothing a reader recognises, unlike a host or a handle. The same
+                holds for an article title, below. */}
             {hymn && (
               <a
                 href={hymn}
@@ -232,6 +250,18 @@ export function ClubView({
                 <HymnGlyph />
                 Hino do clube
                 <span className="sr-only"> — no YouTube (abre em nova aba)</span>
+              </a>
+            )}
+            {wikipedia && (
+              <a
+                href={wikipedia}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`truncate ${LINK_UNDERLINE}`}
+              >
+                <WikipediaGlyph />
+                Wikipédia
+                <span className="sr-only"> — verbete do clube (abre em nova aba)</span>
               </a>
             )}
           </div>
