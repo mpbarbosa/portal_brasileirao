@@ -36,6 +36,16 @@ after each round — the season behind a single row.*
 fixture carries the broadcasters showing it — ge, Globo, Premiere, SporTV, Cazé TV, YouTube
 and Prime Video, with anyone we have no mark for rendered as their own name.*
 
+![Página da partida Chapecoense 1 x 0 São Paulo no tema claro: placar com escudos, data, estádio, as emissoras que transmitiram, as campanhas dos dois clubes empilhadas e os links dos melhores momentos por emissora.](docs/screenshots/partida-554972-light.png)
+
+![A mesma página da partida no tema escuro, com o mesmo placar, emissoras, campanhas dos dois clubes e melhores momentos.](docs/screenshots/partida-554972-dark.png)
+
+*A match page, light and dark. Both clubs' campanhas are stacked rather than overlaid, so
+they share one scale and their rounds line up — the app has no series palette, and inventing
+a hue pair would be the only place colour carried meaning no token defines. **Melhores
+momentos** links each broadcaster's own package; where none is curated it falls back to a
+YouTube search and says so.*
+
 *A club page, in both themes. **Campanha** traces where the club sat after every round, and
 the marks under each fixture say which broadcaster showed it. The marks keep a light backing
 in both themes on purpose — Globo's circle and the Premiere wordmark are dark artwork on a
