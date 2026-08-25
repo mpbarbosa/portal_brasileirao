@@ -60,14 +60,30 @@ function NavigationBar({
                 href={formatRoute(routeFor(item.id))}
                 onClick={(event) => onSelect(event, item.id)}
                 aria-current={active ? "page" : undefined}
-                className={`flex flex-col items-center gap-1 px-2 pb-2 pt-3 ${
+                /* No horizontal padding, where four destinations could afford
+                   `px-2`. An item's minimum width is its 64dp indicator plus
+                   whatever padding it carries, and five items at 80dp is 400dp
+                   on a 375dp screen — the fifth label was clipped at the edge
+                   with no horizontal scroll to reveal it, which is the failure
+                   you only see on a phone. The padding is what gave way because
+                   MD3 does not specify it, while it does specify the 64x32dp
+                   indicator. Measured at 320, 360 and 375dp. */
+                className={`flex flex-col items-center gap-1 pb-2 pt-3 ${
                   active ? `text-ink ${FOCUS_RING}` : `text-ink-muted ${STATE_LAYER}`
                 }`}
               >
                 {/* The indicator is sized by MD3 rather than by the glyph, so
-                    all three line up whatever they happen to draw. */}
+                    all five line up whatever they happen to draw.
+
+                    64dp is MD3's width and what every screen from 360dp up
+                    gets. Below that the arithmetic simply forbids it: five
+                    indicators at 64dp is 320dp exactly, leaving nothing for
+                    "Classificação", whose label alone measures 79dp — so on a
+                    320dp screen the choice is a narrower indicator or a fifth
+                    destination clipped off the edge. It degrades rather than
+                    clips, and only where the spec cannot be satisfied at all. */}
                 <span
-                  className={`flex h-8 w-16 items-center justify-center rounded-full transition ${
+                  className={`flex h-8 w-14 items-center justify-center rounded-full transition min-[360px]:w-16 ${
                     active ? "bg-secondary-container text-on-secondary-container" : ""
                   }`}
                 >

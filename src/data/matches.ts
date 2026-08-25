@@ -252,7 +252,7 @@ export const SEED_MATCHES: Match[] = [
   { id: "554972", round: 24, kickoff: "2026-08-23T21:30:00Z", status: "FINISHED", homeCode: "1772", awayCode: "1776", homeGoals: 1, awayGoals: 0 },
   { id: "554978", round: 24, kickoff: "2026-08-23T21:30:00Z", status: "FINISHED", homeCode: "6685", awayCode: "4364", homeGoals: 1, awayGoals: 1 },
   { id: "554973", round: 24, kickoff: "2026-08-23T22:30:00Z", status: "FINISHED", homeCode: "4241", awayCode: "1779", homeGoals: 2, awayGoals: 1 },
-  { id: "554970", round: 24, kickoff: "2026-08-24T23:00:00Z", status: "SCHEDULED", homeCode: "1770", awayCode: "1768", homeGoals: null, awayGoals: null },
+  { id: "554970", round: 24, kickoff: "2026-08-24T23:00:00Z", status: "FINISHED", homeCode: "1770", awayCode: "1768", homeGoals: 2, awayGoals: 3 },
   { id: "554981", round: 25, kickoff: "2026-08-29T21:30:00Z", status: "SCHEDULED", homeCode: "1766", awayCode: "1782", homeGoals: null, awayGoals: null },
   { id: "554988", round: 25, kickoff: "2026-08-29T23:00:00Z", status: "SCHEDULED", homeCode: "1776", awayCode: "4286", homeGoals: null, awayGoals: null },
   { id: "554989", round: 25, kickoff: "2026-08-30T00:20:00Z", status: "SCHEDULED", homeCode: "1780", awayCode: "1771", homeGoals: null, awayGoals: null },

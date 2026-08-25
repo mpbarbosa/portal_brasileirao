@@ -79,3 +79,17 @@ export function ScorersIcon({ className }: IconProps) {
     </svg>
   );
 }
+
+/**
+ * Jogadores: a shirt. The elenco is read as a list of names, and a shirt is
+ * what a name is worn on — the other candidate, a person glyph, is what every
+ * account menu on the web already means.
+ */
+export function PlayersIcon({ className }: IconProps) {
+  return (
+    <svg {...base} className={className}>
+      <path d="M9 3 5 5 3.5 9l2.5 1v10h12V10l2.5-1L19 5l-4-2" />
+      <path d="M9 3a3 3 0 0 0 6 0" />
+    </svg>
+  );
+}

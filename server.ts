@@ -12,6 +12,7 @@ import {
   MATCHES_CACHE_TTL_MS,
   PLAYER_CACHE_TTL_MS,
   SCORERS_CACHE_TTL_MS,
+  SQUADS_CACHE_TTL_MS,
   STANDINGS_CACHE_TTL_MS,
   TtlCache,
 } from "@/cache-core";
@@ -21,15 +22,18 @@ import {
   mapMatches,
   mapPerson,
   mapScorers,
+  mapSquads,
   mapStandings,
   matchesUrl,
   personUrl,
   scorersUrl,
   standingsUrl,
+  teamsUrl,
   type MatchesResponse,
   type PersonResponse,
   type ScorersResponse,
   type StandingsResponse,
+  type TeamsResponse,
 } from "@/football-data-core";
 import { withBroadcasters, withVenues } from "@/broadcast-core";
 import { withHighlights } from "@/match-core";
@@ -48,6 +52,7 @@ import {
   sitemapXml,
 } from "@/seo-core";
 import { jsonLdScript, structuredData } from "@/structured-data-core";
+import { sortSquads } from "@/squad-core";
 import { computeStandings } from "@/standings-core";
 import { CLUBS as SEED_CLUBS } from "@/src/data/clubs";
 import { CLUB_HYMNS } from "@/src/data/club-hymns";
@@ -58,12 +63,14 @@ import { HIGHLIGHTS } from "@/src/data/highlights";
 import { VENUES } from "@/src/data/venues";
 import { SEED_MATCHES, SNAPSHOT_DATE } from "@/src/data/matches";
 import { SEED_SCORERS } from "@/src/data/scorers";
+import { SEED_SQUADS } from "@/src/data/squads";
 import type {
   ApiEnvelope,
   Club,
   Match,
   Player,
   Scorer,
+  Squad,
   Stadium,
   StandingsRow,
 } from "@/src/types";
@@ -475,6 +482,35 @@ const loadScorers = (): Promise<ApiEnvelope<Scorer[]>> =>
 app.get("/api/scorers", async (_req, res) => {
   const payload = await loadScorers();
   res.set("Cache-Control", "public, max-age=300");
+  res.json(payload);
+});
+
+/**
+ * Every club's elenco, from the one team-list request that carries all twenty.
+ *
+ * The clubs arriving on each squad are enriched the same way standings rows
+ * are, and for the same reason: the team payload has no website, handle, hymn
+ * or article, and the committed list does.
+ */
+const loadSquads = (): Promise<ApiEnvelope<Squad[]>> =>
+  loadCached<Squad[]>(
+    "squads",
+    SQUADS_CACHE_TTL_MS,
+    async () => {
+      const squads = mapSquads(await fetchFromProvider<TeamsResponse>(teamsUrl()));
+      const enriched = withClubDetails(
+        squads.map((squad) => squad.club),
+        CLUBS,
+      );
+      return sortSquads(squads.map((squad, index) => ({ ...squad, club: enriched[index] })));
+    },
+    () => sortSquads(SEED_SQUADS),
+  );
+
+app.get("/api/squads", async (_req, res) => {
+  const payload = await loadSquads();
+  // An elenco is the most static thing the app serves; see SQUADS_CACHE_TTL_MS.
+  res.set("Cache-Control", "public, max-age=3600");
   res.json(payload);
 });
 

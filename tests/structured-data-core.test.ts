@@ -209,3 +209,17 @@ test("the escaped payload is still valid JSON", () => {
 
   assert.equal((JSON.parse(json) as { name: string }).name, "Fla & <b>mengo</b>");
 });
+
+test("jogadores gets its own breadcrumb trail", () => {
+  const blocks = structuredData({ section: "jogadores" }, {}, "https://exemplo.test");
+  const crumbs = blocks.find((block) => block["@type"] === "BreadcrumbList") as
+    | { itemListElement: Array<{ name: string; item: string }> }
+    | undefined;
+
+  assert.ok(crumbs);
+  assert.deepEqual(
+    crumbs.itemListElement.map((entry) => entry.name),
+    ["Classificação", "Jogadores"],
+  );
+  assert.equal(crumbs.itemListElement[1].item, "https://exemplo.test/jogadores");
+});

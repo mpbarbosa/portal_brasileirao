@@ -3,6 +3,7 @@ import type { ReactElement } from "react";
 import {
   LiveIcon,
   MatchesIcon,
+  PlayersIcon,
   ScorersIcon,
   StandingsIcon,
 } from "@/src/components/SectionIcons";
@@ -19,15 +20,17 @@ import {
  * `clube`, `partida` and `estadio` are detail views reached by choosing
  * something, not menu entries — none has meaning without a selection, so all
  * three are absent from NAV_ITEMS on purpose. `estadio` in particular could
- * have been a fifth destination and deliberately is not: the bar has room for
- * exactly one more, and a stadium is something you arrive at from a match, not
- * a section you set out to browse.
+ * have been a fifth destination and deliberately is not — a stadium is
+ * something you arrive at from a match, not a section you set out to browse.
+ * `jogadores` took that fifth slot instead, and it is now the last one: see
+ * the bound on NAV_ITEMS below.
  */
 export type SectionId =
   | "classificacao"
   | "ao-vivo"
   | "jogos"
   | "artilharia"
+  | "jogadores"
   | "clube"
   | "partida"
   | "estadio";
@@ -49,10 +52,11 @@ export interface NavItem {
 
 /**
  * Material Design 3's navigation bar carries **three to five** destinations.
- * There are four. **One** more can be added before the pattern stops fitting,
- * and at the sixth the bar is off-spec — crowded rather than broken, so nothing
- * fails and nobody notices. A sixth section wants a different pattern (MD3's
- * navigation drawer), not a sixth entry here.
+ * There are now **five** — Jogadores took the last one. The bar is **full**: a
+ * sixth entry puts it off-spec, and off-spec here means crowded rather than
+ * broken, so nothing fails, no test goes red and nobody notices. A sixth
+ * section wants a different pattern (MD3's navigation drawer), not a sixth
+ * entry here.
  */
 export const NAV_ITEMS: NavItem[] = [
   {
@@ -82,6 +86,15 @@ export const NAV_ITEMS: NavItem[] = [
     label: "Artilharia",
     description: "Maiores goleadores do campeonato",
     Icon: ScorersIcon,
+  },
+  {
+    // Last, and the fifth of five. It is the least time-sensitive destination
+    // in the bar — an elenco moves in a transfer window, everything to its left
+    // moves every weekend.
+    id: "jogadores",
+    label: "Jogadores",
+    description: "Elencos de todos os clubes da Série A",
+    Icon: PlayersIcon,
   },
 ];
 

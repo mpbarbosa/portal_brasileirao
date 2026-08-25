@@ -1,8 +1,8 @@
 /**
  * sync-seed-data.ts
  * -----------------
- * Regenerate src/data/clubs.ts and src/data/matches.ts from the live
- * football-data.org API.
+ * Regenerate src/data/clubs.ts, src/data/matches.ts, src/data/scorers.ts and
+ * src/data/squads.ts from the live football-data.org API.
  *
  * These two files are the offline fallback: what the app serves when no token
  * is configured or the upstream is down. Hand-maintaining them guarantees
@@ -26,12 +26,16 @@ import {
   clubFromTeam,
   mapMatch,
   mapScorers,
+  mapSquads,
   matchesUrl,
   scorersUrl,
+  teamsUrl,
   type MatchesResponse,
   type ScorersResponse,
+  type TeamsResponse,
 } from "@/football-data-core";
-import type { Club, Match, Scorer } from "@/src/types";
+import { sortSquads, totalPlayers } from "@/squad-core";
+import type { Club, Match, Scorer, Squad } from "@/src/types";
 
 const ROOT = process.cwd();
 const COMPETITION = "BSA";
@@ -60,7 +64,13 @@ const get = async <T>(url: string): Promise<T> => {
   return (await response.json()) as T;
 };
 
-interface TeamsResponse {
+/**
+ * The competition's team list, read for three things at once: the club rows,
+ * the postal address the state is parsed out of, and the `squad` each team
+ * carries. That last one is why the elenco snapshot costs **no extra request** —
+ * the payload was already being fetched for the other two.
+ */
+interface SeedTeamsResponse {
   season?: { startDate?: string; endDate?: string };
   teams?: { id: number; address?: string | null; website?: string | null }[];
 }
@@ -71,8 +81,7 @@ const stateFrom = (address: string | null | undefined): string | null =>
 
 const ts = (value: string) => JSON.stringify(value);
 
-const teamsUrl = `https://api.football-data.org/v4/competitions/${COMPETITION}/teams`;
-const teamsPayload = await get<TeamsResponse>(teamsUrl);
+const teamsPayload = await get<SeedTeamsResponse & TeamsResponse>(teamsUrl(COMPETITION));
 const matchesPayload = await get<MatchesResponse>(matchesUrl(COMPETITION));
 const scorersPayload = await get<ScorersResponse>(scorersUrl(COMPETITION));
 
@@ -227,7 +236,74 @@ ${seedScorers.map(scorerLiteral).join("\n")}
 `,
 );
 
+/**
+ * The elenco snapshot, out of the team payload already in hand.
+ *
+ * Sorted here rather than at request time so the committed file reads as a
+ * list — twenty clubs alphabetically, each squad alphabetically — and a diff
+ * between two syncs shows who arrived and who left rather than a reshuffle.
+ */
+const seedSquads: Squad[] = sortSquads(mapSquads(teamsPayload));
+
+const emptySquads = seedSquads.filter((squad) => squad.players.length === 0);
+if (emptySquads.length) {
+  // Not fatal: a club with no roster upstream is a gap the page renders
+  // honestly. Worth saying out loud, because the alternative is noticing it
+  // months later on the page itself.
+  console.warn(
+    `Warning: no squad listed for ${emptySquads.map((s) => s.club.shortName).join(", ")}`,
+  );
+}
+
+const playerLiteral = (player: Squad["players"][number]) =>
+  `    { id: ${ts(player.id)}, name: ${ts(player.name)}` +
+  (player.position ? `, position: ${ts(player.position)}` : "") +
+  (player.nationality ? `, nationality: ${ts(player.nationality)}` : "") +
+  (player.dateOfBirth ? `, dateOfBirth: ${ts(player.dateOfBirth)}` : "") +
+  ` },`;
+
+writeFileSync(
+  path.join(ROOT, "src/data/squads.ts"),
+  `import { CLUBS_BY_CODE } from "@/src/data/clubs";
+import type { Squad } from "@/src/types";
+
+/**
+ * GENERATED FILE — do not edit by hand.
+ * Regenerate with: npx tsx scripts/sync-seed-data.ts
+ *
+ * Frozen elencos (${seedSquads.length} clubs, ${totalPlayers(seedSquads)} players), taken
+ * ${generatedOn} from football-data.org. The offline fallback behind
+ * \`/api/squads\`, so it goes stale the moment a transfer window opens.
+ *
+ * Clubs are referenced through \`CLUBS_BY_CODE\` rather than restated, so this
+ * file cannot come to disagree with \`clubs.ts\` about a crest or a name — both
+ * are generated from the same payload in the same run, and one copy of a club
+ * is one fewer thing to keep in step.
+ *
+ * \`shirtNumber\` is absent throughout: the competition's team list does not
+ * carry it for anyone. The player card fills it in from \`/api/players/:id\`.
+ */
+const squad = (code: string, players: Squad["players"]): Squad => {
+  const club = CLUBS_BY_CODE.get(code);
+  if (!club) throw new Error(\`src/data/squads.ts names club \${code}, absent from clubs.ts\`);
+  return { club, players };
+};
+
+export const SEED_SQUADS: Squad[] = [
+${seedSquads
+  .map(
+    (entry) =>
+      `  squad(${ts(entry.club.code)}, [\n` +
+      entry.players.map(playerLiteral).join("\n") +
+      `\n  ]),`,
+  )
+  .join("\n")}
+];
+`,
+);
+
 console.log(`Wrote src/data/clubs.ts    — ${clubs.length} clubs`);
 console.log(`Wrote src/data/matches.ts  — ${seedMatches.length} fixtures (through round ${lastPlayed})`);
 console.log(`Wrote src/data/scorers.ts  — ${seedScorers.length} scorers`);
+console.log(`Wrote src/data/squads.ts   — ${seedSquads.length} elencos, ${totalPlayers(seedSquads)} players`);
 console.log(`Snapshot date: ${generatedOn}`);
