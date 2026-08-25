@@ -161,17 +161,18 @@ test.describe("Clube", () => {
     await expect(page.locator("main > article")).toContainText(name);
   });
 
-  /* Selected by destination rather than position: the header now holds three
+  /* Selected by destination rather than position: the header now holds four
      external links, and picking one by index is what broke these specs when a
      name first became a control. The site link is the one defined by exclusion,
      so every link added beside it has to be excluded here too — the hymn was
      the first, and it matched as the site until it was. */
   const siteLink = (page: Page) =>
     page.locator(
-      "main header a[target='_blank']:not([href*='instagram.com']):not([href*='youtube.com'])",
+      "main header a[target='_blank']:not([href*='instagram.com']):not([href*='youtube.com']):not([href*='wikipedia.org'])",
     );
   const instagramLink = (page: Page) => page.locator("main header a[href*='instagram.com']");
   const hymnLink = (page: Page) => page.locator("main header a[href*='youtube.com']");
+  const wikipediaLink = (page: Page) => page.locator("main header a[href*='wikipedia.org']");
 
   test("the club page links to its official site", async ({ page }) => {
     await openClubAt(page, 1);
@@ -235,7 +236,30 @@ test.describe("Clube", () => {
     expect(text).not.toContain("youtube.com");
   });
 
-  test("every club carries all three links", async ({ page }) => {
+  test("the club page links to its Wikipedia article", async ({ page }) => {
+    await openClubAt(page, 1);
+
+    const wikipedia = wikipediaLink(page);
+    await expect(wikipedia).toBeVisible();
+    // The Portuguese edition, and a bare article address: the title alone is
+    // stored, so no `?action=edit` or `#seção` rides along from a copied link.
+    await expect(wikipedia).toHaveAttribute("href", /^https:\/\/pt\.wikipedia\.org\/wiki\/[^?#]+$/);
+    await expect(wikipedia).toHaveAttribute("target", "_blank");
+    await expect(wikipedia).toHaveAttribute("rel", /noopener/);
+  });
+
+  test("the article link reads as its name, not its address", async ({ page }) => {
+    await openClubAt(page, 1);
+
+    // Like the hymn: the club's full legal name is not what a reader scanning
+    // a row of links is looking for. The trailing screen-reader text is
+    // deliberate, so match the start.
+    const text = (await wikipediaLink(page).innerText()).trim();
+    expect(text).toMatch(/^Wikipédia/);
+    expect(text).not.toContain("wikipedia.org");
+  });
+
+  test("every club carries all four links", async ({ page }) => {
     // A missing handle renders as no link at all rather than a broken one, so
     // this would pass silently if the merge stopped working — hence checking
     // that the club actually named in the URL is the one that has it.
@@ -249,6 +273,10 @@ test.describe("Clube", () => {
     await expect(hymnLink(page)).toHaveAttribute(
       "href",
       "https://www.youtube.com/watch?v=DiKvx0gRfaQ",
+    );
+    await expect(wikipediaLink(page)).toHaveAttribute(
+      "href",
+      "https://pt.wikipedia.org/wiki/Sociedade_Esportiva_Palmeiras",
     );
   });
 });

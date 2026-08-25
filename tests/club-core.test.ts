@@ -3,6 +3,7 @@ import { test } from "node:test";
 
 import { CLUBS } from "@/src/data/clubs";
 import { CLUB_HYMNS } from "@/src/data/club-hymns";
+import { CLUB_WIKIPEDIA } from "@/src/data/club-wikipedia";
 import {
   clubKey,
   clubMatches,
@@ -19,8 +20,10 @@ import {
   withClubDetails,
   withHymns,
   withInstagram,
+  withWikipedia,
   hymnUrl,
   instagramUrl,
+  wikipediaUrl,
 } from "@/club-core";
 import type { Match, Scorer, StandingsRow } from "@/src/types";
 
@@ -346,4 +349,97 @@ test("every club in the division has a hymn", () => {
   const missing = CLUBS.filter((entry) => !hymnUrl(CLUB_HYMNS[entry.code]));
 
   assert.deepEqual(missing.map((entry) => entry.shortName), []);
+});
+
+test("an article link is the title, however it was pasted", () => {
+  assert.equal(
+    wikipediaUrl("Sociedade Esportiva Palmeiras"),
+    "https://pt.wikipedia.org/wiki/Sociedade_Esportiva_Palmeiras",
+  );
+  // Underscores are what the address uses; either spelling names one article.
+  assert.equal(
+    wikipediaUrl("Sociedade_Esportiva_Palmeiras"),
+    "https://pt.wikipedia.org/wiki/Sociedade_Esportiva_Palmeiras",
+  );
+  // What a person copies from the address bar, from a section, or from the
+  // edit view. None of the three belongs in the file.
+  assert.equal(
+    wikipediaUrl("https://pt.wikipedia.org/wiki/Sociedade_Esportiva_Palmeiras"),
+    "https://pt.wikipedia.org/wiki/Sociedade_Esportiva_Palmeiras",
+  );
+  assert.equal(
+    wikipediaUrl("https://pt.wikipedia.org/wiki/Sociedade_Esportiva_Palmeiras#História"),
+    "https://pt.wikipedia.org/wiki/Sociedade_Esportiva_Palmeiras",
+  );
+  assert.equal(
+    wikipediaUrl("https://pt.wikipedia.org/wiki/Santos_Futebol_Clube?action=edit"),
+    "https://pt.wikipedia.org/wiki/Santos_Futebol_Clube",
+  );
+});
+
+test("an accented title is encoded, not transliterated", () => {
+  // The opposite of a club slug: stripping the accent there keeps the address
+  // typeable, but "Gremio Foot-Ball Porto Alegrense" is simply not an article.
+  assert.equal(
+    wikipediaUrl("Grêmio Foot-Ball Porto Alegrense"),
+    "https://pt.wikipedia.org/wiki/Gr%C3%AAmio_Foot-Ball_Porto_Alegrense",
+  );
+  // Already-encoded input survives a round trip rather than being encoded twice.
+  assert.equal(
+    wikipediaUrl("https://pt.wikipedia.org/wiki/Gr%C3%AAmio_Foot-Ball_Porto_Alegrense"),
+    "https://pt.wikipedia.org/wiki/Gr%C3%AAmio_Foot-Ball_Porto_Alegrense",
+  );
+});
+
+test("anything that is not a pt article yields no link", () => {
+  // Renders as no link at all, rather than one that lands on a 404. Another
+  // edition is not rewritten: the pt title is rarely the en one, so an "en."
+  // link rewritten to "pt." would look right and resolve to nothing.
+  assert.equal(wikipediaUrl("https://en.wikipedia.org/wiki/Santos_FC"), null);
+  assert.equal(wikipediaUrl("https://pt.wikipedia.org/w/index.php?title=Santos_Futebol_Clube"), null);
+  assert.equal(wikipediaUrl("https://example.com/wiki/Santos_Futebol_Clube"), null);
+  // Characters Wikipedia forbids in a title.
+  assert.equal(wikipediaUrl("Santos [Futebol] Clube"), null);
+  assert.equal(wikipediaUrl("not a url/"), null);
+  assert.equal(wikipediaUrl("   "), null);
+  assert.equal(wikipediaUrl(""), null);
+  assert.equal(wikipediaUrl(undefined), null);
+});
+
+test("curated articles attach to the club list by code", () => {
+  const clubs = [club("1769", "Palmeiras", "palmeiras"), club("9999", "Outro", "outro")];
+
+  const [palmeiras, outro] = withWikipedia(clubs, { "1769": "Sociedade Esportiva Palmeiras" });
+
+  assert.equal(palmeiras.wikipedia, "Sociedade Esportiva Palmeiras");
+  assert.equal(outro.wikipedia, undefined);
+});
+
+test("the article rides along into live payloads", () => {
+  // Like the handle, the website and the hymn: no endpoint carries it, so the
+  // committed list is what supplies it at request time.
+  const live = [club("1769", "Palmeiras", "palmeiras")];
+  const known = [
+    { ...club("1769", "Palmeiras", "palmeiras"), wikipedia: "Sociedade Esportiva Palmeiras" },
+  ];
+
+  const [merged] = withClubDetails(live, known);
+
+  assert.equal(merged.wikipedia, "Sociedade Esportiva Palmeiras");
+});
+
+test("every club in the division has an article", () => {
+  // The link is either on all twenty pages or it is a gap the reader notices.
+  const missing = CLUBS.filter((entry) => !wikipediaUrl(CLUB_WIKIPEDIA[entry.code]));
+
+  assert.deepEqual(missing.map((entry) => entry.shortName), []);
+});
+
+test("no two clubs share an article", () => {
+  // A title keyed to the wrong club id is invisible in review — both pages
+  // render a working link, and one of them is another club's. The same failure
+  // the seed generator rejects for names and codes.
+  const titles = CLUBS.map((entry) => CLUB_WIKIPEDIA[entry.code]);
+
+  assert.equal(new Set(titles).size, titles.length);
 });
