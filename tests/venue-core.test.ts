@@ -9,7 +9,6 @@ import {
   stadiumMatches,
   stadiumSlug,
   venueName,
-  wikipediaUrl,
 } from "@/venue-core";
 import type { Club, Match, StadiumFacts, Venue } from "@/src/types";
 
@@ -224,20 +223,4 @@ test("capacity is grouped pt-BR, and absent when uncurated", () => {
   assert.equal(capacityLabel(curated), "78.838");
   // Not "0" and not "—": the caller leaves the tile out entirely.
   assert.equal(capacityLabel(bare), null);
-});
-
-test("a wikipedia title becomes a pt article address", () => {
-  assert.equal(
-    wikipediaUrl("Estádio Jornalista Mário Filho"),
-    "https://pt.wikipedia.org/wiki/Est%C3%A1dio_Jornalista_M%C3%A1rio_Filho",
-  );
-  // Underscores in, spaces in — same address either way.
-  assert.equal(wikipediaUrl("Arena_Condá"), wikipediaUrl("Arena Condá"));
-});
-
-test("an implausible wikipedia title yields no link rather than a broken one", () => {
-  assert.equal(wikipediaUrl(undefined), null);
-  assert.equal(wikipediaUrl("   "), null);
-  assert.equal(wikipediaUrl("Maracanã#História"), null);
-  assert.equal(wikipediaUrl("[[Maracanã]]"), null);
 });

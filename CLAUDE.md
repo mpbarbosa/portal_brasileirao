@@ -367,6 +367,17 @@ title and channel) before being written down, because a search for a club's hymn
 returns near-misses that the URL does not distinguish — the hymn of the *city* of
 Santos among the club's, for one.
 
+`src/data/club-wikipedia.ts` holds each club's article on the **Portuguese**
+Wikipedia, hand-maintained for the same reason. It stores the title alone
+("Sociedade Esportiva Palmeiras"); `wikipediaUrl` in `club-core.ts` builds the
+address. The title is not derivable from data the app holds — `name` is the
+provider's abbreviation ("SE Palmeiras"), `shortName` the popular name, and the
+article sits at the full legal one, with the club's own spelling ("Foot-Ball",
+"Foot Ball", "Athletico"). Every title was checked through the MediaWiki API
+(`/w/api.php?action=query&titles=…&redirects=1&prop=extracts&exintro=1`, which
+reports existence, redirects and the first sentence) before being written down;
+all twenty resolve directly, and each intro names the club.
+
 `src/data/stadiums.ts` holds each ground's official name, capacity and year of
 inauguration, hand-maintained for the same reason as the hymns — **no provider carries
 any of it**, and CBF's feed stops at a name, a city and a state. Keyed by stadium slug,

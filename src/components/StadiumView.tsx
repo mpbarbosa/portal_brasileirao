@@ -1,16 +1,10 @@
-import { clubKey } from "@/club-core";
+import { clubKey, wikipediaUrl } from "@/club-core";
 import { formatRoute } from "@/route-core";
 import { ClubCrest } from "@/src/components/ClubCrest";
 import { BACK_LINK, LINK_UNDERLINE } from "@/src/components/interaction";
 import { MatchList } from "@/src/components/MatchList";
 import { Surface } from "@/src/components/Surface";
-import {
-  capacityLabel,
-  findStadium,
-  stadiumLocation,
-  stadiumMatches,
-  wikipediaUrl,
-} from "@/venue-core";
+import { capacityLabel, findStadium, stadiumLocation, stadiumMatches } from "@/venue-core";
 import type { Club, Match, Stadium } from "@/src/types";
 
 interface StadiumViewProps {

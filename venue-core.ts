@@ -139,34 +139,6 @@ export const findStadium = (stadiums: Stadium[], key: string): Stadium | null =>
   return stadiums.find((stadium) => stadium.slug === needle) ?? null;
 };
 
-/**
- * The canonical article address for a Wikipedia title.
- *
- * Stores the **title alone** ("Estádio Jornalista Mário Filho") and builds the
- * address here, so a link pasted from an article's edit view or a section
- * heading does not carry `?action=edit` or `#História` into the data file.
- *
- * The edition is fixed to **pt**. Underscores are what the address uses and
- * spaces are what the file reads, so the title is stored with spaces and
- * converted here; the rest is percent-encoded rather than transliterated,
- * because unlike a slug — where stripping accents keeps a URL typeable —
- * `Estadio…` is simply a different article title and would not resolve.
- *
- * Returns null for anything implausible, which the UI renders as no link rather
- * than a broken one.
- *
- * NOTE: a `wikipediaUrl` with these same semantics is being added to
- * `club-core.ts` by the club-article work in flight. When that lands, one of
- * the two should go — a second implementation of an address builder is how the
- * club link and the stadium link come to encode a title differently.
- */
-export const wikipediaUrl = (raw: string | undefined): string | null => {
-  const title = raw?.trim().replace(/_/g, " ");
-  if (!title || /[#<>[\]|{}]/.test(title)) return null;
-
-  return `https://pt.wikipedia.org/wiki/${encodeURIComponent(title.replace(/ /g, "_"))}`;
-};
-
 /** "Rio de Janeiro – RJ", the one-line location used in headers and metadata. */
 export const stadiumLocation = (stadium: Stadium): string =>
   `${stadium.city} – ${stadium.state}`;
