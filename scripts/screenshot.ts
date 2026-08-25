@@ -29,6 +29,8 @@ import { THEME_STORAGE_KEY, type Theme } from "@/theme-core";
 
 const SITE = "https://brasileirao.mpbarbosa.com";
 const OUT_DIR = path.join(process.cwd(), "docs/screenshots");
+/** Captures of anything that is not the live site. Gitignored. */
+const LOCAL_DIR = path.join(OUT_DIR, "local");
 
 const url = process.argv[2] ?? SITE;
 const theme = (process.argv[3] ?? "light") as Theme;
@@ -46,6 +48,24 @@ try {
   process.exit(1);
 }
 
+/**
+ * A shot of a dev server never overwrites a committed one.
+ *
+ * The filename comes from the route, so running this against localhost writes
+ * exactly the path a README image already occupies — silently replacing a
+ * picture of production with one of whatever is checked out. That is not
+ * hypothetical: another session checking the match page against its own build
+ * overwrote a committed shot, deleted it as a stray, and only noticed because
+ * `git status` said `D` rather than nothing.
+ *
+ * So only the live site writes to docs/screenshots. Everything else lands in
+ * docs/screenshots/local, which is ignored — which also makes a before/after
+ * comparison natural, since the committed shot and the local one sit side by
+ * side under different roots.
+ */
+const isLive = url.startsWith(SITE);
+const outDir = isLive ? OUT_DIR : LOCAL_DIR;
+
 /** `/` is the classificação; anything else names itself after its path. */
 const slug =
   route === "/" ? "classificacao" : route.replace(/^\/|\/$/g, "").replace(/\//g, "-");
@@ -60,7 +80,7 @@ const fullPage = route === "/";
 /** Roughly how tall a cropped shot may be, before it is trimmed to a boundary. */
 const MAX_HEIGHT = 1040;
 
-mkdirSync(OUT_DIR, { recursive: true });
+mkdirSync(outDir, { recursive: true });
 
 /**
  * Wait for the page to be worth photographing.
@@ -118,7 +138,7 @@ await context.addInitScript(
 );
 
 const page = await context.newPage();
-console.log(`==> ${url} (${theme})`);
+console.log(`==> ${url} (${theme})${isLive ? "" : " — local build, writing to docs/screenshots/local"}`);
 await page.goto(url, { waitUntil: "networkidle" });
 
 await settle(page);
@@ -163,7 +183,7 @@ const cropHeight = async (): Promise<number> =>
     return Math.round(cut + pad);
   }, MAX_HEIGHT);
 
-const file = path.join(OUT_DIR, `${slug}-${theme}.png`);
+const file = path.join(outDir, `${slug}-${theme}.png`);
 if (fullPage) {
   await page.screenshot({ path: file, fullPage: true });
 } else {
