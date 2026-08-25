@@ -179,6 +179,19 @@ parse/format cases in `route-core.ts`, a case in `App`'s view switch, and — if
 data — a pure mapper in `football-data-core.ts`, a seed snapshot in
 `scripts/sync-seed-data.ts`, and a cached route in `server.ts`. `NavBar` never changes.
 
+**A new `Route` variant is a four-file change, and only one of the four is enforced.**
+Since the crawl surface landed, a variant also needs a case in `page-meta-core.ts`, a
+`pageStatus` rule and sitemap entry in `seo-core.ts`, and breadcrumbs in
+`structured-data-core.ts`. Only `structured-data-core`'s `trailFor` is caught by the
+compiler — its switch returns a value, so a missing case makes it non-exhaustive and
+`tsc` fails. The other three fall through to defaults and fail **silently**: the page
+gets generic metadata, is absent from the sitemap, and — the one that actually
+matters — `pageStatus` answers **200 with a copy of the shell** for every unrecognised
+argument under the new section. That is an unbounded set of duplicate pages offered to a
+crawler, and nothing goes red. `/estadio/qualquer-coisa` did exactly this until the rule
+was added. Adding the variant is the easy half; grep the other three files for a sibling
+section (`"partida"` is the closest analogue) and follow it through.
+
 The `NAV_ITEMS` entry carries its own `Icon`, which is *why* `NavBar` never changes — an
 icon looked up by id inside `NavBar` would break that promise the first time anyone added
 a section.
