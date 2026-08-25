@@ -148,3 +148,9 @@ playwright-report/
 blob-report/
 playwright/.cache/
 
+
+# Per-session git worktrees. Several Claude sessions work this checkout at
+# once; each takes its own worktree and branch so their edits cannot collide.
+# Ignored because a worktree is a whole second checkout — one `git add -A`
+# from any session would otherwise commit another session's entire tree.
+.claude/worktrees/
