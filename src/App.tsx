@@ -157,6 +157,7 @@ export function App() {
               match={findMatch(matches?.matches ?? [], route.id)}
               loading={loading}
               clubs={matches?.clubs ?? []}
+              rankHistory={rankHistory}
               onBack={() => navigate({ section: "jogos", round: null })}
               onNavigate={(path) => navigate(parseRoute(path))}
             />

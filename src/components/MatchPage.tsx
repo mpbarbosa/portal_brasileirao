@@ -9,8 +9,10 @@ import { BroadcasterMark } from "@/src/components/BroadcasterMark";
 import { controlClasses } from "@/src/components/Button";
 import { ClubCrest } from "@/src/components/ClubCrest";
 import { clubKey } from "@/club-core";
+import { lastRecordedRound } from "@/rank-history-core";
+import { RankSparkline } from "@/src/components/RankSparkline";
 import { formatRoute } from "@/route-core";
-import type { Club, Match } from "@/src/types";
+import type { Club, ClubRankHistory, Match, RankAtRound } from "@/src/types";
 
 interface MatchPageProps {
   match: Match | null;
@@ -20,6 +22,8 @@ interface MatchPageProps {
   clubs: Club[];
   onBack: () => void;
   onNavigate: (path: string) => void;
+  /** Every club's campanha. Omit and the section is left out entirely. */
+  rankHistory?: ClubRankHistory[];
 }
 
 const STATUS_LABEL: Record<Match["status"], string> = {
@@ -51,6 +55,53 @@ const kickoffLabel = (kickoff: string): string => {
     minute: "2-digit",
   });
 };
+
+/**
+ * One club's campanha, stacked with its opponent's rather than drawn on shared
+ * axes in two colours.
+ *
+ * Two lines in one box would compare better, but only by introducing a
+ * categorical palette: this app has semantic tokens and no series colours, so a
+ * second hue would need a CVD-safe pair, a legend, and a rule for which club
+ * gets which — none of which exists yet, for one chart. Stacked small multiples
+ * compare almost as well, because the two share one scale and their rounds line
+ * up vertically, and they keep the mark identical to the Classificação and the
+ * club page.
+ */
+function Campaign({
+  club,
+  code,
+  entries,
+  clubCount,
+  lastRound,
+}: {
+  club: Club | null;
+  code: string;
+  entries: RankAtRound[];
+  clubCount: number;
+  lastRound: number;
+}) {
+  const first = entries[0];
+  const last = entries[entries.length - 1];
+
+  return (
+    <div>
+      <p className="mb-1 text-xs font-medium">{club?.shortName ?? code}</p>
+      <RankSparkline
+        entries={entries}
+        clubCount={clubCount}
+        lastRound={lastRound}
+        size="page"
+      />
+      <p className="mt-1 flex justify-between text-xs tabular-nums text-ink-faint">
+        <span>{first.position}º · 1ª rodada</span>
+        <span>
+          {last.position}º · {last.round}ª rodada
+        </span>
+      </p>
+    </div>
+  );
+}
 
 /** A club's side of the scoreboard: crest, name, and a link to its page. */
 function Side({ club, code, onNavigate }: { club: Club | null; code: string; onNavigate: (p: string) => void }) {
@@ -86,7 +137,14 @@ function Side({ club, code, onNavigate }: { club: Club | null; code: string; onN
  * no broadcast data, both arriving from the CBF sync — so each section renders
  * only when its data exists rather than showing an empty row.
  */
-export function MatchPage({ match, loading = false, clubs, onBack, onNavigate }: MatchPageProps) {
+export function MatchPage({
+  match,
+  loading = false,
+  clubs,
+  onBack,
+  onNavigate,
+  rankHistory,
+}: MatchPageProps) {
   if (!match) {
     return (
       <>
@@ -101,6 +159,15 @@ export function MatchPage({ match, loading = false, clubs, onBack, onNavigate }:
   }
 
   const { home, away } = clubsOf(match, clubs);
+  const campaignOf = (code: string) =>
+    rankHistory?.find((entry) => entry.clubCode === code)?.entries ?? [];
+  const homeCampaign = campaignOf(match.homeCode);
+  const awayCampaign = campaignOf(match.awayCode);
+  const lastRound = lastRecordedRound(rankHistory ?? []);
+  // Both or neither: one club's season drawn beside a gap invites the reading
+  // that the other has not played, rather than that we lack its history.
+  const showCampaigns =
+    lastRound > 0 && homeCampaign.length > 0 && awayCampaign.length > 0;
   const venue = venueLabel(match);
   const videos = highlights(match);
   const played = match.homeGoals !== null && match.awayGoals !== null;
@@ -160,6 +227,30 @@ export function MatchPage({ match, loading = false, clubs, onBack, onNavigate }:
           </div>
         )}
       </dl>
+
+      {showCampaigns && (
+        <section className="mt-6">
+          <h3 className="mb-2 text-sm font-medium text-ink-muted">Campanha</h3>
+          {/* Stacked, not side by side: the rounds line up vertically, so "who
+              was above whom in round 12" is read by looking straight down. */}
+          <div className="space-y-4 rounded-lg border border-line bg-surface/50 px-3 py-3">
+            <Campaign
+              club={home}
+              code={match.homeCode}
+              entries={homeCampaign}
+              clubCount={rankHistory?.length ?? 0}
+              lastRound={lastRound}
+            />
+            <Campaign
+              club={away}
+              code={match.awayCode}
+              entries={awayCampaign}
+              clubCount={rankHistory?.length ?? 0}
+              lastRound={lastRound}
+            />
+          </div>
+        </section>
+      )}
 
       {hasHighlights(match) && (
         <section className="mt-6">

@@ -50,11 +50,66 @@ test.describe("Página da partida", () => {
     await expect(link).toHaveAttribute("href", /^\/partida\/\d+$/);
   });
 
+  test("the match page draws both clubs' campanhas", async ({ page }) => {
+    await openFirstMatch(page, PLAYED_ROUND);
+
+    const sparklines = page.locator("main section svg[role='img']");
+
+    await expect(sparklines).toHaveCount(2);
+    await expect(sparklines.first()).toHaveAttribute("aria-label", /^Campanha: /);
+    await expect(sparklines.last()).toHaveAttribute("aria-label", /^Campanha: /);
+  });
+
+  test("both campanhas are drawn on one scale", async ({ page }) => {
+    // The whole reason they are stacked rather than overlaid: rounds line up
+    // vertically, so "who was above whom in round 12" is read by looking
+    // straight down. That only holds if both boxes are the same width and the
+    // same domain — two clubs scaled to their own ranges would be a lie told
+    // convincingly.
+    await openFirstMatch(page, PLAYED_ROUND);
+
+    const boxes = await page.locator("main section svg[role='img']").evaluateAll((nodes) =>
+      nodes.map((node) => ({
+        width: Math.round(node.getBoundingClientRect().width),
+        viewBox: node.getAttribute("viewBox"),
+        lastX: (node.querySelector("polyline")?.getAttribute("points") ?? "")
+          .trim()
+          .split(" ")
+          .pop()
+          ?.split(",")[0],
+      })),
+    );
+
+    expect(boxes).toHaveLength(2);
+    expect(boxes[0].width).toBe(boxes[1].width);
+    expect(boxes[0].viewBox).toBe(boxes[1].viewBox);
+    // Same last round in the snapshot, so the lines must end at the same x.
+    expect(boxes[0].lastX).toBe(boxes[1].lastX);
+  });
+
+  test("the campanha names the club each line belongs to", async ({ page }) => {
+    // Two monochrome lines in one card: without a name against each, the only
+    // thing distinguishing them is their order, which is not a channel.
+    await openFirstMatch(page, PLAYED_ROUND);
+
+    const names = page.locator("main section svg[role='img']").locator("xpath=../p[1]");
+
+    await expect(names).toHaveCount(2);
+    for (const name of await names.all()) {
+      expect((await name.innerText()).trim().length).toBeGreaterThan(0);
+    }
+  });
+
   test("the page shows the round and the status", async ({ page }) => {
     await openFirstMatch(page, UPCOMING_ROUND);
 
-    await expect(page.getByText(/\d+ª rodada/)).toBeVisible();
-    await expect(page.getByText(/(A realizar|Ao vivo|Encerrado|Adiado|Cancelado)/)).toBeVisible();
+    // Scoped to the scoreboard card. The campanha section also names rounds
+    // ("17º · 1ª rodada"), so an unscoped match now finds several.
+    const card = page.locator("main article");
+    await expect(card.getByText(/\d+ª rodada/)).toBeVisible();
+    await expect(
+      card.getByText(/(A realizar|Ao vivo|Encerrado|Adiado|Cancelado)/),
+    ).toBeVisible();
   });
 
   test("an upcoming match shows kickoff, stadium and where to watch", async ({ page }) => {

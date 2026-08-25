@@ -28,7 +28,12 @@ Rendered twice by the same component (`RankSparkline`): as the last column of th
 page at 480×96, where it sits under the Posição tile it explains. Same geometry
 and same domains in both, so the shape a reader recognises in the table is the
 shape they find on the club page — only the box grows. The club page names both
-ends in text, because at that size a line with no axis is not readable on its own. The y axis is inverted — 1st at the top, so a climbing line
+ends in text, because at that size a line with no axis is not readable on its own.
+The **Partida** page carries both clubs' campanhas, stacked rather than overlaid in
+two colours: the app has semantic tokens and no series palette, so a second hue
+would need a CVD-safe pair and a legend. Stacked, the two share one scale and their
+rounds line up vertically, so "who was above whom in the 12ª rodada" is read by
+looking straight down. The y axis is inverted — 1st at the top, so a climbing line
 means a climbing club — and both axes are shared by every row: the rows are small
 multiples, and auto-fitting each club to its own range would draw a side rattling
 between 1st and 3rd as dramatically as one climbing from 20th to 5th.
