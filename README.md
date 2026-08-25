@@ -28,6 +28,14 @@ after each round — the season behind a single row.*
 
 ![A mesma página do clube Palmeiras no tema escuro: os mesmos escudo, links, números da temporada, gráfico da campanha e jogos, com as marcas das emissoras mantendo o fundo claro para continuarem legíveis.](docs/screenshots/clube-palmeiras-dark.png)
 
+![Página de jogos no tema claro: seletor de rodada e os jogos da 25ª rodada, cada um com os clubes, data, horário e as marcas das emissoras que o transmitem.](docs/screenshots/jogos-light.png)
+
+![A mesma página de jogos no tema escuro, com o mesmo seletor de rodada e as mesmas marcas das emissoras sobre fundo claro.](docs/screenshots/jogos-dark.png)
+
+*Jogos, light and dark. Every round of the season is reachable from the picker, and each
+fixture carries the broadcasters showing it — ge, Globo, Premiere, SporTV, Cazé TV, YouTube
+and Prime Video, with anyone we have no mark for rendered as their own name.*
+
 *A club page, in both themes. **Campanha** traces where the club sat after every round, and
 the marks under each fixture say which broadcaster showed it. The marks keep a light backing
 in both themes on purpose — Globo's circle and the Premiere wordmark are dark artwork on a

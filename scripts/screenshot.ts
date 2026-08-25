@@ -83,6 +83,10 @@ const settle = async (page: Page) => {
   } else if (route.startsWith("/clube/")) {
     // The campanha sparkline is the last thing the club page computes.
     await page.locator("main svg polyline").first().waitFor({ timeout: 30_000 });
+  } else if (route.startsWith("/jogos")) {
+    // The round picker renders before the fixtures do, so waiting on it alone
+    // would photograph an empty round.
+    await page.locator("main ul > li").first().waitFor({ timeout: 30_000 });
   }
 
   // Every image actually decoded, rather than a fixed wait and a hope. Crests
