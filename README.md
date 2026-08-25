@@ -24,11 +24,13 @@ agent Claude Code.
 choice; the control in the header switches between them. **Campanha** is the club's position
 after each round — the season behind a single row.*
 
-<img src="docs/screenshots/classificacao-mobile-light.png" alt="A classificação num telemóvel no tema claro: a barra de navegação fixa no rodapé com Classificação, Ao vivo, Jogos e Artilharia, cada uma com ícone e rótulo, e a secção atual marcada por uma pílula atrás do ícone." width="300"> <img src="docs/screenshots/classificacao-mobile-dark.png" alt="A mesma classificação num telemóvel no tema escuro, com a mesma barra de navegação no rodapé." width="300">
+<img src="docs/screenshots/classificacao-mobile-light.png" alt="A classificação num telemóvel no tema claro: a barra de navegação fixa no rodapé com Classificação, Ao vivo, Jogos, Artilharia e Jogadores, cada uma com ícone e rótulo, e a secção atual marcada por uma pílula atrás do ícone." width="300"> <img src="docs/screenshots/classificacao-mobile-dark.png" alt="A mesma classificação num telemóvel no tema escuro, com a mesma barra de navegação no rodapé." width="300">
 
-*On a phone the four sections move to a navigation bar fixed at the bottom, icon above label,
+*On a phone the five sections move to a navigation bar fixed at the bottom, icon above label,
 the current one marked by a pill. Above `sm` they stay inline in the header — which is why the
-desktop shots above look no different.*
+desktop shots above look no different. Five is Material Design 3's ceiling for this pattern, and
+the bar is now at it: the labels fit at 375dp because the items carry no horizontal padding, and
+below 360dp the active indicator narrows rather than let the last destination fall off the edge.*
 
 ![Página Ao vivo no tema claro: a secção Agora responde "Nenhuma partida em andamento agora", e A seguir lista os próximos jogos, cada um com data, horário, uma contagem regressiva em dias até o apito inicial e as marcas das emissoras que o transmitem.](docs/screenshots/ao-vivo-light.png)
 
@@ -53,6 +55,18 @@ guessing a number.*
 *Jogos, light and dark. Every round of the season is reachable from the picker, and each
 fixture carries the broadcasters showing it — ge, Globo, Premiere, SporTV, Cazé TV, YouTube
 and Prime Video, with anyone we have no mark for rendered as their own name.*
+
+![Página Jogadores no tema claro: o total de jogadores e de clubes do campeonato e o convite para escolher um clube; abaixo, um painel por clube com escudo, nome e o número de jogadores do elenco. O primeiro painel está aberto e mostra uma ligação para a página do clube e o elenco dividido em Goleiros, Defensores e Meio-campistas, cada jogador em duas colunas com o nome e a idade sob ele.](docs/screenshots/jogadores-light.png)
+
+![A mesma página Jogadores no tema escuro, com o mesmo painel aberto, as mesmas secções do elenco e os mesmos nomes e idades.](docs/screenshots/jogadores-dark.png)
+
+*Jogadores, light and dark — the elenco of all twenty clubs. The panels are native `<details>`,
+closed on arrival: the division fields close to a thousand players, and rendered flat the second
+club would begin twenty screens below the first, which is exactly the by-club structure the page
+exists to show. Two clubs can be open at once, which a picker would not allow. Positions arrive
+from the provider at two levels of detail in the same list — a broad line for most players, a
+specific role for a few — so they are folded onto the line they belong to, and a player's own
+position is printed under the name only when it says something the heading did not.*
 
 ![Página da partida Palmeiras 4 x 1 Vasco da Gama no tema claro: placar com escudos e, sob o nome de cada clube, uma ligação para o seu artigo na Wikipédia; a data; o estádio, com o nome "Nubank Parque" ligado à página do próprio estádio e a cidade e o estado em texto simples ao lado; as emissoras que transmitiram; as campanhas dos dois clubes empilhadas — o líder reto no alto e o adversário caindo — e os links dos melhores momentos por emissora.](docs/screenshots/partida-554977-light.png)
 

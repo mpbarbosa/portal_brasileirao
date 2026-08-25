@@ -117,8 +117,12 @@ function SquadPanel({
           {/* A heading, not a styled span: it puts the club into the document
               outline between the page's h2 and each line's h4, so the elencos
               are navigable by heading rather than only by eye. The width leaves
-              room for the marker the summary now draws. */}
-          <h3 className="inline-flex w-[calc(100%-1rem)] items-center gap-2 align-middle text-body-medium font-semibold">
+              room for the marker the summary now draws — Chrome lays that
+              marker out *inline*, so the heading has to be narrower than the
+              line or it wraps beneath it and the club name ends up on a second
+              row. 1rem was not enough; measured, the marker and its gap take
+              closer to 1.5rem. */}
+          <h3 className="inline-flex w-[calc(100%-1.5rem)] items-center gap-2 align-middle text-body-medium font-semibold">
             <ClubCrest club={squad.club} size={24} />
             <span>{squad.club.shortName}</span>
             <span className="ml-auto text-body-small font-normal text-ink-faint">

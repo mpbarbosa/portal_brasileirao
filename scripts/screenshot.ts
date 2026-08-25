@@ -169,7 +169,15 @@ const behindMain = (): string[] | null => {
     return null;
   }
 
-  return lines(git("diff", "--name-only", "HEAD..origin/main", "--", ...APPEARANCE));
+  // Three dots, and the distinction is the whole check. `git diff A..B` is
+  // symmetric — it reports every path where the two endpoints differ, in either
+  // direction — so the two-dot form flagged a tree that was *ahead* of
+  // `origin/main` exactly as loudly as one that was behind, and refused the one
+  // capture path this file documents as normal: a local build of a branch whose
+  // whole purpose is to change how a page looks. `A...B` diffs from the merge
+  // base to B, which is the question actually being asked: what does
+  // `origin/main` carry that this tree has not merged.
+  return lines(git("diff", "--name-only", "HEAD...origin/main", "--", ...APPEARANCE));
 };
 
 /** Everything the verdict depends on, measured rather than inferred. */
@@ -271,6 +279,19 @@ const settle = async (page: Page) => {
     // The round picker renders before the fixtures do, so waiting on it alone
     // would photograph an empty round.
     await page.locator("main ul > li").first().waitFor({ timeout: 30_000 });
+  } else if (route === "/jogadores") {
+    // The panels are closed on arrival, which is right for a reader and wrong
+    // for a photograph: twenty collapsed rows document the index and say
+    // nothing about what the page is for. Opening the first one puts a real
+    // elenco in the frame, and the crop below lands on a player row inside it.
+    //
+    // `click`, not `open = true`: the disclosure is the browser's, and driving
+    // it through the property would capture a state no reader can reach by the
+    // route the page actually offers.
+    const first = page.locator("[data-squad] summary").first();
+    await first.waitFor({ timeout: 30_000 });
+    await first.click();
+    await page.locator("[data-squad] section h4").first().waitFor({ timeout: 30_000 });
   } else if (route === "/ao-vivo") {
     // "Agora" renders before any data arrives — it has to, since "nothing is
     // being played" is an answer rather than an empty state. So the heading is
