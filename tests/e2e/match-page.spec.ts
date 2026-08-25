@@ -143,7 +143,9 @@ test.describe("Página da partida", () => {
 
     await expect(page.locator("article").getByText(/0\s*×\s*0/)).toBeVisible();
     await expect(page.getByRole("heading", { name: "Melhores momentos" })).toBeVisible();
-    await expect(page.getByRole("link", { name: /Procurar melhores momentos/ })).toBeVisible();
+    // Either a curated link or the search — asserting which would make this a
+    // test of whether someone has curated this fixture yet.
+    await expect(page.locator("section a[href*='youtube.com']").first()).toBeVisible();
   });
 
   test("back returns to the fixtures", async ({ page }) => {

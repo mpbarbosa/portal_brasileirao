@@ -172,6 +172,14 @@ stadium/city/state, because football-data has **no venue field at any tier** eit
 actually provides, including CBF's undocumented broadcast API and why it is not a
 request-time dependency.
 
+`src/data/highlights.ts` holds "melhores momentos" links, hand-maintained but
+fillable with `npx tsx scripts/find-highlights.ts --round <n> --write`. The
+judgement of whether a video really is a given fixture lives in
+`highlight-search-core.ts`, because a search returns the same clubs, score and
+channel from previous seasons — proximity of the upload to kickoff is what
+separates them, and a candidate whose exact date has not been read is held
+rather than accepted. See `.claude/skills/find-highlights/SKILL.md`.
+
 `src/data/clubs.ts` and `src/data/matches.ts` are **generated files** — a frozen snapshot of
 the real division and season, serving as the offline fallback. Regenerate with:
 

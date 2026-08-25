@@ -16,11 +16,16 @@ import type { Highlight } from "@/src/types";
  * Rules for entries:
  * - YouTube only, over HTTPS. `isHighlightUrl` rejects anything else and that
  *   entry is dropped, so one bad line does not take the others with it.
- * - Prefer the rights-holder's own upload (ge tv, CazéTV, Premiere, the club's
- *   channel). A reupload can vanish or be taken down.
+ * - Prefer the rights-holder's own upload. A reupload can vanish or be taken
+ *   down. `KNOWN_CHANNELS` in `highlight-search-core.ts` holds the ones we
+ *   link, in preference order: ge tv, CazéTV, UOL Esporte.
+ * - List them in that order, since it is the order the reader meets them.
  * - `channel` is the label the reader sees, so write it the way the channel
- *   writes itself: "ge tv", "CazéTV".
- * - Only for matches that actually finished with goals.
+ *   writes itself: "ge tv", "CazéTV", "UOL Esporte".
+ * - Any match that finished with a score, a 0-0 included — see `hasHighlights`.
+ *
+ * Filling this in is a script, not a chore:
+ *   npx tsx scripts/find-highlights.ts --round 24 --write
  *
  * To find a match id: open the fixture in the app and read it from the URL
  * (`/partida/554975`), or run
@@ -31,5 +36,11 @@ export const HIGHLIGHTS: Record<string, Highlight[]> = {
   "554975": [
     { url: "https://www.youtube.com/watch?v=o-_hD5Q8f4Q", channel: "ge tv" },
     { url: "https://www.youtube.com/watch?v=AgycMjd6b-I", channel: "CazéTV" },
+  ],
+  // Internacional 0 x 0 Atlético-MG, rodada 24.
+  "554976": [
+    { url: "https://www.youtube.com/watch?v=4hGzHO6domw", channel: "ge tv" },
+    { url: "https://www.youtube.com/watch?v=lhEf7WoBd3k", channel: "CazéTV" },
+    { url: "https://www.youtube.com/watch?v=IDv3BmGI8M4", channel: "UOL Esporte" },
   ],
 };
