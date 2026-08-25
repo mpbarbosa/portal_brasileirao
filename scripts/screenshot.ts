@@ -140,6 +140,56 @@ const appearanceMatches = (sha: string): string | null => {
   return changed ? `appearance differs from HEAD in:\n    ${changed.split("\n").join("\n    ")}` : null;
 };
 
+/**
+ * Whether HEAD itself is current with the branch being published.
+ *
+ * `appearanceMatches` compares the served build against HEAD and nothing else,
+ * which leaves one case uncovered: a capture taken on a branch whose base has
+ * been overtaken. The served build matched *that* HEAD exactly, so the guard was
+ * satisfied while the images were already stale against main. PR #24 hit it —
+ * the match page changed on main between shooting and opening the PR, and the
+ * whole capture had to be retaken. Shot the right build of the wrong commit.
+ *
+ * It refreshes `origin/main` first, because a stale remote ref answers this
+ * question confidently and wrongly — which is the failure that produced two
+ * false findings the same afternoon. The sha it compared against is printed, so
+ * a reader can see what it actually used rather than trusting that it was
+ * current.
+ *
+ * Best-effort by design. An offline workstation or a clone with no remote gets
+ * a note and a capture, not a refusal: this check exists to catch a race, and a
+ * tool that stops working without a network would be paid for by every session
+ * that never hits one.
+ */
+const behindMain = (): string | null => {
+  try {
+    git("fetch", "origin", "main", "--quiet");
+  } catch {
+    // Offline, or no such remote. Fall through to whatever ref is on disk.
+  }
+
+  let mainSha: string;
+  try {
+    mainSha = git("rev-parse", "--short", "origin/main");
+  } catch {
+    console.warn("Note: no origin/main to compare against — cannot tell whether HEAD is behind.");
+    return null;
+  }
+
+  const missed = git("rev-list", "HEAD..origin/main", "--", ...APPEARANCE);
+  if (!missed) return null;
+
+  const commits = missed
+    .split("\n")
+    .map((sha) => `    ${git("log", "-1", "--format=%h %s", sha)}`);
+
+  return [
+    `HEAD is behind origin/main (${mainSha}), which changed the appearance in:`,
+    ...commits,
+    "    these images would document a superseded commit — merge origin/main and re-shoot",
+  ].join("\n");
+};
+
 let served: { sha: string; provider: string };
 try {
   served = await health();
@@ -149,14 +199,18 @@ try {
 }
 
 const appearanceProblem = appearanceMatches(served.sha);
+const behindProblem = behindMain();
 const hasRealData = served.provider === "football-data";
-const committable = appearanceProblem === null && hasRealData;
+const committable = appearanceProblem === null && behindProblem === null && hasRealData;
 const outDir = committable ? OUT_DIR : LOCAL_DIR;
 
 if (!committable) {
   console.error("This capture cannot be committed:");
   if (appearanceProblem) {
     console.error(`  ${appearanceProblem}`);
+  }
+  if (behindProblem) {
+    console.error(`  ${behindProblem}`);
   }
   if (!hasRealData) {
     console.error(`  provider is "${served.provider}", not "football-data" — frozen seed data`);
