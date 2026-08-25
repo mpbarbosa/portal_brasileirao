@@ -1,6 +1,18 @@
 import { defineConfig, devices } from "@playwright/test";
 
-const port = 3100;
+/**
+ * The port the suite boots its own server on.
+ *
+ * Overridable because several Claude sessions share this checkout and each takes
+ * its own worktree, and two of them cannot run the suite at once on one port:
+ * `STRICT_PORT` below is deliberate — a suite that quietly moved to 3101 would
+ * be testing a server the config did not describe — so the collision is a hard
+ * failure rather than a walk upward like `resolveAppPort` does for `npm run dev`.
+ *
+ * Default unchanged, so CI needs no environment: it runs alone and has the port
+ * to itself. A second worktree runs `E2E_PORT=3101 npm run test:e2e`.
+ */
+const port = Number(process.env.E2E_PORT ?? 3100);
 
 export default defineConfig({
   testDir: "./tests/e2e",
