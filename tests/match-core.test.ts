@@ -8,7 +8,6 @@ import {
   highlights,
   hasHighlights,
   isHighlightUrl,
-  venueLabel,
   withHighlights,
 } from "@/match-core";
 import type { Club, Match } from "@/src/types";
@@ -81,18 +80,6 @@ test("an unplayed or in-progress match offers no highlights", () => {
   );
   assert.equal(hasHighlights(match({ status: "LIVE", homeGoals: 1, awayGoals: 0 })), false);
   assert.equal(hasHighlights(match({ status: "POSTPONED", homeGoals: null })), false);
-});
-
-test("the venue reads as stadium, city and state", () => {
-  const withVenue = match({
-    venue: { stadium: "Nilton Santos", city: "Rio de Janeiro", state: "RJ" },
-  });
-
-  assert.equal(venueLabel(withVenue), "Nilton Santos · Rio de Janeiro – RJ");
-});
-
-test("an unknown venue yields null, not a half-built label", () => {
-  assert.equal(venueLabel(match()), null);
 });
 
 

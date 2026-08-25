@@ -37,6 +37,8 @@ import { withClubDetails, withHymns, withInstagram, withWikipedia } from "@/club
 import { compareForFeed, currentRound, matchesForRound, roundsOf } from "@/matches-core";
 import { injectMeta, pageMeta, type MetaContext } from "@/page-meta-core";
 import { parseRoute, type Route } from "@/route-core";
+import { buildStadiums } from "@/venue-core";
+import { STADIUMS } from "@/src/data/stadiums";
 import {
   canonicalUrl,
   pageStatus,
@@ -56,7 +58,15 @@ import { HIGHLIGHTS } from "@/src/data/highlights";
 import { VENUES } from "@/src/data/venues";
 import { SEED_MATCHES, SNAPSHOT_DATE } from "@/src/data/matches";
 import { SEED_SCORERS } from "@/src/data/scorers";
-import type { ApiEnvelope, Club, Match, Player, Scorer, StandingsRow } from "@/src/types";
+import type {
+  ApiEnvelope,
+  Club,
+  Match,
+  Player,
+  Scorer,
+  Stadium,
+  StandingsRow,
+} from "@/src/types";
 
 /**
  * Injected by scripts/build.sh at bundle time. Running from source (tsx in
@@ -301,13 +311,19 @@ app.get("/robots.txt", (req, res) => {
  * reasoning as the API envelope.
  */
 app.get("/sitemap.xml", async (req, res) => {
-  let context: { clubs?: Club[]; matches?: Match[]; updatedAt?: string } = {};
+  let context: {
+    clubs?: Club[];
+    matches?: Match[];
+    stadiums?: Stadium[];
+    updatedAt?: string;
+  } = {};
 
   try {
     const payload = await loadMatches();
     context = {
       clubs: payload.data.clubs,
       matches: payload.data.matches,
+      stadiums: buildStadiums(payload.data.matches, payload.data.clubs, STADIUMS),
       updatedAt: payload.updatedAt,
     };
   } catch (cause) {
@@ -324,6 +340,7 @@ app.get("/sitemap.xml", async (req, res) => {
 const needsData = (route: Route): boolean =>
   route.section === "clube" ||
   route.section === "partida" ||
+  route.section === "estadio" ||
   (route.section === "jogos" && route.round !== null);
 
 /**
@@ -356,6 +373,13 @@ const renderShell = async (
         clubs: matchesEnvelope.data.clubs,
         matches: matchesEnvelope.data.matches,
         standings: standingsEnvelope.data,
+        // Derived from the same payload rather than fetched: no provider has a
+        // stadium entity, so grouping the fixtures is what makes one.
+        stadiums: buildStadiums(
+          matchesEnvelope.data.matches,
+          matchesEnvelope.data.clubs,
+          STADIUMS,
+        ),
       };
     } catch (cause) {
       // Metadata is a nicety; never fail the page over it. `pageStatus` reads

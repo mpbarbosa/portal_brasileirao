@@ -99,6 +99,21 @@ test("a match route round-trips", () => {
   assert.deepEqual(parseRoute(formatRoute(route)), route);
 });
 
+test("a stadium has its own address", () => {
+  assert.deepEqual(parseRoute("/estadio/maracana"), { section: "estadio", key: "maracana" });
+  assert.equal(formatRoute({ section: "estadio", key: "maracana" }), "/estadio/maracana");
+});
+
+test("a stadium path with no slug falls back home", () => {
+  assert.deepEqual(parseRoute("/estadio"), HOME);
+  assert.deepEqual(parseRoute("/estadio/"), HOME);
+});
+
+test("a stadium route round-trips", () => {
+  const route: Route = { section: "estadio", key: "arena-do-gremio" };
+  assert.deepEqual(parseRoute(formatRoute(route)), route);
+});
+
 test("a malformed percent escape resolves rather than throwing", () => {
   // decodeURIComponent throws URIError on these, and a crawler will send one.
   // Unhandled it surfaced as a 500 from the SPA handler — the one failure shape

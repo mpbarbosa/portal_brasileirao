@@ -10,7 +10,8 @@
 import { findClub } from "@/club-core";
 import { findMatch } from "@/match-core";
 import type { Route } from "@/route-core";
-import type { Club, Match, StandingsRow } from "@/src/types";
+import { capacityLabel, findStadium, stadiumLocation } from "@/venue-core";
+import type { Club, Match, StandingsRow, Stadium } from "@/src/types";
 
 export const SITE_NAME = "Portal Brasileirão";
 export const SITE_DESCRIPTION =
@@ -49,6 +50,9 @@ export interface MetaContext {
   clubs?: Club[];
   matches?: Match[];
   standings?: StandingsRow[];
+  /** Derived by the caller, never fetched — a stadium is not an entity in any
+   *  payload. Absent means the stadium page falls back to generic wording. */
+  stadiums?: Stadium[];
 }
 
 const suffix = (headline: string): string => `${headline} · ${SITE_NAME}`;
@@ -94,6 +98,29 @@ const matchDescription = (match: Match, home: string, away: string): string => {
 
   if (match.venue) parts.push(`${match.venue.stadium}, ${match.venue.city}`);
   if (match.broadcasters?.length) parts.push(`Onde assistir: ${match.broadcasters.join(", ")}`);
+
+  return `${parts.join(". ")}.`;
+};
+
+/**
+ * A stadium in one sentence: where it is, who plays there, how big it is.
+ *
+ * Each clause is dropped when its data is absent rather than rendered empty,
+ * because everything past the location is hand-curated and most of it is
+ * missing for a ground nobody has filled in yet.
+ */
+const stadiumDescription = (stadium: Stadium): string => {
+  const parts: string[] = [`${stadium.name}, em ${stadiumLocation(stadium)}`];
+
+  if (stadium.homeClubs.length) {
+    const names = stadium.homeClubs.map((club) => club.shortName).join(" e ");
+    parts.push(`Casa do ${names}`);
+  }
+
+  const capacity = capacityLabel(stadium);
+  if (capacity) parts.push(`Capacidade de ${capacity} lugares`);
+
+  parts.push("Jogos do Brasileirão Série A neste estádio");
 
   return `${parts.join(". ")}.`;
 };
@@ -163,6 +190,18 @@ export const pageMeta = (
         title: suffix(club.shortName),
         description: clubDescription(club, context.standings),
         image: crestImage(club) ?? site,
+      };
+    }
+
+    case "estadio": {
+      const stadium = findStadium(context.stadiums ?? [], route.key);
+      if (!stadium) {
+        return { title: suffix("Estádio"), description: SITE_DESCRIPTION };
+      }
+
+      return {
+        title: suffix(stadium.name),
+        description: stadiumDescription(stadium),
       };
     }
 

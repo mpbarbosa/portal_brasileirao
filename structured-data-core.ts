@@ -13,10 +13,11 @@
  */
 import { clubKey, findClub, instagramUrl, officialSiteUrl, wikipediaUrl } from "@/club-core";
 import { findMatch } from "@/match-core";
+import { findStadium } from "@/venue-core";
 import { SITE_DESCRIPTION, SITE_NAME, type MetaContext } from "@/page-meta-core";
 import { canonicalPath } from "@/seo-core";
 import type { Route } from "@/route-core";
-import type { Club, Match, MatchStatus } from "@/src/types";
+import type { Club, Match, MatchStatus, Stadium } from "@/src/types";
 
 export const COMPETITION = "Campeonato Brasileiro Série A";
 
@@ -105,6 +106,34 @@ const placeNode = (match: Match): JsonLd | undefined =>
       }
     : undefined;
 
+/**
+ * A ground in its own right, as distinct from the `Place` an event points at.
+ *
+ * `StadiumOrArena` rather than `Place` because that is what it is, and because
+ * the extra facts — capacity, year of inauguration — have no home on a bare
+ * `Place`. Each is omitted when uncurated rather than emitted empty: an
+ * asserted `maximumAttendeeCapacity` of nothing is a claim, and a wrong one.
+ */
+export const stadiumNode = (stadium: Stadium, origin: string): JsonLd =>
+  compact({
+    "@context": "https://schema.org",
+    "@type": "StadiumOrArena",
+    name: stadium.name,
+    alternateName: stadium.officialName,
+    url: url(origin, `/estadio/${stadium.slug}`),
+    address: compact({
+      "@type": "PostalAddress",
+      addressLocality: stadium.city,
+      addressRegion: stadium.state,
+      addressCountry: "BR",
+    }),
+    maximumAttendeeCapacity: stadium.capacity,
+    // Schema wants a date; the year is all that was verified, so the year is
+    // all that is asserted.
+    foundingDate: stadium.opened === undefined ? undefined : String(stadium.opened),
+    sameAs: [wikipediaUrl(stadium.wikipedia)].filter(Boolean),
+  });
+
 const eventNode = (
   match: Match,
   clubs: Club[],
@@ -188,6 +217,16 @@ const trailFor = (route: Route, context: MetaContext): Array<{ name: string; pat
         { name: club?.shortName ?? "Clube", path: canonicalPath(route, context) },
       ];
     }
+    case "estadio": {
+      const stadium = findStadium(context.stadiums ?? [], route.key);
+      return [
+        HOME_CRUMB,
+        {
+          name: stadium?.name ?? "Estádio",
+          path: `/estadio/${stadium?.slug ?? route.key}`,
+        },
+      ];
+    }
     case "partida": {
       const match = findMatch(context.matches ?? [], route.id);
       if (!match) return [HOME_CRUMB, { name: "Partida", path: `/partida/${route.id}` }];
@@ -230,6 +269,11 @@ export const structuredData = (
   if (route.section === "partida") {
     const match = findMatch(context.matches ?? [], route.id);
     if (match) blocks.push(eventNode(match, context.clubs ?? [], origin, description));
+  }
+
+  if (route.section === "estadio") {
+    const stadium = findStadium(context.stadiums ?? [], route.key);
+    if (stadium) blocks.push(stadiumNode(stadium, origin));
   }
 
   const crumbs = breadcrumbNode(origin, trailFor(route, context));

@@ -107,6 +107,17 @@ what makes the logic testable without mocking HTTP.
   38 rounds × 20 clubs is a few thousand operations. It stops at the last round with a
   result — "no position yet" is an absence, not a zero.
 
+- `venue-core.ts` — the **Página do estádio**. `buildStadiums` groups fixtures into
+  grounds, because **a stadium is not an entity in any payload**: football-data has no
+  venue field at any tier, and CBF reports only a `Stadium - City - UF` string per match.
+  Identity is therefore the **slug** of that string, which is what makes `ARENA MRV` and
+  `Arena MRV` one stadium rather than two — CBF's casing drifts by design, since
+  `venues.ts` stores its values verbatim rather than guessing at proper names. It reuses
+  `slugify` from `club-core.ts` deliberately; a second normaliser is how two spellings of
+  one ground come to disagree. Home clubs are derived from who hosted there, so the page
+  needs no curated club list. A fixture whose venue slugs to nothing is skipped rather
+  than bucketed under an empty key, which would collect unrelated grounds into one page.
+
 Extract to a core module before logic in `server.ts` grows a branch worth testing.
 
 ### Data provider
@@ -168,6 +179,19 @@ parse/format cases in `route-core.ts`, a case in `App`'s view switch, and — if
 data — a pure mapper in `football-data-core.ts`, a seed snapshot in
 `scripts/sync-seed-data.ts`, and a cached route in `server.ts`. `NavBar` never changes.
 
+**A new `Route` variant is a four-file change, and only one of the four is enforced.**
+Since the crawl surface landed, a variant also needs a case in `page-meta-core.ts`, a
+`pageStatus` rule and sitemap entry in `seo-core.ts`, and breadcrumbs in
+`structured-data-core.ts`. Only `structured-data-core`'s `trailFor` is caught by the
+compiler — its switch returns a value, so a missing case makes it non-exhaustive and
+`tsc` fails. The other three fall through to defaults and fail **silently**: the page
+gets generic metadata, is absent from the sitemap, and — the one that actually
+matters — `pageStatus` answers **200 with a copy of the shell** for every unrecognised
+argument under the new section. That is an unbounded set of duplicate pages offered to a
+crawler, and nothing goes red. `/estadio/qualquer-coisa` did exactly this until the rule
+was added. Adding the variant is the easy half; grep the other three files for a sibling
+section (`"partida"` is the closest analogue) and follow it through.
+
 The `NAV_ITEMS` entry carries its own `Icon`, which is *why* `NavBar` never changes — an
 icon looked up by id inside `NavBar` would break that promise the first time anyone added
 a section.
@@ -190,10 +214,11 @@ JavaScript**, so without the server half every shared URL unfurls as the generic
 name. `injectMeta` replaces the existing title and description rather than appending, so
 the document never carries two, and escapes every value it writes.
 
-The server only loads data for routes that name something (`clube`, `partida`), and takes
-it from the same cached payload the API serves — no extra upstream request. If that load
-fails the page still renders with generic metadata: metadata is a nicety, never a reason to
-fail a page.
+The server only loads data for routes that name something (`clube`, `partida`,
+`estadio`), and takes it from the same cached payload the API serves — no extra upstream
+request. The stadium list is *derived* from that payload rather than fetched, for the
+reason `venue-core.ts` gives. If that load fails the page still renders with generic
+metadata: metadata is a nicety, never a reason to fail a page.
 
 Canonical and `og:url` come from **`APP_URL`** in the host's `.env`. If that is stale,
 every canonical points at the wrong origin.
@@ -315,6 +340,12 @@ for why) and the production bundle.
 Unrecognised paths and nonsense rounds resolve to something useful rather than 404 — a
 stale link should still land somewhere.
 
+Stadium URLs use the same **slug** mechanism (`/estadio/maracana`), derived from CBF's
+venue string. `findStadium` re-slugs the segment before comparing, so a hand-typed
+`/estadio/Maracanã` lands rather than 404-ing on an accent. There is deliberately **no
+`/estadios` index and no nav entry** — see the bound on `NAV_ITEMS` above; a ground is
+reached from a fixture or a club.
+
 Club URLs use a **slug** (`/clube/flamengo`), derived from the short name by `slugify` in
 `club-core.ts`. The route carries a `key`, not a code, because the segment may be either:
 `findClub` resolves a slug first and then a raw code, so `/clube/1783` — published before
@@ -371,6 +402,19 @@ article sits at the full legal one, with the club's own spelling ("Foot-Ball",
 (`/w/api.php?action=query&titles=…&redirects=1&prop=extracts&exintro=1`, which
 reports existence, redirects and the first sentence) before being written down;
 all twenty resolve directly, and each intro names the club.
+
+`src/data/stadiums.ts` holds each ground's official name, capacity and year of
+inauguration, hand-maintained for the same reason as the hymns — **no provider carries
+any of it**, and CBF's feed stops at a name, a city and a state. Keyed by stadium slug,
+not by match id, which is what `venues.ts` uses. Every value was read out of the
+stadium's article on the Portuguese Wikipedia (the infobox's `nome_completo`,
+`capacidade`, `datainauguração`) before being written down, because **a plausible
+capacity is indistinguishable from a correct one** to anyone reading the page — an
+invented number would never be caught. Two grounds' articles state no inauguration year;
+`opened` is absent for them rather than guessed, and the page simply omits the tile.
+`name` is the popular name properly cased, which is what overrides CBF's `ARENA MRV` on
+both the stadium page and the match page's Estádio line; `officialName` is carried only
+where it genuinely differs.
 
 `src/data/rank-history.ts` is generated by `npm run sync-rank-history`, which fetches
 nothing — it derives the campanha from the seed fixtures already on disk. It is therefore

@@ -88,9 +88,3 @@ export const highlightsSearchUrl = (home: string, away: string): string => {
  */
 export const hasHighlights = (match: Match): boolean => countsTowardStandings(match);
 
-/** `Nilton Santos · Rio de Janeiro – RJ`, or null when the venue is unknown. */
-export const venueLabel = (match: Match): string | null => {
-  const venue = match.venue;
-  if (!venue) return null;
-  return `${venue.stadium} · ${venue.city} – ${venue.state}`;
-};
