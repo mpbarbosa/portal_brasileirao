@@ -182,12 +182,23 @@ images: `raised` sits at tone 94 on light but tone 12 on dark, so light has far
 less room beneath it before AA fails. Tone 50 measured 3.86:1 against `raised`
 and now sits at 45.
 
-The gate also caught a pre-existing defect rather than one the migration
+The gate also caught a pre-existing hazard rather than one the migration
 introduced. The 4.55 worst case recorded above was measured against `canvas`
-only; `ink-faint` on `bg-raised` was already at about 4.37 in the light theme
-and had never been checked. The generator tests every text token against all
-three backgrounds, which is why the number moved. **Worst text pairing is now
-4.59:1 across 70 pairings, both themes.**
+only, and stated as though it covered everything; light's `ink-faint` on
+`bg-raised` sat at about 4.35 and had never been checked.
+
+Be precise about the severity, because it is easy to overstate: that pairing is
+**latent, not shipped**. Every `bg-raised` call site pairs with `ink-soft` or
+`ink-muted`, and `ink-faint` appears only inside filled surfaces, where
+`bg-surface/50` over `canvas` resolves to about 4.64. Nothing renders the
+failing combination today.
+
+That makes it worth fixing rather than less so. A latent pairing below AA is a
+trap that springs the first time someone puts faint text on a badge, a hover
+state or a dialog — and it would ship silently, because a contrast figure
+recorded in a comment ages the moment anyone adds a background token. The
+generator now tests every text token against all three backgrounds on every
+run. **Worst text pairing is 4.59:1 across 70 pairings, both themes.**
 
 The theme-invariant tokens survived: `scrim` is MD3's own neutral tone 0, and
 the `plate` trio is excluded from the tonal system by name, so the broadcaster

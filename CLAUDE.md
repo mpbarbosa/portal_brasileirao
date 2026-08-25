@@ -284,7 +284,11 @@ Rules that follow from sharing a repository:
   falls below AA. Worst text pairing is 4.59 across 70 pairings; `ink-ghost`, used only
   for underline decoration and the large score separator, clears the 3:1 non-text floor.
   Checking all three backgrounds rather than `canvas` alone is what caught light's
-  `ink-faint` on `bg-raised`, which had been shipping at about 4.37.
+  `ink-faint` on `bg-raised` at about 4.35. That pairing is **latent, not shipped** — every
+  `bg-raised` call site today pairs with `ink-soft` or `ink-muted`, and `ink-faint` only
+  appears inside filled surfaces. Which is the point: it is a trap that springs the first
+  time someone puts faint text on a badge, a hover state or a dialog, and nothing would
+  have flagged it. Enforcing the floor beats recording a number that was true when written.
   `scrim` is deliberately dark in both themes: a near-white veil over a light page does not
   read as "the content behind is inactive". `plate` is its mirror — light in both themes,
   because the broadcaster marks it backs are dark artwork on a transparent ground and
