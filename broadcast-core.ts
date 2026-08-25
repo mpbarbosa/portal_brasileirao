@@ -240,8 +240,20 @@ export interface MarkSource {
   commons: string;
 }
 
+/*
+ * A note on choosing files, because search results are not evidence. Commons
+ * offers a purple "GE TV" and a yellow "Logo GE TV" — both are a different
+ * channel, not Globo's green `ge` — and its "SBT logo.png" is a Ukrainian
+ * localisation union. Every entry below was looked at before it was trusted.
+ *
+ * Where the current mark is only available under CC BY-SA — SporTV's flat
+ * wordmark, Globo's 2025 raster — the older public-domain version is used
+ * instead. A slightly dated logo is a smaller cost than an attribution
+ * obligation the page does not discharge.
+ */
 export const MARKS: Record<string, MarkSource> = {
-  GLOBO: { slug: "globo", commons: "Rede Globo logo.svg" },
+  GLOBO: { slug: "globo", commons: "TV Globo 2025.svg" },
+  GLOBOPLAY: { slug: "globoplay", commons: "Globoplay logo 2020.svg" },
   PREMIERE: { slug: "premiere", commons: "Premiere FC logo.png" },
   SPORTV: { slug: "sportv", commons: "SporTV logo 2016.png" },
   AMAZONPRIME: { slug: "prime-video", commons: "Prime Video logo (2024).svg" },

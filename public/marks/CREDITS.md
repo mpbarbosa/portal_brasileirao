@@ -13,7 +13,8 @@ remain the property of their respective owners.
 
 | File | Source on Commons | Licence | Credited |
 | --- | --- | --- | --- |
-| `globo.png` | [Rede Globo logo.svg](https://commons.wikimedia.org/wiki/File:Rede_Globo_logo.svg) | Public domain | Hans Donner/Globo (original logo). Gabriel dos Santos (SVG version). |
+| `globo.png` | [TV Globo 2025.svg](https://commons.wikimedia.org/wiki/File:TV_Globo_2025.svg) | Public domain | TV Globo |
+| `globoplay.png` | [Globoplay logo 2020.svg](https://commons.wikimedia.org/wiki/File:Globoplay_logo_2020.svg) | Public domain | Grupo Globo |
 | `premiere.png` | [Premiere FC logo.png](https://commons.wikimedia.org/wiki/File:Premiere_FC_logo.png) | Public domain | Globosat Canais S.A. |
 | `sportv.png` | [SporTV logo 2016.png](https://commons.wikimedia.org/wiki/File:SporTV_logo_2016.png) | Public domain | Globosat Canais S.A. |
 | `prime-video.png` | [Prime Video logo (2024).svg](https://commons.wikimedia.org/wiki/File:Prime_Video_logo_(2024).svg) | Public domain | Amazon.com, Inc. |
