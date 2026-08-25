@@ -53,6 +53,45 @@ const stat = (label: string, value: string) => (
   </Surface>
 );
 
+/**
+ * Instagram's glyph, beside the handle it links to.
+ *
+ * Drawn here rather than fetched, for the reason `CLAUDE.md` gives for the
+ * broadcaster marks: no runtime dependency on a third party for an asset. Local
+ * to this file because it has exactly one call site, the same way `MatchPage`
+ * keeps `Campaign` and `Side`.
+ *
+ * The monochrome outline rather than Meta's gradient mark. It takes its colour
+ * from the link through `currentColor`, so it warms on hover with the rest of
+ * the text and needs nothing of its own in either theme — a fixed-colour logo
+ * would need a plate the way the broadcaster marks do, which is a lot of chrome
+ * for one glyph beside a word.
+ *
+ * `inline-block` is load-bearing: text-decoration is not drawn through an atomic
+ * inline box, so the link's underline stops at the icon instead of running under
+ * it. `aria-hidden` because the handle beside it already names the link, and the
+ * screen-reader suffix already says which service it is.
+ */
+function InstagramGlyph() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      focusable="false"
+      className="mr-1 inline-block h-[1em] w-[1em] align-[-0.125em]"
+    >
+      <rect x="3" y="3" width="18" height="18" rx="5" />
+      <circle cx="12" cy="12" r="4" />
+      <circle cx="17" cy="7" r="1" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+
 export function ClubView({
   clubKey: key,
   loading = false,
@@ -142,6 +181,7 @@ export function ClubView({
                 rel="noopener noreferrer"
                 className={`truncate ${LINK_UNDERLINE}`}
               >
+                <InstagramGlyph />
                 @{club.instagram}
                 <span className="sr-only"> — Instagram oficial (abre em nova aba)</span>
               </a>

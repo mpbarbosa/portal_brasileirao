@@ -102,7 +102,13 @@ time via `withWebsites`.
 
 **Instagram do clube**:
 The club's official Instagram profile, linked from its page beside the **Site
-oficial** and shown as the bare handle (`@palmeiras`). No provider carries
+oficial** and shown as Instagram's glyph followed by the bare handle
+(`@palmeiras`). The glyph is drawn inline in `ClubView` rather than fetched —
+the same rule the **Marca da emissora** follows, no runtime dependency on a
+third party for an asset — and it is the monochrome outline rather than Meta's
+gradient mark, so it takes the link's colour through `currentColor` and needs
+no **Placa da emissora** to sit on in either theme. It is `aria-hidden`: the
+handle beside it already names the link. No provider carries
 social accounts at any tier, so `src/data/club-instagram.ts` is hand-curated and
 keyed by club code. Stored as the handle alone; `instagramUrl` derives the
 address, so a pasted URL loses Instagram's `?hl=pt-br` locale hint rather than
@@ -111,7 +117,10 @@ Wikidata lists Palmeiras as `sepalmeiras` — not the club's account — and a c
 site advertises its sponsors' handles beside its own.
 _Avoid_: keying on **tla** (Corinthians and Coritiba share `COR`, so one club's
 readers land on another's profile), storing the full URL, showing the URL rather
-than the handle, trusting a single source for a handle.
+than the handle, trusting a single source for a handle, giving the glyph a fixed
+colour (it would then need a plate in one theme, which is a lot of chrome for one
+mark beside a word), letting the link's underline run under it — an atomic inline
+box is not decorated, which is why the glyph is `inline-block`.
 
 **slug**:
 URL-safe form of a club's short name — `Atlético-MG` → `atletico-mg` — used for
