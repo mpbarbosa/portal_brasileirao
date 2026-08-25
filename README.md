@@ -42,9 +42,9 @@ refetches on its own. There is deliberately no match minute: the provider report
 and a score and never an elapsed clock, so the page says **bola rolando** rather than
 guessing a number.*
 
-![Página do clube Palmeiras no tema claro: escudo, site oficial, perfil no Instagram e hino do clube, os números da temporada (1º lugar, 51 pontos, 24 jogos, saldo +24), o gráfico da campanha da 1ª à 24ª rodada, os últimos cinco resultados, o próximo jogo e os artilheiros do clube.](docs/screenshots/clube-palmeiras-light.png)
+![Página do clube Palmeiras no tema claro: escudo, site oficial, perfil no Instagram, hino do clube e artigo na Wikipédia, os números da temporada (1º lugar, 51 pontos, 24 jogos, saldo +24), o gráfico da campanha da 1ª à 24ª rodada, os últimos cinco resultados, o próximo jogo e os artilheiros do clube.](docs/screenshots/clube-palmeiras-light.png)
 
-![A mesma página do clube Palmeiras no tema escuro: os mesmos escudo, três links, números da temporada, gráfico da campanha e jogos, com as marcas das emissoras mantendo o fundo claro para continuarem legíveis.](docs/screenshots/clube-palmeiras-dark.png)
+![A mesma página do clube Palmeiras no tema escuro: os mesmos escudo, quatro links, números da temporada, gráfico da campanha e jogos, com as marcas das emissoras mantendo o fundo claro para continuarem legíveis.](docs/screenshots/clube-palmeiras-dark.png)
 
 ![Página de jogos no tema claro: seletor de rodada e os jogos da 25ª rodada, cada um com os clubes, data, horário e as marcas das emissoras que o transmitem.](docs/screenshots/jogos-light.png)
 
