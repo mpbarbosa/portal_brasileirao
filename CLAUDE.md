@@ -214,6 +214,33 @@ clubs it saw alongside the fixtures so the UI resolves names from the payload.
 `src/types.ts` is the single source of truth for shared shapes. Extend it before adding
 fields to data files or components.
 
+## Working alongside other sessions
+
+Several Claude sessions share this checkout. Each takes its own **git worktree**
+and branch under `.claude/worktrees/`, so their edits cannot collide:
+
+```sh
+git worktree add .claude/worktrees/<name> -b worktree-<name>
+cp .env .claude/worktrees/<name>/.env   # gitignored, so it does not come along
+cd .claude/worktrees/<name> && npm ci   # each worktree needs its own node_modules
+```
+
+`git worktree list` shows who is where. The directory is gitignored, because a
+worktree is a whole second checkout and one `git add -A` would otherwise commit
+another session's entire tree into this one.
+
+Rules that follow from sharing a repository:
+
+- **Commit explicit paths, never `git add -A`.** Another session's uncommitted
+  work is almost certainly in the tree, and sweeping it into your commit is the
+  easy mistake. Check `git status` before every commit and recognise what is
+  not yours.
+- **Never `git stash` in the shared checkout.** It stashes everyone's
+  uncommitted work, not just yours.
+- **`npm run dev` in several worktrees at once is fine** — `resolveAppPort`
+  walks upward from `PORT`, so the second one takes 3001 rather than failing.
+- The root checkout is for integration. Do the work in a worktree.
+
 ## Key conventions
 
 - **Colours are semantic tokens, never palette shades.** `src/index.css` defines the
