@@ -2,6 +2,30 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Before anything else: take a worktree
+
+Several Claude sessions share this checkout. **Do your work in a git worktree, never in
+the root checkout** — root is for integration.
+
+```sh
+git worktree add .claude/worktrees/<name> -b worktree-<name>
+cp .env .claude/worktrees/<name>/.env   # gitignored, so it does not come along
+cd .claude/worktrees/<name> && npm ci   # each worktree needs its own node_modules
+```
+
+This is the one rule here that protects *other people's* work rather than your own, which
+is why it is at the top rather than filed under a section you reach after deciding what to
+do. A branch switch in the shared root carries whatever is uncommitted across into
+whatever gets checked out next. That is how a merged, deployed commit came to look like a
+deliberate revert — several sessions spent an hour diagnosing files nobody had edited. The
+tree was nine paths dirty at the time and nothing about it looked wrong.
+
+The failure repeats because it resets: a session that has been told this moves out and
+works cleanly, and the next one starts in root again. Assume you are the next one.
+
+Full rules — commits, stashes, ports, and why the directory is gitignored — under
+**Working alongside other sessions** below.
+
 ## Project
 
 "Portal Brasileirão" — a companion app for the Campeonato Brasileiro Série A: standings and
@@ -355,13 +379,10 @@ fields to data files or components.
 ## Working alongside other sessions
 
 Several Claude sessions share this checkout. Each takes its own **git worktree**
-and branch under `.claude/worktrees/`, so their edits cannot collide:
-
-```sh
-git worktree add .claude/worktrees/<name> -b worktree-<name>
-cp .env .claude/worktrees/<name>/.env   # gitignored, so it does not come along
-cd .claude/worktrees/<name> && npm ci   # each worktree needs its own node_modules
-```
+and branch under `.claude/worktrees/`, so their edits cannot collide — the
+commands are at the top of this file, under **Before anything else**, and are
+deliberately not repeated here: two copies of a setup snippet is how one of them
+comes to be wrong.
 
 `git worktree list` shows who is where. The directory is gitignored, because a
 worktree is a whole second checkout and one `git add -A` would otherwise commit
