@@ -41,7 +41,7 @@ export function BroadcasterMark({ name, size = "md", decorative = false }: Broad
       <span
         data-mark={name}
         aria-hidden={decorative || undefined}
-        className={`${plate} px-1.5 ${size === "sm" ? "py-0.5 text-[11px]" : "py-0.5 text-xs"} font-semibold text-plate-ink`}
+        className={`${plate} px-1.5 ${size === "sm" ? "py-0.5 text-[11px]" : "py-0.5 text-body-small"} font-semibold text-plate-ink`}
       >
         {name}
       </span>

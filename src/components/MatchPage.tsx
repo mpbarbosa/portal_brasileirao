@@ -88,14 +88,14 @@ function Campaign({
 
   return (
     <div>
-      <p className="mb-1 text-xs font-medium">{club?.shortName ?? code}</p>
+      <p className="mb-1 text-body-small font-medium">{club?.shortName ?? code}</p>
       <RankSparkline
         entries={entries}
         clubCount={clubCount}
         lastRound={lastRound}
         size="page"
       />
-      <p className="mt-1 flex justify-between text-xs tabular-nums text-ink-faint">
+      <p className="mt-1 flex justify-between text-body-small tabular-nums text-ink-faint">
         <span>{first.position}º · 1ª rodada</span>
         <span>
           {last.position}º · {last.round}ª rodada
@@ -153,7 +153,7 @@ export function MatchPage({
         <button type="button" onClick={onBack} className={BACK_LINK}>
           ← Voltar
         </button>
-        <p className="mt-4 text-sm text-ink-muted" role={loading ? "status" : undefined}>
+        <p className="mt-4 text-body-medium text-ink-muted" role={loading ? "status" : undefined}>
           {loading ? "Carregando página…" : "Partida não encontrada."}
         </p>
       </>
@@ -183,7 +183,7 @@ export function MatchPage({
       {/* `as="article"` on purpose: this is the page's main card, and rendering
           it as a bare div would change the document outline. */}
       <Surface as="article" filled className="mt-3 p-5">
-        <div className="flex items-center justify-between gap-2 text-xs text-ink-faint">
+        <div className="flex items-center justify-between gap-2 text-body-small text-ink-faint">
           <span>{match.round}ª rodada</span>
           <span className={`rounded-x-small px-2 py-1 font-medium ${STATUS_CLASS[match.status]}`}>
             {STATUS_LABEL[match.status]}
@@ -195,11 +195,11 @@ export function MatchPage({
 
           <div className="shrink-0 text-center">
             {played ? (
-              <p className="text-3xl font-bold tabular-nums">
+              <p className="text-headline-medium font-bold tabular-nums">
                 {match.homeGoals} <span className="text-ink-ghost">×</span> {match.awayGoals}
               </p>
             ) : (
-              <p className="text-2xl font-bold text-ink-ghost">×</p>
+              <p className="text-headline-small font-bold text-ink-ghost">×</p>
             )}
           </div>
 
@@ -207,22 +207,22 @@ export function MatchPage({
         </div>
       </Surface>
 
-      <dl className="mt-4 space-y-3 text-sm">
+      <dl className="mt-4 space-y-3 text-body-medium">
         <div>
-          <dt className="text-xs text-ink-faint">Data e hora</dt>
+          <dt className="text-body-small text-ink-faint">Data e hora</dt>
           <dd className="font-medium first-letter:uppercase">{kickoffLabel(match.kickoff)}</dd>
         </div>
 
         {venue && (
           <div>
-            <dt className="text-xs text-ink-faint">Estádio</dt>
+            <dt className="text-body-small text-ink-faint">Estádio</dt>
             <dd className="font-medium">{venue}</dd>
           </div>
         )}
 
         {match.broadcasters && (
           <div>
-            <dt className="text-xs text-ink-faint">Onde assistir</dt>
+            <dt className="text-body-small text-ink-faint">Onde assistir</dt>
             <dd className="mt-1 flex flex-wrap items-center gap-1.5">
               {match.broadcasters.map((name) => (
                 <BroadcasterMark key={name} name={name} />
@@ -234,7 +234,7 @@ export function MatchPage({
 
       {showCampaigns && (
         <section className="mt-6">
-          <h3 className="mb-2 text-sm font-medium text-ink-muted">Campanha</h3>
+          <h3 className="mb-2 text-body-medium font-medium text-ink-muted">Campanha</h3>
           {/* Stacked, not side by side: the rounds line up vertically, so "who
               was above whom in round 12" is read by looking straight down. */}
           <Surface filled className="space-y-4 px-3 py-3">
@@ -258,7 +258,7 @@ export function MatchPage({
 
       {hasHighlights(match) && (
         <section className="mt-6">
-          <h3 className="mb-2 text-sm font-medium text-ink-muted">Melhores momentos</h3>
+          <h3 className="mb-2 text-body-medium font-medium text-ink-muted">Melhores momentos</h3>
 
           {/* Curated links beat the search: they point at the rights holders'
               own packages rather than whatever a query happens to surface.
@@ -289,7 +289,7 @@ export function MatchPage({
                   </li>
                 ))}
               </ul>
-              <p className="mt-2 text-xs text-ink-faint">
+              <p className="mt-2 text-body-small text-ink-faint">
                 {videos.length === 1
                   ? "Melhores momentos no YouTube."
                   : "Melhores momentos no YouTube, por emissora."}
@@ -312,7 +312,7 @@ export function MatchPage({
               </a>
               {/* Honest about what this is: without a curated link we do not
                   know the official video, so this opens a search and says so. */}
-              <p className="mt-2 text-xs text-ink-faint">
+              <p className="mt-2 text-body-small text-ink-faint">
                 Abre uma busca no YouTube — não é um vídeo oficial escolhido por nós.
               </p>
             </>

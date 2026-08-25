@@ -105,13 +105,13 @@ export function App() {
         <h1 className="sr-only">Portal Brasileirão — Campeonato Brasileiro Série A</h1>
 
         {note && (
-          <p className="mb-4 rounded-small border border-warning/30 bg-warning/10 px-3 py-2 text-xs text-warning-ink">
+          <p className="mb-4 rounded-small border border-warning/30 bg-warning/10 px-3 py-2 text-body-small text-warning-ink">
             {note}
           </p>
         )}
 
         {error && (
-          <p className="mb-4 rounded-small border border-negative/30 bg-negative/10 px-3 py-2 text-sm text-negative-ink">
+          <p className="mb-4 rounded-small border border-negative/30 bg-negative/10 px-3 py-2 text-body-medium text-negative-ink">
             {error}
           </p>
         )}
@@ -165,7 +165,7 @@ export function App() {
 
           {route.section === "artilharia" && (
             <>
-              <h2 className="mb-3 text-sm font-medium text-ink-muted">Artilharia</h2>
+              <h2 className="mb-3 text-body-medium font-medium text-ink-muted">Artilharia</h2>
               <ScorersTable rows={scorers} onSelectPlayer={setOpenScorer} />
             </>
           )}

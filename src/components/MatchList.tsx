@@ -48,7 +48,7 @@ interface MatchListProps {
 
 export function MatchList({ matches, clubs, onSelectMatch }: MatchListProps) {
   if (matches.length === 0) {
-    return <p className="text-sm text-ink-muted">Nenhuma partida nesta rodada.</p>;
+    return <p className="text-body-medium text-ink-muted">Nenhuma partida nesta rodada.</p>;
   }
 
   const byCode = new Map(clubs?.map((club) => [club.code, club]));
@@ -91,7 +91,7 @@ export function MatchList({ matches, clubs, onSelectMatch }: MatchListProps) {
                 {clubName(match.awayCode)}
               </p>
             )}
-            <p className="mt-0.5 text-xs text-ink-faint">{kickoffLabel(match.kickoff)}</p>
+            <p className="mt-0.5 text-body-small text-ink-faint">{kickoffLabel(match.kickoff)}</p>
             {match.broadcasters && (
               <p className="mt-1 flex flex-wrap items-center gap-1">
                 <span className="sr-only">Onde assistir: </span>
@@ -102,7 +102,7 @@ export function MatchList({ matches, clubs, onSelectMatch }: MatchListProps) {
             )}
           </div>
           <span
-            className={`shrink-0 rounded-x-small px-2 py-1 text-xs font-medium ${STATUS_CLASS[match.status]}`}
+            className={`shrink-0 rounded-x-small px-2 py-1 text-body-small font-medium ${STATUS_CLASS[match.status]}`}
           >
             {STATUS_LABEL[match.status]}
           </span>

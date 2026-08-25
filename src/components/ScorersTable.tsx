@@ -13,16 +13,16 @@ interface ScorersTableProps {
 
 export function ScorersTable({ rows, onSelectPlayer }: ScorersTableProps) {
   if (rows.length === 0) {
-    return <p className="text-sm text-ink-muted">Artilharia indisponível no momento.</p>;
+    return <p className="text-body-medium text-ink-muted">Artilharia indisponível no momento.</p>;
   }
 
   return (
     <Surface className="overflow-x-auto">
-      <table className="w-full min-w-[32rem] text-sm">
+      <table className="w-full min-w-[32rem] text-body-medium">
         <caption className="sr-only">
           Artilharia do Campeonato Brasileiro Série A
         </caption>
-        <thead className="bg-surface-container-low text-xs uppercase tracking-wide text-ink-muted">
+        <thead className="bg-surface-container-low text-label-medium uppercase text-ink-muted">
           <tr>
             <th scope="col" className="px-3 py-2 text-left">#</th>
             <th scope="col" className="px-3 py-2 text-left">Jogador</th>
@@ -48,7 +48,7 @@ export function ScorersTable({ rows, onSelectPlayer }: ScorersTableProps) {
                 ) : (
                   <span className="block font-medium">{row.playerName}</span>
                 )}
-                <span className="block text-xs text-ink-faint">{row.club.shortName}</span>
+                <span className="block text-body-small text-ink-faint">{row.club.shortName}</span>
               </td>
               <td className="px-2 py-2 text-right font-semibold tabular-nums">{row.goals}</td>
               <td className="px-2 py-2 text-right tabular-nums text-ink-muted">
@@ -64,7 +64,7 @@ export function ScorersTable({ rows, onSelectPlayer }: ScorersTableProps) {
           ))}
         </tbody>
       </table>
-      <p className="border-t border-line px-3 py-2 text-xs text-ink-faint">
+      <p className="border-t border-line px-3 py-2 text-body-small text-ink-faint">
         G gols · A assistências · P pênaltis · J jogos · — não informado
       </p>
     </Surface>

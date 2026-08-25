@@ -73,7 +73,7 @@ export function NavBar({ current, onNavigate, theme, onToggleTheme }: NavBarProp
 
   const itemClass = (id: SectionId, block: boolean) =>
     [
-      "rounded-small px-3 py-2 text-sm font-medium",
+      "rounded-small px-3 py-2 text-body-medium font-medium",
       block ? "block w-full text-left" : "",
       // The current entry is a filled chip and needs no veil — but it is still
       // focusable, so it takes the ring on its own. Folding the ring into the
@@ -89,8 +89,8 @@ export function NavBar({ current, onNavigate, theme, onToggleTheme }: NavBarProp
     <header className="sticky top-0 z-20 border-b border-line bg-surface/90 backdrop-blur">
       <div className="mx-auto flex max-w-3xl items-center justify-between gap-3 px-4 py-3">
         <div className="min-w-0">
-          <p className="truncate text-base font-bold tracking-tight">Portal Brasileirão</p>
-          <p className="truncate text-xs text-ink-muted">Campeonato Brasileiro Série A</p>
+          <p className="truncate text-title-medium font-bold">Portal Brasileirão</p>
+          <p className="truncate text-body-small text-ink-muted">Campeonato Brasileiro Série A</p>
         </div>
 
         {/* Desktop: the sections sit inline. No `title` — a tooltip never
@@ -148,7 +148,7 @@ export function NavBar({ current, onNavigate, theme, onToggleTheme }: NavBarProp
               className={itemClass(item.id, true)}
             >
               <span className="block">{item.label}</span>
-              <span className="block text-xs font-normal text-ink-muted">
+              <span className="block text-body-small font-normal text-ink-muted">
                 {item.description}
               </span>
             </a>

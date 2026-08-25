@@ -26,7 +26,7 @@ export function RoundBrowser({
   onSelectMatch,
 }: RoundBrowserProps) {
   if (round === null || rounds.length === 0) {
-    return <p className="text-sm text-ink-muted">Nenhuma rodada disponível.</p>;
+    return <p className="text-body-medium text-ink-muted">Nenhuma rodada disponível.</p>;
   }
 
   const index = rounds.indexOf(round);
@@ -46,7 +46,7 @@ export function RoundBrowser({
         </Button>
 
         <div className="flex items-center gap-2">
-          <label htmlFor="seletor-rodada" className="text-sm text-ink-muted">
+          <label htmlFor="seletor-rodada" className="text-body-medium text-ink-muted">
             Rodada
           </label>
           <select
@@ -77,7 +77,7 @@ export function RoundBrowser({
         </Button>
       </div>
 
-      <h2 className="mb-3 text-sm font-medium text-ink-muted">{round}ª rodada</h2>
+      <h2 className="mb-3 text-body-medium font-medium text-ink-muted">{round}ª rodada</h2>
       <MatchList
         matches={matchesForRound(matches, round)}
         clubs={clubs}

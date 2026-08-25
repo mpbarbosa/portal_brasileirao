@@ -300,6 +300,17 @@ Rules that follow from sharing a repository:
   read as "the content behind is inactive". `plate` is its mirror — light in both themes,
   because the broadcaster marks it backs are dark artwork on a transparent ground and
   disappear against a dark page.
+- **Type comes from the MD3 type scale.** `text-body-small` through
+  `text-headline-medium`, defined in `src/index.css`. A bare `text-sm`, `text-xs`
+  or `text-2xl` in a component is a regression, and so is a `tracking-*` utility:
+  each step carries size, line height **and** letter spacing together, so naming
+  one thing is the point.
+  **Weight is not part of the scale.** MD3 prescribes 500 for its title and label
+  steps; this app's headings are bold by choice, so components keep their explicit
+  `font-*`. Weight is separable from the scale the same way the typeface is.
+  **The typeface is the system stack** — no webfont ships. Roboto is already fourth
+  in Tailwind's default `--font-sans`, so Android renders in MD3's own face for
+  nothing. See `docs/roadmap.md` M0 for what that trades away.
 - **Radii come from the MD3 shape scale.** `rounded-x-small` / `rounded-small` /
   `rounded-medium` / `rounded-large` / `rounded-x-large`, defined in `src/index.css`.
   A bare `rounded`, `rounded-lg` or `rounded-xl` in a component is a regression —
@@ -322,7 +333,10 @@ Rules that follow from sharing a repository:
   `FOCUS_RING` is deliberately **separate** from `STATE_LAYER`: they were one constant
   first, and the current nav entry — a filled chip that takes no veil — silently lost its
   focus ring with it. Anything focusable takes the ring; only things with a container
-  take the veil.
+  take the veil. The general rule is worth more than the incident: hover and focus are
+  two different affordances, and coupling them is invisible until exactly one control
+  opts out of one of them. A focus ring must not be reachable only through a hover
+  effect.
   Note these constants are plain strings, not functions taking a colour. Tailwind
   extracts class names by scanning source text, so `hover:bg-${role}/8` generates no CSS
   at all. Write a second constant rather than making one dynamic.

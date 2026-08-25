@@ -15,7 +15,7 @@ interface PlayerOverlayCardProps {
 const detail = (label: string, value: string | null) =>
   value === null ? null : (
     <div key={label}>
-      <dt className="text-xs text-ink-faint">{label}</dt>
+      <dt className="text-body-small text-ink-faint">{label}</dt>
       <dd className="font-medium">{value}</dd>
     </div>
   );
@@ -90,7 +90,7 @@ export function PlayerOverlayCard({ player, scorer, onClose }: PlayerOverlayCard
       >
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0">
-            <h2 id="jogador-nome" className="truncate text-lg font-bold tracking-tight">
+            <h2 id="jogador-nome" className="truncate text-title-large font-bold">
               {enriched.shirtNumber !== undefined && (
                 <span className="mr-2 text-ink-faint tabular-nums">
                   {enriched.shirtNumber}
@@ -98,7 +98,7 @@ export function PlayerOverlayCard({ player, scorer, onClose }: PlayerOverlayCard
               )}
               {enriched.name}
             </h2>
-            {club && <p className="truncate text-sm text-ink-muted">{club.shortName}</p>}
+            {club && <p className="truncate text-body-medium text-ink-muted">{club.shortName}</p>}
           </div>
 
           <Button ref={closeRef} size="sm" onClick={onClose} aria-label="Fechar" className="shrink-0">
@@ -106,7 +106,7 @@ export function PlayerOverlayCard({ player, scorer, onClose }: PlayerOverlayCard
           </Button>
         </div>
 
-        <dl className="mt-4 grid grid-cols-2 gap-3 text-sm sm:grid-cols-3">
+        <dl className="mt-4 grid grid-cols-2 gap-3 text-body-medium sm:grid-cols-3">
           {detail("Posição", position)}
           {detail("Nacionalidade", enriched.nationality ?? null)}
           {detail("Idade", age === null ? null : `${age} anos`)}
@@ -114,24 +114,24 @@ export function PlayerOverlayCard({ player, scorer, onClose }: PlayerOverlayCard
 
         {scorer && (
           <section className="mt-5 border-t border-line pt-4">
-            <h3 className="mb-2 text-xs uppercase tracking-wide text-ink-faint">
+            <h3 className="mb-2 text-label-medium uppercase text-ink-faint">
               No campeonato
             </h3>
-            <dl className="grid grid-cols-4 gap-3 text-sm">
+            <dl className="grid grid-cols-4 gap-3 text-body-medium">
               <div>
-                <dt className="text-xs text-ink-faint">Gols</dt>
+                <dt className="text-body-small text-ink-faint">Gols</dt>
                 <dd className="font-semibold tabular-nums">{scorer.goals}</dd>
               </div>
               <div>
-                <dt className="text-xs text-ink-faint">Assist.</dt>
+                <dt className="text-body-small text-ink-faint">Assist.</dt>
                 <dd className="tabular-nums">{countOrDash(scorer.assists)}</dd>
               </div>
               <div>
-                <dt className="text-xs text-ink-faint">Pênaltis</dt>
+                <dt className="text-body-small text-ink-faint">Pênaltis</dt>
                 <dd className="tabular-nums">{countOrDash(scorer.penalties)}</dd>
               </div>
               <div>
-                <dt className="text-xs text-ink-faint">Jogos</dt>
+                <dt className="text-body-small text-ink-faint">Jogos</dt>
                 <dd className="tabular-nums">{countOrDash(scorer.playedMatches)}</dd>
               </div>
             </dl>
