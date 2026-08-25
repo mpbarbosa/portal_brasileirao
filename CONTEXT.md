@@ -116,16 +116,19 @@ _Avoid_: title-casing or re-accenting CBF's values, expecting football-data to
 supply a venue.
 
 **Melhores momentos**:
-The highlights section of a **Página da partida**, shown only for a match that
-finished with goals. When `src/data/goal-videos.ts` has entries, it lists one
-link per broadcaster, labelled by channel — several publish their own package
-for the same match, and the reader picks. With no entry it falls back to a
-YouTube *search* and says so, because no provider we use exposes highlight links
-and guessing a video id would eventually point at the wrong match or a reupload.
-_Avoid_: "Gols" as the heading (that is the count, as in the artilharia column),
-labelling several links with the same generic verb, presenting the search as an
-official video, offering either for a fixture that has not finished or ended
-goalless.
+The highlights section of a **Página da partida**, shown for **any** match that
+has finished with a score — a 0-0 included, since it still has chances and saves
+and broadcasters publish a package for it either way. When
+`src/data/highlights.ts` has entries it lists one link per broadcaster, labelled
+by channel; several publish their own package for the same match and the reader
+picks. With no entry it falls back to a YouTube *search* for "melhores
+momentos", and says so, because no provider we use exposes highlight links and
+guessing a video id would eventually point at the wrong match or a reupload.
+_Avoid_: "Gols" anywhere in this section (that is the count, as in the artilharia
+column) or "gols" in the search query — it has to serve a goalless match;
+gating the section on goals scored; labelling several links with the same
+generic verb; presenting the search as an official video; offering either for a
+fixture that has not finished.
 
 **Status da partida**:
 The five values of `MatchStatus`, shown as badges: `SCHEDULED` → "A realizar",

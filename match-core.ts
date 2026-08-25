@@ -2,7 +2,7 @@
  * Pure helpers for a single match page. No I/O (tests/match-core.test.ts).
  */
 import { countsTowardStandings } from "@/standings-core";
-import type { Club, GoalVideo, Match } from "@/src/types";
+import type { Club, Highlight, Match } from "@/src/types";
 
 export const findMatch = (matches: Match[], id: string): Match | null =>
   matches.find((match) => match.id === id) ?? null;
@@ -24,7 +24,7 @@ export const clubsOf = (
  * a bad entry degrades to the search rather than rendering a broken or
  * unexpected destination.
  */
-export const isGoalsVideoUrl = (value: string | undefined): boolean => {
+export const isHighlightUrl = (value: string | undefined): boolean => {
   if (!value) return false;
 
   let url: URL;
@@ -49,17 +49,17 @@ export const isGoalsVideoUrl = (value: string | undefined): boolean => {
  * The curated highlights for a match, dropping any entry whose URL does not
  * survive validation — a typo in one line should not take the others with it.
  */
-export const goalsVideos = (match: Match): GoalVideo[] =>
-  (match.goalsVideos ?? []).filter((video) => isGoalsVideoUrl(video.url));
+export const highlights = (match: Match): Highlight[] =>
+  (match.highlights ?? []).filter((video) => isHighlightUrl(video.url));
 
 /** Attach curated highlights to the matches that have any. */
-export const withGoalVideos = (
+export const withHighlights = (
   matches: Match[],
-  videos: Record<string, GoalVideo[]>,
+  videos: Record<string, Highlight[]>,
 ): Match[] =>
   matches.map((match) => {
-    const valid = (videos[match.id] ?? []).filter((video) => isGoalsVideoUrl(video.url));
-    return valid.length > 0 ? { ...match, goalsVideos: valid } : match;
+    const valid = (videos[match.id] ?? []).filter((video) => isHighlightUrl(video.url));
+    return valid.length > 0 ? { ...match, highlights: valid } : match;
   });
 
 /**
@@ -71,18 +71,22 @@ export const withGoalVideos = (
  * and is honest about being a starting point. A curated exact link, when one
  * exists, should win over this.
  */
-export const goalsSearchUrl = (home: string, away: string): string => {
-  const query = `${home} x ${away} gols Brasileirão`;
+export const highlightsSearchUrl = (home: string, away: string): string => {
+  // "melhores momentos", not "gols": the same query has to serve a 0-0.
+  const query = `${home} x ${away} melhores momentos Brasileirão`;
   return `https://www.youtube.com/results?search_query=${encodeURIComponent(query)}`;
 };
 
 /**
- * Whether a goals link is worth offering. Only for matches that finished with a
- * score — there are no highlights of a fixture that has not kicked off, and a
- * live match's goals are not yet a package.
+ * Whether highlights are worth offering. Any match that has finished with a
+ * score qualifies, **including a goalless one**: a 0-0 still has chances and
+ * saves, and broadcasters publish a package for it either way. Gating on goals
+ * would silently hide the section from 14 of the season's 234 finished matches.
+ *
+ * Still excluded: a fixture that has not kicked off, and a live match, whose
+ * highlights are not yet a package.
  */
-export const hasGoalsToShow = (match: Match): boolean =>
-  countsTowardStandings(match) && (match.homeGoals ?? 0) + (match.awayGoals ?? 0) > 0;
+export const hasHighlights = (match: Match): boolean => countsTowardStandings(match);
 
 /** `Nilton Santos · Rio de Janeiro – RJ`, or null when the venue is unknown. */
 export const venueLabel = (match: Match): string | null => {

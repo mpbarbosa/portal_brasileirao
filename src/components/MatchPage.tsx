@@ -1,8 +1,8 @@
 import {
   clubsOf,
-  goalsSearchUrl,
-  goalsVideos,
-  hasGoalsToShow,
+  highlightsSearchUrl,
+  highlights,
+  hasHighlights,
   venueLabel,
 } from "@/match-core";
 import { controlClasses } from "@/src/components/Button";
@@ -96,7 +96,7 @@ export function MatchPage({ match, clubs, onBack, onNavigate }: MatchPageProps) 
 
   const { home, away } = clubsOf(match, clubs);
   const venue = venueLabel(match);
-  const videos = goalsVideos(match);
+  const videos = highlights(match);
   const played = match.homeGoals !== null && match.awayGoals !== null;
 
   return (
@@ -151,7 +151,7 @@ export function MatchPage({ match, clubs, onBack, onNavigate }: MatchPageProps) 
         )}
       </dl>
 
-      {hasGoalsToShow(match) && (
+      {hasHighlights(match) && (
         <section className="mt-6">
           <h3 className="mb-2 text-sm font-medium text-ink-muted">Melhores momentos</h3>
 
@@ -189,7 +189,7 @@ export function MatchPage({ match, clubs, onBack, onNavigate }: MatchPageProps) 
           ) : (
             <>
               <a
-                href={goalsSearchUrl(
+                href={highlightsSearchUrl(
                   home?.shortName ?? match.homeCode,
                   away?.shortName ?? match.awayCode,
                 )}
@@ -198,7 +198,7 @@ export function MatchPage({ match, clubs, onBack, onNavigate }: MatchPageProps) 
                 className={controlClasses("md", "inline-flex items-center gap-2")}
               >
                 <span aria-hidden="true">▶</span>
-                Procurar os gols no YouTube
+                Procurar melhores momentos no YouTube
                 <span className="sr-only"> (abre em nova aba)</span>
               </a>
               {/* Honest about what this is: without a curated link we do not

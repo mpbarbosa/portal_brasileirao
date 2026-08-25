@@ -38,7 +38,7 @@ export interface Club {
  * misreport a round as still playable.
  */
 /** A highlights package, and the channel that published it. */
-export interface GoalVideo {
+export interface Highlight {
   url: string;
   /** Publisher, shown as the link's label — "ge tv", "CazéTV". */
   channel: string;
@@ -80,12 +80,12 @@ export interface Match {
   /** Where it is played. Merged from `src/data/venues.ts`; also absent for most. */
   venue?: Venue;
   /**
-   * Links to the match's highlights, merged from `src/data/goal-videos.ts`.
+   * Links to the match's highlights, merged from `src/data/highlights.ts`.
    * Several broadcasters publish their own package for the same match, so this
    * is a list. Absent for nearly every match, in which case the page offers a
    * search instead.
    */
-  goalsVideos?: GoalVideo[];
+  highlights?: Highlight[];
 }
 
 export interface StandingsRow {

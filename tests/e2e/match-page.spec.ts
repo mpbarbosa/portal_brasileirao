@@ -29,7 +29,7 @@ const openMatchWithoutVideo = async (page: Page) => {
   for (const href of hrefs) {
     if (href.endsWith(`/${CURATED_MATCH}`)) continue;
     await page.goto(href);
-    if (await page.getByRole("link", { name: /Procurar os gols/ }).count()) return;
+    if (await page.getByRole("link", { name: /Procurar melhores momentos/ }).count()) return;
   }
 
   throw new Error("no finished fixture without a curated video was found");
@@ -74,31 +74,31 @@ test.describe("Página da partida", () => {
     await expect(venue).toContainText(/–\s[A-Z]{2}$/);
   });
 
-  test("an upcoming match offers no goals link", async ({ page }) => {
-    // Nothing has been scored yet.
+  test("an upcoming match offers no highlights", async ({ page }) => {
+    // It has not been played.
     await openFirstMatch(page, UPCOMING_ROUND);
 
-    await expect(page.getByRole("link", { name: /Procurar os gols/ })).toHaveCount(0);
+    await expect(page.getByRole("link", { name: /Procurar melhores momentos/ })).toHaveCount(0);
   });
 
-  test("a finished match offers a goals link", async ({ page }) => {
+  test("a finished match offers highlights", async ({ page }) => {
     await openMatchWithoutVideo(page);
 
-    const goals = page.getByRole("link", { name: /Procurar os gols/ });
+    const goals = page.getByRole("link", { name: /Procurar melhores momentos/ });
     await expect(goals).toBeVisible();
     await expect(goals).toHaveAttribute("href", /youtube\.com\/results\?search_query=/);
   });
 
-  test("the goals link opens safely in a new tab", async ({ page }) => {
+  test("the highlights link opens safely in a new tab", async ({ page }) => {
     await openMatchWithoutVideo(page);
 
-    const goals = page.getByRole("link", { name: /Procurar os gols/ });
+    const goals = page.getByRole("link", { name: /Procurar melhores momentos/ });
     await expect(goals).toHaveAttribute("target", "_blank");
     // Without noopener the opened page can reach back into this one.
     await expect(goals).toHaveAttribute("rel", /noopener/);
   });
 
-  test("the goals link is honest about being a search", async ({ page }) => {
+  test("the search fallback is honest about being a search", async ({ page }) => {
     await openMatchWithoutVideo(page);
 
     await expect(page.getByText(/não é um vídeo oficial/)).toBeVisible();
@@ -136,6 +136,16 @@ test.describe("Página da partida", () => {
     await expect(page.getByText("Data e hora")).toBeVisible();
   });
 
+  test("a goalless match still offers highlights", async ({ page }) => {
+    // Internacional 0 x 0 Atlético-MG. A 0-0 has chances and saves, and gating
+    // on goals hid the section from 14 of the season's finished matches.
+    await page.goto("/partida/554976");
+
+    await expect(page.locator("article").getByText(/0\s*×\s*0/)).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Melhores momentos" })).toBeVisible();
+    await expect(page.getByRole("link", { name: /Procurar melhores momentos/ })).toBeVisible();
+  });
+
   test("back returns to the fixtures", async ({ page }) => {
     await openFirstMatch(page, PLAYED_ROUND);
     await page.getByRole("button", { name: "← Voltar" }).click();
@@ -168,7 +178,7 @@ test.describe("Página da partida", () => {
   test("a curated video suppresses the search fallback", async ({ page }) => {
     await page.goto("/partida/554975");
 
-    await expect(page.getByRole("link", { name: /Procurar os gols/ })).toHaveCount(0);
+    await expect(page.getByRole("link", { name: /Procurar melhores momentos/ })).toHaveCount(0);
     await expect(page.getByText(/não é um vídeo oficial/)).toHaveCount(0);
   });
 });

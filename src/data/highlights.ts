@@ -1,4 +1,4 @@
-import type { GoalVideo } from "@/src/types";
+import type { Highlight } from "@/src/types";
 
 /**
  * HAND-MAINTAINED — never generated, and the sync script does not touch it.
@@ -11,10 +11,10 @@ import type { GoalVideo } from "@/src/types";
  * one may be longer, better, or simply still up when another is gone. The page
  * lists them all, labelled by channel, so the reader picks. When a match has
  * none, the page falls back to a YouTube *search* and says so — see
- * `goalsSearchUrl` in `match-core.ts`.
+ * `highlightsSearchUrl` in `match-core.ts`.
  *
  * Rules for entries:
- * - YouTube only, over HTTPS. `isGoalsVideoUrl` rejects anything else and that
+ * - YouTube only, over HTTPS. `isHighlightUrl` rejects anything else and that
  *   entry is dropped, so one bad line does not take the others with it.
  * - Prefer the rights-holder's own upload (ge tv, CazéTV, Premiere, the club's
  *   channel). A reupload can vanish or be taken down.
@@ -26,7 +26,7 @@ import type { GoalVideo } from "@/src/types";
  * (`/partida/554975`), or run
  *   curl -s https://brasileirao.mpbarbosa.com/api/matches?round=24 | jq
  */
-export const GOAL_VIDEOS: Record<string, GoalVideo[]> = {
+export const HIGHLIGHTS: Record<string, Highlight[]> = {
   // Fluminense 2 x 1 Clube do Remo, rodada 24.
   "554975": [
     { url: "https://www.youtube.com/watch?v=o-_hD5Q8f4Q", channel: "ge tv" },
