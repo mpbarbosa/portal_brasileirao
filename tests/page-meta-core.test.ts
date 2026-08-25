@@ -165,7 +165,9 @@ test("an image is included only when there is one", () => {
 });
 
 test("a canonical URL is emitted when supplied", () => {
-  const out = injectMeta(HTML, { title: "t", description: "d" }, "https://site/clube/flamengo");
+  const out = injectMeta(HTML, { title: "t", description: "d" }, {
+    canonicalUrl: "https://site/clube/flamengo",
+  });
 
   assert.match(out, /<link rel="canonical" href="https:\/\/site\/clube\/flamengo" \/>/);
   assert.match(out, /og:url" content="https:\/\/site\/clube\/flamengo"/);
@@ -187,4 +189,22 @@ test("a document with no head is returned unchanged rather than blanked", () => 
   const fragment = "<p>no head here</p>";
 
   assert.equal(injectMeta(fragment, { title: "t", description: "d" }), fragment);
+});
+
+test("a noindex page says so, and still lets its links be followed", () => {
+  const out = injectMeta(HTML, { title: "t", description: "d" }, { noindex: true });
+
+  assert.match(out, /<meta name="robots" content="noindex, follow" \/>/);
+});
+
+test("an indexable page carries no robots tag at all", () => {
+  assert.ok(!injectMeta(HTML, { title: "t", description: "d" }).includes('name="robots"'));
+});
+
+test("pre-rendered JSON-LD is placed inside the head", () => {
+  const script = '<script type="application/ld+json">{"@type":"WebSite"}</script>';
+  const out = injectMeta(HTML, { title: "t", description: "d" }, { jsonLd: script });
+
+  assert.ok(out.includes(script));
+  assert.ok(out.indexOf(script) < out.indexOf("</head>"));
 });

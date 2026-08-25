@@ -140,15 +140,41 @@ const escapeHtml = (value: string): string =>
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;");
 
+/** Everything the shell needs beyond the title and description. */
+export interface InjectOptions {
+  canonicalUrl?: string;
+  /**
+   * Keep this page out of the index. Set for the paths that answer with a
+   * friendly body but a 404 status — a made-up club, a round that was never
+   * played. The status alone is enough for a crawler that reads it; the tag
+   * covers the ones that render first and ask later.
+   */
+  noindex?: boolean;
+  /**
+   * Pre-rendered `<script type="application/ld+json">` markup.
+   *
+   * Passed in as a string rather than built here, because building it needs
+   * `structured-data-core`, which needs this module's `SITE_NAME` — importing
+   * it back would close a cycle. The caller already holds both.
+   */
+  jsonLd?: string;
+}
+
 /**
  * Rewrite a document's metadata.
  *
  * Replaces the existing `<title>` and description rather than appending, so the
- * document never carries two of either, and injects Open Graph and Twitter tags
- * before `</head>`. Returns the HTML unchanged if there is no head to inject
- * into — a malformed shell should still be served, not blanked.
+ * document never carries two of either, and injects Open Graph, Twitter,
+ * canonical, robots and JSON-LD tags before `</head>`. Returns the HTML
+ * unchanged if there is no head to inject into — a malformed shell should still
+ * be served, not blanked.
  */
-export const injectMeta = (html: string, meta: PageMeta, canonicalUrl?: string): string => {
+export const injectMeta = (
+  html: string,
+  meta: PageMeta,
+  options: InjectOptions = {},
+): string => {
+  const { canonicalUrl, noindex, jsonLd } = options;
   const title = escapeHtml(meta.title);
   const description = escapeHtml(meta.description);
 
@@ -170,6 +196,11 @@ export const injectMeta = (html: string, meta: PageMeta, canonicalUrl?: string):
     `<meta name="twitter:card" content="${meta.image ? "summary" : "summary_large_image"}" />`,
     `<meta name="twitter:title" content="${title}" />`,
     `<meta name="twitter:description" content="${description}" />`,
+    // `noindex` without `nofollow`: the page is not worth an index entry, but
+    // its links still lead to pages that are, and a stale link is the common
+    // way a crawler reaches this branch at all.
+    noindex ? `<meta name="robots" content="noindex, follow" />` : "",
+    jsonLd ?? "",
   ]
     .filter(Boolean)
     .join("\n    ");
