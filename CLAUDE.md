@@ -395,7 +395,12 @@ Stadium URLs use the same **slug** mechanism (`/estadio/maracana`), derived from
 venue string. `findStadium` re-slugs the segment before comparing, so a hand-typed
 `/estadio/Maracanã` lands rather than 404-ing on an accent. There is deliberately **no
 `/estadios` index and no nav entry** — see the bound on `NAV_ITEMS` above; a ground is
-reached from a fixture or a club.
+reached from a fixture, and from nowhere else. The club page carries no link to one:
+`ClubView` names no venue at all, and the stadium page's **Mandantes** tiles run the
+other way, stadium → club. Three files described that relationship backwards and
+promised a door the club page has never had, which is worth knowing before you go
+looking for it. So `/sitemap.xml` is the only route a crawler has to the 19 stadium
+pages, exactly as it is for the rounds — the same reason, one section further on.
 
 Club URLs use a **slug** (`/clube/flamengo`), derived from the short name by `slugify` in
 `club-core.ts`. The route carries a `key`, not a code, because the segment may be either:

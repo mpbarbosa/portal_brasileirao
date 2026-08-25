@@ -73,9 +73,9 @@ transparent ground, and they vanish against a dark page without it.*
 
 ![A mesma página do estádio no tema escuro, com a mesma fotografia aérea e a mesma linha de crédito, o mesmo nome popular e oficial, a mesma capacidade e ano de inauguração, os mesmos dois mandantes e a mesma lista de jogos, e as marcas das emissoras mantendo o fundo claro.](docs/screenshots/estadio-maracana-dark.png)
 
-*A stadium page, light and dark, reached from a match's **Estádio** line or a club's
-**Mandante** tile — it has no nav entry, because a ground is somewhere you arrive at from a
-fixture rather than a section you set out to browse. No feed we read has a stadium in it:
+*A stadium page, light and dark, reached from a match's **Estádio** line — it has no nav
+entry, because a ground is somewhere you arrive at from a fixture rather than a section
+you set out to browse. No feed we read has a stadium in it:
 football-data carries no venue field at any tier, and CBF reports only `Stadium - City - UF`
 per match, so the roster is derived by grouping fixtures on the slug of that string. That
 slug is the identity, which is what makes CBF's `ARENA MRV` and `Arena MRV` one ground

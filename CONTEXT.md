@@ -276,7 +276,7 @@ supply a venue.
 
 **Página do estádio**:
 The detail page for one ground, at `/estadio/<slug>`, reached from a **Página da
-partida**'s **Estádio** line or from a club's **Mandante** tile — never from the
+partida**'s **Estádio** line — the only door there is, and never from the
 navigation bar. Shows the name, city and state, the official name where it
 differs, a **foto do estádio** where one is curated, capacity, year of
 inauguration, the clubs that host there, and every fixture of the season played
@@ -286,10 +286,13 @@ derives the roster by grouping fixtures on the slug of their venue string, which
 is the only thing tying a fixture to a ground. The slug is therefore the
 identity, and it is what absorbs CBF's casing drift — `ARENA MRV` and `Arena MRV`
 are one stadium, not two.
-_Avoid_: a nav-bar entry for it (MD3's bar holds five and four are spent, and a
-ground is somewhere you arrive at from a fixture rather than a section you set
-out to browse), keying stadiums on the raw venue string, treating the absence of
-a curated fact as a zero.
+_Avoid_: a nav-bar entry for it (MD3's bar is full at five, and a ground is
+somewhere you arrive at from a fixture rather than a section you set out to
+browse), keying stadiums on the raw venue string, treating the absence of a
+curated fact as a zero, and describing a club page as a way in — the
+**Mandantes** tiles point *from* this page *to* the clubs, and reading that
+relationship backwards is how three files came to promise a link the club page
+has never had.
 
 **Foto do estádio**:
 The photograph at the top of a **Página do estádio**, under the name and above
