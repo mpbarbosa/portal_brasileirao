@@ -33,11 +33,30 @@ export const HOME: Route = { section: "classificacao" };
 const isRound = (value: string): boolean => /^[1-9]\d*$/.test(value);
 
 /**
+ * Split and percent-decode a pathname, treating an undecodable one as empty.
+ *
+ * `decodeURIComponent` throws `URIError` on a malformed escape — `/clube/%`,
+ * `/clube/%E0%A4%A` — and a crawler will eventually send one. Left to throw,
+ * that surfaces as a 500 from the SPA handler, which is both the wrong answer
+ * and the one shape of failure this module exists to rule out: every path is
+ * supposed to resolve to something. It resolves to the table, and `pageStatus`
+ * in `seo-core` is what gives it a 404 rather than an indexable duplicate.
+ */
+const decodeSegments = (pathname: string): string[] => {
+  const raw = pathname.split("/").filter(Boolean);
+  try {
+    return raw.map(decodeURIComponent);
+  } catch {
+    return [];
+  }
+};
+
+/**
  * Read a route from a pathname. Anything unrecognised falls back to the table
  * rather than erroring: a stale or mistyped link should land somewhere useful.
  */
 export const parseRoute = (pathname: string): Route => {
-  const [first, second] = pathname.split("/").filter(Boolean).map(decodeURIComponent);
+  const [first, second] = decodeSegments(pathname);
 
   switch (first) {
     case undefined:

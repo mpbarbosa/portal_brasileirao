@@ -1,7 +1,15 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { injectMeta, pageMeta, SITE_NAME } from "@/page-meta-core";
+import {
+  injectMeta,
+  OG_IMAGE_HEIGHT,
+  OG_IMAGE_PATH,
+  OG_IMAGE_WIDTH,
+  pageMeta,
+  SITE_NAME,
+  type PreviewImage,
+} from "@/page-meta-core";
 import { buildStadiums } from "@/venue-core";
 import type { Club, Match, StandingsRow } from "@/src/types";
 
@@ -52,7 +60,8 @@ test("a club page is titled by the club", () => {
   const meta = pageMeta({ section: "clube", key: "flamengo" }, { clubs: CLUBS });
 
   assert.equal(meta.title, `Flamengo · ${SITE_NAME}`);
-  assert.equal(meta.image, "https://crests.football-data.org/1783.png");
+  assert.equal(meta.image?.url, "https://crests.football-data.org/1783.png");
+  assert.equal(meta.image?.shape, "square");
 });
 
 test("a club page resolves by code as well as slug", () => {
@@ -157,16 +166,67 @@ test("Open Graph and Twitter tags are added before the head closes", () => {
   assert.ok(out.indexOf("og:title") < out.indexOf("</head>"));
 });
 
+const WIDE: PreviewImage = {
+  url: "https://x/card.png",
+  shape: "wide",
+  width: 1200,
+  height: 630,
+  alt: "cartão",
+};
+
+const SQUARE: PreviewImage = { url: "https://x/crest.png", shape: "square", alt: "escudo" };
+
 test("an image is included only when there is one", () => {
-  const withImage = injectMeta(HTML, { title: "t", description: "d", image: "https://x/y.png" });
+  const withImage = injectMeta(HTML, { title: "t", description: "d", image: WIDE });
   const without = injectMeta(HTML, { title: "t", description: "d" });
 
-  assert.match(withImage, /og:image" content="https:\/\/x\/y.png"/);
+  assert.match(withImage, /og:image" content="https:\/\/x\/card.png"/);
+  assert.match(withImage, /twitter:image" content="https:\/\/x\/card.png"/);
   assert.ok(!without.includes("og:image"));
+  assert.ok(!without.includes("twitter:image"));
+});
+
+test("the card type follows the image's shape", () => {
+  // This was inverted: summary_large_image was declared exactly when there was
+  // no image to fill it, and a crest was cramped into the wide layout.
+  const wide = injectMeta(HTML, { title: "t", description: "d", image: WIDE });
+  const square = injectMeta(HTML, { title: "t", description: "d", image: SQUARE });
+  const none = injectMeta(HTML, { title: "t", description: "d" });
+
+  assert.match(wide, /twitter:card" content="summary_large_image"/);
+  assert.match(square, /twitter:card" content="summary"/);
+  assert.match(none, /twitter:card" content="summary"/);
+});
+
+test("dimensions ride along only when they are known", () => {
+  const wide = injectMeta(HTML, { title: "t", description: "d", image: WIDE });
+  const square = injectMeta(HTML, { title: "t", description: "d", image: SQUARE });
+
+  assert.match(wide, /og:image:width" content="1200"/);
+  assert.match(wide, /og:image:height" content="630"/);
+  // A crest arrives from the provider at an unspecified size; guessing would
+  // tell a scraper to lay out a box the image does not fill.
+  assert.ok(!square.includes("og:image:width"));
+});
+
+test("the image carries alt text, escaped", () => {
+  const out = injectMeta(HTML, {
+    title: "t",
+    description: "d",
+    image: { ...SQUARE, alt: 'Escudo do "X" & cia' },
+  });
+
+  assert.match(out, /og:image:alt" content="Escudo do &quot;X&quot; &amp; cia"/);
+});
+
+test("the locale is declared", () => {
+  assert.match(injectMeta(HTML, { title: "t", description: "d" }), /og:locale" content="pt_BR"/);
 });
 
 test("a canonical URL is emitted when supplied", () => {
-  const out = injectMeta(HTML, { title: "t", description: "d" }, "https://site/clube/flamengo");
+  const out = injectMeta(HTML, { title: "t", description: "d" }, {
+    canonicalUrl: "https://site/clube/flamengo",
+  });
 
   assert.match(out, /<link rel="canonical" href="https:\/\/site\/clube\/flamengo" \/>/);
   assert.match(out, /og:url" content="https:\/\/site\/clube\/flamengo"/);
@@ -222,4 +282,69 @@ test("an unknown stadium still gets a truthful title, not undefined", () => {
 
   assert.match(meta.title, /Estádio/);
   assert.ok(!meta.title.includes("undefined"));
+});
+
+test("a noindex page says so, and still lets its links be followed", () => {
+  const out = injectMeta(HTML, { title: "t", description: "d" }, { noindex: true });
+
+  assert.match(out, /<meta name="robots" content="noindex, follow" \/>/);
+});
+
+test("an indexable page carries no robots tag at all", () => {
+  assert.ok(!injectMeta(HTML, { title: "t", description: "d" }).includes('name="robots"'));
+});
+
+test("pre-rendered JSON-LD is placed inside the head", () => {
+  const script = '<script type="application/ld+json">{"@type":"WebSite"}</script>';
+  const out = injectMeta(HTML, { title: "t", description: "d" }, { jsonLd: script });
+
+  assert.ok(out.includes(script));
+  assert.ok(out.indexOf(script) < out.indexOf("</head>"));
+});
+
+const ORIGIN = "https://site.test";
+
+test("every section carries the site's own card", () => {
+  for (const route of [
+    { section: "classificacao" },
+    { section: "ao-vivo" },
+    { section: "jogos", round: null },
+    { section: "artilharia" },
+  ] as const) {
+    const image = pageMeta(route, {}, ORIGIN).image;
+
+    assert.equal(image?.url, `${ORIGIN}${OG_IMAGE_PATH}`, route.section);
+    assert.equal(image?.shape, "wide", route.section);
+    assert.equal(image?.width, OG_IMAGE_WIDTH);
+    assert.equal(image?.height, OG_IMAGE_HEIGHT);
+  }
+});
+
+test("a fixture takes the site's card, not one of the two clubs' crests", () => {
+  // Illustrating a match with the home crest asserts the page is about that
+  // club, which is also how the away side reads it.
+  const image = pageMeta({ section: "partida", id: "554970" }, { clubs: CLUBS, matches: [MATCH] }, ORIGIN).image;
+
+  assert.equal(image?.url, `${ORIGIN}${OG_IMAGE_PATH}`);
+  assert.equal(image?.shape, "wide");
+});
+
+test("a club with no crest falls back to the site's card", () => {
+  const image = pageMeta({ section: "clube", key: "botafogo" }, { clubs: CLUBS }, ORIGIN).image;
+
+  assert.equal(image?.url, `${ORIGIN}${OG_IMAGE_PATH}`);
+});
+
+test("no origin means no card, rather than an unfetchable relative one", () => {
+  // A scraper fetches from its own host: "/og-default.png" resolves nowhere.
+  assert.equal(pageMeta({ section: "classificacao" }).image, undefined);
+  assert.equal(pageMeta({ section: "partida", id: "554970" }, { matches: [MATCH] }).image, undefined);
+});
+
+test("a club's crest still wins on its own page, and it is square", () => {
+  const image = pageMeta({ section: "clube", key: "flamengo" }, { clubs: CLUBS }, ORIGIN).image;
+
+  assert.equal(image?.url, "https://crests.football-data.org/1783.png");
+  assert.equal(image?.shape, "square");
+  assert.match(image?.alt ?? "", /Flamengo/);
 });
