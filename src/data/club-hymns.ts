@@ -30,8 +30,10 @@ import type { ClubCode } from "@/src/types";
  * then a channel whose upload is titled as the club's official hymn. A reupload
  * can vanish; the label's own cannot without the label.
  *
- * Palmeiras is the one entry not chosen by that rule: it is the video supplied
- * when this feature was asked for. Left as given, since a hymn is a hymn.
+ * Palmeiras, Botafogo, Flamengo and Santos are not chosen by that rule: all
+ * four are videos supplied by hand, and all four are the same channel. Left as
+ * given. The rule exists to pick between candidates nobody has an opinion
+ * about, and it yields to somebody who does.
  */
 export const CLUB_HYMNS: Record<ClubCode, string> = {
   // Hino Oficial do Fluminense (Lyric Video) — Gravadora Cid
@@ -44,8 +46,8 @@ export const CLUB_HYMNS: Record<ClubCode, string> = {
   "1768": "Z6-NYoaI9Gc",
   // HINO DO PALMEIRAS — golaudio
   "1769": "DiKvx0gRfaQ",
-  // Hino Oficial do Botafogo (Lyric Video) — Gravadora Cid
-  "1770": "UPpdo9nmBj0",
+  // HINO DO BOTAFOGO-RJ — golaudio
+  "1770": "n9eubiXerB8",
   // Hino Oficial do Cruzeiro (Lyric Video) — Gravadora Cid
   "1771": "CM9eHx2SV1E",
   // Hino oficial da Associação Chapecoense de Futebol — Hinos do Futebol Mundial
@@ -60,8 +62,8 @@ export const CLUB_HYMNS: Record<ClubCode, string> = {
   "1780": "wjWig2aKcdE",
   // Hino do Vitória - Hino Oficial do Esporte Clube Vitória — Hinos do Futebol Mundial
   "1782": "XveVhtInOrM",
-  // HINO OFICIAL DO FLAMENGO — Gravadora Cid
-  "1783": "gESWI9ZlXzo",
+  // HINO DO FLAMENGO — golaudio
+  "1783": "Sx86-18V3m8",
   // Hino do Coritiba (Oficial) — Orquestra e Coro Cid - Topic
   "4241": "G63BSW7sSZk",
   // Red Bull Bragantino - Hino Oficial — Vitrola Sports
@@ -72,6 +74,6 @@ export const CLUB_HYMNS: Record<ClubCode, string> = {
   "4364": "yqxnaQM1Mwk",
   // HINO OFICIAL DO INTERNACIONAL — Gravadora Cid
   "6684": "AoLFJxM3deg",
-  // Hino Oficial do Santos (Leão do Mar) - (Lyric Video) — Gravadora Cid
-  "6685": "Mu5y4lL59l4",
+  // HINO DO SANTOS-SP — golaudio
+  "6685": "9jqN0bnuHLc",
 };
