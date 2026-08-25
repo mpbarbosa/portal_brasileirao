@@ -76,6 +76,6 @@ export const LINK_UNDERLINE = [
  * drift apart.
  */
 export const BACK_LINK = [
-  "text-sm text-ink-muted transition hover:text-ink-soft",
+  "text-body-medium text-ink-muted transition hover:text-ink-soft",
   FOCUS_RING,
 ].join(" ");

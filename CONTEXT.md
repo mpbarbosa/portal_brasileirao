@@ -477,3 +477,23 @@ border and the 16px/20px content height floor.
 _Avoid_: "chip" for this (the word invites the tonal container that breaks it),
 deriving `--color-plate` from the palette, a border in place of the ring — a
 border adds to the box, a ring does not, and the plate is sized to artwork.
+
+**Movimento**:
+Material Design 3's easing curves and durations, in `src/index.css`. The app uses
+two of each: `standard` at 200ms for small frequent changes a reader should
+barely notice, and `emphasized-decelerate` at 300ms for the **Cartão do jogador**
+arriving — the slow finish is what makes it read as placed rather than snapped.
+A bare `transition` already means the standard pair, because Tailwind's defaults
+are overridden rather than annotated at each call site.
+_Avoid_: `duration-*` utilities (Tailwind v4 has no such namespace — they compile
+to nothing and leave the default silently in place), emphasized easing on a hover
+(it reads as sluggish), adding motion without checking **Movimento reduzido**.
+
+**Movimento reduzido**:
+A reader who has asked their system for less motion, via
+`prefers-reduced-motion: reduce`. Honoured since M5: movement stops, colour
+feedback does not. Durations go near-zero rather than to `none`, so
+`transitionend` still fires and anything waiting on it keeps working.
+_Avoid_: removing hover and focus feedback along with the movement — a control
+that stops reacting is harder to use, not calmer; treating it as optional
+polish, since it is the reader stating a need rather than a preference.
