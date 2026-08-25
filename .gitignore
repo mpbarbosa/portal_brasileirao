@@ -154,3 +154,7 @@ playwright/.cache/
 # Ignored because a worktree is a whole second checkout — one `git add -A`
 # from any session would otherwise commit another session's entire tree.
 .claude/worktrees/
+
+# Screenshots of a local build. Only the live site writes to docs/screenshots,
+# so a dev-server capture cannot overwrite a committed README image.
+docs/screenshots/local/
