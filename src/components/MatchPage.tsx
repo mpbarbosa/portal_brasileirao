@@ -13,6 +13,7 @@ import { BACK_LINK, LINK_UNDERLINE } from "@/src/components/interaction";
 import { lastRecordedRound } from "@/rank-history-core";
 import { RankSparkline } from "@/src/components/RankSparkline";
 import { formatRoute } from "@/route-core";
+import { StatusChip } from "@/src/components/StatusChip";
 import { Surface } from "@/src/components/Surface";
 import type { Club, ClubRankHistory, Match, RankAtRound } from "@/src/types";
 
@@ -27,22 +28,6 @@ interface MatchPageProps {
   /** Every club's campanha. Omit and the section is left out entirely. */
   rankHistory?: ClubRankHistory[];
 }
-
-const STATUS_LABEL: Record<Match["status"], string> = {
-  SCHEDULED: "A realizar",
-  LIVE: "Ao vivo",
-  FINISHED: "Encerrado",
-  POSTPONED: "Adiado",
-  CANCELLED: "Cancelado",
-};
-
-const STATUS_CLASS: Record<Match["status"], string> = {
-  SCHEDULED: "bg-surface-container text-ink-soft",
-  LIVE: "bg-positive/20 text-positive-ink",
-  FINISHED: "bg-surface-container text-ink-muted",
-  POSTPONED: "bg-warning/20 text-warning-ink",
-  CANCELLED: "bg-negative/20 text-negative-ink",
-};
 
 const kickoffLabel = (kickoff: string): string => {
   const parsed = new Date(kickoff);
@@ -185,9 +170,7 @@ export function MatchPage({
       <Surface as="article" filled className="mt-3 p-5">
         <div className="flex items-center justify-between gap-2 text-body-small text-ink-faint">
           <span>{match.round}ª rodada</span>
-          <span className={`rounded-x-small px-2 py-1 font-medium ${STATUS_CLASS[match.status]}`}>
-            {STATUS_LABEL[match.status]}
-          </span>
+          <StatusChip status={match.status} />
         </div>
 
         <div className="mt-4 flex items-center justify-between gap-3">
@@ -273,7 +256,11 @@ export function MatchPage({
                       href={video.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className={controlClasses("md", "inline-flex items-center gap-2")}
+                      // Tonal: this is a curated link to the actual video, and
+                      // it sits beside a fallback that only guesses. They read
+                      // identically before M4 despite the comment above saying
+                      // they are not the same kind of answer.
+                      className={controlClasses("md", "inline-flex items-center gap-2", "tonal")}
                     >
                       <span aria-hidden="true">▶</span>
                       {/* The publisher is a broadcaster like any other, so it

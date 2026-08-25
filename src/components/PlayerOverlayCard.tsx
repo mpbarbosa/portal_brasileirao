@@ -34,6 +34,7 @@ const countOrDash = (value: number | null | undefined) =>
 export function PlayerOverlayCard({ player, scorer, onClose }: PlayerOverlayCardProps) {
   const [enriched, setEnriched] = useState<Player>(player);
   const closeRef = useRef<HTMLButtonElement>(null);
+  const dialogRef = useRef<HTMLDialogElement>(null);
 
   useEffect(() => {
     setEnriched(player);
@@ -55,39 +56,75 @@ export function PlayerOverlayCard({ player, scorer, onClose }: PlayerOverlayCard
     };
   }, [player]);
 
-  // Focus the dismiss control on open, so the keyboard lands inside the dialog
-  // rather than behind it.
+  /**
+   * Open as a *modal* dialog rather than rendering a fixed overlay.
+   *
+   * `showModal` is what buys the behaviour this card was missing. Before M4 it
+   * looked modal and was not: Tab walked straight out of it into the page
+   * behind, which is still there and still focusable. The browser's own modality
+   * gives four things at once — a focus trap, `inert` on everything behind, the
+   * top layer (so no ancestor's `overflow` can clip it), and focus returned to
+   * whatever opened it when it closes. Each is fiddly to hand-roll and easy to
+   * get subtly wrong.
+   *
+   * Escape arrives as `cancel`, not `keydown`, so it is handled below rather
+   * than through a document listener.
+   */
   useEffect(() => {
+    const node = dialogRef.current;
+    if (!node || node.open) return;
+    node.showModal();
+    // The dismiss, not the card: opening on the first *control* means Escape
+    // and Enter both do something sensible without a further keystroke.
     closeRef.current?.focus();
   }, []);
 
+  // A modal dialog makes the page inert but does not stop it scrolling behind.
   useEffect(() => {
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") onClose();
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = previous;
     };
-    document.addEventListener("keydown", onKeyDown);
-    return () => document.removeEventListener("keydown", onKeyDown);
-  }, [onClose]);
+  }, []);
 
   const age = ageOn(enriched.dateOfBirth, new Date());
   const position = positionLabel(enriched.position);
   const club = enriched.club ?? scorer?.club;
 
   return (
-    <div
-      className="fixed inset-0 z-30 flex items-end justify-center bg-scrim/70 p-4 backdrop-blur-sm sm:items-center"
-      // A click on the backdrop dismisses; a click that started inside the card
-      // and ended here must not.
+    <dialog
+      ref={dialogRef}
+      aria-labelledby="jogador-nome"
+      // Escape reaches a modal dialog as `cancel`. Prevented so the close runs
+      // through React rather than the browser tearing the element out from
+      // under it, which would leave the parent still thinking it is open.
+      onCancel={(event) => {
+        event.preventDefault();
+        onClose();
+      }}
+      // A click on the backdrop lands on the dialog element itself, because the
+      // backdrop is its pseudo-element. Anything inside the card has the inner
+      // wrapper as its target. Using mousedown, not click, so a drag that starts
+      // on the card and ends outside does not dismiss.
       onMouseDown={(event) => {
         if (event.target === event.currentTarget) onClose();
       }}
+      // MD3 puts a dialog at its largest corner. The card is rebuilt here, so it
+      // takes the shape MD3 gives it; controls elsewhere kept their own.
+      // `mt-auto` bottoms it on a phone and `sm:m-auto` centres it above that,
+      // reproducing the sheet-then-card behaviour the fixed overlay had.
+      // `mt-auto mb-4` bottoms it on a phone with the inset the fixed overlay's
+      // `p-4` used to give — flush to the edge would hide the bottom corners the
+      // shape scale just widened. `sm:my-auto` centres it vertically above that.
+      //
+      // `mx-auto` is not redundant with the user agent's `dialog { margin: auto }`:
+      // Tailwind's preflight resets `margin: 0` on every element, so relying on
+      // the UA rule left the dialog hard against the left edge on desktop while
+      // vertical centring worked, because only the vertical margins were set here.
+      className="mx-auto mt-auto mb-4 w-full max-w-md rounded-x-large border border-line-strong bg-surface-container-low p-5 text-ink shadow-xl backdrop:bg-scrim/70 backdrop:backdrop-blur-sm sm:my-auto"
     >
-      <div
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="jogador-nome"
-        className="w-full max-w-md rounded-medium border border-line-strong bg-surface-container-low p-5 shadow-xl"
-      >
+      <div>
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0">
             <h2 id="jogador-nome" className="truncate text-title-large font-bold">
@@ -138,6 +175,6 @@ export function PlayerOverlayCard({ player, scorer, onClose }: PlayerOverlayCard
           </section>
         )}
       </div>
-    </div>
+    </dialog>
   );
 }

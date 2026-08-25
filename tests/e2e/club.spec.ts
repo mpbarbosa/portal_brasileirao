@@ -161,7 +161,7 @@ test.describe("Clube", () => {
 
     await expect(page).toHaveURL(/\/partida\/\d+$/);
     // The match involves the club we came from.
-    await expect(page.locator("article")).toContainText(name);
+    await expect(page.locator("main > article")).toContainText(name);
   });
 
   /* Selected by destination rather than position: the header now holds two
