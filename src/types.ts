@@ -107,6 +107,29 @@ export interface StandingsRow {
 }
 
 /**
+ * A club's place in the classificação after one round. `played` rides along
+ * because a postponed fixture leaves a club a game short of its rivals, which
+ * is the difference between "dropped four places" and "has a game in hand".
+ */
+export interface RankAtRound {
+  round: number;
+  position: number;
+  points: number;
+  played: number;
+}
+
+/**
+ * One club's campanha: its position after every round played so far, oldest
+ * first. `clubCode` is the identity; `shortName` rides along for display only,
+ * exactly as `tla` does on `Club`.
+ */
+export interface ClubRankHistory {
+  clubCode: ClubCode;
+  shortName: string;
+  entries: RankAtRound[];
+}
+
+/**
  * A player, as much as the provider knows. Every field beyond id and name is
  * optional: squad listings, the person endpoint and the scorer table each carry
  * a different subset, and the card renders whatever it has.

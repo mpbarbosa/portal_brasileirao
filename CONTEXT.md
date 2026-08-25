@@ -15,6 +15,18 @@ tie-breakers. Rendered by `StandingsTable` and served by `/api/standings` as
 _Avoid_: "tabela" (ambiguous — reads as the HTML `<table>` element as often as the
 league table), "ranking" (not the Brazilian football word), "leaderboard".
 
+**Campanha**:
+A club's run through the season seen as a path rather than a final row: its
+position in the **Classificação** after every round played, modelled as
+`ClubRankHistory` and computed by `computeRankHistory` in `rank-history-core.ts`.
+Each `RankAtRound` carries `played` alongside the position, because a postponed
+fixture is the difference between "caiu quatro posições" and "tem um jogo a
+menos". Positions come from re-running `computeStandings` round by round, so the
+campanha can never disagree with the table it describes.
+_Avoid_: "histórico" (reads as past seasons, not this one), "ranking" (not the
+Brazilian football word, same as under **Classificação**), "evolução" on its own
+(it also reads as a club improving, which a falling campanha is not).
+
 **Rodada**:
 One matchday of the championship — the set of fixtures sharing a `round` number.
 The second tab (`TABS`, id `"rodada"`), whose heading renders as `Nª rodada`.
