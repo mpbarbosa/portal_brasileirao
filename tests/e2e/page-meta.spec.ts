@@ -6,12 +6,6 @@ import { expect, test, type Page } from "@playwright/test";
  * link previews and is covered by unit tests on `injectMeta` — the e2e suite
  * runs against the dev server, where Vite serves the shell untouched.
  */
-const SM_BREAKPOINT = 640;
-const isCollapsed = (page: Page) => (page.viewportSize()?.width ?? 0) < SM_BREAKPOINT;
-
-const openMenuIfNeeded = async (page: Page) => {
-  if (isCollapsed(page)) await page.getByRole("button", { name: /menu/i }).click();
-};
 
 const description = (page: Page) =>
   page.locator('meta[name="description"]').getAttribute("content");
@@ -26,11 +20,9 @@ test.describe("Título da página", () => {
   test("each section retitles the tab", async ({ page }) => {
     await page.goto("/");
 
-    await openMenuIfNeeded(page);
     await page.getByRole("link", { name: /^Artilharia/ }).click();
     await expect(page).toHaveTitle("Artilharia · Portal Brasileirão");
 
-    await openMenuIfNeeded(page);
     await page.getByRole("link", { name: /^Jogos/ }).click();
     await expect(page).toHaveTitle("Jogos · Portal Brasileirão");
   });
@@ -70,7 +62,6 @@ test.describe("Título da página", () => {
     await page.goto("/");
     const home = await description(page);
 
-    await openMenuIfNeeded(page);
     await page.getByRole("link", { name: /^Artilharia/ }).click();
     await expect(page.locator('meta[name="description"]')).toHaveAttribute(
       "content",
@@ -82,9 +73,7 @@ test.describe("Título da página", () => {
 
   test("there is never more than one description tag", async ({ page }) => {
     await page.goto("/");
-    await openMenuIfNeeded(page);
     await page.getByRole("link", { name: /^Artilharia/ }).click();
-    await openMenuIfNeeded(page);
     await page.getByRole("link", { name: /^Jogos/ }).click();
 
     await expect(page.locator('meta[name="description"]')).toHaveCount(1);
@@ -92,7 +81,6 @@ test.describe("Título da página", () => {
 
   test("going back restores the previous title", async ({ page }) => {
     await page.goto("/");
-    await openMenuIfNeeded(page);
     await page.getByRole("link", { name: /^Artilharia/ }).click();
     await expect(page).toHaveTitle("Artilharia · Portal Brasileirão");
 

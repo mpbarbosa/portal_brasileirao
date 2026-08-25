@@ -1,10 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 
-const SM_BREAKPOINT = 640;
-const isCollapsed = (page: Page) => (page.viewportSize()?.width ?? 0) < SM_BREAKPOINT;
-
 const goToJogos = async (page: Page) => {
-  if (isCollapsed(page)) await page.getByRole("button", { name: /menu/i }).click();
   await page.getByRole("link", { name: /^Jogos/ }).click();
   await expect(page.getByRole("combobox", { name: "Rodada" })).toBeVisible();
 };
@@ -92,7 +88,6 @@ test.describe("Jogos", () => {
     await page.getByRole("combobox", { name: "Rodada" }).selectOption("3");
     await expect(page).toHaveURL(/\/jogos\/3$/);
 
-    if (isCollapsed(page)) await page.getByRole("button", { name: /menu/i }).click();
     await page.getByRole("link", { name: /^Classificação/ }).click();
     await goToJogos(page);
 

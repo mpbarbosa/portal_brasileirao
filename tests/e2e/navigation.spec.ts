@@ -1,21 +1,13 @@
 import { expect, test, type Page } from "@playwright/test";
 
-/** Tailwind's `sm` breakpoint — below it the nav collapses behind a toggle. */
-const SM_BREAKPOINT = 640;
-
-const isCollapsed = (page: Page) => (page.viewportSize()?.width ?? 0) < SM_BREAKPOINT;
-
-const menuToggle = (page: Page) => page.getByRole("button", { name: /menu/i });
-
 /**
- * Reach a section at any viewport. The mobile panel repeats each label with its
- * description, so the accessible name starts with — rather than equals — the
- * label.
+ * Reach a section at any viewport.
+ *
+ * One line now: the destinations are visible at every width, so there is no
+ * menu to open first. It stays a helper because the regex is not obvious —
+ * the accessible name *starts with* the label rather than equalling it.
  */
 const goToSection = async (page: Page, label: string) => {
-  if (isCollapsed(page)) {
-    await menuToggle(page).click();
-  }
   await page.getByRole("link", { name: new RegExp(`^${label}`) }).click();
 };
 
@@ -41,7 +33,6 @@ test.describe("Navegação", () => {
 
   test("opens on Classificação", async ({ page }) => {
     await expect(page.locator("table")).toBeVisible();
-    if (isCollapsed(page)) await menuToggle(page).click();
     await expect(
       page.getByRole("link", { name: /^Classificação/ }),
     ).toHaveAttribute("aria-current", "page");
@@ -90,81 +81,55 @@ test.describe("Navegação", () => {
   });
 });
 
-test.describe("Menu de seções", () => {
+/**
+ * The navigation bar that replaced the collapsed menu.
+ *
+ * The specs it replaced were about a *disclosure*: that the toggle reported
+ * `aria-expanded`, that Escape closed it and restored focus, that a click
+ * outside dismissed it. None of that behaviour exists now, and rewriting those
+ * specs to click something else would have kept the letter of a contract whose
+ * subject had been deleted.
+ *
+ * What survives is the property that actually mattered — every section reachable
+ * at every width, and the current one saying so — asserted against whichever
+ * presentation the viewport gets.
+ */
+test.describe("Barra de navegação", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/");
   });
 
-  test("the toggle appears only below the sm breakpoint", async ({ page }) => {
-    if (isCollapsed(page)) {
-      await expect(menuToggle(page)).toBeVisible();
-    } else {
-      // On a wide viewport the sections are inline; a toggle would be noise.
-      await expect(menuToggle(page)).toBeHidden();
-      await expect(page.getByRole("link", { name: /^Classificação/ })).toBeVisible();
-    }
-  });
-
-  test("the toggle reports and flips its expanded state", async ({ page }) => {
-    test.skip(!isCollapsed(page), "no toggle at this width");
-
-    const toggle = menuToggle(page);
-    await expect(toggle).toHaveAttribute("aria-expanded", "false");
-    await toggle.click();
-    await expect(toggle).toHaveAttribute("aria-expanded", "true");
-    await toggle.click();
-    await expect(toggle).toHaveAttribute("aria-expanded", "false");
-  });
-
-  test("the panel it controls actually exists", async ({ page }) => {
-    test.skip(!isCollapsed(page), "no toggle at this width");
-
-    const controls = await menuToggle(page).getAttribute("aria-controls");
-    expect(controls).toBeTruthy();
-    await expect(page.locator(`#${controls}`)).toHaveCount(1);
-  });
-
-  test("choosing a section closes the menu", async ({ page }) => {
-    test.skip(!isCollapsed(page), "no toggle at this width");
-
-    await menuToggle(page).click();
-    await page.getByRole("link", { name: /^Jogos/ }).click();
-
-    await expect(menuToggle(page)).toHaveAttribute("aria-expanded", "false");
-    await expect(page.getByRole("heading", { level: 2 })).toHaveText(/\d+ª rodada/);
-  });
-
-  test("Escape closes the menu and restores focus to the toggle", async ({ page }) => {
-    test.skip(!isCollapsed(page), "no toggle at this width");
-
-    const toggle = menuToggle(page);
-    await toggle.click();
-    await expect(toggle).toHaveAttribute("aria-expanded", "true");
-
-    await page.keyboard.press("Escape");
-
-    await expect(toggle).toHaveAttribute("aria-expanded", "false");
-    // Focus must come back, or it is stranded on a now-hidden element.
-    await expect(toggle).toBeFocused();
-  });
-
-  test("clicking outside closes the menu", async ({ page }) => {
-    test.skip(!isCollapsed(page), "no toggle at this width");
-
-    await menuToggle(page).click();
-    await page.locator("main").click({ position: { x: 5, y: 5 } });
-
-    await expect(menuToggle(page)).toHaveAttribute("aria-expanded", "false");
-  });
-
-  test("every section in the nav model is reachable", async ({ page }) => {
+  test("every section is reachable and marked, at this width", async ({ page }) => {
     for (const label of ["Classificação", "Jogos", "Artilharia"]) {
-      await goToSection(page, label);
-      if (isCollapsed(page)) await menuToggle(page).click();
+      await page.getByRole("link", { name: new RegExp(`^${label}`) }).click();
       await expect(
         page.getByRole("link", { name: new RegExp(`^${label}`) }),
       ).toHaveAttribute("aria-current", "page");
-      if (isCollapsed(page)) await page.keyboard.press("Escape");
+    }
+  });
+
+  test("exactly one presentation of the destinations is visible", async ({ page }) => {
+    // Both render from NAV_ITEMS and one is always `display: none`. Were both
+    // ever visible, every `getByRole("link")` in the suite would hit a strict
+    // mode violation — so this guards the whole suite, not only itself.
+    for (const label of ["Classificação", "Jogos", "Artilharia"]) {
+      await expect(page.getByRole("link", { name: new RegExp(`^${label}`) })).toHaveCount(1);
+    }
+  });
+
+  test("destinations sit within thumb reach on a phone, inline on a desktop", async ({
+    page,
+  }) => {
+    const viewport = page.viewportSize();
+    const box = await page.getByRole("link", { name: /^Jogos/ }).boundingBox();
+    expect(box).not.toBeNull();
+
+    if ((viewport?.width ?? 0) < 640) {
+      // Pinned to the bottom edge, which is the point of the pattern over a
+      // menu in the opposite corner.
+      expect(box!.y).toBeGreaterThan((viewport?.height ?? 0) / 2);
+    } else {
+      expect(box!.y).toBeLessThan((viewport?.height ?? 0) / 2);
     }
   });
 });

@@ -101,7 +101,11 @@ export function App() {
         onToggleTheme={toggleTheme}
       />
 
-      <div className="mx-auto max-w-3xl px-4 py-6">
+      {/* `pb-28` on small screens clears the navigation bar fixed to the bottom
+          edge — without it the last row of every page sits underneath it, which
+          is invisible until you scroll to the end of a twenty-club table. The
+          bar is `sm:hidden`, so the padding goes with it. */}
+      <div className="mx-auto max-w-3xl px-4 pb-28 pt-6 sm:pb-6">
         <h1 className="sr-only">Portal Brasileirão — Campeonato Brasileiro Série A</h1>
 
         {note && (

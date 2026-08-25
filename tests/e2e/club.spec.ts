@@ -1,8 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
 
-const SM_BREAKPOINT = 640;
-const isCollapsed = (page: Page) => (page.viewportSize()?.width ?? 0) < SM_BREAKPOINT;
-
 /** Open the club sitting at a given standings position. */
 const openClubAt = async (page: Page, position: number) => {
   const row = page.locator("table tbody tr").nth(position - 1);
@@ -125,7 +122,6 @@ test.describe("Clube", () => {
   test("the nav still works from a club page", async ({ page }) => {
     await openClubAt(page, 5);
 
-    if (isCollapsed(page)) await page.getByRole("button", { name: /menu/i }).click();
     await page.getByRole("link", { name: /^Artilharia/ }).click();
 
     await expect(page.locator("table thead th").nth(1)).toHaveText(/jogador/i);
@@ -133,7 +129,6 @@ test.describe("Clube", () => {
 
   test("no nav entry points at the club section", async ({ page }) => {
     // It is a drill-down: without a selected club it would render nothing.
-    if (isCollapsed(page)) await page.getByRole("button", { name: /menu/i }).click();
     await expect(page.getByRole("link", { name: /^Clube$/ })).toHaveCount(0);
   });
 

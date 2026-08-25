@@ -388,7 +388,7 @@ containers (meant to scroll). Zero page overflow, zero clipped visible text.
 Worth keeping the method — the first run reported 40-odd "overflows" that were
 entirely screen-reader text and scrollable tables.
 
-### M4 — Components — **done except NavBar**
+### M4 — Components — **done**
 
 In ascending order of risk:
 
@@ -461,12 +461,48 @@ Caught by looking at a screenshot, confirmed by reading computed margins, and no
 guarded by a spec — no other test in the suite has an opinion about where a
 dialog sits.
 
-**4. `NavBar` is deferred to its own phase**, as the only component whose
-structure changes. One thing to settle before it starts: MD3's navigation bar
-specifies **3 to 5 destinations**, and `NAV_ITEMS` has exactly 3. The promise in
-`CLAUDE.md` that adding a section needs no change to `NavBar` therefore holds for
-two more sections and then quietly stops being true — a spec violation nobody
-would notice, rather than a build error. That ceiling belongs beside the promise.
+**4. `NavBar` — done, in its own phase.** The ceiling was settled first and
+accepted: MD3's navigation bar carries **3 to 5 destinations**, `NAV_ITEMS` has
+three, two more fit, and a sixth wants MD3's navigation *drawer* rather than a
+sixth entry. That bound now sits beside the promise in `CLAUDE.md`, described as
+what it is — the one constraint in that file no tooling can check.
+
+The hamburger is gone. Below `sm` the three destinations are a navigation bar
+fixed to the bottom edge, each an icon above its label, the current one marked by
+a pill behind the *icon* rather than a fill behind the whole item. Above `sm`
+nothing changed: the destinations stay inline in the header, which is already
+MD3's tab arrangement.
+
+This is the phase's real justification rather than spec compliance. **Three links
+behind a hamburger is the arrangement the navigation bar pattern exists to
+correct** — they were one tap away instead of zero, in the corner furthest from a
+thumb.
+
+**The icons live on the `NAV_ITEMS` entry, not in a lookup inside `NavBar`.**
+That is what preserves the promise: a lookup keyed by section id would have meant
+`NavBar` needing a change the next time someone added a section, quietly
+converting the promise into a lie. Three glyphs are drawn in
+`src/components/SectionIcons.tsx` rather than pulled from a set — the app ships no
+UI dependency and draws its own sparkline already.
+
+**Seven specs' worth of disclosure behaviour was deleted, not rewritten.** The
+old tests asserted `aria-expanded`, that Escape closed the panel and restored
+focus, that an outside click dismissed it. None of that behaviour exists now, and
+rewriting them to click something else would have kept the letter of a contract
+whose subject was gone. What survives is the property that mattered — every
+section reachable at every width, and the current one saying so — plus a new
+guard that exactly *one* presentation of the destinations is visible at a time,
+which protects every `getByRole("link")` in the suite from a strict-mode
+violation.
+
+Eight spec files carried `if (isCollapsed(page)) await menuToggle(page).click()`
+before every navigation. All of it went: destinations are visible at every width,
+and Playwright's role selectors already exclude the `display: none` copy.
+
+**The fixed bar needs the page to make room for it.** `pb-28 sm:pb-6` on the
+layout wrapper — without it the last row of a twenty-club table sits underneath
+the bar, invisible until someone scrolls to the very end, which is exactly when
+nobody is looking. Verified by measurement: last row bottom 699, bar top 739.
 
 ### M5 — Motion — **done**
 
