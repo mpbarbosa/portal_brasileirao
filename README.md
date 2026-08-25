@@ -81,7 +81,11 @@ per match, so the roster is derived by grouping fixtures on the slug of that str
 slug is the identity, which is what makes CBF's `ARENA MRV` and `Arena MRV` one ground
 rather than two. **Mandantes** falls out of who actually hosted there — nobody had to say
 the Maracanã has two tenants. Capacity, the official name and the year are hand-curated, and
-each is left out rather than guessed where the source is silent.*
+each is left out rather than guessed where the source is silent. So is the
+**photograph**, which no feed carries either — it is named by its file title on
+Wikimedia Commons and fetched from there, and it always ships with the photographer
+and the licence, because every licence in use but one requires the credit wherever
+the picture appears.*
 
 ## Stack
 
