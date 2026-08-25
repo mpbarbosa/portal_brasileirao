@@ -27,6 +27,7 @@ import path from "node:path";
 
 import { chromium, type Page } from "@playwright/test";
 
+import { captureRefusals, behindMainUnknown, type CaptureFacts } from "@/screenshot-core";
 import { THEME_STORAGE_KEY, type Theme } from "@/theme-core";
 
 const SITE = "https://brasileirao.mpbarbosa.com";
@@ -89,6 +90,15 @@ try {
  *   exactly. So this asks whether any appearance path differs between the
  *   captured build and HEAD, which is the same question `check-screenshots.sh`
  *   asks about ancestry, and reads its list from the same file.
+ * - **the tree must not be behind `origin/main` on appearance.** Matching HEAD
+ *   is not sufficient, because HEAD can itself be behind: a capture taken while
+ *   `origin/main` carries an appearance commit this tree has not merged depicts
+ *   the branch faithfully and depicts what it will be committed alongside
+ *   incorrectly. It is stale on arrival. This fired in the wild — a capture at
+ *   `ea27bee` matched its own HEAD exactly while `origin/main` held a change to
+ *   `MatchPage`, was admitted, and CI then failed the capture PR on its own
+ *   images. The check was a discipline before it was a guard, which is another
+ *   way of saying it was not enforced.
  * - **provider must be football-data.** A worktree without `.env` boots on the
  *   seed snapshot and renders a frozen table that looks entirely plausible.
  *   `git worktree add` never brings `.env` — it is gitignored — so building a
@@ -97,8 +107,9 @@ try {
  *   data drift, which is the one difference this project has taught itself to
  *   expect.
  *
- * A capture that fails either test still gets written, to docs/screenshots/local,
- * so it can be looked at. It just cannot be committed.
+ * A capture that fails any of these still gets written, to docs/screenshots/local,
+ * so it can be looked at. It just cannot be committed. The verdict itself lives
+ * in `screenshot-core.ts`, which is pure and tested; this file measures.
  */
 const health = async (): Promise<{ sha: string; provider: string }> => {
   const response = await fetch(new URL("/api/health", url), {
@@ -119,25 +130,60 @@ const APPEARANCE = readFileSync(path.join(process.cwd(), "scripts/appearance-pat
   .split("\n")
   .filter(Boolean);
 
+const lines = (out: string): string[] => out.split("\n").filter(Boolean);
+
 /**
- * Whether a build's appearance matches HEAD's.
+ * Appearance paths `origin/main` has that HEAD does not, or null if that cannot
+ * be established.
  *
- * Returns a reason when it does not, so the caller can say which of the two
- * failure modes happened — an unknown commit and a diverged one need different
- * advice.
+ * Fetches first, best-effort. The comparison is only worth as much as the
+ * freshness of `origin/main`, and a remote-tracking ref left over from this
+ * morning would answer "clean" with exactly the confidence of a real check —
+ * which is the failure mode this whole guard exists to remove. A fetch is not a
+ * new category of side effect here: the script already talks to the network to
+ * read `/api/health` and to load the page it photographs.
+ *
+ * Offline degrades to null rather than to an error. A capture with no network
+ * is still a legitimate capture; the caller says the check was skipped instead
+ * of pretending it passed.
  */
-const appearanceMatches = (sha: string): string | null => {
-  if (sha.endsWith("-dirty")) {
-    return `built from a dirty tree (${sha}) — commit first, a dirty build is not reproducible`;
-  }
+const behindMain = (): string[] | null => {
   try {
-    git("cat-file", "-e", `${sha}^{commit}`);
+    git("fetch", "--quiet", "origin", "main");
   } catch {
-    return `serves ${sha}, which is not a commit in this repository — fetch, or it is not ours`;
+    // Offline, or no such remote. Fall through to whatever ref is on disk.
   }
 
-  const changed = git("diff", "--name-only", `${sha}..HEAD`, "--", ...APPEARANCE);
-  return changed ? `appearance differs from HEAD in:\n    ${changed.split("\n").join("\n    ")}` : null;
+  try {
+    git("rev-parse", "--verify", "--quiet", "origin/main");
+  } catch {
+    return null;
+  }
+
+  return lines(git("diff", "--name-only", "HEAD..origin/main", "--", ...APPEARANCE));
+};
+
+/** Everything the verdict depends on, measured rather than inferred. */
+const gather = (sha: string, provider: string): CaptureFacts => {
+  let known = false;
+  try {
+    git("cat-file", "-e", `${sha}^{commit}`);
+    known = true;
+  } catch {
+    // Left false; `captureRefusals` turns that into the right message.
+  }
+
+  return {
+    servedSha: sha,
+    provider,
+    known,
+    // A sha we do not have cannot be diffed against, and asking would throw.
+    changedVsHead:
+      known && !sha.endsWith("-dirty")
+        ? lines(git("diff", "--name-only", `${sha}..HEAD`, "--", ...APPEARANCE))
+        : [],
+    behindMain: behindMain(),
+  };
 };
 
 let served: { sha: string; provider: string };
@@ -148,21 +194,19 @@ try {
   process.exit(1);
 }
 
-const appearanceProblem = appearanceMatches(served.sha);
-const hasRealData = served.provider === "football-data";
-const committable = appearanceProblem === null && hasRealData;
+const facts = gather(served.sha, served.provider);
+const refusals = captureRefusals(facts);
+const committable = refusals.length === 0;
 const outDir = committable ? OUT_DIR : LOCAL_DIR;
 
 if (!committable) {
   console.error("This capture cannot be committed:");
-  if (appearanceProblem) {
-    console.error(`  ${appearanceProblem}`);
-  }
-  if (!hasRealData) {
-    console.error(`  provider is "${served.provider}", not "football-data" — frozen seed data`);
-    console.error("  a worktree without .env boots on the seed snapshot; copy it in");
-  }
+  for (const reason of refusals) console.error(`  ${reason}`);
   console.error("  writing to docs/screenshots/local instead");
+} else if (behindMainUnknown(facts)) {
+  // Not a refusal — see `behindMainUnknown`. But a verdict that skipped a check
+  // should say so, or it reads as stronger than it is.
+  console.warn("Note: could not compare against origin/main — this capture may already be stale.");
 }
 
 /** `/` is the classificação; anything else names itself after its path. */
