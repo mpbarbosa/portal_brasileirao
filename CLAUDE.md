@@ -326,6 +326,17 @@ Rules that follow from sharing a repository:
   the document outline and because an end-to-end spec selects `main article`. This is the
   rule that drifted once already — that card was hand-rolled with a *different* radius
   than every other card until M2 folded it back in.
+- **Motion is MD3's, and `prefers-reduced-motion` is honoured.** A bare `transition`
+  already means MD3 standard easing at 200ms, because `--default-transition-duration`
+  and `--default-transition-timing-function` are overridden in `src/index.css` — do not
+  add `duration-*`/`ease-*` per call site. **There is no `--duration-*` utility namespace
+  in Tailwind v4**: `duration-short-4` compiles to nothing and silently leaves the
+  default in place. The tokens are real custom properties, so hand-written CSS can use
+  them; only the utility does not exist.
+  The reduced-motion block sets near-zero rather than `none`, so `transitionend` still
+  fires, and it stops movement only — colour feedback survives, because a control that
+  stops reacting is harder to use rather than calmer. `tests/e2e/motion.spec.ts` asserts
+  both that motion exists and that the preference removes it.
 - **Hover, focus and pressed come from `interaction.ts`.** `STATE_LAYER` is MD3's veil
   (8% hover, 10% focus and pressed, of `on-surface`); `FOCUS_RING` is the keyboard
   indicator; `LINK_UNDERLINE` and `BACK_LINK` cover the two text patterns. A

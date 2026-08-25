@@ -468,10 +468,50 @@ specifies **3 to 5 destinations**, and `NAV_ITEMS` has exactly 3. The promise in
 two more sections and then quietly stops being true — a spec violation nobody
 would notice, rather than a build error. That ceiling belongs beside the promise.
 
-### M5 — Motion
+### M5 — Motion — **done**
 
 - MD3 easing and duration tokens for the theme toggle, dialog and round changes.
 - Honour `prefers-reduced-motion`, which the app does not currently check.
+
+**Two curves and two durations, not the whole scale.** MD3 defines four
+durations in each of four bands and half a dozen easings; the app uses
+`standard` for small frequent changes and `emphasized-decelerate` for the dialog
+arriving. The rest are omitted for the same reason `ControlSize` is short.
+
+**`transition` was redefined rather than annotated.** Overriding
+`--default-transition-duration` and `--default-transition-timing-function` makes
+a bare `transition` *mean* MD3 standard, so no call site repeats the pair and
+none can drift from the others.
+
+That was not the first attempt, and the first one failed silently. **Tailwind v4
+has no `--duration-*` utility namespace**, so `duration-short-4` compiled to
+nothing at all: the class sat in three call sites looking correct while every
+transition kept the framework's 150ms default. Nothing would have caught it —
+the CSS was valid, the build was clean, and no test watches things move. The
+tokens are still real custom properties, which is why the hand-written dialog
+animation can reference them; only the *utility* does not exist.
+
+**`prefers-reduced-motion` is honoured for the first time.** The gap mattered
+more than when the roadmap was written, because M2 and M4 both *added* motion —
+state layers and a dialog — so it widened while nothing flagged it.
+
+Near-zero rather than `none`: a 0.01ms duration still fires `transitionend`, so
+anything waiting on that event keeps working. Colour feedback deliberately
+survives; only movement stops. A control that stops reacting to hover and focus
+is harder to use, not calmer, and that is asserted rather than assumed.
+
+**`tests/e2e/motion.spec.ts` asserts both directions**, because a test for only
+the reduced case would pass on an app with no motion at all. One trap found
+writing it: `test.use({ reducedMotion })` in a *nested* describe silently did not
+apply, and the page kept reporting `no-preference` — which reads as "reduced
+motion is broken" rather than "the test never enabled it". Uses
+`page.emulateMedia` with an assertion that the emulation took effect.
+
+**A miss from M3, found here and fixed.** `BACK_LINK` in `interaction.ts` still
+carried `text-sm`. M3's exit-criteria grep was scoped to `*.tsx`, and that file
+is `.ts` — so "no bare Tailwind text size in any component" was true of every
+component and not of the module three of them share. Same pixel size, missing
+tracking, which is why it looked right. **Check `--include='*.ts'` too.**
 
 ## What this does not change
 

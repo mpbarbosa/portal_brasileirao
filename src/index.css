@@ -17,6 +17,46 @@
  */
 
 /**
+ * Material Design 3 motion.
+ *
+ * Two scales, as with shape and type: easing curves and durations, named for
+ * MD3's own steps. Only the steps something uses are defined — MD3 has four
+ * durations in each band and four more bands beyond `medium`, and writing them
+ * down unused is the same guess the size and variant lists already refuse.
+ *
+ * The distinction that matters is *standard* versus *emphasized*. Standard is
+ * for small, frequent changes a reader should barely notice — a hover veil, an
+ * underline warming. Emphasized is for something entering or leaving the screen,
+ * where the curve's slow finish is what makes the arrival read as deliberate
+ * rather than abrupt. Using emphasized on a hover would feel sluggish; using
+ * standard on the dialog would make it appear to snap into place.
+ */
+@theme {
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --ease-emphasized-decelerate: cubic-bezier(0.05, 0.7, 0.1, 1);
+
+  --duration-short-4: 200ms;
+  --duration-medium-2: 300ms;
+
+  /**
+   * What a bare `transition` means.
+   *
+   * Overriding the defaults rather than adding `duration-*` and `ease-*` at each
+   * call site, because standard easing *is* the default case — every transition
+   * in this app is a small, frequent change. Per-site utilities would repeat the
+   * same pair everywhere and let one drift, which is the failure the state layer
+   * was extracted to prevent in the first place.
+   *
+   * Note there is no `--duration-*` utility namespace in Tailwind v4: writing
+   * `duration-short-4` compiles to nothing at all and leaves the default in
+   * place, silently. The tokens above are still real custom properties, so the
+   * hand-written CSS below can reference them.
+   */
+  --default-transition-duration: var(--duration-short-4);
+  --default-transition-timing-function: var(--ease-standard);
+}
+
+/**
  * Material Design 3 type scale.
  *
  * Hand-written like the shape scale, and for the same reason: these are
@@ -295,4 +335,69 @@
 
 body {
   @apply bg-surface text-ink antialiased;
+}
+
+/**
+ * The player card's entry.
+ *
+ * Written here rather than as utilities because a `<dialog>` is moved into the
+ * top layer by the browser, and the backdrop is a pseudo-element with no class
+ * of its own to hang one on.
+ *
+ * Emphasized-decelerate, not standard: the card is *arriving*, and the curve's
+ * slow finish is what makes it read as placed rather than snapped. It rises a
+ * few pixels and settles — enough to say where it came from on a phone, where it
+ * enters from the bottom, without becoming an effect anyone has to sit through.
+ *
+ * Entry only. Exiting would mean holding the element mounted until an animation
+ * finished, which means React state that exists purely to please a transition —
+ * a real source of "closed but still on screen" bugs. MD3 does not require it.
+ */
+@keyframes dialog-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+}
+
+@keyframes backdrop-enter {
+  from {
+    opacity: 0;
+  }
+}
+
+dialog[open] {
+  animation: dialog-enter var(--duration-medium-2) var(--ease-emphasized-decelerate);
+}
+
+dialog[open]::backdrop {
+  animation: backdrop-enter var(--duration-short-4) var(--ease-standard);
+}
+
+/**
+ * Honour a reader who has asked for less motion.
+ *
+ * The app checked this nowhere before M5, which mattered more after M2 and M4
+ * than before them: state layers and a dialog were both *added* by this
+ * migration, so the gap grew while nothing flagged it. Vestibular disorders make
+ * movement genuinely unpleasant, and the setting is the reader saying so.
+ *
+ * Near-zero rather than `none`, and `!important` rather than polite: a duration
+ * of 0.01ms still fires `transitionend`, so anything waiting on that event keeps
+ * working instead of hanging. The blunt selector is deliberate — this has to
+ * cover utilities that do not exist yet, including any a future phase adds.
+ *
+ * Colour still changes on hover and focus; only the *movement* stops. Removing
+ * the feedback entirely would take away the affordance rather than the motion.
+ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after,
+  ::backdrop {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
