@@ -10,11 +10,13 @@ import {
   mapStandings,
   mapPerson,
   mapScorers,
+  mapSquads,
   mapStatus,
   matchesUrl,
   personUrl,
   scorersUrl,
   standingsUrl,
+  teamsUrl,
 } from "@/football-data-core";
 
 test("builds Série A URLs and the token header", () => {
@@ -23,6 +25,7 @@ test("builds Série A URLs and the token header", () => {
     "https://api.football-data.org/v4/competitions/BSA/standings",
   );
   assert.equal(matchesUrl(), "https://api.football-data.org/v4/competitions/BSA/matches");
+  assert.equal(teamsUrl(), "https://api.football-data.org/v4/competitions/BSA/teams");
   assert.equal(matchesUrl("BSB"), "https://api.football-data.org/v4/competitions/BSB/matches");
   assert.deepEqual(authHeaders("abc123"), { "X-Auth-Token": "abc123" });
 });
@@ -389,4 +392,92 @@ test("a club with no crest simply has none", () => {
 
   assert.equal(club?.crest, undefined);
   assert.equal("crest" in club!, false);
+});
+
+test("squads are built from the team list, one request for the whole division", () => {
+  const squads = mapSquads({
+    teams: [
+      {
+        id: 1783,
+        name: "CR Flamengo",
+        shortName: "Flamengo",
+        tla: "FLA",
+        crest: "https://crests.football-data.org/1783.png",
+        squad: [
+          { id: 1077, name: "Pedro", position: "Offence", nationality: "Brazil", dateOfBirth: "1997-06-20" },
+          { id: 1078, name: "Rossi", position: "Goalkeeper" },
+        ],
+      },
+    ],
+  });
+
+  assert.equal(squads.length, 1);
+  assert.equal(squads[0].club.shortName, "Flamengo");
+  assert.equal(squads[0].club.crest, "https://crests.football-data.org/1783.png");
+  assert.deepEqual(
+    squads[0].players.map((player) => player.name),
+    ["Pedro", "Rossi"],
+  );
+  assert.equal(squads[0].players[0].position, "Offence");
+  assert.equal(squads[0].players[0].dateOfBirth, "1997-06-20");
+});
+
+test("a squad member does not restate the club it is nested under", () => {
+  // 948 copies of a club object, to say what the enclosing Squad already says,
+  // is most of the payload. The page attaches the club when it opens a card.
+  const squads = mapSquads({
+    teams: [{ id: 1783, name: "CR Flamengo", squad: [{ id: 1077, name: "Pedro" }] }],
+  });
+
+  assert.equal(squads[0].club.code, "1783");
+  assert.ok(!("club" in squads[0].players[0]));
+});
+
+test("fields the provider omits are absent, not blanked", () => {
+  const squads = mapSquads({
+    teams: [{ id: 1783, name: "CR Flamengo", squad: [{ id: 1077, name: "Pedro", position: null }] }],
+  });
+
+  const player = squads[0].players[0];
+  assert.ok(!("position" in player));
+  assert.ok(!("nationality" in player));
+  assert.ok(!("dateOfBirth" in player));
+  // Nothing in the division reports one here — the person endpoint does.
+  assert.ok(!("shirtNumber" in player));
+});
+
+test("a club with no squad is still a club, with an empty one", () => {
+  // Dropping it would hide the club rather than the gap.
+  const squads = mapSquads({
+    teams: [
+      { id: 1783, name: "CR Flamengo" },
+      { id: 1776, name: "SE Palmeiras", squad: [] },
+    ],
+  });
+
+  assert.equal(squads.length, 2);
+  assert.deepEqual(squads[0].players, []);
+  assert.deepEqual(squads[1].players, []);
+});
+
+test("a member with no id or no name is dropped, the rest of the squad is not", () => {
+  const squads = mapSquads({
+    teams: [
+      {
+        id: 1783,
+        name: "CR Flamengo",
+        squad: [{ name: "Sem id" }, { id: 9, name: "   " }, { id: 1077, name: "Pedro" }],
+      },
+    ],
+  });
+
+  assert.deepEqual(
+    squads[0].players.map((player) => player.name),
+    ["Pedro"],
+  );
+});
+
+test("a team with no name yields nothing rather than a squad with no owner", () => {
+  assert.deepEqual(mapSquads({ teams: [{ id: 1783, squad: [{ id: 1, name: "X" }] }] }), []);
+  assert.deepEqual(mapSquads({}), []);
 });

@@ -486,6 +486,46 @@ seeing nothing.
 _Avoid_: inventing a translation for a value the map does not cover, collapsing
 specific roles into their broad line.
 
+**Elenco**:
+The set of players a club fields, as the provider lists it — `Squad` in
+`src/types.ts`, one per club. The word for the collection; **Jogadores** is the
+page that shows all twenty of them. An elenco may be **empty**: a club upstream
+has not filled in is still a club in the championship, and the panel says
+"elenco não informado" rather than vanishing.
+_Avoid_: "time" or "plantel" for the collection (see **Clube**), dropping a club
+whose squad is missing, and the word "escalação" — that is the eleven picked for
+one match, which the app does not carry.
+
+**Jogadores**:
+The page listing every club's **Elenco**, one collapsible panel per club, each
+squad split into its **Linha**. Backed by `/api/squads`, which is the only page
+in the app with an endpoint of its own rather than a slice of the fixture
+payload — a squad is not derivable from anything already loaded. One upstream
+request carries all twenty, so it costs what a single club would.
+Panels are closed by default: a thousand players rendered flat puts the second
+club twenty screens below the first, which destroys the by-club structure the
+page exists for. They are native `<details>`, so two clubs can be open at once
+and compared.
+_Avoid_: "elencos" as the section label ("Jogadores" is what a reader scans the
+bar for), a club picker that shows one squad at a time (it makes comparing two
+mean losing the first), asserting a squad size anywhere in the tests — it moves
+with every transfer window.
+
+**Linha**:
+The part of the field a player belongs to, and the heading a squad is split
+under: **Goleiros**, **Defensores**, **Meio-campistas**, **Atacantes**, and
+**Outros** for anyone the provider places nowhere. It exists because upstream
+mixes two levels of detail in the same list — mostly a broad line ("Defence"),
+occasionally a specific role ("Left-Back") — so `lineOf` folds the roles back
+onto the line they belong to and a lateral does not become its own section.
+A player's own **Posição** is printed under the name only when it says something
+the heading did not: a "Defesa" caption under a Defensores heading is the
+heading again, once per row.
+_Avoid_: a section per specific role, guessing a line for a position the map
+does not cover (it goes to Outros and keeps its verbatim caption), separate
+headings for "no position" and "unrecognised position" — a reader cannot tell
+those apart, and both mean the provider did not say.
+
 **Onde assistir**:
 The channels showing a match, rendered under its kickoff in the fixture list.
 Comes from `src/data/broadcasts.ts` — the one hand-maintained file in

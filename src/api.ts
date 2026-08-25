@@ -1,4 +1,4 @@
-import type { ApiEnvelope, Club, Match, Scorer, StandingsRow } from "@/src/types";
+import type { ApiEnvelope, Club, Match, Scorer, Squad, StandingsRow } from "@/src/types";
 
 export interface MatchesPayload {
   rounds: number[];
@@ -20,3 +20,5 @@ const getJson = async <T>(url: string): Promise<ApiEnvelope<T>> => {
 export const fetchStandings = () => getJson<StandingsRow[]>("/api/standings");
 export const fetchMatches = () => getJson<MatchesPayload>("/api/matches");
 export const fetchScorers = () => getJson<Scorer[]>("/api/scorers");
+/** Every club's elenco. One request upstream serves all twenty. */
+export const fetchSquads = () => getJson<Squad[]>("/api/squads");

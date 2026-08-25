@@ -13,6 +13,9 @@ export type Route =
    *  useful next week, which `/jogos/24` does not. */
   | { section: "jogos"; round: number | null }
   | { section: "artilharia" }
+  /** Every club's elenco, on one page. Takes no argument: it is an index of
+   *  the whole division, not a drill-down into one club. */
+  | { section: "jogadores" }
   /**
    * `key` is what the URL says — a slug like "flamengo", or a raw club code for
    * links published before slugs existed. Resolving it to a club is the view's
@@ -74,6 +77,9 @@ export const parseRoute = (pathname: string): Route => {
     case "artilharia":
       return { section: "artilharia" };
 
+    case "jogadores":
+      return { section: "jogadores" };
+
     case "clube":
       return second ? { section: "clube", key: second } : HOME;
 
@@ -99,6 +105,8 @@ export const formatRoute = (route: Route): string => {
       return route.round === null ? "/jogos" : `/jogos/${route.round}`;
     case "artilharia":
       return "/artilharia";
+    case "jogadores":
+      return "/jogadores";
     case "clube":
       return `/clube/${encodeURIComponent(route.key)}`;
     case "partida":

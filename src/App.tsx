@@ -1,11 +1,18 @@
 import { useEffect, useMemo, useState } from "react";
 
-import { fetchMatches, fetchScorers, fetchStandings, type MatchesPayload } from "@/src/api";
+import {
+  fetchMatches,
+  fetchScorers,
+  fetchSquads,
+  fetchStandings,
+  type MatchesPayload,
+} from "@/src/api";
 import { ClubView } from "@/src/components/ClubView";
 import { LiveView } from "@/src/components/LiveView";
 import { MatchPage } from "@/src/components/MatchPage";
 import { NavBar } from "@/src/components/NavBar";
 import { PlayerOverlayCard } from "@/src/components/PlayerOverlayCard";
+import { PlayersView } from "@/src/components/PlayersView";
 import { RoundBrowser } from "@/src/components/RoundBrowser";
 import { ScorersTable } from "@/src/components/ScorersTable";
 import { StadiumView } from "@/src/components/StadiumView";
@@ -19,7 +26,7 @@ import { parseRoute } from "@/route-core";
 import { usePageMeta } from "@/src/usePageMeta";
 import { useTheme } from "@/src/useTheme";
 import { useRoute } from "@/src/useRoute";
-import type { Scorer, StandingsRow } from "@/src/types";
+import type { Player, Scorer, Squad, StandingsRow } from "@/src/types";
 
 export function App() {
   const { route, navigate } = useRoute();
@@ -27,11 +34,22 @@ export function App() {
   const [standings, setStandings] = useState<StandingsRow[]>([]);
   const [matches, setMatches] = useState<MatchesPayload | null>(null);
   const [scorers, setScorers] = useState<Scorer[]>([]);
+  /** Null until the Jogadores page is opened — see the lazy fetch below. */
+  const [squads, setSquads] = useState<Squad[] | null>(null);
+  const [squadsLoading, setSquadsLoading] = useState(false);
   /** The round the URL asks for; null means "whatever is current". */
   const [currentRound, setCurrentRound] = useState<number | null>(null);
-  /** The scorer whose card is open. Not a route: a card is a transient overlay,
-   *  and a URL for it would survive a reload that the overlay should not. */
-  const [openScorer, setOpenScorer] = useState<Scorer | null>(null);
+  /**
+   * The player whose card is open, and the scoring row it was opened from when
+   * there was one — the Artilharia has season figures to show, the Jogadores
+   * page has none. One piece of state rather than two, because "opened from the
+   * table" and "opened from an elenco" are the same overlay in two states, and
+   * two booleans that must never both be set is how they come to both be set.
+   *
+   * Not a route: a card is a transient overlay, and a URL for it would survive
+   * a reload that the overlay should not.
+   */
+  const [openPlayer, setOpenPlayer] = useState<{ player: Player; scorer?: Scorer } | null>(null);
   const [note, setNote] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   /** True until the first load settles. A page that names something — a club, a
@@ -108,6 +126,43 @@ export function App() {
       cancelled = true;
     };
   }, []);
+
+  /**
+   * The elencos, fetched **only when the Jogadores page is opened**, and only
+   * once.
+   *
+   * Every other payload is loaded up front because every other page is built
+   * from it. This one is nearly a thousand players and no other view touches
+   * it, so putting it in the opening `Promise.all` would spend that download on
+   * every reader who never leaves the table. It is also the most static thing
+   * the app serves — an elenco moves in a transfer window — so a single fetch
+   * per session is not a staleness anyone can see.
+   *
+   * A failure leaves `squads` null rather than empty, which is what makes
+   * navigating back a retry instead of a permanent "indisponível".
+   */
+  useEffect(() => {
+    if (route.section !== "jogadores" || squads !== null) return;
+
+    let cancelled = false;
+    setSquadsLoading(true);
+
+    void (async () => {
+      try {
+        const response = await fetchSquads();
+        if (!cancelled) setSquads(response.data);
+      } catch {
+        // The endpoint degrades to the seed rather than failing, so this is a
+        // lost connection. Say nothing and let the next visit try again.
+      } finally {
+        if (!cancelled) setSquadsLoading(false);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [route.section, squads]);
 
   /**
    * The **Ao vivo** page refetches; every other view is a snapshot of what
@@ -246,24 +301,37 @@ export function App() {
             />
           )}
 
+          {route.section === "jogadores" && (
+            <PlayersView
+              squads={squads ?? []}
+              loading={squadsLoading}
+              onSelectPlayer={(player) => setOpenPlayer({ player })}
+              onSelectClub={(key) => navigate({ section: "clube", key })}
+            />
+          )}
+
           {route.section === "artilharia" && (
             <>
               <h2 className="mb-3 text-body-medium font-medium text-ink-muted">Artilharia</h2>
-              <ScorersTable rows={scorers} onSelectPlayer={setOpenScorer} />
+              <ScorersTable
+                rows={scorers}
+                onSelectPlayer={(scorer) =>
+                  setOpenPlayer({
+                    player: { id: scorer.playerId, name: scorer.playerName, club: scorer.club },
+                    scorer,
+                  })
+                }
+              />
             </>
           )}
         </main>
       </div>
 
-      {openScorer && (
+      {openPlayer && (
         <PlayerOverlayCard
-          player={{
-            id: openScorer.playerId,
-            name: openScorer.playerName,
-            club: openScorer.club,
-          }}
-          scorer={openScorer}
-          onClose={() => setOpenScorer(null)}
+          player={openPlayer.player}
+          scorer={openPlayer.scorer}
+          onClose={() => setOpenPlayer(null)}
         />
       )}
     </div>

@@ -24,6 +24,14 @@ export const SCORERS_CACHE_TTL_MS = 5 * 60 * 1000;
  *  lookup costs a request against a 10/minute budget. */
 export const PLAYER_CACHE_TTL_MS = 60 * 60 * 1000;
 
+/**
+ * An elenco changes when a transfer window does, which is a handful of days a
+ * year — so the longest TTL in the app, and the one request that serves all
+ * twenty clubs is worth holding on to. Restarting the process clears it anyway,
+ * which is the only refresh a deploy needs.
+ */
+export const SQUADS_CACHE_TTL_MS = 6 * 60 * 60 * 1000;
+
 export const CIRCUIT_BREAKER_FAILURE_THRESHOLD = 3;
 export const CIRCUIT_BREAKER_OPEN_MS = 60 * 1000;
 

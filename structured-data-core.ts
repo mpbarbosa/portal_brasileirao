@@ -204,6 +204,8 @@ const trailFor = (route: Route, context: MetaContext): Array<{ name: string; pat
       return [HOME_CRUMB, { name: "Ao vivo", path: "/ao-vivo" }];
     case "artilharia":
       return [HOME_CRUMB, { name: "Artilharia", path: "/artilharia" }];
+    case "jogadores":
+      return [HOME_CRUMB, { name: "Jogadores", path: "/jogadores" }];
     case "jogos": {
       const jogos = { name: "Jogos", path: "/jogos" };
       return route.round === null
