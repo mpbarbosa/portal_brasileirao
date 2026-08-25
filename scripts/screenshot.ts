@@ -218,6 +218,22 @@ const settle = async (page: Page) => {
     // The round picker renders before the fixtures do, so waiting on it alone
     // would photograph an empty round.
     await page.locator("main ul > li").first().waitFor({ timeout: 30_000 });
+  } else if (route === "/ao-vivo") {
+    // "Agora" renders before any data arrives — it has to, since "nothing is
+    // being played" is an answer rather than an empty state. So the heading is
+    // no evidence the page is ready, and waiting on it would photograph a page
+    // with three headings and nothing under them.
+    //
+    // Tolerating absence rather than failing: with the season over and nothing
+    // live, upcoming or recently played, every section is legitimately empty
+    // and there is no row to wait for. That state is worth capturing too.
+    await page
+      .locator("main ul > li")
+      .first()
+      .waitFor({ timeout: 30_000 })
+      .catch(() => {
+        /* Nothing to show — see above. */
+      });
   }
 
   // Every image actually decoded, rather than a fixed wait and a hope. Crests

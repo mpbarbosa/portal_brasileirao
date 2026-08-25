@@ -24,11 +24,23 @@ agent Claude Code.
 choice; the control in the header switches between them. **Campanha** is the club's position
 after each round — the season behind a single row.*
 
-<img src="docs/screenshots/classificacao-mobile-light.png" alt="A classificação num telemóvel no tema claro: a barra de navegação fixa no rodapé com Classificação, Jogos e Artilharia, cada uma com ícone e rótulo, e a secção atual marcada por uma pílula atrás do ícone." width="300"> <img src="docs/screenshots/classificacao-mobile-dark.png" alt="A mesma classificação num telemóvel no tema escuro, com a mesma barra de navegação no rodapé." width="300">
+<img src="docs/screenshots/classificacao-mobile-light.png" alt="A classificação num telemóvel no tema claro: a barra de navegação fixa no rodapé com Classificação, Ao vivo, Jogos e Artilharia, cada uma com ícone e rótulo, e a secção atual marcada por uma pílula atrás do ícone." width="300"> <img src="docs/screenshots/classificacao-mobile-dark.png" alt="A mesma classificação num telemóvel no tema escuro, com a mesma barra de navegação no rodapé." width="300">
 
-*On a phone the three sections move to a navigation bar fixed at the bottom, icon above label,
+*On a phone the four sections move to a navigation bar fixed at the bottom, icon above label,
 the current one marked by a pill. Above `sm` they stay inline in the header — which is why the
 desktop shots above look no different.*
+
+![Página Ao vivo no tema claro: a secção Agora responde "Nenhuma partida em andamento agora", e A seguir lista os próximos jogos, cada um com data, horário, uma contagem regressiva ("Começa em 4 dias") e as marcas das emissoras que o transmitem.](docs/screenshots/ao-vivo-light.png)
+
+![A mesma página Ao vivo no tema escuro, com as mesmas secções, contagens regressivas e marcas das emissoras sobre fundo claro.](docs/screenshots/ao-vivo-dark.png)
+
+*Ao vivo, light and dark — what is being played now, what is next, and what just finished.
+Matches in progress get a card each rather than a row, so simultaneous kickoffs are all
+visible at once; the shots above were taken between rounds, which is the honest common case
+and why "Agora" answers in a sentence instead of vanishing. It is the only page that
+refetches on its own. There is deliberately no match minute: the provider reports a status
+and a score and never an elapsed clock, so the page says **bola rolando** rather than
+guessing a number.*
 
 ![Página do clube Palmeiras no tema claro: escudo, site oficial e perfil no Instagram, os números da temporada (1º lugar, 51 pontos, 24 jogos, saldo +24), o gráfico da campanha da 1ª à 24ª rodada, os últimos cinco resultados, o próximo jogo e os artilheiros do clube.](docs/screenshots/clube-palmeiras-light.png)
 
