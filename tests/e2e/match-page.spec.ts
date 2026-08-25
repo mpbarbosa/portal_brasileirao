@@ -105,7 +105,7 @@ test.describe("Página da partida", () => {
 
     // Scoped to the scoreboard card. The campanha section also names rounds
     // ("17º · 1ª rodada"), so an unscoped match now finds several.
-    const card = page.locator("main article");
+    const card = page.locator("main > article");
     await expect(card.getByText(/\d+ª rodada/)).toBeVisible();
     await expect(
       card.getByText(/(A realizar|Ao vivo|Encerrado|Adiado|Cancelado)/),
@@ -158,6 +158,25 @@ test.describe("Página da partida", () => {
     await expect(page.getByText(/não é um vídeo oficial/)).toBeVisible();
   });
 
+  test("the scoreboard is the only article on the page", async ({ page }) => {
+    // A canary, not a feature test. Five selectors across this file and
+    // club.spec.ts scope to `main > article` and assume it resolves to exactly
+    // one element — the scoreboard.
+    //
+    // That assumption is not self-enforcing, and `main > article` is a weaker
+    // guard than it looks: it rules out an article nested inside a section, but
+    // a second card taking as="article" as a sibling of the scoreboard still
+    // matches. Verified by injecting one — `main > article` went to 2 and every
+    // dependent selector broke.
+    //
+    // So this fails first and by name, instead of five strict-mode violations
+    // whose message says nothing about the cause.
+    await openFirstMatch(page, PLAYED_ROUND);
+
+    await expect(page.locator("main > article")).toHaveCount(1);
+    await expect(page.locator("article")).toHaveCount(1);
+  });
+
   test("a finished match shows its score", async ({ page }) => {
     await openFirstMatch(page, PLAYED_ROUND);
 
@@ -167,7 +186,10 @@ test.describe("Página da partida", () => {
   test("each club on the scoreboard links to its page", async ({ page }) => {
     await openFirstMatch(page, UPCOMING_ROUND);
 
-    const clubLinks = page.locator("article a[href^='/clube/']");
+    // `main > article`, not a bare `article`: the scoreboard is the only
+    // article in the app today, which is what made the unscoped form pass
+    // rather than anything about the form being specific.
+    const clubLinks = page.locator("main > article a[href^='/clube/']");
     await expect(clubLinks).toHaveCount(2);
 
     await clubLinks.first().click();
