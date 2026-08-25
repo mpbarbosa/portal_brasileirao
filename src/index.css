@@ -390,6 +390,30 @@ dialog[open]::backdrop {
  * Colour still changes on hover and focus; only the *movement* stops. Removing
  * the feedback entirely would take away the affordance rather than the motion.
  */
+/**
+ * The single frame a theme swap happens in.
+ *
+ * On some Chromium versions a transition on a colour that comes from a custom
+ * property does **not** re-resolve when that property changes: the element
+ * keeps its old computed value indefinitely, so everything carrying a
+ * `transition` stayed painted in the outgoing theme while the tokens underneath
+ * it had already flipped. Reproduced on Chrome 148 and not on the Chromium 151
+ * Playwright bundles. See `applyTheme` in `src/useTheme.ts` for the full set of
+ * measurements; this is the half that has to live in CSS.
+ *
+ * `transition: none`, not a near-zero duration: the reduced-motion block below
+ * keeps 0.01ms precisely so `transitionend` still fires, and here the point is
+ * the opposite — no transition may start at all, because a started one is what
+ * freezes. The class is added and removed within one synchronous block, so
+ * nothing observes it.
+ */
+:root.theme-swapping,
+:root.theme-swapping *,
+:root.theme-swapping *::before,
+:root.theme-swapping *::after {
+  transition: none !important;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   ::before,
