@@ -43,4 +43,9 @@ export const HIGHLIGHTS: Record<string, Highlight[]> = {
     { url: "https://www.youtube.com/watch?v=lhEf7WoBd3k", channel: "CazéTV" },
     { url: "https://www.youtube.com/watch?v=IDv3BmGI8M4", channel: "UOL Esporte" },
   ],
+  // Palmeiras 4 x 1 Vasco da Gama, rodada 24.
+  "554977": [
+    { url: "https://www.youtube.com/watch?v=0ceAn6TLVtE", channel: "ge tv" },
+    { url: "https://www.youtube.com/watch?v=ryRpY29ySvk", channel: "UOL Esporte" },
+  ],
 };
