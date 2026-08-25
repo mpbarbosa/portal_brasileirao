@@ -25,10 +25,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-        with:
-          # The screenshot check compares commit ancestry, which a depth-1
-          # clone cannot answer.
-          fetch-depth: 0
 
       - uses: actions/setup-node@v5
         with:
@@ -42,9 +38,6 @@ jobs:
 
       - name: Unit tests
         run: npm run test:unit
-
-      - name: README screenshots are not stale
-        run: ./scripts/check-screenshots.sh
 
       - name: Colour tokens and contrast
         # Two failures in one: `src/index.css` having drifted from the generator
@@ -86,6 +79,44 @@ jobs:
 
       - name: Shellcheck the deploy scripts
         run: shellcheck scripts/*.sh shell_scripts/*.sh
+
+  screenshots:
+    name: README screenshots are current
+    runs-on: ubuntu-latest
+    # Deliberately NOT in `deploy`'s `needs`. This reports a documentation debt,
+    # and a documentation debt must never be able to stop a release. A stale
+    # README is a defect; a frozen deploy is an outage waiting to be noticed,
+    # and the second should not be the price of the first. That is the durable
+    # reason, and it holds however the check itself is later rewritten.
+    #
+    # The history, because it is the reason anyone thought to look. This was a
+    # step inside `check`, and in August 2026 it deadlocked the pipeline. At the
+    # time, images could only be captured from the deployed site, so between an
+    # appearance change landing on main and its release there was no capture
+    # that could satisfy the check — and with `deploy` gated on it, the release
+    # that would have made capture possible never ran. 0673a52 froze the club
+    # column and production stopped at cfb4a98 behind it, four commits back.
+    #
+    # That was not bad luck with one commit. Every later commit touching
+    # src/components, src/index.css, src/App.tsx or index.html would have done
+    # the same, because the gate was unsatisfiable in precisely the window it
+    # fired in.
+    #
+    # Note the capture constraint above is stated in the past tense on purpose:
+    # it is being removed separately, by teaching the capture rule to mean "must
+    # depict this commit" rather than "must be production". Do not read it as a
+    # standing rule and do not reintroduce "deploy first, capture second" — that
+    # ordering was a symptom of the impossibility, not a practice worth keeping.
+    #
+    # Red here means someone owes a screenshot refresh and can go and take it.
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          # The check compares commit ancestry, which a depth-1 clone cannot
+          # answer. Only this job needs the history.
+          fetch-depth: 0
+
+      - run: ./scripts/check-screenshots.sh
 
   e2e:
     name: End-to-end (Playwright)

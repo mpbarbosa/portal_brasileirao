@@ -268,6 +268,12 @@ Rules that follow from sharing a repository:
   uncommitted work, not just yours.
 - **`npm run dev` in several worktrees at once is fine** — `resolveAppPort`
   walks upward from `PORT`, so the second one takes 3001 rather than failing.
+  **That applies to the dev server only, not to the test harness.** Playwright
+  boots its own server with `STRICT_PORT`, deliberately: a suite that quietly
+  moved to another port would be testing a server its own config does not
+  describe. So a second concurrent `npm run test:e2e` fails rather than walks —
+  pass **`E2E_PORT=3101`** to run one alongside another session's. CI needs
+  nothing; it runs alone.
 - The root checkout is for integration. Do the work in a worktree.
 
 ## Key conventions
