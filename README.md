@@ -30,7 +30,7 @@ after each round — the season behind a single row.*
 the current one marked by a pill. Above `sm` they stay inline in the header — which is why the
 desktop shots above look no different.*
 
-![Página Ao vivo no tema claro: a secção Agora responde "Nenhuma partida em andamento agora", e A seguir lista os próximos jogos, cada um com data, horário, uma contagem regressiva ("Começa em 4 dias") e as marcas das emissoras que o transmitem.](docs/screenshots/ao-vivo-light.png)
+![Página Ao vivo no tema claro: a secção Agora responde "Nenhuma partida em andamento agora", e A seguir lista os próximos jogos, cada um com data, horário, uma contagem regressiva em dias até o apito inicial e as marcas das emissoras que o transmitem.](docs/screenshots/ao-vivo-light.png)
 
 ![A mesma página Ao vivo no tema escuro, com as mesmas secções, contagens regressivas e marcas das emissoras sobre fundo claro.](docs/screenshots/ao-vivo-dark.png)
 
