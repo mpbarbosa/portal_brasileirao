@@ -2,14 +2,28 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import { controlClasses } from "@/src/components/Button";
+import { STATE_LAYER } from "@/src/components/interaction";
 
 test("every control shares the same chrome", () => {
   const classes = controlClasses();
 
-  assert.match(classes, /rounded-lg/);
+  assert.match(classes, /rounded-small/);
   assert.match(classes, /border-line-strong/);
   assert.match(classes, /text-ink-soft/);
-  assert.match(classes, /hover:bg-raised/);
+});
+
+test("controls take the shared state layer rather than their own hover", () => {
+  // The point of M2's state layer: one definition, so a control cannot hover to
+  // a slightly different grey than the one beside it. Asserting containment
+  // rather than the literal classes means this test does not need editing every
+  // time MD3's opacities are revisited — only if a control stops sharing them.
+  assert.ok(controlClasses().includes(STATE_LAYER));
+});
+
+test("controls are focusable visibly, not just hoverable", () => {
+  // Before M2 there was no focus style anywhere in the app; a keyboard user got
+  // whatever the browser drew. A hover-only control is unusable without a mouse.
+  assert.match(controlClasses(), /focus-visible:/);
 });
 
 test("disabled styling is always present, so callers cannot forget it", () => {
@@ -34,7 +48,7 @@ test("extra classes are appended, not replacing the base", () => {
   const classes = controlClasses("sm", "shrink-0");
 
   assert.match(classes, /shrink-0/);
-  assert.match(classes, /rounded-lg/);
+  assert.match(classes, /rounded-small/);
 });
 
 test("no double spaces when no extras are passed", () => {

@@ -86,7 +86,7 @@ export function PlayerOverlayCard({ player, scorer, onClose }: PlayerOverlayCard
         role="dialog"
         aria-modal="true"
         aria-labelledby="jogador-nome"
-        className="w-full max-w-md rounded-xl border border-line-strong bg-surface p-5 shadow-xl"
+        className="w-full max-w-md rounded-medium border border-line-strong bg-surface-container-low p-5 shadow-xl"
       >
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0">

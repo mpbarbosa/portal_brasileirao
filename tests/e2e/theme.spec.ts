@@ -173,3 +173,66 @@ test.describe("Tema", () => {
     await expect(page.locator("table thead th").nth(1)).toHaveText(/jogador/i);
   });
 });
+
+/**
+ * The one control the specs above cannot reach.
+ *
+ * They tab to the *first* focusable thing and sweep `:visible` selectors, which
+ * covers every control that shares the state layer. The current section entry
+ * does not share it: it is a filled chip, so it deliberately takes no hover
+ * veil. That exclusion is exactly how it lost its focus ring — the ring lived
+ * inside the state layer, and skipping one took the other with it.
+ *
+ * Kept separate rather than folded above because it guards a specific past
+ * mistake rather than the general rule, and the two fail for different reasons.
+ */
+test.describe("Foco do teclado", () => {
+  test("the current section keeps its ring even though it takes no state layer", async ({
+    page,
+  }) => {
+    await page.goto("/");
+
+    // Below `sm` the entries collapse behind a toggle, so the link exists but is
+    // not focusable until the panel is open. Both layouts render the same entry.
+    const menu = page.getByRole("button", { name: "Abrir menu" });
+    if (await menu.isVisible()) await menu.click();
+
+    const current = page
+      .getByRole("link", { name: "Classificação" })
+      .filter({ visible: true })
+      .first();
+    await expect(current).toHaveAttribute("aria-current", "page");
+
+    // Reach it by Tab rather than `.focus()`. `:focus-visible` is a heuristic:
+    // after a pointer interaction — and opening the menu above is one — Chrome
+    // does not treat a programmatic focus as keyboard focus, so the ring would
+    // correctly not draw and this would be measuring the wrong thing.
+    let reached = false;
+    for (let i = 0; i < 12 && !reached; i++) {
+      await page.keyboard.press("Tab");
+      reached = await page.evaluate(
+        () => document.activeElement?.getAttribute("aria-current") === "page",
+      );
+    }
+    expect(reached, "never tabbed to the current section").toBe(true);
+
+    // `transition` covers outline-color, so an immediate read samples the ring
+    // mid-fade from currentColor rather than the colour it settles on.
+    await page.waitForTimeout(400);
+
+    const state = await page.evaluate(() => {
+      const node = document.activeElement as HTMLElement;
+      const style = getComputedStyle(node);
+      return {
+        focusVisible: node.matches(":focus-visible"),
+        outline: style.outlineStyle !== "none" && style.outlineWidth !== "0px",
+        ring: style.boxShadow !== "none" && style.boxShadow !== "",
+      };
+    });
+
+    expect(state.focusVisible).toBe(true);
+    // Agnostic about the mechanism, matching the specs above: an outline and a
+    // box-shadow ring are both fine, having neither is not.
+    expect(state.outline || state.ring).toBe(true);
+  });
+});

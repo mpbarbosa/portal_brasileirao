@@ -252,11 +252,18 @@ Rules that follow from sharing a repository:
 ## Key conventions
 
 - **Colours are semantic tokens, never palette shades.** `src/index.css` defines the
-  full set under `@theme` — `canvas`/`surface`/`raised`, `line`/`line-strong`,
-  `ink` through `ink-ghost`, and `positive`/`negative`/`warning` each with a lighter
-  `-ink` for text. Components say `text-ink-muted`, not `text-slate-400`. A raw
-  `slate-*`, `emerald-*`, `rose-*` or `amber-*` utility in a component is a regression:
-  before tokens there were 32 distinct colour utilities and five shades of grey text.
+  full set under `@theme` — the `surface`/`surface-container-*` ladder,
+  `line`/`line-strong`, `ink` through `ink-ghost`, and `positive`/`negative`/`warning`
+  each with a lighter `-ink` for text. Components say `text-ink-muted`, not
+  `text-slate-400`. A raw `slate-*`, `emerald-*`, `rose-*` or `amber-*` utility in a
+  component is a regression: before tokens there were 32 distinct colour utilities and
+  five shades of grey text.
+  The surface ladder took its MD3 role names in M2: the page is **`surface`** (it was
+  `canvas`), a card is **`surface-container-low`** (it was `surface`, which is the trap
+  — MD3 means the page by that word), and `raised`/`raised-strong` became
+  `surface-container`/`surface-container-high`. The `ink` and `line` names are still
+  aliases onto `on-surface` and `outline-variant`; renaming those is a separate pass and
+  nothing to do with elevation.
 - **The token *values* are generated, not chosen.** Since the Material Design 3
   migration (`docs/roadmap.md`, phase M1) everything between the `MD3-TOKENS`
   markers in `src/index.css` comes from `npm run sync-md3-tokens`. Do not hand-edit
@@ -293,11 +300,32 @@ Rules that follow from sharing a repository:
   read as "the content behind is inactive". `plate` is its mirror — light in both themes,
   because the broadcaster marks it backs are dark artwork on a transparent ground and
   disappear against a dark page.
+- **Radii come from the MD3 shape scale.** `rounded-x-small` / `rounded-small` /
+  `rounded-medium` / `rounded-large` / `rounded-x-large`, defined in `src/index.css`.
+  A bare `rounded`, `rounded-lg` or `rounded-xl` in a component is a regression —
+  Tailwind's scale and MD3's share names but not sizes (`rounded-lg` is 8px in Tailwind,
+  MD3's large is 16dp), which is exactly how one panel ends up a step off from the one
+  beside it.
 - **Raised panels use `Surface`.** It owns the rounded-border chrome that was
   hand-repeated in five components. Padding and layout stay with the caller, since those
   genuinely differ. `filled` adds the card background; table containers stay unfilled
   because the table header supplies its own. Buttons and the round selector are *control*
   chrome, a separate pattern, and deliberately not folded in.
+  Use `as` when the element matters: `MatchPage`'s scoreboard is `as="article"`, both for
+  the document outline and because an end-to-end spec selects `main article`. This is the
+  rule that drifted once already — that card was hand-rolled with a *different* radius
+  than every other card until M2 folded it back in.
+- **Hover, focus and pressed come from `interaction.ts`.** `STATE_LAYER` is MD3's veil
+  (8% hover, 10% focus and pressed, of `on-surface`); `FOCUS_RING` is the keyboard
+  indicator; `LINK_UNDERLINE` and `BACK_LINK` cover the two text patterns. A
+  hand-written `hover:` colour in a component is a regression.
+  `FOCUS_RING` is deliberately **separate** from `STATE_LAYER`: they were one constant
+  first, and the current nav entry — a filled chip that takes no veil — silently lost its
+  focus ring with it. Anything focusable takes the ring; only things with a container
+  take the veil.
+  Note these constants are plain strings, not functions taking a colour. Tailwind
+  extracts class names by scanning source text, so `hover:bg-${role}/8` generates no CSS
+  at all. Write a second constant rather than making one dynamic.
 - **Controls use `Button` or `controlClasses`.** The bordered chrome was hand-written in
   six places, which is how a stepper ends up with a `transition` its neighbour lacks.
   `Button` also defaults `type="button"` — the HTML default is `"submit"`, which silently

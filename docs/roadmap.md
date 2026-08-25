@@ -204,7 +204,7 @@ The theme-invariant tokens survived: `scrim` is MD3's own neutral tone 0, and
 the `plate` trio is excluded from the tonal system by name, so the broadcaster
 marks still sit on a light backing in both themes.
 
-### M2 — Shape, elevation and state layers
+### M2 — Shape, elevation and state layers — **done**
 
 **Read the gate's margin report before retoning anything.** MD3 expresses
 elevation as tonal surface tint, so this phase moves the very surface tones the
@@ -277,7 +277,54 @@ tone ordering rather than a fact about alpha.
   This fixes a known inconsistency — a stepper with a `transition` its neighbour
   lacks — rather than merely restyling it.
 
-**Exit criteria:** no raw radius or hover colour in any component.
+**Exit criteria:** no raw radius or hover colour in any component. **Met** — a
+strict grep for Tailwind's own radius names and for `hover:` colours across
+`src/**/*.tsx` returns nothing but prose in comments.
+
+**What was decided, and what it cost.**
+
+- **The shape scale was adopted at today's values, not MD3's per-component
+  assignments.** Tailwind's `rounded`/`rounded-lg`/`rounded-xl` are 4/8/12px and
+  land exactly on MD3's extra-small/small/medium, so all 15 call sites moved with
+  no visual change at all. MD3's *assignments* — pill buttons, a 28dp dialog,
+  12dp cards — are a separate, visible restyle and remain unadopted. That is a
+  deliberate split: the scale is infrastructure, the assignments are design.
+- **`Surface`'s filled variant went solid.** `bg-surface/50` was diluting the
+  elevation MD3 encodes in the token; the page-to-card separation roughly
+  doubles, from about one tone unit to two. The composite disappears from the
+  contrast gate with it, though `blend` stays in `md3-color-core.ts` for the
+  next translucent fill.
+- **The surface ladder took its MD3 names**; `ink` and `line` did not. Renaming
+  `ink` alone is 57 call sites and has nothing to do with elevation, so it is a
+  separate pass rather than a rider on this one.
+
+**Two things found while doing it, neither of which was on the list.**
+
+The app had **no focus styles at all** — no `focus:`, no `focus-visible:`, no
+ring anywhere. Keyboard users got whatever the browser drew. MD3's state layer
+model covers focus, so `FOCUS_RING` closes it.
+
+`MatchPage` had **two** panels wearing `Surface`'s chrome by hand, and the
+difference between them is the better argument for the exit criterion.
+
+The scoreboard was `rounded-xl` where every `Surface` is `rounded-lg` — visibly
+a step off, and the kind of thing review eventually catches. The campanha panel
+below it was `rounded-lg`: pixel-identical to the component it duplicated, and
+therefore invisible. That is the dangerous one. Copied chrome looks correct on
+the day it lands and only separates when the shared component moves — and this
+phase is exactly that event. Moving `Surface` onto the shape tokens would have
+left the copy behind at the old radius while every real `Surface` advanced.
+
+Both are `<Surface>` now. The `as` matters on the scoreboard: an end-to-end spec
+selects `main article`, and a bare div would have matched nothing.
+
+**A verification trap worth recording, because it cost two wrong readings.**
+Tailwind's `transition` covers `background-color` *and* `outline-color`. Reading
+a computed style immediately after `hover()` or `Tab` samples the animation at
+t=0 and reports the *rest* value — which looked exactly like "the state layer
+does not work", then like "the focus ring is the wrong colour". Both were the
+measurement. Wait out the transition before reading, or the DOM will lie to you
+in a way that looks like a CSS bug.
 
 ### M3 — Typography
 

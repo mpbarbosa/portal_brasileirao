@@ -1,6 +1,7 @@
 import { formatRoute } from "@/route-core";
 import { BroadcasterMark } from "@/src/components/BroadcasterMark";
 import { CLUBS_BY_CODE } from "@/src/data/clubs";
+import { LINK_UNDERLINE } from "@/src/components/interaction";
 import { Surface } from "@/src/components/Surface";
 import type { Club, Match } from "@/src/types";
 
@@ -13,9 +14,9 @@ const STATUS_LABEL: Record<Match["status"], string> = {
 };
 
 const STATUS_CLASS: Record<Match["status"], string> = {
-  SCHEDULED: "bg-raised text-ink-soft",
+  SCHEDULED: "bg-surface-container text-ink-soft",
   LIVE: "bg-positive/20 text-positive-ink",
-  FINISHED: "bg-raised text-ink-muted",
+  FINISHED: "bg-surface-container text-ink-muted",
   POSTPONED: "bg-warning/20 text-warning-ink",
   CANCELLED: "bg-negative/20 text-negative-ink",
 };
@@ -77,7 +78,7 @@ export function MatchList({ matches, clubs, onSelectMatch }: MatchListProps) {
                   event.preventDefault();
                   onSelectMatch(match.id);
                 }}
-                className="block truncate font-medium underline decoration-line-strong underline-offset-2 hover:decoration-ink-muted"
+                className={`block truncate font-medium ${LINK_UNDERLINE}`}
               >
                 {clubName(match.homeCode)}{" "}
                 <span className="font-semibold tabular-nums text-ink-soft">{score(match)}</span>{" "}
@@ -101,7 +102,7 @@ export function MatchList({ matches, clubs, onSelectMatch }: MatchListProps) {
             )}
           </div>
           <span
-            className={`shrink-0 rounded px-2 py-1 text-xs font-medium ${STATUS_CLASS[match.status]}`}
+            className={`shrink-0 rounded-x-small px-2 py-1 text-xs font-medium ${STATUS_CLASS[match.status]}`}
           >
             {STATUS_LABEL[match.status]}
           </span>
