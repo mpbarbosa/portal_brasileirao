@@ -25,6 +25,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
+        with:
+          # The screenshot check compares commit ancestry, which a depth-1
+          # clone cannot answer.
+          fetch-depth: 0
 
       - uses: actions/setup-node@v5
         with:
@@ -38,6 +42,9 @@ jobs:
 
       - name: Unit tests
         run: npm run test:unit
+
+      - name: README screenshots are not stale
+        run: ./scripts/check-screenshots.sh
 
       - name: Colour tokens and contrast
         # Two failures in one: `src/index.css` having drifted from the generator
