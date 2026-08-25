@@ -285,6 +285,23 @@ one day's page showed `ATH` as both Athletic Club and Athletico-PR), editing the
 generated `matches.ts` to add channels, calling any CBF endpoint at request time
 — see `docs/data-sources.md`.
 
+**Marca da emissora**:
+A broadcaster shown as its own logo rather than its name, under **Onde assistir**
+and on the **Melhores momentos** buttons. The files come from Wikimedia Commons
+through `Special:FilePath`, the way the sibling World Cup app sources its flags.
+Commons is a deliberate choice over a broadcaster's own site: everything it hosts
+is freely licensed or public domain, and each of these is public domain because a
+plain wordmark is not original enough to copyright.
+Every mark sits on a **plate** — light in both themes, since Globo's circle, the
+YouTube wordmark and CazéTV are dark artwork on a transparent ground and vanish
+against a dark page. A broadcaster with no mark is rendered as its own name on
+the same plate: that is the ordinary case, not a defect, since CBF's feed already
+names ESPN/Disney+, Band and a dozen others we curate nothing for.
+_Avoid_: copying logo artwork from a broadcaster's site (no licence comes with
+it), letting a control's accessible name rest on an image's `alt` (these load
+lazily from another origin — carry the name in text and mark the image
+decorative), showing a mark with no plate, treating a missing mark as an error.
+
 **Menu de seções**:
 The navigation in the sticky header. Its entries come from `NAV_ITEMS`
 (`src/navigation.ts`), which is the single source of truth for what sections exist

@@ -62,4 +62,43 @@ test.describe("Onde assistir", () => {
     await expect(page.getByText("Onde assistir:")).toHaveCount(0);
     await expect(page.getByText("📺")).toHaveCount(0);
   });
+
+  test("a broadcaster is shown as its own mark", async ({ page }) => {
+    await page.goto("/partida/554972");
+
+    // Premiere, YouTube and Cazé TV all have one; the image carries the
+    // broadcaster name so the marks read exactly as the text they replaced.
+    const marks = page.locator("dd img[alt]");
+    await expect(marks.first()).toBeVisible();
+
+    const alts = await marks.evaluateAll((all) => all.map((i) => i.getAttribute("alt")));
+    expect(alts).toContain("Premiere");
+    expect(alts.every((a) => (a ?? "").length > 0)).toBe(true);
+  });
+
+  test("the marks load from Commons", async ({ page }) => {
+    await page.goto("/partida/554972");
+
+    const mark = page.locator("dd img[alt='Premiere']");
+    await expect(mark).toHaveAttribute("src", /commons\.wikimedia\.org.*Special:FilePath/);
+    // A thumbnail, not the full asset.
+    await expect(mark).toHaveAttribute("src", /width=\d+/);
+  });
+
+  test("a broadcaster with no mark still reads as its name", async ({ page }) => {
+    await page.goto("/partida/554972");
+
+    // Record's only Commons logo is CC BY-SA, so it renders as a wordmark
+    // rather than an image — and must still be legible, not missing.
+    await expect(page.getByText("Record", { exact: true })).toBeVisible();
+  });
+
+  test("the highlights link keeps its name when the label becomes a mark", async ({ page }) => {
+    await page.goto("/partida/554975");
+
+    // The accessible name must not rest on an image's alt: these are lazy and
+    // cross-origin, so the text carries it and the mark is decorative.
+    await expect(page.getByRole("link", { name: /^ge tv —/ })).toBeVisible();
+    await expect(page.getByRole("link", { name: /^CazéTV —/ })).toBeVisible();
+  });
 });

@@ -211,3 +211,57 @@ export const withVenues = (
     const venue = venues[match.id];
     return venue ? { ...match, venue } : match;
   });
+
+/**
+ * Broadcaster marks, keyed by a normalised channel name.
+ *
+ * The files are Wikimedia Commons titles, resolved at render time through
+ * `Special:FilePath` — the same way the sibling World Cup app sources its
+ * flags. Commons is the deliberate choice over a broadcaster's own site:
+ * everything it hosts is freely licensed or public domain, and each of these is
+ * public domain because a plain wordmark is not original enough to copyright.
+ * Copying artwork off a broadcaster's site would carry no such assurance.
+ *
+ * A name with no entry here is not a gap to apologise for — `BroadcasterMark`
+ * renders it as its own wordmark instead. That path is load-bearing: CBF's feed
+ * already names ESPN/Disney+, Band, SportyNet and a dozen others we have no
+ * mark for, and Record's only Commons logo is CC BY-SA, whose attribution
+ * requirement is not worth taking on for the one fixture it appears in.
+ */
+const MARKS: Record<string, string> = {
+  GLOBO: "Rede Globo logo.svg",
+  PREMIERE: "Premiere FC logo.png",
+  SPORTV: "SporTV logo 2016.png",
+  AMAZONPRIME: "Prime Video logo (2024).svg",
+  PRIMEVIDEO: "Prime Video logo (2024).svg",
+  YOUTUBE: "YouTube Logo 2017.svg",
+  CAZETV: "CazéTV wordmark.svg",
+  GETV: "Ge.globo logo.svg",
+  GE: "Ge.globo logo.svg",
+};
+
+/**
+ * Channel names reach us spelled several ways and all of them are correct in
+ * context: CBF writes "GE TV" and "Cazé TV", the channels write themselves
+ * "ge tv" and "CazéTV". Accents, spaces and case carry no meaning for lookup.
+ */
+export const markKey = (name: string): string =>
+  name
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toUpperCase()
+    .replace(/[^A-Z0-9]/g, "");
+
+/**
+ * The mark for a channel, or null when we have none.
+ *
+ * `width` asks Commons for a thumbnail rather than the full asset — an SVG is
+ * rasterised server-side, and the PNGs are several hundred pixels wide for a
+ * mark that renders at 18.
+ */
+export const broadcasterMarkUrl = (name: string, width = 120): string | null => {
+  const file = MARKS[markKey(name)];
+  if (!file) return null;
+
+  return `https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(file)}?width=${width}`;
+};

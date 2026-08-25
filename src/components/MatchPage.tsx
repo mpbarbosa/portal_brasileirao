@@ -5,6 +5,7 @@ import {
   hasHighlights,
   venueLabel,
 } from "@/match-core";
+import { BroadcasterMark } from "@/src/components/BroadcasterMark";
 import { controlClasses } from "@/src/components/Button";
 import { ClubCrest } from "@/src/components/ClubCrest";
 import { clubKey } from "@/club-core";
@@ -151,7 +152,11 @@ export function MatchPage({ match, loading = false, clubs, onBack, onNavigate }:
         {match.broadcasters && (
           <div>
             <dt className="text-xs text-ink-faint">Onde assistir</dt>
-            <dd className="font-medium">{match.broadcasters.join(" · ")}</dd>
+            <dd className="mt-1 flex flex-wrap items-center gap-1.5">
+              {match.broadcasters.map((name) => (
+                <BroadcasterMark key={name} name={name} />
+              ))}
+            </dd>
           </div>
         )}
       </dl>
@@ -176,10 +181,14 @@ export function MatchPage({ match, loading = false, clubs, onBack, onNavigate }:
                       className={controlClasses("md", "inline-flex items-center gap-2")}
                     >
                       <span aria-hidden="true">▶</span>
-                      {video.channel}
+                      {/* The publisher is a broadcaster like any other, so it
+                          wears the same mark it wears under "Onde assistir".
+                          The mark carries the channel name as its alt, so the
+                          link still reads aloud as "ge tv". */}
+                      <BroadcasterMark name={video.channel} size="sm" decorative />
                       <span className="sr-only">
-                        {" "}
-                        — melhores momentos no YouTube (abre em nova aba)
+                        {video.channel} — melhores momentos no YouTube (abre em nova
+                        aba)
                       </span>
                     </a>
                   </li>

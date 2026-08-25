@@ -1,4 +1,5 @@
 import { formatRoute } from "@/route-core";
+import { BroadcasterMark } from "@/src/components/BroadcasterMark";
 import { CLUBS_BY_CODE } from "@/src/data/clubs";
 import { Surface } from "@/src/components/Surface";
 import type { Club, Match } from "@/src/types";
@@ -91,12 +92,14 @@ export function MatchList({ matches, clubs, onSelectMatch }: MatchListProps) {
             )}
             <p className="mt-0.5 text-xs text-ink-faint">{kickoffLabel(match.kickoff)}</p>
             {match.broadcasters && (
-              <p className="mt-0.5 truncate text-xs text-ink-muted">
-                <span className="mr-1" aria-hidden="true">
+              <p className="mt-1 flex flex-wrap items-center gap-1">
+                <span className="mr-0.5 text-xs" aria-hidden="true">
                   📺
                 </span>
                 <span className="sr-only">Onde assistir: </span>
-                {match.broadcasters.join(" · ")}
+                {match.broadcasters.map((name) => (
+                  <BroadcasterMark key={name} name={name} size="sm" />
+                ))}
               </p>
             )}
           </div>

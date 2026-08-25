@@ -221,7 +221,9 @@ fields to data files or components.
   separator, clears the 3:1 non-text floor. Fixing this also lifted **dark**'s `ink-faint`,
   which had been shipping at 4.24.
   `scrim` is deliberately dark in both themes: a near-white veil over a light page does not
-  read as "the content behind is inactive".
+  read as "the content behind is inactive". `plate` is its mirror — light in both themes,
+  because the broadcaster marks it backs are dark artwork on a transparent ground and
+  disappear against a dark page.
 - **Raised panels use `Surface`.** It owns the rounded-border chrome that was
   hand-repeated in five components. Padding and layout stay with the caller, since those
   genuinely differ. `filled` adds the card background; table containers stay unfilled

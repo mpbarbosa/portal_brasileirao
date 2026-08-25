@@ -47,6 +47,15 @@
   /* Modal backdrop. Dark in both themes on purpose — a near-white scrim over a
      light page does not read as "the content behind is inactive". */
   --color-scrim: #020617;
+
+  /* The light backing a broadcaster mark sits on. Light in both themes on
+     purpose, the mirror of `scrim`: several of these logos are dark artwork on
+     a transparent ground — Globo's circle, the YouTube wordmark, CazéTV — and
+     on a dark page they disappear entirely. A consistent plate is also how a
+     reader recognises a row of marks as one kind of thing. */
+  --color-plate: #ffffff;
+  --color-plate-line: #d8dee7;
+  --color-plate-ink: #0f172a;
 }
 
 /**
@@ -76,6 +85,16 @@
   --color-negative-ink: #fda4af;
   --color-warning: #f59e0b;
   --color-warning-ink: #fcd34d;
+
+
+  /* The light backing a broadcaster mark sits on. Light in both themes on
+     purpose, the mirror of `scrim`: several of these logos are dark artwork on
+     a transparent ground — Globo's circle, the YouTube wordmark, CazéTV — and
+     on a dark page they disappear entirely. A consistent plate is also how a
+     reader recognises a row of marks as one kind of thing. */
+  --color-plate: #ffffff;
+  --color-plate-line: #d8dee7;
+  --color-plate-ink: #0f172a;
 
   color-scheme: dark;
 }
@@ -115,6 +134,16 @@
   --color-negative-ink: #be123c;
   --color-warning: #f59e0b;
   --color-warning-ink: #b45309;
+
+
+  /* The light backing a broadcaster mark sits on. Light in both themes on
+     purpose, the mirror of `scrim`: several of these logos are dark artwork on
+     a transparent ground — Globo's circle, the YouTube wordmark, CazéTV — and
+     on a dark page they disappear entirely. A consistent plate is also how a
+     reader recognises a row of marks as one kind of thing. */
+  --color-plate: #ffffff;
+  --color-plate-line: #d8dee7;
+  --color-plate-ink: #0f172a;
 
   color-scheme: light;
 }

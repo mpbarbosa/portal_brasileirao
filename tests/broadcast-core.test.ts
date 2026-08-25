@@ -12,6 +12,8 @@ import {
   venueFromLocal,
   withBroadcasters,
   withVenues,
+  markKey,
+  broadcasterMarkUrl,
 } from "@/broadcast-core";
 import type { Club, Match } from "@/src/types";
 
@@ -334,4 +336,41 @@ test("venues attach only to the matches that have one", () => {
 
   assert.deepEqual(withVenue.venue, venue);
   assert.equal("venue" in without, false);
+});
+
+test("channel spellings converge on one lookup key", () => {
+  // CBF writes "GE TV" and "Cazé TV"; the channels write themselves "ge tv"
+  // and "CazéTV". Accents, spaces and case carry no meaning here.
+  assert.equal(markKey("GE TV"), markKey("ge tv"));
+  assert.equal(markKey("Cazé TV"), markKey("CazéTV"));
+  assert.equal(markKey("SporTV"), "SPORTV");
+});
+
+test("a known broadcaster resolves to a Commons file", () => {
+  const url = broadcasterMarkUrl("Globo");
+
+  assert.ok(url?.startsWith("https://commons.wikimedia.org/wiki/Special:FilePath/"));
+  // A thumbnail, not the full asset — these render at 18 pixels tall.
+  assert.match(url ?? "", /\?width=\d+$/);
+});
+
+test("both spellings of a channel find the same mark", () => {
+  assert.equal(broadcasterMarkUrl("Cazé TV"), broadcasterMarkUrl("CazéTV"));
+  assert.equal(broadcasterMarkUrl("GE TV"), broadcasterMarkUrl("ge tv"));
+});
+
+test("a filename with spaces and an accent is escaped", () => {
+  // "CazéTV wordmark.svg" would otherwise produce a broken URL.
+  const url = broadcasterMarkUrl("CazéTV") ?? "";
+
+  assert.ok(!url.includes(" "));
+  assert.ok(url.includes("Caz%C3%A9TV%20wordmark.svg"));
+});
+
+test("an unknown broadcaster yields no mark rather than a guess", () => {
+  // CBF's feed already names these, and the UI renders them as wordmarks.
+  assert.equal(broadcasterMarkUrl("ESPN / Disney+"), null);
+  assert.equal(broadcasterMarkUrl("SportyNet"), null);
+  assert.equal(broadcasterMarkUrl("Record"), null);
+  assert.equal(broadcasterMarkUrl(""), null);
 });
