@@ -41,9 +41,9 @@ export function StandingsTable({ rows, onSelectClub, rankHistory }: StandingsTab
 
   return (
     <Surface className="overflow-x-auto">
-      <table className={`w-full text-sm ${showCampaign ? "min-w-[40rem]" : "min-w-[34rem]"}`}>
+      <table className={`w-full text-body-medium ${showCampaign ? "min-w-[40rem]" : "min-w-[34rem]"}`}>
         <caption className="sr-only">Classificação do Campeonato Brasileiro Série A</caption>
-        <thead className="bg-surface-container-low text-xs uppercase tracking-wide text-ink-muted">
+        <thead className="bg-surface-container-low text-label-medium uppercase text-ink-muted">
           <tr>
             <th scope="col" className="px-3 py-2 text-left">#</th>
             <th scope="col" className="px-3 py-2 text-left">Clube</th>
@@ -94,7 +94,7 @@ export function StandingsTable({ rows, onSelectClub, rankHistory }: StandingsTab
                   <span>{row.club.shortName}</span>
                 )}
                 {row.club.state && (
-                  <span className="ml-2 text-xs text-ink-faint">{row.club.state}</span>
+                  <span className="ml-2 text-body-small text-ink-faint">{row.club.state}</span>
                 )}
               </td>
               <td className="px-2 py-2 text-right font-semibold tabular-nums">{row.points}</td>

@@ -439,3 +439,17 @@ Anything focusable takes the ring; only things with a container take the veil.
 _Avoid_: "outline" on its own (it collides with the `outline`/`outline-variant`
 colour roles, which are borders and not focus), folding it back into the state
 layer.
+
+**Escala tipográfica**:
+Material Design 3's type steps — `text-body-small` through
+`text-headline-medium`, defined in `src/index.css`. Each carries size, line
+height and letter spacing together, so a component names one thing rather than
+pairing a size with a leading and trusting the next component to pair them the
+same way. Weight is *not* part of it: MD3 prescribes 500 for its title and label
+steps, and this app's headings are bold by choice, so components keep an explicit
+`font-*`. The typeface is likewise separate — the app ships no webfont and uses
+the system stack.
+_Avoid_: Tailwind's own `text-sm`/`text-xs` names (they carry no line height or
+tracking, which is the whole point of the step), `tracking-*` alongside a step
+(it overrides the letter spacing the step defines), "fonte" for the scale (that
+is the typeface, which is a different and still-unshipped decision).

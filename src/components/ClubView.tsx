@@ -48,7 +48,7 @@ const FORM_TITLE: Record<FormResult, string> = {
 
 const stat = (label: string, value: string) => (
   <Surface key={label} filled className="px-3 py-2">
-    <p className="text-xs text-ink-faint">{label}</p>
+    <p className="text-body-small text-ink-faint">{label}</p>
     <p className="font-semibold tabular-nums">{value}</p>
   </Surface>
 );
@@ -75,7 +75,7 @@ export function ClubView({
         <button type="button" onClick={onBack} className={BACK_LINK}>
           ← Voltar
         </button>
-        <p className="mt-4 text-sm text-ink-muted" role={loading ? "status" : undefined}>
+        <p className="mt-4 text-body-medium text-ink-muted" role={loading ? "status" : undefined}>
           {loading ? "Carregando página…" : "Clube não encontrado."}
         </p>
       </>
@@ -115,15 +115,15 @@ export function ClubView({
       <header className="mt-3 flex items-center gap-3">
         <ClubCrest club={club} size={44} />
         <div className="min-w-0">
-          <h2 className="truncate text-xl font-bold tracking-tight">{club.shortName}</h2>
-          <p className="truncate text-sm text-ink-muted">
+          <h2 className="truncate text-title-large font-bold">{club.shortName}</h2>
+          <p className="truncate text-body-medium text-ink-muted">
             {club.name}
             {club.state ? ` · ${club.state}` : ""}
           </p>
           {/* Both links read as the thing itself — a bare host, a bare handle —
               rather than a full URL, which is what a reader recognises and what
               keeps the pair on one line. */}
-          <div className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-sm">
+          <div className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-body-medium">
             {club.website && (
               <a
                 href={club.website}
@@ -163,7 +163,7 @@ export function ClubView({
         <section className="mt-6">
           {/* Sits directly under the Posição tile, which it explains: the tile
               says where the club is, this says how it got there. */}
-          <h3 className="mb-2 text-sm font-medium text-ink-muted">Campanha</h3>
+          <h3 className="mb-2 text-body-medium font-medium text-ink-muted">Campanha</h3>
           <Surface filled className="px-3 py-3">
             <RankSparkline
               entries={campaign}
@@ -173,7 +173,7 @@ export function ClubView({
             />
             {/* The drawing carries no axis, so the ends are named in text —
                 which is also the only version a screen reader gets. */}
-            <p className="mt-2 flex justify-between text-xs tabular-nums text-ink-faint">
+            <p className="mt-2 flex justify-between text-body-small tabular-nums text-ink-faint">
               <span>{campaign[0].position}º · 1ª rodada</span>
               <span>
                 {campaign[campaign.length - 1].position}º · {lastRound}ª rodada
@@ -184,16 +184,16 @@ export function ClubView({
       )}
 
       <section className="mt-6">
-        <h3 className="mb-2 text-sm font-medium text-ink-muted">Últimos resultados</h3>
+        <h3 className="mb-2 text-body-medium font-medium text-ink-muted">Últimos resultados</h3>
         {form.length === 0 ? (
-          <p className="text-sm text-ink-muted">Nenhum jogo disputado ainda.</p>
+          <p className="text-body-medium text-ink-muted">Nenhum jogo disputado ainda.</p>
         ) : (
           <ul className="flex gap-1.5">
             {form.map((result, index) => (
               <li
                 key={index}
                 title={FORM_TITLE[result]}
-                className={`flex h-7 w-7 items-center justify-center rounded-x-small text-xs font-bold ${FORM_CLASS[result]}`}
+                className={`flex h-7 w-7 items-center justify-center rounded-x-small text-body-small font-bold ${FORM_CLASS[result]}`}
               >
                 {result}
               </li>
@@ -204,14 +204,14 @@ export function ClubView({
 
       {next && (
         <section className="mt-6">
-          <h3 className="mb-2 text-sm font-medium text-ink-muted">Próximo jogo</h3>
+          <h3 className="mb-2 text-body-medium font-medium text-ink-muted">Próximo jogo</h3>
           <MatchList matches={[next]} clubs={clubs} onSelectMatch={onSelectMatch} />
         </section>
       )}
 
       {clubScorers.length > 0 && (
         <section className="mt-6">
-          <h3 className="mb-2 text-sm font-medium text-ink-muted">
+          <h3 className="mb-2 text-body-medium font-medium text-ink-muted">
             Artilheiros do clube
           </h3>
           <ul className="space-y-1">
@@ -220,7 +220,7 @@ export function ClubView({
                 as="li"
                 filled
                 key={scorer.playerId}
-                className="flex items-center justify-between px-3 py-2 text-sm"
+                className="flex items-center justify-between px-3 py-2 text-body-medium"
               >
                 <span>{scorer.playerName}</span>
                 <span className="tabular-nums text-ink-muted">
@@ -233,7 +233,7 @@ export function ClubView({
       )}
 
       <section className="mt-6">
-        <h3 className="mb-2 text-sm font-medium text-ink-muted">Jogos disputados</h3>
+        <h3 className="mb-2 text-body-medium font-medium text-ink-muted">Jogos disputados</h3>
         <MatchList matches={played} clubs={clubs} onSelectMatch={onSelectMatch} />
       </section>
     </>

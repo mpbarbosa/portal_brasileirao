@@ -30,7 +30,7 @@ const PADDING: Record<ControlSize, string> = {
  */
 export const controlClasses = (size: ControlSize = "md", extra = ""): string =>
   [
-    "rounded-small border border-line-strong text-sm text-ink-soft",
+    "rounded-small border border-line-strong text-body-medium text-ink-soft",
     // Hover, focus and pressed all come from one place — see `interaction.ts`.
     // Before M2 this was a bare `hover:bg-raised` with no focus state at all.
     STATE_LAYER,

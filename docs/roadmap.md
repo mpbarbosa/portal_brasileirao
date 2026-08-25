@@ -129,9 +129,25 @@ reviewable rather than described.
 - **Bundle budget:** no JS increase at all. CSS may grow by the size of the role
   vocabulary; M1 spent 1.83 kB raw / 0.41 kB gzipped, part of which returns in
   M2 when the legacy aliases are deleted.
-- **Typeface: still open**, and deliberately not decided here — it belongs to
-  M3, and nothing in M1 depends on it. The type *scale* remains separable from
-  the typeface.
+- **Typeface: the system stack.** Decided 2026-08-25, at the start of M3. No
+  webfont is shipped; the app keeps Tailwind's default `--font-sans` and each
+  platform renders in its own UI face.
+
+  The reasoning is specific to this app rather than a general preference.
+  A subsetted Roboto Flex is roughly 40–100 kB, which would be the single
+  largest asset on a page whose whole value is glancing at a score, often on
+  mobile data mid-match. **Roboto is already fourth in the default stack**, so
+  Android — the dominant platform for a Brazilian football app — renders in
+  MD3's own typeface at zero cost. And pt-BR strings run long: "Melhores
+  momentos" and "Onde assistir" already sit close to their containers on
+  mobile, so a swap that changes metrics risks reflowing exactly the strings
+  with least room.
+
+  What is given up: MD3's letter-spacing values are tuned for Roboto and are
+  marginally off on SF Pro and Segoe UI, and line lengths vary a little by
+  platform. Revisit only if the app gains a brand identity that needs a
+  specific face — this is a brand decision, not a technical one, and the type
+  *scale* below is unaffected either way.
 
 ### M1 — Colour roles and tonal palettes — **done**
 
@@ -326,7 +342,7 @@ does not work", then like "the focus ring is the wrong colour". Both were the
 measurement. Wait out the transition before reading, or the DOM will lie to you
 in a way that looks like a CSS bug.
 
-### M3 — Typography
+### M3 — Typography — **done**
 
 - Adopt the MD3 type scale (display / headline / title / body / label, each in
   large / medium / small) as tokens.
@@ -334,6 +350,43 @@ in a way that looks like a CSS bug.
   longer than English, and "Onde assistir" and "Melhores momentos" already sit
   close to their containers on mobile.
 - Typeface per the M0 decision.
+
+**Exit criteria:** no bare Tailwind text size and no `tracking-*` utility in any
+component. **Met** — a strict grep returns nothing.
+
+**Each step carries size, line height and letter spacing together**, so a
+component names one thing rather than pairing a size with a leading and hoping
+the next component pairs them the same way. That is most of the value: the app
+previously wrote `text-sm` and its leading independently at 28 call sites.
+
+**Weight is deliberately not in the scale.** MD3 prescribes 500 for title and
+label steps, but this app's headings are bold by choice and flattening them is a
+restyle rather than a scale adoption. Components keep their explicit `font-*` —
+weight is separable from the scale exactly as the typeface is.
+
+**Four of the seven sizes already matched.** 12, 14, 16 and 24px are MD3's
+body-small, body-medium, title-medium and headline-small precisely, the same
+coincidence the shape scale had. Three did not exist in MD3 and moved:
+
+| was | now | change |
+|---|---|---|
+| `text-lg` 18px — player name | `title-large` 22px | +4px |
+| `text-xl` 20px — club name | `title-large` 22px | +2px |
+| `text-3xl` 30px — the score | `headline-medium` 28px | −2px |
+
+The first two are the point rather than a side effect: the player name and the
+club name are the same kind of heading — the entity a detail view is about — and
+they were two different sizes. The scale makes them one.
+
+`display-*` and `headline-large` are defined nowhere, following the rule
+`Button`'s size list already sets: steps that nothing uses are not written down.
+
+**The pt-BR risk did not materialise.** Measured rather than eyeballed: five
+routes in both themes at 375px, checking page scroll width and every element's
+own overflow, ignoring `sr-only` (clipped to 1px by design) and `overflow-x`
+containers (meant to scroll). Zero page overflow, zero clipped visible text.
+Worth keeping the method — the first run reported 40-odd "overflows" that were
+entirely screen-reader text and scrollable tables.
 
 ### M4 — Components
 
