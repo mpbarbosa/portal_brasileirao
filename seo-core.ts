@@ -28,6 +28,7 @@ const SECTIONS = new Set([
   "ao-vivo",
   "jogos",
   "artilharia",
+  "jogadores",
   "clube",
   "partida",
   "estadio",
@@ -279,6 +280,9 @@ export const sitemapEntries = (context: {
     { path: "/ao-vivo", lastmod: updatedAt, changefreq: "hourly", priority: 0.9 },
     { path: "/jogos", lastmod: updatedAt, changefreq: "daily", priority: 0.8 },
     { path: "/artilharia", lastmod: updatedAt, changefreq: "daily", priority: 0.7 },
+    // Weekly, not daily: an elenco moves in a transfer window, and telling a
+    // crawler otherwise is the same lie as a fixture claiming today's lastmod.
+    { path: "/jogadores", lastmod: updatedAt, changefreq: "weekly", priority: 0.7 },
   ];
 
   for (const round of roundsOf(context.matches ?? [])) {

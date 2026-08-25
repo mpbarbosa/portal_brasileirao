@@ -10,7 +10,15 @@
  * Upstream docs: https://www.football-data.org/documentation/quickstart
  */
 import { slugify } from "@/club-core";
-import type { Club, Match, MatchStatus, Player, Scorer, StandingsRow } from "@/src/types";
+import type {
+  Club,
+  Match,
+  MatchStatus,
+  Player,
+  Scorer,
+  Squad,
+  StandingsRow,
+} from "@/src/types";
 
 export const FOOTBALL_DATA_BASE = "https://api.football-data.org/v4";
 export const BSA_COMPETITION = "BSA";
@@ -25,6 +33,17 @@ export const standingsUrl = (competition: string = BSA_COMPETITION): string =>
 
 export const matchesUrl = (competition: string = BSA_COMPETITION): string =>
   `${FOOTBALL_DATA_BASE}/competitions/${competition}/matches`;
+
+/**
+ * Every club in the competition, each with its `squad` embedded.
+ *
+ * One request for all twenty elencos, which is the only reason the Jogadores
+ * page is affordable on a 10 req/minute budget — the per-team endpoint would be
+ * twenty. The seed generator already calls this URL for club addresses and
+ * websites, so the snapshot costs nothing extra either.
+ */
+export const teamsUrl = (competition: string = BSA_COMPETITION): string =>
+  `${FOOTBALL_DATA_BASE}/competitions/${competition}/teams`;
 
 /** A single person. One request each, so callers must cache. */
 export const personUrl = (id: string): string =>
@@ -96,6 +115,30 @@ interface RawScorer {
 
 export interface ScorersResponse {
   scorers?: RawScorer[];
+}
+
+/**
+ * A squad member as the competition's team list reports one.
+ *
+ * Note what is **absent**: `shirtNumber` is not in this payload for any player
+ * in the division, and neither is `currentTeam` — the club is the team the
+ * entry is nested under. The person endpoint carries both, which is what the
+ * player card fills in when one is opened.
+ */
+interface RawSquadMember {
+  id?: number;
+  name?: string;
+  position?: string | null;
+  nationality?: string | null;
+  dateOfBirth?: string | null;
+}
+
+interface RawTeamWithSquad extends RawTeam {
+  squad?: RawSquadMember[];
+}
+
+export interface TeamsResponse {
+  teams?: RawTeamWithSquad[];
 }
 
 /**
@@ -271,6 +314,48 @@ export const mapScorers = (payload: ScorersResponse): Scorer[] => {
   }
 
   return rows;
+};
+
+/**
+ * Build every club's elenco from the competition's team list.
+ *
+ * A club with an **empty or absent** squad still yields a `Squad`, deliberately:
+ * it is in the championship whether or not upstream has filled its roster in,
+ * and dropping it would hide the club rather than the gap. A member missing an
+ * id or a name is dropped, on the same reasoning as a nameless scorer — there
+ * is nothing to render and nothing to look up.
+ *
+ * Order is upstream's here and normalised by `sortSquads`; this stays a mapper.
+ */
+export const mapSquads = (payload: TeamsResponse): Squad[] => {
+  const squads: Squad[] = [];
+
+  for (const team of payload.teams ?? []) {
+    const club = clubFromTeam(team);
+    if (!club) continue;
+
+    const players: Player[] = [];
+    for (const raw of team.squad ?? []) {
+      const name = raw.name?.trim();
+      if (!isNumber(raw.id) || !name) continue;
+
+      players.push({
+        id: String(raw.id),
+        name,
+        ...(raw.position?.trim() ? { position: raw.position.trim() } : {}),
+        ...(raw.nationality?.trim() ? { nationality: raw.nationality.trim() } : {}),
+        ...(raw.dateOfBirth?.trim() ? { dateOfBirth: raw.dateOfBirth.trim() } : {}),
+        // No `club` here, deliberately: it is the team this squad already hangs
+        // off, and repeating it on all 948 entries would triple the payload to
+        // restate what the enclosing `Squad` says. The page attaches it when it
+        // opens a card.
+      });
+    }
+
+    squads.push({ club, players });
+  }
+
+  return squads;
 };
 
 interface RawPerson {

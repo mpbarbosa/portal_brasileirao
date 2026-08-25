@@ -348,3 +348,13 @@ test("a club's crest still wins on its own page, and it is square", () => {
   assert.equal(image?.shape, "square");
   assert.match(image?.alt ?? "", /Flamengo/);
 });
+
+test("the jogadores page names itself rather than falling back to the site title", () => {
+  const meta = pageMeta({ section: "jogadores" }, {}, "https://exemplo.test");
+
+  assert.equal(meta.title, "Jogadores · Portal Brasileirão");
+  assert.match(meta.description, /elencos/i);
+  // The site card, not a crest: the page is twenty clubs, not one.
+  assert.equal(meta.image?.url, "https://exemplo.test/og-default.png");
+  assert.equal(meta.image?.shape, "wide");
+});

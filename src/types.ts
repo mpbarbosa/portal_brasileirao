@@ -275,6 +275,23 @@ export interface Scorer {
 }
 
 /**
+ * One club's elenco: every player the provider lists for it.
+ *
+ * A squad is not addressable upstream on its own — it arrives embedded in the
+ * competition's team list, which is why one request yields all twenty. The club
+ * rides along whole rather than as a code, exactly as `Scorer` carries one: the
+ * page renders crest and name straight from this and needs no second lookup.
+ *
+ * `players` may be **empty**. A club whose squad upstream has not filled in is
+ * still a club in the championship, and dropping it would hide the club rather
+ * than the gap.
+ */
+export interface Squad {
+  club: Club;
+  players: Player[];
+}
+
+/**
  * Envelope every externally-backed endpoint returns. `source` names the
  * provider that actually answered, so a client can label degraded data instead
  * of silently presenting stale numbers as live ones.

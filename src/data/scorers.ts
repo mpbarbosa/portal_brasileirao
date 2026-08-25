@@ -8,7 +8,7 @@ import type { Scorer } from "@/src/types";
  * as the offline fallback, so it goes stale the moment anyone scores.
  */
 export const SEED_SCORERS: Scorer[] = [
-  { position: 1, playerId: "192070", playerName: "Kevin Viveros", club: { code: "1768", name: "CA Paranaense", shortName: "Athletico-PR", tla: "CAP" }, goals: 15, assists: 3, penalties: 2, playedMatches: 22 },
+  { position: 1, playerId: "192070", playerName: "Kevin Viveros", club: { code: "1768", name: "CA Paranaense", shortName: "Athletico-PR", tla: "CAP" }, goals: 16, assists: 3, penalties: 2, playedMatches: 22 },
   { position: 2, playerId: "1077", playerName: "Pedro", club: { code: "1783", name: "CR Flamengo", shortName: "Flamengo", tla: "FLA" }, goals: 15, assists: 5, penalties: null, playedMatches: 22 },
   { position: 3, playerId: "37833", playerName: "Carlos Vinícius", club: { code: "1767", name: "Grêmio FBPA", shortName: "Grêmio", tla: "FBP" }, goals: 10, assists: 1, penalties: 1, playedMatches: 21 },
   { position: 4, playerId: "157533", playerName: "John Kennedy", club: { code: "1765", name: "Fluminense FC", shortName: "Fluminense", tla: "FLU" }, goals: 9, assists: 1, penalties: null, playedMatches: 19 },

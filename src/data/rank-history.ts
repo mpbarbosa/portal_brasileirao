@@ -44,7 +44,7 @@ export const RANK_HISTORY: ClubRankHistory[] = [
       { round: 21, position: 3, points: 37, played: 21 },
       { round: 22, position: 3, points: 40, played: 22 },
       { round: 23, position: 3, points: 41, played: 23 },
-      { round: 24, position: 3, points: 41, played: 23 },
+      { round: 24, position: 3, points: 44, played: 24 },
     ],
   },
   {
@@ -134,7 +134,7 @@ export const RANK_HISTORY: ClubRankHistory[] = [
       { round: 21, position: 8, points: 29, played: 20 },
       { round: 22, position: 9, points: 30, played: 21 },
       { round: 23, position: 11, points: 30, played: 22 },
-      { round: 24, position: 11, points: 30, played: 22 },
+      { round: 24, position: 11, points: 30, played: 23 },
     ],
   },
   {

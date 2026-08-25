@@ -178,7 +178,7 @@ test("robots omits the sitemap line when there is no origin to make it absolute"
 test("the sitemap carries the sections even with no data loaded", () => {
   const paths = sitemapEntries({}).map((entry) => entry.path);
 
-  assert.deepEqual(paths, ["/", "/ao-vivo", "/jogos", "/artilharia"]);
+  assert.deepEqual(paths, ["/", "/ao-vivo", "/jogos", "/artilharia", "/jogadores"]);
 });
 
 test("every round, club and fixture is listed", () => {
@@ -256,4 +256,28 @@ test("a round needs the season's fixture list; the sections need nothing", () =>
   assert.equal(subjectResolved({ section: "jogos", round: null }, {}), true);
   assert.equal(subjectResolved({ section: "classificacao" }, {}), true);
   assert.equal(subjectResolved({ section: "ao-vivo" }, {}), true);
+});
+
+test("jogadores is a real section, and takes no argument", () => {
+  assert.equal(pageStatus("/jogadores").status, 200);
+  assert.equal(pageStatus("/jogadores").index, true);
+
+  // The trap CLAUDE.md names: without a rule, every made-up argument under a
+  // new section answers 200 with a copy of the shell — unboundedly many
+  // duplicates offered to a crawler, with nothing going red.
+  assert.deepEqual(pageStatus("/jogadores/flamengo"), {
+    status: 404,
+    index: false,
+    reason: "unknown-section",
+  });
+});
+
+test("the jogadores page is in the sitemap, and does not claim to change daily", () => {
+  const entry = sitemapEntries({ updatedAt: "2026-08-25T12:00:00Z" }).find(
+    (candidate) => candidate.path === "/jogadores",
+  );
+
+  assert.ok(entry);
+  assert.equal(entry.changefreq, "weekly");
+  assert.equal(entry.lastmod, "2026-08-25");
 });

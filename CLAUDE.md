@@ -121,6 +121,24 @@ what makes the logic testable without mocking HTTP.
   stadium photograph needs, from the file **title** the data stores — see **Data**
   below for why a title rather than a URL.
 
+- `squad-core.ts` — the **Jogadores** page: every club's elenco, grouped into
+  the lines a squad is read in. It exists because the provider reports a
+  position at **two levels of detail in the same list** — mostly a broad line
+  ("Defence", "Midfield"), occasionally a specific role ("Left-Back", "Right
+  Winger"), and for a handful of players nothing at all. `lineOf` folds the
+  roles onto the line they belong to, so a lateral does not become a section of
+  one. An unrecognised position goes to **Outros** rather than being guessed at,
+  and keeps its verbatim caption — the same rule `positionLabel` follows, whose
+  table this module reuses rather than copying.
+  `playerPositionLabel` returns **null** for a broad position, because the
+  section heading has already said it; printing "Defesa" under a Defensores
+  heading is the heading again, once per row, for two thirds of the squad.
+  Sorting is alphabetical in pt-BR collation with the player id as a tie-break —
+  **not** by shirt number, which the competition's team payload does not carry
+  for anyone in the division. Athletico-PR really does list two Dudus, which is
+  what the tie-break is for.
+
+
 Extract to a core module before logic in `server.ts` grows a branch worth testing.
 
 ### Data provider
@@ -144,6 +162,16 @@ Mapping notes, all covered by tests:
 - Club codes prefer the upstream `tla` (FLA, PAL, …), which lines up with the local seed
   codes, falling back to a synthetic `FD-<id>`.
 - Standings read the `TOTAL` group only, never the HOME/AWAY splits.
+- **Squads arrive embedded in the competition's team list**, not from a per-team
+  endpoint: `/competitions/BSA/teams` carries a `squad` array on each of the
+  twenty clubs, so `mapSquads` builds the whole division's elencos from **one**
+  request rather than twenty. That is the only reason the Jogadores page is
+  affordable at 10 req/minute. The listing has **no `shirtNumber` and no
+  `currentTeam`** for any player — the person endpoint has both, which is what
+  the player card fills in when one is opened. `mapSquads` deliberately does not
+  copy the club onto each of the ~950 entries: it is what the enclosing `Squad`
+  already says, and repeating it more than doubled the payload (255KB → 109KB
+  when it was removed). The page attaches it at the moment it opens a card.
 
 **Known difference, deliberate:** football-data counts `IN_PLAY` matches in its standings
 table — a club leading 1-0 at half-time is already credited 3 points. `computeStandings`
@@ -174,13 +202,16 @@ note for anything that isn't live. New endpoints keep this shape and degrade to 
 rather than returning a 500.
 
 Current routes: `/api/health`, `/api/clubs`, `/api/standings`, `/api/scorers`,
+`/api/squads` (every club's elenco; one upstream request serves all twenty),
 `/api/players/:id` (numeric id, else 400 — enrichment only, answers `null` offline),
 `/api/matches` (optional `?round=` — a non-integer or `< 1` is a 400).
 
 Adding a section is: a `NAV_ITEMS` entry in `src/navigation.ts`, a `Route` variant plus
 parse/format cases in `route-core.ts`, a case in `App`'s view switch, and — if it needs new
 data — a pure mapper in `football-data-core.ts`, a seed snapshot in
-`scripts/sync-seed-data.ts`, and a cached route in `server.ts`. `NavBar` never changes.
+`scripts/sync-seed-data.ts`, and a cached route in `server.ts`. `NavBar` needs no change
+*for the entry itself* — that promise held when Jogadores was added — but see the width
+arithmetic below: the bar had slack for four items' padding and not for five.
 
 **A new `Route` variant is a four-file change, and only one of the four is enforced.**
 Since the crawl surface landed, a variant also needs a case in `page-meta-core.ts`, a
@@ -199,12 +230,23 @@ The `NAV_ITEMS` entry carries its own `Icon`, which is *why* `NavBar` never chan
 icon looked up by id inside `NavBar` would break that promise the first time anyone added
 a section.
 
-**The promise is bounded, and the bound is not enforced by anything.** Material Design 3's
-navigation bar carries **three to five** destinations, and there are four — Ao vivo made
-it four. **One** more fits. At the sixth the bar is off-spec — crowded rather than broken, so no build fails, no test
-goes red, and nobody notices. A sixth section wants MD3's navigation *drawer*, not a sixth
-entry here. Read that as a real limit rather than a style note: it is the one constraint in
-this file that the tooling cannot check for you.
+**The promise is bounded, and the bound is now spent.** Material Design 3's navigation bar
+carries **three to five** destinations. Ao vivo made it four; Jogadores took the fifth.
+**The bar is full.** A sixth section wants MD3's navigation *drawer*, not a sixth entry
+here — and at the sixth nothing fails, no build breaks and no test goes red, which is why
+this is a real limit rather than a style note: the tooling cannot check it for you.
+
+**The fifth entry was not free, and what it cost was measured rather than eyeballed.** A
+nav item's minimum width is its 64dp MD3 indicator plus whatever padding it carries; at
+`px-2` that is 80dp, and five of those is 400dp on a 375dp screen. The fifth label was
+clipped at the screen edge with **no horizontal scroll to reveal it** — invisible on a
+desktop, and invisible to every test in the suite until `tests/e2e/players.spec.ts` began
+measuring each item's box against the bar's at 320, 360 and 375dp. The padding is what gave
+way, because MD3 does not specify it while it does specify the indicator. Below 360dp even
+that is not enough: five indicators at 64dp is 320dp exactly, leaving nothing for
+"Classificação", whose label alone measures 79dp — so the indicator degrades to 56dp under
+`min-[360px]:`, and only there, where the spec cannot be satisfied at all. A sixth entry has
+no such slack left to find.
 
 ### Page metadata
 
@@ -465,11 +507,20 @@ two files describe different seasons. The generator validates its own output: ev
 must have an entry for every round, and each round's positions must be a permutation of
 1..N, because a duplicated or missing position is invisible once it is drawn as a line.
 
+`src/data/squads.ts` is generated by the same `sync-seed-data` run and costs **no extra
+request**: the club rows, the postal address the state is parsed from, and every club's
+squad all come out of the one `/competitions/BSA/teams` payload. It references clubs
+through `CLUBS_BY_CODE` rather than restating them, so it cannot come to disagree with
+`clubs.ts` about a crest or a name, and it throws at import time if it names a club that
+file does not have. The generator **warns but does not fail** when a club has no squad
+upstream: that is a gap the page renders honestly, and the alternative is noticing it
+months later on the page itself.
+
 `src/data/clubs.ts` and `src/data/matches.ts` are **generated files** — a frozen snapshot of
 the real division and season, serving as the offline fallback. Regenerate with:
 
 ```sh
-npx tsx scripts/sync-seed-data.ts   # costs 2 calls against the 10/min budget
+npx tsx scripts/sync-seed-data.ts   # costs 3 calls against the 10/min budget
 ```
 
 Do not hand-edit them; hand-maintenance is what let the original list drift to the wrong
@@ -612,6 +663,16 @@ Rules that follow from sharing a repository:
   in Tailwind v4**: `duration-short-4` compiles to nothing and silently leaves the
   default in place. The tokens are real custom properties, so hand-written CSS can use
   them; only the utility does not exist.
+  **A Tailwind class that compiles is not a Tailwind class that applies.** A rotating
+  disclosure chevron on the Jogadores page was written twice — `group-open:rotate-90` and
+  an arbitrary `[details[open]_&]:rotate-90` — and *both* emitted a rule that the element
+  genuinely matched, while `rotate` still computed to `0deg` in the page. The fix was to
+  stop hand-drawing the mark and let `<details>` use the browser's own `::marker`, which
+  rotates for free and cannot fail to compile. Two things worth keeping from it: the
+  summary must **not** be `display: flex` or Chrome drops the marker (which is what pushes
+  people toward a hand-drawn chevron in the first place), and a movement you cannot see is
+  worth measuring in the page — `getComputedStyle(el).rotate`, not `.transform`, since
+  Tailwind's `rotate-*` sets the `rotate` property.
   The reduced-motion block sets near-zero rather than `none`, so `transitionend` still
   fires, and it stops movement only — colour feedback survives, because a control that
   stops reacting is harder to use rather than calmer. `tests/e2e/motion.spec.ts` asserts

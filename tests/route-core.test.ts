@@ -122,3 +122,10 @@ test("a malformed percent escape resolves rather than throwing", () => {
     assert.deepEqual(parseRoute(path), HOME, path);
   }
 });
+
+test("jogadores is a section that takes no argument", () => {
+  assert.deepEqual(parseRoute("/jogadores"), { section: "jogadores" });
+  assert.equal(formatRoute({ section: "jogadores" }), "/jogadores");
+  // An argument under it addresses nothing, so it is not a deeper page.
+  assert.deepEqual(parseRoute("/jogadores/flamengo"), { section: "jogadores" });
+});

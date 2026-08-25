@@ -176,6 +176,15 @@ export const pageMeta = (
         image: site,
       };
 
+    case "jogadores":
+      return {
+        title: suffix("Jogadores"),
+        description:
+          "Os elencos dos 20 clubes do Campeonato Brasileiro Série A, " +
+          "jogador por jogador.",
+        image: site,
+      };
+
     case "clube": {
       const club = findClub(context.clubs ?? [], route.key);
       if (!club) {
