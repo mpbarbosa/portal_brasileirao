@@ -20,6 +20,15 @@
  * key the app reads, so the inline no-flash script picks it up on first paint —
  * clicking the toggle after load would capture a repaint. A screenshot showing
  * that flash would be documenting a bug the app does not have.
+ *
+ * **Retaking an image means re-reading its alt text in README.md.** The alt
+ * describes what the picture shows — a round number, a points total, a
+ * countdown — so a fresh capture can leave the description behind on a page
+ * that no longer exists. Nothing verifies the two against each other, and
+ * nothing can: the one reader alt text is written for is the one who cannot
+ * see that it has drifted. It has already happened once, to the Ao vivo
+ * countdown: it passed review and a merge, because a binary diff shows that
+ * a PNG changed and never what it now says.
  */
 import { execFileSync } from "node:child_process";
 import { mkdirSync, readFileSync } from "node:fs";

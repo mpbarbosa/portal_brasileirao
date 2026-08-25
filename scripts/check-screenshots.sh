@@ -83,6 +83,14 @@ echo
 # built from `ls` cannot name an image that does not exist.
 echo "  Refresh docs/screenshots, then commit them."
 echo
+echo "  Re-read the alt text in README.md for every image you retake. It"
+echo "  describes what the picture shows, so a recaptured image can leave it"
+echo "  describing a page that no longer exists — and nothing here checks the"
+echo "  two against each other. Nothing can: the one reader alt text is written"
+echo "  for is the one who cannot see that it has drifted. Not hypothetical —"
+echo "  the Ao vivo alt quoted a countdown, a refresh moved it, and the stale"
+echo "  description passed review and a merge before anyone opened the PNG."
+echo
 echo "  The rule is that the images must depict THIS commit — not that they come"
 echo "  from production. scripts/screenshot.ts enforces it: it reads /api/health"
 echo "  from whatever it captured and writes into docs/screenshots only if that"
