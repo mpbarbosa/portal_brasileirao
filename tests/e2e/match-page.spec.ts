@@ -161,7 +161,7 @@ test.describe("Página da partida", () => {
   test("a finished match shows its score", async ({ page }) => {
     await openFirstMatch(page, PLAYED_ROUND);
 
-    await expect(page.locator("article").getByText(/\d+\s*×\s*\d+/)).toBeVisible();
+    await expect(page.locator("main > article").getByText(/\d+\s*×\s*\d+/)).toBeVisible();
   });
 
   test("each club on the scoreboard links to its page", async ({ page }) => {
@@ -218,7 +218,7 @@ test.describe("Página da partida", () => {
     // on goals hid the section from 14 of the season's finished matches.
     await page.goto("/partida/554976");
 
-    await expect(page.locator("article").getByText(/0\s*×\s*0/)).toBeVisible();
+    await expect(page.locator("main > article").getByText(/0\s*×\s*0/)).toBeVisible();
     await expect(page.getByRole("heading", { name: "Melhores momentos" })).toBeVisible();
     // Either a curated link or the search — asserting which would make this a
     // test of whether someone has curated this fixture yet.

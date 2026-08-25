@@ -340,8 +340,25 @@ Rules that follow from sharing a repository:
   Note these constants are plain strings, not functions taking a colour. Tailwind
   extracts class names by scanning source text, so `hover:bg-${role}/8` generates no CSS
   at all. Write a second constant rather than making one dynamic.
+- **A match's status is `StatusChip`.** Both the fixture list and the match page used
+  to carry their own copy of the label map *and* the colour map. Two copies of a lookup
+  table is how a new status renders in one place and blank in the other.
+  **Broadcaster marks are a plate, not a chip**, and deliberately so: a chip takes its
+  container colour from the tonal system, and `--color-plate` must stay `#ffffff` in both
+  themes or the marks that are dark artwork on transparent grounds vanish silently. Keep
+  the `data-mark` attribute — nine specs select on it precisely so markup can change.
+- **The player card is a native `<dialog>` opened with `showModal()`.** Not an overlay
+  div: modality has to be real. It carried `aria-modal="true"` for months while Tab
+  walked straight out of it. The browser gives the focus trap, `inert` behind, the top
+  layer and focus restoration; body scroll is locked separately, because modality does
+  not stop the page scrolling. Two traps if you touch it: Escape arrives as `cancel`,
+  not `keydown`; and Tailwind's preflight resets `margin: 0`, which kills the user
+  agent's `dialog { margin: auto }`, so horizontal centring must be set explicitly.
 - **Controls use `Button` or `controlClasses`.** The bordered chrome was hand-written in
   six places, which is how a stepper ends up with a `transition` its neighbour lacks.
+  Two variants exist — `outlined` and `tonal` — and MD3's other three are absent because
+  nothing renders them. `tonal` also takes MD3's pill where `outlined` keeps the shape
+  scale, because a pill beside a right-aligned `tabular-nums` column reads as floating.
   `Button` also defaults `type="button"` — the HTML default is `"submit"`, which silently
   submits any enclosing form. `controlClasses` exists separately because not every control
   is a `<button>`: the goals link is an anchor and the round picker a `<select>`, and both

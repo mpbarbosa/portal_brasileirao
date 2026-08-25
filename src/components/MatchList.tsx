@@ -2,24 +2,9 @@ import { formatRoute } from "@/route-core";
 import { BroadcasterMark } from "@/src/components/BroadcasterMark";
 import { CLUBS_BY_CODE } from "@/src/data/clubs";
 import { LINK_UNDERLINE } from "@/src/components/interaction";
+import { StatusChip } from "@/src/components/StatusChip";
 import { Surface } from "@/src/components/Surface";
 import type { Club, Match } from "@/src/types";
-
-const STATUS_LABEL: Record<Match["status"], string> = {
-  SCHEDULED: "A realizar",
-  LIVE: "Ao vivo",
-  FINISHED: "Encerrado",
-  POSTPONED: "Adiado",
-  CANCELLED: "Cancelado",
-};
-
-const STATUS_CLASS: Record<Match["status"], string> = {
-  SCHEDULED: "bg-surface-container text-ink-soft",
-  LIVE: "bg-positive/20 text-positive-ink",
-  FINISHED: "bg-surface-container text-ink-muted",
-  POSTPONED: "bg-warning/20 text-warning-ink",
-  CANCELLED: "bg-negative/20 text-negative-ink",
-};
 
 const kickoffLabel = (kickoff: string): string => {
   const parsed = new Date(kickoff);
@@ -101,11 +86,7 @@ export function MatchList({ matches, clubs, onSelectMatch }: MatchListProps) {
               </p>
             )}
           </div>
-          <span
-            className={`shrink-0 rounded-x-small px-2 py-1 text-body-small font-medium ${STATUS_CLASS[match.status]}`}
-          >
-            {STATUS_LABEL[match.status]}
-          </span>
+          <StatusChip status={match.status} />
         </Surface>
       ))}
     </ul>

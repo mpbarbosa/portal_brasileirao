@@ -388,7 +388,7 @@ containers (meant to scroll). Zero page overflow, zero clipped visible text.
 Worth keeping the method — the first run reported 40-odd "overflows" that were
 entirely screen-reader text and scrollable tables.
 
-### M4 — Components
+### M4 — Components — **done except NavBar**
 
 In ascending order of risk:
 
@@ -403,6 +403,70 @@ In ascending order of risk:
    `CLAUDE.md` currently promises "NavBar never changes" when a section is
    added — that promise must survive.
 5. **`PlayerOverlayCard`** — the candidate for a real MD3 dialog implementation.
+
+**Shapes were adopted only where a component was rebuilt.** The dialog takes
+MD3's extra-large corner because it *is* rebuilt; the outlined controls and
+`Surface` keep the shape scale they already had. That split is not a
+half-measure: a pill sitting against a right-aligned `tabular-nums` column reads
+as floating, because the eye takes the pill's widest point as its edge while the
+number's edge is the glyph box — and the round stepper and the goals link both
+sit against tables. The tonal links sit in open prose, where nothing misaligns.
+
+**1. Chips — done, and it removed a real duplication.** `MatchList` and
+`MatchPage` each carried their own copy of the label map *and* the colour map,
+identical, five values apiece. `StatusChip` owns both now. Two copies of a lookup
+table is how a new status renders in one place and blank in the other.
+
+**Broadcaster marks were deliberately *not* converted.** The roadmap assumed
+"the plate already behaves like a chip". It behaves like one superficially and
+differs where it matters, and the difference is fatal: a chip takes its container
+colour from the tonal system, and `--color-plate` is `#ffffff` in *every* theme
+because Globo's circle, the YouTube wordmark and CazéTV are dark artwork on
+transparent grounds. On a dark container they do not look worse — they disappear,
+silently, with the `img` present and the accessible name correct. The plate is a
+background for foreign artwork; a chip is a container for our own content. Kept
+as a plate, and verified in a browser in both themes rather than assumed.
+
+**2. Button — two variants, not four.** `outlined` (everything that was there
+before) and `tonal`. MD3's *filled*, *elevated* and *text* are absent for the
+same reason `ControlSize` is short: nothing renders them, and a variant with no
+call site is a guess about the future that later has to be maintained or deleted.
+
+`tonal` went to the one place the app already drew a distinction in prose but not
+in pixels — a *curated* highlights link beside the search fallback. The comment
+there has always said one is a real answer and the other is a guess; they
+rendered identically until M4.
+
+**3. `Surface` — already an MD3 outlined card.** Border plus surface tone at the
+shape scale is exactly that. No restyle was invented to fill the item.
+
+**5. The dialog was modal in name only.** It carried `aria-modal="true"` while
+Tab walked straight out of it into the page behind. It is now a native
+`<dialog>` opened with `showModal()`, which buys a focus trap, `inert` on
+everything behind, the top layer, and focus returned to whatever opened it —
+each fiddly to hand-roll and easy to get subtly wrong. Body scroll is locked
+separately, because modality does not stop the page scrolling behind.
+
+The spec that asserted `aria-modal="true"` now asserts modality instead:
+`dialog.matches(":modal")`, and that focusing a control behind the card fails.
+That is the same lesson as the focus rings — the old assertion tested the label,
+and the label was true while the behaviour was not.
+
+**A bug worth recording, because the cause is not obvious.** The dialog rendered
+hard against the left edge on desktop. A native dialog is centred by the user
+agent's `dialog { margin: auto }`, and **Tailwind's preflight resets `margin: 0`
+on every element**, so that rule never applied. Vertical centring worked because
+`my-auto` was set explicitly, which made it look deliberate rather than broken.
+Caught by looking at a screenshot, confirmed by reading computed margins, and now
+guarded by a spec — no other test in the suite has an opinion about where a
+dialog sits.
+
+**4. `NavBar` is deferred to its own phase**, as the only component whose
+structure changes. One thing to settle before it starts: MD3's navigation bar
+specifies **3 to 5 destinations**, and `NAV_ITEMS` has exactly 3. The promise in
+`CLAUDE.md` that adding a section needs no change to `NavBar` therefore holds for
+two more sections and then quietly stops being true — a spec violation nobody
+would notice, rather than a build error. That ceiling belongs beside the promise.
 
 ### M5 — Motion
 

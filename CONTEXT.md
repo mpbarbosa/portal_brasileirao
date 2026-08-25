@@ -453,3 +453,27 @@ _Avoid_: Tailwind's own `text-sm`/`text-xs` names (they carry no line height or
 tracking, which is the whole point of the step), `tracking-*` alongside a step
 (it overrides the letter spacing the step defines), "fonte" for the scale (that
 is the typeface, which is a different and still-unshipped decision).
+
+**Selo de status**:
+The **Status da partida** rendered as a chip — `StatusChip` in
+`src/components/StatusChip.tsx`, used by both the fixture list and the match
+page. Its colour is information rather than decoration: a live match and a
+cancelled one must not look alike, which is why it does not take Material Design
+3's single-container-colour convention for chips even though the shape and label
+come from there. Both call sites previously carried their own copy of the label
+map and the colour map.
+_Avoid_: "badge" (the app says selo), duplicating the maps at a call site, using
+a bare status colour as text — the base tokens are for fills, the `-ink` pairs
+are what clear AA.
+
+**Placa da emissora**:
+The light backing a **Marca da emissora** sits on. Deliberately *not* a Material
+Design 3 chip, despite behaving like one at a glance: a chip takes its container
+colour from the tonal system, and this must stay `#ffffff` in both themes or the
+marks that are dark artwork on a transparent ground disappear entirely. It is a
+background for foreign artwork, not a container for our own content — that
+difference is what decides every other property, including the ring rather than a
+border and the 16px/20px content height floor.
+_Avoid_: "chip" for this (the word invites the tonal container that breaks it),
+deriving `--color-plate` from the palette, a border in place of the ring — a
+border adds to the box, a ring does not, and the plate is sized to artwork.

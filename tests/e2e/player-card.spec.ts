@@ -26,10 +26,54 @@ test.describe("Cartão do jogador", () => {
   test("the card is a modal dialog with an accessible name", async ({ page }) => {
     await openFirstPlayer(page);
 
-    await expect(card(page)).toHaveAttribute("aria-modal", "true");
     const labelledBy = await card(page).getAttribute("aria-labelledby");
     expect(labelledBy).toBeTruthy();
     await expect(page.locator(`#${labelledBy}`)).not.toBeEmpty();
+  });
+
+  test("the card is genuinely modal, not merely labelled as one", async ({ page }) => {
+    // This used to assert `aria-modal="true"`, which the card carried while not
+    // actually being modal — Tab walked straight out into the page behind it.
+    // M4 opens a native dialog with showModal(), where modality is real and the
+    // attribute is redundant, so the assertion moved from the label to the
+    // behaviour it was standing in for.
+    await openFirstPlayer(page);
+
+    const state = await page.evaluate(`(() => {
+      const dialog = document.querySelector("dialog");
+      if (!dialog) return { error: "no dialog element" };
+      const behind = document.querySelector("main table tbody button");
+      // Anything outside a modal dialog is inert: focusing it does nothing.
+      behind?.focus();
+      return {
+        open: dialog.open,
+        modal: dialog.matches(":modal"),
+        focusEscaped: behind ? document.activeElement === behind : null,
+        focusIsInside: dialog.contains(document.activeElement),
+      };
+    })()`);
+
+    expect(state).toMatchObject({ open: true, modal: true, focusEscaped: false });
+    expect((state as { focusIsInside: boolean }).focusIsInside).toBe(true);
+  });
+
+  test("the card is centred rather than hard against an edge", async ({ page }) => {
+    // A native dialog is centred by the user agent's `dialog { margin: auto }`,
+    // which Tailwind's preflight resets to `margin: 0` on every element. Relying
+    // on the UA rule put the card against the left edge on desktop while
+    // vertical centring still worked, because only the vertical margins were
+    // set explicitly — so it looked deliberate rather than broken, and no other
+    // spec in the suite has an opinion about where a dialog sits.
+    await openFirstPlayer(page);
+
+    const box = await card(page).boundingBox();
+    const width = page.viewportSize()?.width ?? 0;
+    expect(box).not.toBeNull();
+
+    const left = box!.x;
+    const right = width - (box!.x + box!.width);
+    // Within a pixel of symmetrical; the exact gap depends on the viewport.
+    expect(Math.abs(left - right)).toBeLessThanOrEqual(1);
   });
 
   test("focus lands inside the card on open", async ({ page }) => {
