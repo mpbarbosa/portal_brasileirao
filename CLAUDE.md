@@ -117,9 +117,12 @@ what makes the logic testable without mocking HTTP.
   one ground come to disagree. Home clubs are derived from who hosted there, so the page
   needs no curated club list. A fixture whose venue slugs to nothing is skipped rather
   than bucketed under an empty key, which would collect unrelated grounds into one page.
-  `stadiumPhotoUrl`/`stadiumPhotoPage` build the two Wikimedia Commons addresses a
-  stadium photograph needs, from the file **title** the data stores — see **Data**
-  below for why a title rather than a URL.
+  `stadiumPhotoUrl` builds the address of a vendored photograph on **our own
+  origin**, keyed by stadium slug and width; `stadiumPhotoPage` still builds the
+  Commons file-page link the licence requires. `PHOTO_WIDTHS` lives here rather
+  than beside the `<img>`, because `sync-stadium-photos` writes exactly those
+  files — two copies of that list is how the page comes to request a size nobody
+  vendored, which fails as a missing image rather than as a build error.
 
 Extract to a core module before logic in `server.ts` grows a branch worth testing.
 
@@ -426,12 +429,23 @@ both the stadium page and the match page's Estádio line; `officialName` is carr
 where it genuinely differs.
 
 It also holds each ground's **photograph**, named by its **file title on Wikimedia
-Commons** — `"ARENA MRV.jpg"` — exactly as `wikipedia` stores an article title, and
-for the same reason: the address is one function's business. `stadiumPhotoUrl` builds
-it through `Special:FilePath`, which follows a rename; the direct
-`upload.wikimedia.org/.../thumb/b/b5/…` form embeds a hash of the filename and does
-not. The bytes are fetched by the reader's browser rather than committed, which is
-what `Club.crest` already does with the provider's CDN.
+Commons** — `"ARENA MRV.jpg"` — exactly as `wikipedia` stores an article title. The
+title is the *source*; the bytes are **vendored into `public/stadiums/`** by
+`npm run sync-stadium-photos` and served from our own origin, the same answer the
+broadcaster marks got and for the same reason (`docs/roadmap.md` principle 4). They
+shipped hotlinked and were vendored afterwards — one image per page had not tripped
+Commons' 429, but that is a property of the layout rather than of the code.
+
+The sync's licence rule is deliberately **looser than the marks'**: `redistributable`
+in `commons-core.ts` admits CC0, CC BY and CC BY-SA, because a photograph renders its
+credit as a condition of display and so the obligation is met, where a mark has no
+credit line beside it. It refuses any licence it cannot *name* rather than anything on
+a blocklist. `commons-core.ts` is shared with `check-stadium-photos` on purpose — a
+second copy of that judgement is how the checker comes to pass a file the sync refuses.
+
+```sh
+npm run sync-stadium-photos   # 19 grounds × 2 widths, ~17 MB, re-reads every licence
+```
 
 **The credit is not decoration.** Every licence in that file except one CC0 upload
 requires the photographer to be named wherever the image appears, so `credit`,

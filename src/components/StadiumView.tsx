@@ -11,6 +11,7 @@ import {
   stadiumMatches,
   stadiumPhotoPage,
   stadiumPhotoUrl,
+  PHOTO_WIDTHS,
 } from "@/venue-core";
 import type { Club, Match, Stadium, StadiumPhoto } from "@/src/types";
 
@@ -69,17 +70,6 @@ function WikipediaGlyph() {
 }
 
 /**
- * Widths offered to the browser, in CSS pixels.
- *
- * The column is at most 736px wide (`max-w-3xl` less its padding), so the
- * largest entry covers a 2× display at full width and the smallest covers a
- * phone at 1×. Commons renders each on demand from an original that routinely
- * runs to eight megapixels — without this the page would ship a 4000px JPEG to
- * a 390px screen, which is the whole reason `stadiumPhotoUrl` takes a width.
- */
-const PHOTO_WIDTHS = [480, 736, 1104, 1472];
-
-/**
  * The ground itself.
  *
  * Local to this file, like `WikipediaGlyph` above and for the same stated
@@ -97,7 +87,7 @@ const PHOTO_WIDTHS = [480, 736, 1104, 1472];
  * the image would reflow the whole page on load — the stat tiles, the mandantes
  * and the fixture list all sit below it.
  */
-function StadiumPhotoFigure({ photo }: { photo: StadiumPhoto }) {
+function StadiumPhotoFigure({ slug, photo }: { slug: string; photo: StadiumPhoto }) {
   return (
     <figure className="mt-4" data-stadium-photo={photo.file}>
       <Surface className="overflow-hidden">
@@ -105,13 +95,17 @@ function StadiumPhotoFigure({ photo }: { photo: StadiumPhoto }) {
             inside a scrolling table; this is one large image at the top of the
             page, and deferring the element a reader is already looking at only
             delays the thing they came for. */}
+        {/* Widths come from `PHOTO_WIDTHS` in venue-core rather than from a
+            list here, because `sync-stadium-photos` writes exactly those files.
+            A local list would let the page ask for a size nobody vendored,
+            which fails as a missing image rather than as a build error. */}
         <img
-          src={stadiumPhotoUrl(photo, 1104)}
-          srcSet={PHOTO_WIDTHS.map((w) => `${stadiumPhotoUrl(photo, w)} ${w}w`).join(", ")}
+          src={stadiumPhotoUrl(slug, PHOTO_WIDTHS[0])}
+          srcSet={PHOTO_WIDTHS.map((w) => `${stadiumPhotoUrl(slug, w)} ${w}w`).join(", ")}
           sizes="(min-width: 768px) 736px, 100vw"
           alt={photo.alt}
-          width={1104}
-          height={621}
+          width={1472}
+          height={828}
           decoding="async"
           className="aspect-[16/9] w-full object-cover"
         />
@@ -220,7 +214,7 @@ export function StadiumView({
         )}
       </header>
 
-      {stadium.photo && <StadiumPhotoFigure photo={stadium.photo} />}
+      {stadium.photo && <StadiumPhotoFigure slug={stadium.slug} photo={stadium.photo} />}
 
       {(capacity || stadium.opened !== undefined) && (
         <div className="mt-4 grid grid-cols-2 gap-2">

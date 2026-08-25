@@ -45,8 +45,9 @@
  *   0  every photo resolves and its credit and licence still match Commons.
  *   1  at least one does not — the line says which and why.
  */
+import { creditMatches, deedFor, fold, plain } from "@/commons-core";
 import { STADIUMS } from "@/src/data/stadiums";
-import { buildStadiums, stadiumPhotoUrl } from "@/venue-core";
+import { buildStadiums, PHOTO_WIDTHS } from "@/venue-core";
 import type { Club, Match, StadiumPhoto } from "@/src/types";
 
 const appUrl = process.argv[2];
@@ -59,26 +60,6 @@ const appUrl = process.argv[2];
 const UA = "portal-brasileirao/1.0 (https://brasileirao.mpbarbosa.com; check-stadium-photos)";
 
 const API = "https://commons.wikimedia.org/w/api.php";
-
-/** Commons returns these fields as HTML — a linked username, an italicised
- *  studio name. The page shows plain text, so compare plain text. */
-const plain = (value: string): string =>
-  value
-    .replace(/<[^>]*>/g, " ")
-    .replace(/&amp;/g, "&")
-    .replace(/&nbsp;/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
-
-/** Accents off, case off, punctuation off. "Erica Ramalho/Portal da Copa" and
- *  "Erica Ramalho / Portal da Copa" are the same credit written two ways. */
-const fold = (value: string): string =>
-  plain(value)
-    .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "")
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, " ")
-    .trim();
 
 interface CommonsFacts {
   license: string;
@@ -132,7 +113,11 @@ const commons = async (file: string): Promise<CommonsFacts | null> => {
  * whose renderer fails still shows a reader a broken box.
  */
 const thumbnailRenders = async (photo: StadiumPhoto): Promise<string | null> => {
-  const response = await fetch(stadiumPhotoUrl(photo, 480), {
+  // Commons directly, not `stadiumPhotoUrl` — since the photographs were
+  // vendored that builds a path on *our* origin, and asking it here would check
+  // our copy while claiming to check the source.
+  const source = `https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(photo.file)}?width=${PHOTO_WIDTHS[0]}`;
+  const response = await fetch(source, {
     headers: { "User-Agent": UA },
     signal: AbortSignal.timeout(20_000),
   });
@@ -142,26 +127,6 @@ const thumbnailRenders = async (photo: StadiumPhoto): Promise<string | null> => 
   if (!type.startsWith("image/")) return `thumbnail served ${type || "no content type"}`;
 
   return null;
-};
-
-/**
- * The Creative Commons deed a licence short name should point at.
- *
- * Derived rather than listed so a licence this file has never seen produces
- * "cannot check" rather than a false pass. Ported jurisdictions carry their
- * country in the path ("CC BY 3.0 BR" → `/by/3.0/br/`), which is exactly the
- * detail a hand-copied URL drops.
- */
-const deedFor = (license: string): string | null => {
-  const folded = fold(license);
-  if (folded === "cc0") return "https://creativecommons.org/publicdomain/zero/1.0/";
-
-  const match = /^cc by(?: (sa))? (\d+ \d+)(?: ([a-z]{2}))?$/.exec(folded);
-  if (!match) return null;
-
-  const [, sa, version, jurisdiction] = match;
-  const path = `by${sa ? "-sa" : ""}/${version.replace(" ", ".")}/`;
-  return `https://creativecommons.org/licenses/${path}${jurisdiction ? `${jurisdiction}/` : ""}`;
 };
 
 /** What a deployment currently serves, keyed by stadium slug. Absent when no
@@ -218,10 +183,13 @@ const check = async (
           problems.push(`Commons now says "${there.license}", not "${photo.license}"`);
         }
 
-        // Where the photographer dictated an attribution string, that is the
-        // one with legal force; otherwise the artist's name is what is owed.
+        // `creditMatches` decides this, shared with `sync-stadium-photos`:
+        // where the photographer dictated an attribution string that is the one
+        // with legal force, otherwise the artist's name is what is owed. A
+        // second copy of that judgement is how the checker comes to pass a file
+        // the sync refuses.
         const owed = there.attribution || there.artist;
-        if (owed && fold(owed) !== fold(photo.credit)) {
+        if (owed && !creditMatches(photo.credit, there)) {
           problems.push(`Commons credits "${owed}", not "${photo.credit}"`);
         }
         if (!owed && fold(photo.license) !== "cc0") {

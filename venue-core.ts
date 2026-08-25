@@ -44,23 +44,40 @@ export const venueName = (
 ): string => facts[stadiumSlug(venue.stadium)]?.name ?? venue.stadium;
 
 /**
+ * The rendered widths a stadium photograph is served at.
+ *
+ * Shared rather than declared beside the `<img>`, because `sync-stadium-photos`
+ * writes exactly these files and the view requests exactly these widths. Two
+ * copies of the list is how the page comes to ask for a size nobody vendored,
+ * which fails as a missing image rather than as a build error.
+ *
+ * The page renders the photo at most 736 CSS pixels wide (see `sizes` in
+ * `StadiumView`), so these are the 1× and 2× steps and nothing else. The
+ * intermediate sizes that were here while the image came from Commons cost
+ * nothing there, because Commons rendered them on demand; every step now costs
+ * a committed file per ground.
+ */
+export const PHOTO_WIDTHS = [736, 1472] as const;
+
+/**
  * Where to fetch a stadium photograph, at a given rendered width.
  *
- * `Special:FilePath` is Commons' documented way to reach a file by **title**,
- * and the reason the data file stores a title rather than a URL. The direct
- * address on `upload.wikimedia.org` embeds a hash of the filename
- * (`.../thumb/b/b5/ARENA_MRV.jpg/1280px-ARENA_MRV.jpg`), so it is unreadable,
- * unverifiable by eye against Commons, and dead the moment a file is renamed —
- * whereas this endpoint follows the rename. It answers a 302 to the CDN, which
- * costs one redirect on the single largest image of the page and buys a data
- * file a human can check.
+ * **Served from this app's own origin**, not from Commons. Hotlinking Commons
+ * is what `sync-broadcaster-marks` already exists to avoid: Commons answers a
+ * browser's third or fourth request with 429, because it is an archive rather
+ * than a CDN, and throttling is correct on their side. The photographs were
+ * hotlinked when they shipped and are now vendored into `public/stadiums/` by
+ * `npm run sync-stadium-photos`, which is the same answer the marks got.
  *
- * `width` asks Commons for a thumbnail rather than the original. That matters:
- * these files run to eight megapixels, and the page shows a strip a few hundred
- * pixels tall.
+ * Keyed by **stadium slug** rather than by the Commons file title: the slug is
+ * already the stadium's identity, it is unique by construction, and it keeps
+ * `public/stadiums/maracana-1472.jpg` legible to someone listing the directory.
+ * The Commons title stays in the data as the *source*, and `stadiumPhotoPage`
+ * still links to it — the licence requires that link, and vendoring the bytes
+ * does not vendor the attribution.
  */
-export const stadiumPhotoUrl = (photo: StadiumPhoto, width: number): string =>
-  `https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(photo.file)}?width=${width}`;
+export const stadiumPhotoUrl = (slug: string, width: number): string =>
+  `/stadiums/${slug}-${width}.jpg`;
 
 /**
  * The file's description page — where the licence, the photographer and the

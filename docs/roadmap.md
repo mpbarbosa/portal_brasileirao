@@ -61,13 +61,9 @@ Recorded here because they are easy to undo by accident:
    `CONTEXT.md` is the glossary. New concepts get an entry in the same commit.
 4. **No runtime dependency on a third party for assets.** Crests come from the
    provider; broadcaster marks are served from our own origin precisely because
-   hotlinking Commons earns a 429.
-   **One recorded exception: the stadium photograph**, which is hotlinked from
-   Commons. It holds only while a page loads **one** Commons image — the 429 was
-   a dozen marks on one page — and the reasoning, the measurement behind it and
-   the bound are under **Foto do estádio** in `CONTEXT.md`. A second Commons
-   image on any page is not a second exception; it is the case this principle
-   was written for.
+   hotlinking Commons earns a 429. Stadium photographs briefly shipped hotlinked
+   and were vendored into `public/stadiums/` by `npm run sync-stadium-photos`;
+   the principle has no exceptions again.
 5. **CI needs no secrets.** Do not add a provider token to test "the live path".
 
 ---
