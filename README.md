@@ -23,8 +23,12 @@ explicit choice; the control in the header switches between them.*
 
 ![Página do clube Palmeiras no tema claro: escudo, site oficial e perfil no Instagram, os números da temporada (1º lugar, 51 pontos, 24 jogos, saldo +24), o gráfico da campanha da 1ª à 24ª rodada, os últimos cinco resultados, o próximo jogo e os artilheiros do clube.](docs/screenshots/clube-palmeiras-light.png)
 
-*A club page. **Campanha** traces where the club sat after every round, and the marks under
-each fixture say which broadcaster showed it.*
+![A mesma página do clube Palmeiras no tema escuro: os mesmos escudo, links, números da temporada, gráfico da campanha e jogos, com as marcas das emissoras mantendo o fundo claro para continuarem legíveis.](docs/screenshots/clube-palmeiras-dark.png)
+
+*A club page, in both themes. **Campanha** traces where the club sat after every round, and
+the marks under each fixture say which broadcaster showed it. The marks keep a light backing
+in both themes on purpose — Globo's circle and the Premiere wordmark are dark artwork on a
+transparent ground, and they vanish against a dark page without it.*
 
 ## Stack
 
