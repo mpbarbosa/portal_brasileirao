@@ -8,6 +8,7 @@ import {
 import { BroadcasterMark } from "@/src/components/BroadcasterMark";
 import { controlClasses } from "@/src/components/Button";
 import { ClubCrest } from "@/src/components/ClubCrest";
+import { WikipediaLink } from "@/src/components/ClubLinks";
 import { clubKey } from "@/club-core";
 import { BACK_LINK, LINK_UNDERLINE } from "@/src/components/interaction";
 import { lastRecordedRound } from "@/rank-history-core";
@@ -90,7 +91,17 @@ function Campaign({
   );
 }
 
-/** A club's side of the scoreboard: crest, name, and a link to its page. */
+/**
+ * A club's side of the scoreboard: crest, name, a link to its page, and its
+ * article.
+ *
+ * The article is the one *external* link here, and it sits a type step below
+ * the name deliberately. The scoreboard's job is the score; a second link at
+ * the same weight as the club name would read as two equal destinations and
+ * pull the eye off the middle of the card. The club's other three links stay on
+ * the club page, one tap away through the name above — repeating all four
+ * beside each side would put eight external links around a scoreline.
+ */
 function Side({ club, code, onNavigate }: { club: Club | null; code: string; onNavigate: (p: string) => void }) {
   const label = club?.shortName ?? code;
 
@@ -112,6 +123,7 @@ function Side({ club, code, onNavigate }: { club: Club | null; code: string; onN
       ) : (
         <span className="truncate font-semibold">{label}</span>
       )}
+      {club && <WikipediaLink club={club} extra="text-body-small" />}
     </div>
   );
 }

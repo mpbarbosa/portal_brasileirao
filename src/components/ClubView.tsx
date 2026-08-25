@@ -8,11 +8,11 @@ import {
   resultFor,
   scorersFor,
   standingFor,
-  wikipediaUrl,
   type FormResult,
 } from "@/club-core";
 import { lastRecordedRound } from "@/rank-history-core";
 import { ClubCrest } from "@/src/components/ClubCrest";
+import { GLYPH, WikipediaLink } from "@/src/components/ClubLinks";
 import { BACK_LINK, LINK_UNDERLINE } from "@/src/components/interaction";
 import { MatchList } from "@/src/components/MatchList";
 import { RankSparkline } from "@/src/components/RankSparkline";
@@ -59,45 +59,23 @@ const stat = (label: string, value: string) => (
  * The marks beside the club's external links.
  *
  * Drawn here rather than fetched, for the reason `CLAUDE.md` gives for the
- * broadcaster marks: no runtime dependency on a third party for an asset. Local
- * to this file because they have one call site each, the same way `MatchPage`
- * keeps `Campaign` and `Side`.
+ * broadcaster marks: no runtime dependency on a third party for an asset. These
+ * three stay local because they have one call site each, the same way
+ * `MatchPage` keeps `Campaign` and `Side`. The Wikipédia mark left for
+ * `ClubLinks` when the match page became its second caller — that rule is what
+ * moved it, and what keeps these here.
  *
- * All four are monochrome outlines — Instagram's rather than Meta's gradient
- * mark, a plain globe for the club's own site, a pair of quavers for the hymn
- * rather than YouTube's play button, and an open book for the article rather
- * than Wikipedia's puzzle globe: each names the *thing* and not the host that
- * happens to keep it. The book also has to differ from the site's globe, which
- * is the one pair a reader could otherwise confuse. They take their colour from the link through `currentColor`, so they
- * warm on hover with the rest of the text and need nothing of their own in
- * either theme; a fixed-colour logo would want a **Placa da emissora** the way
- * the broadcaster marks do, which is a lot of chrome for one glyph beside a
- * word.
- *
- * `inline-block` is load-bearing rather than incidental: text-decoration is not
- * drawn through an atomic inline box, so each link's underline stops at its icon
- * instead of running under it.
- *
- * `aria-hidden` on both. The text beside them already names the link — a host or
- * a handle — and the screen-reader suffix already says which kind it is, so an
- * announced icon would read the destination twice.
+ * All are monochrome outlines — Instagram's rather than Meta's gradient mark, a
+ * plain globe for the club's own site, and a pair of quavers for the hymn
+ * rather than YouTube's play button: each names the *thing* and not the host
+ * that happens to keep it. Their shared attributes come from `GLYPH`, so a mark
+ * defined here cannot drift from the one defined there.
  */
-const glyph = {
-  viewBox: "0 0 24 24",
-  fill: "none",
-  stroke: "currentColor",
-  strokeWidth: 2,
-  strokeLinecap: "round" as const,
-  strokeLinejoin: "round" as const,
-  "aria-hidden": true,
-  focusable: false,
-  className: "mr-1 inline-block h-[1em] w-[1em] align-[-0.125em]",
-};
 
 /** A globe: the club's own site, as distinct from a profile it keeps elsewhere. */
 function SiteGlyph() {
   return (
-    <svg {...glyph}>
+    <svg {...GLYPH}>
       <circle cx="12" cy="12" r="9" />
       <path d="M3 12h18" />
       <path d="M12 3a15 15 0 0 1 0 18a15 15 0 0 1 0-18" />
@@ -107,7 +85,7 @@ function SiteGlyph() {
 
 function InstagramGlyph() {
   return (
-    <svg {...glyph}>
+    <svg {...GLYPH}>
       <rect x="3" y="3" width="18" height="18" rx="5" />
       <circle cx="12" cy="12" r="4" />
       <circle cx="17" cy="7" r="1" fill="currentColor" stroke="none" />
@@ -119,23 +97,10 @@ function InstagramGlyph() {
  *  so the mark is the song rather than the platform. */
 function HymnGlyph() {
   return (
-    <svg {...glyph}>
+    <svg {...GLYPH}>
       <path d="M9 18V5l12-2v13" />
       <circle cx="6" cy="18" r="3" />
       <circle cx="18" cy="16" r="3" />
-    </svg>
-  );
-}
-
-/** An open book: the club's article. Wikipedia's own mark is a *globe*, which
- *  would read as a second official site beside the one already there — and it
- *  is artwork with a fixed form rather than an outline that takes
- *  `currentColor`. */
-function WikipediaGlyph() {
-  return (
-    <svg {...glyph}>
-      <path d="M12 7v13" />
-      <path d="M12 7C10.5 5 8 4.5 4 4.5v13C8 17.5 10.5 18 12 20c1.5-2 4-2.5 8-2.5v-13c-4 0-6.5.5-8 2.5" />
     </svg>
   );
 }
@@ -180,7 +145,6 @@ export function ClubView({
   const clubScorers = scorersFor(scorers, code);
   const instagram = instagramUrl(club.instagram);
   const hymn = hymnUrl(club.hymn);
-  const wikipedia = wikipediaUrl(club.wikipedia);
 
   // Same domains as the Classificação, so the shape a reader recognises in the
   // table is the shape they find here — only the box is bigger. `clubCount`
@@ -252,18 +216,7 @@ export function ClubView({
                 <span className="sr-only"> — no YouTube (abre em nova aba)</span>
               </a>
             )}
-            {wikipedia && (
-              <a
-                href={wikipedia}
-                target="_blank"
-                rel="noopener noreferrer"
-                className={`truncate ${LINK_UNDERLINE}`}
-              >
-                <WikipediaGlyph />
-                Wikipédia
-                <span className="sr-only"> — verbete do clube (abre em nova aba)</span>
-              </a>
-            )}
+            <WikipediaLink club={club} />
           </div>
         </div>
       </header>

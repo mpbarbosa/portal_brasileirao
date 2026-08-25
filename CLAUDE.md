@@ -544,6 +544,15 @@ Rules that follow from sharing a repository:
   Note these constants are plain strings, not functions taking a colour. Tailwind
   extracts class names by scanning source text, so `hover:bg-${role}/8` generates no CSS
   at all. Write a second constant rather than making one dynamic.
+- **A club's external links live in `ClubLinks`** once they have more than one
+  call site. `WikipediaLink` owns the whole anchor — glyph, label, `target`,
+  `rel` and the screen-reader suffix — because those last three are what drift
+  when a link is copied: a second copy missing `rel="noopener"` is a real defect
+  that looks identical on the page. `GLYPH` holds the shared mark attributes, so
+  an icon defined in `ClubView` cannot drift from one defined there. The other
+  three marks stay local to `ClubView` because they still have one call site
+  each; that is the rule, not an inconsistency — the Wikipédia mark moved out the
+  moment the match page became its second caller.
 - **A match's status is `StatusChip`.** Both the fixture list and the match page used
   to carry their own copy of the label map *and* the colour map. Two copies of a lookup
   table is how a new status renders in one place and blank in the other.

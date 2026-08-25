@@ -196,6 +196,35 @@ test.describe("Página da partida", () => {
     await expect(page).toHaveURL(/\/clube\/.+/);
   });
 
+  test("each club on the scoreboard links to its Wikipedia article", async ({ page }) => {
+    await openFirstMatch(page, UPCOMING_ROUND);
+
+    const articles = page.locator("main > article a[href*='wikipedia.org']");
+    await expect(articles).toHaveCount(2);
+
+    // Both sides, both the pt edition, both bare article addresses.
+    for (const href of await articles.evaluateAll((nodes) =>
+      nodes.map((node) => node.getAttribute("href")),
+    )) {
+      expect(href).toMatch(/^https:\/\/pt\.wikipedia\.org\/wiki\/[^?#]+$/);
+    }
+
+    await expect(articles.first()).toHaveAttribute("target", "_blank");
+    await expect(articles.first()).toHaveAttribute("rel", /noopener/);
+  });
+
+  test("the article link reads as its name and does not crowd the club link", async ({ page }) => {
+    await openFirstMatch(page, UPCOMING_ROUND);
+
+    const text = (await page.locator("main > article a[href*='wikipedia.org']").first().innerText()).trim();
+    expect(text).toMatch(/^Wikipédia/);
+
+    // The scoreboard gained an external link per side; the internal ones must
+    // still be exactly two. Counting both is what catches a selector that
+    // started sweeping up the new link.
+    await expect(page.locator("main > article a[href^='/clube/']")).toHaveCount(2);
+  });
+
   test("an unknown match id says so rather than erroring", async ({ page }) => {
     await page.goto("/partida/000000");
 
