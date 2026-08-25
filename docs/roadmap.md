@@ -206,6 +206,15 @@ marks still sit on a light backing in both themes.
 
 ### M2 — Shape, elevation and state layers
 
+**Read the gate's margin report before retoning anything.** MD3 expresses
+elevation as tonal surface tint, so this phase moves the very surface tones the
+text tokens are measured against. `npm run test:tokens` prints the five tightest
+pairings with their headroom; at the end of M1 the thinnest is `light: ink-faint
+on raised` at **+0.09** above AA, followed by `ink-ghost on raised` at +0.22
+against the 3:1 non-text floor. Those fail first. Headroom is the number to read
+rather than the ratio — a text pairing and a graphic pairing at the same ratio
+are not equally safe, because their floors differ.
+
 - **Shape scale.** Replace the three ad-hoc radii (`rounded-lg`, `rounded-xl`,
   `rounded`) with MD3's extra-small through extra-large tokens. Small surface
   area — about a dozen usages.

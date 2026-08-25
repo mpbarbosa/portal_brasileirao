@@ -354,22 +354,47 @@ const pairings = [
   ...pairingsFor("light", lightTokens),
 ];
 
-let worstText = Infinity;
-const failures: string[] = [];
-for (const { label, fg, bg, floor } of pairings) {
-  const ratio = contrastRatio(fg, bg);
-  if (floor >= 4.5) worstText = Math.min(worstText, ratio);
-  if (ratio < floor) failures.push(`  ${label}: ${ratio.toFixed(2)}:1 (needs ${floor})`);
-}
+/**
+ * Headroom, not ratio, is what says whether a pairing is safe.
+ *
+ * A text pairing at 4.83 and a graphic pairing at 4.83 are not equally healthy:
+ * the first is 0.33 above its floor and the second is 1.83 above a different
+ * one. Reporting the raw ratio invites reading "it passes" as "there is room",
+ * which is how a retoning in a later phase turns a thin pass into a failure
+ * that nobody saw coming. So the report is sorted by margin and names the floor.
+ */
+const measured = pairings
+  .map((pairing) => {
+    const ratio = contrastRatio(pairing.fg, pairing.bg);
+    return { ...pairing, ratio, headroom: ratio - pairing.floor };
+  })
+  .sort((a, b) => a.headroom - b.headroom);
+
+const failures = measured.filter((m) => m.ratio < m.floor);
+const worstText = Math.min(
+  ...measured.filter((m) => m.floor >= 4.5).map((m) => m.ratio),
+);
 
 console.log(`seed ${SEED} -> hue ${seed.hue.toFixed(1)}, chroma ${seed.chroma.toFixed(1)}, tone ${seed.tone.toFixed(1)}`);
 console.log(`${pairings.length} pairings checked, worst text pairing ${worstText.toFixed(2)}:1`);
 
 if (failures.length > 0) {
-  console.error(`\nContrast gate FAILED:\n${failures.join("\n")}`);
+  console.error(
+    `\nContrast gate FAILED:\n${failures
+      .map((m) => `  ${m.label}: ${m.ratio.toFixed(2)}:1 (needs ${m.floor})`)
+      .join("\n")}`,
+  );
   process.exit(1);
 }
-console.log("Contrast gate passed (AA for text, 3:1 for non-text).\n");
+
+console.log("Contrast gate passed (AA for text, 3:1 for non-text).");
+console.log("\nTightest margins — these fail first if a tone moves:");
+for (const m of measured.slice(0, 5)) {
+  console.log(
+    `  +${m.headroom.toFixed(2)}  ${m.ratio.toFixed(2)}:1 vs ${m.floor.toFixed(1)} floor  ${m.label}`,
+  );
+}
+console.log();
 
 const css = readFileSync(CSS_PATH, "utf8");
 const startAt = css.indexOf(START);
