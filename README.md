@@ -21,6 +21,11 @@ agent Claude Code.
 *Classificação in the light theme. The app follows your system setting and remembers an
 explicit choice; the control in the header switches between them.*
 
+![Página do clube Palmeiras no tema claro: escudo, site oficial e perfil no Instagram, os números da temporada (1º lugar, 51 pontos, 24 jogos, saldo +24), o gráfico da campanha da 1ª à 24ª rodada, os últimos cinco resultados, o próximo jogo e os artilheiros do clube.](docs/screenshots/clube-palmeiras-light.png)
+
+*A club page. **Campanha** traces where the club sat after every round, and the marks under
+each fixture say which broadcaster showed it.*
+
 ## Stack
 
 | Layer | Choice |
