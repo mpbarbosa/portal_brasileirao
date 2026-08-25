@@ -242,6 +242,19 @@ API.
 _Avoid_: keeping section state in `App` alongside the URL (they drift), a route
 that 404s, adding a router dependency for four routes.
 
+**Carregando página**:
+What a page that names something — a **Clube**, a **Partida** — shows while the
+first load is still in flight. It matters because an empty payload and a
+genuinely unknown key look identical to the component: both are a list with
+nothing in it. Before this, `/clube/flamengo` answered "Clube não encontrado."
+for the moment before its data landed, which is not a slower truth but a
+different, false one. `App` passes an explicit `loading` flag rather than letting
+each page infer it, and clears it in a `finally` so a failed request does not
+leave the page loading forever.
+_Avoid_: inferring the state from an empty array, showing "não encontrado" before
+the request settles, leaving the line up after a failure, spinners (the wait is
+one request and a line of text says more).
+
 **Cartão do jogador**:
 The overlay opened by choosing a player in **Artilharia**. It renders
 immediately from the row it was opened from (name, club, season figures), then

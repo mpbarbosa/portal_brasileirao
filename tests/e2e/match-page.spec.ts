@@ -126,6 +126,29 @@ test.describe("Página da partida", () => {
     await expect(page.getByText("Partida não encontrada.")).toBeVisible();
   });
 
+  test("a page still loading says so, rather than claiming not found", async ({ page }) => {
+    // Hold the fixtures open. Until they land, an unknown id and an id whose
+    // payload has not arrived are the same empty list, and the page used to
+    // answer "não encontrada" for both — telling the reader something untrue
+    // about a match that exists.
+    let release = () => {};
+    const held = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    await page.route("**/api/matches*", async (route) => {
+      await held;
+      await route.continue();
+    });
+
+    await page.goto("/partida/554975", { waitUntil: "commit" });
+    await expect(page.getByText("Carregando página…")).toBeVisible();
+    await expect(page.getByText("Partida não encontrada.")).toHaveCount(0);
+
+    release();
+    // And once it arrives, the real page replaces it.
+    await expect(page.getByRole("heading", { name: "Melhores momentos" })).toBeVisible();
+  });
+
   test("the page is reachable directly and survives a reload", async ({ page }) => {
     await openFirstMatch(page, PLAYED_ROUND);
     const url = page.url();

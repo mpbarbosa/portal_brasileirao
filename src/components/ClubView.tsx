@@ -17,6 +17,9 @@ import type { Club, Match, Scorer, StandingsRow } from "@/src/types";
 interface ClubViewProps {
   /** Slug or code, straight from the URL. */
   clubKey: string;
+  /** Whether the first load is still in flight. Without it an empty payload and
+   *  an unknown club are indistinguishable, and the page picks the wrong one. */
+  loading?: boolean;
   standings: StandingsRow[];
   matches: Match[];
   clubs?: Club[];
@@ -47,6 +50,7 @@ const stat = (label: string, value: string) => (
 
 export function ClubView({
   clubKey: key,
+  loading = false,
   standings,
   matches,
   clubs,
@@ -65,7 +69,9 @@ export function ClubView({
         <button type="button" onClick={onBack} className="text-sm text-ink-muted hover:text-ink-soft">
           ← Voltar
         </button>
-        <p className="mt-4 text-sm text-ink-muted">Clube não encontrado.</p>
+        <p className="mt-4 text-sm text-ink-muted" role={loading ? "status" : undefined}>
+          {loading ? "Carregando página…" : "Clube não encontrado."}
+        </p>
       </>
     );
   }

@@ -13,6 +13,9 @@ import type { Club, Match } from "@/src/types";
 
 interface MatchPageProps {
   match: Match | null;
+  /** Whether the first load is still in flight. Without it a missing match and
+   *  a payload that has not arrived look the same, and the page picks wrong. */
+  loading?: boolean;
   clubs: Club[];
   onBack: () => void;
   onNavigate: (path: string) => void;
@@ -82,14 +85,16 @@ function Side({ club, code, onNavigate }: { club: Club | null; code: string; onN
  * no broadcast data, both arriving from the CBF sync — so each section renders
  * only when its data exists rather than showing an empty row.
  */
-export function MatchPage({ match, clubs, onBack, onNavigate }: MatchPageProps) {
+export function MatchPage({ match, loading = false, clubs, onBack, onNavigate }: MatchPageProps) {
   if (!match) {
     return (
       <>
         <button type="button" onClick={onBack} className="text-sm text-ink-muted hover:text-ink-soft">
           ← Voltar
         </button>
-        <p className="mt-4 text-sm text-ink-muted">Partida não encontrada.</p>
+        <p className="mt-4 text-sm text-ink-muted" role={loading ? "status" : undefined}>
+          {loading ? "Carregando página…" : "Partida não encontrada."}
+        </p>
       </>
     );
   }

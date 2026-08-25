@@ -28,6 +28,11 @@ export function App() {
   const [openScorer, setOpenScorer] = useState<Scorer | null>(null);
   const [note, setNote] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  /** True until the first load settles. A page that names something — a club, a
+   *  match — cannot tell "no such thing" from "not fetched yet" on its own,
+   *  since both look like an empty list, and answering "não encontrado" while
+   *  the request is still in flight tells the reader something untrue. */
+  const [loading, setLoading] = useState(true);
 
   usePageMeta(route, {
     clubs: matches?.clubs,
@@ -57,6 +62,10 @@ export function App() {
         if (!cancelled) {
           setError(cause instanceof Error ? cause.message : "Falha ao carregar os dados.");
         }
+      } finally {
+        // Also on failure: the request has settled, and leaving the page
+        // reading "carregando" forever would be its own kind of lie.
+        if (!cancelled) setLoading(false);
       }
     })();
 
@@ -113,6 +122,7 @@ export function App() {
           {route.section === "clube" && (
             <ClubView
               clubKey={route.key}
+              loading={loading}
               standings={standings}
               matches={matches?.matches ?? []}
               clubs={matches?.clubs}
@@ -125,6 +135,7 @@ export function App() {
           {route.section === "partida" && (
             <MatchPage
               match={findMatch(matches?.matches ?? [], route.id)}
+              loading={loading}
               clubs={matches?.clubs ?? []}
               onBack={() => navigate({ section: "jogos", round: null })}
               onNavigate={(path) => navigate(parseRoute(path))}

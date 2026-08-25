@@ -82,6 +82,8 @@ test.describe("Rotas", () => {
     await page.goto("/clube/nao-existe");
 
     await expect(page.getByText("Clube não encontrado.")).toBeVisible();
+    // The loading line is a different state, and must not linger once settled.
+    await expect(page.getByText("Carregando página…")).toHaveCount(0);
   });
 
   test("a club has a shareable address", async ({ page }) => {
