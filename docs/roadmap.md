@@ -304,10 +304,19 @@ The app had **no focus styles at all** — no `focus:`, no `focus-visible:`, no
 ring anywhere. Keyboard users got whatever the browser drew. MD3's state layer
 model covers focus, so `FOCUS_RING` closes it.
 
-`MatchPage`'s scoreboard had been hand-rolled with `Surface`'s chrome and a
-*different radius*, which is the exact drift `Surface` exists to prevent. Folded
-back in as `<Surface as="article">` — the `as` matters, because an end-to-end
-spec selects `main article` and a bare div would have found nothing.
+`MatchPage` had **two** panels wearing `Surface`'s chrome by hand, and the
+difference between them is the better argument for the exit criterion.
+
+The scoreboard was `rounded-xl` where every `Surface` is `rounded-lg` — visibly
+a step off, and the kind of thing review eventually catches. The campanha panel
+below it was `rounded-lg`: pixel-identical to the component it duplicated, and
+therefore invisible. That is the dangerous one. Copied chrome looks correct on
+the day it lands and only separates when the shared component moves — and this
+phase is exactly that event. Moving `Surface` onto the shape tokens would have
+left the copy behind at the old radius while every real `Surface` advanced.
+
+Both are `<Surface>` now. The `as` matters on the scoreboard: an end-to-end spec
+selects `main article`, and a bare div would have matched nothing.
 
 **A verification trap worth recording, because it cost two wrong readings.**
 Tailwind's `transition` covers `background-color` *and* `outline-color`. Reading
