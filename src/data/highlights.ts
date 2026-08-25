@@ -866,4 +866,405 @@ export const HIGHLIGHTS: Record<string, Highlight[]> = {
     { url: "https://www.youtube.com/watch?v=h33A0bKVQgM", channel: "CazéTV" },
     { url: "https://www.youtube.com/watch?v=ueZpE5_TRvQ", channel: "UOL Esporte" },
   ],
+  // Bragantino 1 x 2 Botafogo, rodada 8.
+  "554811": [
+    { url: "https://www.youtube.com/watch?v=b8XNTsi-yGo", channel: "ge tv" },
+    { url: "https://www.youtube.com/watch?v=ubPCXrgmLR8", channel: "UOL Esporte" },
+  ],
+  // Fluminense 1 x 0 Atlético-MG, rodada 8.
+  "554814": [
+    { url: "https://www.youtube.com/watch?v=FJV2dyVeCZY", channel: "ge tv" },
+    { url: "https://www.youtube.com/watch?v=jG8MTPuKw2s", channel: "UOL Esporte" },
+  ],
+  // São Paulo 0 x 1 Palmeiras, rodada 8.
+  "554817": [
+    { url: "https://www.youtube.com/watch?v=qxOwbqEWLSM", channel: "ge tv" },
+    { url: "https://www.youtube.com/watch?v=9OzNjaEUSTQ", channel: "UOL Esporte" },
+  ],
+  // Athletico-PR 2 x 0 Coritiba, rodada 8.
+  "554810": [
+    { url: "https://www.youtube.com/watch?v=_-kNViQMi6E", channel: "ge tv" },
+    { url: "https://www.youtube.com/watch?v=J9o1ZuAoDNY", channel: "CazéTV" },
+    { url: "https://www.youtube.com/watch?v=WyrJ6gStmLc", channel: "UOL Esporte" },
+  ],
+  // Cruzeiro 0 x 0 Santos, rodada 8.
+  "554813": [
+    { url: "https://www.youtube.com/watch?v=Mn9-RfW45_w", channel: "ge tv" },
+    { url: "https://www.youtube.com/watch?v=vRA70MSy-eg", channel: "CazéTV" },
+    { url: "https://www.youtube.com/watch?v=NrsaH8xjZPc", channel: "UOL Esporte" },
+  ],
+  // Clube do Remo 4 x 1 Bahia, rodada 8.
+  "554816": [
+    { url: "https://www.youtube.com/watch?v=Yr6qvidWFpY", channel: "ge tv" },
+    { url: "https://www.youtube.com/watch?v=Vni2JpTICt4", channel: "UOL Esporte" },
+  ],
+  // Vasco da Gama 2 x 1 Grêmio, rodada 8.
+  "554818": [
+    { url: "https://www.youtube.com/watch?v=qXgokWafhnA", channel: "ge tv" },
+    { url: "https://www.youtube.com/watch?v=RrwWWlWJxiU", channel: "CazéTV" },
+    { url: "https://www.youtube.com/watch?v=cAm28wKiNxo", channel: "UOL Esporte" },
+  ],
+  // Internacional 2 x 0 Chapecoense, rodada 8.
+  "554815": [
+    { url: "https://www.youtube.com/watch?v=hmyogV59Z4w", channel: "ge tv" },
+    { url: "https://www.youtube.com/watch?v=X2qHw5ykTpM", channel: "CazéTV" },
+    { url: "https://www.youtube.com/watch?v=WP5iwZ4Gs08", channel: "UOL Esporte" },
+  ],
+  // Vitória 1 x 0 Mirassol, rodada 8.
+  "554819": [
+    { url: "https://www.youtube.com/watch?v=z6i1uXEpdXU", channel: "ge tv" },
+    { url: "https://www.youtube.com/watch?v=X0u1Uy5mhxE", channel: "UOL Esporte" },
+  ],
+  // Corinthians 1 x 1 Flamengo, rodada 8.
+  "554812": [
+    { url: "https://www.youtube.com/watch?v=6qi41mARq3k", channel: "ge tv" },
+    { url: "https://www.youtube.com/watch?v=fjpn9aGyvmM", channel: "CazéTV" },
+    { url: "https://www.youtube.com/watch?v=BwDvtJ4ktGE", channel: "UOL Esporte" },
+  ],
+  // Bahia 2 x 0 Bragantino, rodada 7.
+  "554802": [
+    { url: "https://www.youtube.com/watch?v=VYzRoqJ_b5Q", channel: "ge tv" },
+    { url: "https://www.youtube.com/watch?v=0crCxT7vSF4", channel: "UOL Esporte" },
+  ],
+  // Palmeiras 2 x 1 Botafogo, rodada 7.
+  "554807": [
+    { url: "https://www.youtube.com/watch?v=IG0WnIVMfew", channel: "ge tv" },
+    { url: "https://www.youtube.com/watch?v=3ly_UMoM2-k", channel: "UOL Esporte" },
+  ],
+  // Athletico-PR 2 x 1 Cruzeiro, rodada 7.
+  "554800": [
+    { url: "https://www.youtube.com/watch?v=f3XHf7lW5c8", channel: "ge tv" },
+    { url: "https://www.youtube.com/watch?v=-JYlmvRjBKA", channel: "CazéTV" },
+    { url: "https://www.youtube.com/watch?v=9d3Earul-co", channel: "UOL Esporte" },
+  ],
+  // Atlético-MG 1 x 0 São Paulo, rodada 7.
+  "554801": [
+    { url: "https://www.youtube.com/watch?v=LrsCTm4ceko", channel: "ge tv" },
+    { url: "https://www.youtube.com/watch?v=WneDcWNUh-A", channel: "UOL Esporte" },
+  ],
+  // Mirassol 0 x 1 Coritiba, rodada 7.
+  "554806": [
+    { url: "https://www.youtube.com/watch?v=XFjSDJkxT9s", channel: "ge tv" },
+    { url: "https://www.youtube.com/watch?v=2GBJynT32Ds", channel: "CazéTV" },
+  ],
+  // Santos 1 x 2 Internacional, rodada 7.
+  "554808": [
+    { url: "https://www.youtube.com/watch?v=ZzEelQILA7U", channel: "ge tv" },
+    { url: "https://www.youtube.com/watch?v=YiL2mMfBMBo", channel: "UOL Esporte" },
+  ],
+  // Vasco da Gama 3 x 2 Fluminense, rodada 7.
+  "554809": [
+    { url: "https://www.youtube.com/watch?v=uUJNJWUYAHc", channel: "ge tv" },
+    { url: "https://www.youtube.com/watch?v=fo6Gwo7xxkU", channel: "CazéTV" },
+    { url: "https://www.youtube.com/watch?v=jCLWo695sMc", channel: "UOL Esporte" },
+  ],
+  // Grêmio 2 x 0 Vitória, rodada 7.
+  "554805": [
+    { url: "https://www.youtube.com/watch?v=pjQ5DBu0bC0", channel: "ge tv" },
+    { url: "https://www.youtube.com/watch?v=9D9L-bP-2DQ", channel: "UOL Esporte" },
+  ],
+  // Flamengo 3 x 0 Clube do Remo, rodada 7.
+  "554804": [
+    { url: "https://www.youtube.com/watch?v=RCIj5udZRaI", channel: "ge tv" },
+    { url: "https://www.youtube.com/watch?v=BBefVVWWcug", channel: "UOL Esporte" },
+  ],
+  // Chapecoense 0 x 0 Corinthians, rodada 7.
+  "554803": [
+    { url: "https://www.youtube.com/watch?v=36qv7dLCDsc", channel: "ge tv" },
+    { url: "https://www.youtube.com/watch?v=uZdkQZpu6Zo", channel: "CazéTV" },
+  ],
+  // Vitória 2 x 0 Atlético-MG, rodada 6.
+  "554799": [
+    { url: "https://www.youtube.com/watch?v=J25VYgXJ-Jk", channel: "ge tv" },
+    { url: "https://www.youtube.com/watch?v=q8HxYNATUsw", channel: "UOL Esporte" },
+  ],
+  // Botafogo 0 x 3 Flamengo, rodada 6.
+  "554790": [
+    { url: "https://www.youtube.com/watch?v=FZ5_oGQtbzc", channel: "ge tv" },
+    { url: "https://www.youtube.com/watch?v=hxEvu1AxmZE", channel: "CazéTV" },
+  ],
+  // Fluminense 3 x 2 Athletico-PR, rodada 6.
+  "554795": [
+    { url: "https://www.youtube.com/watch?v=WMbFQUs2uHM", channel: "ge tv" },
+    { url: "https://www.youtube.com/watch?v=wIVNJXzKpF0", channel: "CazéTV" },
+    { url: "https://www.youtube.com/watch?v=AhZ_w_9NT2w", channel: "UOL Esporte" },
+  ],
+  // Internacional 0 x 1 Bahia, rodada 6.
+  "554796": [
+    { url: "https://www.youtube.com/watch?v=6TvTBFjXe4A", channel: "ge tv" },
+    { url: "https://www.youtube.com/watch?v=Tu5LLP9cY7o", channel: "CazéTV" },
+  ],
+  // Santos 1 x 1 Corinthians, rodada 6.
+  "554798": [
+    { url: "https://www.youtube.com/watch?v=qZl9ExmJZCM", channel: "ge tv" },
+    { url: "https://www.youtube.com/watch?v=iHCZuNNXqzA", channel: "UOL Esporte" },
+  ],
+  // Coritiba 1 x 0 Clube do Remo, rodada 6.
+  "554793": [
+    { url: "https://www.youtube.com/watch?v=78q1uh6asNk", channel: "ge tv" },
+    { url: "https://www.youtube.com/watch?v=AtZDhRC9SPk", channel: "CazéTV" },
+    { url: "https://www.youtube.com/watch?v=kuoSK2XEDZc", channel: "UOL Esporte" },
+  ],
+  // Palmeiras 1 x 0 Mirassol, rodada 6.
+  "554797": [
+    { url: "https://www.youtube.com/watch?v=_VFbHS7Bpu4", channel: "ge tv" },
+    { url: "https://www.youtube.com/watch?v=_-LfpDSym0k", channel: "UOL Esporte" },
+  ],
+  // Bragantino 1 x 2 São Paulo, rodada 6.
+  "554791": [
+    { url: "https://www.youtube.com/watch?v=eo9UGMauFBo", channel: "ge tv" },
+    { url: "https://www.youtube.com/watch?v=xj2bKApMSrY", channel: "UOL Esporte" },
+  ],
+  // Cruzeiro 3 x 3 Vasco da Gama, rodada 6.
+  "554794": [
+    { url: "https://www.youtube.com/watch?v=nEbLpiI2xs0", channel: "ge tv" },
+    { url: "https://www.youtube.com/watch?v=xkVIuyeeANY", channel: "CazéTV" },
+  ],
+  // Chapecoense 1 x 1 Grêmio, rodada 6.
+  "554792": [
+    { url: "https://www.youtube.com/watch?v=TN5miHjBzxU", channel: "ge tv" },
+    { url: "https://www.youtube.com/watch?v=1uk352G7QJM", channel: "CazéTV" },
+    { url: "https://www.youtube.com/watch?v=kIZgm369riw", channel: "UOL Esporte" },
+  ],
+  // Mirassol 2 x 2 Santos, rodada 5.
+  "554786": [
+    { url: "https://www.youtube.com/watch?v=DY28GUWx8_w", channel: "ge tv" },
+    { url: "https://www.youtube.com/watch?v=4PAm0Z9kKs8", channel: "CazéTV" },
+    { url: "https://www.youtube.com/watch?v=LeezduYU6uQ", channel: "UOL Esporte" },
+  ],
+  // Atlético-MG 1 x 0 Internacional, rodada 5.
+  "554781": [
+    { url: "https://www.youtube.com/watch?v=FdXjAuRhMfA", channel: "ge tv" },
+    { url: "https://www.youtube.com/watch?v=G_Rg0FPmtxU", channel: "UOL Esporte" },
+  ],
+  // Bahia 1 x 1 Vitória, rodada 5.
+  "554782": [
+    { url: "https://www.youtube.com/watch?v=6Cz_8lqTYUY", channel: "ge tv" },
+    { url: "https://www.youtube.com/watch?v=CEojVBiUEH4", channel: "UOL Esporte" },
+  ],
+  // Corinthians 0 x 2 Coritiba, rodada 5.
+  "554783": [
+    { url: "https://www.youtube.com/watch?v=0BrO96wiQ40", channel: "ge tv" },
+    { url: "https://www.youtube.com/watch?v=Zjl2iwmcGzU", channel: "CazéTV" },
+    { url: "https://www.youtube.com/watch?v=f-0ikowiE00", channel: "UOL Esporte" },
+  ],
+  // Flamengo 2 x 0 Cruzeiro, rodada 5.
+  "554784": [
+    { url: "https://www.youtube.com/watch?v=sSiSTWgaJZk", channel: "ge tv" },
+    { url: "https://www.youtube.com/watch?v=7hcSQdcaBwI", channel: "UOL Esporte" },
+  ],
+  // Clube do Remo 0 x 2 Fluminense, rodada 5.
+  "554787": [
+    { url: "https://www.youtube.com/watch?v=yBrCJBqd6JE", channel: "ge tv" },
+    { url: "https://www.youtube.com/watch?v=bZu_XdXAAdU", channel: "UOL Esporte" },
+  ],
+  // Vasco da Gama 2 x 1 Palmeiras, rodada 5.
+  "554789": [
+    { url: "https://www.youtube.com/watch?v=QbPbqyRdpRU", channel: "ge tv" },
+    { url: "https://www.youtube.com/watch?v=PEr8h1_O3i4", channel: "CazéTV" },
+    { url: "https://www.youtube.com/watch?v=zimZzOE5WD8", channel: "UOL Esporte" },
+  ],
+  // São Paulo 2 x 0 Chapecoense, rodada 5.
+  "554788": [
+    { url: "https://www.youtube.com/watch?v=mAzDBxanPp4", channel: "ge tv" },
+    { url: "https://www.youtube.com/watch?v=ozp5H-Xf2hk", channel: "UOL Esporte" },
+  ],
+  // Grêmio 1 x 1 Bragantino, rodada 5.
+  "554785": [
+    { url: "https://www.youtube.com/watch?v=Xd1hmbdoiTA", channel: "ge tv" },
+    { url: "https://www.youtube.com/watch?v=lpU-drolWo8", channel: "UOL Esporte" },
+  ],
+  // Athletico-PR 4 x 1 Botafogo, rodada 5.
+  "554780": [
+    { url: "https://www.youtube.com/watch?v=4kog4z5qiMc", channel: "ge tv" },
+    { url: "https://www.youtube.com/watch?v=zv0WtqkKdTc", channel: "CazéTV" },
+    { url: "https://www.youtube.com/watch?v=4X1QHbDN5UA", channel: "UOL Esporte" },
+  ],
+  // Bragantino 1 x 1 Athletico-PR, rodada 4.
+  "554772": [
+    { url: "https://www.youtube.com/watch?v=c1faENo0sI8", channel: "ge tv" },
+    { url: "https://www.youtube.com/watch?v=vBIOKU6RJak", channel: "UOL Esporte" },
+  ],
+  // Clube do Remo 1 x 1 Internacional, rodada 4.
+  "554778": [
+    { url: "https://www.youtube.com/watch?v=1qXbWnGahJw", channel: "ge tv" },
+    { url: "https://www.youtube.com/watch?v=YLEvnRxp6p0", channel: "UOL Esporte" },
+  ],
+  // Coritiba 0 x 1 São Paulo, rodada 4.
+  "554773": [
+    { url: "https://www.youtube.com/watch?v=ydXfIvuFsyw", channel: "ge tv" },
+    { url: "https://www.youtube.com/watch?v=fAUVLXseN50", channel: "CazéTV" },
+    { url: "https://www.youtube.com/watch?v=YnFfpVq665o", channel: "UOL Esporte" },
+  ],
+  // Cruzeiro 1 x 1 Corinthians, rodada 4.
+  "554774": [
+    { url: "https://www.youtube.com/watch?v=cMj0TmvGWek", channel: "ge tv" },
+    { url: "https://www.youtube.com/watch?v=8GkO4ncXiEI", channel: "CazéTV" },
+    { url: "https://www.youtube.com/watch?v=ZmBgmQRYhxc", channel: "UOL Esporte" },
+  ],
+  // Grêmio 2 x 1 Atlético-MG, rodada 4.
+  "554776": [
+    { url: "https://www.youtube.com/watch?v=7uHe8mQwnfo", channel: "ge tv" },
+    { url: "https://www.youtube.com/watch?v=QkTq8GKcRKo", channel: "UOL Esporte" },
+  ],
+  // Palmeiras 2 x 1 Fluminense, rodada 4.
+  "554777": [
+    { url: "https://www.youtube.com/watch?v=29XTXvycS5U", channel: "ge tv" },
+    { url: "https://www.youtube.com/watch?v=JgWVw5FtsxI", channel: "UOL Esporte" },
+  ],
+  // Santos 2 x 1 Vasco da Gama, rodada 4.
+  "554779": [
+    { url: "https://www.youtube.com/watch?v=n_HH1GeUIUk", channel: "ge tv" },
+    { url: "https://www.youtube.com/watch?v=0QGJ5WJpiAY", channel: "UOL Esporte" },
+  ],
+  // Bahia 2 x 0 Chapecoense, rodada 4.
+  "554770": [
+    { url: "https://www.youtube.com/watch?v=N9uq5jiSF5k", channel: "ge tv" },
+    { url: "https://www.youtube.com/watch?v=bQOiH-8ShZE", channel: "UOL Esporte" },
+  ],
+  // Botafogo 0 x 0 Vitória, rodada 4.
+  "554771": [
+    { url: "https://www.youtube.com/watch?v=mFnVnYCuv14", channel: "ge tv" },
+    { url: "https://www.youtube.com/watch?v=Cmp29kCvtXA", channel: "CazéTV" },
+    { url: "https://www.youtube.com/watch?v=3bQbYXrjnFg", channel: "UOL Esporte" },
+  ],
+  // Vitória 1 x 2 Flamengo, rodada 3.
+  "554769": [
+    { url: "https://www.youtube.com/watch?v=fIMnEts7U-c", channel: "ge tv" },
+  ],
+  // Chapecoense 3 x 3 Coritiba, rodada 3.
+  "554762": [
+    { url: "https://www.youtube.com/watch?v=rwkVgHARhKM", channel: "ge tv" },
+    { url: "https://www.youtube.com/watch?v=7JJrHjL6G9Q", channel: "CazéTV" },
+  ],
+  // Mirassol 2 x 2 Cruzeiro, rodada 3.
+  "554766": [
+    { url: "https://www.youtube.com/watch?v=NHADqojGnys", channel: "ge tv" },
+    { url: "https://www.youtube.com/watch?v=DaXrNVkYhtI", channel: "CazéTV" },
+  ],
+  // Atlético-MG 3 x 3 Clube do Remo, rodada 3.
+  "554761": [
+    { url: "https://www.youtube.com/watch?v=27P8UDErNZE", channel: "ge tv" },
+  ],
+  // São Paulo 2 x 0 Grêmio, rodada 3.
+  "554767": [
+    { url: "https://www.youtube.com/watch?v=0q5dpW_ckNw", channel: "ge tv" },
+  ],
+  // Vasco da Gama 0 x 1 Bahia, rodada 3.
+  "554768": [
+    { url: "https://www.youtube.com/watch?v=8y0kvecpEMs", channel: "ge tv" },
+    { url: "https://www.youtube.com/watch?v=4PYeaF__mHw", channel: "CazéTV" },
+  ],
+  // Athletico-PR 2 x 1 Santos, rodada 3.
+  "554760": [
+    { url: "https://www.youtube.com/watch?v=gxECf2WRBtk", channel: "ge tv" },
+    { url: "https://www.youtube.com/watch?v=EFL47Q4mDKM", channel: "CazéTV" },
+    { url: "https://www.youtube.com/watch?v=KteDfOVzzjw", channel: "UOL Esporte" },
+  ],
+  // Fluminense 1 x 0 Botafogo, rodada 3.
+  "554764": [
+    { url: "https://www.youtube.com/watch?v=Ej65rRQQjcY", channel: "ge tv" },
+    { url: "https://www.youtube.com/watch?v=-NWSl6vi588", channel: "CazéTV" },
+  ],
+  // Corinthians 2 x 0 Bragantino, rodada 3.
+  "554763": [
+    { url: "https://www.youtube.com/watch?v=4PWW9kcVJqs", channel: "ge tv" },
+    { url: "https://www.youtube.com/watch?v=S5neov_FajU", channel: "CazéTV" },
+  ],
+  // Internacional 1 x 3 Palmeiras, rodada 3.
+  "554765": [
+    { url: "https://www.youtube.com/watch?v=_j30mT_-i1Q", channel: "ge tv" },
+    { url: "https://www.youtube.com/watch?v=eWHS_m7L79M", channel: "CazéTV" },
+  ],
+  // Bragantino 1 x 0 Atlético-MG, rodada 2.
+  "554752": [
+    { url: "https://www.youtube.com/watch?v=o7YXJg4Gg_I", channel: "ge tv" },
+  ],
+  // Flamengo 1 x 1 Internacional, rodada 2.
+  "554754": [
+    { url: "https://www.youtube.com/watch?v=udLyHeD2pOk", channel: "ge tv" },
+  ],
+  // Clube do Remo 2 x 2 Mirassol, rodada 2.
+  "554757": [
+    { url: "https://www.youtube.com/watch?v=a0WVoq96pCA", channel: "ge tv" },
+  ],
+  // Santos 1 x 1 São Paulo, rodada 2.
+  "554758": [
+    { url: "https://www.youtube.com/watch?v=iCe1o6hKgkc", channel: "ge tv" },
+  ],
+  // Grêmio 5 x 3 Botafogo, rodada 2.
+  "554755": [
+    { url: "https://www.youtube.com/watch?v=iGea4eVsbFw", channel: "ge tv" },
+  ],
+  // Palmeiras 5 x 1 Vitória, rodada 2.
+  "554756": [
+    { url: "https://www.youtube.com/watch?v=g-ZhIznI0eg", channel: "ge tv" },
+  ],
+  // Bahia 1 x 1 Fluminense, rodada 2.
+  "554751": [
+    { url: "https://www.youtube.com/watch?v=O0IawqkArEY", channel: "ge tv" },
+  ],
+  // Vasco da Gama 1 x 1 Chapecoense, rodada 2.
+  "554759": [
+    { url: "https://www.youtube.com/watch?v=6VV6rSC4ImM", channel: "ge tv" },
+    { url: "https://www.youtube.com/watch?v=nISUhAxUjcE", channel: "CazéTV" },
+  ],
+  // Cruzeiro 1 x 2 Coritiba, rodada 2.
+  "554753": [
+    { url: "https://www.youtube.com/watch?v=VNY2hayxxaA", channel: "ge tv" },
+    { url: "https://www.youtube.com/watch?v=4nLMDCPxbUU", channel: "CazéTV" },
+  ],
+  // Athletico-PR 0 x 1 Corinthians, rodada 2.
+  "554750": [
+    { url: "https://www.youtube.com/watch?v=y6mvjj5fLOc", channel: "ge tv" },
+    { url: "https://www.youtube.com/watch?v=CrPhrMsVm7w", channel: "CazéTV" },
+    { url: "https://www.youtube.com/watch?v=PBDMptzByY0", channel: "UOL Esporte" },
+  ],
+  // Atlético-MG 2 x 2 Palmeiras, rodada 1.
+  "554740": [
+    { url: "https://www.youtube.com/watch?v=TOLBGl2aYwg", channel: "ge tv" },
+  ],
+  // Coritiba 0 x 1 Bragantino, rodada 1.
+  "554744": [
+    { url: "https://www.youtube.com/watch?v=13GFSGyQq2A", channel: "ge tv" },
+    { url: "https://www.youtube.com/watch?v=6W8oaQ_9fRs", channel: "CazéTV" },
+  ],
+  // Internacional 0 x 1 Athletico-PR, rodada 1.
+  "554746": [
+    { url: "https://www.youtube.com/watch?v=_RR8r3jvYLA", channel: "ge tv" },
+    { url: "https://www.youtube.com/watch?v=8JzThYMb43w", channel: "CazéTV" },
+  ],
+  // Vitória 2 x 0 Clube do Remo, rodada 1.
+  "554749": [
+    { url: "https://www.youtube.com/watch?v=vDrdK3uyIt0", channel: "ge tv" },
+  ],
+  // Fluminense 2 x 1 Grêmio, rodada 1.
+  "554745": [
+    { url: "https://www.youtube.com/watch?v=TwcRtNNwoio", channel: "ge tv" },
+    { url: "https://www.youtube.com/watch?v=EKzMKFz2HAc", channel: "CazéTV" },
+  ],
+  // Chapecoense 4 x 2 Santos, rodada 1.
+  "554742": [
+    { url: "https://www.youtube.com/watch?v=c8-n_qrhAtg", channel: "ge tv" },
+    { url: "https://www.youtube.com/watch?v=XvkyV08bLOo", channel: "CazéTV" },
+  ],
+  // Corinthians 1 x 2 Bahia, rodada 1.
+  "554743": [
+    { url: "https://www.youtube.com/watch?v=ugVugFQ8IVo", channel: "ge tv" },
+    { url: "https://www.youtube.com/watch?v=K8O6NPlcJvU", channel: "CazéTV" },
+  ],
+  // São Paulo 2 x 1 Flamengo, rodada 1.
+  "554748": [
+    { url: "https://www.youtube.com/watch?v=6kVcqMqFz7I", channel: "ge tv" },
+  ],
+  // Mirassol 2 x 1 Vasco da Gama, rodada 1.
+  "554747": [
+    { url: "https://www.youtube.com/watch?v=mh2DZo6wBl4", channel: "ge tv" },
+    { url: "https://www.youtube.com/watch?v=XLbYlCJbSzU", channel: "CazéTV" },
+  ],
+  // Botafogo 4 x 0 Cruzeiro, rodada 1.
+  "554741": [
+    { url: "https://www.youtube.com/watch?v=fSlD5YosPSE", channel: "ge tv" },
+    { url: "https://www.youtube.com/watch?v=INtHSOP1rK4", channel: "CazéTV" },
+  ],
 };
