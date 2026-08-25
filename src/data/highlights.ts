@@ -1267,4 +1267,20 @@ export const HIGHLIGHTS: Record<string, Highlight[]> = {
     { url: "https://www.youtube.com/watch?v=fSlD5YosPSE", channel: "ge tv" },
     { url: "https://www.youtube.com/watch?v=INtHSOP1rK4", channel: "CazéTV" },
   ],
+  // Botafogo 2 x 3 Athletico-PR, rodada 24.
+  //
+  // Added by hand: find-highlights.ts refused this one, correctly. ge tv titled
+  // it "BOTAFOGO 1 X 3 ATHLETICO-PR" and the fixture was 2-3, so the score
+  // check did exactly what it exists to do. The title is simply wrong — the
+  // video is this match, confirmed by channel id, round 24, an upload 2.1h
+  // after kickoff, and a description narrating it ("abrem 3 a 0 no Rio de
+  // Janeiro, veem o time da casa reduzir no fim"). Two other channels covering
+  // the match title it 2x3, as does the provider.
+  //
+  // Do not relax the score check to accommodate this. A broadcaster's typo is
+  // rare; a previous season's identical fixture is not, and that check is the
+  // only thing standing between the two.
+  "554970": [
+    { url: "https://www.youtube.com/watch?v=pJBVrWUNq-s", channel: "ge tv" },
+  ],
 };
