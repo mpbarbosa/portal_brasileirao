@@ -39,6 +39,14 @@ jobs:
       - name: Unit tests
         run: npm run test:unit
 
+      - name: Colour tokens and contrast
+        # Two failures in one: `src/index.css` having drifted from the generator
+        # that produces it, and any text pairing falling below AA. The second is
+        # the reason this runs in CI rather than on request — contrast is the
+        # kind of thing that is measured once, written into a comment, and then
+        # quietly stops being true when someone adds a background token.
+        run: npm run test:tokens
+
       - name: Build production payload
         run: npm run build
 
