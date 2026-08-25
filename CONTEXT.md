@@ -89,8 +89,13 @@ what the upstream API calls it, which is why the adapter type is `RawTeam`),
 "sigla" as an identifier (see **tla**).
 
 **Site oficial**:
-The club's own website, linked from its page and shown as the bare host
-(`palmeiras.com.br`). Comes from the provider's teams endpoint, normalised by
+The club's own website, linked from its page and shown as a globe glyph followed
+by the bare host (`palmeiras.com.br`). The globe distinguishes the club's *own*
+site from a profile it keeps somewhere else — it pairs with the Instagram mark
+beside the handle, and both are drawn inline in `ClubView` under the same rules:
+monochrome outline, `currentColor`, `inline-block` so the link's underline stops
+at the icon, and `aria-hidden` because the host beside it already names the link.
+Comes from the provider's teams endpoint, normalised by
 `officialSiteUrl` to an **HTTPS origin**: most clubs are listed as `http://`,
 and Flamengo is listed as its basketball landing page, so both the scheme and
 the path are corrected. Every one of the twenty terminates TLS — verified by
