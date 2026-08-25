@@ -23,8 +23,12 @@ Each `RankAtRound` carries `played` alongside the position, because a postponed
 fixture is the difference between "caiu quatro posições" and "tem um jogo a
 menos". Positions come from re-running `computeStandings` round by round, so the
 campanha can never disagree with the table it describes.
-Rendered as the last column of the **Classificação**, a 72×20 sparkline per club
-(`RankSparkline`). The y axis is inverted — 1st at the top, so a climbing line
+Rendered twice by the same component (`RankSparkline`): as the last column of the
+**Classificação**, a 72×20 sparkline per club, and as a section of the **Clube**
+page at 480×96, where it sits under the Posição tile it explains. Same geometry
+and same domains in both, so the shape a reader recognises in the table is the
+shape they find on the club page — only the box grows. The club page names both
+ends in text, because at that size a line with no axis is not readable on its own. The y axis is inverted — 1st at the top, so a climbing line
 means a climbing club — and both axes are shared by every row: the rows are small
 multiples, and auto-fitting each club to its own range would draw a side rattling
 between 1st and 3rd as dramatically as one climbing from 20th to 5th.
