@@ -54,37 +54,54 @@ const stat = (label: string, value: string) => (
 );
 
 /**
- * Instagram's glyph, beside the handle it links to.
+ * The two marks beside the club's external links.
  *
  * Drawn here rather than fetched, for the reason `CLAUDE.md` gives for the
  * broadcaster marks: no runtime dependency on a third party for an asset. Local
- * to this file because it has exactly one call site, the same way `MatchPage`
+ * to this file because they have one call site each, the same way `MatchPage`
  * keeps `Campaign` and `Side`.
  *
- * The monochrome outline rather than Meta's gradient mark. It takes its colour
- * from the link through `currentColor`, so it warms on hover with the rest of
- * the text and needs nothing of its own in either theme — a fixed-colour logo
- * would need a plate the way the broadcaster marks do, which is a lot of chrome
- * for one glyph beside a word.
+ * Both are monochrome outlines — Instagram's rather than Meta's gradient mark,
+ * and a plain globe for the club's own site. They take their colour from the
+ * link through `currentColor`, so they warm on hover with the rest of the text
+ * and need nothing of their own in either theme; a fixed-colour logo would want
+ * a **Placa da emissora** the way the broadcaster marks do, which is a lot of
+ * chrome for one glyph beside a word.
  *
- * `inline-block` is load-bearing: text-decoration is not drawn through an atomic
- * inline box, so the link's underline stops at the icon instead of running under
- * it. `aria-hidden` because the handle beside it already names the link, and the
- * screen-reader suffix already says which service it is.
+ * `inline-block` is load-bearing rather than incidental: text-decoration is not
+ * drawn through an atomic inline box, so each link's underline stops at its icon
+ * instead of running under it.
+ *
+ * `aria-hidden` on both. The text beside them already names the link — a host or
+ * a handle — and the screen-reader suffix already says which kind it is, so an
+ * announced icon would read the destination twice.
  */
+const glyph = {
+  viewBox: "0 0 24 24",
+  fill: "none",
+  stroke: "currentColor",
+  strokeWidth: 2,
+  strokeLinecap: "round" as const,
+  strokeLinejoin: "round" as const,
+  "aria-hidden": true,
+  focusable: false,
+  className: "mr-1 inline-block h-[1em] w-[1em] align-[-0.125em]",
+};
+
+/** A globe: the club's own site, as distinct from a profile it keeps elsewhere. */
+function SiteGlyph() {
+  return (
+    <svg {...glyph}>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M3 12h18" />
+      <path d="M12 3a15 15 0 0 1 0 18a15 15 0 0 1 0-18" />
+    </svg>
+  );
+}
+
 function InstagramGlyph() {
   return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={2}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-      focusable="false"
-      className="mr-1 inline-block h-[1em] w-[1em] align-[-0.125em]"
-    >
+    <svg {...glyph}>
       <rect x="3" y="3" width="18" height="18" rx="5" />
       <circle cx="12" cy="12" r="4" />
       <circle cx="17" cy="7" r="1" fill="currentColor" stroke="none" />
@@ -170,6 +187,7 @@ export function ClubView({
                 rel="noopener noreferrer"
                 className={`truncate ${LINK_UNDERLINE}`}
               >
+                <SiteGlyph />
                 {club.website.replace(/^https:\/\//, "").replace(/\/$/, "")}
                 <span className="sr-only"> — site oficial (abre em nova aba)</span>
               </a>
