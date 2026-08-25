@@ -1,7 +1,14 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { computeRankHistory, lastRoundWithResult, positionAfterRound } from "@/rank-history-core";
+import {
+  computeRankHistory,
+  describeCampaign,
+  lastRoundWithResult,
+  positionAfterRound,
+  sparklinePoints,
+  sparklinePolyline,
+} from "@/rank-history-core";
 import { computeStandings } from "@/standings-core";
 import type { Club, Match } from "@/src/types";
 
@@ -135,4 +142,78 @@ test("a round outside the history has no position rather than the nearest one", 
   assert.equal(positionAfterRound(history, 2), 1);
   assert.equal(positionAfterRound(history, 38), null);
   assert.equal(positionAfterRound(history, 0), null);
+});
+
+const BOX = { width: 72, height: 20, padding: 2, clubCount: 20, lastRound: 24 };
+
+const entry = (round: number, position: number) => ({ round, position, points: 0, played: round });
+
+test("position 1 is drawn at the top and last place at the bottom", () => {
+  // The inversion is the whole correctness of the mark: a line that climbs has
+  // to mean a club that climbed.
+  const [top, bottom] = sparklinePoints([entry(1, 1), entry(24, 20)], BOX);
+
+  assert.equal(top.y, BOX.padding);
+  assert.equal(bottom.y, BOX.height - BOX.padding);
+  assert.ok(top.y < bottom.y, "1st must sit above 20th");
+});
+
+test("the round axis spans the full box, first round to last", () => {
+  const [first, last] = sparklinePoints([entry(1, 10), entry(24, 10)], BOX);
+
+  assert.equal(first.x, BOX.padding);
+  assert.equal(last.x, BOX.width - BOX.padding);
+  assert.equal(first.y, last.y, "an unchanged position must draw flat");
+});
+
+test("every club shares one scale, so amplitudes compare across rows", () => {
+  // A club oscillating 1st-3rd must not be drawn as dramatically as one
+  // climbing 20th to 5th — that is the small-multiples trap.
+  const steady = sparklinePoints([entry(1, 1), entry(24, 3)], BOX);
+  const climber = sparklinePoints([entry(1, 20), entry(24, 5)], BOX);
+
+  const span = (points: ReturnType<typeof sparklinePoints>) =>
+    Math.abs(points[0].y - points[1].y);
+
+  assert.ok(span(climber) > span(steady) * 5, "shared scale flattens the steady club");
+});
+
+test("a half-played season stops mid-box rather than stretching to fill it", () => {
+  const points = sparklinePoints([entry(1, 4), entry(12, 4)], { ...BOX, lastRound: 24 });
+
+  assert.equal(points[1].x, 34.52); // 2 + (11/23) × 68
+  assert.ok(points[1].x < BOX.width - BOX.padding);
+});
+
+test("degenerate domains produce a point, not NaN", () => {
+  // An SVG with a malformed points attribute draws nothing at all, so this
+  // fails silently in the browser.
+  const single = sparklinePoints([entry(1, 1)], { ...BOX, lastRound: 1 });
+  const oneClub = sparklinePoints([entry(1, 1)], { ...BOX, clubCount: 1 });
+
+  for (const point of [...single, ...oneClub]) {
+    assert.ok(Number.isFinite(point.x), `x is ${point.x}`);
+    assert.ok(Number.isFinite(point.y), `y is ${point.y}`);
+  }
+});
+
+test("an empty campaign draws no polyline at all", () => {
+  assert.deepEqual(sparklinePoints([], BOX), []);
+  assert.equal(sparklinePolyline([]), "");
+});
+
+test("the polyline reads as SVG point pairs", () => {
+  assert.equal(sparklinePolyline(sparklinePoints([entry(1, 1), entry(24, 20)], BOX)), "2,2 70,18");
+});
+
+test("the campaign is stated in words, not only drawn", () => {
+  assert.equal(
+    describeCampaign([entry(1, 20), entry(24, 5)]),
+    "Campanha: 20º na 1ª rodada, 5º na 24ª rodada",
+  );
+  assert.equal(
+    describeCampaign([entry(1, 8), entry(12, 2), entry(24, 6)]),
+    "Campanha: 8º na 1ª rodada, 6º na 24ª rodada. Melhor: 2º na 12ª rodada",
+  );
+  assert.equal(describeCampaign([]), "Campanha ainda não disponível");
 });

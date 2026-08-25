@@ -57,7 +57,15 @@ what makes the logic testable without mocking HTTP.
   then SCHEDULED, then FINISHED. `currentRound` is the earliest round holding an unfinished
   match, else the last round.
 
-- `rank-history-core.ts` — every club's position after each round (the **campanha**).
+- `rank-history-core.ts` — every club's position after each round (the **campanha**),
+  plus the sparkline geometry that draws it in the Classificação. The **client** computes
+  this from the `/api/matches` payload it already holds — the whole season ships in one
+  response, so a second endpoint would buy nothing. Note the sparkline is therefore
+  derived from the fixture list while the row's position comes from `/api/standings`: with
+  a live provider the two legitimately differ by a place mid-round, for the IN_PLAY reason
+  documented above. The mark is a trajectory, not a restatement of the position column.
+  Both sparkline axes are shared across every row, because a per-row scale would make a
+  club oscillating 1st–3rd look like one climbing from 20th.
   `computeRankHistory` re-runs `computeStandings` once per round rather than keeping an
   incremental tally: the CBF tie-breakers are what decide a position, and a second
   implementation of them is how a history comes to disagree with the table it describes.

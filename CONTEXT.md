@@ -23,6 +23,11 @@ Each `RankAtRound` carries `played` alongside the position, because a postponed
 fixture is the difference between "caiu quatro posições" and "tem um jogo a
 menos". Positions come from re-running `computeStandings` round by round, so the
 campanha can never disagree with the table it describes.
+Rendered as the last column of the **Classificação**, a 72×20 sparkline per club
+(`RankSparkline`). The y axis is inverted — 1st at the top, so a climbing line
+means a climbing club — and both axes are shared by every row: the rows are small
+multiples, and auto-fitting each club to its own range would draw a side rattling
+between 1st and 3rd as dramatically as one climbing from 20th to 5th.
 _Avoid_: "histórico" (reads as past seasons, not this one), "ranking" (not the
 Brazilian football word, same as under **Classificação**), "evolução" on its own
 (it also reads as a club improving, which a falling campanha is not).

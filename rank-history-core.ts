@@ -71,3 +71,83 @@ export const positionAfterRound = (
   history: ClubRankHistory,
   round: number,
 ): number | null => history.entries.find((entry) => entry.round === round)?.position ?? null;
+
+/**
+ * Geometry for a campanha sparkline. Both domains are supplied by the caller
+ * rather than read off the club's own entries, and that is the whole point: a
+ * row-per-club table is a set of small multiples, so every sparkline must share
+ * one scale. Auto-fitting each club to its own range would draw a side rattling
+ * between 1st and 3rd with the same amplitude as one climbing from 20th to 5th.
+ */
+export interface SparklineBox {
+  width: number;
+  height: number;
+  /** Inset on all sides, so the stroke and the end dot are not clipped. */
+  padding: number;
+  /** Size of the division: the y domain is 1..clubCount, **1 at the top**. */
+  clubCount: number;
+  /** The x domain is rounds 1..lastRound, shared by every club. */
+  lastRound: number;
+}
+
+export interface SparklinePoint {
+  x: number;
+  y: number;
+  round: number;
+  position: number;
+}
+
+const round2 = (value: number): number => Math.round(value * 100) / 100;
+
+/**
+ * Project a campanha onto the box. The y axis is **inverted** — position 1 sits
+ * at the top, because a line that climbs must mean a club that climbed.
+ *
+ * The denominators are floored at 1 for the degenerate domains (a single round
+ * played, a one-club division), which would otherwise divide by zero and put
+ * every point at NaN — an invisible failure, since an SVG with a malformed
+ * `points` attribute simply draws nothing.
+ */
+export const sparklinePoints = (
+  entries: RankAtRound[],
+  box: SparklineBox,
+): SparklinePoint[] => {
+  const innerWidth = box.width - box.padding * 2;
+  const innerHeight = box.height - box.padding * 2;
+  const roundSpan = Math.max(1, box.lastRound - 1);
+  const positionSpan = Math.max(1, box.clubCount - 1);
+
+  return entries.map((entry) => ({
+    x: round2(box.padding + ((entry.round - 1) / roundSpan) * innerWidth),
+    y: round2(box.padding + ((entry.position - 1) / positionSpan) * innerHeight),
+    round: entry.round,
+    position: entry.position,
+  }));
+};
+
+/** The `points` attribute of an SVG `<polyline>`. */
+export const sparklinePolyline = (points: SparklinePoint[]): string =>
+  points.map((point) => `${point.x},${point.y}`).join(" ");
+
+/**
+ * pt-BR summary of a campanha, for the sparkline's accessible name and its
+ * hover title. A drawing of a trajectory is not readable by a screen reader and
+ * not readable at all in forced-colours mode, so the same fact is stated in
+ * words: where the club started, the best it reached, and where it is now.
+ */
+export const describeCampaign = (entries: RankAtRound[]): string => {
+  if (entries.length === 0) return "Campanha ainda não disponível";
+
+  const first = entries[0];
+  const last = entries[entries.length - 1];
+  const best = entries.reduce((a, b) => (b.position < a.position ? b : a));
+
+  const at = (entry: RankAtRound) => `${entry.position}º na ${entry.round}ª rodada`;
+  const summary = `Campanha: ${at(first)}, ${at(last)}`;
+
+  // Only worth saying when the peak is not already one of the two endpoints —
+  // otherwise it repeats what was just read out.
+  return best.position < Math.min(first.position, last.position)
+    ? `${summary}. Melhor: ${at(best)}`
+    : summary;
+};

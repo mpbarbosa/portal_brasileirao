@@ -1,8 +1,11 @@
+import { useMemo } from "react";
+
 import { clubKey } from "@/club-core";
 import { ClubCrest } from "@/src/components/ClubCrest";
+import { RankSparkline } from "@/src/components/RankSparkline";
 import { formatRoute } from "@/route-core";
 import { Surface } from "@/src/components/Surface";
-import type { StandingsRow } from "@/src/types";
+import type { ClubCode, ClubRankHistory, RankAtRound, StandingsRow } from "@/src/types";
 
 /** Libertadores places (G4) and the relegation zone (Z4) get a rail colour. */
 const zoneClass = (position: number, total: number): string => {
@@ -16,12 +19,39 @@ interface StandingsTableProps {
   /** Receives the club's URL key (slug, or code as a fallback). Omit to render
    *  plain text — the table stays useful without a drill-down. */
   onSelectClub?: (key: string) => void;
+  /** Each club's position after every round. Omit and the campanha column is
+   *  left out entirely — the table predates it and still stands without it. */
+  rankHistory?: ClubRankHistory[];
 }
 
-export function StandingsTable({ rows, onSelectClub }: StandingsTableProps) {
+export function StandingsTable({ rows, onSelectClub, rankHistory }: StandingsTableProps) {
+  const campaigns = useMemo(
+    () => new Map<ClubCode, RankAtRound[]>((rankHistory ?? []).map((c) => [c.clubCode, c.entries])),
+    [rankHistory],
+  );
+
+  /**
+   * One x domain for the whole table, taken from the club that has played the
+   * most rounds — not from each row's own entries. Rows are small multiples of
+   * each other, and a per-row axis would draw a club with a game in hand on a
+   * different scale from the rest.
+   */
+  const lastRound = useMemo(
+    () =>
+      (rankHistory ?? []).reduce(
+        (max, club) => Math.max(max, club.entries[club.entries.length - 1]?.round ?? 0),
+        0,
+      ),
+    [rankHistory],
+  );
+
+  // Nothing to draw before the fixtures land. Rendering the column empty would
+  // read as twenty broken cells rather than as data still in flight.
+  const showCampaign = lastRound > 0;
+
   return (
     <Surface className="overflow-x-auto">
-      <table className="w-full min-w-[34rem] text-sm">
+      <table className={`w-full text-sm ${showCampaign ? "min-w-[40rem]" : "min-w-[34rem]"}`}>
         <caption className="sr-only">Classificação do Campeonato Brasileiro Série A</caption>
         <thead className="bg-surface text-xs uppercase tracking-wide text-ink-muted">
           <tr>
@@ -33,6 +63,9 @@ export function StandingsTable({ rows, onSelectClub }: StandingsTableProps) {
             <th scope="col" className="px-2 py-2 text-right">E</th>
             <th scope="col" className="px-2 py-2 text-right">D</th>
             <th scope="col" className="px-2 py-2 text-right">SG</th>
+            {/* Last, so it is the column a narrow screen scrolls away from
+                rather than one of the numbers the table exists for. */}
+            {showCampaign && <th scope="col" className="px-3 py-2 text-left">Campanha</th>}
           </tr>
         </thead>
         <tbody>
@@ -82,6 +115,15 @@ export function StandingsTable({ rows, onSelectClub }: StandingsTableProps) {
               <td className="px-2 py-2 text-right tabular-nums text-ink-muted">
                 {row.goalDifference > 0 ? `+${row.goalDifference}` : row.goalDifference}
               </td>
+              {showCampaign && (
+                <td className="px-3 py-2">
+                  <RankSparkline
+                    entries={campaigns.get(row.club.code) ?? []}
+                    clubCount={rows.length}
+                    lastRound={lastRound}
+                  />
+                </td>
+              )}
             </tr>
           ))}
         </tbody>
