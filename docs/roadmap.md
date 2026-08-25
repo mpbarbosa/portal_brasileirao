@@ -259,6 +259,12 @@ tone ordering rather than a fact about alpha.
   page — but the magnitude does not. Dark is where MD3 differs: its ladder is
   deliberately tighter, compensated by having more rungs.
 
+  Both palettes landing within a hundredth of one tone unit is the useful part:
+  "is one tone unit of separation enough?" was never an MD3 question. The
+  migration inherited it, unchanged, from what shipped before. So M2 decides
+  this on the merits — there is no previous behaviour worth preserving, and no
+  regression to weigh against the elevation model.
+
   And tone is not the only cue. A filled `Surface` is `rounded-lg border
   border-line` before it is a fill, and MD3 strengthens that border
   considerably — `line` against `canvas` goes from 1.18:1 to **1.62:1** in
