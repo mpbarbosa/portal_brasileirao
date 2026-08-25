@@ -156,6 +156,43 @@ export const instagramUrl = (raw: string | undefined): string | null => {
   return `https://www.instagram.com/${handle}/`;
 };
 
+/**
+ * The canonical watch address for a hymn video.
+ *
+ * Accepts what a person is likely to paste — a bare id, a `watch?v=` link, a
+ * `youtu.be` short link, an `embed/` link — because the hymn list is
+ * hand-maintained and being strict about the input format buys nothing. Only
+ * the id is kept, so a link copied while the video played inside a mix does not
+ * carry `&list=RD…&start_radio=1` into the file and drop every reader into
+ * autoplaying radio instead of the hymn.
+ *
+ * Returns null for anything that is not a plausible video id — YouTube's are
+ * exactly 11 characters of the URL-safe alphabet — which the UI renders as no
+ * link rather than a broken one.
+ */
+export const hymnUrl = (raw: string | undefined): string | null => {
+  const value = raw?.trim();
+  if (!value) return null;
+
+  let id = value;
+  if (value.includes("/")) {
+    let url: URL;
+    try {
+      url = new URL(value);
+    } catch {
+      return null;
+    }
+    id =
+      url.searchParams.get("v") ??
+      // youtu.be/<id>, /embed/<id>, /shorts/<id> — the last path segment.
+      (url.pathname.split("/").filter(Boolean).pop() ?? "");
+  }
+
+  if (!/^[A-Za-z0-9_-]{11}$/.test(id)) return null;
+
+  return `https://www.youtube.com/watch?v=${id}`;
+};
+
 /** Attach curated handles to a club list, keyed by code. */
 export const withInstagram = (clubs: Club[], handles: Record<string, string>): Club[] =>
   clubs.map((club) => {
@@ -163,13 +200,20 @@ export const withInstagram = (clubs: Club[], handles: Record<string, string>): C
     return handle && !club.instagram ? { ...club, instagram: handle } : club;
   });
 
+/** Attach curated hymn video ids to a club list, keyed by code. */
+export const withHymns = (clubs: Club[], hymns: Record<string, string>): Club[] =>
+  clubs.map((club) => {
+    const hymn = hymns[club.code];
+    return hymn && !club.hymn ? { ...club, hymn } : club;
+  });
+
 /**
  * Fill in details the live payloads omit.
  *
  * Club objects embedded in standings and fixtures carry only id, name, crest
  * and abbreviation — the website comes from the teams endpoint, which only the
- * seed generator calls, and the Instagram handle from no endpoint at all. So
- * the committed club list supplies both at request time.
+ * seed generator calls, and the Instagram handle and the hymn from no endpoint
+ * at all. So the committed club list supplies all three at request time.
  */
 export const withClubDetails = (clubs: Club[], known: Club[]): Club[] => {
   const byCode = new Map(known.map((club) => [club.code, club]));
@@ -178,11 +222,13 @@ export const withClubDetails = (clubs: Club[], known: Club[]): Club[] => {
     const source = byCode.get(club.code);
     const website = club.website ?? source?.website;
     const instagram = club.instagram ?? source?.instagram;
+    const hymn = club.hymn ?? source?.hymn;
 
     return {
       ...club,
       ...(website ? { website } : {}),
       ...(instagram ? { instagram } : {}),
+      ...(hymn ? { hymn } : {}),
     };
   });
 };

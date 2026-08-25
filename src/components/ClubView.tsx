@@ -2,6 +2,7 @@ import {
   clubMatches,
   findClub,
   nextFixture,
+  hymnUrl,
   instagramUrl,
   recentForm,
   resultFor,
@@ -54,19 +55,21 @@ const stat = (label: string, value: string) => (
 );
 
 /**
- * The two marks beside the club's external links.
+ * The marks beside the club's external links.
  *
  * Drawn here rather than fetched, for the reason `CLAUDE.md` gives for the
  * broadcaster marks: no runtime dependency on a third party for an asset. Local
  * to this file because they have one call site each, the same way `MatchPage`
  * keeps `Campaign` and `Side`.
  *
- * Both are monochrome outlines — Instagram's rather than Meta's gradient mark,
- * and a plain globe for the club's own site. They take their colour from the
- * link through `currentColor`, so they warm on hover with the rest of the text
- * and need nothing of their own in either theme; a fixed-colour logo would want
- * a **Placa da emissora** the way the broadcaster marks do, which is a lot of
- * chrome for one glyph beside a word.
+ * All three are monochrome outlines — Instagram's rather than Meta's gradient
+ * mark, a plain globe for the club's own site, and a pair of quavers for the
+ * hymn rather than YouTube's play button, which is the *host* and not the
+ * thing. They take their colour from the link through `currentColor`, so they
+ * warm on hover with the rest of the text and need nothing of their own in
+ * either theme; a fixed-colour logo would want a **Placa da emissora** the way
+ * the broadcaster marks do, which is a lot of chrome for one glyph beside a
+ * word.
  *
  * `inline-block` is load-bearing rather than incidental: text-decoration is not
  * drawn through an atomic inline box, so each link's underline stops at its icon
@@ -105,6 +108,18 @@ function InstagramGlyph() {
       <rect x="3" y="3" width="18" height="18" rx="5" />
       <circle cx="12" cy="12" r="4" />
       <circle cx="17" cy="7" r="1" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+
+/** A pair of quavers: the club's hymn. The link's own words say where it plays,
+ *  so the mark is the song rather than the platform. */
+function HymnGlyph() {
+  return (
+    <svg {...glyph}>
+      <path d="M9 18V5l12-2v13" />
+      <circle cx="6" cy="18" r="3" />
+      <circle cx="18" cy="16" r="3" />
     </svg>
   );
 }
@@ -148,6 +163,7 @@ export function ClubView({
   const played = fixtures.filter((match) => resultFor(match, code) !== null).reverse();
   const clubScorers = scorersFor(scorers, code);
   const instagram = instagramUrl(club.instagram);
+  const hymn = hymnUrl(club.hymn);
 
   // Same domains as the Classificação, so the shape a reader recognises in the
   // table is the shape they find here — only the box is bigger. `clubCount`
@@ -202,6 +218,20 @@ export function ClubView({
                 <InstagramGlyph />
                 @{club.instagram}
                 <span className="sr-only"> — Instagram oficial (abre em nova aba)</span>
+              </a>
+            )}
+            {/* Named for what it is rather than for its address: a video id is
+                nothing a reader recognises, unlike a host or a handle. */}
+            {hymn && (
+              <a
+                href={hymn}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`truncate ${LINK_UNDERLINE}`}
+              >
+                <HymnGlyph />
+                Hino do clube
+                <span className="sr-only"> — no YouTube (abre em nova aba)</span>
               </a>
             )}
           </div>
