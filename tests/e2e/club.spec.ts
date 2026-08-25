@@ -130,4 +130,23 @@ test.describe("Clube", () => {
     // The match involves the club we came from.
     await expect(page.locator("article")).toContainText(name);
   });
+
+  test("the club page links to its official site", async ({ page }) => {
+    await openClubAt(page, 1);
+
+    const site = page.locator("main a[target='_blank']").first();
+    await expect(site).toBeVisible();
+    // Always HTTPS: the provider lists most clubs as http.
+    await expect(site).toHaveAttribute("href", /^https:\/\/[^/]+\/$/);
+    await expect(site).toHaveAttribute("rel", /noopener/);
+  });
+
+  test("the official site link shows the host, not the whole URL", async ({ page }) => {
+    await openClubAt(page, 1);
+
+    const site = page.locator("main a[target='_blank']").first();
+    const text = (await site.innerText()).trim();
+    expect(text).not.toContain("https://");
+    expect(text).toMatch(/\.[a-z]{2,}/);
+  });
 });

@@ -10,9 +10,11 @@ import {
   playsIn,
   recentForm,
   resultFor,
+  officialSiteUrl,
   scorersFor,
   slugify,
   standingFor,
+  withWebsites,
 } from "@/club-core";
 import type { Match, Scorer, StandingsRow } from "@/src/types";
 
@@ -198,4 +200,46 @@ test("findClub is case-insensitive on slugs", () => {
 test("findClub returns null for an unknown key", () => {
   assert.equal(findClub([club("1783", "Flamengo", "flamengo")], "nao-existe"), null);
   assert.equal(findClub([], "flamengo"), null);
+});
+
+test("a club site is normalised to an HTTPS origin", () => {
+  assert.equal(officialSiteUrl("http://www.palmeiras.com.br"), "https://www.palmeiras.com.br/");
+  assert.equal(officialSiteUrl("https://www.palmeiras.com.br/"), "https://www.palmeiras.com.br/");
+});
+
+test("a path is dropped, because this link means the club's home", () => {
+  // The provider lists Flamengo as its basketball landing page.
+  assert.equal(
+    officialSiteUrl("https://www.flamengo.com.br/pagina-inicial-basquete"),
+    "https://www.flamengo.com.br/",
+  );
+});
+
+test("an unparseable or non-web address yields no link", () => {
+  assert.equal(officialSiteUrl("not a url"), null);
+  assert.equal(officialSiteUrl("javascript:alert(1)"), null);
+  assert.equal(officialSiteUrl("ftp://files.example.com"), null);
+  assert.equal(officialSiteUrl(""), null);
+  assert.equal(officialSiteUrl(undefined), null);
+});
+
+test("websites are filled in from the committed club list", () => {
+  // Standings and fixtures carry no website; the seed does.
+  const live = [club("1769", "Palmeiras", "palmeiras")];
+  const known = [{ ...club("1769", "Palmeiras", "palmeiras"), website: "https://www.palmeiras.com.br/" }];
+
+  assert.equal(withWebsites(live, known)[0].website, "https://www.palmeiras.com.br/");
+});
+
+test("a website already present is left alone", () => {
+  const live = [{ ...club("1769", "Palmeiras", "palmeiras"), website: "https://already.example/" }];
+  const known = [{ ...club("1769", "Palmeiras", "palmeiras"), website: "https://other.example/" }];
+
+  assert.equal(withWebsites(live, known)[0].website, "https://already.example/");
+});
+
+test("a club the seed does not know keeps no website", () => {
+  const live = [club("9999", "Desconhecido", "desconhecido")];
+
+  assert.equal(withWebsites(live, [])[0].website, undefined);
 });

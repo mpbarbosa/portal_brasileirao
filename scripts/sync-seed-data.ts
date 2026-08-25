@@ -21,6 +21,7 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 
+import { officialSiteUrl } from "@/club-core";
 import {
   clubFromTeam,
   mapMatch,
@@ -61,7 +62,7 @@ const get = async <T>(url: string): Promise<T> => {
 
 interface TeamsResponse {
   season?: { startDate?: string; endDate?: string };
-  teams?: { id: number; address?: string | null }[];
+  teams?: { id: number; address?: string | null; website?: string | null }[];
 }
 
 /** Brazilian state from the postal address, e.g. "… Rio de Janeiro, RJ 22231-220". */
@@ -88,7 +89,8 @@ const clubs: SeedClub[] = rawTeams
       console.error(`Error: could not map team id ${team.id}`);
       process.exit(1);
     }
-    return { ...club, state: stateFrom(team.address) };
+    const website = officialSiteUrl(team.website ?? undefined);
+    return { ...club, state: stateFrom(team.address), ...(website ? { website } : {}) };
   })
   .sort((a, b) => a.shortName.localeCompare(b.shortName, "pt-BR"));
 
@@ -135,6 +137,7 @@ ${clubs
       (club.tla ? `, tla: ${ts(club.tla)}` : "") +
       (club.slug ? `, slug: ${ts(club.slug)}` : "") +
       (club.crest ? `, crest: ${ts(club.crest)}` : "") +
+      (club.website ? `, website: ${ts(club.website)}` : "") +
       (club.state ? `, state: ${ts(club.state)}` : "") +
       ` },`,
   )

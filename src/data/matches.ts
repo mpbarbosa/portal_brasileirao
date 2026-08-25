@@ -6,12 +6,12 @@ import type { Match } from "@/src/types";
  *
  * A frozen snapshot of the 2026 season
  * (380 fixtures, played through round 24), taken
- * 2026-08-24 from football-data.org. This is the offline fallback the app
+ * 2026-08-25 from football-data.org. This is the offline fallback the app
  * serves when no token is configured or the upstream is unreachable — real
  * historical data rather than invented scorelines, but **frozen**: it does not
  * reflect anything that happened after the snapshot date.
  */
-export const SNAPSHOT_DATE = "2026-08-24";
+export const SNAPSHOT_DATE = "2026-08-25";
 
 export const SEED_MATCHES: Match[] = [
   { id: "554740", round: 1, kickoff: "2026-01-28T22:00:00Z", status: "FINISHED", homeCode: "1766", awayCode: "1769", homeGoals: 2, awayGoals: 2 },

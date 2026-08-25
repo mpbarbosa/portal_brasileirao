@@ -91,3 +91,54 @@ export const standingFor = (rows: StandingsRow[], code: ClubCode): StandingsRow 
 /** The club's entries in the top-scorer table, best first. */
 export const scorersFor = (scorers: Scorer[], code: ClubCode): Scorer[] =>
   scorers.filter((scorer) => scorer.club.code === code);
+
+
+/**
+ * Normalise a club's official site to an HTTPS origin.
+ *
+ * Two corrections, both from real provider data:
+ *
+ * - **Scheme.** Most clubs are listed as `http://`. Every one of the twenty
+ *   terminates TLS — checked by hand, including the ones whose bot protection
+ *   answers a script with 403 — so upgrading is safe and linking a reader to
+ *   plaintext is not.
+ * - **Path.** Flamengo is listed as `/pagina-inicial-basquete`, the basketball
+ *   landing page. This link means "the club's official site", so only the origin
+ *   is kept. No club here lives at a path, and dropping one is a smaller error
+ *   than sending football readers to a basketball page.
+ *
+ * Returns null for anything unparseable, which the UI renders as no link at all.
+ */
+export const officialSiteUrl = (raw: string | undefined): string | null => {
+  const value = raw?.trim();
+  if (!value) return null;
+
+  let url: URL;
+  try {
+    url = new URL(value);
+  } catch {
+    return null;
+  }
+
+  if (url.protocol !== "http:" && url.protocol !== "https:") return null;
+  if (!url.hostname) return null;
+
+  return `https://${url.hostname}/`;
+};
+
+/**
+ * Fill in details the live payloads omit.
+ *
+ * Club objects embedded in standings and fixtures carry only id, name, crest
+ * and abbreviation — the website comes from the teams endpoint, which only the
+ * seed generator calls. So the committed club list supplies it at request time.
+ */
+export const withWebsites = (clubs: Club[], known: Club[]): Club[] => {
+  const byCode = new Map(known.map((club) => [club.code, club]));
+
+  return clubs.map((club) => {
+    if (club.website) return club;
+    const site = byCode.get(club.code)?.website;
+    return site ? { ...club, website: site } : club;
+  });
+};

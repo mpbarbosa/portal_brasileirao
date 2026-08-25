@@ -33,6 +33,7 @@ import {
 } from "@/football-data-core";
 import { withBroadcasters, withVenues } from "@/broadcast-core";
 import { withGoalVideos } from "@/match-core";
+import { withWebsites } from "@/club-core";
 import { compareForFeed, currentRound, matchesForRound, roundsOf } from "@/matches-core";
 import { injectMeta, pageMeta } from "@/page-meta-core";
 import { parseRoute } from "@/route-core";
@@ -166,7 +167,15 @@ const loadStandings = (): Promise<ApiEnvelope<StandingsRow[]>> =>
   loadCached<StandingsRow[]>(
     "standings",
     STANDINGS_CACHE_TTL_MS,
-    async () => mapStandings(await fetchFromProvider<StandingsResponse>(standingsUrl())),
+    async () => {
+      const rows = mapStandings(await fetchFromProvider<StandingsResponse>(standingsUrl()));
+      // Same gap as fixtures: the standings payload has no website either.
+      const enriched = withWebsites(
+        rows.map((row) => row.club),
+        CLUBS,
+      );
+      return rows.map((row, index) => ({ ...row, club: enriched[index] }));
+    },
     () => computeStandings(CLUBS, SEED_MATCHES),
   );
 
@@ -204,7 +213,8 @@ const loadMatches = async (): Promise<ApiEnvelope<MatchesPayload>> => {
         withVenues(withBroadcasters([...matches].sort(compareForFeed), BROADCASTS), VENUES),
         GOAL_VIDEOS,
       ),
-      clubs: clubsFromMatches(raw),
+      // Fixtures carry no website; the committed club list does.
+      clubs: withWebsites(clubsFromMatches(raw), CLUBS),
     };
 
     breaker.recordSuccess();

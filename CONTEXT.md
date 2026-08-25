@@ -52,6 +52,18 @@ _Avoid_: "team"/"time" for the entity (`Club` is the domain word here; "team" is
 what the upstream API calls it, which is why the adapter type is `RawTeam`),
 "sigla" as an identifier (see **tla**).
 
+**Site oficial**:
+The club's own website, linked from its page and shown as the bare host
+(`palmeiras.com.br`). Comes from the provider's teams endpoint, normalised by
+`officialSiteUrl` to an **HTTPS origin**: most clubs are listed as `http://`,
+and Flamengo is listed as its basketball landing page, so both the scheme and
+the path are corrected. Every one of the twenty terminates TLS — verified by
+hand, including those whose bot protection answers a script with 403.
+_Avoid_: linking the raw provider value, keeping a path (this link means the
+club's home, not a section of it), assuming standings or fixtures carry it —
+only the teams endpoint does, so the committed club list supplies it at request
+time via `withWebsites`.
+
 **slug**:
 URL-safe form of a club's short name — `Atlético-MG` → `atletico-mg` — used for
 readable addresses like `/clube/flamengo`. Accents are stripped rather than

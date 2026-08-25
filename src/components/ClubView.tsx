@@ -97,6 +97,19 @@ export function ClubView({
             {club.name}
             {club.state ? ` · ${club.state}` : ""}
           </p>
+          {club.website && (
+            <a
+              href={club.website}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-0.5 inline-block truncate text-sm underline decoration-ink-ghost underline-offset-2 hover:decoration-ink-soft"
+            >
+              {/* The bare host reads better than the full URL and is what a
+                  reader recognises as "the club's site". */}
+              {club.website.replace(/^https:\/\//, "").replace(/\/$/, "")}
+              <span className="sr-only"> — site oficial (abre em nova aba)</span>
+            </a>
+          )}
         </div>
       </header>
 
