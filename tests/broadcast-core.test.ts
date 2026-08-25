@@ -14,6 +14,7 @@ import {
   withVenues,
   markKey,
   broadcasterMarkUrl,
+  MARKS,
 } from "@/broadcast-core";
 import type { Club, Match } from "@/src/types";
 
@@ -346,12 +347,10 @@ test("channel spellings converge on one lookup key", () => {
   assert.equal(markKey("SporTV"), "SPORTV");
 });
 
-test("a known broadcaster resolves to a Commons file", () => {
-  const url = broadcasterMarkUrl("Globo");
-
-  assert.ok(url?.startsWith("https://commons.wikimedia.org/wiki/Special:FilePath/"));
-  // A thumbnail, not the full asset — these render at 18 pixels tall.
-  assert.match(url ?? "", /\?width=\d+$/);
+test("a known broadcaster resolves to a mark on our own origin", () => {
+  // Not a Commons URL: hotlinking earns a 429 once a few readers load a page,
+  // and half the marks come back as empty plates.
+  assert.equal(broadcasterMarkUrl("Globo"), "/marks/globo.png");
 });
 
 test("both spellings of a channel find the same mark", () => {
@@ -359,12 +358,13 @@ test("both spellings of a channel find the same mark", () => {
   assert.equal(broadcasterMarkUrl("GE TV"), broadcasterMarkUrl("ge tv"));
 });
 
-test("a filename with spaces and an accent is escaped", () => {
-  // "CazéTV wordmark.svg" would otherwise produce a broken URL.
-  const url = broadcasterMarkUrl("CazéTV") ?? "";
-
-  assert.ok(!url.includes(" "));
-  assert.ok(url.includes("Caz%C3%A9TV%20wordmark.svg"));
+test("every mark is a plain path needing no escaping", () => {
+  // The Commons titles carry spaces, accents and brackets; the slugs must not,
+  // or the served URL differs from the file on disk.
+  for (const mark of Object.values(MARKS)) {
+    assert.match(mark.slug, /^[a-z0-9-]+$/);
+    assert.equal(broadcasterMarkUrl(mark.slug.toUpperCase().replace(/-/g, " ")) ?? `/marks/${mark.slug}.png`, `/marks/${mark.slug}.png`);
+  }
 });
 
 test("an unknown broadcaster yields no mark rather than a guess", () => {

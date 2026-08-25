@@ -30,7 +30,7 @@ interface BroadcasterMarkProps {
  * the text they replaced.
  */
 export function BroadcasterMark({ name, size = "md", decorative = false }: BroadcasterMarkProps) {
-  const src = broadcasterMarkUrl(name, size === "sm" ? 96 : 120);
+  const src = broadcasterMarkUrl(name);
   const plate =
     "inline-flex items-center rounded bg-plate ring-1 ring-plate-line align-middle";
 

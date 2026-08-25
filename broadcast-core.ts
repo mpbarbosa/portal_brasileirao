@@ -215,12 +215,17 @@ export const withVenues = (
 /**
  * Broadcaster marks, keyed by a normalised channel name.
  *
- * The files are Wikimedia Commons titles, resolved at render time through
- * `Special:FilePath` — the same way the sibling World Cup app sources its
- * flags. Commons is the deliberate choice over a broadcaster's own site:
- * everything it hosts is freely licensed or public domain, and each of these is
- * public domain because a plain wordmark is not original enough to copyright.
- * Copying artwork off a broadcaster's site would carry no such assurance.
+ * `commons` records where the artwork came from; `slug` is what the app serves.
+ * They are downloaded once by `scripts/sync-broadcaster-marks.ts` and served
+ * from our own origin, **not** hotlinked.
+ *
+ * Hotlinking was the first attempt and it fails in production: Commons answers
+ * a browser's third or fourth request with 429, so a reader sees some marks and
+ * empty plates where the rest should be. Commons is an archive, not a CDN, and
+ * throttling is the correct behaviour on their side. Redistributing is fine
+ * precisely because each of these is public domain — a plain wordmark is not
+ * original enough to copyright — which is also why Commons is the source rather
+ * than a broadcaster's own site, where no licence comes with the file.
  *
  * A name with no entry here is not a gap to apologise for — `BroadcasterMark`
  * renders it as its own wordmark instead. That path is load-bearing: CBF's feed
@@ -228,16 +233,23 @@ export const withVenues = (
  * mark for, and Record's only Commons logo is CC BY-SA, whose attribution
  * requirement is not worth taking on for the one fixture it appears in.
  */
-const MARKS: Record<string, string> = {
-  GLOBO: "Rede Globo logo.svg",
-  PREMIERE: "Premiere FC logo.png",
-  SPORTV: "SporTV logo 2016.png",
-  AMAZONPRIME: "Prime Video logo (2024).svg",
-  PRIMEVIDEO: "Prime Video logo (2024).svg",
-  YOUTUBE: "YouTube Logo 2017.svg",
-  CAZETV: "CazéTV wordmark.svg",
-  GETV: "Ge.globo logo.svg",
-  GE: "Ge.globo logo.svg",
+export interface MarkSource {
+  /** Served as `/marks/<slug>.png`. */
+  slug: string;
+  /** Wikimedia Commons file title, read only by the sync script. */
+  commons: string;
+}
+
+export const MARKS: Record<string, MarkSource> = {
+  GLOBO: { slug: "globo", commons: "Rede Globo logo.svg" },
+  PREMIERE: { slug: "premiere", commons: "Premiere FC logo.png" },
+  SPORTV: { slug: "sportv", commons: "SporTV logo 2016.png" },
+  AMAZONPRIME: { slug: "prime-video", commons: "Prime Video logo (2024).svg" },
+  PRIMEVIDEO: { slug: "prime-video", commons: "Prime Video logo (2024).svg" },
+  YOUTUBE: { slug: "youtube", commons: "YouTube Logo 2017.svg" },
+  CAZETV: { slug: "caze-tv", commons: "CazéTV wordmark.svg" },
+  GETV: { slug: "ge", commons: "Ge.globo logo.svg" },
+  GE: { slug: "ge", commons: "Ge.globo logo.svg" },
 };
 
 /**
@@ -252,16 +264,8 @@ export const markKey = (name: string): string =>
     .toUpperCase()
     .replace(/[^A-Z0-9]/g, "");
 
-/**
- * The mark for a channel, or null when we have none.
- *
- * `width` asks Commons for a thumbnail rather than the full asset — an SVG is
- * rasterised server-side, and the PNGs are several hundred pixels wide for a
- * mark that renders at 18.
- */
-export const broadcasterMarkUrl = (name: string, width = 120): string | null => {
-  const file = MARKS[markKey(name)];
-  if (!file) return null;
-
-  return `https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(file)}?width=${width}`;
+/** The mark for a channel, or null when we have none. */
+export const broadcasterMarkUrl = (name: string): string | null => {
+  const mark = MARKS[markKey(name)];
+  return mark ? `/marks/${mark.slug}.png` : null;
 };

@@ -76,13 +76,25 @@ test.describe("Onde assistir", () => {
     expect(alts.every((a) => (a ?? "").length > 0)).toBe(true);
   });
 
-  test("the marks load from Commons", async ({ page }) => {
+  test("every mark actually renders", async ({ page }) => {
     await page.goto("/partida/554972");
 
     const mark = page.locator("dd img[alt='Premiere']");
-    await expect(mark).toHaveAttribute("src", /commons\.wikimedia\.org.*Special:FilePath/);
-    // A thumbnail, not the full asset.
-    await expect(mark).toHaveAttribute("src", /width=\d+/);
+    // Served from our own origin. Hotlinking Commons passed a src assertion
+    // while showing empty plates in production, because Commons answers a
+    // browser's third or fourth request with 429 — so assert the pixels, not
+    // the attribute.
+    await expect(mark).toHaveAttribute("src", "/marks/premiere.png");
+    // These are lazy, so bring them into view before asking whether they
+    // painted — otherwise this passes or fails on viewport height.
+    await mark.scrollIntoViewIfNeeded();
+    await expect(mark).toBeVisible();
+
+    const loaded = await page.locator("dd img").evaluateAll((all) =>
+      all.map((i) => ({ alt: i.getAttribute("alt"), ok: (i as HTMLImageElement).naturalWidth > 0 })),
+    );
+    expect(loaded.length).toBeGreaterThan(0);
+    expect(loaded.filter((m) => !m.ok)).toEqual([]);
   });
 
   test("a broadcaster with no mark still reads as its name", async ({ page }) => {
