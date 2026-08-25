@@ -169,7 +169,15 @@ const behindMain = (): string[] | null => {
     return null;
   }
 
-  return lines(git("diff", "--name-only", "HEAD..origin/main", "--", ...APPEARANCE));
+  // Three dots, and the distinction is the whole check. `git diff A..B` is
+  // symmetric — it reports every path where the two endpoints differ, in either
+  // direction — so the two-dot form flagged a tree that was *ahead* of
+  // `origin/main` exactly as loudly as one that was behind, and refused the one
+  // capture path this file documents as normal: a local build of a branch whose
+  // whole purpose is to change how a page looks. `A...B` diffs from the merge
+  // base to B, which is the question actually being asked: what does
+  // `origin/main` carry that this tree has not merged.
+  return lines(git("diff", "--name-only", "HEAD...origin/main", "--", ...APPEARANCE));
 };
 
 /** Everything the verdict depends on, measured rather than inferred. */
