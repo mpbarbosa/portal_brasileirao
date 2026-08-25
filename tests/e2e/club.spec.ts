@@ -155,7 +155,9 @@ test.describe("Clube", () => {
     await page.locator("main ul > li a[href^='/partida/']").first().click();
 
     await expect(page).toHaveURL(/\/partida\/\d+$/);
-    // The match involves the club we came from.
+    // The match involves the club we came from. `main > article` is the
+    // scoreboard; that it resolves to exactly one element is enforced by
+    // "the scoreboard is the only article on the page" in match-page.spec.ts.
     await expect(page.locator("main > article")).toContainText(name);
   });
 
