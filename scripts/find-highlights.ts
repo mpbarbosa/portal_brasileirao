@@ -74,6 +74,10 @@ if (round === null && ids.length === 0) {
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
+/** Gap between requests. Unhurried on purpose: the backfill is a one-off, and
+ *  going faster is what produces the redirect chains. */
+const PACE_MS = 1500;
+
 /**
  * Fetch with retries.
  *
@@ -82,7 +86,7 @@ const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
  * fixtures and lost everything before it. Transient faults are retried with
  * backoff, and the caller decides what an exhausted retry means.
  */
-const get = async (url: string, attempts = 3): Promise<string> => {
+const get = async (url: string, attempts = 5): Promise<string> => {
   let last: unknown;
 
   for (let attempt = 1; attempt <= attempts; attempt += 1) {
@@ -101,7 +105,10 @@ const get = async (url: string, attempts = 3): Promise<string> => {
       last = error;
       if (attempt === attempts) break;
     }
-    await sleep(attempt * 1500);
+    // Backs off to ~45s in total. YouTube answers a burst by bouncing it
+    // into a redirect chain until undici gives up, and that window outlasts a
+    // few seconds of waiting — the fault is pace, not the request.
+    await sleep(attempt * 3000);
   }
 
   throw last instanceof Error ? last : new Error(String(last));
@@ -176,7 +183,7 @@ const investigate = async (fixture: Fixture): Promise<Verdict[]> => {
   for (const { label } of KNOWN_CHANNELS) {
     if (verdicts.some((v) => v.channel === label && v.status !== "rejected")) continue;
 
-    await sleep(700);
+    await sleep(PACE_MS);
     const extra = await searchYouTube(`${query} ${label}`);
     const known = new Set(candidates.map((c) => c.videoId));
     verdicts = verdicts.concat(
@@ -189,7 +196,7 @@ const investigate = async (fixture: Fixture): Promise<Verdict[]> => {
   const shortlist = verdicts.filter((v) => v.status === "unconfirmed");
   const confirmed = new Map<string, Verdict>();
   for (const verdict of shortlist) {
-    await sleep(700);
+    await sleep(PACE_MS);
     const at = await uploadedAt(verdict.candidate.videoId).catch(() => undefined);
     confirmed.set(
       verdict.candidate.videoId,
@@ -263,10 +270,15 @@ for (const match of playable) {
     // One fixture's bad luck is not the run's. Name it loudly so it can be
     // retried on its own rather than silently missing from the season.
     failed.push(match.id);
-    console.error(`\n! ${label(fixture)} — ${(error as Error).message}`);
+    // undici wraps the real reason in `cause`, and the message alone is always
+    // the useless "fetch failed" — which cost a diagnosis once already.
+    const cause = (error as { cause?: { message?: string } }).cause?.message;
+    console.error(
+      `\n! ${label(fixture)} — ${(error as Error).message}${cause ? ` (${cause})` : ""}`,
+    );
   }
 
-  await sleep(700);
+  await sleep(PACE_MS);
 }
 
 console.log(`\n${"=".repeat(60)}`);
