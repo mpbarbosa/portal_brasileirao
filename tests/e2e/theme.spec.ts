@@ -14,6 +14,26 @@ const canvas = (page: Page) =>
  * a particular utility would pin the test to today's implementation and tell us
  * nothing about whether a ring is actually drawn.
  */
+/**
+ * The colour a token resolves to *right now*, read through a freshly mounted
+ * probe rather than written down as a hex.
+ *
+ * Every value in the palette is emitted by `sync-md3-tokens` from a seed, so a
+ * literal here would go stale the next time the seed moves and fail on a commit
+ * that never touched theming. The probe is new, and a transition needs a
+ * previous value to interpolate from, so it reports where the token lands
+ * rather than a frame of somebody else's fade.
+ */
+const tokenColour = (page: Page, token: string) =>
+  page.evaluate((name) => {
+    const probe = document.createElement("span");
+    probe.style.color = `var(${name})`;
+    document.body.append(probe);
+    const value = getComputedStyle(probe).color;
+    probe.remove();
+    return value;
+  }, token);
+
 const focusIndicator = (page: Page, selector: string) =>
   page.locator(selector).first().evaluate((node) => {
     const style = getComputedStyle(node);
@@ -90,6 +110,44 @@ test.describe("Tema", () => {
     };
     // Light page, dark ink: a wide gap either way, but specifically inverted.
     expect(luminance(bg)).toBeGreaterThan(luminance(fg) + 100);
+  });
+
+  test("the toggle itself lands on the new theme's ink", async ({ page }) => {
+    // The toggle is the one control guaranteed to have been interacted with at
+    // the moment the palette swaps, so if anything were to keep the old theme's
+    // colour it would always be this one — on a light page it would render as a
+    // very faint glyph. Nothing above re-reads the clicked control after the
+    // flip, which is the gap this closes.
+    //
+    // Two things make an unguarded read of this lie, and a report of a stale
+    // toggle turned out to be both of them at once. `STATE_LAYER` carries a
+    // bare `transition`, whose property list includes `color`, so an immediate
+    // read samples the fade rather than where it settles — hence the poll. And
+    // a transition does not run at all on an unrendered element, so the desktop
+    // nav links, which are `display: none` below `sm`, re-resolve *instantly*
+    // and make a mid-fade toggle look uniquely broken beside them. Comparing
+    // against the token rather than against a neighbouring element is what
+    // keeps this spec honest at both widths.
+    await page.goto("/");
+
+    for (const theme of ["dark", "light"]) {
+      if ((await themeAttr(page)) === theme) await toggle(page).click();
+      const before = await toggle(page).evaluate((node) => getComputedStyle(node).color);
+
+      await toggle(page).click();
+      await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
+
+      // Custom properties are not in any transition's property list, so this
+      // reads the newly active palette immediately.
+      const expected = await tokenColour(page, "--color-ink-soft");
+      expect(expected, "the two themes must not share this token").not.toBe(before);
+
+      await expect
+        .poll(() => toggle(page).evaluate((node) => getComputedStyle(node).color), {
+          message: `the toggle kept the old theme's colour after switching to ${theme}`,
+        })
+        .toBe(expected);
+    }
   });
 
   test("a keyboard-focused control is visibly focused, in both themes", async ({ page }) => {
