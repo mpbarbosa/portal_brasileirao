@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
+import { CLUBS } from "@/src/data/clubs";
+import { CLUB_HYMNS } from "@/src/data/club-hymns";
 import {
   clubKey,
   clubMatches,
@@ -15,7 +17,9 @@ import {
   slugify,
   standingFor,
   withClubDetails,
+  withHymns,
   withInstagram,
+  hymnUrl,
   instagramUrl,
 } from "@/club-core";
 import type { Match, Scorer, StandingsRow } from "@/src/types";
@@ -290,4 +294,56 @@ test("the handle rides along with the website into live payloads", () => {
 
   assert.equal(merged.instagram, "palmeiras");
   assert.equal(merged.website, "https://www.palmeiras.com.br/");
+});
+
+test("a hymn link is the video id, however it was pasted", () => {
+  assert.equal(hymnUrl("DiKvx0gRfaQ"), "https://www.youtube.com/watch?v=DiKvx0gRfaQ");
+  // What a person copies while the video plays inside a mix. Keeping the radio
+  // parameters would drop every reader into autoplay instead of the hymn.
+  assert.equal(
+    hymnUrl("https://www.youtube.com/watch?v=DiKvx0gRfaQ&list=RDDiKvx0gRfaQ&start_radio=1"),
+    "https://www.youtube.com/watch?v=DiKvx0gRfaQ",
+  );
+  assert.equal(hymnUrl("https://youtu.be/DiKvx0gRfaQ?t=42"), "https://www.youtube.com/watch?v=DiKvx0gRfaQ");
+  assert.equal(
+    hymnUrl("https://www.youtube.com/embed/DiKvx0gRfaQ"),
+    "https://www.youtube.com/watch?v=DiKvx0gRfaQ",
+  );
+});
+
+test("anything that is not a video id yields no link", () => {
+  // Renders as no link at all, rather than one that lands on YouTube's 404.
+  assert.equal(hymnUrl("short"), null);
+  assert.equal(hymnUrl("https://www.youtube.com/watch?v=nope"), null);
+  assert.equal(hymnUrl("https://www.youtube.com/"), null);
+  assert.equal(hymnUrl("not a url/"), null);
+  assert.equal(hymnUrl(""), null);
+  assert.equal(hymnUrl(undefined), null);
+});
+
+test("curated hymns attach to the club list by code", () => {
+  const clubs = [club("1769", "Palmeiras", "palmeiras"), club("9999", "Outro", "outro")];
+
+  const [palmeiras, outro] = withHymns(clubs, { "1769": "DiKvx0gRfaQ" });
+
+  assert.equal(palmeiras.hymn, "DiKvx0gRfaQ");
+  assert.equal(outro.hymn, undefined);
+});
+
+test("the hymn rides along into live payloads", () => {
+  // Like the handle and the website: no endpoint carries it, so the committed
+  // list is what supplies it at request time.
+  const live = [club("1769", "Palmeiras", "palmeiras")];
+  const known = [{ ...club("1769", "Palmeiras", "palmeiras"), hymn: "DiKvx0gRfaQ" }];
+
+  const [merged] = withClubDetails(live, known);
+
+  assert.equal(merged.hymn, "DiKvx0gRfaQ");
+});
+
+test("every club in the division has a hymn", () => {
+  // The link is either on all twenty pages or it is a gap the reader notices.
+  const missing = CLUBS.filter((entry) => !hymnUrl(CLUB_HYMNS[entry.code]));
+
+  assert.deepEqual(missing.map((entry) => entry.shortName), []);
 });

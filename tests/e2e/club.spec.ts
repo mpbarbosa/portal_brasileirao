@@ -161,12 +161,17 @@ test.describe("Clube", () => {
     await expect(page.locator("main > article")).toContainText(name);
   });
 
-  /* Selected by destination rather than position: the header now holds two
+  /* Selected by destination rather than position: the header now holds three
      external links, and picking one by index is what broke these specs when a
-     name first became a control. */
+     name first became a control. The site link is the one defined by exclusion,
+     so every link added beside it has to be excluded here too — the hymn was
+     the first, and it matched as the site until it was. */
   const siteLink = (page: Page) =>
-    page.locator("main header a[target='_blank']:not([href*='instagram'])");
+    page.locator(
+      "main header a[target='_blank']:not([href*='instagram.com']):not([href*='youtube.com'])",
+    );
   const instagramLink = (page: Page) => page.locator("main header a[href*='instagram.com']");
+  const hymnLink = (page: Page) => page.locator("main header a[href*='youtube.com']");
 
   test("the club page links to its official site", async ({ page }) => {
     await openClubAt(page, 1);
@@ -208,7 +213,29 @@ test.describe("Clube", () => {
     expect(text).not.toContain("instagram.com");
   });
 
-  test("every club carries both links", async ({ page }) => {
+  test("the club page links to its hymn", async ({ page }) => {
+    await openClubAt(page, 1);
+
+    const hymn = hymnLink(page);
+    await expect(hymn).toBeVisible();
+    // A bare watch address: the id alone is stored, so no `list=RD…` playlist
+    // or `start_radio` rides along to open the mix instead of the hymn.
+    await expect(hymn).toHaveAttribute("href", /^https:\/\/www\.youtube\.com\/watch\?v=[\w-]{11}$/);
+    await expect(hymn).toHaveAttribute("target", "_blank");
+    await expect(hymn).toHaveAttribute("rel", /noopener/);
+  });
+
+  test("the hymn link reads as its name, not its address", async ({ page }) => {
+    await openClubAt(page, 1);
+
+    // Unlike the site and the handle, a video id names nothing a reader knows.
+    // The trailing screen-reader text is deliberate, so match the start.
+    const text = (await hymnLink(page).innerText()).trim();
+    expect(text).toMatch(/^Hino do clube/);
+    expect(text).not.toContain("youtube.com");
+  });
+
+  test("every club carries all three links", async ({ page }) => {
     // A missing handle renders as no link at all rather than a broken one, so
     // this would pass silently if the merge stopped working — hence checking
     // that the club actually named in the URL is the one that has it.
@@ -219,5 +246,9 @@ test.describe("Clube", () => {
       "https://www.instagram.com/palmeiras/",
     );
     await expect(siteLink(page)).toHaveAttribute("href", "https://www.palmeiras.com.br/");
+    await expect(hymnLink(page)).toHaveAttribute(
+      "href",
+      "https://www.youtube.com/watch?v=DiKvx0gRfaQ",
+    );
   });
 });

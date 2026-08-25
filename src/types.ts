@@ -32,6 +32,12 @@ export interface Club {
   instagram?: string;
   /** The club's official site, normalised to an HTTPS origin. */
   website?: string;
+  /**
+   * The club's hymn on YouTube, stored as the **video id alone** (11 chars).
+   * The watch address is derived by `hymnUrl`, so a pasted link loses the
+   * `&list=RD…&start_radio=1` radio parameters instead of persisting them.
+   */
+  hymn?: string;
   /** Home state (e.g. "RJ"). Absent for clubs derived from a provider that
    *  doesn't carry it — render it conditionally. */
   state?: string;

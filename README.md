@@ -42,9 +42,9 @@ refetches on its own. There is deliberately no match minute: the provider report
 and a score and never an elapsed clock, so the page says **bola rolando** rather than
 guessing a number.*
 
-![Página do clube Palmeiras no tema claro: escudo, site oficial e perfil no Instagram, os números da temporada (1º lugar, 51 pontos, 24 jogos, saldo +24), o gráfico da campanha da 1ª à 24ª rodada, os últimos cinco resultados, o próximo jogo e os artilheiros do clube.](docs/screenshots/clube-palmeiras-light.png)
+![Página do clube Palmeiras no tema claro: escudo, site oficial, perfil no Instagram e hino do clube, os números da temporada (1º lugar, 51 pontos, 24 jogos, saldo +24), o gráfico da campanha da 1ª à 24ª rodada, os últimos cinco resultados, o próximo jogo e os artilheiros do clube.](docs/screenshots/clube-palmeiras-light.png)
 
-![A mesma página do clube Palmeiras no tema escuro: os mesmos escudo, links, números da temporada, gráfico da campanha e jogos, com as marcas das emissoras mantendo o fundo claro para continuarem legíveis.](docs/screenshots/clube-palmeiras-dark.png)
+![A mesma página do clube Palmeiras no tema escuro: os mesmos escudo, três links, números da temporada, gráfico da campanha e jogos, com as marcas das emissoras mantendo o fundo claro para continuarem legíveis.](docs/screenshots/clube-palmeiras-dark.png)
 
 ![Página de jogos no tema claro: seletor de rodada e os jogos da 25ª rodada, cada um com os clubes, data, horário e as marcas das emissoras que o transmitem.](docs/screenshots/jogos-light.png)
 
@@ -54,9 +54,9 @@ guessing a number.*
 fixture carries the broadcasters showing it — ge, Globo, Premiere, SporTV, Cazé TV, YouTube
 and Prime Video, with anyone we have no mark for rendered as their own name.*
 
-![Página da partida Chapecoense 1 x 0 São Paulo no tema claro: placar com escudos, data, estádio, as emissoras que transmitiram, as campanhas dos dois clubes empilhadas e os links dos melhores momentos por emissora.](docs/screenshots/partida-554972-light.png)
+![Página da partida Palmeiras 4 x 1 Vasco da Gama no tema claro: placar com escudos, data, estádio, as emissoras que transmitiram, as campanhas dos dois clubes empilhadas — o líder reto no alto e o adversário caindo — e os links dos melhores momentos por emissora.](docs/screenshots/partida-554977-light.png)
 
-![A mesma página da partida no tema escuro, com o mesmo placar, emissoras, campanhas dos dois clubes e melhores momentos.](docs/screenshots/partida-554972-dark.png)
+![A mesma página da partida no tema escuro, com o mesmo placar, emissoras, campanhas dos dois clubes e melhores momentos, e as marcas das emissoras mantendo o fundo claro.](docs/screenshots/partida-554977-dark.png)
 
 *A match page, light and dark. Both clubs' campanhas are stacked rather than overlaid, so
 they share one scale and their rounds line up — the app has no series palette, and inventing
