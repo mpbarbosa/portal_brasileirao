@@ -9,10 +9,12 @@ import {
   standingFor,
   type FormResult,
 } from "@/club-core";
+import { lastRecordedRound } from "@/rank-history-core";
 import { ClubCrest } from "@/src/components/ClubCrest";
 import { MatchList } from "@/src/components/MatchList";
+import { RankSparkline } from "@/src/components/RankSparkline";
 import { Surface } from "@/src/components/Surface";
-import type { Club, Match, Scorer, StandingsRow } from "@/src/types";
+import type { Club, ClubRankHistory, Match, Scorer, StandingsRow } from "@/src/types";
 
 interface ClubViewProps {
   /** Slug or code, straight from the URL. */
@@ -27,6 +29,8 @@ interface ClubViewProps {
   onBack: () => void;
   /** Omit to render fixtures as plain text — the page stands on its own. */
   onSelectMatch?: (id: string) => void;
+  /** Every club's campanha. Omit and the section is left out entirely. */
+  rankHistory?: ClubRankHistory[];
 }
 
 const FORM_CLASS: Record<FormResult, string> = {
@@ -57,6 +61,7 @@ export function ClubView({
   scorers,
   onBack,
   onSelectMatch,
+  rankHistory,
 }: ClubViewProps) {
   // The URL may name the club by slug or by code, and the club itself may only
   // appear in one of the two lists, so search both before giving up.
@@ -86,6 +91,15 @@ export function ClubView({
   const played = fixtures.filter((match) => resultFor(match, code) !== null).reverse();
   const clubScorers = scorersFor(scorers, code);
   const instagram = instagramUrl(club.instagram);
+
+  // Same domains as the Classificação, so the shape a reader recognises in the
+  // table is the shape they find here — only the box is bigger. `clubCount`
+  // comes from the table rather than from the history, because the y axis is
+  // the size of the division, not the number of clubs that happen to have a
+  // campanha recorded.
+  const campaign = rankHistory?.find((entry) => entry.clubCode === code)?.entries ?? [];
+  const lastRound = lastRecordedRound(rankHistory ?? []);
+  const clubCount = standings.length || rankHistory?.length || 0;
 
   return (
     <>
@@ -142,6 +156,30 @@ export function ClubView({
           {stat("Jogos", String(row.played))}
           {stat("Saldo", row.goalDifference > 0 ? `+${row.goalDifference}` : String(row.goalDifference))}
         </div>
+      )}
+
+      {campaign.length > 0 && lastRound > 0 && (
+        <section className="mt-6">
+          {/* Sits directly under the Posição tile, which it explains: the tile
+              says where the club is, this says how it got there. */}
+          <h3 className="mb-2 text-sm font-medium text-ink-muted">Campanha</h3>
+          <Surface filled className="px-3 py-3">
+            <RankSparkline
+              entries={campaign}
+              clubCount={clubCount}
+              lastRound={lastRound}
+              size="page"
+            />
+            {/* The drawing carries no axis, so the ends are named in text —
+                which is also the only version a screen reader gets. */}
+            <p className="mt-2 flex justify-between text-xs tabular-nums text-ink-faint">
+              <span>{campaign[0].position}º · 1ª rodada</span>
+              <span>
+                {campaign[campaign.length - 1].position}º · {lastRound}ª rodada
+              </span>
+            </p>
+          </Surface>
+        </section>
       )}
 
       <section className="mt-6">

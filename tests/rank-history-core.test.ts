@@ -4,6 +4,7 @@ import { test } from "node:test";
 import {
   computeRankHistory,
   describeCampaign,
+  lastRecordedRound,
   lastRoundWithResult,
   positionAfterRound,
   sparklinePoints,
@@ -216,4 +217,20 @@ test("the campaign is stated in words, not only drawn", () => {
     "Campanha: 8º na 1ª rodada, 6º na 24ª rodada. Melhor: 2º na 12ª rodada",
   );
   assert.equal(describeCampaign([]), "Campanha ainda não disponível");
+});
+
+test("the shared x domain is the furthest round anyone has reached", () => {
+  // A club with a game in hand has a shorter campanha. Scaling it to its own
+  // last round would draw it on a different axis from every other club.
+  const history = [
+    { clubCode: "AAA", shortName: "AAA", entries: [entry(1, 1), entry(2, 1)] },
+    { clubCode: "BBB", shortName: "BBB", entries: [entry(1, 2), entry(2, 2), entry(3, 2)] },
+  ];
+
+  assert.equal(lastRecordedRound(history), 3);
+});
+
+test("nothing played yet gives a zero domain rather than a negative one", () => {
+  assert.equal(lastRecordedRound([]), 0);
+  assert.equal(lastRecordedRound([{ clubCode: "AAA", shortName: "AAA", entries: [] }]), 0);
 });

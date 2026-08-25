@@ -46,6 +46,39 @@ test.describe("Clube", () => {
     await expect(main.getByText("1º", { exact: true })).toBeVisible();
   });
 
+  test("the club page draws the club's campanha", async ({ page }) => {
+    await openClubAt(page, 1);
+
+    const sparkline = page.locator("main section svg[role='img']");
+
+    await expect(sparkline).toHaveCount(1);
+    await expect(sparkline).toHaveAttribute("aria-label", /^Campanha: /);
+  });
+
+  test("the campanha names both ends, since the drawing carries no axis", async ({ page }) => {
+    await openClubAt(page, 1);
+
+    // Shape, never a value: the snapshot ages and the table reorders.
+    const ends = page.locator("main section svg[role='img'] ~ p span");
+
+    await expect(ends).toHaveCount(2);
+    await expect(ends.first()).toHaveText(/^\d+º · 1ª rodada$/);
+    await expect(ends.last()).toHaveText(/^\d+º · \d+ª rodada$/);
+  });
+
+  test("the campanha ends where the standings summary says the club is", async ({ page }) => {
+    // The two are computed from different payloads — the sparkline from the
+    // fixture list, the tile from /api/standings — so with a live provider they
+    // can differ mid-round. Against the frozen snapshot nothing is in play, so
+    // they must agree, and disagreement here means a real bug.
+    await openClubAt(page, 1);
+
+    const position = (await page.locator("main p", { hasText: /^\d+º$/ }).first().innerText()).trim();
+    const endLabel = await page.locator("main section svg[role='img'] ~ p span").last().innerText();
+
+    expect(endLabel.startsWith(position)).toBe(true);
+  });
+
   test("the form guide uses at most five results", async ({ page }) => {
     await openClubAt(page, 1);
 

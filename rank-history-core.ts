@@ -73,6 +73,21 @@ export const positionAfterRound = (
 ): number | null => history.entries.find((entry) => entry.round === round)?.position ?? null;
 
 /**
+ * The last round any club in the history has played — the x domain every
+ * sparkline shares.
+ *
+ * Taken across the whole history rather than from one club's own entries: a
+ * club with a game in hand has a shorter campanha, and scaling it to its own
+ * last round would draw it on a different axis from the rest. Zero when nothing
+ * has been played, which callers read as "nothing to draw yet".
+ */
+export const lastRecordedRound = (history: ClubRankHistory[]): number =>
+  history.reduce(
+    (max, club) => Math.max(max, club.entries[club.entries.length - 1]?.round ?? 0),
+    0,
+  );
+
+/**
  * Geometry for a campanha sparkline. Both domains are supplied by the caller
  * rather than read off the club's own entries, and that is the whole point: a
  * row-per-club table is a set of small multiples, so every sparkline must share

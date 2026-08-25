@@ -2,6 +2,7 @@ import { useMemo } from "react";
 
 import { clubKey } from "@/club-core";
 import { ClubCrest } from "@/src/components/ClubCrest";
+import { lastRecordedRound } from "@/rank-history-core";
 import { RankSparkline } from "@/src/components/RankSparkline";
 import { formatRoute } from "@/route-core";
 import { Surface } from "@/src/components/Surface";
@@ -30,20 +31,8 @@ export function StandingsTable({ rows, onSelectClub, rankHistory }: StandingsTab
     [rankHistory],
   );
 
-  /**
-   * One x domain for the whole table, taken from the club that has played the
-   * most rounds — not from each row's own entries. Rows are small multiples of
-   * each other, and a per-row axis would draw a club with a game in hand on a
-   * different scale from the rest.
-   */
-  const lastRound = useMemo(
-    () =>
-      (rankHistory ?? []).reduce(
-        (max, club) => Math.max(max, club.entries[club.entries.length - 1]?.round ?? 0),
-        0,
-      ),
-    [rankHistory],
-  );
+  /** One x domain for the whole table — see `lastRecordedRound`. */
+  const lastRound = useMemo(() => lastRecordedRound(rankHistory ?? []), [rankHistory]);
 
   // Nothing to draw before the fixtures land. Rendering the column empty would
   // read as twenty broken cells rather than as data still in flight.
