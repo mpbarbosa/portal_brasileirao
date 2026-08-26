@@ -2,6 +2,7 @@
  * Pure player display logic. No I/O, no React — translation and age are total
  * functions over their inputs (tests/player-core.test.ts).
  */
+import { instagramHandle } from "@/club-core";
 import type { Player } from "@/src/types";
 
 /**
@@ -72,3 +73,26 @@ export const mergePlayer = (base: Player, extra: Player | null): Player => {
     club: extra.club ?? base.club,
   };
 };
+
+/**
+ * The player's Instagram handle, or null when nothing usable is recorded.
+ *
+ * Returns the handle rather than the address, so it matches what `Club` carries
+ * in `instagram` and the one link component can take either. The address is
+ * built from it by `instagramUrl`, in one place, as it is for a club.
+ *
+ * The handle table is passed in rather than imported, keeping this module free
+ * of I/O like every other core module — and letting the tests state the mapping
+ * they assert about instead of depending on whoever is in `squads.ts` this
+ * season.
+ *
+ * An unknown id is *absence*, not an error: coverage is partial by design and
+ * most of the division has no recorded account. It normalises through
+ * `instagramHandle`, so a value written down as `@nome` or as a pasted profile
+ * URL still yields the handle rather than something that renders as a broken
+ * link.
+ */
+export const playerInstagram = (
+  id: string,
+  handles: Record<string, string>,
+): string | null => instagramHandle(handles[id]);

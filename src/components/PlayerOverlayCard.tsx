@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 
-import { ageOn, mergePlayer, positionLabel } from "@/player-core";
+import { ageOn, mergePlayer, playerInstagram, positionLabel } from "@/player-core";
 import { Button } from "@/src/components/Button";
+import { InstagramLink } from "@/src/components/ClubLinks";
+import { PLAYER_INSTAGRAM } from "@/src/data/player-instagram";
 import type { Player, Scorer } from "@/src/types";
 
 interface PlayerOverlayCardProps {
@@ -91,6 +93,18 @@ export function PlayerOverlayCard({ player, scorer, onClose }: PlayerOverlayCard
   const age = ageOn(enriched.dateOfBirth, new Date());
   const position = positionLabel(enriched.position);
   const club = enriched.club ?? scorer?.club;
+  /**
+   * Read from the bundled table rather than waited for from
+   * `/api/players/:id`, deliberately. The enrichment is optional — the card is
+   * built to stay useful when it fails — and a link that appears only when the
+   * network cooperates is worse than one that is simply there. The id is
+   * already in hand, so nothing has to arrive first.
+   *
+   * `player.id`, not `enriched.id`: the enrichment cannot change who the card
+   * is about, and reading the identity from the mutable copy is how a card
+   * would come to show one player's name beside another's profile.
+   */
+  const instagram = playerInstagram(player.id, PLAYER_INSTAGRAM);
 
   return (
     <dialog
@@ -136,6 +150,15 @@ export function PlayerOverlayCard({ player, scorer, onClose }: PlayerOverlayCard
               {enriched.name}
             </h2>
             {club && <p className="truncate text-body-medium text-ink-muted">{club.shortName}</p>}
+            {/* Under the name, where the club page puts a club's links: the
+                profile belongs to the person the card names, not to the figures
+                below it. Hidden from a reader with no account recorded rather
+                than shown as a dash — an absent link is not a missing value. */}
+            {instagram && (
+              <p className="mt-0.5 text-body-medium">
+                <InstagramLink handle={instagram} subject="do jogador" />
+              </p>
+            )}
           </div>
 
           <Button ref={closeRef} size="sm" onClick={onClose} aria-label="Fechar" className="shrink-0">

@@ -127,7 +127,7 @@ export const officialSiteUrl = (raw: string | undefined): string | null => {
 };
 
 /**
- * The canonical profile address for a handle.
+ * The handle alone, from whatever was written down.
  *
  * Accepts what a person is likely to paste — a bare handle, an `@handle`, or a
  * full URL carrying Instagram's `?hl=pt-br` locale hint — because the handle
@@ -138,7 +138,7 @@ export const officialSiteUrl = (raw: string | undefined): string | null => {
  * Returns null for anything that is not a plausible handle, which the UI
  * renders as no link rather than a broken one.
  */
-export const instagramUrl = (raw: string | undefined): string | null => {
+export const instagramHandle = (raw: string | undefined): string | null => {
   const value = raw?.trim();
   if (!value) return null;
 
@@ -151,9 +151,17 @@ export const instagramUrl = (raw: string | undefined): string | null => {
     .replace(/^@/, "");
 
   // Instagram's own rule: letters, digits, dots and underscores, up to 30.
-  if (!/^[A-Za-z0-9._]{1,30}$/.test(handle)) return null;
+  return /^[A-Za-z0-9._]{1,30}$/.test(handle) ? handle : null;
+};
 
-  return `https://www.instagram.com/${handle}/`;
+/**
+ * The address for a handle, built from the normalised handle rather than from
+ * the raw value — so a link and the `@handle` printed beside it cannot come to
+ * disagree about which profile they mean.
+ */
+export const instagramUrl = (raw: string | undefined): string | null => {
+  const handle = instagramHandle(raw);
+  return handle && `https://www.instagram.com/${handle}/`;
 };
 
 /**

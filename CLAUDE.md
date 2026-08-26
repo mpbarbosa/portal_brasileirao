@@ -451,6 +451,26 @@ runs it automatically: CI has no network dependency on a third party by design,
 and a link that rots on someone else's server is not a reason for a red build on
 a commit that did not touch it.
 
+`src/data/player-instagram.ts` holds players' own Instagram accounts, keyed by
+**player id** and hand-maintained for the same reason `club-instagram.ts` is: no
+provider carries a social account at any tier. Coverage is deliberately
+**partial** — 38 of ~950 listed players — and grows by hand, like `broadcasts.ts`.
+
+**There is no `check-player-instagram` script, and that is not an oversight.**
+Instagram serves the identical JavaScript shell for a real handle and an invented
+one — 200, `<title>Instagram</title>`, no Open Graph tags — so the check
+`check-hymns` and `check-stadium-photos` perform is simply unavailable here, and
+a script that fetched a profile and reported success would confirm nothing while
+looking exactly like the ones that confirm something. Candidates came from
+Wikidata's `P2003` joined to `squads.ts` on **exact date of birth**, then each was
+confirmed against a search result carrying the profile's own title, follower count
+and — where visible — a bio naming the club. That pass rejected or corrected
+**13 of 70**: six wrong handles (Ramón Sosa's `sosa` is somebody else's account;
+Nicolás De La Cruz differs from the recorded handle by one underscore), one
+account since **deactivated**, and the rest uncorroborated or split between two
+rival profiles. Absent is the honest answer for those. Do not add a handle
+without opening it.
+
 `src/data/club-wikipedia.ts` holds each club's article on the **Portuguese**
 Wikipedia, hand-maintained for the same reason. It stores the title alone
 ("Sociedade Esportiva Palmeiras"); `wikipediaUrl` in `club-core.ts` builds the
