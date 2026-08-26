@@ -93,6 +93,49 @@ test.describe("Jogadores", () => {
     await expect(page.getByRole("dialog")).not.toContainText(/no campeonato/i);
   });
 
+  test("a player with a recorded account gets a link to it", async ({ page }) => {
+    // Named rather than taken from `.first()`, unlike the specs above: the
+    // handle table is curated and covers a minority of the division, so the
+    // first player of the first club is very likely to have no account. This
+    // asserts the wiring, and the fixture is chosen for being in the table.
+    const panel = page.locator('[data-squad="corinthians"]');
+    await panel.locator("summary").click();
+    await panel.getByRole("button", { name: "Memphis Depay" }).click();
+
+    const link = page.getByRole("dialog").getByRole("link", { name: /Instagram/ });
+    // The handle itself is not asserted — it is curated data and may be
+    // corrected. That it resolves to a profile on Instagram is the contract.
+    await expect(link).toHaveAttribute("href", /^https:\/\/www\.instagram\.com\/[\w.]+\/$/);
+    // A window.opener handed to a third-party origin is the defect this
+    // catches, and it looks identical on the page when it is missing.
+    await expect(link).toHaveAttribute("rel", /noopener/);
+    await expect(link).toHaveAttribute("target", "_blank");
+  });
+
+  test("a player with no recorded account gets no link, not an empty one", async ({ page }) => {
+    // Coverage is partial by design, so the absent case is the common one and
+    // has to render as nothing rather than as a dash or a dead anchor.
+    const panel = page.locator('[data-squad="corinthians"]');
+    await panel.locator("summary").click();
+
+    const names = panel.locator("section ul li button");
+    for (const player of await names.all()) {
+      const name = (await player.innerText()).trim();
+      if (name === "Memphis Depay") continue;
+      await player.click();
+
+      const dialog = page.getByRole("dialog");
+      await expect(dialog).toBeVisible();
+      const links = await dialog.getByRole("link", { name: /Instagram/ }).count();
+      if (links === 0) {
+        await dialog.getByRole("button", { name: "Fechar" }).click();
+        return;
+      }
+      await dialog.getByRole("button", { name: "Fechar" }).click();
+    }
+    throw new Error("expected at least one player in the snapshot to have no recorded account");
+  });
+
   test("a club panel links to that club's own page", async ({ page }) => {
     const panel = firstPanel(page);
     const slug = await panel.getAttribute("data-squad");

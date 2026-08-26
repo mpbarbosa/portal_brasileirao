@@ -22,6 +22,7 @@ import {
   withInstagram,
   withWikipedia,
   hymnUrl,
+  instagramHandle,
   instagramUrl,
   wikipediaUrl,
 } from "@/club-core";
@@ -442,4 +443,14 @@ test("no two clubs share an article", () => {
   const titles = CLUBS.map((entry) => CLUB_WIKIPEDIA[entry.code]);
 
   assert.equal(new Set(titles).size, titles.length);
+});
+
+test("instagramHandle keeps only the handle, whatever was written down", () => {
+  // The handle and the URL must never disagree about which profile they mean,
+  // which is why the link component prints this rather than the raw value.
+  assert.equal(instagramHandle("@palmeiras"), "palmeiras");
+  assert.equal(instagramHandle("https://www.instagram.com/palmeiras/?hl=pt-br"), "palmeiras");
+  assert.equal(instagramHandle("  ecbahia  "), "ecbahia");
+  assert.equal(instagramHandle("não é um perfil"), null);
+  assert.equal(instagramHandle(undefined), null);
 });

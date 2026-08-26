@@ -148,7 +148,7 @@ time via `withWebsites`.
 **Instagram do clube**:
 The club's official Instagram profile, linked from its page beside the **Site
 oficial** and shown as Instagram's glyph followed by the bare handle
-(`@palmeiras`). The glyph is drawn inline in `ClubView` rather than fetched —
+(`@palmeiras`). The glyph is drawn inline in `ClubLinks` rather than fetched —
 the same rule the **Marca da emissora** follows, no runtime dependency on a
 third party for an asset — and it is the monochrome outline rather than Meta's
 gradient mark, so it takes the link's colour through `currentColor` and needs
@@ -166,6 +166,25 @@ than the handle, trusting a single source for a handle, giving the glyph a fixed
 colour (it would then need a plate in one theme, which is a lot of chrome for one
 mark beside a word), letting the link's underline run under it — an atomic inline
 box is not decorated, which is why the glyph is `inline-block`.
+
+**Instagram do jogador**:
+A player's own Instagram profile, shown on the **Card do jogador** under the
+club's name and rendered by the same `InstagramLink` as the **Instagram do
+clube** — the glyph left `ClubView` for `ClubLinks` when this became its second
+caller, which is the rule that moves a mark rather than copying it. Curated in
+`src/data/player-instagram.ts` and keyed by **player id**, never by name: the
+division fields two Dudus at one club, several Gabriels and more than one Pedro.
+Coverage is partial and always will be — most of the ~950 listed players have no
+account any source records — and a player without one shows no link rather than
+a dash, because an absent profile is not a missing value. The handle is read
+from the bundled table rather than from `/api/players/:id`, so it does not
+disappear when the enrichment fails.
+_Avoid_: keying on the player's name, waiting on the enrichment request before
+showing it, rendering a placeholder for a player with no account, saying
+"Instagram" alone where both a club's and a player's appear (the screen-reader
+suffix says whose), and — above all — writing down a handle nobody has opened:
+Wikidata was wrong or stale for nearly one in five of the candidates, including
+one account that had been deactivated.
 
 **Hino do clube**:
 The club's hymn, linked from its page as a third external link beside the **Site
