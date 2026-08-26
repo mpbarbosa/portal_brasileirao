@@ -206,11 +206,17 @@ network dependency on a third party by design.
 
 ## Player photographs
 
-**None ship, and the reason is a licence rather than a missing source.**
-football-data has no player imagery at any tier, so the Jogadores page draws
-initials. CBF does hold a headshot of every registered athlete, reachable
-without auth — the block is that it may not be reused. Established
-2026-08-25; recorded so the search is not run a second time.
+**Photographs do ship, and none of them are CBF's.**
+`src/data/player-photos.ts` carries 70, from **Wikimedia Commons**, vendored
+into `public/players/` by `npm run sync-player-photos` — the same arrangement as
+the stadium photographs above, with `credit`, `license` and `licenseUrl`
+required on each. football-data has no player imagery at any tier, so every
+player outside those 70 still draws initials.
+
+CBF is the obvious place to look for the rest: it holds an official headshot of
+**every** registered athlete and serves them without auth. This section records
+what is there, and why it is still not used. Established 2026-08-25, so that the
+search is not run a second time.
 
 ### `bid.cbf.com.br/foto-atleta/{atleta_id}` — the photo itself
 
@@ -260,7 +266,7 @@ the images, reads *Confederação Brasileira de Futebol © Todos os direitos
 reservados*. The response carries no licence header, the site links no licence
 page, and there is no field naming a photographer or a permitted use — nothing
 here resembles the `credit`/`license`/`licenseUrl` trio that makes the Commons
-stadium photographs usable.
+photographs in `player-photos.ts` and `stadiums.ts` usable.
 
 **CBF's Termos de uso then forbid the reuse explicitly.** Under *Vedações* the
 user may not "copiar, reproduzir e alterar, total ou parcialmente, qualquer
@@ -268,13 +274,19 @@ dado" from CBF's site. That reaches vendoring and hotlinking alike — vendoring
 is the copy it names, and hotlinking republishes the image on our page just the
 same.
 
-So this differs from the stadium photographs in kind, not in degree. There,
-attribution is a **condition** that reuse can satisfy, which is why `credit` is a
-required field on `StadiumPhoto`. Here attribution buys nothing, because nothing
-was granted: naming CBF beneath the image would be a citation, not a licence.
-Shipping these needs CBF's written permission, not a sync script — the same
-conclusion **Stadium photographs** above reaches about CBF's own venue imagery,
-and for the same reason.
+So this differs in kind from the photographs that do ship, not in degree. On
+Commons, attribution is a **condition** that reuse can satisfy — which is why
+`credit` is required on both `PlayerPhoto` and `StadiumPhoto`, and why the card
+drops the picture if the credit goes. Here attribution buys nothing, because
+nothing was granted: naming CBF beneath the image would be a citation, not a
+licence. Shipping these needs CBF's written permission, not a sync script — the
+same conclusion **Stadium photographs** above reaches about CBF's own venue
+imagery, and for the same reason.
+
+**This is the tempting fix for the coverage gap, and it is the wrong one.** 70
+of ~950 is thin, and CBF has all of them at uniform quality with no team
+photographs to weed out — which is precisely why it is worth having written down
+that the blocker is permission rather than effort.
 
 The mechanics point the same way even setting copyright aside: the response
 carries `Cache-Control: private, must-revalidate` and a `Set-Cookie` on every
