@@ -1156,6 +1156,61 @@ minute or the free-tier budget ran out. Keep it that way: do not add
 `FOOTBALL_DATA_TOKEN` as a repository secret to "test the live path". If the live
 mapping needs coverage, add a unit test with a captured payload.
 
+## The deploy pipeline
+
+`main` deploys itself. A push to `main` that passes `check` and `e2e` runs the
+`deploy` job, and about four minutes after a merge the new commit is serving.
+
+**There are no long-lived AWS credentials and no inbound SSH.** The job mints an
+OIDC token, assumes `portal-brasileirao-deploy`, writes the payload to S3 and
+drives the host over SSM — so the security group stays pinned to the maintainer's
+address and GitHub holds no key that outlives the run.
+
+```
+push to main ──▶ check ─┐
+                        ├─▶ deploy ──▶ tar(dist, package.json, package-lock.json, shell_scripts)
+                 e2e ───┘               │
+                                        ├─▶ OIDC ──▶ sts:AssumeRoleWithWebIdentity
+                                        ├─▶ s3://…/releases/<sha>.tar.gz
+                                        ├─▶ ssm send-command ──▶ host
+                                        │     07_install_release.sh  (rsync into place)
+                                        │     06_redeploy.sh         (npm ci --omit=dev,
+                                        │                             restart, health)
+                                        └─▶ assert <sha> at /api/health
+```
+
+**The release is self-describing, and that is what makes the last step mean
+something.** `scripts/build.sh` stamps the commit and the build time into the
+bundle at esbuild time, so `/api/health` reports the commit it was built from
+whatever host it lands on. The workflow compares that against the sha it just
+built — strictly stronger than an uptime heuristic, which a fast restart of the
+*previous* bundle would also satisfy.
+
+**The host is too small to build on.** It receives a prebuilt payload and runs
+`npm ci --omit=dev`; nothing compiles there. That is also why a runtime dependency
+stranded in `devDependencies` stays invisible until the bundle boots, which is the
+failure `check`'s boot step exists to catch.
+
+**`shell_scripts/` travels inside the tarball**, so the host always runs the deploy
+logic matching the release it just received rather than whatever was left there by
+the last one.
+
+**The OIDC trap, because it fails in a way that reads as a permissions problem.**
+This account issues the *immutable* form of the `sub` claim — it embeds the numeric
+owner and repo ids (`repo:owner@<id>/repo@<id>:ref:…`), not the documented
+`repo:owner/repo:ref:…` shape, so a trust policy written against the documented
+form silently never matches. If role assumption starts failing with "Not authorized
+to perform sts:AssumeRoleWithWebIdentity", print the claim before touching anything
+else.
+
+`scripts/deploy.sh` is the workstation path — rsync over SSH — and ends in the same
+`06_redeploy.sh`, so both routes converge and only the transport differs. It builds
+from the **working tree** rather than from a git ref, which is why **Working
+alongside other sessions** above says never to run it by hand.
+
+What is still missing from this pipeline, and the phased plan for closing it, is
+`docs/cicd-plan.md`.
+
 ## Not built yet
 
 *(Nothing outstanding — deploys are automated; see below.)*
@@ -1168,18 +1223,18 @@ and `certbot renew --dry-run` passes, so renewal is unattended.
 
 Because certbot owns that file, **re-running `04_setup_nginx.sh` overwrites its edits** and
 drops the site back to plain HTTP. That is recoverable — re-run `05_setup_tls.sh` — but the
-site serves HTTP in between, so do not run `04` casually on a host that already has TLS. Port the deploy scripts
-from the sibling repo when shipping, including its constraint that the production host is
-too small to build on (it pulls a prebuilt payload rather than running `npm run build`).
+site serves HTTP in between, so do not run `04` casually on a host that already has TLS.
 
 The live provider path is verified: with a real token the app renders the current Série A
 table from football-data.org. Verified against a live payload, v4 reports scores as
 `fullTime.home`/`away`.
 
-**No deploy has ever run against a real host.** The preflight, every argument-validation
-path, and the rsync semantics (including that the remote `.env` survives) are verified
-locally, but no EC2 instance has received this payload — the remote half of `deploy.sh` and
-all of `shell_scripts/` are unexercised.
+**Every one of those paths has now run against the real host**, and this paragraph
+used to say the opposite long after it stopped being true — which is worth knowing
+about a file whose whole claim is that it describes what the code does. `06` and
+`07` execute on every release, and the rsync semantics, including that the remote
+`.env` survives, are exercised rather than reasoned about. What actually runs is
+**The deploy pipeline** above.
 
 One known data mismatch: upstream club codes are not always the local seed codes — São
 Paulo is `PAU` upstream, not `SAO`, and the real 2026 division includes clubs absent from
