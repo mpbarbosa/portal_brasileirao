@@ -205,12 +205,18 @@ export const pageMeta = (
     case "estadio": {
       const stadium = findStadium(context.stadiums ?? [], route.key);
       if (!stadium) {
-        return { title: suffix("Estádio"), description: SITE_DESCRIPTION };
+        return { title: suffix("Estádio"), description: SITE_DESCRIPTION, image: site };
       }
 
       return {
         title: suffix(stadium.name),
         description: stadiumDescription(stadium),
+        // The site's card, not the photograph of the ground the page itself
+        // shows. An `og:image` is republication on somebody else's surface,
+        // where the credit line the CC BY-SA licence requires does not travel
+        // with it — so the card is the choice that does not put an
+        // unattributed photo into every scraper's cache.
+        image: site,
       };
     }
 
