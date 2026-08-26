@@ -1,9 +1,19 @@
 import { useEffect, useRef, useState } from "react";
 
-import { ageOn, mergePlayer, playerInstagram, positionLabel } from "@/player-core";
+import {
+  ageOn,
+  mergePlayer,
+  playerInstagram,
+  PLAYER_PHOTO_WIDTHS,
+  playerPhotoPage,
+  playerPhotoUrl,
+  positionLabel,
+} from "@/player-core";
 import { Button } from "@/src/components/Button";
 import { InstagramLink, WikipediaLink } from "@/src/components/ClubLinks";
+import { LINK_UNDERLINE } from "@/src/components/interaction";
 import { PLAYER_INSTAGRAM } from "@/src/data/player-instagram";
+import { PLAYER_PHOTOS } from "@/src/data/player-photos";
 import { PLAYER_WIKIPEDIA } from "@/src/data/player-wikipedia";
 import type { Player, Scorer } from "@/src/types";
 
@@ -107,6 +117,7 @@ export function PlayerOverlayCard({ player, scorer, onClose }: PlayerOverlayCard
    */
   const instagram = playerInstagram(player.id, PLAYER_INSTAGRAM);
   const wikipedia = PLAYER_WIKIPEDIA[player.id];
+  const photo = PLAYER_PHOTOS[player.id];
 
   return (
     <dialog
@@ -142,7 +153,24 @@ export function PlayerOverlayCard({ player, scorer, onClose }: PlayerOverlayCard
     >
       <div>
         <div className="flex items-start justify-between gap-4">
-          <div className="min-w-0">
+          {photo && (
+            /* Square and cropped rather than letterboxed: these arrive at
+               whatever shape their photographer framed, mostly portrait, and a
+               row of cards should not shift about. `object-top` because a
+               head-and-shoulders portrait keeps the face high in the frame —
+               centring the crop cuts foreheads. */
+            <img
+              src={playerPhotoUrl(player.id, PLAYER_PHOTO_WIDTHS[0])}
+              srcSet={PLAYER_PHOTO_WIDTHS.map((w) => `${playerPhotoUrl(player.id, w)} ${w}w`).join(", ")}
+              sizes="64px"
+              alt={photo.alt}
+              width={64}
+              height={64}
+              decoding="async"
+              className="size-16 shrink-0 rounded-medium border border-line object-cover object-top"
+            />
+          )}
+          <div className="min-w-0 flex-1">
             <h2 id="jogador-nome" className="truncate text-title-large font-bold">
               {enriched.shirtNumber !== undefined && (
                 <span className="mr-2 text-ink-faint tabular-nums">
@@ -176,6 +204,39 @@ export function PlayerOverlayCard({ player, scorer, onClose }: PlayerOverlayCard
           {detail("Nacionalidade", enriched.nationality ?? null)}
           {detail("Idade", age === null ? null : `${age} anos`)}
         </dl>
+
+        {photo && (
+          /* Not optional chrome a redesign may quietly drop: every licence in
+             `player-photos.ts` except CC0 requires the photographer to be named
+             wherever the picture appears, and vendoring the bytes made this app
+             the publisher of its copy. If the credit goes, the photograph has
+             to go with it.
+
+             At the foot of the card rather than under the image, because the
+             image is 64px in a header row and a two-line credit beside it would
+             crowd the player's name off the card on a phone. */
+          <p className="mt-4 text-body-small text-ink-faint">
+            Foto:{" "}
+            <a
+              href={playerPhotoPage(photo)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={LINK_UNDERLINE}
+            >
+              {photo.credit}
+            </a>
+            {" · "}
+            <a
+              href={photo.licenseUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={LINK_UNDERLINE}
+            >
+              {photo.license}
+            </a>
+            {" · via Wikimedia Commons"}
+          </p>
+        )}
 
         {scorer && (
           <section className="mt-5 border-t border-line pt-4">

@@ -204,6 +204,22 @@ title as the link text, sharing the club's screen-reader suffix, and trusting a
 Wikidata sitelink without reading the article — three of them named a different
 player of the same name.
 
+**Foto do jogador**:
+A photograph of a player, shown at 64px in the header of the **Card do jogador**,
+from Wikimedia Commons and served from this app's own origin. Cropped square with
+the crop anchored to the top, because these arrive at whatever shape their
+photographer framed and a head-and-shoulders portrait keeps the face high.
+Carries a **credit line** at the foot of the card naming the photographer and the
+licence, both as links — that is a condition of showing the picture, not chrome.
+The alt says what the picture *shows* — which shirt, which year — rather than the
+player's name, which the heading beside it already gives: a free photograph of a
+footballer is usually years old and taken at a previous club, and a reader who
+cannot see it is owed that.
+_Avoid_: taking a picture from the player's Instagram (their copyright; a public
+profile licenses nothing), hotlinking Commons (it rate-limits, and several cards
+in a row is normal reading), writing the alt from the file name, dropping the
+credit in a redesign, and assuming the photograph shows the player's current club.
+
 **Hino do clube**:
 The club's hymn, linked from its page as a third external link beside the **Site
 oficial** and the **Instagram do clube**, under the same rules: a monochrome

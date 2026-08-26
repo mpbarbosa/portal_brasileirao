@@ -43,78 +43,12 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import path from "node:path";
 
-import { creditMatches, deedFor, plain, redistributable } from "@/commons-core";
+import { creditMatches, deedFor, redistributable } from "@/commons-core";
+import { commonsBytes, commonsFacts, pause } from "@/scripts/commons-api";
 import { STADIUMS } from "@/src/data/stadiums";
 import { PHOTO_WIDTHS } from "@/venue-core";
 
 const OUT = path.join(process.cwd(), "public/stadiums");
-
-/** Wikimedia asks for a real contact in the User-Agent, and answers generic
- *  ones with 403. */
-const UA = "portal-brasileirao/1.0 (https://brasileirao.mpbarbosa.com; mpbarbosa@gmail.com)";
-
-const API = "https://commons.wikimedia.org/w/api.php";
-
-const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-
-interface CommonsFacts {
-  license: string;
-  attribution: string;
-  artist: string;
-  mime: string;
-}
-
-const commons = async (file: string): Promise<CommonsFacts | null> => {
-  const url =
-    `${API}?action=query&format=json` +
-    `&titles=${encodeURIComponent(`File:${file}`)}` +
-    `&prop=imageinfo&iiprop=extmetadata|mime` +
-    `&iiextmetadatafilter=LicenseShortName|Artist|Attribution`;
-
-  const response = await fetch(url, {
-    headers: { "User-Agent": UA },
-    signal: AbortSignal.timeout(20_000),
-  });
-  if (!response.ok) throw new Error(`${response.status} reading ${file}`);
-
-  const body = (await response.json()) as {
-    query?: {
-      pages?: Record<
-        string,
-        { missing?: string; imageinfo?: { mime?: string; extmetadata?: Record<string, { value: string }> }[] }
-      >;
-    };
-  };
-
-  const page = Object.values(body.query?.pages ?? {})[0];
-  if (!page || page.missing !== undefined) return null;
-
-  const meta = page.imageinfo?.[0]?.extmetadata ?? {};
-  return {
-    license: plain(meta.LicenseShortName?.value ?? ""),
-    attribution: plain(meta.Attribution?.value ?? ""),
-    artist: plain(meta.Artist?.value ?? ""),
-    mime: page.imageinfo?.[0]?.mime ?? "",
-  };
-};
-
-/**
- * Fetch one rendering. `Special:FilePath` is used here and nowhere else now:
- * it reaches a file by **title**, which is what the data stores, and follows a
- * rename where the hashed `upload.wikimedia.org` path does not. That property
- * is worth a redirect in a script run by hand; it was not worth one on every
- * reader's page view, which is the whole point of this file.
- */
-const download = async (file: string, width: number): Promise<Buffer> => {
-  const url = `https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(file)}?width=${width}`;
-  const response = await fetch(url, {
-    headers: { "User-Agent": UA },
-    signal: AbortSignal.timeout(60_000),
-  });
-  if (!response.ok) throw new Error(`${response.status} downloading ${file} at ${width}px`);
-
-  return Buffer.from(await response.arrayBuffer());
-};
 
 /** Annotated on the declaration, not just on the arrow: TypeScript only
  *  narrows past a never-returning call when the binding itself is typed. */
@@ -140,7 +74,7 @@ for (const [slug, facts] of Object.entries(STADIUMS)) {
   const photo = facts.photo;
   if (!photo) continue;
 
-  const there = await commons(photo.file);
+  const there = await commonsFacts(photo.file, "sync-stadium-photos");
   if (!there) fail(`Commons has no File:${photo.file} — deleted or renamed (${slug})`);
 
   if (!there.mime.startsWith("image/")) {
@@ -164,13 +98,11 @@ for (const [slug, facts] of Object.entries(STADIUMS)) {
   }
 
   for (const width of PHOTO_WIDTHS) {
-    const bytes = await download(photo.file, width);
+    const bytes = await commonsBytes(photo.file, width, "sync-stadium-photos");
     writeFileSync(path.join(OUT, `${slug}-${width}.jpg`), bytes);
     total += bytes.length;
     console.log(`  ${slug}-${width}.jpg  ${(bytes.length / 1024).toFixed(0)}kB`);
-    // Deliberately unhurried: the 429 that motivated this script is a reminder
-    // that Commons is someone else's server.
-    await sleep(1200);
+    await pause(1200);
   }
 
   credits.push({

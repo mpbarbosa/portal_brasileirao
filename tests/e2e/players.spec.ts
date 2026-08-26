@@ -139,6 +139,51 @@ test.describe("Jogadores", () => {
     await expect(dialog.getByRole("link", { name: /verbete do jogador/ })).toBeVisible();
   });
 
+  test("a recorded photograph is served, not a broken box", async ({ page }) => {
+    const panel = page.locator('[data-squad="corinthians"]');
+    await panel.locator("summary").click();
+    await panel.getByRole("button", { name: "Memphis Depay" }).click();
+
+    const photo = page.getByRole("dialog").locator("img[src^='/players/']");
+    await expect(photo).toBeVisible();
+
+    // The SPA catch-all answers 200 with the HTML shell for a path that is not
+    // a file, so a photograph in the data but never synced would still render
+    // an <img> and still "load" as far as the DOM is concerned. Only the
+    // decoded size tells the two apart.
+    const width = await photo.evaluate((img) => (img as HTMLImageElement).naturalWidth);
+    expect(width).toBeGreaterThan(0);
+
+    // The alt says what the picture shows, never the player's name — the name
+    // is already the heading beside it.
+    const alt = await photo.getAttribute("alt");
+    expect(alt?.trim().length ?? 0).toBeGreaterThan(0);
+  });
+
+  test("a photograph brings its credit with it", async ({ page }) => {
+    // Not chrome: every licence in player-photos.ts except CC0 requires the
+    // photographer to be named wherever the picture appears, and vendoring the
+    // bytes made this app the publisher of its copy. If this ever goes green
+    // with the photo present and the credit gone, the photo has to come out.
+    const panel = page.locator('[data-squad="corinthians"]');
+    await panel.locator("summary").click();
+    await panel.getByRole("button", { name: "Memphis Depay" }).click();
+
+    const dialog = page.getByRole("dialog");
+    await expect(dialog.locator("img[src^='/players/']")).toBeVisible();
+    await expect(dialog.getByText(/^Foto:/)).toBeVisible();
+    // Both the photographer and the licence have to be reachable, which is what
+    // "credited" means — a name in plain text is not the link the deed asks for.
+    await expect(dialog.getByRole("link", { name: /commons\.wikimedia\.org|Joe Sins/ })).toHaveAttribute(
+      "href",
+      /commons\.wikimedia\.org\/wiki\/File:/,
+    );
+    await expect(dialog.getByRole("link", { name: /^CC / })).toHaveAttribute(
+      "href",
+      /creativecommons\.org/,
+    );
+  });
+
   test("a player with no recorded account gets no link, not an empty one", async ({ page }) => {
     // Coverage is partial by design, so the absent case is the common one and
     // has to render as nothing rather than as a dash or a dead anchor.
