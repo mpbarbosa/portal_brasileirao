@@ -44,6 +44,23 @@ export interface PageMeta {
   image?: PreviewImage;
 }
 
+/**
+ * What `pageMeta` itself returns, which is `PageMeta` with one difference:
+ * `image` is a **required key** that may hold `undefined`.
+ *
+ * That is the whole point of the type. `image` is optional on `PageMeta`
+ * because `injectMeta` renders a page that genuinely has no picture, and its
+ * callers should not have to say so. But a *route* always has an answer — the
+ * site card, or a crest — so a `case` that never mentions `image` is an
+ * omission rather than a decision, and it used to compile. Every stadium page
+ * shipped with no preview image for exactly that reason: the branch returned a
+ * title and a description, nothing failed, and the pages unfurled bare.
+ *
+ * Requiring the key does not require a value. A branch with no image writes
+ * `image: undefined` and says so out loud.
+ */
+type RouteMeta = Omit<PageMeta, "image"> & { image: PreviewImage | undefined };
+
 /** Whatever the caller happens to have loaded. Every field is optional: the
  *  metadata degrades to something sensible rather than waiting for data. */
 export interface MetaContext {
@@ -136,7 +153,7 @@ export const pageMeta = (
   route: Route,
   context: MetaContext = {},
   origin = "",
-): PageMeta => {
+): RouteMeta => {
   const site = siteImage(origin);
 
   switch (route.section) {
