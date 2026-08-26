@@ -5,6 +5,9 @@ import {
   ageOn,
   mergePlayer,
   playerInstagram,
+  PLAYER_PHOTO_WIDTHS,
+  playerPhotoPage,
+  playerPhotoUrl,
   playerWikipedia,
   positionLabel,
 } from "@/player-core";
@@ -129,5 +132,34 @@ test("playerWikipedia carries a disambiguated title through intact", () => {
   assert.equal(
     playerWikipedia("a", { a: "Dudu (futebolista, 1992)" }),
     "https://pt.wikipedia.org/wiki/Dudu_(futebolista%2C_1992)",
+  );
+});
+
+test("playerPhotoUrl addresses our own origin, keyed by player id", () => {
+  // Not Commons: the bytes are vendored, and a path pointing back at Commons is
+  // the 429 that vendoring exists to avoid.
+  assert.equal(playerPhotoUrl("8472", 64), "/players/8472-64.jpg");
+  assert.equal(playerPhotoUrl("8472", 128), "/players/8472-128.jpg");
+});
+
+test("every width the card asks for is one the sync writes", () => {
+  // Two copies of this list is how the card comes to request a size nobody
+  // vendored — which fails as a missing image, not as a build error.
+  assert.deepEqual([...PLAYER_PHOTO_WIDTHS], [64, 128]);
+});
+
+test("playerPhotoPage links the Commons file page the licence requires", () => {
+  const photo = {
+    file: "Memphis Depay 2019.jpg",
+    alt: "…",
+    credit: "Derivative work: Joe Sins",
+    license: "CC BY-SA 4.0",
+    licenseUrl: "https://creativecommons.org/licenses/by-sa/4.0/",
+  };
+  // Underscores first, then encoding — the other order percent-encodes the
+  // underscores it just introduced and lands on no page at all.
+  assert.equal(
+    playerPhotoPage(photo),
+    "https://commons.wikimedia.org/wiki/File:Memphis_Depay_2019.jpg",
   );
 });

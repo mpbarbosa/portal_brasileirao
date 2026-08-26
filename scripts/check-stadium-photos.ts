@@ -45,64 +45,13 @@
  *   0  every photo resolves and its credit and licence still match Commons.
  *   1  at least one does not — the line says which and why.
  */
-import { creditMatches, deedFor, fold, plain } from "@/commons-core";
+import { creditMatches, deedFor, fold } from "@/commons-core";
+import { commonsFacts, userAgent } from "@/scripts/commons-api";
 import { STADIUMS } from "@/src/data/stadiums";
 import { buildStadiums, PHOTO_WIDTHS } from "@/venue-core";
 import type { Club, Match, StadiumPhoto } from "@/src/types";
 
 const appUrl = process.argv[2];
-
-/**
- * Commons asks reusers to identify themselves. An anonymous script hammering
- * the API is what its rate limiter is for, and being nameless is how this ends
- * up throttled for reasons nobody can diagnose from the output.
- */
-const UA = "portal-brasileirao/1.0 (https://brasileirao.mpbarbosa.com; check-stadium-photos)";
-
-const API = "https://commons.wikimedia.org/w/api.php";
-
-interface CommonsFacts {
-  license: string;
-  /** The wording the photographer dictated, where they dictated one. */
-  attribution: string;
-  /** Who Commons says took it. */
-  artist: string;
-  description: string;
-  mime: string;
-}
-
-const commons = async (file: string): Promise<CommonsFacts | null> => {
-  const url =
-    `${API}?action=query&format=json&origin=*` +
-    `&titles=${encodeURIComponent(`File:${file}`)}` +
-    `&prop=imageinfo&iiprop=extmetadata|mime` +
-    `&iiextmetadatafilter=LicenseShortName|LicenseUrl|Artist|Attribution|ImageDescription`;
-
-  const response = await fetch(url, {
-    headers: { "User-Agent": UA },
-    signal: AbortSignal.timeout(20_000),
-  });
-  if (!response.ok) throw new Error(`Commons API answered ${response.status}`);
-
-  const body = (await response.json()) as {
-    query?: { pages?: Record<string, { missing?: string; imageinfo?: { mime?: string; extmetadata?: Record<string, { value: string }> }[] }> };
-  };
-
-  const page = Object.values(body.query?.pages ?? {})[0];
-  // A missing file comes back as a page stub with `missing`, not as an error.
-  if (!page || page.missing !== undefined) return null;
-
-  const info = page.imageinfo?.[0];
-  const meta = info?.extmetadata ?? {};
-
-  return {
-    license: plain(meta.LicenseShortName?.value ?? ""),
-    attribution: plain(meta.Attribution?.value ?? ""),
-    artist: plain(meta.Artist?.value ?? ""),
-    description: plain(meta.ImageDescription?.value ?? ""),
-    mime: info?.mime ?? "",
-  };
-};
 
 /**
  * Fetch the exact address the page puts in `src`, and confirm Commons answers
@@ -118,7 +67,7 @@ const thumbnailRenders = async (photo: StadiumPhoto): Promise<string | null> => 
   // our copy while claiming to check the source.
   const source = `https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(photo.file)}?width=${PHOTO_WIDTHS[0]}`;
   const response = await fetch(source, {
-    headers: { "User-Agent": UA },
+    headers: { "User-Agent": userAgent("check-stadium-photos") },
     signal: AbortSignal.timeout(20_000),
   });
   if (!response.ok) return `thumbnail answered ${response.status}`;
@@ -168,7 +117,7 @@ const check = async (
     problems.push("no photo recorded");
   } else {
     try {
-      const there = await commons(photo.file);
+      const there = await commonsFacts(photo.file, "check-stadium-photos");
 
       if (!there) {
         problems.push(`Commons has no File:${photo.file} — deleted or renamed`);

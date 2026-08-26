@@ -117,6 +117,40 @@ export interface StadiumPhoto {
   licenseUrl: string;
 }
 
+/**
+ * A photograph of a player, from Wikimedia Commons.
+ *
+ * Deliberately the same shape as `StadiumPhoto`, and deliberately **not** the
+ * same type: the two carry different `alt` conventions and are keyed by
+ * different things, and folding them together would invite one page's rules
+ * onto the other's data. What they do share is the part that is not negotiable
+ * — `credit`, `license` and `licenseUrl` are **required** here as they are
+ * there, because a player may have no photograph but may not have an
+ * unattributed one.
+ */
+export interface PlayerPhoto {
+  /** Commons file title, without the `File:` prefix. */
+  file: string;
+  /**
+   * What the picture shows, in pt-BR. Written by hand after looking at the
+   * image — never from the file name.
+   *
+   * The convention differs from a stadium's, where the heading already names
+   * the ground. Here the card names the player beside the photo, so the alt
+   * says what is *visible about this picture* rather than repeating the name:
+   * which shirt, which era. Free photographs of footballers are usually years
+   * old and taken at a previous club or on international duty, and a reader who
+   * cannot see it is owed that rather than being left to assume it is current.
+   */
+  alt: string;
+  /** The attribution line, verbatim from Commons. */
+  credit: string;
+  /** Licence short name, as Commons spells it: "CC BY-SA 4.0". */
+  license: string;
+  /** Where that licence is written down. */
+  licenseUrl: string;
+}
+
 export interface StadiumFacts {
   /**
    * The name to display: the popular one a reader would say out loud, properly

@@ -512,6 +512,56 @@ when editing the checker: pt-BR writes the first of the month as an ordinal, so
 `1º` and `1.º` are accepted beside `1`, and without that Bruno Fuchs reads as a
 mismatch on every run.
 
+`src/data/player-photos.ts` holds a photograph for a player, keyed by player id,
+from **Wikimedia Commons** — the bytes vendored into `public/players/` by
+`npm run sync-player-photos` and served from our own origin.
+
+**Instagram is not a source and cannot be**, which is worth stating because the
+handle sits in the file next door and the question comes up. A player's own
+photographs are their copyright; a public profile licenses nothing, the CDN
+addresses expire, and hotlinking them republishes someone's work without
+permission. Commons is the source precisely because every file carries a licence
+that says what a reuser may do.
+
+The vendoring argument is **stronger here than for stadiums**. That one had to be
+made from what a future design might do, since a stadium page shows one image.
+Opening several player cards in a row is not a future design — it is how the
+Jogadores page is read, and it is exactly the shape that earns Commons' 429.
+
+```sh
+npm run sync-player-photos    # re-reads every licence and credit, then vendors
+npm run check-player-photos   # …and verifies what is on disk still matches
+```
+
+`credit`, `license` and `licenseUrl` are **required** on `PlayerPhoto`: a player
+may have no photograph, but may not have an unattributed one. The credit renders
+at the foot of the card as a condition of showing the picture — if it goes, the
+picture goes with it. `tests/player-photos.test.ts` asserts the *data* rather
+than the code for that reason: the compiler is satisfied by an empty string,
+which reads on the page as a missing attribution.
+
+**`redistributable` refuses "Public domain", and that is the licence to think
+hardest about before widening.** It is the second most common among candidate
+player photographs (23 of 125 surveyed), so the temptation is real; but on
+Commons it is an umbrella over dozens of tags, some country-specific and some
+contested, and `deedFor` cannot name the deed a reuser would rely on. Widening it
+is a change to `commons-core.ts` with the stadium photographs downstream.
+
+**Two traps, both of which the stadium photographs hit first.** A file that
+resolves is not a photograph of the right person — for a player the trap is a
+team group shot or a namesake, where for a ground it was a logo. And a free
+photograph of a footballer is usually **old**: Commons has what somebody was free
+to release, rarely this season and rarely this club. Memphis Depay's shows him at
+Olympique Lyonnais in 2019. That is why `alt` names the shirt and the year rather
+than the player, whom the card already names beside it.
+
+`scripts/commons-api.ts` holds the HTTP half — fetching a file's metadata and its
+bytes — shared by all four Commons scripts. It was extracted when the player
+scripts would have made a fourth copy, and the two stadium copies had already
+drifted: one asked Commons for `ImageDescription` and the other did not. It stays
+separate from `commons-core.ts`, which is pure and holds the *judgement*, because
+that split is what lets the licence rules be unit-tested without a network.
+
 `src/data/stadiums.ts` holds each ground's official name, capacity and year of
 inauguration, hand-maintained for the same reason as the hymns — **no provider carries
 any of it**, and CBF's feed stops at a name, a city and a state. Keyed by stadium slug,
