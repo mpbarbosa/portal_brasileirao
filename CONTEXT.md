@@ -128,6 +128,27 @@ _Avoid_: "team"/"time" for the entity (`Club` is the domain word here; "team" is
 what the upstream API calls it, which is why the adapter type is `RawTeam`),
 "sigla" as an identifier (see **tla**).
 
+**Sede**:
+The club's headquarters as a postal address, carried on `Club.address` and shown
+on the **Clube** page under the club's name, above the row of links, as a pin
+glyph followed by one line of text. The pin is the only mark in that header that
+is not a link: the app holds no map, so it says "this is a place" and stops.
+Comes from the provider's teams endpoint, like the **Site oficial**, and is the
+same field the club's `state` is already parsed out of — so it costs no request
+that was not already being made.
+Cleaned by `clubAddress` before it is written down, because football-data
+interpolates the string without checking its own columns: a club missing a street
+or a postcode arrives as the literal `"null São Paulo, SP null"`, and three of the
+twenty do. Only a leading and a trailing `null` token is stripped. Everything
+between them is left verbatim — there is no separator between the neighbourhood
+and the city (`"Bairro Laranjeiras Rio de Janeiro, RJ"`), so the address cannot be
+split into components, which is why it is **a line rather than fields**.
+_Avoid_: "endereço" on the page (it is the club's seat, not a delivery address,
+and "endereço" also reads as a URL — which is exactly what the three links beside
+it are), "localização" (reads as a map pin the app cannot honour), parsing the
+line into street/bairro/cidade, truncating it (the cut falls on the city and the
+state, which is the half worth reading).
+
 **Site oficial**:
 The club's own website, linked from its page and shown as a globe glyph followed
 by the bare host (`palmeiras.com.br`). The globe distinguishes the club's *own*

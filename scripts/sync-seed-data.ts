@@ -21,7 +21,7 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 
-import { officialSiteUrl } from "@/club-core";
+import { clubAddress, officialSiteUrl } from "@/club-core";
 import {
   clubFromTeam,
   mapMatch,
@@ -75,7 +75,9 @@ interface SeedTeamsResponse {
   teams?: { id: number; address?: string | null; website?: string | null }[];
 }
 
-/** Brazilian state from the postal address, e.g. "… Rio de Janeiro, RJ 22231-220". */
+/** Brazilian state from the postal address, e.g. "… Rio de Janeiro, RJ 22231-220".
+ *  Reads the raw string rather than the cleaned one, because the two-letter code
+ *  survives `clubAddress` untouched and this pattern predates it. */
 const stateFrom = (address: string | null | undefined): string | null =>
   address?.match(/,\s*([A-Z]{2})\b/)?.[1] ?? null;
 
@@ -99,7 +101,13 @@ const clubs: SeedClub[] = rawTeams
       process.exit(1);
     }
     const website = officialSiteUrl(team.website ?? undefined);
-    return { ...club, state: stateFrom(team.address), ...(website ? { website } : {}) };
+    const address = clubAddress(team.address);
+    return {
+      ...club,
+      state: stateFrom(team.address),
+      ...(website ? { website } : {}),
+      ...(address ? { address } : {}),
+    };
   })
   .sort((a, b) => a.shortName.localeCompare(b.shortName, "pt-BR"));
 
@@ -148,6 +156,7 @@ ${clubs
       (club.crest ? `, crest: ${ts(club.crest)}` : "") +
       (club.website ? `, website: ${ts(club.website)}` : "") +
       (club.state ? `, state: ${ts(club.state)}` : "") +
+      (club.address ? `, address: ${ts(club.address)}` : "") +
       ` },`,
   )
   .join("\n")}

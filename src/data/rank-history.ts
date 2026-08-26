@@ -5,8 +5,8 @@ import type { ClubRankHistory } from "@/src/types";
  * Regenerate with: npx tsx scripts/sync-rank-history.ts
  *
  * Every club's position in the classificação after each of rounds 1–24,
- * derived from the seed fixtures in src/data/matches.ts (snapshot 2026-08-25).
- * Written 2026-08-25.
+ * derived from the seed fixtures in src/data/matches.ts (snapshot 2026-08-26).
+ * Written 2026-08-26.
  *
  * Positions come from `computeStandings` applied round by round, so they honour
  * the same CBF tie-breakers as the live table and count only FINISHED matches.

@@ -48,6 +48,15 @@ export interface Club {
   /** Home state (e.g. "RJ"). Absent for clubs derived from a provider that
    *  doesn't carry it — render it conditionally. */
   state?: string;
+  /**
+   * The club's sede as one line ("Rua Álvaro Chaves 41, Bairro Laranjeiras Rio
+   * de Janeiro, RJ 22231-220"), already cleaned by `clubAddress` — see there
+   * for why the raw upstream string cannot be rendered as it arrives, and why
+   * this is a line rather than parsed components. Absent for a club whose
+   * provider does not carry one, and for one whose address is nothing but the
+   * city; render it conditionally.
+   */
+  address?: string;
 }
 
 /**
