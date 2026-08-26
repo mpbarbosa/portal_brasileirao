@@ -42,8 +42,18 @@ ls -l --time-style=+%H:%M:%S <path>     # written seconds ago, or hours?
 pgrep -af '<producing-command>'         # is it still running?
 ```
 
-`pgrep -af` matches **your own shell** when the pattern appears in the command
-you just typed. Read the matches, do not count them.
+**`pgrep` will match your own command, always.** Every tool-run command sits in
+the process table as a `zsh -c …` line containing the whole pattern for as long
+as the `pgrep` inside it runs, so this is guaranteed rather than incidental.
+Measured with **nothing** actually running:
+
+    pgrep -cf 'screenshot\.ts'               -> 1   the wrapper
+    pgrep -cf 'tsx scripts/screenshot\.ts'   -> 2   also the wrapper
+    pgrep -af 'screenshot\.ts' | grep -v 'zsh -c'  -> 0   correct
+
+Being more specific does not help — a longer pattern is still in your own command
+line. **Read the matches, or exclude the wrapper; never count, and never gate an
+`if` on it.** A count is a silent false positive every single time.
 
 For PRs, ownership often **cannot** be established: sessions share one GitHub
 account, so `--author` cannot separate you from anyone else. Say so rather than
