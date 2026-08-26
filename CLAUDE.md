@@ -1186,6 +1186,35 @@ whatever host it lands on. The workflow compares that against the sha it just
 built — strictly stronger than an uptime heuristic, which a fast restart of the
 *previous* bundle would also satisfy.
 
+**A release must be a descendant of what is live.** `concurrency: deploy-production`
+serialises releases but does **not** order them, and on 2026-08-26 a queue that
+drained after an Actions incident installed `cbf98f7` and then `8d95b17`, which is
+its parent — production moved backwards, and every check this pipeline had
+*passed*. That is the part worth understanding: "Verify the live site is this
+commit" asks whether the live commit is the one this run built, and it was.
+Nothing asked whether it was newer than what it replaced. The `deploy` job now
+reads the running `/api/health` immediately before installing and refuses a commit
+that is an ancestor of it, naming how many commits the install would undo.
+
+Three things about that guard are deliberate. It checks out with **`fetch-depth: 0`**,
+because a depth-1 clone holds neither the live commit nor the history connecting
+it to this one, and a guard that cannot answer protects nothing. It sits **after**
+the S3 publish, so the window between reading the live commit and replacing it is
+as narrow as possible — the orphaned object is keyed by sha and a rollback will
+want it there anyway. And it fails **open** on an unreachable site, a health
+payload with no usable sha, or a commit this checkout does not have: during an
+outage the ability to deploy is worth more than the ordering this protects, and a
+site that is down cannot tell you what it is running. Override it for a deliberate
+rollback by dispatching the workflow with `allow_non_descendant=true`.
+
+**`deploy` runs for any run *for* `main`, not only a push-triggered one.** The
+event gate it used to carry made `workflow_dispatch` useless in precisely the
+window it was needed: with push events being dropped in that same incident there
+was no way to carry a merged commit to the host, and `6325fa5`, `e065a8d` and
+`8fa12e5` are empty commits that exist only to emit a push event. It is also what
+makes the guard testable at all — `main` only moves forward, so no push can ever
+present an ancestor to refuse.
+
 **The host is too small to build on.** It receives a prebuilt payload and runs
 `npm ci --omit=dev`; nothing compiles there. That is also why a runtime dependency
 stranded in `devDependencies` stays invisible until the bundle boots, which is the

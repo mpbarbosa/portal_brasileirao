@@ -242,7 +242,7 @@ a commit, and it cannot redden anything. Worth doing last, and only in that shap
 
 Each phase is independently shippable and leaves the pipeline working.
 
-### D0 — Tell the truth about what exists
+### D0 — Tell the truth about what exists — **done**
 
 Correct `CLAUDE.md`'s "No deploy has ever run against a real host", and the
 paragraph after it about `shell_scripts/` being unexercised. Add a short
@@ -252,7 +252,7 @@ paragraph after it about `shell_scripts/` being unexercised. Add a short
 *Exit:* the two authoritative documents agree about whether production exists.
 No workflow change. No risk.
 
-### D1 — Production cannot move backwards
+### D1 — Production cannot move backwards — **done**
 
 Defect 1. Ancestry guard in the `deploy` job before the SSM call, comparing
 `GITHUB_SHA` to the sha at `${SITE_URL}/api/health`, with an explicit override
@@ -263,7 +263,14 @@ commits; a normal push still deploys.
 
 ### D2 — Every commit on `main` reaches production
 
-Defect 2. Reconciling scheduled job; drop the `event_name == 'push'` gate.
+Defect 2. Reconciling scheduled job.
+
+**Half of this shipped with D1**, and the reason is worth recording: the
+`event_name == 'push'` gate had to go before the ancestry guard could be tested
+at all, because `main` only moves forward and no push can present an ancestor to
+refuse. So `deploy` already runs for a `workflow_dispatch` on `main`, and what is
+left here is the reconciler — the scheduled job that compares `origin/main`
+against the sha at `/api/health` and closes the gap without anyone asking.
 
 *Exit:* delete the tip's workflow run mid-flight (or dispatch from a stale state)
 and observe the reconciler deploy within one interval, once. Then no more empty

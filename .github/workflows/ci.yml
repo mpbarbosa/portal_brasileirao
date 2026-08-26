@@ -5,6 +5,11 @@ on:
     branches: [main]
   pull_request:
   workflow_dispatch:
+    inputs:
+      allow_non_descendant:
+        description: "Deploy even though the commit is an ancestor of what is live (a deliberate rollback)"
+        type: boolean
+        default: false
 
 # A newer push to the same branch makes the in-flight run obsolete.
 concurrency:
@@ -176,7 +181,17 @@ jobs:
   deploy:
     name: Deploy to production
     needs: [check, e2e]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    # Any run *for main*, not only a push-triggered one. The event gate this
+    # replaces made workflow_dispatch useless precisely when it was needed: with
+    # push events being dropped during the Actions incident of 2026-08-26 there
+    # was no way to carry a merged commit to the host, and 6325fa5, e065a8d and
+    # 8fa12e5 are empty commits that exist only to emit a push event. It is also
+    # what makes the ancestry guard below testable — main only ever moves
+    # forward, so a push can never present an ancestor to refuse.
+    # `pull_request` runs carry refs/pull/N/merge and so are still excluded.
+    if: >-
+      github.ref == 'refs/heads/main' &&
+      (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -192,6 +207,13 @@ jobs:
       SITE_URL: https://brasileirao.mpbarbosa.com
     steps:
       - uses: actions/checkout@v5
+        with:
+          # The ancestry guard below asks whether the commit being released is an
+          # ancestor of the one already live. A depth-1 clone does not contain the
+          # live commit, let alone the history connecting the two, so it cannot
+          # answer — and a guard that cannot answer fails open and protects
+          # nothing. Same reason the `screenshots` job takes the full history.
+          fetch-depth: 0
 
       - uses: actions/setup-node@v5
         with:
@@ -230,6 +252,77 @@ jobs:
           aws s3 cp release.tar.gz \
             "s3://${ARTIFACT_BUCKET}/releases/${GITHUB_SHA}.tar.gz" \
             --region "$AWS_REGION"
+
+      - name: Refuse a release that would move production backwards
+        # `concurrency: deploy-production` serialises releases; it does not order
+        # them. On 2026-08-26 a queue that drained after an Actions incident
+        # installed cbf98f7 and then 8d95b17, which is its parent — production
+        # moved backwards, and *every check this pipeline had passed*, because
+        # "Verify the live site is this commit" below asks whether the live commit
+        # is the one this run built, and it was. Nothing asked whether it was
+        # newer than what it replaced. This does.
+        #
+        # Placed immediately before the install rather than at the top of the job,
+        # so the window between reading the live commit and replacing it is as
+        # narrow as it can be. The S3 object is already published by now and that
+        # is fine: it is keyed by sha, harmless, and a rollback will want it there.
+        #
+        # It fails OPEN on anything it cannot read — an unreachable site, a health
+        # payload without a usable sha, a commit not in this repository. That is
+        # deliberate and is the whole difference between a guard and a lock:
+        # during an outage the ability to deploy is worth more than the ordering
+        # this protects, and a site that is down cannot tell you what it is running.
+        env:
+          ALLOW_NON_DESCENDANT: ${{ inputs.allow_non_descendant || false }}
+        run: |
+          set -euo pipefail
+          incoming="$GITHUB_SHA"
+
+          if [ "$ALLOW_NON_DESCENDANT" = "true" ]; then
+            echo "::warning::Ancestry guard overridden — this release may move production backwards."
+            exit 0
+          fi
+
+          if ! curl -sf --max-time 10 "${SITE_URL}/api/health" -o live.json; then
+            echo "::warning::Could not read ${SITE_URL}/api/health — installing without the ancestry check."
+            exit 0
+          fi
+
+          live_short="$(jq -r '.sha // empty' live.json)"
+          # A locally-stamped build can carry a -dirty suffix; production should
+          # never serve one, but strip it rather than fail open on the surprise.
+          live_short="${live_short%-dirty}"
+
+          if [ -z "$live_short" ] || [ "$live_short" = "unknown" ]; then
+            echo "::warning::Live site reports no usable commit — installing without the ancestry check."
+            exit 0
+          fi
+
+          if ! live="$(git rev-parse --verify --quiet "${live_short}^{commit}")"; then
+            echo "::warning::Live commit ${live_short} is not in this repository — installing without the ancestry check."
+            exit 0
+          fi
+
+          if [ "$live" = "$incoming" ]; then
+            echo "Live is already ${live_short}. Reinstalling the same commit."
+            exit 0
+          fi
+
+          if git merge-base --is-ancestor "$incoming" "$live"; then
+            echo "::error::Refusing to install ${incoming:0:7}: it is an ancestor of ${live_short}, which is live."
+            echo "::error::Installing it would undo $(git rev-list --count "${incoming}..${live}") commit(s) already in production."
+            echo "::error::If this is a deliberate rollback, re-run from the Actions tab with allow_non_descendant=true."
+            exit 1
+          fi
+
+          if git merge-base --is-ancestor "$live" "$incoming"; then
+            echo "OK: ${incoming:0:7} is $(git rev-list --count "${live}..${incoming}") commit(s) ahead of live ${live_short}."
+          else
+            # Neither contains the other. History was rewritten, or the live build
+            # came from somewhere this checkout cannot see. Not a backwards move,
+            # so not this guard's call to make — but worth saying out loud.
+            echo "::warning::${incoming:0:7} and live ${live_short} have diverged; neither contains the other. Installing anyway."
+          fi
 
       - name: Install the release on the host
         # Delivered over SSM, so the host needs no inbound SSH and the security
