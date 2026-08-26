@@ -273,7 +273,12 @@ jobs:
         # during an outage the ability to deploy is worth more than the ordering
         # this protects, and a site that is down cannot tell you what it is running.
         env:
-          ALLOW_NON_DESCENDANT: ${{ inputs.allow_non_descendant || false }}
+          # `github.event.inputs`, not `inputs`: the latter is only populated for
+          # workflow_dispatch and workflow_call, and this step runs on every push
+          # to main. `github.event` always exists and simply carries no `inputs`
+          # key for a push, so the fallback takes over. Same form as
+          # sync-broadcasts.yml, which has been running on it for months.
+          ALLOW_NON_DESCENDANT: ${{ github.event.inputs.allow_non_descendant || 'false' }}
         run: |
           set -euo pipefail
           incoming="$GITHUB_SHA"
