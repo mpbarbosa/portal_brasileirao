@@ -896,6 +896,22 @@ commands is cheaper than the retraction.
   scrolled, because ordinary table layout puts them adjacent either way. Three specs in
   `tests/e2e/standings.spec.ts` scroll a 380px viewport and check exactly these three
   things; nothing else would catch any of them.
+  **A frozen column must never be the one that absorbs the table's `min-w` surplus.**
+  Auto layout hands surplus to the widest column, which is Clube — so it rendered 219px
+  around 137px of content at 360dp, and because that column is frozen the 82px of empty
+  space was subtracted from the viewport permanently instead of scrolling away, leaving
+  59px of a 326px container for all seven data columns. `STICKY_CLUB` therefore carries
+  **`w-0`**, which does not mean zero: a specified width below a column's minimum is
+  clamped up to it, so the column takes its content and the surplus goes to the columns
+  that scroll. It needs no maintenance as club names change, where a hand-tuned `w-40`
+  would clip a promoted club.
+  The trap underneath it is that **the obvious measurement cannot see the failure**. A
+  table column's minimum is its widest *unbreakable* run, so without `whitespace-nowrap`
+  the clamp lands lower and the browser pays for it by wrapping the state onto a second
+  line — 12 of 20 rows going 37px to 57px. Width alone reports that as a success, and it
+  passed a `scrollWidth > clientWidth` clip check too, because a wrapped cell is not a
+  clipped one. Assert **row height**, which is what `no club name wraps to a second line`
+  does; the sibling spec asserts the frozen pair stays under 70% of the container.
 - **Motion is MD3's, and `prefers-reduced-motion` is honoured.** A bare `transition`
   already means MD3 standard easing at 200ms, because `--default-transition-duration`
   and `--default-transition-timing-function` are overridden in `src/index.css` — do not

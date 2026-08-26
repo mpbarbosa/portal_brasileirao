@@ -29,7 +29,37 @@ const ROW_LINE = "border-t border-line";
  *  carries its own background, since the cells that slide beneath them would
  *  otherwise show through. */
 const STICKY_POSITION = "sticky left-0 z-10 w-12";
-const STICKY_CLUB = "sticky left-12 z-10 border-r border-line";
+
+/** `w-0` does not make the column zero wide — it makes it *content* wide, and
+ *  that is the whole point.
+ *
+ *  The table carries a `min-w` so the numbers keep room to breathe on a narrow
+ *  screen, which means it is routinely wider than its content and auto layout
+ *  has surplus to hand out. It hands it to the widest column, and the widest
+ *  column is this one: Clube rendered 219px against 137px of content at 360dp,
+ *  so 82px of empty space sat *inside a frozen column*, where it is subtracted
+ *  from the viewport permanently rather than scrolling away. That left 59px of
+ *  a 326px container for all seven data columns.
+ *
+ *  A specified width below the column's minimum is clamped up to it, so `w-0`
+ *  says "take what you need and no more" and the surplus goes to the columns
+ *  that scroll. It also needs no maintenance: a promoted club with a longer
+ *  name widens the column by itself, where a hand-tuned `w-40` would clip it.
+ *
+ *  `whitespace-nowrap` is load-bearing rather than tidy-up. A table column's
+ *  minimum is the widest *unbreakable* run, so without it the clamp lands far
+ *  lower and the browser buys the difference by wrapping the state onto a
+ *  second line — 12 of 20 rows went from 37px to 57px tall. That reads as a
+ *  narrower column to anything measuring width alone, which is exactly how it
+ *  survived the first round of measurements here. */
+const STICKY_CLUB = "sticky left-12 z-10 w-0 whitespace-nowrap border-r border-line";
+
+/** Clube is the only column whose padding is worth a breakpoint: it is frozen,
+ *  so every pixel it takes is one the numbers never get back, and only a narrow
+ *  screen is short of them. Desktop keeps `px-3` — though note the column does
+ *  narrow there too (254px to 175px), because `w-0` above stops it absorbing
+ *  surplus at every width, not just this one. */
+const CLUB_PADDING = "px-2 sm:px-3";
 
 interface StandingsTableProps {
   rows: StandingsRow[];
@@ -68,7 +98,7 @@ export function StandingsTable({ rows, onSelectClub, rankHistory }: StandingsTab
         <thead className="bg-surface-container-low text-label-medium uppercase text-ink-muted">
           <tr>
             <th scope="col" className={`${STICKY_POSITION} bg-surface-container-low px-3 py-2 text-left`}>#</th>
-            <th scope="col" className={`${STICKY_CLUB} bg-surface-container-low px-3 py-2 text-left`}>Clube</th>
+            <th scope="col" className={`${STICKY_CLUB} ${CLUB_PADDING} bg-surface-container-low py-2 text-left`}>Clube</th>
             <th scope="col" className="px-2 py-2 text-right">P</th>
             {/* Beside the points rather than after SG: the campanha is read
                 against the total, and a narrow screen scrolls the tallies away
@@ -89,7 +119,7 @@ export function StandingsTable({ rows, onSelectClub, rankHistory }: StandingsTab
               >
                 {row.position}
               </td>
-              <td className={`${ROW_LINE} ${STICKY_CLUB} bg-surface px-3 py-2 font-medium`}>
+              <td className={`${ROW_LINE} ${STICKY_CLUB} ${CLUB_PADDING} bg-surface py-2 font-medium`}>
                 <span className="mr-2 inline-flex align-middle">
                   <ClubCrest club={row.club} size={18} />
                 </span>
