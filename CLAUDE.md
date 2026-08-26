@@ -945,10 +945,18 @@ in two parallel jobs:
 
 A third job, **screenshots**, checks that `docs/screenshots` still depicts the app. It is
 advisory — never in `deploy`'s `needs`, for the reason the workflow gives — and it asks two
-questions rather than one. First, are the appearance sources at the last capture commit
-identical to HEAD's? That is a content comparison, and it replaced an ancestry test that
-went red for merges which changed nothing on main. Second, for whatever genuinely differs,
-is every commit accounted for?
+questions rather than one. First, are the appearance sources at the commit the images
+*depict* identical to HEAD's? That is a content comparison, and it replaced an ancestry
+test that went red for merges which changed nothing on main. Second, for whatever genuinely
+differs, is every commit accounted for?
+
+**Which commit the images depict is not the commit that stored them.** The anchor is the
+sha inside `docs/screenshots/CAPTURED`, falling back to `git log -1 -- docs/screenshots`
+only when that cannot be read. The two differ exactly when a capture is taken, main moves
+underneath it, and the images are committed after: the image commit's *tree* then carries
+an appearance change the photographs do not show, and the weaker anchor calls that current.
+CAPTURED is trusted the way the trailer below is — a person's assertion standing in a diff,
+not something the check can verify.
 
 **An appearance path can move without a pixel moving.** A rule that is never in effect
 during a paint, a selector nothing matches, a comment: the edit is real and the render is
