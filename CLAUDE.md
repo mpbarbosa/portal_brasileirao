@@ -206,7 +206,9 @@ rather than returning a 500.
 
 Current routes: `/api/health`, `/api/clubs`, `/api/standings`, `/api/scorers`,
 `/api/squads` (every club's elenco; one upstream request serves all twenty),
-`/api/players/:id` (numeric id, else 400 — enrichment only, answers `null` offline),
+`/api/players/:id` (numeric id, else 400 — enrichment only, answers `null` offline;
+note its `currentTeam` is often a national team, which is why the card prefers the
+club the page already knew),
 `/api/matches` (optional `?round=` — a non-integer or `< 1` is a 400).
 
 Adding a section is: a `NAV_ITEMS` entry in `src/navigation.ts`, a `Route` variant plus
@@ -737,7 +739,10 @@ Rules that follow from sharing a repository:
   because the broadcaster marks it backs are dark artwork on a transparent ground and
   disappear against a dark page.
 - **Type comes from the MD3 type scale.** `text-body-small` through
-  `text-headline-medium`, defined in `src/index.css`. A bare `text-sm`, `text-xs`
+  `text-display-large`, defined in `src/index.css`. The scale is hand-written and
+  sits *outside* the `MD3-TOKENS` markers, so adding a step is an ordinary edit —
+  and steps are added only when something renders them, which is how
+  `display-large` arrived for the player card's shirt-number watermark. A bare `text-sm`, `text-xs`
   or `text-2xl` in a component is a regression, and so is a `tracking-*` utility:
   each step carries size, line height **and** letter spacing together, so naming
   one thing is the point.
@@ -826,6 +831,36 @@ Rules that follow from sharing a repository:
   container colour from the tonal system, and `--color-plate` must stay `#ffffff` in both
   themes or the marks that are dark artwork on transparent grounds vanish silently. Keep
   the `data-mark` attribute — nine specs select on it precisely so markup can change.
+- **The player card sets numbers apart from words.** A **Ficha** is a figure —
+  `Camisa`, `Idade`, a scorer's four tallies — set at the headline step in
+  `text-primary` against a short accent rule, with the unit in its caption rather
+  than in the value. A **Linha do cartão** is a word — `Posição`,
+  `Nacionalidade`, `Nascimento` — label left, value right, on a hairline. Before
+  the split every fact on the card was the same size and the same grey, which is
+  a wall of equal-looking values with nothing to look at first.
+  Both are built from *lists of what is present* rather than from a fixed grid,
+  because almost every field is optional: the competition's team payload carries
+  no shirt number for anyone, so `Camisa` and the watermark exist only once
+  `/api/players/:id` has answered, and the artilharia knows a name and four
+  tallies and nothing else. Nothing renders a dash standing in for a value that
+  was never reported.
+  The body is spaced with `space-y`, not a `mt-*` per block, for the same reason:
+  a margin belonging to a conditional block leaves a gap above whichever one
+  happens to be first — the artilharia card opened with exactly that.
+  **`text-primary` is text here, which MD3 does not promise.** Its guarantee is
+  that `on-primary` is readable on `primary`; primary *as ink on a surface* is a
+  pairing nothing had used, so it was added to the contrast gate as a live
+  pairing rather than measured once and written down. It clears AA in both
+  themes, tightest at 5.49 on light.
+- **The card's club comes from the page, not from the enrichment.**
+  `/api/players/:id` reports football-data's `currentTeam`, which for an
+  international is frequently the **national team** — opened from the Corinthians
+  elenco, Memphis Depay's card read "Netherlands" under his name and
+  "Netherlands" again as his nationality, verified on a live payload. Whoever
+  opened the card already knows better: `PlayersView` attaches the club whose
+  elenco the player was listed in, and a scorer carries the club they scored for,
+  and both are Série A clubs by construction. `mergePlayer` is deliberately left
+  alone — it is right for every other field.
 - **The player card is a native `<dialog>` opened with `showModal()`.** Not an overlay
   div: modality has to be real. It carried `aria-modal="true"` for months while Tab
   walked straight out of it. The browser gives the focus trap, `inert` behind, the top

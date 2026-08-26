@@ -71,14 +71,20 @@
  * to 500 is a restyle, not a scale adoption. Components keep their explicit
  * `font-*`, exactly as the typeface stays separable from the scale.
  *
- * The `display-*` steps and `headline-large` are omitted rather than defined
- * unused — the same rule `Button`'s size list follows. Add a step when a
- * component needs it.
+ * `headline-large` and the two smaller `display-*` steps are omitted rather
+ * than defined unused — the same rule `Button`'s size list follows. Add a step
+ * when a component needs it, which is how `display-large` arrived: the player
+ * card's shirt-number watermark needs a size no other step reaches, and an
+ * arbitrary `text-[57px]` beside a scale is how the next one comes to be 56.
  *
  * The four sizes the app already used most map onto MD3 exactly: 12, 14, 16
  * and 24px are body-small, body-medium, title-medium and headline-small.
  */
 @theme {
+  --text-display-large: 57px;
+  --text-display-large--line-height: 64px;
+  --text-display-large--letter-spacing: -0.25px;
+
   --text-headline-medium: 28px;
   --text-headline-medium--line-height: 36px;
   --text-headline-medium--letter-spacing: 0px;

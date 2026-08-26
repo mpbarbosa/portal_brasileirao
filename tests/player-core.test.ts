@@ -3,11 +3,13 @@ import { test } from "node:test";
 
 import {
   ageOn,
+  birthDateLabel,
   mergePlayer,
   playerInstagram,
   PLAYER_PHOTO_WIDTHS,
   playerPhotoPage,
   playerPhotoUrl,
+  playerSearchUrls,
   playerWikipedia,
   positionLabel,
 } from "@/player-core";
@@ -161,5 +163,67 @@ test("playerPhotoPage links the Commons file page the licence requires", () => {
   assert.equal(
     playerPhotoPage(photo),
     "https://commons.wikimedia.org/wiki/File:Memphis_Depay_2019.jpg",
+  );
+});
+
+test("birthDateLabel writes the date the way a reader does", () => {
+  assert.equal(birthDateLabel("1994-02-13"), "13 fev. 1994");
+  assert.equal(birthDateLabel("1995-04-26"), "26 abr. 1995");
+  // First and last month, because an off-by-one in the month table shows up
+  // only at the ends of the year.
+  assert.equal(birthDateLabel("2004-01-01"), "1 jan. 2004");
+  assert.equal(birthDateLabel("2004-12-31"), "31 dez. 2004");
+});
+
+test("birthDateLabel reads the date in UTC, not in the reader's calendar", () => {
+  // The upstream sends a bare date, which `Date` parses as UTC midnight. Read
+  // through a local calendar in Brazil (UTC-3) that midnight is the previous
+  // evening, so every date on the card would be a day early. Pinned here
+  // because the failure is silent and off by exactly one.
+  const previous = process.env.TZ;
+  process.env.TZ = "America/Sao_Paulo";
+  try {
+    assert.equal(birthDateLabel("1994-02-13"), "13 fev. 1994");
+  } finally {
+    process.env.TZ = previous;
+  }
+});
+
+test("birthDateLabel answers null for what it cannot read", () => {
+  // Same contract as `ageOn` and `positionLabel`: an absent value renders as no
+  // row at all, never as a dash or the string "Invalid Date".
+  assert.equal(birthDateLabel(undefined), null);
+  assert.equal(birthDateLabel(""), null);
+  assert.equal(birthDateLabel("não é uma data"), null);
+});
+
+test("playerSearchUrls quotes the name and narrows by club", () => {
+  const { google } = playerSearchUrls("Pedro", "Flamengo");
+  const query = new URL(google).searchParams.get("q");
+
+  // The quotes are what stop a one-word name returning the whole division, and
+  // the club is what tells two players of the same name apart.
+  assert.equal(query, '"Pedro" Flamengo futebol');
+  assert.equal(new URL(google).searchParams.get("hl"), "pt-BR");
+  assert.equal(new URL(google).searchParams.get("gl"), "BR");
+});
+
+test("playerSearchUrls works for a player whose club the card does not know", () => {
+  // Opened from the artilharia with the provider down, the card may hold a name
+  // and nothing else. A search for a name alone is still worth offering; a
+  // query reading `"Pedro" undefined futebol` is not.
+  const { google } = playerSearchUrls("Pedro");
+  assert.equal(new URL(google).searchParams.get("q"), '"Pedro" futebol');
+});
+
+test("the news link is the same query, not a second one", () => {
+  // Two independently built queries is how the two tabs come to search for
+  // different things after someone edits one of them.
+  const { google, news } = playerSearchUrls("Memphis Depay", "Corinthians");
+  assert.ok(news.startsWith(google));
+  assert.equal(new URL(news).searchParams.get("tbm"), "nws");
+  assert.equal(
+    new URL(news).searchParams.get("q"),
+    new URL(google).searchParams.get("q"),
   );
 });

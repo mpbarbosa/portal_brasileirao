@@ -524,14 +524,73 @@ the request settles, leaving the line up after a failure, spinners (the wait is
 one request and a line of text says more).
 
 **Cartão do jogador**:
-The overlay opened by choosing a player in **Artilharia**. It renders
-immediately from the row it was opened from (name, club, season figures), then
-fills in shirt number, position, nationality and age from `/api/players/:id`.
-That request is an *enrichment*, not a dependency — when it fails or the app is
-offline the card omits those fields rather than showing blanks. Deliberately not
-a route: an overlay should not survive a reload.
+The overlay opened by choosing a player in **Artilharia** or in an **Elenco**. It
+renders immediately from the row it was opened from (name, club, season figures),
+then fills in shirt number, position, nationality and birth date from
+`/api/players/:id`. That request is an *enrichment*, not a dependency — when it
+fails or the app is offline the card omits those fields rather than showing
+blanks. Deliberately not a route: an overlay should not survive a reload.
+
+It is laid out around one distinction: a **Ficha** is a number, a **Linha do
+cartão** is a word. Numbers are what a reader scans a card for and they carry the
+size and the accent; words are read once and sit quietly beneath them.
+
+**The club is whichever the *page* knew**, not the one the enrichment reports:
+`currentTeam` is often a player's national team, which had Memphis Depay's card
+reading "Netherlands" under his name and again as his nationality.
 _Avoid_: blocking the card on the fetch, rendering an empty label for a detail
-the provider did not supply, giving it a URL.
+the provider did not supply, giving it a URL, setting words at the same size as
+figures (the card was a wall of equal-looking values before the two were split),
+and letting `currentTeam` overwrite a club the page already knew.
+
+**Ficha**:
+One labelled number on the **Cartão do jogador** — *Camisa*, *Idade*, and a
+scorer's *Gols*, *Assist.*, *Pênaltis* and *Jogos*. Set at the headline step in
+the accent colour against a short accent rule, with a small uppercase caption
+beneath. The unit lives in the caption, never in the value: the tile reads "32"
+under `Idade`, not "32 anos".
+_Avoid_: "estatística" (the word for the discipline, not for one figure), putting
+a word in a ficha, printing the unit in the value, and rendering a ficha for a
+figure the provider did not report — an absent value is not a zero, and an
+unreported one is an em dash.
+
+**Linha do cartão**:
+One label-and-value row on the **Cartão do jogador** — *Posição*,
+*Nacionalidade*, *Nascimento* — label left, value right, separated by hairlines.
+The shape for facts that are words rather than figures.
+_Avoid_: "campo" (that is the pitch), a row whose value is a bare number (that is
+a **Ficha**), and a row rendered empty for a fact the provider did not supply.
+
+**Nascimento**:
+A player's date of birth, written the way a reader writes one — "13 fev. 1994".
+Shown as a **Linha do cartão** beside the derived *Idade*, which is a **Ficha**;
+the two are not a duplication, because one answers "how old" and the other
+"when". Read in **UTC**: the provider sends a bare date, which parses as UTC
+midnight, and reading that through a Brazilian calendar moves every date back by
+one day.
+_Avoid_: "data de nascimento" as the label (the noun alone is the caption in this
+column), formatting through `Intl` (the host's ICU decides, and a trimmed image
+silently answers in English), and reading the date locally.
+
+**Pesquisar na web**:
+Two links at the foot of the **Cartão do jogador** — Google and *Notícias* —
+built from the player's name and club rather than curated. The only part of the
+card that works for every player rather than for the handful with a recorded
+account, and the honest answer to what the card cannot hold: the app knows a
+position and a birth date, and a reader who opened the card usually wanted this
+week's news.
+_Avoid_: "buscar" (pt-BR prefers "pesquisar" for a web search), curating these by
+hand, and building the news link as a second query rather than as a tab of the
+first.
+
+**Onde acompanhar**:
+The heading over a player's own accounts on the **Cartão do jogador** — the
+**Instagram do jogador** and the **Verbete do jogador**. Named for what a reader
+does with them rather than for what they are, which is what tells them apart from
+**Pesquisar na web** below: one is the player speaking, the other is the web
+about the player.
+_Avoid_: "Redes sociais" (a Wikipedia article is not one), "Links" (says nothing),
+and rendering the heading over an empty row for a player with neither recorded.
 
 **Posição**:
 A player's position. The upstream reports it in English, at two levels of detail
