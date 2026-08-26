@@ -159,3 +159,77 @@ export const playerPhotoUrl = (id: string, width: number): string =>
  */
 export const playerPhotoPage = (photo: PlayerPhoto): string =>
   `https://commons.wikimedia.org/wiki/File:${encodeURIComponent(photo.file.replace(/ /g, "_"))}`;
+
+/**
+ * Month abbreviations, written down rather than taken from `Intl`.
+ *
+ * `Intl.DateTimeFormat("pt-BR", { month: "short" })` would answer this, and its
+ * answer is whatever ICU the host was built against says — which is a moving
+ * target across Node releases and, on a trimmed container image, may be `en`
+ * with no error at all. A unit test pinning "13 fev. 1994" would then fail on a
+ * machine the code is correct on, and — worse — a production card would print
+ * "Feb" without anything going red. Twelve strings are cheaper than that.
+ */
+const MONTHS_PT = [
+  "jan.",
+  "fev.",
+  "mar.",
+  "abr.",
+  "mai.",
+  "jun.",
+  "jul.",
+  "ago.",
+  "set.",
+  "out.",
+  "nov.",
+  "dez.",
+];
+
+/**
+ * A birth date as a reader writes one — "13 fev. 1994".
+ *
+ * Read in **UTC**, like `ageOn` and for the same reason: the upstream sends a
+ * bare `1994-02-13`, which `Date` parses as UTC midnight, and formatting that
+ * through a local calendar moves the day back by one for every reader west of
+ * Greenwich. Brazil is UTC-3, so this is not a hypothetical — it would be
+ * wrong for every reader the app has.
+ *
+ * Null for a missing or unparseable date, the same contract `ageOn` and
+ * `positionLabel` keep: an absent value renders as no row rather than a dash.
+ */
+export const birthDateLabel = (dateOfBirth: string | undefined): string | null => {
+  if (!dateOfBirth) return null;
+
+  const born = new Date(dateOfBirth);
+  if (Number.isNaN(born.getTime())) return null;
+
+  return `${born.getUTCDate()} ${MONTHS_PT[born.getUTCMonth()]} ${born.getUTCFullYear()}`;
+};
+
+/**
+ * Where to go looking for a player the app holds little about.
+ *
+ * The card knows a name, a club and — when the provider answers — a position
+ * and a birth date. It will never know what a reader who opened it actually
+ * wanted, which is usually *news*. Two search links cost no data, no upstream
+ * request and no curation, and they are the only part of this card that works
+ * for all ~950 players rather than for the handful with a curated entry.
+ *
+ * The name is quoted so a search for "Pedro" does not return the whole
+ * division, and the club is appended for the same reason — the snapshot has two
+ * players called Dudu at one club, and pt-BR football is full of one-word
+ * names. `hl`/`gl` ask for Brazilian results, because a player's news is in
+ * Portuguese and a reader in São Paulo should not have to say so.
+ *
+ * `tbm=nws` is the news tab of the same query rather than a second query, so
+ * the two links cannot drift apart.
+ */
+export const playerSearchUrls = (
+  name: string,
+  clubName?: string,
+): { google: string; news: string } => {
+  const terms = [`"${name.trim()}"`, clubName?.trim(), "futebol"].filter(Boolean).join(" ");
+  const google = `https://www.google.com/search?q=${encodeURIComponent(terms)}&hl=pt-BR&gl=BR`;
+
+  return { google, news: `${google}&tbm=nws` };
+};

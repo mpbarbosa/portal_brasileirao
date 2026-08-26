@@ -262,6 +262,23 @@ const pairingsFor = (mode: string, tokens: Tokens): Pairing[] => {
     });
   }
 
+  // `primary` as *text*, which MD3 does not promise: its guarantee is that
+  // `on-primary` is readable on `primary`, and a role used as ink on a surface
+  // it was never paired with is exactly the latent trap this gate exists for.
+  // The player card's stat tiles are the first call site, so it is checked as a
+  // live pairing rather than recorded as having been fine when someone looked.
+  for (const bg of backgrounds) {
+    pairings.push({
+      label: `${mode}: primary as text on ${bg.name}`,
+      fg: tokens.primary,
+      bg: bg.hex,
+      floor: 4.5,
+      // The tiles sit on a card, and on the page behind it in no theme — but
+      // `surface-container` is not somewhere anything paints primary text.
+      live: bg.name !== "surface-container",
+    });
+  }
+
   // The current nav entry is a filled chip: ink background, inverted text.
   pairings.push({
     label: `${mode}: ink-inverted on ink (nav chip)`,

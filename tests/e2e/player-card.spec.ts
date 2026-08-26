@@ -2,6 +2,19 @@ import { expect, test, type Page } from "@playwright/test";
 
 const card = (page: Page) => page.getByRole("dialog");
 
+/**
+ * One labelled figure inside the card, by the exact text of its `dt`.
+ *
+ * Anchored rather than `filter({ hasText })`, which is case-insensitive
+ * substring matching — "Nacionalidade" contains "idade", so the loose form
+ * selects two blocks and fails as a strict-mode violation rather than as a
+ * wrong value.
+ */
+const figure = (page: Page, label: string) =>
+  card(page)
+    .locator("dl div")
+    .filter({ has: page.locator("dt", { hasText: new RegExp(`^${label}$`) }) });
+
 const openFirstPlayer = async (page: Page) => {
   await page.goto("/artilharia");
   await expect(page.locator("table tbody tr")).not.toHaveCount(0);
@@ -90,7 +103,13 @@ test.describe("Cartão do jogador", () => {
 
     await expect(card(page).getByText("No campeonato")).toBeVisible();
     await expect(card(page).getByText("Gols", { exact: true })).toBeVisible();
-    await expect(card(page).locator("dd").first()).toHaveText(goals);
+    // Scoped to the figure labelled `Gols`, not to the card's first `dd`. That
+    // is what this meant all along; it passed as `.first()` only because the
+    // suite runs offline, where the artilharia knows nothing else about a
+    // player and so nothing else renders above the tally. The first shirt
+    // number to arrive ahead of it would have broken a test that has nothing
+    // to do with shirt numbers.
+    await expect(figure(page, "Gols").locator("dd")).toHaveText(goals);
   });
 
   test("an unreported figure stays a dash inside the card", async ({ page }) => {
@@ -98,8 +117,60 @@ test.describe("Cartão do jogador", () => {
 
     const stats = await card(page).locator("dd").allInnerTexts();
     for (const value of stats) {
-      expect(value.trim()).toMatch(/^(\d+|—|.+ anos|[A-Za-zÀ-ÿ\-\s]+)$/);
+      // A figure, an em dash for one the provider did not report, a date, or a
+      // word — never an empty cell, a `0` standing in for silence, or the
+      // string "undefined".
+      expect(value.trim()).toMatch(
+        /^(\d+|—|\d{1,2} [a-z]{3}\. \d{4}|[A-Za-zÀ-ÿ\-\s]+)$/,
+      );
     }
+  });
+
+  test("the club the page knows outranks the one the enrichment reports", async ({ page }) => {
+    // `currentTeam` is football-data's answer, and for an international it is
+    // frequently the national team — opened from the Corinthians elenco,
+    // Memphis Depay's card read "Netherlands" under his name and "Netherlands"
+    // again as his nationality. Verified against a live payload before this was
+    // written; stubbed here so the suite stays offline.
+    await page.route("**/api/players/*", (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          source: "football-data",
+          note: "stub",
+          updatedAt: new Date().toISOString(),
+          data: {
+            id: "1077",
+            name: "Pedro",
+            nationality: "Netherlands",
+            club: {
+              code: "8601",
+              name: "Netherlands",
+              shortName: "Netherlands",
+              tla: "NED",
+              slug: "netherlands",
+            },
+          },
+        }),
+      }),
+    );
+
+    await page.goto("/artilharia");
+    await expect(page.locator("table tbody tr")).not.toHaveCount(0);
+
+    const row = page.locator("table tbody tr").first();
+    // Whatever club the artilharia says the player scored for is the one the
+    // card has to keep. Read from the table rather than named, because the
+    // snapshot's top scorer changes with every sync.
+    const club = (await row.locator("td:nth-child(2) span").innerText()).trim();
+    await row.locator("td:nth-child(2) button").click();
+
+    await expect(card(page)).toBeVisible();
+    await expect(card(page).getByText(club, { exact: true })).toBeVisible();
+    // The nationality still comes from the enrichment — only the club is
+    // overruled, and only because the page already knew a better answer.
+    await expect(figure(page, "Nacionalidade").locator("dd")).toHaveText("Netherlands");
   });
 
   test("enrichment fills in details the table did not have", async ({ page }) => {
@@ -131,9 +202,18 @@ test.describe("Cartão do jogador", () => {
     // Position is translated, not shown in the upstream's English.
     await expect(card(page).getByText("Centroavante")).toBeVisible();
     await expect(card(page).getByText("Brazil")).toBeVisible();
-    await expect(card(page).getByText(/\d+ anos/)).toBeVisible();
-    // The shirt number joins the heading.
-    await expect(card(page).getByRole("heading", { level: 2 })).toContainText("9");
+    // The age is a figure with its unit in the label, like every other tile —
+    // the card used to print "32 anos" as the value, which at the headline step
+    // is half a phone's width for one word the label already implies.
+    await expect(figure(page, "Idade").locator("dd")).toHaveText(/^\d+$/);
+    // The shirt number is a figure of its own rather than a prefix on the name.
+    // It used to ride in the heading, which is why this assertion moved: a
+    // number set in the same line as the name reads as part of it, and the
+    // heading is the card's accessible name, so a screen reader announced the
+    // dialog as "9 Pedro". It is now a `Camisa` tile — and, at a size that
+    // cannot be read as a value, the header watermark.
+    await expect(figure(page, "Camisa").locator("dd")).toHaveText("9");
+    await expect(card(page).getByRole("heading", { level: 2 })).not.toContainText("9");
   });
 
   test("without enrichment the card omits unknown details rather than showing blanks", async ({
