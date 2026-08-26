@@ -7,6 +7,8 @@ import { CLUB_WIKIPEDIA } from "@/src/data/club-wikipedia";
 import {
   clubKey,
   clubMatches,
+  coachOf,
+  coachesOf,
   findClub,
   lastFixture,
   nextFixture,
@@ -453,4 +455,57 @@ test("instagramHandle keeps only the handle, whatever was written down", () => {
   assert.equal(instagramHandle("  ecbahia  "), "ecbahia");
   assert.equal(instagramHandle("não é um perfil"), null);
   assert.equal(instagramHandle(undefined), null);
+});
+
+test("the coach printed on a club page prefers the live map to the frozen one", () => {
+  // clubs.ts is regenerated a few times a season and a Série A club changes
+  // coach far more often than that, so the snapshot is the floor and
+  // /api/coaches is the answer. This is the reverse of withClubDetails' rule,
+  // where the committed list supplies what no live payload carries.
+  const palmeiras = { ...club("1769", "Palmeiras", "palmeiras"), coach: "Técnico Antigo" };
+
+  assert.equal(coachOf(palmeiras, { "1769": "Abel Ferreira" }), "Abel Ferreira");
+});
+
+test("a failed coaches request still leaves the club page naming someone", () => {
+  // The map is undefined until it lands and stays undefined if it never does.
+  const palmeiras = { ...club("1769", "Palmeiras", "palmeiras"), coach: "Abel Ferreira" };
+
+  assert.equal(coachOf(palmeiras, undefined), "Abel Ferreira");
+  assert.equal(coachOf(palmeiras, {}), "Abel Ferreira");
+});
+
+test("a club nothing knows a coach for gets no line", () => {
+  // Null, never "" and never a dash: the page leaves the line out entirely.
+  assert.equal(coachOf(club("9999", "Desconhecido", "desconhecido")), null);
+  assert.equal(coachOf({ ...club("9999", "Desconhecido", "desconhecido"), coach: "  " }), null);
+  assert.equal(coachOf(club("1769", "Palmeiras", "palmeiras"), { "1769": "   " }), null);
+});
+
+test("the coaches map leaves out the clubs that have none", () => {
+  // What /api/coaches answers with. An absence survives the round trip as an
+  // absence rather than arriving as a value the page must test a second time.
+  const clubs = [
+    { ...club("1769", "Palmeiras", "palmeiras"), coach: "Abel Ferreira" },
+    club("1783", "Flamengo", "flamengo"),
+  ];
+
+  assert.deepEqual(coachesOf(clubs), { "1769": "Abel Ferreira" });
+});
+
+test("the coach rides along with the website into live payloads", () => {
+  // Fixtures and standings name two clubs and no coach; the committed list is
+  // what fills the gap until /api/coaches answers.
+  const live = [club("1769", "Palmeiras", "palmeiras")];
+  const known = [{ ...club("1769", "Palmeiras", "palmeiras"), coach: "Abel Ferreira" }];
+
+  assert.equal(withClubDetails(live, known)[0].coach, "Abel Ferreira");
+});
+
+test("a coach already on a live club is not overwritten by the snapshot", () => {
+  // Clubs on /api/squads come from the teams endpoint and carry their own.
+  const live = [{ ...club("1769", "Palmeiras", "palmeiras"), coach: "Técnico Atual" }];
+  const known = [{ ...club("1769", "Palmeiras", "palmeiras"), coach: "Técnico Antigo" }];
+
+  assert.equal(withClubDetails(live, known)[0].coach, "Técnico Atual");
 });

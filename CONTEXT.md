@@ -128,6 +128,33 @@ _Avoid_: "team"/"time" for the entity (`Club` is the domain word here; "team" is
 what the upstream API calls it, which is why the adapter type is `RawTeam`),
 "sigla" as an identifier (see **tla**).
 
+**Técnico**:
+The club's head coach, named on the **Clube** page directly beneath the club's
+own name — "Técnico: Abel Ferreira", the label in `ink-muted` and the name in
+`ink`, so what is read is the person and not the caption. Modelled as
+`Club.coach`, a bare name and nothing else: nothing in the app looks a coach up,
+so an id would be a field to keep in step for no reader's benefit.
+
+It is **identity, not a statistic**, which is why it sits with the club's name
+rather than in a tile beside Posição and Pontos — those are figures a reader
+scans and compares, and a name in that row would be read as one.
+
+The only endpoint that reports one is the teams list, which is neither of the
+payloads the club page is built from — a fixture names two clubs and no coach,
+and so does a standings row. So `/api/coaches` serves the map, projected from
+the same cached team payload the **Elenco** comes from, and `coachOf` prefers it
+over the copy `sync-seed-data` froze into `clubs.ts`: a Série A club changes
+coach several times a season and the snapshot is regenerated far less often than
+that. The frozen value is the floor, kept so a failed request still names
+someone.
+A club upstream lists no coach for has **no line at all** — never a dash, and
+never a bare label.
+_Avoid_: "treinador" (correct Portuguese, but "técnico" is what Brazilian
+football says and what every source the app reads writes), "coach", "manager",
+"comissão técnica" (the whole staff, which the app does not carry), putting the
+name in a **Ficha** tile (a name is a word, not a figure — see **Linha do
+cartão** for the same split on the player card).
+
 **Site oficial**:
 The club's own website, linked from its page and shown as a globe glyph followed
 by the bare host (`palmeiras.com.br`). The globe distinguishes the club's *own*

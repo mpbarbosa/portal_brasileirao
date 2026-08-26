@@ -273,13 +273,53 @@ export const withWikipedia = (clubs: Club[], articles: Record<string, string>): 
   });
 
 /**
+ * The name to print as a club's head coach, or null when nothing knows one.
+ *
+ * Two sources, and the precedence is the point. `/api/coaches` is read from the
+ * team list on the request, while `club.coach` is whatever the last
+ * `sync-seed-data` froze into `clubs.ts` — so the map wins where it has an
+ * answer and the club's own field is the floor beneath it. That is the opposite
+ * of `withClubDetails`' rule, deliberately: there the committed list supplies
+ * what a live payload never carries, here it holds a copy that expires.
+ *
+ * Falling back at all is what keeps the line on the page when that request
+ * fails, which is the same reasoning the API envelope follows one layer up.
+ */
+export const coachOf = (
+  club: Club,
+  coaches?: Record<ClubCode, string>,
+): string | null => coaches?.[club.code]?.trim() || club.coach?.trim() || null;
+
+/**
+ * The coaches a club list knows about, keyed by club code.
+ *
+ * The inverse of `withCoaches`, and what `/api/coaches` answers with: a club
+ * with no coach is left out entirely rather than mapped to an empty string, so
+ * the absence survives the round trip instead of arriving as a value the page
+ * would have to test for a second time.
+ */
+export const coachesOf = (clubs: Club[]): Record<ClubCode, string> => {
+  const coaches: Record<ClubCode, string> = {};
+
+  for (const club of clubs) {
+    if (club.coach) coaches[club.code] = club.coach;
+  }
+
+  return coaches;
+};
+
+/**
  * Fill in details the live payloads omit.
  *
  * Club objects embedded in standings and fixtures carry only id, name, crest
- * and abbreviation — the website comes from the teams endpoint, which only the
- * seed generator calls, and the Instagram handle, the hymn and the Wikipedia
- * article from no endpoint at all. So the committed club list supplies all four
- * at request time.
+ * and abbreviation — the website and the head coach come from the teams
+ * endpoint, and the Instagram handle, the hymn and the Wikipedia article from
+ * no endpoint at all. So the committed club list supplies all five at request
+ * time.
+ *
+ * The coach is the one of the five that goes stale between snapshots, which is
+ * why it is also served live by `/api/coaches`; what the seed supplies here is
+ * the floor, not the whole answer.
  */
 export const withClubDetails = (clubs: Club[], known: Club[]): Club[] => {
   const byCode = new Map(known.map((club) => [club.code, club]));
@@ -290,6 +330,7 @@ export const withClubDetails = (clubs: Club[], known: Club[]): Club[] => {
     const instagram = club.instagram ?? source?.instagram;
     const hymn = club.hymn ?? source?.hymn;
     const wikipedia = club.wikipedia ?? source?.wikipedia;
+    const coach = club.coach ?? source?.coach;
 
     return {
       ...club,
@@ -297,6 +338,7 @@ export const withClubDetails = (clubs: Club[], known: Club[]): Club[] => {
       ...(instagram ? { instagram } : {}),
       ...(hymn ? { hymn } : {}),
       ...(wikipedia ? { wikipedia } : {}),
+      ...(coach ? { coach } : {}),
     };
   });
 };

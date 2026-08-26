@@ -57,13 +57,37 @@ export const scorersUrl = (
   limit: number = SCORERS_LIMIT,
 ): string => `${FOOTBALL_DATA_BASE}/competitions/${competition}/scorers?limit=${limit}`;
 
-/** Upstream shapes, narrowed to the fields this app reads. */
+/* Upstream shapes, narrowed to the fields this app reads. */
+
+/**
+ * The head coach, as a team object reports one.
+ *
+ * `name` is the whole name and is what upstream fills in; `firstName` and
+ * `lastName` are the split form, and `lastName` is frequently null for a
+ * Brazilian coach known by one name. All three are read, because a coach whose
+ * split fields are populated and whose `name` is not would otherwise vanish —
+ * and a club between coaches reports no `coach` at all, which is an absence and
+ * not an error.
+ */
+interface RawCoach {
+  name?: string | null;
+  firstName?: string | null;
+  lastName?: string | null;
+}
+
 interface RawTeam {
   id?: number;
   name?: string;
   shortName?: string;
   tla?: string | null;
   crest?: string | null;
+  /**
+   * **Only the teams endpoint carries this.** The team objects embedded in
+   * fixtures, standings and scorer rows are the same shape minus the coach and
+   * the squad, so `clubFromTeam` reads it where it exists and omits it where it
+   * does not, rather than there being two mappers.
+   */
+  coach?: RawCoach | null;
 }
 
 interface RawMatch {
@@ -178,6 +202,25 @@ export const DISPLAY_NAME_OVERRIDES: Record<number, string> = {
 };
 
 /**
+ * The head coach's name, from whichever field upstream filled in.
+ *
+ * Prefers the whole name and falls back to joining the split fields, which is
+ * what makes a coach with `name: null` and a populated `firstName` render
+ * rather than disappear. Returns undefined for a club upstream lists no coach
+ * for — an absence the page shows by saying nothing, never by printing a dash.
+ */
+export const coachName = (raw: RawCoach | null | undefined): string | undefined => {
+  const whole = raw?.name?.trim();
+  if (whole) return whole;
+
+  const parts = [raw?.firstName, raw?.lastName]
+    .map((part) => part?.trim())
+    .filter((part): part is string => Boolean(part));
+
+  return parts.length ? parts.join(" ") : undefined;
+};
+
+/**
  * Identity comes from the upstream numeric id, never from `tla`. The
  * abbreviation is not unique — Corinthians and Coritiba both report "COR" —
  * so keying on it silently merges two clubs' rows. `tla` is carried along for
@@ -197,10 +240,20 @@ export const clubFromTeam = (team: RawTeam | undefined): Club | null => {
 
   const slug = slugify(shortName) || undefined;
   const crest = team.crest?.trim() || undefined;
+  const coach = coachName(team.coach);
 
   // Conditional so an absent crest means the key is missing, not present-and-
-  // undefined — otherwise `"crest" in club` lies.
-  return { code, name: team.name, shortName, tla, slug, ...(crest ? { crest } : {}) };
+  // undefined — otherwise `"crest" in club` lies. The coach follows the same
+  // rule, and is absent from every payload but the teams list.
+  return {
+    code,
+    name: team.name,
+    shortName,
+    tla,
+    slug,
+    ...(crest ? { crest } : {}),
+    ...(coach ? { coach } : {}),
+  };
 };
 
 /**

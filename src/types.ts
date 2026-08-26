@@ -45,6 +45,21 @@ export interface Club {
    * `?action=…` or `#História` does not persist.
    */
   wikipedia?: string;
+  /**
+   * The head coach's name, as the provider spells it ("Filipe Luís").
+   *
+   * A bare string, like the four fields above, because nothing here looks the
+   * coach up — the club page prints the name and stops. It carries no id for
+   * the same reason `Player.club` carries no coach: an identifier nothing
+   * dereferences is a field that has to be kept in step for no reader's
+   * benefit.
+   *
+   * **Only the teams endpoint reports it.** Fixtures and standings carry a club
+   * without one, which is why this is optional in the ordinary case rather than
+   * only when a club is between coaches — see `/api/coaches` in `server.ts` for
+   * where the club page gets it from.
+   */
+  coach?: string;
   /** Home state (e.g. "RJ"). Absent for clubs derived from a provider that
    *  doesn't carry it — render it conditionally. */
   state?: string;

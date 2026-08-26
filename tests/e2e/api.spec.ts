@@ -104,6 +104,27 @@ test.describe("API", () => {
     expect(body.data).toHaveLength(20);
   });
 
+  test("/api/coaches maps club codes to coaches", async ({ request }) => {
+    const response = await request.get("/api/coaches");
+    expect(response.status()).toBe(200);
+
+    const body = await response.json();
+    expectEnvelope(body);
+
+    // Never a count: the snapshot carries a coach only for the clubs upstream
+    // named one for when it was taken, and a club between coaches has none.
+    // What must hold is that every entry is a club in the division under a
+    // name worth printing — an absence is an absent key, never an empty value.
+    const clubs = await (await request.get("/api/clubs")).json();
+    const codes = new Set(clubs.data.map((club: { code: string }) => club.code));
+
+    for (const [code, coach] of Object.entries(body.data as Record<string, string>)) {
+      expect(codes).toContain(code);
+      expect(typeof coach).toBe("string");
+      expect(coach.trim().length).toBeGreaterThan(0);
+    }
+  });
+
   test("an unknown route falls through to the SPA rather than the API", async ({ request }) => {
     // Still the app shell, not a JSON error: the catch-all is registered after
     // the API routes and neither swallows the other. The status is 404 because
