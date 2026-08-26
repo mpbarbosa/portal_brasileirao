@@ -16,7 +16,7 @@ agent Claude Code.
 > `FOOTBALL_DATA_TOKEN` is set; without a token the app serves a frozen snapshot, so a
 > fresh clone runs with no signup.
 
-![Classificação do Campeonato Brasileiro Série A no tema claro: os 20 clubes com escudo, pontos, jogos, vitórias, empates, derrotas, saldo de gols e o gráfico da campanha. Os quatro primeiros trazem uma faixa verde (G4) e os quatro últimos uma faixa vermelha (Z4).](docs/screenshots/classificacao-light.png)
+![Classificação do Campeonato Brasileiro Série A no tema claro: os 20 clubes com escudo, pontos, o gráfico da campanha, jogos, vitórias, empates, derrotas e saldo de gols. Os quatro primeiros trazem uma faixa verde (G4) e os quatro últimos uma faixa vermelha (Z4).](docs/screenshots/classificacao-light.png)
 
 ![A mesma classificação no tema escuro, com as mesmas 20 posições, faixas do G4 e do Z4 e gráficos da campanha.](docs/screenshots/classificacao-dark.png)
 
