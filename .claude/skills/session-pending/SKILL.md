@@ -83,7 +83,8 @@ Yours are awaiting the user, not unfinished — see the weights below.
 create. **Record each worktree and branch at the moment you create it**, not
 here — at teardown you would be reconstructing from memory, which rule one
 forbids, and peers' worktrees may already be gone so the listing cannot correct
-you.
+you. This has already failed inside a run of this skill: a session reported
+holding no worktrees, then found one of its own on a later listing.
 
 **5. Servers you started, attributed.** A port number is not an owner:
 ```sh
@@ -104,7 +105,10 @@ resources held through a tool rather than a port, like a browser pane, which
 `ss` cannot see because a client is not a listener.
 
 If the harness reports orphaned tasks, that notification is a signal worth
-reading rather than dismissing.
+reading rather than dismissing — but read what it names. One such listing named
+**its own output file**, present while the command ran and gone by the time it
+was read. Same shape as this skill's own file tripping check 1: a measurement
+that includes its own apparatus.
 
 **Then classify, because a stopped task is not automatically a blocker.** The
 question is not "did something die" but **"did I promise its result?"** A poll
