@@ -3,7 +3,6 @@ import {
   findClub,
   nextFixture,
   hymnUrl,
-  instagramUrl,
   recentForm,
   resultFor,
   scorersFor,
@@ -12,7 +11,7 @@ import {
 } from "@/club-core";
 import { lastRecordedRound } from "@/rank-history-core";
 import { ClubCrest } from "@/src/components/ClubCrest";
-import { GLYPH, WikipediaLink } from "@/src/components/ClubLinks";
+import { GLYPH, InstagramLink, WikipediaLink } from "@/src/components/ClubLinks";
 import { BACK_LINK, LINK_UNDERLINE } from "@/src/components/interaction";
 import { MatchList } from "@/src/components/MatchList";
 import { RankSparkline } from "@/src/components/RankSparkline";
@@ -60,16 +59,15 @@ const stat = (label: string, value: string) => (
  *
  * Drawn here rather than fetched, for the reason `CLAUDE.md` gives for the
  * broadcaster marks: no runtime dependency on a third party for an asset. These
- * three stay local because they have one call site each, the same way
- * `MatchPage` keeps `Campaign` and `Side`. The Wikipédia mark left for
- * `ClubLinks` when the match page became its second caller — that rule is what
- * moved it, and what keeps these here.
+ * two stay local because they have one call site each, the same way `MatchPage`
+ * keeps `Campaign` and `Side`. The Wikipédia mark left for `ClubLinks` when the
+ * match page became its second caller, and the Instagram mark followed it when
+ * the player card did — that rule is what moved them, and what keeps these here.
  *
- * All are monochrome outlines — Instagram's rather than Meta's gradient mark, a
- * plain globe for the club's own site, and a pair of quavers for the hymn
- * rather than YouTube's play button: each names the *thing* and not the host
- * that happens to keep it. Their shared attributes come from `GLYPH`, so a mark
- * defined here cannot drift from the one defined there.
+ * Both are monochrome outlines — a plain globe for the club's own site, and a
+ * pair of quavers for the hymn rather than YouTube's play button: each names the
+ * *thing* and not the host that happens to keep it. Their shared attributes come
+ * from `GLYPH`, so a mark defined here cannot drift from the one defined there.
  */
 
 /** A globe: the club's own site, as distinct from a profile it keeps elsewhere. */
@@ -79,16 +77,6 @@ function SiteGlyph() {
       <circle cx="12" cy="12" r="9" />
       <path d="M3 12h18" />
       <path d="M12 3a15 15 0 0 1 0 18a15 15 0 0 1 0-18" />
-    </svg>
-  );
-}
-
-function InstagramGlyph() {
-  return (
-    <svg {...GLYPH}>
-      <rect x="3" y="3" width="18" height="18" rx="5" />
-      <circle cx="12" cy="12" r="4" />
-      <circle cx="17" cy="7" r="1" fill="currentColor" stroke="none" />
     </svg>
   );
 }
@@ -143,7 +131,6 @@ export function ClubView({
   // is the opposite of the round view's chronological order.
   const played = fixtures.filter((match) => resultFor(match, code) !== null).reverse();
   const clubScorers = scorersFor(scorers, code);
-  const instagram = instagramUrl(club.instagram);
   const hymn = hymnUrl(club.hymn);
 
   // Same domains as the Classificação, so the shape a reader recognises in the
@@ -189,18 +176,7 @@ export function ClubView({
                 <span className="sr-only"> — site oficial (abre em nova aba)</span>
               </a>
             )}
-            {instagram && (
-              <a
-                href={instagram}
-                target="_blank"
-                rel="noopener noreferrer"
-                className={`truncate ${LINK_UNDERLINE}`}
-              >
-                <InstagramGlyph />
-                @{club.instagram}
-                <span className="sr-only"> — Instagram oficial (abre em nova aba)</span>
-              </a>
-            )}
+            <InstagramLink handle={club.instagram} subject="oficial do clube" />
             {/* Named for what it is rather than for its address: a video id is
                 nothing a reader recognises, unlike a host or a handle. The same
                 holds for an article title, below. */}
@@ -216,7 +192,7 @@ export function ClubView({
                 <span className="sr-only"> — no YouTube (abre em nova aba)</span>
               </a>
             )}
-            <WikipediaLink club={club} />
+            <WikipediaLink title={club.wikipedia} subject="do clube" />
           </div>
         </div>
       </header>

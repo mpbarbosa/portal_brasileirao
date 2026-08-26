@@ -124,7 +124,7 @@ function Side({ club, code, onNavigate }: { club: Club | null; code: string; onN
       ) : (
         <span className="truncate font-semibold">{label}</span>
       )}
-      {club && <WikipediaLink club={club} extra="text-body-small" />}
+      {club && <WikipediaLink title={club.wikipedia} subject="do clube" extra="text-body-small" />}
     </div>
   );
 }

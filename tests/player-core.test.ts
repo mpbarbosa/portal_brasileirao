@@ -1,7 +1,13 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { ageOn, mergePlayer, positionLabel } from "@/player-core";
+import {
+  ageOn,
+  mergePlayer,
+  playerInstagram,
+  playerWikipedia,
+  positionLabel,
+} from "@/player-core";
 import type { Player } from "@/src/types";
 
 test("broad positions are translated", () => {
@@ -82,4 +88,46 @@ test("a failed enrichment leaves the card as it was", () => {
   const withData = { ...base, shirtNumber: 9, position: "Offence" };
 
   assert.deepEqual(mergePlayer(withData, null), withData);
+});
+
+test("playerInstagram resolves a recorded handle and ignores an unknown id", () => {
+  const handles = { "8472": "memphisdepay" };
+
+  assert.equal(playerInstagram("8472", handles), "memphisdepay");
+  // Absence, not an error: most of the division has no recorded account, and a
+  // player with none must render no link rather than one that lands on a 404.
+  assert.equal(playerInstagram("1", handles), null);
+});
+
+test("playerInstagram normalises whatever form the handle was written in", () => {
+  // The table is hand-maintained, so the value may arrive as a pasted profile
+  // URL with Instagram's locale hint on it, or with the @ still attached.
+  assert.equal(playerInstagram("a", { a: "@memphisdepay" }), "memphisdepay");
+  assert.equal(
+    playerInstagram("b", { b: "https://www.instagram.com/memphisdepay/?hl=pt-br" }),
+    "memphisdepay",
+  );
+  // Not a plausible handle: no link at all, rather than a broken one.
+  assert.equal(playerInstagram("c", { c: "não é um perfil" }), null);
+});
+
+test("playerWikipedia builds the article address from a stored title", () => {
+  const articles = { "8472": "Memphis Depay" };
+
+  assert.equal(
+    playerWikipedia("8472", articles),
+    "https://pt.wikipedia.org/wiki/Memphis_Depay",
+  );
+  // Absence, not an error: most of the division has no article recorded.
+  assert.equal(playerWikipedia("1", articles), null);
+});
+
+test("playerWikipedia carries a disambiguated title through intact", () => {
+  // Half the recorded titles are disambiguated, because the popular name is
+  // shared — this is precisely why the title cannot be derived from the name
+  // the app already holds, and has to be stored.
+  assert.equal(
+    playerWikipedia("a", { a: "Dudu (futebolista, 1992)" }),
+    "https://pt.wikipedia.org/wiki/Dudu_(futebolista%2C_1992)",
+  );
 });

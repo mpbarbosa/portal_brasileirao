@@ -451,6 +451,26 @@ runs it automatically: CI has no network dependency on a third party by design,
 and a link that rots on someone else's server is not a reason for a red build on
 a commit that did not touch it.
 
+`src/data/player-instagram.ts` holds players' own Instagram accounts, keyed by
+**player id** and hand-maintained for the same reason `club-instagram.ts` is: no
+provider carries a social account at any tier. Coverage is deliberately
+**partial** — 38 of ~950 listed players — and grows by hand, like `broadcasts.ts`.
+
+**There is no `check-player-instagram` script, and that is not an oversight.**
+Instagram serves the identical JavaScript shell for a real handle and an invented
+one — 200, `<title>Instagram</title>`, no Open Graph tags — so the check
+`check-hymns` and `check-stadium-photos` perform is simply unavailable here, and
+a script that fetched a profile and reported success would confirm nothing while
+looking exactly like the ones that confirm something. Candidates came from
+Wikidata's `P2003` joined to `squads.ts` on **exact date of birth**, then each was
+confirmed against a search result carrying the profile's own title, follower count
+and — where visible — a bio naming the club. That pass rejected or corrected
+**13 of 70**: six wrong handles (Ramón Sosa's `sosa` is somebody else's account;
+Nicolás De La Cruz differs from the recorded handle by one underscore), one
+account since **deactivated**, and the rest uncorroborated or split between two
+rival profiles. Absent is the honest answer for those. Do not add a handle
+without opening it.
+
 `src/data/club-wikipedia.ts` holds each club's article on the **Portuguese**
 Wikipedia, hand-maintained for the same reason. It stores the title alone
 ("Sociedade Esportiva Palmeiras"); `wikipediaUrl` in `club-core.ts` builds the
@@ -461,6 +481,36 @@ article sits at the full legal one, with the club's own spelling ("Foot-Ball",
 (`/w/api.php?action=query&titles=…&redirects=1&prop=extracts&exintro=1`, which
 reports existence, redirects and the first sentence) before being written down;
 all twenty resolve directly, and each intro names the club.
+
+`src/data/player-wikipedia.ts` holds each player's article on the **Portuguese**
+Wikipedia, keyed by player id and storing the **title alone**, exactly as
+`club-wikipedia.ts` does. `wikipediaUrl` builds the address. The title is not
+derivable from anything the app holds — **75 of the 157 recorded titles differ
+from the listed name**, most of them disambiguated ("Dudu (futebolista, 1992)",
+"Luiz Gustavo (futebolista, 1987)"), because the popular name is shared.
+
+**This one has a checker, and its Instagram sibling deliberately does not:**
+
+```sh
+npm run check-player-wikipedia   # 157 articles, one API call per 20
+```
+
+That asymmetry is a property of the two hosts, not of how carefully each file
+was built. Wikipedia answers a machine honestly; Instagram serves the same
+shell for a real handle and an invented one. Do not read it as an inconsistency
+and do not "fix" it by adding a script that fetches a profile and reports 200.
+
+The check is: the article resolves following redirects, its `wikibase_item`
+round-trips to the Wikidata id the sitelink came from, it is not a
+disambiguation page, and **its own intro states the same birth date as
+`squads.ts`**. The birth date is the load-bearing one. Candidates came from a
+Wikidata `ptwiki` sitelink joined on date of birth, and three of 160 still drew
+the wrong person — the article offered for "Willian Oliveira" opens "6 de junho
+de 1989" against a squad list saying 1993-05-16, because it is about Willian
+Farias. A title match cannot see that; only reading the article can. One trap
+when editing the checker: pt-BR writes the first of the month as an ordinal, so
+`1º` and `1.º` are accepted beside `1`, and without that Bruno Fuchs reads as a
+mismatch on every run.
 
 `src/data/stadiums.ts` holds each ground's official name, capacity and year of
 inauguration, hand-maintained for the same reason as the hymns — **no provider carries
