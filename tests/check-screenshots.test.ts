@@ -72,9 +72,22 @@ class Sandbox {
     return this.git("rev-parse", "HEAD");
   }
 
-  /** A commit to docs/screenshots — what the gate measures staleness against. */
-  shoot(message = "Refresh the screenshots"): string {
+  /**
+   * A commit to docs/screenshots.
+   *
+   * `depicts` is what scripts/screenshot.ts records in CAPTURED: the commit it
+   * was actually served, which is HEAD at capture time and so always behind the
+   * commit that stores the images. Left out, this models a capture from before
+   * CAPTURED existed, or one committed by hand — the fallback path.
+   */
+  shoot(message = "Refresh the screenshots", depicts?: string): string {
     this.write("docs/screenshots/classificacao-light.png", `png ${this.git("rev-parse", "HEAD")}\n`);
+    if (depicts !== undefined) {
+      this.write(
+        "docs/screenshots/CAPTURED",
+        `# Which commit these screenshots depict.\ncommit ${depicts}\n`,
+      );
+    }
     return this.commit(message);
   }
 
@@ -274,5 +287,106 @@ test("a merge that only catches a branch up is not an appearance change", () => 
     // this against `git log` should not have to wonder where it went.
     assert.match(out, /changing nothing on main/);
     assert.match(out, /Merge pull request #39 from docs-only/);
+  });
+});
+
+test("the anchor is what the images depict, not when they were committed", () => {
+  // The case the CAPTURED anchor exists for, and the only one where the two
+  // answers differ. A capture is taken at A; before it is committed, main moves
+  // under it and brings an appearance change in. The image commit's *tree* now
+  // contains that change and the photographs do not, so anchoring on "the last
+  // commit touching docs/screenshots" compares HEAD against a tree the pictures
+  // never depicted and calls it current.
+  withSandbox((repo) => {
+    const photographed = repo.git("rev-parse", "HEAD");
+
+    repo.git("checkout", "-q", "-b", "restyle", photographed);
+    repo.touch("src/index.css");
+    repo.commit("Restyle the table");
+    repo.git("checkout", "-q", "main");
+    repo.git("merge", "-q", "--no-ff", "restyle", "-m", "Merge the restyle");
+
+    // Committed now, but shot before the restyle landed.
+    repo.shoot("Refresh the screenshots", photographed);
+
+    const { ok, out } = repo.run();
+
+    assert.equal(ok, false);
+    assert.match(out, /Restyle the table/);
+  });
+});
+
+test("with no CAPTURED it falls back to the commit that stored the images", () => {
+  withSandbox((repo) => {
+    repo.shoot();
+    repo.touch("src/index.css");
+    repo.commit("Restyle the table");
+
+    const { ok, out } = repo.run();
+
+    assert.equal(ok, false);
+    assert.match(out, /last screenshot refresh/);
+    assert.match(out, /Restyle the table/);
+  });
+});
+
+test("a CAPTURED pointing off the image commit's line is not used", () => {
+  // The normal flow cannot produce this: screenshot.ts writes the sha it was
+  // served, and the commit storing the images is built on top of it. A note
+  // naming a commit that is not an ancestor of the image commit has been
+  // hand-edited or rebased out from under, and says nothing about these
+  // pictures — so the weaker anchor is used and the run says which it used.
+  //
+  // This is accuracy against a mistake, not tamper-resistance. Editing CAPTURED
+  // is a commit to docs/screenshots, which moves the fallback anchor too; see
+  // the note in the script. The assertion here is on which anchor was chosen.
+  withSandbox((repo) => {
+    const base = repo.git("rev-parse", "HEAD");
+    repo.git("checkout", "-q", "-b", "elsewhere", base);
+    repo.touch("src/index.css");
+    const stray = repo.commit("A change on a branch that was never merged");
+
+    repo.git("checkout", "-q", "main");
+    repo.shoot("Refresh the screenshots", stray);
+    repo.touch("src/components/Table.tsx");
+    repo.commit("Widen the position column");
+
+    const { ok, out } = repo.run();
+
+    assert.equal(ok, false);
+    assert.match(out, /last screenshot refresh/);
+    assert.doesNotMatch(out, /the images depict/);
+  });
+});
+
+test("a CAPTURED naming a commit this repository does not have falls back quietly", () => {
+  // The verdict comes from the ancestor test either way — an unknown commit is
+  // an ancestor of nothing. The existence check is here for the output: without
+  // it `git merge-base --is-ancestor` writes "fatal: Not a valid commit name"
+  // to stderr on every run, which reads as the check having broken rather than
+  // as it having handled an unreadable note and moved on.
+  withSandbox((repo) => {
+    repo.shoot("Refresh the screenshots", "0".repeat(40));
+    repo.touch("src/index.css");
+    repo.commit("Restyle the table");
+
+    const { ok, out } = repo.run();
+
+    assert.equal(ok, false);
+    assert.match(out, /last screenshot refresh/);
+    assert.doesNotMatch(out, /fatal:/);
+  });
+});
+
+test("an unchanged appearance is still current when CAPTURED is present", () => {
+  withSandbox((repo) => {
+    repo.touch("src/index.css");
+    const photographed = repo.commit("Restyle the table");
+    repo.shoot("Refresh the screenshots", photographed);
+
+    const { ok, out } = repo.run();
+
+    assert.equal(ok, true);
+    assert.match(out, /the images depict/);
   });
 });

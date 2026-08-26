@@ -30,10 +30,12 @@
 #      No refresh could clear it, because there was nothing to refresh.
 #
 #      So the first question here is about content: are the appearance sources
-#      at the screenshot commit identical to HEAD's? That is a direct answer
-#      where ancestry was an inference, and it is strictly weaker as a bar —
-#      an ancestry pass implies identical trees, never the reverse. Every case
-#      the old test passed, this one passes.
+#      at the commit the images depict identical to HEAD's? That is a direct
+#      answer where ancestry was an inference, and it is strictly weaker as a
+#      bar — an ancestry pass implies identical trees, never the reverse. Every
+#      case the old test passed, this one passes. Which commit the images depict
+#      is its own question, and not the one `git log -1 -- docs/screenshots`
+#      answers; see WHAT THE IMAGES DEPICT below.
 #
 #   2. A change can touch an appearance path without moving a pixel. PR #42 put
 #      a rule in src/index.css that is only in effect inside one synchronous
@@ -114,12 +116,56 @@ if [ -z "$last_shot" ]; then
     exit 1
 fi
 
+# WHAT THE IMAGES DEPICT, WHICH IS NOT WHEN THEY WERE COMMITTED
+#
+# `git log -1 -- docs/screenshots` answers the second question. It was the
+# anchor here because it was the only thing available, and it is the weaker of
+# the two: a capture taken at A and committed after a merge that brought in an
+# appearance change B produces an image commit whose *tree* contains B and
+# photographs that do not show it. Anchored there, the gate compares HEAD
+# against a tree the pictures never depicted and calls it current.
+#
+# screenshot.ts writes the commit it actually photographed into CAPTURED, so
+# ask that instead and fall back only when it cannot answer. The header above
+# has said "read that first" since CAPTURED landed; this is that.
+#
+# Two ways it declines to answer, both falling back rather than failing — an
+# unreadable note is a reason to ask the weaker question, never to fail a build:
+#
+#   - No CAPTURED, or no commit line in it. Every capture predating 2129da0 is
+#     in this state, and so is a hand-committed image.
+#   - It names a commit this repository does not have, or one that is not an
+#     ancestor of the commit that recorded the images. The normal flow cannot
+#     produce either: screenshot.ts writes the sha it was served and a human
+#     commits on top of it, so the depicted commit is always behind the image
+#     commit. A note pointing somewhere off that line has been hand-edited or
+#     rebased out from under, and is not evidence about these pictures.
+#
+# What this does NOT do is make CAPTURED tamper-proof, and it is worth being
+# exact about that rather than implying a guarantee. CAPTURED lives inside
+# docs/screenshots, so editing it is itself a commit to docs/screenshots — which
+# moves the fallback anchor too. Pointing it at HEAD turns this green either
+# way, and did so before CAPTURED was read at all. The file is trusted exactly
+# as the trailer is: an assertion by a person, standing in a diff where a
+# reviewer meets it. The ancestor test buys accuracy against mistakes, not
+# resistance to a determined edit, and nothing here should be read as the second.
+anchor="$last_shot"
+anchor_note="last screenshot refresh"
+
+if depicted="$(git show "HEAD:$SHOT_DIR/CAPTURED" 2>/dev/null | awk '/^commit/ { print $2; exit }')" \
+    && [ -n "$depicted" ] \
+    && git cat-file -e "$depicted^{commit}" 2>/dev/null \
+    && git merge-base --is-ancestor "$depicted" "$last_shot"; then
+    anchor="$(git rev-parse "$depicted")"
+    anchor_note="the images depict"
+fi
+
 # The content question. `git diff` between two commits compares their trees, so
 # this is true exactly when the appearance sources the images were taken against
 # are the ones HEAD ships — whatever route the history took to get here.
-if git diff --quiet "$last_shot" HEAD -- "${SURFACE[@]}"; then
+if git diff --quiet "$anchor" HEAD -- "${SURFACE[@]}"; then
     echo "Screenshots are current."
-    echo "  last screenshot refresh: $(git log -1 --format='%h %s' "$last_shot")"
+    echo "  $anchor_note: $(git log -1 --format='%h %s' "$anchor")"
     echo "  the appearance has not changed since."
     exit 0
 fi
@@ -170,7 +216,7 @@ while IFS= read -r -d '' record; do
     done < <(printf '%s\x1e' "$values")
 done < <(git log -z \
     --format="%H%x1f%(trailers:key=$TRAILER,keyonly,separator=%x1e)%x1f%(trailers:key=$TRAILER,valueonly,unfold,separator=%x1e)" \
-    "$last_shot..HEAD")
+    "$anchor..HEAD")
 
 unexplained=()
 honoured=()
@@ -201,7 +247,7 @@ while IFS= read -r sha; do
     else
         unexplained+=("$sha")
     fi
-done < <(git log --format=%H "$last_shot..HEAD" -- "${SURFACE[@]}")
+done < <(git log --format=%H "$anchor..HEAD" -- "${SURFACE[@]}")
 
 # Print the claims whether or not they carried the run. A trailer that is only
 # read when it changes the verdict is a trailer nobody reviews.
@@ -231,7 +277,7 @@ report_malformed() {
 
 if [ ${#unexplained[@]} -eq 0 ]; then
     echo "Screenshots are current."
-    echo "  last screenshot refresh: $(git log -1 --format='%h %s' "$last_shot")"
+    echo "  $anchor_note: $(git log -1 --format='%h %s' "$anchor")"
     if [ ${#topology[@]} -gt 0 ]; then
         echo "  appearance paths moved only by a catch-up merge, changing nothing on main:"
         for sha in "${topology[@]}"; do
@@ -245,7 +291,7 @@ fi
 
 echo "Error: the screenshots predate the last change to the app's appearance."
 echo
-echo "  last screenshot refresh: $(git log -1 --format='%h %s' "$last_shot")"
+echo "  $anchor_note: $(git log -1 --format='%h %s' "$anchor")"
 echo "  appearance changed since, in:"
 for sha in "${unexplained[@]}"; do
     echo "    $(git log -1 --format='%h %s' "$sha")"
