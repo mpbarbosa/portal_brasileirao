@@ -112,22 +112,6 @@ test.describe("Tema", () => {
     expect(luminance(bg)).toBeGreaterThan(luminance(fg) + 100);
   });
 
-  /**
-   * **This spec cannot fail on the engine CI runs, and that is worth knowing
-   * before trusting it.** The bug it was written for — an element with a
-   * `transition` keeping its old computed colour after the palette swaps —
-   * reproduces on Chrome 148 and does **not** reproduce on the Chromium 151
-   * that `@playwright/test` bundles. Checked against the unfixed code by real
-   * mouse click, scripted click and keyboard: green all three ways, while the
-   * same page in Chrome 148 was visibly wrong.
-   *
-   * It is kept rather than deleted: the assertion is the right one, it costs
-   * nothing, and it will start earning its place the day CI's browser regresses
-   * or someone reintroduces a colour transition the swap cannot clear. But it
-   * is not what protects `applyTheme` in src/useTheme.ts — nothing here is, and
-   * the fix shipped without a failing test on purpose rather than with a test
-   * that passes for reasons unrelated to the defect.
-   */
   test("the toggle itself lands on the new theme's ink", async ({ page }) => {
     // The toggle is the one control guaranteed to have been interacted with at
     // the moment the palette swaps, so if anything were to keep the old theme's

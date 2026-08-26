@@ -611,24 +611,6 @@ Rules that follow from sharing a repository:
   names above, which are aliases onto them until M2 renames the call sites. One trap:
   MD3 spells the page `surface`, but here that is still `canvas` and `surface` means
   a card. `scripts/md3-color-core.ts` implements HCT so no runtime dependency is added.
-- **A theme swap suppresses transitions for one frame, and that is a bug fix.**
-  `applyTheme` in `src/useTheme.ts` stamps `theme-swapping` on `<html>`, sets
-  `data-theme`, forces a reflow and clears the class — all synchronously. On
-  some Chromium versions a transition on a colour that comes from a custom
-  property does **not** re-resolve when that property changes: the element keeps
-  its old computed colour indefinitely, frozen rather than mid-fade, while the
-  token underneath has already flipped. Every element carrying `STATE_LAYER`,
-  `LINK_UNDERLINE` or `BACK_LINK` carries a transition, so "everything with a
-  hover state" is the affected set.
-  **The engine dependence is the part that will waste your time.** It reproduces
-  on Chrome 148 and not on the Chromium 151 `@playwright/test` bundles, so the
-  e2e suite runs where the bug does not exist — `tests/e2e/theme.spec.ts` has a
-  spec that asserts exactly the right thing and passes with or without the fix.
-  Do not read its green as coverage. If you touch the swap, verify in a browser
-  that shows the defect; nothing in CI can tell you.
-  The reflow is load-bearing — without it both style changes coalesce and the
-  suppression never applies — and the class must not be narrowed to `color`,
-  since decoration colour, border and background freeze the same way.
 - **Two themes, one set of tokens.** `src/index.css` defines the palette under
   `@theme` (dark, the fallback) and again under `:root[data-theme="dark"]` and
   `:root[data-theme="light"]`. Components never change: only the values do. An inline
