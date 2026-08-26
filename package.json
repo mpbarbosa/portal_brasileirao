@@ -9,7 +9,7 @@
     "start": "node dist/server.cjs",
     "clean": "rm -rf dist",
     "lint": "tsc --noEmit",
-    "test:unit": "node --import tsx --test tests/standings-core.test.ts tests/matches-core.test.ts tests/football-data-core.test.ts tests/cache-core.test.ts tests/club-core.test.ts tests/route-core.test.ts tests/player-core.test.ts tests/broadcast-core.test.ts tests/match-core.test.ts tests/highlight-search-core.test.ts tests/page-meta-core.test.ts tests/theme-core.test.ts tests/button-classes.test.ts tests/rank-history-core.test.ts tests/md3-color-core.test.ts tests/live-core.test.ts tests/screenshot-core.test.ts tests/seo-core.test.ts tests/structured-data-core.test.ts tests/venue-core.test.ts tests/squad-core.test.ts tests/commons-core.test.ts tests/player-photos.test.ts",
+    "test:unit": "node --import tsx --test tests/standings-core.test.ts tests/matches-core.test.ts tests/football-data-core.test.ts tests/cache-core.test.ts tests/club-core.test.ts tests/route-core.test.ts tests/player-core.test.ts tests/broadcast-core.test.ts tests/match-core.test.ts tests/highlight-search-core.test.ts tests/page-meta-core.test.ts tests/theme-core.test.ts tests/button-classes.test.ts tests/rank-history-core.test.ts tests/md3-color-core.test.ts tests/live-core.test.ts tests/screenshot-core.test.ts tests/seo-core.test.ts tests/structured-data-core.test.ts tests/venue-core.test.ts tests/squad-core.test.ts tests/commons-core.test.ts tests/player-photos.test.ts tests/check-screenshots.test.ts",
     "deploy": "./scripts/deploy.sh",
     "deploy:preflight": "./scripts/deploy-preflight.sh",
     "test:e2e": "playwright test",
