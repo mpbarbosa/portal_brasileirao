@@ -1,4 +1,13 @@
-import type { ApiEnvelope, Club, Match, Scorer, Squad, StandingsRow } from "@/src/types";
+import { parseHealth } from "@/health-core";
+import type {
+  ApiEnvelope,
+  Club,
+  Health,
+  Match,
+  Scorer,
+  Squad,
+  StandingsRow,
+} from "@/src/types";
 
 export interface MatchesPayload {
   rounds: number[];
@@ -22,3 +31,34 @@ export const fetchMatches = () => getJson<MatchesPayload>("/api/matches");
 export const fetchScorers = () => getJson<Scorer[]>("/api/scorers");
 /** Every club's elenco. One request upstream serves all twenty. */
 export const fetchSquads = () => getJson<Squad[]>("/api/squads");
+
+/** A reading of `/api/health`, and when it was taken. */
+export interface HealthReading {
+  /** `null` when the endpoint answered something this build cannot read. */
+  health: Health | null;
+  /**
+   * The instant the body arrived. Carried alongside because `uptime` is
+   * relative to it and to nothing else — the rodapé turns the two into the
+   * instant the process started, and reading the clock again later would walk
+   * that answer forward instead of holding it still.
+   */
+  readAt: number;
+}
+
+/**
+ * The process answering, for the **Rodapé**.
+ *
+ * The one fetch here that does not go through `getJson`: `/api/health` is not
+ * an `ApiEnvelope` (see `Health`), and it is read through `parseHealth` rather
+ * than cast, because a host serving an older bundle answers the shape that
+ * build emitted. A 503 and an unreadable body are the same fact to a footer, so
+ * both land as `health: null` rather than as two cases the caller must join
+ * back together.
+ */
+export const fetchHealth = async (): Promise<HealthReading> => {
+  const response = await fetch("/api/health");
+  const readAt = Date.now();
+  if (!response.ok) return { health: null, readAt };
+
+  return { health: parseHealth(await response.json()), readAt };
+};

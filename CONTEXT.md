@@ -906,3 +906,38 @@ feedback does not. Durations go near-zero rather than to `none`, so
 _Avoid_: removing hover and focus feedback along with the movement — a control
 that stops reacting is harder to use, not calmer; treating it as optional
 polish, since it is the reader stating a need rather than a preference.
+
+**Rodapé**:
+The strip closing every page: what this site is, and what is currently serving
+it. Rendered by `Footer`, and placed **inside** the page container rather than
+under it, so the `pb-28` that clears the navigation bar on a phone clears the
+rodapé too — under it, the last line would sit beneath the bar and be invisible
+until someone scrolled to the end of a twenty-club table. It is a sibling of
+`<main>`, not a child, because a drill-down replaces what is inside `main` and
+the rodapé must survive it.
+_Avoid_: "footer" in user-facing copy (upstream's word, not the reader's),
+putting navigation in it (the destinations are `NAV_ITEMS` and the bar is
+already full — see the bound in CLAUDE.md), treating it as the place to park
+anything with nowhere else to go.
+
+**Saúde do serviço**:
+What `/api/health` reports about the process that answered — its state, the
+provider it is **configured** with, the commit it was built from, when it was
+built, and when it started. Read once at load, narrowed by `parseHealth` in
+`health-core.ts`, and rendered as the second half of the **Rodapé**.
+Two distinctions the wording turns on. The **Fonte** here names what is
+configured, never what the last request returned: `/api/health` knows whether a
+token is present and the kill switch is off, and whether the upstream answered a
+minute ago is the envelope's `source`, which the banner above already carries.
+Saying "dados ao vivo" here would contradict a `fallback` banner three lines up.
+And **No ar desde** is an instant rather than an elapsed count, though the
+endpoint reports elapsed seconds: an instant answers "did it restart?" without
+the reader subtracting, and it holds still, where a "há 5 h 12 min" would differ
+between two captures of the same running process and commit that band as noise
+every screenshot refresh.
+Every field but the state may be absent — from source there is no build time —
+and an absent one is a missing item, never a dash.
+_Avoid_: "status" (the app says estado; `Status da partida` is a different
+thing and is a match's), "uptime" in user-facing copy, "versão" for
+`package.json`'s number — it sat at 0.1.0 for every deploy ever made and
+answered nothing, so the commit is what the rodapé shows.
