@@ -68,6 +68,22 @@ git merge-base --is-ancestor <branch> origin/main # has this branch landed?
 whole machine. Nothing in them marks ownership. Remove only what you created,
 and where you cannot establish that you created it, **leave it and say so.**
 
+**Knowing what you created is a record, not a memory.** `session-pending` says to
+write down each worktree and branch *at the moment you make it*; this is the step
+that spends it. Without that record you are recalling branch names at the point
+where being wrong deletes someone else's work — which is the one place the
+measure-don't-recall rule matters most.
+
+**Subtract your record from the listing, never the reverse.** Deriving the
+removal list *from* the listing cannot distinguish something you forgot you made
+from something that arrived while you were working — and the arrival is the more
+dangerous reading, because a worktree created a minute ago is the one most likely
+to hold work nobody has pushed. This is not hypothetical: during one teardown a
+peer's worktree appeared between two commands, clean and a minute old.
+
+Re-measuring guards against *the thing you measured having changed*. It does not
+guard against *something new having appeared*. Only the record does that.
+
 "It looked abandoned" is not attribution. A worktree that is clean, stale and
 quiet is equally a finished session, a live session reading files, and an
 abandoned one — and it has been each of those here.
@@ -81,6 +97,12 @@ its own upstream will refuse while being fully merged. The property you want is
 **Servers:** stop by **recorded PID**. `pkill -f <pattern>` matches every
 session's process, and has. If you did not record the PID, attribute it first
 with `readlink /proc/<PID>/cwd`.
+
+**Servers and panes held through a tool are invisible to `ss`.** A browser pane
+opened with `preview_start` is a client, not a listener, so no port scan will
+find it, and the dev server behind it is released by **`preview_stop <serverId>`**
+— not by port and not by PID. Record the `serverId` when you start it; that is
+the only handle you get.
 
 **Background tasks and monitors:** these have no on-disk trace and die silently
 with the session. Terminate them deliberately, and if anyone was waiting on a
@@ -104,6 +126,14 @@ ss -ltn 2>/dev/null | grep -E ':3[0-9]{3}'
 git status --porcelain -uall
 ```
 
+## An empty teardown is the good outcome
+
+If you tidied as you went, the destructive half is a no-op and there is nothing
+to remove. **Say so and stop.** This document is almost entirely about removal,
+which creates a mild pull toward finding something to remove — resist it. A
+session that arrives at teardown holding nothing did the work correctly earlier,
+and the shortest honest report is the best one.
+
 ## The closing report
 
 End with what you left behind, because the next session inherits it:
@@ -115,6 +145,7 @@ TORN DOWN
   left       .claude/worktrees/highlights — not mine, untouched
   handed off the Maracanã re-capture to <session>; they acknowledged
   nothing    no branches, worktrees, servers or tasks of mine remain
+             (destructive half was a no-op — nothing was left to remove)
 ```
 
 If something could not be cleaned up, name it and why. An honest leftover someone
