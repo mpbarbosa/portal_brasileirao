@@ -16,9 +16,9 @@ agent Claude Code.
 > `FOOTBALL_DATA_TOKEN` is set; without a token the app serves a frozen snapshot, so a
 > fresh clone runs with no signup.
 
-![Classificação do Campeonato Brasileiro Série A no tema claro: os 20 clubes com escudo, pontos, o gráfico da campanha, jogos, vitórias, empates, derrotas e saldo de gols. Os quatro primeiros trazem uma faixa verde (G4) e os quatro últimos uma faixa vermelha (Z4).](docs/screenshots/classificacao-light.png)
+![Classificação do Campeonato Brasileiro Série A no tema claro: os 20 clubes com escudo, pontos, o gráfico da campanha, jogos, vitórias, empates, derrotas e saldo de gols. Os quatro primeiros trazem uma faixa verde (G4) e os quatro últimos uma faixa vermelha (Z4). Ao pé da página, o rodapé diz que o projeto é independente e sem vínculo com a CBF ou com os clubes, e traz a saúde do serviço: estado, fonte dos dados, versão, quando foi compilado e desde quando está no ar.](docs/screenshots/classificacao-light.png)
 
-![A mesma classificação no tema escuro, com as mesmas 20 posições, faixas do G4 e do Z4 e gráficos da campanha.](docs/screenshots/classificacao-dark.png)
+![A mesma classificação no tema escuro, com as mesmas 20 posições, faixas do G4 e do Z4, gráficos da campanha e o mesmo rodapé com a saúde do serviço.](docs/screenshots/classificacao-dark.png)
 
 *Classificação, light and dark. The app follows your system setting and remembers an explicit
 choice; the control in the header switches between them. **Campanha** is the club's position
@@ -44,9 +44,9 @@ refetches on its own. There is deliberately no match minute: the provider report
 and a score and never an elapsed clock, so the page says **bola rolando** rather than
 guessing a number.*
 
-![Página do clube Palmeiras no tema claro: escudo, site oficial, perfil no Instagram, hino do clube e artigo na Wikipédia, os números da temporada (1º lugar, 51 pontos, 24 jogos, saldo +24), o gráfico da campanha da 1ª à 24ª rodada, os últimos cinco resultados, o próximo jogo e os artilheiros do clube.](docs/screenshots/clube-palmeiras-light.png)
+![Página do clube Palmeiras no tema claro: escudo, o endereço da sede, site oficial, perfil no Instagram, hino do clube e artigo na Wikipédia, os números da temporada (1º lugar, 51 pontos, 24 jogos, saldo +24), o gráfico da campanha da 1ª à 24ª rodada, os últimos cinco resultados, o próximo jogo e os artilheiros do clube.](docs/screenshots/clube-palmeiras-light.png)
 
-![A mesma página do clube Palmeiras no tema escuro: os mesmos escudo, quatro links, números da temporada, gráfico da campanha e jogos, com as marcas das emissoras mantendo o fundo claro para continuarem legíveis.](docs/screenshots/clube-palmeiras-dark.png)
+![A mesma página do clube Palmeiras no tema escuro: os mesmos escudo, endereço da sede, quatro links, números da temporada, gráfico da campanha e jogos, com as marcas das emissoras mantendo o fundo claro para continuarem legíveis.](docs/screenshots/clube-palmeiras-dark.png)
 
 ![Página de jogos no tema claro: seletor de rodada e os jogos da 25ª rodada, cada um com os clubes, data, horário e as marcas das emissoras que o transmitem.](docs/screenshots/jogos-light.png)
 
