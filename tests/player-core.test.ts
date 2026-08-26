@@ -10,8 +10,10 @@ import {
   playerPhotoPage,
   playerPhotoUrl,
   playerSearchUrls,
+  playerSofascore,
   playerWikipedia,
   positionLabel,
+  sofascoreUrl,
 } from "@/player-core";
 import type { Player } from "@/src/types";
 
@@ -225,5 +227,74 @@ test("the news link is the same query, not a second one", () => {
   assert.equal(
     new URL(news).searchParams.get("q"),
     new URL(google).searchParams.get("q"),
+  );
+});
+
+test("sofascoreUrl drops the slug rather than storing one", () => {
+  // The slug is decoration: `_` in that position resolves by id, which is what
+  // lets the table hold a bare number and cannot rot when Sofascore renames a
+  // player's URL.
+  assert.equal(
+    sofascoreUrl("138833"),
+    "https://www.sofascore.com/player/_/138833",
+  );
+});
+
+test("sofascoreUrl accepts whatever form the profile was pasted in", () => {
+  // The table is hand-maintained, so the value may arrive as the address a
+  // reader copied out of the browser — with the locale prefix, the sport, the
+  // slug and a tab anchor on it. Only the id survives.
+  const expected = "https://www.sofascore.com/player/_/138833";
+
+  assert.equal(
+    sofascoreUrl("https://www.sofascore.com/pt/football/player/memphis-depay/138833"),
+    expected,
+  );
+  assert.equal(sofascoreUrl("https://www.sofascore.com/player/_/138833"), expected);
+  assert.equal(
+    sofascoreUrl("https://www.sofascore.com/football/player/memphis-depay/138833#tab:statistics"),
+    expected,
+  );
+});
+
+test("sofascoreUrl refuses anything that is not a plausible id", () => {
+  // No link at all, rather than one that lands on Sofascore's 404 — the same
+  // rule `wikipediaUrl` and `instagramUrl` follow.
+  assert.equal(sofascoreUrl("memphis-depay"), null);
+  assert.equal(sofascoreUrl("1"), null);
+  assert.equal(sofascoreUrl("12345678"), null);
+  assert.equal(sofascoreUrl(""), null);
+  assert.equal(sofascoreUrl(undefined), null);
+  // Another host's URL is not rewritten into a Sofascore one: that would build
+  // a plausible address out of somebody else's identifier.
+  assert.equal(sofascoreUrl("https://www.transfermarkt.com/player/138833"), null);
+  assert.equal(sofascoreUrl("not a url/138833"), null);
+});
+
+test("playerSofascore builds the profile address from a stored id", () => {
+  const profiles = { "8472": "138833" };
+
+  assert.equal(
+    playerSofascore("8472", profiles),
+    "https://www.sofascore.com/player/_/138833",
+  );
+  // Absence, not an error: coverage is partial and roughly half the listed
+  // players have no recorded profile.
+  assert.equal(playerSofascore("1", profiles), null);
+});
+
+test("playerSofascore tells two players of one name apart", () => {
+  // Athletico-PR really does list two Dudus, and they are two men ten years
+  // apart with two Sofascore profiles. This is the whole reason the table is
+  // keyed by player id rather than by name.
+  const profiles = { "1584": "859083", "211606": "1482354" };
+
+  assert.equal(
+    playerSofascore("1584", profiles),
+    "https://www.sofascore.com/player/_/859083",
+  );
+  assert.equal(
+    playerSofascore("211606", profiles),
+    "https://www.sofascore.com/player/_/1482354",
   );
 });

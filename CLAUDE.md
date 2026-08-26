@@ -575,6 +575,34 @@ drifted: one asked Commons for `ImageDescription` and the other did not. It stay
 separate from `commons-core.ts`, which is pure and holds the *judgement*, because
 that split is what lets the licence rules be unit-tested without a network.
 
+`src/data/player-sofascore.ts` holds each player's profile on **Sofascore**,
+keyed by player id and storing the **id alone** — the curated player file whose
+stored value is smallest, for a reason worth reading. A Sofascore URL looks like `/pt/football/player/memphis-depay/138833`, but none of
+that path except the number is load-bearing: **`_` in the slug position resolves
+by id** and redirects to the canonical address, which is Wikidata's own
+formatter for this identifier (P12302). So `sofascoreUrl` in `player-core.ts`
+builds `…/player/_/<id>`, the file stays a plain `Record<string, string>` like
+its two neighbours, and a slug Sofascore renames tomorrow cannot rot a link
+here. The `/pt/` prefix is not stored either and must not be added: `/pt/player/_/138833`
+is a **404**, and the prefixed form a reader pastes redirects to the unprefixed
+address regardless — Sofascore negotiates the language itself.
+
+Coverage is 427 of 948. Candidates came from Wikidata's P12302 joined to
+`squads.ts` on exact date of birth **plus** an exact normalised name, and 141 of
+them needed no name match at all — their `ptwiki` title is the one
+`player-wikipedia.ts` already records, so they ride on a join
+`check-player-wikipedia` has verified against the article's own birth date.
+Every match was then re-queried for citizenship and occupation; that caught
+three real cross-person matches on the name+date path (Vitinho, Matheus Reis,
+Alexandre Guedes), all dropped.
+
+**There is no `check-player-sofascore`, and like the Instagram file that is a
+property of the host rather than of diligence.** Sofascore sits behind
+Cloudflare and answers **403** to every scripted request, `api.sofascore.com`
+included, whatever the User-Agent — so a checker would have nothing to read.
+Eight ids were opened in a real browser instead. Do not add one from a search
+result without opening it.
+
 `src/data/stadiums.ts` holds each ground's official name, capacity and year of
 inauguration, hand-maintained for the same reason as the hymns — **no provider carries
 any of it**, and CBF's feed stops at a name, a city and a state. Keyed by stadium slug,

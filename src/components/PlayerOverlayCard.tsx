@@ -9,6 +9,7 @@ import {
   playerPhotoPage,
   playerPhotoUrl,
   playerSearchUrls,
+  playerSofascore,
   positionLabel,
 } from "@/player-core";
 import { Button } from "@/src/components/Button";
@@ -16,6 +17,7 @@ import { GLYPH, InstagramLink, WikipediaLink } from "@/src/components/ClubLinks"
 import { LINK_UNDERLINE } from "@/src/components/interaction";
 import { PLAYER_INSTAGRAM } from "@/src/data/player-instagram";
 import { PLAYER_PHOTOS } from "@/src/data/player-photos";
+import { PLAYER_SOFASCORE } from "@/src/data/player-sofascore";
 import { PLAYER_WIKIPEDIA } from "@/src/data/player-wikipedia";
 import type { Player, Scorer } from "@/src/types";
 
@@ -116,6 +118,53 @@ function SearchLink({
       {children}
       {label}
       <span className="sr-only"> — {suffix} (abre em nova aba)</span>
+    </a>
+  );
+}
+
+/**
+ * A bar chart rather than Sofascore's own wordmark, and drawn here rather than
+ * in `ClubLinks`.
+ *
+ * The mark first: a wordmark is artwork with a fixed form and a fixed colour,
+ * so it could not take `currentColor` and would sit cold beside the two links
+ * it shares a row with — the same argument `ClubLinks` makes for preferring
+ * Instagram's outline to Meta's gradient. Three rising bars say "statistics",
+ * which is what the destination is for.
+ *
+ * The place second: `ClubLinks` holds the links a *club* carries, and a mark
+ * moves there when it gains a second call site. This one has one and no club
+ * has a Sofascore page, so it stays local exactly as the search and news marks
+ * below it do. It still takes `GLYPH` from there, so it cannot drift from the
+ * marks printed beside it — that is the part that must not be copied.
+ */
+function SofascoreGlyph() {
+  return (
+    <svg {...GLYPH}>
+      <path d="M5 20V13" />
+      <path d="M12 20V8" />
+      <path d="M19 20V4" />
+    </svg>
+  );
+}
+
+/**
+ * The player's Sofascore profile, or nothing when none is recorded.
+ *
+ * Reads as the host, like the Wikipédia link beside it and for the same reason:
+ * the stored value is a seven-digit id and nobody scanning a row of links is
+ * looking for one. No `subject` argument, because unlike `InstagramLink` and
+ * `WikipediaLink` this has a single caller and no club counterpart to be
+ * confused with — the suffix can simply say what it is.
+ */
+function SofascoreLink({ href }: { href: string | null }) {
+  if (!href) return null;
+
+  return (
+    <a href={href} target="_blank" rel="noopener noreferrer" className={`truncate ${LINK_UNDERLINE}`}>
+      <SofascoreGlyph />
+      Sofascore
+      <span className="sr-only"> — estatísticas do jogador (abre em nova aba)</span>
     </a>
   );
 }
@@ -226,6 +275,7 @@ export function PlayerOverlayCard({ player, scorer, onClose }: PlayerOverlayCard
    */
   const instagram = playerInstagram(player.id, PLAYER_INSTAGRAM);
   const wikipedia = PLAYER_WIKIPEDIA[player.id];
+  const sofascore = playerSofascore(player.id, PLAYER_SOFASCORE);
   const photo = PLAYER_PHOTOS[player.id];
   const search = playerSearchUrls(enriched.name, club?.shortName);
 
@@ -385,15 +435,16 @@ export function PlayerOverlayCard({ player, scorer, onClose }: PlayerOverlayCard
           </section>
         )}
 
-        {(instagram || wikipedia) && (
+        {(instagram || wikipedia || sofascore) && (
           /* Curated, so present for a minority of the division. A reader with
-             neither recorded gets no section at all rather than a heading over
-             nothing — an absent link is not a missing value. */
+             none of the three recorded gets no section at all rather than a
+             heading over nothing — an absent link is not a missing value. */
           <section>
             <GroupLabel>Onde acompanhar</GroupLabel>
             <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-body-medium">
               <InstagramLink handle={instagram} subject="do jogador" />
               <WikipediaLink title={wikipedia} subject="do jogador" />
+              <SofascoreLink href={sofascore} />
             </div>
           </section>
         )}
