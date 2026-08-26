@@ -912,6 +912,26 @@ commands is cheaper than the retraction.
   passed a `scrollWidth > clientWidth` clip check too, because a wrapped cell is not a
   clipped one. Assert **row height**, which is what `no club name wraps to a second line`
   does; the sibling spec asserts the frozen pair stays under 70% of the container.
+  **Pinning Clube does not end the surplus story — it moves it one column right.**
+  Auto layout re-runs the same rule on what is left, and the next widest column is
+  Campanha, which holds surplus worse than a tally does: the mark is a fixed 72px and
+  nothing else in the cell grows, so the space cannot be taken up. At 1280px the column
+  rendered 164px around that 72px, and the ~80px of blank between the end of the line and
+  J read as a hole in the row rather than as spacing. `CAMPAIGN_COLUMN` therefore carries
+  **`w-0`** for exactly the reason `STICKY_CLUB` does, and the surplus lands on the
+  tallies, which share it evenly — P through SG went 55px to 70px.
+  **Stretching the mark to fill the column is the other way to close that gap, and it is
+  the wrong one.** `RankSparkline` keeps one geometry in the table and on the club page so
+  a reader recognises the same shape in both, and a width that followed the viewport would
+  not. Fix the column, never the mark.
+  The two failures are not equally visible, which is the part worth carrying away. The
+  frozen-column one starved the data columns on a phone — a functional failure, and a
+  proportion of the container catches it. This one costs nothing functionally: the table
+  still fits, no cell wraps, nothing is clipped, and **every existing spec passed
+  throughout**. It is visible only to someone looking at the row, or to an assertion about
+  the **gap to the next column** rather than about any column's width — which is what
+  `the campanha column is no wider than the mark it holds` measures, at a desktop width,
+  since a narrow screen sits near the table's `min-w` and has little surplus to misplace.
 - **Motion is MD3's, and `prefers-reduced-motion` is honoured.** A bare `transition`
   already means MD3 standard easing at 200ms, because `--default-transition-duration`
   and `--default-transition-timing-function` are overridden in `src/index.css` — do not
