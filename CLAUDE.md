@@ -968,6 +968,16 @@ commands is cheaper than the retraction.
   pairing nothing had used, so it was added to the contrast gate as a live
   pairing rather than measured once and written down. It clears AA in both
   themes, tightest at 5.49 on light.
+- **The provider's English is translated at the edge, never rendered.**
+  `positionLabel` and `nationalityLabel` in `player-core.ts` are the two, and
+  both follow the same contract: an unmapped value is shown **verbatim** rather
+  than guessed at or blanked, because the English word serves a reader better
+  than nothing and is a visible prompt to add the row. `NATIONALITY_LABELS` is
+  hand-written — `Intl.DisplayNames` speaks ISO region codes while the provider
+  sends its own names (`DR Congo`, `Ivory Coast`), and `England` is football
+  counting the home nations separately. A unit test asserts every nationality in
+  `squads.ts` is mapped, so the table goes red on the next `sync-seed-data`
+  rather than silently leaking English after a transfer window.
 - **The card's club comes from the page, not from the enrichment.**
   `/api/players/:id` reports football-data's `currentTeam`, which for an
   international is frequently the **national team** — opened from the Corinthians

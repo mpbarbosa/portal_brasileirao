@@ -170,7 +170,9 @@ test.describe("Cartão do jogador", () => {
     await expect(card(page).getByText(club, { exact: true })).toBeVisible();
     // The nationality still comes from the enrichment — only the club is
     // overruled, and only because the page already knew a better answer.
-    await expect(figure(page, "Nacionalidade").locator("dd")).toHaveText("Netherlands");
+    // Translated, like the position beside it — the stub sends the provider's
+    // English and the card is a pt-BR surface.
+    await expect(figure(page, "Nacionalidade").locator("dd")).toHaveText("Países Baixos");
   });
 
   test("enrichment fills in details the table did not have", async ({ page }) => {
@@ -201,7 +203,10 @@ test.describe("Cartão do jogador", () => {
 
     // Position is translated, not shown in the upstream's English.
     await expect(card(page).getByText("Centroavante")).toBeVisible();
-    await expect(card(page).getByText("Brazil")).toBeVisible();
+    // The country is translated too, not just the position: the card said
+    // "Nacionalidade: Brazil" in an app whose every other word is Portuguese.
+    await expect(card(page).getByText("Brasil", { exact: true })).toBeVisible();
+    await expect(card(page).getByText("Brazil")).toHaveCount(0);
     // The age is a figure with its unit in the label, like every other tile —
     // the card used to print "32 anos" as the value, which at the headline step
     // is half a phone's width for one word the label already implies.

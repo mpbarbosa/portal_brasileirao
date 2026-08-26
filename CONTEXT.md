@@ -624,6 +624,28 @@ seeing nothing.
 _Avoid_: inventing a translation for a value the map does not cover, collapsing
 specific roles into their broad line.
 
+**Nacionalidade**:
+The country a player represents, shown as a **Linha do cartão**. The provider
+reports it in English and `nationalityLabel` writes it in pt-BR — "Brasil", not
+"Brazil", which is what the card said for months while the position beside it
+was translated from the first day.
+
+Hand-written, because there is no `Intl` route to it: `Intl.DisplayNames` speaks
+ISO region codes and the provider sends **its own names** — `DR Congo` and
+`Ivory Coast` are not what any standard calls those countries. `England` rather
+than the United Kingdom is football counting the home nations separately, which
+is right here and is another thing a region-code table would get wrong.
+
+The table covers every value the division actually carries, measured against the
+live squads; a unit test fails the moment `sync-seed-data` brings in one that is
+missing, so it cannot quietly fall behind a transfer window.
+_Avoid_: "Holanda" for the Netherlands — a data row is a reference surface and
+takes the country's current pt-BR name, "Países Baixos", where the
+broadcast voice governs prose rather than proper nouns; the demonym form
+("brasileiro"), since the column names countries and not people; guessing at a
+country the table does not list, which is shown **verbatim in English** instead,
+as a visible prompt to add the row.
+
 **Elenco**:
 The set of players a club fields, as the provider lists it — `Squad` in
 `src/types.ts`, one per club. The word for the collection; **Jogadores** is the

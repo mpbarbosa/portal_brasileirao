@@ -4,6 +4,7 @@ import {
   ageOn,
   birthDateLabel,
   mergePlayer,
+  nationalityLabel,
   playerInstagram,
   PLAYER_PHOTO_WIDTHS,
   playerPhotoPage,
@@ -249,6 +250,7 @@ export function PlayerOverlayCard({ player, scorer, onClose }: PlayerOverlayCard
   const age = ageOn(enriched.dateOfBirth, new Date());
   const born = birthDateLabel(enriched.dateOfBirth);
   const position = positionLabel(enriched.position);
+  const nationality = nationalityLabel(enriched.nationality);
   /**
    * The club the *page* knows, ahead of the one the enrichment reports.
    *
@@ -294,7 +296,7 @@ export function PlayerOverlayCard({ player, scorer, onClose }: PlayerOverlayCard
 
   const rows: Array<{ label: string; value: string }> = [
     ...(position !== null ? [{ label: "Posição", value: position }] : []),
-    ...(enriched.nationality ? [{ label: "Nacionalidade", value: enriched.nationality }] : []),
+    ...(nationality !== null ? [{ label: "Nacionalidade", value: nationality }] : []),
     ...(born !== null ? [{ label: "Nascimento", value: born }] : []),
   ];
 
