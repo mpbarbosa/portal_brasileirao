@@ -1,11 +1,22 @@
 import { expect, test, type Page } from "@playwright/test";
 
+/**
+ * The heading naming what this page is about.
+ *
+ * Scoped to `main` because the rodapé carries an `sr-only` level-2 heading of
+ * its own on every page, and the player card another — an unscoped
+ * `getByRole("heading", { level: 2 })` resolves to two elements and fails
+ * strict mode. These specs were unambiguous only until the page grew a second
+ * top-level section, which is the accident the scope removes.
+ */
+const pageHeading = (page: Page) => page.getByRole("main").getByRole("heading", { level: 2 });
+
 /** Open the club sitting at a given standings position. */
 const openClubAt = async (page: Page, position: number) => {
   const row = page.locator("table tbody tr").nth(position - 1);
   const name = (await row.locator("td:nth-child(2) a").innerText()).trim();
   await row.locator("td:nth-child(2) a").click();
-  await expect(page.getByRole("heading", { level: 2 })).toHaveText(name);
+  await expect(pageHeading(page)).toHaveText(name);
   return name;
 };
 
@@ -26,7 +37,7 @@ test.describe("Clube", () => {
   test("choosing a club opens its page", async ({ page }) => {
     const name = await openClubAt(page, 1);
 
-    await expect(page.getByRole("heading", { level: 2 })).toHaveText(name);
+    await expect(pageHeading(page)).toHaveText(name);
     await expect(page.locator("table")).toHaveCount(0);
   });
 

@@ -43,7 +43,7 @@ test.describe("Navegação", () => {
 
     await expect(page.locator("table")).toHaveCount(0);
     // Round number is deliberately not asserted: it advances with the calendar.
-    await expect(page.getByRole("heading", { level: 2 })).toHaveText(/\d+ª rodada/);
+    await expect(page.getByRole("main").getByRole("heading", { level: 2 })).toHaveText(/\d+ª rodada/);
   });
 
   test("switching back to Classificação restores the table", async ({ page }) => {

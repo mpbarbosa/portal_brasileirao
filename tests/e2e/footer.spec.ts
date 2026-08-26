@@ -36,6 +36,21 @@ test.describe("Rodapé", () => {
     await expect(footer(page)).toBeVisible();
   });
 
+  test("it names itself in the outline, once, and outside main", async ({ page }) => {
+    await page.goto("/");
+
+    // The heading is the rodapé's entry in the document outline: a screen
+    // reader lands on "Rodapé" rather than on an unnamed run of facts. It is
+    // level 2 because the footer is a sibling of `main` under the page's h1,
+    // not a section of it.
+    const heading = footer(page).getByRole("heading", { level: 2, name: "Rodapé" });
+    await expect(heading).toHaveCount(1);
+
+    // …and it must stay out of `main`, because that scope is what lets every
+    // other spec name the page's own heading without matching this one too.
+    await expect(page.getByRole("main").getByRole("heading", { name: "Rodapé" })).toHaveCount(0);
+  });
+
   test("the health readout names the state, the source and the version", async ({ page }) => {
     await page.goto("/");
     await expect(footer(page).locator('[data-health="ok"]')).toBeVisible();
