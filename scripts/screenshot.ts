@@ -31,7 +31,7 @@
  * a PNG changed and never what it now says.
  */
 import { execFileSync } from "node:child_process";
-import { mkdirSync, readFileSync } from "node:fs";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 
 import { chromium, type Page } from "@playwright/test";
@@ -407,3 +407,35 @@ if (mobile) {
 await browser.close();
 
 console.log(`Wrote ${path.relative(process.cwd(), file)}`);
+
+/**
+ * Record which commit these images depict.
+ *
+ * Two jobs, and the second is the one that made it necessary.
+ *
+ * It documents provenance, which nothing did before: the directory held
+ * sixteen PNGs and no statement of what they were pictures *of*.
+ *
+ * And it lets `check-screenshots.sh` be satisfiable. That gate compares the
+ * newest commit touching an appearance path against the newest touching
+ * `docs/screenshots`, which assumes a change to the app always yields new bytes
+ * to commit. **An appearance change that moves no pixel breaks that
+ * assumption** — a transition suppressed for one frame, and then the revert of
+ * it, both reddened the gate while every one of the sixteen captures came back
+ * byte-identical, leaving nothing to commit and no way to clear it. This file
+ * changes whenever the captured commit does, so a refresh is always something
+ * the gate can see.
+ *
+ * Deliberately only written for a **committable** capture. Claiming provenance
+ * for images that went to `local/` would assert exactly the thing the guard
+ * above just refused. And deliberately no timestamp: the sha is the substance,
+ * and a clock would make every re-shoot a diff whether or not anything changed.
+ */
+if (committable) {
+  writeFileSync(
+    path.join(OUT_DIR, "CAPTURED"),
+    `# Which commit these screenshots depict.\n` +
+      `# Written by scripts/screenshot.ts; read by a human, not by the build.\n` +
+      `commit ${served.sha}\n`,
+  );
+}
