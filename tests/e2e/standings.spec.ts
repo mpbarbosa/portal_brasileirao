@@ -31,7 +31,7 @@ test.describe("Classificação", () => {
     const headers = await page.locator("table thead th").allInnerTexts();
 
     expect(headers.map((header) => header.trim())).toEqual([
-      "#", "CLUBE", "P", "J", "V", "E", "D", "SG", "CAMPANHA",
+      "#", "CLUBE", "P", "CAMPANHA", "J", "V", "E", "D", "SG",
     ]);
   });
 
@@ -67,16 +67,15 @@ test.describe("Classificação", () => {
 
     for (const row of rows) {
       const cells = await row.locator("td").allInnerTexts();
-      const [, , points, , wins, draws] = cells.map((cell) => cell.trim());
+      // 0 #, 1 Clube, 2 P, 3 Campanha, 4 J, 5 V, 6 E, 7 D, 8 SG.
+      const [, , points, , , wins, draws] = cells.map((cell) => cell.trim());
 
       expect(Number(points)).toBe(Number(wins) * 3 + Number(draws));
     }
   });
 
   test("goal difference is signed", async ({ page }) => {
-    // Addressed by index, not :last-child — the campanha column now sits after
-    // SG, and :last-child would sample a cell holding a drawing.
-    const values = await page.locator("table tbody tr td:nth-child(8)").allInnerTexts();
+    const values = await page.locator("table tbody tr td:last-child").allInnerTexts();
 
     for (const value of values) {
       expect(value.trim()).toMatch(/^[+-]?\d+$/);
@@ -84,7 +83,9 @@ test.describe("Classificação", () => {
   });
 
   test("every club row draws its campanha", async ({ page }) => {
-    const sparklines = page.locator("table tbody tr td:last-child svg");
+    // Addressed by index, not :last-child — the campanha column sits between P
+    // and J, and :last-child would sample the goal-difference number.
+    const sparklines = page.locator("table tbody tr td:nth-child(4) svg");
 
     await expect(sparklines).toHaveCount(20);
   });
@@ -92,7 +93,7 @@ test.describe("Classificação", () => {
   test("the campanha is stated in words as well as drawn", async ({ page }) => {
     // The drawing is unreadable to a screen reader and may not render at all
     // under forced colours, so the same fact has to exist as text.
-    const first = page.locator("table tbody tr td:last-child svg").first();
+    const first = page.locator("table tbody tr td:nth-child(4) svg").first();
 
     // Never assert a position or a round number: the snapshot ages and the
     // table reorders. The shape of the sentence is what is being fixed here.
@@ -109,7 +110,7 @@ test.describe("Classificação", () => {
       const points = await page
         .locator("table tbody tr")
         .nth(nth)
-        .locator("td:last-child svg polyline")
+        .locator("td:nth-child(4) svg polyline")
         .getAttribute("points");
       const pairs = (points ?? "").trim().split(" ");
       return Number(pairs[pairs.length - 1].split(",")[1]);

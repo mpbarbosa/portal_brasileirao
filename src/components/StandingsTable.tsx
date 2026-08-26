@@ -70,14 +70,15 @@ export function StandingsTable({ rows, onSelectClub, rankHistory }: StandingsTab
             <th scope="col" className={`${STICKY_POSITION} bg-surface-container-low px-3 py-2 text-left`}>#</th>
             <th scope="col" className={`${STICKY_CLUB} bg-surface-container-low px-3 py-2 text-left`}>Clube</th>
             <th scope="col" className="px-2 py-2 text-right">P</th>
+            {/* Beside the points rather than after SG: the campanha is read
+                against the total, and a narrow screen scrolls the tallies away
+                from it rather than it away from the tallies. */}
+            {showCampaign && <th scope="col" className="px-3 py-2 text-left">Campanha</th>}
             <th scope="col" className="px-2 py-2 text-right">J</th>
             <th scope="col" className="px-2 py-2 text-right">V</th>
             <th scope="col" className="px-2 py-2 text-right">E</th>
             <th scope="col" className="px-2 py-2 text-right">D</th>
             <th scope="col" className="px-2 py-2 text-right">SG</th>
-            {/* Last, so it is the column a narrow screen scrolls away from
-                rather than one of the numbers the table exists for. */}
-            {showCampaign && <th scope="col" className="px-3 py-2 text-left">Campanha</th>}
           </tr>
         </thead>
         <tbody>
@@ -121,13 +122,6 @@ export function StandingsTable({ rows, onSelectClub, rankHistory }: StandingsTab
                 )}
               </td>
               <td className={`${ROW_LINE} px-2 py-2 text-right font-semibold tabular-nums`}>{row.points}</td>
-              <td className={`${ROW_LINE} px-2 py-2 text-right tabular-nums text-ink-muted`}>{row.played}</td>
-              <td className={`${ROW_LINE} px-2 py-2 text-right tabular-nums text-ink-muted`}>{row.wins}</td>
-              <td className={`${ROW_LINE} px-2 py-2 text-right tabular-nums text-ink-muted`}>{row.draws}</td>
-              <td className={`${ROW_LINE} px-2 py-2 text-right tabular-nums text-ink-muted`}>{row.losses}</td>
-              <td className={`${ROW_LINE} px-2 py-2 text-right tabular-nums text-ink-muted`}>
-                {row.goalDifference > 0 ? `+${row.goalDifference}` : row.goalDifference}
-              </td>
               {showCampaign && (
                 <td className={`${ROW_LINE} px-3 py-2`}>
                   <RankSparkline
@@ -137,6 +131,13 @@ export function StandingsTable({ rows, onSelectClub, rankHistory }: StandingsTab
                   />
                 </td>
               )}
+              <td className={`${ROW_LINE} px-2 py-2 text-right tabular-nums text-ink-muted`}>{row.played}</td>
+              <td className={`${ROW_LINE} px-2 py-2 text-right tabular-nums text-ink-muted`}>{row.wins}</td>
+              <td className={`${ROW_LINE} px-2 py-2 text-right tabular-nums text-ink-muted`}>{row.draws}</td>
+              <td className={`${ROW_LINE} px-2 py-2 text-right tabular-nums text-ink-muted`}>{row.losses}</td>
+              <td className={`${ROW_LINE} px-2 py-2 text-right tabular-nums text-ink-muted`}>
+                {row.goalDifference > 0 ? `+${row.goalDifference}` : row.goalDifference}
+              </td>
             </tr>
           ))}
         </tbody>
