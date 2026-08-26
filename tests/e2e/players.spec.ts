@@ -126,10 +126,28 @@ test.describe("Jogadores", () => {
     await expect(link).toHaveAttribute("target", "_blank");
   });
 
-  test("the two external links are told apart for a screen reader", async ({ page }) => {
-    // Both read "Instagram"/"Wikipédia" visually, and both sit on the same row.
-    // The suffix is what says whose profile and whose article — a card that
-    // said "do clube" here would be pointing a reader at the wrong subject.
+  test("a player with a recorded profile gets a link to Sofascore", async ({ page }) => {
+    const panel = page.locator('[data-squad="corinthians"]');
+    await panel.locator("summary").click();
+    await panel.getByRole("button", { name: "Memphis Depay" }).click();
+
+    const link = page.getByRole("dialog").getByRole("link", { name: /Sofascore/ });
+    // The id is curated data, so the contract is the shape — and specifically
+    // the `_` slug, which is what lets the table store an id alone. A URL that
+    // grew a real slug here would mean somebody put one in the file.
+    await expect(link).toHaveAttribute(
+      "href",
+      /^https:\/\/www\.sofascore\.com\/player\/_\/\d+$/,
+    );
+    await expect(link).toHaveAttribute("rel", /noopener/);
+    await expect(link).toHaveAttribute("target", "_blank");
+  });
+
+  test("the three external links are told apart for a screen reader", async ({ page }) => {
+    // All three read as a bare host name visually, and all three sit on the
+    // same row. The suffix is what says whose profile and whose article — a
+    // card that said "do clube" here would be pointing a reader at the wrong
+    // subject.
     const panel = page.locator('[data-squad="corinthians"]');
     await panel.locator("summary").click();
     await panel.getByRole("button", { name: "Memphis Depay" }).click();
@@ -137,6 +155,9 @@ test.describe("Jogadores", () => {
     const dialog = page.getByRole("dialog");
     await expect(dialog.getByRole("link", { name: /Instagram do jogador/ })).toBeVisible();
     await expect(dialog.getByRole("link", { name: /verbete do jogador/ })).toBeVisible();
+    await expect(
+      dialog.getByRole("link", { name: /estatísticas do jogador/ }),
+    ).toBeVisible();
   });
 
   test("a recorded photograph is served, not a broken box", async ({ page }) => {

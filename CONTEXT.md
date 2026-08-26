@@ -220,6 +220,27 @@ profile licenses nothing), hotlinking Commons (it rate-limits, and several cards
 in a row is normal reading), writing the alt from the file name, dropping the
 credit in a redesign, and assuming the photograph shows the player's current club.
 
+**Estatísticas do jogador**:
+A player's profile on Sofascore, shown under **Onde acompanhar** on the **Cartão
+do jogador** as a third link beside the **Instagram do jogador** and the
+**Verbete do jogador**, under the same rules: a monochrome outline taking
+`currentColor`, `inline-block`, `aria-hidden`. It belongs under that heading
+rather than under **Pesquisar na web** because it is a page *about* this player
+that somebody maintains, not a query the card composed. The mark is three rising
+bars rather than Sofascore's wordmark — the destination is a page of numbers, and
+a wordmark is fixed artwork that would sit cold beside links that warm on hover.
+Reads as "Sofascore", not as the id, for the reason the verbete reads as
+"Wikipédia": a seven-digit number is nothing a reader recognises. Curated in
+`src/data/player-sofascore.ts`, keyed by player id, storing the **id alone** —
+the slug a Sofascore URL carries is decoration, since `_` in that position
+resolves by id, and `sofascoreUrl` builds the address from that.
+_Avoid_: storing the slug or the `/pt/` prefix (the first can rot on a rename,
+the second is a 404), printing the id as the link text, giving this a `subject`
+argument like its two neighbours (no club has a Sofascore page, so there is
+nothing to confuse it with), filing it under **Pesquisar na web**, and writing
+down an id nobody has opened — the site answers every scripted request with 403,
+so unlike the verbete this cannot be checked by a script.
+
 **Hino do clube**:
 The club's hymn, linked from its page as a third external link beside the **Site
 oficial** and the **Instagram do clube**, under the same rules: a monochrome
@@ -584,13 +605,15 @@ hand, and building the news link as a second query rather than as a tab of the
 first.
 
 **Onde acompanhar**:
-The heading over a player's own accounts on the **Cartão do jogador** — the
-**Instagram do jogador** and the **Verbete do jogador**. Named for what a reader
-does with them rather than for what they are, which is what tells them apart from
-**Pesquisar na web** below: one is the player speaking, the other is the web
-about the player.
-_Avoid_: "Redes sociais" (a Wikipedia article is not one), "Links" (says nothing),
-and rendering the heading over an empty row for a player with neither recorded.
+The heading over the pages a reader can follow a player on, in the **Cartão do
+jogador** — the **Instagram do jogador**, the **Verbete do jogador** and the
+**Estatísticas do jogador**. Named for what a reader does with them rather than
+for what they are, which is what tells them apart from **Pesquisar na web**
+below: these are maintained pages about this player, that one is a query the card
+composed.
+_Avoid_: "Redes sociais" (neither a Wikipedia article nor a stats profile is
+one), "Links" (says nothing), and rendering the heading over an empty row for a
+player with none of the three recorded.
 
 **Posição**:
 A player's position. The upstream reports it in English, at two levels of detail

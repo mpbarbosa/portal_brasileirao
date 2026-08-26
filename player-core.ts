@@ -233,3 +233,64 @@ export const playerSearchUrls = (
 
   return { google, news: `${google}&tbm=nws` };
 };
+
+/**
+ * The canonical address for a Sofascore player id.
+ *
+ * The slug in a Sofascore URL is decoration: `_` in that position resolves by
+ * id and redirects to the real address, which is Wikidata's own formatter for
+ * this identifier and is what lets `player-sofascore.ts` store the id alone.
+ * Accepts what a person is likely to paste — a bare id or a full profile URL,
+ * with or without the `/pt/` prefix and the `football/` section — because the
+ * table is hand-maintained and being strict about the input format buys
+ * nothing. Only the id is kept, so a link copied from the statistics tab does
+ * not carry `#tab:statistics` into the file.
+ *
+ * The locale prefix is deliberately **not** reproduced, unlike `wikipediaUrl`'s
+ * fixed `pt` edition. `/pt/player/_/138833` is a 404 and `/pt/football/player/
+ * memphis-depay/138833` redirects to the unprefixed address, so Sofascore
+ * negotiates the language itself and a path we wrote would only be thrown away.
+ *
+ * Returns null for anything that is not a plausible id — Wikidata's own
+ * constraint on P12302 is two to seven digits — which the UI renders as no link
+ * rather than a broken one.
+ */
+export const sofascoreUrl = (raw: string | null | undefined): string | null => {
+  const value = raw?.trim();
+  if (!value) return null;
+
+  let id = value;
+  if (value.includes("/")) {
+    let url: URL;
+    try {
+      url = new URL(value);
+    } catch {
+      return null;
+    }
+    if (!/(^|\.)sofascore\.com$/.test(url.hostname)) return null;
+    // The id is the last segment, after whatever locale, sport and slug the
+    // pasted address happened to carry.
+    id = url.pathname.split("/").filter(Boolean).pop() ?? "";
+  }
+
+  if (!/^[0-9]{2,7}$/.test(id)) return null;
+
+  return `https://www.sofascore.com/player/_/${id}`;
+};
+
+/**
+ * The player's Sofascore profile, or null when none is recorded.
+ *
+ * Returns the **address**, like `playerWikipedia` and unlike
+ * `playerInstagram`: the link prints the word "Sofascore" and the id is only
+ * ever the destination — a seven-digit number is nothing a reader recognises.
+ *
+ * The table is passed in rather than imported, keeping this module free of I/O
+ * like every other core module.
+ *
+ * An unknown id is absence, not an error — coverage is partial by design.
+ */
+export const playerSofascore = (
+  id: string,
+  profiles: Record<string, string>,
+): string | null => sofascoreUrl(profiles[id]);
