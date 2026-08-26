@@ -4,7 +4,7 @@ import type { Scorer } from "@/src/types";
  * GENERATED FILE — do not edit by hand.
  * Regenerate with: npx tsx scripts/sync-seed-data.ts
  *
- * Frozen top-scorer table, taken 2026-08-25 from football-data.org. Serves
+ * Frozen top-scorer table, taken 2026-08-26 from football-data.org. Serves
  * as the offline fallback, so it goes stale the moment anyone scores.
  */
 export const SEED_SCORERS: Scorer[] = [

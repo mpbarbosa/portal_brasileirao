@@ -273,13 +273,43 @@ export const withWikipedia = (clubs: Club[], articles: Record<string, string>): 
   });
 
 /**
+ * The club's **sede** as one readable line, or null when there is nothing to
+ * show.
+ *
+ * football-data builds this field by interpolation and does not check its own
+ * columns first, so a club whose street or postcode is unknown arrives with the
+ * literal word `null` standing in that position — three of the twenty read
+ * `"null São Paulo, SP null"`. Rendered verbatim, that is what the page says,
+ * and it looks like our bug rather than upstream's.
+ *
+ * Only a **leading and a trailing** token is stripped, anchored rather than
+ * replaced wherever it occurs: everything between them is a street and a
+ * neighbourhood copied as upstream wrote them, and an address this app cannot
+ * parse is not one it should be editing. It cannot parse it because there is no
+ * separator between the neighbourhood and the city — `"Bairro Laranjeiras Rio de
+ * Janeiro, RJ"` — which is also why the result is a line rather than components.
+ *
+ * A club left with only its city keeps that; a club left with nothing at all
+ * returns null, so the caller omits the row instead of printing an empty one.
+ */
+export const clubAddress = (raw: string | null | undefined): string | null => {
+  const line = (raw ?? "")
+    .replace(/^\s*null\b\s*/i, "")
+    .replace(/\s*\bnull\s*$/i, "")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  return line || null;
+};
+
+/**
  * Fill in details the live payloads omit.
  *
  * Club objects embedded in standings and fixtures carry only id, name, crest
- * and abbreviation — the website comes from the teams endpoint, which only the
- * seed generator calls, and the Instagram handle, the hymn and the Wikipedia
- * article from no endpoint at all. So the committed club list supplies all four
- * at request time.
+ * and abbreviation — the website and the sede come from the teams endpoint,
+ * which only the seed generator calls, and the Instagram handle, the hymn and
+ * the Wikipedia article from no endpoint at all. So the committed club list
+ * supplies all five at request time.
  */
 export const withClubDetails = (clubs: Club[], known: Club[]): Club[] => {
   const byCode = new Map(known.map((club) => [club.code, club]));
@@ -290,6 +320,7 @@ export const withClubDetails = (clubs: Club[], known: Club[]): Club[] => {
     const instagram = club.instagram ?? source?.instagram;
     const hymn = club.hymn ?? source?.hymn;
     const wikipedia = club.wikipedia ?? source?.wikipedia;
+    const address = club.address ?? source?.address;
 
     return {
       ...club,
@@ -297,6 +328,7 @@ export const withClubDetails = (clubs: Club[], known: Club[]): Club[] => {
       ...(instagram ? { instagram } : {}),
       ...(hymn ? { hymn } : {}),
       ...(wikipedia ? { wikipedia } : {}),
+      ...(address ? { address } : {}),
     };
   });
 };

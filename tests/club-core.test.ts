@@ -5,6 +5,7 @@ import { CLUBS } from "@/src/data/clubs";
 import { CLUB_HYMNS } from "@/src/data/club-hymns";
 import { CLUB_WIKIPEDIA } from "@/src/data/club-wikipedia";
 import {
+  clubAddress,
   clubKey,
   clubMatches,
   findClub,
@@ -252,6 +253,63 @@ test("a club the seed does not know keeps no website", () => {
   const live = [club("9999", "Desconhecido", "desconhecido")];
 
   assert.equal(withClubDetails(live, [])[0].website, undefined);
+});
+
+test("a full address survives cleaning unchanged", () => {
+  assert.equal(
+    clubAddress("Rua Álvaro Chaves 41, Bairro Laranjeiras Rio de Janeiro, RJ 22231-220"),
+    "Rua Álvaro Chaves 41, Bairro Laranjeiras Rio de Janeiro, RJ 22231-220",
+  );
+});
+
+test("upstream's interpolated nulls are stripped, leaving the city", () => {
+  // Verbatim from /competitions/BSA/teams: football-data builds this string
+  // without checking its own columns, so a missing street and postcode arrive
+  // as the literal word. Three of the twenty clubs read exactly like this.
+  assert.equal(clubAddress("null São Paulo, SP null"), "São Paulo, SP");
+  assert.equal(clubAddress("null Rio de Janeiro, RJ null"), "Rio de Janeiro, RJ");
+  assert.equal(clubAddress("null Mirassol, SP null"), "Mirassol, SP");
+});
+
+test("only the ends are stripped, never a null inside the line", () => {
+  // The middle is a street and a neighbourhood as upstream wrote them. An
+  // unanchored replace would edit an address this app cannot parse.
+  assert.equal(
+    clubAddress("Rua null Central 10, Centro Recife, PE"),
+    "Rua null Central 10, Centro Recife, PE",
+  );
+  // And the token has to be the whole word: a street may begin with one.
+  assert.equal(
+    clubAddress("Nullo Marcheselli 12, Centro Santos, SP"),
+    "Nullo Marcheselli 12, Centro Santos, SP",
+  );
+});
+
+test("an address with nothing left in it is absent, not empty", () => {
+  // The caller omits the line; it must never print a blank one.
+  assert.equal(clubAddress("null null"), null);
+  assert.equal(clubAddress("   "), null);
+  assert.equal(clubAddress(""), null);
+  assert.equal(clubAddress(null), null);
+  assert.equal(clubAddress(undefined), null);
+});
+
+test("the sede is filled in from the committed club list", () => {
+  // Same gap as the website: only the teams endpoint carries an address, and
+  // only the seed generator calls it.
+  const live = [club("1769", "Palmeiras", "palmeiras")];
+  const known = [
+    {
+      ...club("1769", "Palmeiras", "palmeiras"),
+      address: "Rua Palestra Italia nº 214, Perdizes São Paulo, SP 05005-030",
+    },
+  ];
+
+  assert.equal(
+    withClubDetails(live, known)[0].address,
+    "Rua Palestra Italia nº 214, Perdizes São Paulo, SP 05005-030",
+  );
+  assert.equal(withClubDetails(live, [])[0].address, undefined);
 });
 
 test("a handle becomes the canonical profile address", () => {

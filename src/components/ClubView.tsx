@@ -55,19 +55,21 @@ const stat = (label: string, value: string) => (
 );
 
 /**
- * The marks beside the club's external links.
+ * The marks in the club's header.
  *
  * Drawn here rather than fetched, for the reason `CLAUDE.md` gives for the
  * broadcaster marks: no runtime dependency on a third party for an asset. These
- * two stay local because they have one call site each, the same way `MatchPage`
- * keeps `Campaign` and `Side`. The Wikipédia mark left for `ClubLinks` when the
- * match page became its second caller, and the Instagram mark followed it when
- * the player card did — that rule is what moved them, and what keeps these here.
+ * three stay local because they have one call site each, the same way
+ * `MatchPage` keeps `Campaign` and `Side`. The Wikipédia mark left for
+ * `ClubLinks` when the match page became its second caller, and the Instagram
+ * mark followed it when the player card did — that rule is what moved them, and
+ * what keeps these here.
  *
- * Both are monochrome outlines — a plain globe for the club's own site, and a
- * pair of quavers for the hymn rather than YouTube's play button: each names the
- * *thing* and not the host that happens to keep it. Their shared attributes come
- * from `GLYPH`, so a mark defined here cannot drift from the one defined there.
+ * All three are monochrome outlines — a plain globe for the club's own site, a
+ * pair of quavers for the hymn rather than YouTube's play button, a pin for the
+ * sede: each names the *thing* and not the host that happens to keep it. Their
+ * shared attributes come from `GLYPH`, so a mark defined here cannot drift from
+ * the one defined there.
  */
 
 /** A globe: the club's own site, as distinct from a profile it keeps elsewhere. */
@@ -77,6 +79,18 @@ function SiteGlyph() {
       <circle cx="12" cy="12" r="9" />
       <path d="M3 12h18" />
       <path d="M12 3a15 15 0 0 1 0 18a15 15 0 0 1 0-18" />
+    </svg>
+  );
+}
+
+/** A map pin: the club's sede. The one mark in this header that is not a link —
+ *  the app holds no map, and an address is not an address bar, so the pin says
+ *  "this is a place" and stops there. */
+function SedeGlyph() {
+  return (
+    <svg {...GLYPH}>
+      <path d="M12 21s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11" />
+      <circle cx="12" cy="10" r="2.5" />
     </svg>
   );
 }
@@ -160,6 +174,18 @@ export function ClubView({
             {club.name}
             {club.state ? ` · ${club.state}` : ""}
           </p>
+          {/* The one line here that is allowed to wrap. Truncating an address
+              cuts from the right, which is where the city and the state are —
+              the half a reader who is not going there actually wants. */}
+          {club.address && (
+            <p data-sede className="mt-0.5 text-body-small text-ink-faint">
+              <SedeGlyph />
+              {/* The mark is aria-hidden, so without this the address is read
+                  out as a bare string with nothing saying what it is. */}
+              <span className="sr-only">Sede: </span>
+              {club.address}
+            </p>
+          )}
           {/* Each link reads as the thing itself — a bare host, a bare handle,
               a name — rather than a full URL, which is what a reader recognises
               and what keeps the row from wrapping. */}

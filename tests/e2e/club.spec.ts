@@ -259,6 +259,37 @@ test.describe("Clube", () => {
     expect(text).not.toContain("wikipedia.org");
   });
 
+  test("the club page names the club's sede", async ({ page }) => {
+    await page.goto("/clube/palmeiras");
+
+    // One line, verbatim from the provider: there is no separator between the
+    // neighbourhood and the city, so it is not split into fields.
+    await expect(page.locator("main [data-sede]")).toHaveText(
+      /Rua Palestra Italia .*Perdizes São Paulo, SP 05005-030$/,
+    );
+  });
+
+  test("a half-empty address shows the city, never upstream's word null", async ({ page }) => {
+    // football-data interpolates this field without checking its own columns,
+    // so Flamengo, Mirassol and São Paulo arrive as "null <city>, <UF> null".
+    // Rendered raw that is what the most-visited club page in the app says.
+    for (const slug of ["flamengo", "mirassol", "sao-paulo"]) {
+      await page.goto(`/clube/${slug}`);
+
+      const sede = page.locator("main [data-sede]");
+      await expect(sede).toHaveText(/^[A-ZÁ-Ú][^,]+, [A-Z]{2}$/);
+      expect(await page.locator("main").innerText()).not.toMatch(/\bnull\b/i);
+    }
+  });
+
+  test("the sede is announced as one, since its mark is aria-hidden", async ({ page }) => {
+    await page.goto("/clube/palmeiras");
+
+    // Without the screen-reader label the address reads out as a bare string
+    // with nothing saying what it is.
+    await expect(page.locator("main [data-sede] .sr-only")).toHaveText("Sede:");
+  });
+
   test("every club carries all four links", async ({ page }) => {
     // A missing handle renders as no link at all rather than a broken one, so
     // this would pass silently if the merge stopped working — hence checking
