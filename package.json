@@ -17,6 +17,7 @@
     "sync-broadcasts": "tsx scripts/sync-broadcasts.ts",
     "screenshot": "tsx scripts/screenshot.ts",
     "check-hymns": "tsx scripts/check-hymns.ts",
+    "check-player-wikipedia": "tsx scripts/check-player-wikipedia.ts",
     "check-stadium-photos": "tsx scripts/check-stadium-photos.ts",
     "find-highlights": "tsx scripts/find-highlights.ts",
     "sync-marks": "tsx scripts/sync-broadcaster-marks.ts",

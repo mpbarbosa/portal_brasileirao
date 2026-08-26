@@ -1,7 +1,13 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { ageOn, mergePlayer, playerInstagram, positionLabel } from "@/player-core";
+import {
+  ageOn,
+  mergePlayer,
+  playerInstagram,
+  playerWikipedia,
+  positionLabel,
+} from "@/player-core";
 import type { Player } from "@/src/types";
 
 test("broad positions are translated", () => {
@@ -103,4 +109,25 @@ test("playerInstagram normalises whatever form the handle was written in", () =>
   );
   // Not a plausible handle: no link at all, rather than a broken one.
   assert.equal(playerInstagram("c", { c: "não é um perfil" }), null);
+});
+
+test("playerWikipedia builds the article address from a stored title", () => {
+  const articles = { "8472": "Memphis Depay" };
+
+  assert.equal(
+    playerWikipedia("8472", articles),
+    "https://pt.wikipedia.org/wiki/Memphis_Depay",
+  );
+  // Absence, not an error: most of the division has no article recorded.
+  assert.equal(playerWikipedia("1", articles), null);
+});
+
+test("playerWikipedia carries a disambiguated title through intact", () => {
+  // Half the recorded titles are disambiguated, because the popular name is
+  // shared — this is precisely why the title cannot be derived from the name
+  // the app already holds, and has to be stored.
+  assert.equal(
+    playerWikipedia("a", { a: "Dudu (futebolista, 1992)" }),
+    "https://pt.wikipedia.org/wiki/Dudu_(futebolista%2C_1992)",
+  );
 });

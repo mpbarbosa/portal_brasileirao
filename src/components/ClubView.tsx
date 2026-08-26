@@ -192,7 +192,7 @@ export function ClubView({
                 <span className="sr-only"> — no YouTube (abre em nova aba)</span>
               </a>
             )}
-            <WikipediaLink club={club} />
+            <WikipediaLink title={club.wikipedia} subject="do clube" />
           </div>
         </div>
       </header>

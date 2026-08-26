@@ -186,6 +186,24 @@ suffix says whose), and — above all — writing down a handle nobody has opene
 Wikidata was wrong or stale for nearly one in five of the candidates, including
 one account that had been deactivated.
 
+**Verbete do jogador**:
+A player's article on the Portuguese Wikipedia, shown on the **Card do jogador**
+beside the **Instagram do jogador** and rendered by the same `WikipediaLink` as
+the club's — the component took a `title` and a `subject` when the card became
+its third caller, so the screen-reader suffix says whose verbete it is rather
+than defaulting to the club's. Reads as "Wikipédia", not as the title: the title
+is usually the name printed two lines above, and where it is not, it is a
+disambiguation ("Dudu (futebolista, 1992)") that means nothing to a reader.
+Curated in `src/data/player-wikipedia.ts`, keyed by player id, storing the title
+alone. Unlike the handle beside it this **can be verified**, and is, by
+`npm run check-player-wikipedia` — against the article's own stated birth date,
+not its title.
+_Avoid_: deriving the title from the player's name (half of them are
+disambiguated or sit at a fuller legal name), storing the URL, printing the
+title as the link text, sharing the club's screen-reader suffix, and trusting a
+Wikidata sitelink without reading the article — three of them named a different
+player of the same name.
+
 **Hino do clube**:
 The club's hymn, linked from its page as a third external link beside the **Site
 oficial** and the **Instagram do clube**, under the same rules: a monochrome

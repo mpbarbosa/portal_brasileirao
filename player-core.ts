@@ -2,7 +2,7 @@
  * Pure player display logic. No I/O, no React — translation and age are total
  * functions over their inputs (tests/player-core.test.ts).
  */
-import { instagramHandle } from "@/club-core";
+import { instagramHandle, wikipediaUrl } from "@/club-core";
 import type { Player } from "@/src/types";
 
 /**
@@ -96,3 +96,23 @@ export const playerInstagram = (
   id: string,
   handles: Record<string, string>,
 ): string | null => instagramHandle(handles[id]);
+
+/**
+ * The player's article on the Portuguese Wikipedia, or null when none is
+ * recorded.
+ *
+ * Returns the **address**, not the title, which is the opposite of
+ * `playerInstagram` above and deliberate: a handle is what the Instagram link
+ * prints, whereas the Wikipédia link prints the word "Wikipédia" and the title
+ * is only ever the destination. Returning what each caller actually renders is
+ * what keeps a second normalisation out of the component.
+ *
+ * The table is passed in rather than imported, keeping this module free of I/O
+ * like every other core module.
+ *
+ * An unknown id is absence, not an error — coverage is partial by design.
+ */
+export const playerWikipedia = (
+  id: string,
+  articles: Record<string, string>,
+): string | null => wikipediaUrl(articles[id]);

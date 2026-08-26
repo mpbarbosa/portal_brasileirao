@@ -138,7 +138,7 @@ export const officialSiteUrl = (raw: string | undefined): string | null => {
  * Returns null for anything that is not a plausible handle, which the UI
  * renders as no link rather than a broken one.
  */
-export const instagramHandle = (raw: string | undefined): string | null => {
+export const instagramHandle = (raw: string | null | undefined): string | null => {
   const value = raw?.trim();
   if (!value) return null;
 
@@ -159,7 +159,7 @@ export const instagramHandle = (raw: string | undefined): string | null => {
  * the raw value — so a link and the `@handle` printed beside it cannot come to
  * disagree about which profile they mean.
  */
-export const instagramUrl = (raw: string | undefined): string | null => {
+export const instagramUrl = (raw: string | null | undefined): string | null => {
   const handle = instagramHandle(raw);
   return handle && `https://www.instagram.com/${handle}/`;
 };
@@ -224,7 +224,7 @@ export const hymnUrl = (raw: string | undefined): string | null => {
  * Returns null for anything that is not a plausible title — Wikipedia forbids
  * `#<>[]|{}` in one — which the UI renders as no link rather than a broken one.
  */
-export const wikipediaUrl = (raw: string | undefined): string | null => {
+export const wikipediaUrl = (raw: string | null | undefined): string | null => {
   const value = raw?.trim();
   if (!value) return null;
 
