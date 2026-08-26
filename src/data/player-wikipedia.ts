@@ -14,7 +14,7 @@
  * the full one ("Danilo Luiz da Silva"), or at a disambiguated one where the
  * popular name is shared.
  *
- * Coverage is **partial**, like every curated file here — 157 of ~950 listed
+ * Coverage is **partial**, like every curated file here — 169 of ~950 listed
  * players. A player absent here renders no link.
  *
  * ## How these were checked
@@ -45,6 +45,29 @@
  * One false negative was fixed rather than dropped: pt-BR writes the first of
  * the month as an ordinal, so Bruno Fuchs's "1º de abril de 1999" did not match
  * a plain "1 de abril". The checker accepts `1`, `1º` and `1.º`.
+ *
+ * ## A second source: the club's own article
+ *
+ * The Wikidata join is not the only way in, and Atlético-MG's twelve later
+ * entries came the other way — from the **squad table of the club's own
+ * article**, which links each player to their article by hand. That source is
+ * better than the join at the thing the join is worst at: a club article's
+ * table is maintained by people who know which Dudu plays there, so it does not
+ * offer a same-name stranger in the first place.
+ *
+ * It is not a licence to skip the check. Every one of the twelve went through
+ * the same four tests — and through a fifth that only this source makes
+ * available, since the article arrived from a page asserting the player is at
+ * this club: **the intro names Atlético Mineiro**. All twelve do.
+ *
+ * Two things the source does not give, both of which look like gaps and are
+ * not. Its table is **more current than `squads.ts`**, so it lists players the
+ * frozen snapshot has never heard of (Léo Duarte, Kevin Castaño, Vitão); they
+ * are skipped, because there is no id to file them under until the next
+ * `sync-seed-data`. And it links only the players who *have* an article, so a
+ * squad member absent from it — Igor Gomes, Júnior Alonso, Tomás Cuello — is
+ * unlinked **on that page**, which is not the same as having no article. Those
+ * are candidates for the Wikidata join, not evidence against one.
  */
 export const PLAYER_WIKIPEDIA: Record<string, string> = {
   // Athletico-PR
@@ -54,9 +77,21 @@ export const PLAYER_WIKIPEDIA: Record<string, string> = {
   "1662": "Santos (futebolista)", // Santos
 
   // Atlético-MG
+  "24670": "Alan Franco Palma", // Alan Franco
+  "179174": "Alan Minda",
+  "189371": "Alexsander", // Alexsander Gomes
+  "24673": "Ángelo Preciado",
+  "16476": "Bernard (futebolista)", // Bernard
   "1182": "Dudu (futebolista, 1992)", // Dudu
+  "1695": "Éverson", // Everson
+  "178929": "Gabriel Delfim",
+  "72781": "Gustavo Scarpa",
+  "2283": "Lyanco",
+  "7569": "Mateo Cassierra",
   "1447": "Maycon de Andrade Barberan", // Maycon
   "141379": "Natanael (futebolista, 2002)", // Natanael
+  "123350": "Reinier",
+  "1671": "Renan Lodi",
   "178854": "Victor Hugo (futebolista)", // Victor Hugo Gomes
   "1773": "Vitor Hugo Franchescoli de Souza", // Vitor Hugo
 
