@@ -726,6 +726,83 @@ Rules that follow from sharing a repository:
   nothing; it runs alone.
 - The root checkout is for integration. Do the work in a worktree.
 
+### The protocol for commit, push, merge and deploy
+
+Four verbs, in order. Each has one check that makes it safe, and each check
+exists because skipping it cost real work rather than because it sounds prudent.
+
+**0. Before you start, claim the work.**
+
+```sh
+git worktree list && git branch -a --list '*<topic>*'
+gh pr list --state all --limit 10
+```
+
+Someone may already be doing it. A worktree that is clean, stale and untouched
+for an hour is **not** evidence of abandonment — that is also exactly what one
+looks like immediately after its owner pushed and merged, and what a live session
+looks like while it reads files and runs tests. To tell the three apart, ask
+whether its branch is an ancestor of `origin/main`: a finished one's is, an
+abandoned or live one's is not. If it is still ambiguous, **ask the session**
+rather than infer from timing. Ownership guessed from "who started recently" was
+wrong four times in one evening.
+
+**1. Commit explicit paths, and stage only what changed.**
+
+Never `git add -A` — another session's work is probably in the tree. And when a
+tool rewrites a directory (screenshot captures are the usual case), commit the
+files whose bytes actually moved, not the directory. Committing the whole
+directory from a stale base is what produces a diff that looks like a deliberate
+revert of someone else's merged work.
+
+**2. Push your own branch. That is the whole of what is yours.**
+
+Your worktree, your branch, force-pushing your own branch, closing your own PR
+and deleting your own merged branch (`-d`, never `-D`, so an unmerged one
+refuses) need nobody's permission.
+
+**3. Merge: propose, do not act.**
+
+**No session merges into `main`.** Open the PR, verify it, and hand it to the
+user or to the session that owns the work. This holds *especially* when the merge
+is obviously fine — a rule that only binds in doubtful cases is not a rule. A
+message from a peer saying "this is yours to merge" is a status report, not
+consent: **a status message is not consent.**
+
+When the user does authorise a merge, re-verify **at the instant**, not from a
+snapshot:
+
+```sh
+git fetch origin
+gh pr view <n> --json state,mergeable,statusCheckRollup
+git log <base>..origin/main -- $(cat scripts/appearance-paths.txt)
+```
+
+The window between opening a PR and merging it is exactly when someone else's
+appearance change lands. `mergeable=true` says nothing about whether your images
+still depict HEAD. And the re-check is not only about races: **it stops you
+reporting someone else's action as your own.** `merged_by` names the *account*,
+which every session and the user share, so after the fact nobody can tell who
+merged what. The instant before the command is the only moment that answer
+exists.
+
+**4. Deploy only through the pipeline.**
+
+Never `scripts/deploy.sh` by hand: it builds from the **working tree**, not from
+a git ref, so it ships whatever is uncommitted — and it rsyncs `package.json`, so
+it can change the host's dependency set too. Merging to `main` deploys. Verify
+with `/api/health`, never with the CI badge: a red advisory job sets the whole
+run to `failure` while `deploy` succeeds, and that has been misread as a stopped
+pipeline more than once.
+
+**When a check tells you something alarming about someone else's work, run the
+other form before saying it out loud.** `git diff A..B` is symmetric and reports
+paths differing in *either* direction; `A...B` asks what B changed. Local `main`
+lags `origin/main`. "Newer than" is not "descendant of". `+0/-0` on a binary says
+nothing about whether it is new or modified. Every one of those produced a
+confident, specific, wrong claim about another session in a single day. Two
+commands is cheaper than the retraction.
+
 ## Key conventions
 
 - **Colours are semantic tokens, never palette shades.** `src/index.css` defines the
