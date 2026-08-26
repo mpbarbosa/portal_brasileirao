@@ -1003,6 +1003,25 @@ The reason is required, and is printed on every run, green or red — a claim no
 the thing this replaced. Nothing verifies it. **"It looks the same to me" is a refresh, not
 a trailer**; reach for it only when the edit cannot reach a paint at all.
 
+**A capture waits for the page to stop moving, and that is not a nicety.**
+Playwright's `click` moves the pointer to the element and leaves it there, so the
+Jogadores shot — the one capture that clicks anything — sat on the club summary
+with `STATE_LAYER`'s 8% veil fading in over 200ms, and photographed an arbitrary
+point in that fade. Measured at alpha 0.008 against a settled 0.08. Two
+consequences, and the second is the one that matters: the image was **not
+reproducible** (three captures of one build against one payload all differed
+across the summary row, so every re-shoot committed that band as noise), and it
+documented the page **as it looks with a cursor resting on it**, which is not
+what a reader sees. `settle` now parks the pointer at `(0, 0)` — the bare sticky
+header, which carries no state layer — and awaits every running transition.
+
+**It awaits `CSSTransition` only, never everything `getAnimations()` returns.**
+`animate-pulse` on the Ao vivo live indicator is a `CSSAnimation` with infinite
+iterations whose `finished` promise never resolves; awaiting it hangs the capture
+for the full timeout on exactly the page where a live match is the thing worth
+photographing. Verified both ways — awaiting all animations hung, the filtered
+form settled in 2ms.
+
 `scripts/screenshot.ts` deliberately does **not** honour the trailer. It refuses a capture
 whose build differs from HEAD on any appearance path, which stays a plain file comparison —
 its refusal writes to `docs/screenshots/local` and self-clears on the next deploy, so it is

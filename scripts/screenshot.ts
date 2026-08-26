@@ -325,6 +325,51 @@ const settle = async (page: Page) => {
     undefined,
     { timeout: 30_000 },
   );
+
+  /**
+   * Put the pointer down and let every transition finish.
+   *
+   * Two separate defects, one cause. Playwright's `click` moves the mouse to
+   * the element and **leaves it there**, so the Jogadores summary stayed
+   * `:hover` — and `STATE_LAYER` fades an 8% veil in over 200ms. Nothing here
+   * waited for that, so the shot landed at an arbitrary point in the fade:
+   * measured at alpha **0.008** on one run against a settled 0.08, with a
+   * `CSSTransition` still listed as running.
+   *
+   *   1. **It was not reproducible.** Three captures of one build against one
+   *      payload differed from each other across the whole summary row. Every
+   *      re-shoot committed that band as noise, and a gate with one permanently
+   *      restless image is a gate people stop reading.
+   *   2. **It was the wrong picture.** Even settled, it documents the page as
+   *      it looks with a cursor resting on the first club. A reader opening the
+   *      README is not hovering anything.
+   *
+   * `(0, 0)` is the parking spot because it lands on the bare sticky header,
+   * which carries no state layer of its own — verified rather than assumed.
+   *
+   * **Only transitions are awaited, never animations.** `animate-pulse` on the
+   * Ao vivo live indicator is a `CSSAnimation` with infinite iterations, so its
+   * `finished` promise never resolves; awaiting everything `getAnimations()`
+   * returns would hang this for the full timeout on exactly the page where a
+   * match being live is the thing worth photographing.
+   */
+  await page.mouse.move(0, 0);
+  await page.evaluate(async () => {
+    // Two frames, so the pointer leaving is recalculated into a transition
+    // before we ask what is running. Asking immediately can find nothing and
+    // return before the fade-out has even started.
+    await new Promise((resolve) =>
+      requestAnimationFrame(() => requestAnimationFrame(resolve)),
+    );
+    await Promise.all(
+      document
+        .getAnimations()
+        .filter((animation) => animation instanceof CSSTransition)
+        // A cancelled transition rejects; that is settled enough for a
+        // photograph, and an unhandled rejection here would fail the capture.
+        .map((animation) => animation.finished.catch(() => undefined)),
+    );
+  });
 };
 
 const browser = await chromium.launch();
