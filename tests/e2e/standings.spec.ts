@@ -203,4 +203,46 @@ test.describe("Classificação", () => {
     const rail = (await first.boundingBox())!;
     expect(rail.x).toBeGreaterThanOrEqual(container.x - 1);
   });
+
+  test("the frozen columns leave the numbers most of a narrow screen", async ({ page }) => {
+    // Clube is frozen, so its width is taken off the viewport permanently
+    // rather than scrolling away — which makes it the one column that must
+    // never absorb the table's `min-w` surplus. Auto layout hands surplus to
+    // the widest column, and that was this one: 219px against 137px of content
+    // at 360dp, leaving 59px of a 326px container for all seven data columns.
+    //
+    // Proportional rather than a pixel count, because the club names, the
+    // crest and the font all legitimately move this number around. The
+    // regression it catches is not subtle: it halves this ratio.
+    await page.setViewportSize(NARROW);
+
+    const geometry = await page.locator("table").evaluate((table) => {
+      const container = table.parentElement as HTMLElement;
+      const headers = [...table.querySelectorAll("thead th")];
+      const frozen = headers
+        .slice(0, 2)
+        .reduce((total, th) => total + th.getBoundingClientRect().width, 0);
+      return { frozen, available: container.clientWidth };
+    });
+
+    expect(geometry.frozen / geometry.available).toBeLessThan(0.7);
+  });
+
+  test("no club name wraps to a second line", async ({ page }) => {
+    // The guard above pushes the Clube column down onto its own minimum, and a
+    // table column's minimum is the widest *unbreakable* run — so without
+    // `whitespace-nowrap` the browser satisfies it by breaking "Vasco da Gama"
+    // and dropping the state onto a second line, taking 12 of 20 rows from
+    // 37px to 57px. That reads as a *narrower* column to anything measuring
+    // width alone, which is exactly how it survived being measured here once
+    // already. Height is what tells the truth, so height is what is asserted.
+    await page.setViewportSize(NARROW);
+
+    const heights = await page
+      .locator("table tbody tr td:nth-child(2)")
+      .evaluateAll((cells) => cells.map((cell) => cell.getBoundingClientRect().height));
+
+    expect(heights).toHaveLength(20);
+    expect(Math.max(...heights) - Math.min(...heights)).toBeLessThan(1);
+  });
 });
