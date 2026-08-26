@@ -32,9 +32,28 @@ This matters most in check 1. Uncommitted files in a shared checkout are usually
 *someone else's* — committing them is the exact accident the worktree rule
 exists to prevent. Never widen a commit to something you did not write.
 
+There are **three** owners, not two. Besides you and other sessions, **the user
+works at the terminal too** — a dirty `docs/screenshots/CAPTURED` may be someone
+running `npm run screenshot` by hand. Git cannot tell you which; mtimes and the
+producing process can:
+
+```sh
+ls -l --time-style=+%H:%M:%S <path>     # written seconds ago, or hours?
+pgrep -af '<producing-command>'         # is it still running?
+```
+
+`pgrep -af` matches **your own shell** when the pattern appears in the command
+you just typed. Read the matches, do not count them.
+
 For PRs, ownership often **cannot** be established: sessions share one GitHub
 account, so `--author` cannot separate you from anyone else. Say so rather than
 claiming or disclaiming.
+
+**Committed state cannot see work in progress.** `git show origin/main:<file>`
+reads the commit; a capture, a sync or a generator writes the *working tree* and
+commits at the end. Asking "has anyone started X?" of the committed state
+returns "no" throughout the whole time someone is doing it. Read the tree —
+`git status`, mtimes, running processes — when the question is about now.
 
 ## The checks
 
@@ -60,8 +79,11 @@ else echo "NO UPSTREAM — everything below exists only here:"
 **3. Open PRs.** `gh pr list --state open --json number,title,headRefName`
 Yours are awaiting the user, not unfinished — see the weights below.
 
-**4. Worktrees you hold.** `git worktree list` — then subtract the ones you did
-not create.
+**4. Worktrees you hold.** `git worktree list`, minus the ones you did not
+create. **Record each worktree and branch at the moment you create it**, not
+here — at teardown you would be reconstructing from memory, which rule one
+forbids, and peers' worktrees may already be gone so the listing cannot correct
+you.
 
 **5. Servers you started, attributed.** A port number is not an owner:
 ```sh
@@ -76,10 +98,18 @@ A broad `pkill -f` pattern matches every session's server, and has.
 **6. Distance behind `origin/main`.** `git fetch origin && git log --oneline HEAD..origin/main`
 Informational only.
 
-**7. Background tasks, monitors and scheduled work.** The largest gap, because it
-leaves no trace on disk. Did you arm a monitor, start a long-running background
-command, or schedule something the user is relying on for notification? Dropping
-the session silently ends it and nothing will say so.
+**7. Background tasks, monitors and session-held resources.** The largest gap:
+none of this touches disk. Background commands, monitors, scheduled work — and
+resources held through a tool rather than a port, like a browser pane, which
+`ss` cannot see because a client is not a listener.
+
+If the harness reports orphaned tasks, that notification is a signal worth
+reading rather than dismissing.
+
+**Then classify, because a stopped task is not automatically a blocker.** The
+question is not "did something die" but **"did I promise its result?"** A poll
+loop that timed out with nobody waiting is noise; a monitor watching a deploy the
+user asked to be told about is a promise, and belongs below.
 
 **8. Promises.** Re-read your last several messages and ask the concrete
 questions, not the general one — "did I promise anything?" is too easy to answer
