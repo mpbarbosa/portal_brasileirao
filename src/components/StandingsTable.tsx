@@ -61,6 +61,24 @@ const STICKY_CLUB = "sticky left-12 z-10 w-0 whitespace-nowrap border-r border-l
  *  surplus at every width, not just this one. */
 const CLUB_PADDING = "px-2 sm:px-3";
 
+/** The campanha column, which takes its content width and no more.
+ *
+ *  Auto layout hands a table's surplus width to its widest column, and with
+ *  Clube pinned by `w-0` above, the widest column is this one. At 1280px it
+ *  rendered 164px around a 72px mark, so some 90px of blank sat between the end
+ *  of the sparkline and the J column — a hole in the middle of the row rather
+ *  than spacing, since nothing in the cell grows to fill it.
+ *
+ *  `w-0` clamps up to the column's minimum, exactly as it does for Clube: the
+ *  column takes the 72px mark (the header word is unbreakable but narrower, at
+ *  70px) and the surplus goes to the tallies, which share it evenly.
+ *
+ *  The mark itself stays 72px. Stretching it to fill the column is the other
+ *  way to close the gap and it is the wrong one — `RankSparkline` keeps one
+ *  geometry across the table and the club page so a reader recognises the same
+ *  shape in both, and a width that followed the viewport would not. */
+const CAMPAIGN_COLUMN = "w-0 px-3";
+
 interface StandingsTableProps {
   rows: StandingsRow[];
   /** Receives the club's URL key (slug, or code as a fallback). Omit to render
@@ -103,7 +121,7 @@ export function StandingsTable({ rows, onSelectClub, rankHistory }: StandingsTab
             {/* Beside the points rather than after SG: the campanha is read
                 against the total, and a narrow screen scrolls the tallies away
                 from it rather than it away from the tallies. */}
-            {showCampaign && <th scope="col" className="px-3 py-2 text-left">Campanha</th>}
+            {showCampaign && <th scope="col" className={`${CAMPAIGN_COLUMN} py-2 text-left`}>Campanha</th>}
             <th scope="col" className="px-2 py-2 text-right">J</th>
             <th scope="col" className="px-2 py-2 text-right">V</th>
             <th scope="col" className="px-2 py-2 text-right">E</th>
@@ -153,7 +171,7 @@ export function StandingsTable({ rows, onSelectClub, rankHistory }: StandingsTab
               </td>
               <td className={`${ROW_LINE} px-2 py-2 text-right font-semibold tabular-nums`}>{row.points}</td>
               {showCampaign && (
-                <td className={`${ROW_LINE} px-3 py-2`}>
+                <td className={`${ROW_LINE} ${CAMPAIGN_COLUMN} py-2`}>
                   <RankSparkline
                     entries={campaigns.get(row.club.code) ?? []}
                     clubCount={rows.length}
