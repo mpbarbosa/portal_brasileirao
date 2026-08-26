@@ -112,6 +112,33 @@ test.describe("Jogadores", () => {
     await expect(link).toHaveAttribute("target", "_blank");
   });
 
+  test("a player with a recorded article gets a link to the pt Wikipedia", async ({ page }) => {
+    const panel = page.locator('[data-squad="corinthians"]');
+    await panel.locator("summary").click();
+    await panel.getByRole("button", { name: "Memphis Depay" }).click();
+
+    const link = page.getByRole("dialog").getByRole("link", { name: /Wikipédia/ });
+    // The title is curated data and may be renamed upstream, so the contract is
+    // the edition and the shape, not the article — `check-player-wikipedia`
+    // is what asserts the title still names the right player.
+    await expect(link).toHaveAttribute("href", /^https:\/\/pt\.wikipedia\.org\/wiki\/\S+$/);
+    await expect(link).toHaveAttribute("rel", /noopener/);
+    await expect(link).toHaveAttribute("target", "_blank");
+  });
+
+  test("the two external links are told apart for a screen reader", async ({ page }) => {
+    // Both read "Instagram"/"Wikipédia" visually, and both sit on the same row.
+    // The suffix is what says whose profile and whose article — a card that
+    // said "do clube" here would be pointing a reader at the wrong subject.
+    const panel = page.locator('[data-squad="corinthians"]');
+    await panel.locator("summary").click();
+    await panel.getByRole("button", { name: "Memphis Depay" }).click();
+
+    const dialog = page.getByRole("dialog");
+    await expect(dialog.getByRole("link", { name: /Instagram do jogador/ })).toBeVisible();
+    await expect(dialog.getByRole("link", { name: /verbete do jogador/ })).toBeVisible();
+  });
+
   test("a player with no recorded account gets no link, not an empty one", async ({ page }) => {
     // Coverage is partial by design, so the absent case is the common one and
     // has to render as nothing rather than as a dash or a dead anchor.

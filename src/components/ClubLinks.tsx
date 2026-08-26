@@ -13,7 +13,6 @@
  */
 import { instagramHandle, instagramUrl, wikipediaUrl } from "@/club-core";
 import { LINK_UNDERLINE } from "@/src/components/interaction";
-import type { Club } from "@/src/types";
 
 /**
  * Shared attributes for the marks beside a club's links. Monochrome outlines
@@ -54,20 +53,39 @@ export function WikipediaGlyph() {
 }
 
 /**
- * The club's article on the Portuguese Wikipedia, or nothing when it has none —
- * an absent article renders as no link rather than a broken one.
+ * An article on the Portuguese Wikipedia, or nothing when there is none — an
+ * absent article renders as no link rather than a broken one.
  *
- * Reads as a name rather than an address, like the hymn: "Sociedade Esportiva
- * Palmeiras" is the club's full legal name, and nobody scanning a row of links
- * is looking for it. Here the name is the host, which is what a reader
- * recognises.
+ * Reads as the host rather than as the title, like the hymn reads as the song:
+ * "Sociedade Esportiva Palmeiras" is the club's full legal name and nobody
+ * scanning a row of links is looking for it, and a player's article title is
+ * usually just the name printed two lines above. "Wikipédia" is the word a
+ * reader recognises, so it is the word on the page.
+ *
+ * `title` is the stored article title, not a URL — `wikipediaUrl` builds the
+ * address, so the edition is written once and a pasted link's `?action=` or
+ * `#História` does not survive into the data.
+ *
+ * `subject` is what the screen-reader suffix says the article is about — "do
+ * clube", "do jogador". Required rather than defaulted, for the reason
+ * `InstagramLink` gives: the match page and the player card both render this,
+ * and telling a screen reader that a player's article is the club's is the one
+ * mistake a default would silently make.
  *
  * `extra` is for the caller's own layout only. The club header sets its type
  * from the surrounding row; the match page sets a smaller step so the link does
  * not compete with the score.
  */
-export function WikipediaLink({ club, extra = "" }: { club: Club; extra?: string }) {
-  const href = wikipediaUrl(club.wikipedia);
+export function WikipediaLink({
+  title,
+  subject,
+  extra = "",
+}: {
+  title: string | null | undefined;
+  subject: string;
+  extra?: string;
+}) {
+  const href = wikipediaUrl(title);
   if (!href) return null;
 
   return (
@@ -79,7 +97,7 @@ export function WikipediaLink({ club, extra = "" }: { club: Club; extra?: string
     >
       <WikipediaGlyph />
       Wikipédia
-      <span className="sr-only"> — verbete do clube (abre em nova aba)</span>
+      <span className="sr-only"> — verbete {subject} (abre em nova aba)</span>
     </a>
   );
 }
@@ -119,7 +137,7 @@ export function InstagramLink({
   subject,
   extra = "",
 }: {
-  handle: string | undefined;
+  handle: string | null | undefined;
   subject: string;
   extra?: string;
 }) {

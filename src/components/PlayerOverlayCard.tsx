@@ -2,8 +2,9 @@ import { useEffect, useRef, useState } from "react";
 
 import { ageOn, mergePlayer, playerInstagram, positionLabel } from "@/player-core";
 import { Button } from "@/src/components/Button";
-import { InstagramLink } from "@/src/components/ClubLinks";
+import { InstagramLink, WikipediaLink } from "@/src/components/ClubLinks";
 import { PLAYER_INSTAGRAM } from "@/src/data/player-instagram";
+import { PLAYER_WIKIPEDIA } from "@/src/data/player-wikipedia";
 import type { Player, Scorer } from "@/src/types";
 
 interface PlayerOverlayCardProps {
@@ -105,6 +106,7 @@ export function PlayerOverlayCard({ player, scorer, onClose }: PlayerOverlayCard
    * would come to show one player's name beside another's profile.
    */
   const instagram = playerInstagram(player.id, PLAYER_INSTAGRAM);
+  const wikipedia = PLAYER_WIKIPEDIA[player.id];
 
   return (
     <dialog
@@ -150,14 +152,17 @@ export function PlayerOverlayCard({ player, scorer, onClose }: PlayerOverlayCard
               {enriched.name}
             </h2>
             {club && <p className="truncate text-body-medium text-ink-muted">{club.shortName}</p>}
-            {/* Under the name, where the club page puts a club's links: the
-                profile belongs to the person the card names, not to the figures
-                below it. Hidden from a reader with no account recorded rather
-                than shown as a dash — an absent link is not a missing value. */}
-            {instagram && (
-              <p className="mt-0.5 text-body-medium">
+            {/* Under the name, where the club page puts a club's links: these
+                belong to the person the card names, not to the figures below
+                it. A reader with neither recorded gets no row at all rather
+                than a dash — an absent link is not a missing value. The row
+                wraps and shares the club page's gaps, so one link and two look
+                like the same component rather than two layouts. */}
+            {(instagram || wikipedia) && (
+              <div className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-body-medium">
                 <InstagramLink handle={instagram} subject="do jogador" />
-              </p>
+                <WikipediaLink title={wikipedia} subject="do jogador" />
+              </div>
             )}
           </div>
 
