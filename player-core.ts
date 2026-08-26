@@ -37,6 +37,74 @@ export const positionLabel = (position: string | undefined): string | null => {
 };
 
 /**
+ * The countries football-data names, in pt-BR.
+ *
+ * The card said "Nacionalidade: Brazil" in an app whose every other word is
+ * Portuguese, because `position` was translated from the first day and this
+ * field never was.
+ *
+ * **Hand-written, and there is no `Intl` shortcut.** `Intl.DisplayNames` speaks
+ * ISO region codes, and the provider sends names — its *own* names, at that:
+ * `DR Congo` and `Ivory Coast` are not what any standard calls those countries,
+ * so an English-name-to-code table would have to be hand-written first and this
+ * one merely skips a step. `England` rather than the United Kingdom is football
+ * counting the home nations separately, which is correct here and is another
+ * thing a region-code table would get wrong.
+ *
+ * These twenty-nine are **every value the division actually carries**, measured
+ * against the live squads rather than guessed at, and they happen to cover all
+ * ten of CONMEBOL. Nothing speculative is listed: a country nobody in Série A
+ * comes from would be a claim this file cannot check, and
+ * `tests/player-core.test.ts` fails the moment `sync-seed-data` brings in a
+ * nationality that is missing here — so the table cannot quietly fall behind
+ * the data the way a list of guesses would.
+ *
+ * As with `positionLabel`, an unmapped value is shown **verbatim** rather than
+ * as a guess or a dash: a reader seeing "Serbia" is better served than one
+ * seeing nothing, and it is a visible prompt to add the row.
+ */
+const NATIONALITY_LABELS: Record<string, string> = {
+  Angola: "Angola",
+  Argentina: "Argentina",
+  Belgium: "Bélgica",
+  Bolivia: "Bolívia",
+  Brazil: "Brasil",
+  Bulgaria: "Bulgária",
+  Cameroon: "Camarões",
+  Chile: "Chile",
+  Colombia: "Colômbia",
+  "DR Congo": "RD Congo",
+  Denmark: "Dinamarca",
+  Ecuador: "Equador",
+  England: "Inglaterra",
+  Ghana: "Gana",
+  Greece: "Grécia",
+  Guinea: "Guiné",
+  Italy: "Itália",
+  "Ivory Coast": "Costa do Marfim",
+  Mexico: "México",
+  Morocco: "Marrocos",
+  Netherlands: "Países Baixos",
+  Panama: "Panamá",
+  Paraguay: "Paraguai",
+  Peru: "Peru",
+  Portugal: "Portugal",
+  Spain: "Espanha",
+  Ukraine: "Ucrânia",
+  Uruguay: "Uruguai",
+  Venezuela: "Venezuela",
+};
+
+/** Every English name this maps, for the test that guards the table's coverage. */
+export const mappedNationalities = (): string[] => Object.keys(NATIONALITY_LABELS);
+
+export const nationalityLabel = (nationality: string | undefined): string | null => {
+  const raw = nationality?.trim();
+  if (!raw) return null;
+  return NATIONALITY_LABELS[raw] ?? raw;
+};
+
+/**
  * Whole years elapsed, counting a birthday as reached only on the day itself.
  * Takes `now` rather than reading the clock so the boundary cases are testable.
  * Returns null for a missing or unparseable date.

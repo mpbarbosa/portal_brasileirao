@@ -4,7 +4,9 @@ import { test } from "node:test";
 import {
   ageOn,
   birthDateLabel,
+  mappedNationalities,
   mergePlayer,
+  nationalityLabel,
   playerInstagram,
   PLAYER_PHOTO_WIDTHS,
   playerPhotoPage,
@@ -15,6 +17,7 @@ import {
   positionLabel,
   sofascoreUrl,
 } from "@/player-core";
+import { SEED_SQUADS } from "@/src/data/squads";
 import type { Player } from "@/src/types";
 
 test("broad positions are translated", () => {
@@ -296,5 +299,50 @@ test("playerSofascore tells two players of one name apart", () => {
   assert.equal(
     playerSofascore("211606", profiles),
     "https://www.sofascore.com/player/_/1482354",
+  );
+});
+
+test("nationalityLabel writes the country in pt-BR", () => {
+  assert.equal(nationalityLabel("Brazil"), "Brasil");
+  assert.equal(nationalityLabel("Uruguay"), "Uruguai");
+  assert.equal(nationalityLabel("Netherlands"), "Países Baixos");
+  // The provider's own spellings, which no ISO table would resolve.
+  assert.equal(nationalityLabel("DR Congo"), "RD Congo");
+  assert.equal(nationalityLabel("Ivory Coast"), "Costa do Marfim");
+  // Football counts the home nations separately; this is not the UK.
+  assert.equal(nationalityLabel("England"), "Inglaterra");
+});
+
+test("an unmapped country is shown verbatim, never guessed at", () => {
+  // Same contract as `positionLabel`: a reader seeing "Serbia" is better served
+  // than one seeing nothing, and the English word is a visible prompt to add
+  // the row rather than a silent gap.
+  assert.equal(nationalityLabel("Serbia"), "Serbia");
+  assert.equal(nationalityLabel(undefined), null);
+  assert.equal(nationalityLabel(""), null);
+  assert.equal(nationalityLabel("   "), null);
+});
+
+test("every nationality in the snapshot is mapped", () => {
+  // The guard that stops the table falling behind the division. The set of
+  // nationalities is *data* — it moves with every transfer window — so a table
+  // written once against today's squads would silently start leaking English
+  // the first time a club signs somebody from a country not listed. This turns
+  // that into a red test on the next `sync-seed-data`, with a one-line fix.
+  const mapped = new Set(mappedNationalities());
+  const missing = [
+    ...new Set(
+      SEED_SQUADS.flatMap((squad) =>
+        squad.players.map((player) => player.nationality).filter((n): n is string => Boolean(n)),
+      ),
+    ),
+  ]
+    .filter((nationality) => !mapped.has(nationality))
+    .sort();
+
+  assert.deepEqual(
+    missing,
+    [],
+    `add these to NATIONALITY_LABELS in player-core.ts: ${missing.join(", ")}`,
   );
 });
