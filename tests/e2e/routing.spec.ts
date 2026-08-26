@@ -1,4 +1,15 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
+
+/**
+ * The heading naming what this page is about.
+ *
+ * Scoped to `main` because the rodapé carries an `sr-only` level-2 heading of
+ * its own on every page, and the player card another — an unscoped
+ * `getByRole("heading", { level: 2 })` resolves to two elements and fails
+ * strict mode. These specs were unambiguous only until the page grew a second
+ * top-level section, which is the accident the scope removes.
+ */
+const pageHeading = (page: Page) => page.getByRole("main").getByRole("heading", { level: 2 });
 
 test.describe("Rotas", () => {
   test("each section has its own address", async ({ page }) => {
@@ -28,7 +39,7 @@ test.describe("Rotas", () => {
   test("a round has a shareable address", async ({ page }) => {
     await page.goto("/jogos/7");
 
-    await expect(page.getByRole("heading", { level: 2 })).toHaveText("7ª rodada");
+    await expect(pageHeading(page)).toHaveText("7ª rodada");
     await expect(page.getByRole("combobox", { name: "Rodada" })).toHaveValue("7");
   });
 
@@ -52,20 +63,20 @@ test.describe("Rotas", () => {
   test("a slug opens the right club", async ({ page }) => {
     await page.goto("/clube/flamengo");
 
-    await expect(page.getByRole("heading", { level: 2 })).toHaveText("Flamengo");
+    await expect(pageHeading(page)).toHaveText("Flamengo");
   });
 
   test("a slug with an accent in the name still resolves", async ({ page }) => {
     await page.goto("/clube/sao-paulo");
 
-    await expect(page.getByRole("heading", { level: 2 })).toHaveText("São Paulo");
+    await expect(pageHeading(page)).toHaveText("São Paulo");
   });
 
   test("a numeric code still resolves, so published links do not rot", async ({ page }) => {
     // /clube/1783 was the address before slugs existed.
     await page.goto("/clube/1783");
 
-    await expect(page.getByRole("heading", { level: 2 })).toHaveText("Flamengo");
+    await expect(pageHeading(page)).toHaveText("Flamengo");
   });
 
   test("an unknown club key says so instead of erroring", async ({ page }) => {
@@ -83,7 +94,7 @@ test.describe("Rotas", () => {
     const href = await row.locator("td:nth-child(2) a").getAttribute("href");
 
     await page.goto(href!);
-    await expect(page.getByRole("heading", { level: 2 })).toHaveText(name);
+    await expect(pageHeading(page)).toHaveText(name);
   });
 
   test("back returns to the previous section", async ({ page }) => {
@@ -115,7 +126,7 @@ test.describe("Rotas", () => {
     await page.goBack();
 
     await expect(page).toHaveURL(/\/jogos\/5$/);
-    await expect(page.getByRole("heading", { level: 2 })).toHaveText("5ª rodada");
+    await expect(pageHeading(page)).toHaveText("5ª rodada");
   });
 
   test("back from a club page returns to the table", async ({ page }) => {
@@ -146,7 +157,7 @@ test.describe("Rotas", () => {
   test("a nonsense round still shows fixtures", async ({ page }) => {
     await page.goto("/jogos/abc");
 
-    await expect(page.getByRole("heading", { level: 2 })).toHaveText(/\d+ª rodada/);
+    await expect(pageHeading(page)).toHaveText(/\d+ª rodada/);
   });
 
   test("repeating the current section does not stack history entries", async ({ page }) => {
