@@ -19,9 +19,10 @@ lastUpdated, homeTeam, awayTeam, score, odds, referees
 
 No channel, TV, stream or broadcaster field. Verified against a live payload.
 
-Other limits worth remembering: no player photos anywhere; squad entries carry
-only `name`, `position`, `nationality`, `dateOfBirth`; Série B is TIER_THREE and
-Série C/D are TIER_FOUR with data frozen at 2020.
+Other limits worth remembering: no player photos anywhere (see **Player
+photographs** below for where they do exist, and why they are still not used);
+squad entries carry only `name`, `position`, `nationality`, `dateOfBirth`; Série
+B is TIER_THREE and Série C/D are TIER_FOUR with data frozen at 2020.
 
 ## Evaluated and rejected
 
@@ -54,7 +55,7 @@ Both are **publicly readable but internal**. Public-readable is not a licence to
 reuse: CBF's Termos de uso govern, and neither surface carries any stability
 guarantee. Treated as reference, not as a dependency.
 
-### Broken TLS chain — affects every CBF host
+### Broken TLS chain — affects the two main CBF hosts
 
 `www.cbf.com.br` and `cms.cbf.com.br` both serve a valid Sectigo certificate but
 **omit the intermediate**, so a chain cannot be built:
@@ -64,8 +65,13 @@ verify error:num=21:unable to verify the first certificate
 ```
 
 Browsers hide this by fetching the intermediate via AIA; `curl` fails outright.
-Any automated client against a CBF host needs special TLS handling. This is their
-misconfiguration, not ours.
+Any automated client against either host needs special TLS handling. This is
+their misconfiguration, not ours.
+
+**Two CBF hosts are exceptions and serve a complete chain**, which is worth
+knowing before writing off a whole domain: `conteudo.cbf.com.br` (the crests,
+below) and `bid.cbf.com.br` (the player photographs, below). Both are reachable
+with a plain `curl`.
 
 ### `www.cbf.com.br/futebol-brasileiro/onde-assistir`
 
@@ -197,6 +203,88 @@ licence recorded here. Like `check-hymns`, it prints the whole table rather than
 only the failures, and it cannot tell you the photograph is of the right ground —
 that part stays with whoever looks. Nothing runs it automatically: CI has no
 network dependency on a third party by design.
+
+## Player photographs
+
+**None ship, and the reason is a licence rather than a missing source.**
+football-data has no player imagery at any tier, so the Jogadores page draws
+initials. CBF does hold a headshot of every registered athlete, reachable
+without auth — the block is that it may not be reused. Established
+2026-08-25; recorded so the search is not run a second time.
+
+### `bid.cbf.com.br/foto-atleta/{atleta_id}` — the photo itself
+
+The BID (Boletim Informativo Diário), CBF's registration bulletin, serves each
+athlete's official posed headshot as a 160×200 JPEG of roughly 25 KB — the
+player in his club's kit on a white ground. `bid` is one of the two CBF hosts
+with a **valid certificate chain**, so plain `curl` reaches it where `www` and
+`cms` need the handling described under **Broken TLS chain** above.
+
+**An unknown id answers 200, not 404.** It serves a grey silhouette placeholder,
+exactly 2,079 bytes every time, so a missing photograph is detected by comparing
+the body — by size or hash — and never by the status code. Any sync script needs
+that check written in from the start.
+
+Coverage is effectively total: of 120 athletes sampled at random from the Série A
+list below, 120 had a real photograph.
+
+### `www.cbf.com.br/api/cbf/atletas/campeonato/{id}/pagina/{n}` — where the id comes from
+
+The feed behind `/futebol-brasileiro/atletas`, found by watching that page's
+network rather than from any documentation. Série A 2026 is campeonato
+`1260611`; the response paginates 25 to a page (30 pages, 746 athletes) and each
+row carries `atleta_id`, `atleta_nome`, `atleta_apelido` and the club's id, name
+and crest. `atleta_id` is exactly the key `foto-atleta` takes.
+
+**It also carries `atleta_cpf`, unmasked, for all 746.** That is personal data
+under the LGPD and has no business in this repository. Whatever else is taken
+from this feed, that field is dropped at the point of reading — not filtered out
+later, and never written to disk.
+
+### Joining it to our players
+
+CBF's ids are its own, so a join is by name, the same problem the broadcast feed
+has. All 20 clubs line up with `src/data/squads.ts`. A naive normalised match on
+`atleta_apelido` and `atleta_nome` resolves **630 of 746 (84.5%)**; the residue
+is two different things and only one of them is a matching failure. football-data
+lists 948 squad entries against CBF's 746 *registered* athletes, so roughly 200
+of ours have no CBF row at all — youth and reserve players who were never
+inscribed. The genuine misses (`Thiago Silva`, `Walace`, `SOSA`) would need a
+better matcher plus hand curation, the way `highlights.ts` is maintained.
+
+### Copyright — the reason none of this ships
+
+**The photographs are CBF's, all rights reserved, and no licence is offered.**
+That is not an inference from silence: the BID's own footer, on the host serving
+the images, reads *Confederação Brasileira de Futebol © Todos os direitos
+reservados*. The response carries no licence header, the site links no licence
+page, and there is no field naming a photographer or a permitted use — nothing
+here resembles the `credit`/`license`/`licenseUrl` trio that makes the Commons
+stadium photographs usable.
+
+**CBF's Termos de uso then forbid the reuse explicitly.** Under *Vedações* the
+user may not "copiar, reproduzir e alterar, total ou parcialmente, qualquer
+dado" from CBF's site. That reaches vendoring and hotlinking alike — vendoring
+is the copy it names, and hotlinking republishes the image on our page just the
+same.
+
+So this differs from the stadium photographs in kind, not in degree. There,
+attribution is a **condition** that reuse can satisfy, which is why `credit` is a
+required field on `StadiumPhoto`. Here attribution buys nothing, because nothing
+was granted: naming CBF beneath the image would be a citation, not a licence.
+Shipping these needs CBF's written permission, not a sync script — the same
+conclusion **Stadium photographs** above reaches about CBF's own venue imagery,
+and for the same reason.
+
+The mechanics point the same way even setting copyright aside: the response
+carries `Cache-Control: private, must-revalidate` and a `Set-Cookie` on every
+request, so hotlinking would mean an uncached, cookie-setting third-party fetch
+per avatar — the arrangement the broadcaster marks and the stadium photographs
+were both vendored to avoid (`docs/roadmap.md` principle 4).
+
+One further caveat if permission is ever obtained: **the photographs age**.
+Pedro's is a Flamengo kit carrying 2022's sponsors. A registration photo is
+retaken when CBF retakes it, not when a season turns.
 
 ## How broadcast data actually reaches the app
 
