@@ -108,12 +108,16 @@ jobs:
     # standing rule and do not reintroduce "deploy first, capture second" — that
     # ordering was a symptom of the impossibility, not a practice worth keeping.
     #
-    # Red here means someone owes a screenshot refresh and can go and take it.
+    # Red here means someone owes a screenshot refresh and can go and take it —
+    # or, where the edit provably cannot reach a paint, owes a sentence saying
+    # why. The check honours a `Screenshots-unaffected:` trailer and prints it;
+    # scripts/check-screenshots.sh has the syntax and the case it was added for.
     steps:
       - uses: actions/checkout@v5
         with:
-          # The check compares commit ancestry, which a depth-1 clone cannot
-          # answer. Only this job needs the history.
+          # The check reads trees and walks commits across the range since the
+          # last capture, which a depth-1 clone cannot answer. Only this job
+          # needs the history.
           fetch-depth: 0
 
       - run: ./scripts/check-screenshots.sh

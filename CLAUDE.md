@@ -847,6 +847,35 @@ in two parallel jobs:
   version. A version bump needs a matching browser build, so the cache key must
   include it or the run fails with "Executable doesn't exist".
 
+A third job, **screenshots**, checks that `docs/screenshots` still depicts the app. It is
+advisory — never in `deploy`'s `needs`, for the reason the workflow gives — and it asks two
+questions rather than one. First, are the appearance sources at the last capture commit
+identical to HEAD's? That is a content comparison, and it replaced an ancestry test that
+went red for merges which changed nothing on main. Second, for whatever genuinely differs,
+is every commit accounted for?
+
+**An appearance path can move without a pixel moving.** A rule that is never in effect
+during a paint, a selector nothing matches, a comment: the edit is real and the render is
+identical. `docs/screenshots/CAPTURED` records which commit the images depict, so a refresh
+always leaves something to commit even when all sixteen PNGs come back byte-identical —
+that is the mechanical answer and it is the right one wherever it applies. But it still
+charges sixteen captures from a live-data production build to certify that nothing changed,
+and records no reason. Where an edit *provably* cannot reach a paint, say so instead:
+
+```
+Screenshots-unaffected: <why no rendered pixel can change>
+Screenshots-unaffected: <sha>: <why>   # for a commit already on main
+```
+
+The reason is required, and is printed on every run, green or red — a claim nobody reads is
+the thing this replaced. Nothing verifies it. **"It looks the same to me" is a refresh, not
+a trailer**; reach for it only when the edit cannot reach a paint at all.
+
+`scripts/screenshot.ts` deliberately does **not** honour the trailer. It refuses a capture
+whose build differs from HEAD on any appearance path, which stays a plain file comparison —
+its refusal writes to `docs/screenshots/local` and self-clears on the next deploy, so it is
+a nuisance where the gate was a deadlock.
+
 **CI needs no secrets.** Both jobs run against the frozen snapshot with no token,
 so a red build always means the code broke — never that the upstream had a bad
 minute or the free-tier budget ran out. Keep it that way: do not add

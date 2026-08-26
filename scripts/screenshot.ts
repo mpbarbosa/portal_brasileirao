@@ -97,8 +97,15 @@ try {
  *   CLAUDE.md and playwright.config.ts cannot move a pixel, yet it would put
  *   production one commit behind HEAD and block a capture that depicts the app
  *   exactly. So this asks whether any appearance path differs between the
- *   captured build and HEAD, which is the same question `check-screenshots.sh`
- *   asks about ancestry, and reads its list from the same file.
+ *   captured build and HEAD, and reads its list from the same file.
+ *
+ *   `check-screenshots.sh` asks a related question and now honours a
+ *   `Screenshots-unaffected:` trailer for an edit that provably cannot reach a
+ *   paint. This does not, deliberately: there the trailer resolves a deadlock —
+ *   a re-shoot yields byte-identical PNGs, so no commit is possible and the gate
+ *   is red forever — while a refusal here is a nuisance that writes to
+ *   docs/screenshots/local and clears itself on the next deploy. The shared file
+ *   is the path list, not the judgement.
  * - **the tree must not be behind `origin/main` on appearance.** Matching HEAD
  *   is not sufficient, because HEAD can itself be behind: a capture taken while
  *   `origin/main` carries an appearance commit this tree has not merged depicts
