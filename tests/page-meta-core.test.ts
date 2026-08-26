@@ -37,6 +37,24 @@ const MATCH: Match = {
   awayGoals: 1,
 };
 
+const STADIUMS = buildStadiums(
+  [
+    {
+      id: "1",
+      round: 24,
+      kickoff: "2026-08-01T20:00:00Z",
+      status: "FINISHED",
+      homeCode: "1783",
+      awayCode: "1770",
+      homeGoals: 1,
+      awayGoals: 0,
+      venue: { stadium: "Maracanã", city: "Rio de Janeiro", state: "RJ" },
+    },
+  ],
+  CLUBS,
+  { maracana: { name: "Maracanã", capacity: 78838 } },
+);
+
 test("the table is the site's own title, not a suffixed section", () => {
   const meta = pageMeta({ section: "classificacao" });
 
@@ -251,25 +269,7 @@ test("a document with no head is returned unchanged rather than blanked", () => 
 });
 
 test("a stadium page names the ground and who plays there", () => {
-  const stadiums = buildStadiums(
-    [
-      {
-        id: "1",
-        round: 24,
-        kickoff: "2026-08-01T20:00:00Z",
-        status: "FINISHED",
-        homeCode: "1783",
-        awayCode: "1770",
-        homeGoals: 1,
-        awayGoals: 0,
-        venue: { stadium: "Maracanã", city: "Rio de Janeiro", state: "RJ" },
-      },
-    ],
-    CLUBS,
-    { maracana: { name: "Maracanã", capacity: 78838 } },
-  );
-
-  const meta = pageMeta({ section: "estadio", key: "maracana" }, { stadiums });
+  const meta = pageMeta({ section: "estadio", key: "maracana" }, { stadiums: STADIUMS });
 
   assert.match(meta.title, /Maracanã/);
   assert.match(meta.description, /Rio de Janeiro – RJ/);
@@ -310,6 +310,8 @@ test("every section carries the site's own card", () => {
     { section: "ao-vivo" },
     { section: "jogos", round: null },
     { section: "artilharia" },
+    { section: "jogadores" },
+    { section: "estadio", key: "nao-existe" },
   ] as const) {
     const image = pageMeta(route, {}, ORIGIN).image;
 
@@ -327,6 +329,28 @@ test("a fixture takes the site's card, not one of the two clubs' crests", () => 
 
   assert.equal(image?.url, `${ORIGIN}${OG_IMAGE_PATH}`);
   assert.equal(image?.shape, "wide");
+});
+
+test("a stadium takes the site's card, not the photograph of the ground", () => {
+  // The page shows a CC BY-SA photo with its credit line beneath it. An
+  // og:image is republication on somebody else's surface, where that credit
+  // does not travel — so the card goes out instead of the photograph.
+  const meta = pageMeta({ section: "estadio", key: "maracana" }, { stadiums: STADIUMS }, ORIGIN);
+
+  assert.equal(meta.image?.url, `${ORIGIN}${OG_IMAGE_PATH}`);
+  assert.equal(meta.image?.shape, "wide");
+  assert.ok(!JSON.stringify(meta.image).includes("upload.wikimedia.org"));
+  assert.ok(!JSON.stringify(meta.image).includes("/stadiums/"));
+});
+
+test("a stadium page declares the wide card, since the site card fills it", () => {
+  const out = injectMeta(
+    HTML,
+    pageMeta({ section: "estadio", key: "maracana" }, { stadiums: STADIUMS }, ORIGIN),
+  );
+
+  assert.match(out, /twitter:card" content="summary_large_image"/);
+  assert.match(out, new RegExp(`og:image" content="${ORIGIN}${OG_IMAGE_PATH}"`));
 });
 
 test("a club with no crest falls back to the site's card", () => {
