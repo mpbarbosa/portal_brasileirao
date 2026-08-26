@@ -246,4 +246,24 @@ test.describe("Classificação", () => {
     expect(heights).toHaveLength(20);
     expect(Math.max(...heights) - Math.min(...heights)).toBeLessThan(1);
   });
+
+  test("the campanha column is no wider than the mark it holds", async ({ page }) => {
+    // The other half of the surplus story above. Pinning Clube to its content
+    // width moves the table's surplus to the next widest column, which is this
+    // one — and unlike a tally, nothing inside it grows to fill the space, so
+    // the sparkline stayed 72px and the blank opened up to its right: 164px of
+    // column around a 72px mark at 1280px, read as a hole between Campanha and
+    // J rather than as spacing.
+    //
+    // Measured as the gap to the next column rather than as a column width,
+    // because that is the thing a reader sees. Only the cell's own padding
+    // belongs there; the regression put seven times that in.
+    await page.setViewportSize({ width: 1280, height: 800 });
+
+    const row = page.locator("table tbody tr").first();
+    const mark = (await row.locator("svg").first().boundingBox())!;
+    const played = (await row.locator("td").nth(4).boundingBox())!;
+
+    expect(played.x - (mark.x + mark.width)).toBeLessThan(32);
+  });
 });
