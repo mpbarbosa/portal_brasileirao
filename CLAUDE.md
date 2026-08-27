@@ -851,7 +851,40 @@ Rules that follow from sharing a repository:
   describe. So a second concurrent `npm run test:e2e` fails rather than walks —
   pass **`E2E_PORT=3101`** to run one alongside another session's. CI needs
   nothing; it runs alone.
+- **Identify a worktree by the branch it holds, not by the directory name you
+  gave it.** `git worktree list` prints both on one line; compare them before
+  every destructive command. A directory named for your task can be checked out
+  on a branch you never created — a prepared worktree with `node_modules`
+  already installed costs a peer nothing to reuse, so they reuse it. After that
+  the name is a fact about who *made* the directory, not about who is working
+  in it, and the second reading is the one that matters.
+- **Remove your worktree in the same turn its PR merges, or hand it over in
+  words. Do not defer it.** "Say the word and I'll tear it down later" sounds
+  careful and is the opposite. The window between your work landing and your
+  cleanup is exactly when a peer adopts the directory, and by the time the word
+  comes you can no longer answer your own question: `account-store-test` was
+  re-pointed at another session's branch, carrying a merged commit of theirs,
+  **nineteen minutes** after its own PR merged. Deferring turned a one-command
+  cleanup into an ownership hunt across a dozen sessions.
+- **If you adopt someone else's worktree, rename it to match the branch you put
+  on it.** `git worktree move .claude/worktrees/<old> .claude/worktrees/<new>`
+  is one command and makes `git worktree list` self-describing again. Adoption
+  itself is fine and usually sensible — a prepared checkout with `node_modules`
+  already installed is worth reusing — but an adopted directory still carrying
+  its creator's name is indistinguishable, from outside, from one that session
+  forgot it had re-pointed. This is the half that turned the incident above into
+  a broadcast to a dozen sessions: recording a worktree when you create it only
+  closes the loop if the **adopter** records too, and nothing prompts them to.
 - The root checkout is for integration. Do the work in a worktree.
+
+**Two separate questions, and the ancestor test only answers the first.**
+Whether a *branch* is finished is `git merge-base --is-ancestor <branch>
+origin/main`. Whether a *directory* is yours to delete is whether you are the
+session working in it — and a branch that has merged says nothing about that,
+because the peer who adopted your worktree may still be sitting in it with the
+next task already started. Where you cannot establish both, leave it standing
+and say so: an idle directory costs a little tidiness, and `git worktree prune`
+collects it once its owner is done.
 
 ### The protocol for commit, push, merge and deploy
 
