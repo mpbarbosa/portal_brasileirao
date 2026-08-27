@@ -38,18 +38,28 @@ pipeline — what is still open** below carries what they did not close.
 
 ## In progress
 
-**Highlights backfill.** 235 finished matches, of which a handful are curated.
-`scripts/find-highlights.ts` finds each fixture's "melhores momentos" on ge tv,
-CazéTV and UOL Esporte and verifies it against kickoff. Running by round in
-phases, newest first, one commit per phase.
+Nothing. The section is deliberately empty rather than deleted — an empty
+heading says "we looked"; a missing one says nothing at all.
 
-Two things learned while starting it, both now fixed: a single failed fetch used
-to abort a whole run, and the end-to-end specs depended on some fixture in round
-24 *not* being curated, so a successful backfill would have broken CI.
+~~**Highlights backfill.**~~ **Shipped.** All **235** finished matches carry a
+curated "melhores momentos"; no round has a gap. `scripts/find-highlights.ts`
+finds a fixture's package on ge tv, CazéTV or UOL Esporte and verifies it against
+kickoff, and it ran by round in phases, newest first.
+
+Two things learned while starting it, both fixed at the time: a single failed
+fetch used to abort a whole run, and the end-to-end specs depended on some
+fixture in round 24 *not* being curated, so a successful backfill would have
+broken CI.
+
+**This entry described unfinished work for some time after it finished**, saying
+"a handful are curated" of a set that was fully curated, while Near term still
+asked to finish it. Nothing signals that transition: the last phase of a backfill
+looks exactly like the previous ones, and the only thing that changes is a count
+nobody re-runs. The check is two lines of Python over `matches.ts` and
+`highlights.ts` — cheap, and worth running before trusting either section.
 
 ## Near term
 
-- Finish the backfill (rounds 22–24, then 16–21, 9–15, 1–8).
 - Re-run `sync-broadcasts` weekly as the season advances; the cron already does.
 - Watch for broadcasters CBF names that we render as wordmarks — ESPN/Disney+,
   Band, SportyNet — and add marks where a public-domain one exists.
