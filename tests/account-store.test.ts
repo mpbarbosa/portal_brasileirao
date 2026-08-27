@@ -66,8 +66,8 @@ test("a missing directory is created rather than refused — the fresh-host case
   // The counterpart to the rule above, and the reason it cannot be provoked by
   // an absent directory. `account-store.ts` mkdirs deliberately because both
   // real callers name one that may not exist yet: the host's
-  // `${DEPLOY_DIR}/data` before the first deploy, and `./test-results` before
-  // Playwright has written anything (`docs/accounts.md` §3.11).
+  // `${DEPLOY_DIR}/data` before the first deploy (`docs/accounts.md` §3.2), and
+  // `./test-results` before Playwright has written anything (§3.11).
   //
   // Pinned here so that a future reader who meets the test above does not
   // "fix" it by deleting the mkdir, which would leave a fresh host with the
