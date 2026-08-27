@@ -140,6 +140,16 @@ jobs:
           # production runs. No flag is set and none has to be remembered —
           # it clears itself the moment a fix reaches main and deploys, because
           # that ci.yml run then becomes the newer of the two.
+          #
+          # "Successful" is load-bearing in that last sentence, and it was not
+          # dependable until the advisory `screenshots` job gained
+          # `continue-on-error`. Before that, a release this job reddened
+          # concluded `failure`, so it never became the newer of the two and the
+          # hold would not have cleared — leaving a rollback in force against a
+          # main that had already been fixed. Not hypothetical: at the time of
+          # that change the newest SUCCESSFUL ci.yml run on main was 47 minutes
+          # and nine releases behind the newest one. Nothing had observed it
+          # only because a rollback has to happen first.
           last_rollback="$(gh api \
             "repos/${GITHUB_REPOSITORY}/actions/workflows/rollback.yml/runs?status=success&per_page=1" \
             --jq '.workflow_runs[0].run_started_at // empty' 2>/dev/null || echo unknown)"
@@ -174,12 +184,17 @@ jobs:
           # problem. A `cancelled` run is deliberately NOT treated this way —
           # that is precisely the case this workflow exists to recover from.
           #
-          # The run conclusion is safe to read here despite the advisory
-          # `screenshots` job being able to redden a run whose deploy
-          # succeeded: such a run left production AT this commit, so the
-          # in-sync check above already returned and this line is unreachable.
-          # Reaching here with a `failure` means the deploy itself did not
-          # happen — check or e2e went red, or the install failed — and none
+          # The run conclusion means here what it says. It did not always, and
+          # the defence is worth keeping rather than deleting: the advisory
+          # `screenshots` job could redden a run whose deploy had succeeded, and
+          # this line was safe anyway because such a run left production AT this
+          # commit, so the in-sync check above had already returned and this was
+          # unreachable. That held — but it was a defence, and `screenshots` now
+          # carries `continue-on-error`, so the hazard is gone at source rather
+          # than survived.
+          #
+          # Reaching here with a `failure` therefore means the deploy itself did
+          # not happen — check or e2e went red, or the install failed — and none
           # of those get better by trying again on a timer.
           last_attempt="$(gh api \
             "repos/${GITHUB_REPOSITORY}/actions/workflows/ci.yml/runs?branch=main&per_page=30" \
