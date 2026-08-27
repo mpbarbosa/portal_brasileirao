@@ -172,6 +172,17 @@ provider than it needed to build:
   all sixteen and `CAPTURED` now reads `10b7c1a` — and it did not photograph the
   árbitro row, because it never could.** See the next item. Re-check the diff
   above before starting anything here, since `main` moves.
+
+  **It was also wrong, which is worth separating from its being finished.** It
+  named production as the *only* route; the check's own failure text does not,
+  accepting "a local production build of HEAD (`npm run build && npm start`) —
+  the normal case, and the only one available while a change is unreleased". The
+  rule is the one stated two items below — the live site, or a local build whose
+  `.env` matches the host's. And when that sentence was written **neither route
+  worked**: `fetchAccount` held the 404's response stream open, so no capture
+  reached `networkidle` from anywhere until #118. A struck claim still teaches
+  whoever reads the strikethrough, and this one should not be read as a rule that
+  was right and has now been carried out.
 - **The árbitro row cannot be photographed by any refresh, and needs the capture
   set pointed at a different fixture.** This is the one item on this page that
   waiting does *not* fix, which is why it is stated separately from the refresh
