@@ -436,11 +436,52 @@ production, and not one to make in passing.
 `setup-node`'s cache makes this cheap but not free. Folding the built payload
 into an artifact (defect 3) removes one of the three.
 
-**D. No release identity beyond a sha.** No tags, no releases, no changelog.
-This is fine for a solo-maintained app and becomes not-fine the moment a rollback
-needs a human to choose a target from a list. A lightweight tag per successful
-deploy (`deploy-YYYYMMDD-HHMMSS-<sha7>`) makes the rollback workflow's input
-something a person can pick rather than something they have to derive.
+**D. No release identity beyond a sha — the tag half is done.** There were no
+tags, no releases and no changelog, which is fine for a solo-maintained app and
+becomes not-fine the moment a rollback needs a human to choose a target from a
+list. A `tag` job now writes `deploy-YYYYMMDD-HHMMSS-<sha7>` after every release
+that reached production and answered from it.
+
+Three things about its shape are deliberate:
+
+- **`needs: deploy` is the whole invariant.** A deploy tag exists if and only if
+  a release installed and the live site reported it. It carries no `if:` of its
+  own — a `pull_request` run skips `deploy` and this skips with it, and a second
+  copy of that condition is how the two come to disagree.
+- **It is a separate job rather than four lines at the end of `deploy`**, because
+  it needs `contents: write` and `deploy` holds the OIDC token and the release
+  payload. Splitting them keeps the writable repository token off the job with
+  the most reach.
+- **`continue-on-error: true`**, because this is Defect 4's shape exactly: an
+  advisory step that must not report a successful release as failed. What that
+  flag does is no longer assumed — the entry above establishes it leaves the job
+  and its check run concluding `failure` while the run concludes `success`, so an
+  untagged release keeps a red row where a person looks.
+
+**The tags are also a release inventory that costs no AWS permission**, which
+matters more than it sounds. Dispatched with an empty sha on 2026-08-27,
+`rollback.yml`'s list-only mode answered `AccessDenied` naming `s3:ListBucket` —
+an observation of the role on that date rather than a standing property, and IAM
+has been edited since for the reland's trust policy, so re-dispatch rather than
+trusting this line. The tag list answers the same question from git and cannot
+stop being readable. Two caveats, because the two
+lists are not the same list: a tag records that a release **was** published, not
+that its object still exists — nothing here defines a lifecycle policy on
+`releases/`, so S3 may have expired an object whose tag remains. And tags begin
+now, so releases before this one have none.
+
+**What is left of D: `rollback.yml` still demands a full 40-character sha**, and
+rejects an abbreviation explicitly because the S3 key is the full sha. So a person
+picks a tag and then still transcribes 40 hex characters from it — better than
+deriving which sha ever shipped, which is what the gap was about, but not yet
+"pick and go". Teaching it to resolve a ref is a small change with one trap that
+must be **settled empirically rather than by reading**: `TARGET_SHA` is a
+job-level `env`, three later steps consume it, and whether a value written to
+`$GITHUB_ENV` overrides a job-level `env` of the same name for subsequent steps is
+exactly the kind of thing that looks obvious and is worth a throwaway workflow.
+Sidestepping it — a distinct `RESOLVED_SHA`, or a step output threaded through
+step-level `env` — means editing those three steps in a workflow that has now been
+exercised against production. Worth doing, not worth doing in passing.
 
 **E. `sync-broadcasts` pushes straight to `main`.** It works today and will break
 the day branch protection is enabled — which is the next item. Have it open a PR
@@ -901,13 +942,24 @@ and the `reconcile.yml` hold it turned out to unjam. It was taken first as the
 cheapest item and the one most likely to cause a real misreading; the count in
 its entry went from six to a measured seventeen once it was actually queried.
 
-Gap B (no Deployments record) is **reverted and blocked** — it shipped, broke
-every release for ten commits, and was removed in #155. It needs an IAM trust
-policy change before it can be attempted again; see its entry above.
+Gap B (no Deployments record) is **done, on its second attempt.** It shipped in
+#151, broke every release for ten commits because attaching the job to an
+environment rewrites the OIDC subject claim, and was reverted in #155/#156. #159
+relanded it after the trust policy was widened to accept **both** subject forms —
+read from the token by `oidc-subject-probe.yml` rather than derived. Both are
+needed: `rollback.yml` and `flip-back-drill.yml` carry no environment and keep
+sending the ref form. This paragraph said "reverted and blocked" for several
+merges after that stopped being true, which is the failure the entry itself is
+about.
 
-What remains under D7: gaps D, E, F and G. The plan's own ordering still holds —
-F interacts with E and with the reconciling deploy, so E comes first; G is last
-and only in the shape its entry describes.
+Gap D's tag half is **done** — see its entry above, including why the tags double
+as the release inventory the missing `s3:ListBucket` permission denies, and the
+one piece left (teaching `rollback.yml` to accept a ref) with the trap that makes
+it more than a one-liner.
+
+What remains under D7: the rest of D, then gaps E, F and G. The plan's own
+ordering still holds — F interacts with E and with the reconciling deploy, so E
+comes first; G is last and only in the shape its entry describes.
 
 ---
 
