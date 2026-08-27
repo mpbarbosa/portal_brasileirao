@@ -276,6 +276,61 @@ worth knowing before writing any Phase 2 copy: `/privacidade` and the account
 pages will want "a sua conta", not a club name, but the moment anything says
 "do <clube>" it belongs in that helper and not in a template literal.
 
+## From the club-article fix
+
+[#101](https://github.com/mpbarbosa/portal_brasileirao/pull/101) made the
+**Artigo do clube** a table exhaustive over `src/data/clubs.ts` and moved it to
+`club-core.ts`, after the first attempt shipped a set of the four exceptions and
+a silent masculine default — which could catch a *known* feminine club being
+promoted and not an unknown one. Four things it did not close. None of them is
+red anywhere, which is the only reason they are written down.
+
+1. **Coverage stops at the snapshot, and no test can extend it.** The
+   exhaustiveness guard runs over `CLUBS`, so it bites at `sync-seed-data` and
+   nowhere else. Upstream already names clubs the seed does not — that is why
+   `/api/matches` ships the clubs it saw — and one of those falls through to "o"
+   with nothing to say so. A live test cannot close it: CI has no network by
+   design, and adding one would trade a red build that always means the code
+   broke for one that sometimes means the upstream had a bad minute. The place
+   that *can* is `scripts/sync-seed-data.ts`, which runs on a workstation at the
+   exact moment the division changes: have it refuse, or at least warn, when it
+   writes a club `hasClubArticle` does not know. That is the same shape as the
+   generator's existing duplicate-slug check.
+
+2. **Only *de* is contracted.** `ofClub` returns "do"/"da" and nothing else,
+   because that is what all four call sites needed. pt-BR contracts three more
+   prepositions with the article — em → "no"/"na", a → "ao"/"à", por →
+   "pelo"/"pela" — so the first line of copy reading "no Flamengo" or "pela
+   Chapecoense" will hand-write the article again, which is precisely how it came
+   to be wrong in four files at once. Extend the module rather than inlining at
+   the call site — which is the same rule **Contas** states just above, from the
+   other side. The *un*contracted case already has its answer: `clubArticle`
+   returns the bare word, which is what "contra a Chapecoense" and the **Meu
+   time** control both want.
+
+3. **A `Screenshots-unaffected:` trailer outside the last paragraph is not a
+   trailer.** Git's trailer block is the final paragraph of the message only, so
+   one sitting in its own paragraph above `Co-Authored-By:` is body prose:
+   `git interpret-trailers --parse` returns nothing for it and
+   `check-screenshots.sh` reports the commit as unaccounted while a correct,
+   specific reason sits six lines up in the same message. Cost was a red advisory
+   job, an amend and a force-push. The script already prints the trailer's syntax
+   on failure; what it cannot currently say is *this*. It reads only the parsed
+   side, through `%(trailers:key=…)`, so an unparsed claim is indistinguishable
+   from no claim at all — but a second `--format=%B` over the same commits would
+   separate them, and a line present in the message and absent from the trailers
+   is exactly the case worth naming instead of printing the generic how-to at
+   somebody who has already followed it. Worth stating in the help text either
+   way: continuation lines must be **indented**, and the block must be last.
+
+4. **A spec keyed on which club sorts first.** `tests/e2e/players.spec.ts`
+   selected the club link by `/^Ver a página do/`. The "do" was never a fact
+   about the page — it was Athletico-PR happening to sort first in the snapshot,
+   and a promoted Portuguesa would have turned that locator red on a change that
+   had nothing to do with it. `CLAUDE.md` already carries "assert shape, not
+   value" for rounds and scorelines; this is the same rule applied to **copy that
+   varies by club**, which was not on the list. No sweep has been done for
+   others.
 
 ## Constraints that must survive any redesign
 
@@ -843,3 +898,10 @@ Nothing in this migration. The remaining items are the pre-existing ones under
 **Near term** above — the highlights backfill and the weekly broadcast sync —
 plus the README viewport question noted at the top of this section, which is a
 product decision rather than work.
+
+Three lists elsewhere in this file are also outstanding and are deliberately not
+restated here: the thirteen items under **From the Brasileirão Pro import**, the
+host steps and Phase 2 under **Contas — what Phase 1 leaves outstanding**, and
+the four under **From the club-article fix**. The last is the one to read if you
+are about to write a sentence with a club's name in it, or a
+`Screenshots-unaffected:` trailer.
