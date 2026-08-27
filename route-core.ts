@@ -40,7 +40,13 @@ export type Route =
    * differs per requester.
    */
   | { section: "conta" }
-  | { section: "entrar" };
+  | { section: "entrar" }
+  /**
+   * The privacy notice. **Public and indexable**, unlike the two above: a
+   * notice only a signed-in reader can find is not a notice, and Google's
+   * consent screen links to it from outside this site entirely.
+   */
+  | { section: "privacidade" };
 
 export const HOME: Route = { section: "classificacao" };
 
@@ -97,6 +103,9 @@ export const parseRoute = (pathname: string): Route => {
     case "entrar":
       return { section: "entrar" };
 
+    case "privacidade":
+      return { section: "privacidade" };
+
     case "clube":
       return second ? { section: "clube", key: second } : HOME;
 
@@ -128,6 +137,8 @@ export const formatRoute = (route: Route): string => {
       return "/conta";
     case "entrar":
       return "/entrar";
+    case "privacidade":
+      return "/privacidade";
     case "clube":
       return `/clube/${encodeURIComponent(route.key)}`;
     case "partida":

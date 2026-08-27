@@ -123,7 +123,11 @@ export function SignInView({
 
           <p className="mt-4 max-w-prose text-body-small text-ink-faint">
             Guardamos o seu nome do Google e nada mais. Você pode apagar a conta
-            a qualquer momento, e ela é apagada de verdade.
+            a qualquer momento, e ela é apagada de verdade. Os detalhes estão em{" "}
+            <a href="/privacidade" className={LINK_UNDERLINE}>
+              Privacidade
+            </a>
+            .
           </p>
         </>
       )}
@@ -206,7 +210,12 @@ export function AccountView({
           </div>
         </dl>
         <p className="mt-3 text-body-small text-ink-faint">
-          É tudo o que guardamos sobre você.
+          É tudo o que guardamos sobre você, além do seu time e de um registro
+          por aparelho conectado. Veja{" "}
+          <a href="/privacidade" className={LINK_UNDERLINE}>
+            Privacidade
+          </a>
+          .
         </p>
       </Surface>
 

@@ -1098,3 +1098,20 @@ a reader who visits at all regularly never meets an expiry, and one who
 disappears for a month is signed out, which is the point of having one.
 _Avoid_: "token" in user-facing copy, "login" as a noun for it, "sessão" for the
 `ApiEnvelope` cache window (a different thing entirely).
+
+**Privacidade**:
+The public notice at `/privacidade`: what the app stores about someone with a
+**Conta**, why, who else sees it, and how to delete it. Rendered by
+`PrivacyView` and written to be true of this build rather than legally
+decorative — every claim in it is checkable against `account-store.ts`, so a new
+column there makes this page wrong until it is edited.
+**Indexable, unlike `/conta` and `/entrar`**, which are `PRIVATE` in
+`pageStatus`. A notice only a signed-in reader can find is not a notice: the
+point is to be readable *before* deciding, and Google's consent screen links to
+it from outside this site entirely. It is in the sitemap for the same reason the
+rounds are — the only links to it are on two pages a crawler is told not to
+fetch.
+_Avoid_: "política de privacidade" as the label (longer, and the page is not a
+policy document), "termos" (there are none, and inventing them would be a
+promise nobody is keeping), "LGPD" in the copy — the law is why the page exists,
+not what a reader came to read.

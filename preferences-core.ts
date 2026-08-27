@@ -29,6 +29,48 @@ export interface Preferences {
   club: ClubCode | null;
 }
 
+/**
+ * What a device should hold once its reader signs in, and what to send back.
+ *
+ * `docs/accounts.md` §4 sketches this as "last-write-wins per key, with the
+ * local copy winning on a tie". That needs a timestamp per key on both sides,
+ * and this is the argument for not paying for one.
+ *
+ * There is **one key**. Timestamps would resolve exactly one situation: the
+ * reader signed out on device A, changed their club there, and then signed in
+ * on device B — where the change on A is newer but B's account copy would win.
+ * Buying that costs a stamp beside every value, a storage-shape migration for
+ * everyone who already has a preference, and a rule nobody can predict from the
+ * outside, because the deciding value is invisible.
+ *
+ * The rule here is one sentence instead: **the account is the source of truth,
+ * and a device seeds an account that has none yet.** So:
+ *
+ * - the account names a club → the device adopts it, and nothing is uploaded;
+ * - the account names none and the device does → the device's is uploaded,
+ *   which is the case the plan actually cared about (a sign-in must never
+ *   silently discard the choice the reader just made);
+ * - neither names one → nothing happens.
+ *
+ * What it gives up is the A-then-B case above. What it gains is that a reader
+ * can predict the outcome, which last-write-wins over an invisible clock does
+ * not offer. Revisit when there is a second key whose value is expensive to
+ * re-choose — this is a decision about *one* club, not a general position on
+ * synchronisation.
+ */
+export interface SyncPlan {
+  /** What this device should hold from now on. */
+  device: Preferences;
+  /** What to send to the server, or `null` when it already agrees. */
+  upload: Preferences | null;
+}
+
+export const planSync = (device: Preferences, account: Preferences): SyncPlan => {
+  if (account.club) return { device: account, upload: null };
+  if (device.club) return { device, upload: device };
+  return { device, upload: null };
+};
+
 /** Namespaced to match `THEME_STORAGE_KEY`, so one reader's keys sit together. */
 export const PREFERENCES_STORAGE_KEY = "portal-brasileirao:preferences";
 

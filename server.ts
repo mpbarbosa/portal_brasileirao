@@ -58,6 +58,7 @@ import {
   publicAccount,
   type Account,
 } from "@/account-core";
+import { NO_PREFERENCES, parsePreferences, serialisePreferences } from "@/preferences-core";
 import { openStore } from "@/account-store";
 import {
   authorizeUrl,
@@ -670,6 +671,19 @@ const beginSession = (res: express.Response, accountId: string, now: number): vo
   );
 };
 
+/**
+ * The reader's preferences, narrowed the way the client narrows them.
+ *
+ * The stored value goes through `parsePreferences`, the same function that
+ * tolerates junk in `localStorage`, so a row written by a build that knew a key
+ * this one does not is dropped rather than served. Storing the whole object
+ * under one key keeps the two sides speaking the same shape.
+ */
+const preferencesOf = (accountId: string) => {
+  if (!accountStore) return NO_PREFERENCES;
+  return parsePreferences(accountStore.readPreferences(accountId).preferences);
+};
+
 /** Absent feature, not broken feature. */
 const requireAccounts = (res: express.Response): boolean => {
   if (accountsEnabled()) return true;
@@ -677,6 +691,24 @@ const requireAccounts = (res: express.Response): boolean => {
   res.status(404).json({ error: "Contas não estão disponíveis nesta instalação." });
   return false;
 };
+
+/**
+ * Sweep expired sessions hourly, and once at boot.
+ *
+ * `pruneSessions` existed through Phase 1 with nothing calling it. An expired
+ * row authenticates nobody, so this is not a security fix — it is §5: a row
+ * saying when a person was last here, kept for no stated purpose, is personal
+ * data retained without a reason. `unref` so the timer never holds the process
+ * open, which is what would make a container refuse to stop.
+ */
+if (accountStore) {
+  const sweep = () => {
+    const removed = accountStore.pruneSessions(Date.now());
+    if (removed > 0) console.log(`[accounts] pruned ${removed} expired session(s)`);
+  };
+  sweep();
+  setInterval(sweep, 60 * 60 * 1000).unref();
+}
 
 app.get("/api/auth/google", (req, res) => {
   if (!requireAccounts(res)) return;
@@ -835,7 +867,7 @@ if (ACCOUNTS_DEV_LOGIN) {
     });
 
     beginSession(res, account.id, now);
-    res.json(publicAccount(account));
+    res.json(publicAccount(account, preferencesOf(account.id)));
   });
 }
 
@@ -851,7 +883,7 @@ app.get("/api/account/me", (req, res) => {
   if (!requireAccounts(res)) return;
   noStore(res);
   const account = currentAccount(req, res);
-  res.json(account ? publicAccount(account) : null);
+  res.json(account ? publicAccount(account, preferencesOf(account.id)) : null);
 });
 
 app.post("/api/auth/logout", (req, res) => {
@@ -875,6 +907,40 @@ app.post("/api/auth/logout", (req, res) => {
 
   res.append("Set-Cookie", clearCookie(SESSION_COOKIE, cookieOptions));
   res.status(204).end();
+});
+
+/**
+ * Replace the reader's preference set.
+ *
+ * A whole-object PUT rather than a patch per key: there is one key, the client
+ * always holds the complete set, and a partial update is a merge rule that
+ * would have to agree with `planSync` — a second place for the two to disagree.
+ */
+app.put("/api/account/preferences", express.json({ limit: "4kb" }), (req, res) => {
+  if (!requireAccounts(res)) return;
+  noStore(res);
+  if (!sameOrigin(req)) {
+    res.status(403).json({ error: "Origem inválida." });
+    return;
+  }
+
+  const account = currentAccount(req, res);
+  if (!account) {
+    res.status(401).json({ error: "Você não está conectado." });
+    return;
+  }
+
+  // Narrowed through the same parser the client uses, so a body this build does
+  // not understand becomes "follows nobody" rather than a stored surprise.
+  const preferences = parsePreferences(JSON.stringify(req.body ?? {}));
+  accountStore!.writePreference(
+    account.id,
+    "preferences",
+    preferences.club ? serialisePreferences(preferences) : null,
+    Date.now(),
+  );
+
+  res.json(publicAccount(account, preferences));
 });
 
 /** The LGPD erasure right: a delete, in one transaction, cascading to every

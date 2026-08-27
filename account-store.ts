@@ -78,6 +78,15 @@ const MIGRATIONS: string[] = [
 
   CREATE INDEX sessions_by_account ON sessions(account_id);
   `,
+  `
+  CREATE TABLE preferences (
+    account_id  TEXT NOT NULL REFERENCES accounts(id) ON DELETE CASCADE,
+    key         TEXT NOT NULL,
+    value       TEXT NOT NULL,
+    updated_at  INTEGER NOT NULL,
+    PRIMARY KEY (account_id, key)
+  );
+  `,
 ];
 
 interface AccountRow {
@@ -137,6 +146,21 @@ export interface AccountStore {
   /** Hard delete, cascading to sessions, in one transaction — the LGPD
    *  erasure right, and not a soft-delete flag. */
   deleteAccount(accountId: string): void;
+
+  /**
+   * The reader's preferences, as a key/value map.
+   *
+   * Key/value rather than a column per preference, so adding one is a write
+   * rather than a migration — and so a **stale bundle reading a newer row does
+   * not break**: an unknown key is simply a key this build has no use for,
+   * where an unknown column would be a query that fails.
+   */
+  readPreferences(accountId: string): Record<string, string>;
+
+  /** Set or clear one key. `null` deletes the row rather than storing a null,
+   *  so "follows nobody" and "has never chosen" are the same state — which is
+   *  what `planSync` assumes when it decides whether to seed. */
+  writePreference(accountId: string, key: string, value: string | null, now: number): void;
 
   /** Drop sessions that have expired. Nothing reads them, and keeping them is
    *  a record of when a person was last here, retained for no stated purpose. */
@@ -215,6 +239,14 @@ export const openStore = (file: string): AccountStore | null => {
   const deleteSessionsFor = db.prepare("DELETE FROM sessions WHERE account_id = ?");
   const deleteExpired = db.prepare("DELETE FROM sessions WHERE expires_at <= ?");
   const deleteAccountRow = db.prepare("DELETE FROM accounts WHERE id = ?");
+  const selectPreferences = db.prepare("SELECT key, value FROM preferences WHERE account_id = ?");
+  const upsertPreference = db.prepare(
+    `INSERT INTO preferences (account_id, key, value, updated_at) VALUES (?, ?, ?, ?)
+     ON CONFLICT(account_id, key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at`,
+  );
+  const deletePreference = db.prepare(
+    "DELETE FROM preferences WHERE account_id = ? AND key = ?",
+  );
 
   return {
     upsertAccount({ id, provider, subject, displayName, now }) {
@@ -293,6 +325,16 @@ export const openStore = (file: string): AccountStore | null => {
         db.exec("ROLLBACK");
         throw error;
       }
+    },
+
+    readPreferences(accountId) {
+      const rows = selectPreferences.all(accountId) as { key: string; value: string }[];
+      return Object.fromEntries(rows.map((row) => [row.key, row.value]));
+    },
+
+    writePreference(accountId, key, value, now) {
+      if (value === null) deletePreference.run(accountId, key);
+      else upsertPreference.run(accountId, key, value, now);
     },
 
     pruneSessions(now) {

@@ -203,6 +203,15 @@ export const pageMeta = (
         image: site,
       };
 
+    case "privacidade":
+      return {
+        title: suffix("Privacidade"),
+        description:
+          "O que o Portal Brasileirão guarda sobre quem cria uma conta, por quê, " +
+          "e como apagar.",
+        image: site,
+      };
+
     case "entrar":
       return {
         title: suffix("Entrar"),
