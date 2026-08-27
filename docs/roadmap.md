@@ -48,6 +48,32 @@ to abort a whole run, and the end-to-end specs depended on some fixture in round
 - Watch for broadcasters CBF names that we render as wordmarks — ESPN/Disney+,
   Band, SportyNet — and add marks where a public-domain one exists.
 
+Left over from **Árbitro** (item 1 below), which surfaced more about the
+provider than it needed to build:
+
+- **Refresh the README screenshots once PR #104 deploys.** `MatchPage` gained a
+  row, which is an appearance path, so the capture job is red by design — no
+  `Screenshots-unaffected:` trailer applies, because the change genuinely
+  reaches a paint. The catch is that the row renders **only against live data**,
+  so a local capture cannot show it either: the sequence is merge, deploy, then
+  capture from the live site.
+- **Watch whether upstream backfills the officials for rounds 16–24.** BSA names
+  a referee on 157 of 380 fixtures — rounds 1–15 complete, 16 onward mostly not
+  — so the row is absent from roughly 60% of match pages today. It fills in
+  **retroactively**, since finished matches gain one, so this may resolve
+  itself and nothing in the app needs changing if it does. Worth knowing before
+  someone reads a missing row as a bug and goes looking for one.
+- **Do not translate a role the payload has not sent, and do not prettify one it
+  has.** `refereeRoleLabel` maps `REFEREE` alone, because that is every one of
+  the 356 entries across BSA, PL and CL. If the tier ever widens, an assistant
+  reaches the page as `ASSISTANT_REFEREE_N1` — ugly on purpose, and the visible
+  prompt to add the row rather than a rendering defect to patch over.
+- **The officials' `nationality` is deliberately dropped, and the reason is a
+  live example rather than a principle.** It reads `Brazil` for 156 of the 157
+  entries, and the one exception is an **upstream error**: a French official
+  recorded against Coritiba × Chapecoense in round 22. So the field offers one
+  word repeated on every page, plus one that is wrong.
+
 ## From the Brasileirão Pro import
 
 `brasileirao-pro.zip` — an AI Studio prototype of a Série A analytics dashboard —
@@ -64,9 +90,17 @@ provider already sends; the rest are derivations or rules.
 **Now — no decision to make.** Six of these are one attribute, one element or a
 paragraph of prose.
 
-1. **Árbitro on the match page.** `referees` rides on every football-data match
-   object and `football-data-core.ts` drops it. Translate the role vocabulary at
-   the edge like `positionLabel` does, and render nothing when the array is empty.
+1. ~~**Árbitro on the match page.**~~ **Shipped.** `refereeRoleLabel` translates
+   at the edge and the row is absent when upstream names nobody, which is 223 of
+   the 380 fixtures — finished ones included, so the field fills in
+   retroactively rather than at kickoff. Two things the payload settled that the
+   proposal could only guess at: **every** one of the 356 entries across BSA, PL
+   and CL is `REFEREE`, so the wider vocabulary it predicted is not reachable on
+   this tier and only that one value is translated; and the field is
+   **live-only**, since the seed snapshot carries no officials and the e2e suite
+   boots frozen. Green e2e is therefore not evidence that it renders —
+   `tests/football-data-core.test.ts` covers the mapper against a captured
+   payload, per the rule in `CLAUDE.md`.
 2. **Aproveitamento (%).** `pontos / (jogos × 3)`. The metric a Brazilian reader
    quotes by default, and the one that survives a postponed fixture honestly.
    Needs a `CONTEXT.md` entry in the same commit.

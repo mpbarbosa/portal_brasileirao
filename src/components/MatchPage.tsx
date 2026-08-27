@@ -3,6 +3,7 @@ import {
   highlightsSearchUrl,
   highlights,
   hasHighlights,
+  refereeRoleLabel,
 } from "@/match-core";
 import { stadiumSlug, venueName } from "@/venue-core";
 import { STADIUMS } from "@/src/data/stadiums";
@@ -169,6 +170,10 @@ export function MatchPage({
   const showCampaigns =
     lastRound > 0 && homeCampaign.length > 0 && awayCampaign.length > 0;
   const venue = match.venue;
+  // Absent and empty are the same thing to a reader, and both render nothing —
+  // the player card's rule. Upstream names nobody for 223 of the season's 380
+  // fixtures, so that is the common case rather than the edge one.
+  const officials = match.referees ?? [];
   const videos = highlights(match);
   const played = match.homeGoals !== null && match.awayGoals !== null;
 
@@ -232,6 +237,19 @@ export function MatchPage({
             </dd>
           </div>
         )}
+
+        {/* One row per official, labelled by role rather than gathered under a
+            single "Arbitragem" heading: the provider sends exactly one entry
+            per match today, so the specific word is the honest one and the list
+            extends by itself if assistants ever arrive. */}
+        {officials.map((official) => (
+          <div key={`${official.role}-${official.name}`}>
+            <dt className="text-body-small text-ink-faint">
+              {refereeRoleLabel(official.role)}
+            </dt>
+            <dd className="font-medium">{official.name}</dd>
+          </div>
+        ))}
 
         {match.broadcasters && (
           <div>

@@ -406,8 +406,8 @@ a count, not a fixture), "event".
 
 **Página da partida**:
 The detail page for one fixture, at `/partida/<id>`, reached from the fixture
-list. Shows the scoreboard, round, status, kickoff, **Estádio** and — depending
-on state — either **Onde assistir** or a link to the goals. Every field beyond
+list. Shows the scoreboard, round, status, kickoff, **Estádio**, **Árbitro**
+and — depending on state — either **Onde assistir** or a link to the goals. Every field beyond
 the score is optional, since the provider supplies neither venue nor channels,
 so each section renders only when its data exists.
 _Avoid_: rendering an empty row for a field the sync has not filled, showing a
@@ -491,6 +491,25 @@ pipeline carries any of them.
 _Avoid_: printing it when it merely restates the popular name ("Arena MRV /
 Arena MRV"), calling it "apelido" — the nickname is the *popular* name here, and
 naming both the same thing is how one row ends up rendering twice.
+
+**Árbitro**:
+Who officiated a **Partida**, from football-data's `referees` array — the one
+field on `Match` that comes from **no local file**, so it is **live-only**:
+`src/data/matches.ts` carries none and the end-to-end suite, which boots frozen,
+never sees one. Rendered as its own row of the match page's `<dl>`, labelled by
+role: `REFEREE` → "Árbitro", and a named official whose role upstream omitted
+gets "Arbitragem", the collective noun, since that is all the payload claimed.
+Any other role reaches the page **verbatim**, the rule **Posição** and
+**Nacionalidade** already follow — every one of the 356 entries across BSA, PL
+and CL is `REFEREE`, so translating an assistant's token would be a claim this
+app cannot check. Upstream names nobody for 223 of the season's 380 fixtures,
+finished ones included, so it fills in retroactively rather than at kickoff.
+_Avoid_: "arbitragem" for the person (it is the collective — the activity and
+the crew, which is exactly why it stands in when the role is unknown); "juiz"
+(the spoken word, but CBF and the provider both say *árbitro*); rendering an
+empty row, a dash or "a definir" for the 223 fixtures with no official; printing
+the reported nationality, which is `Brazil` for 156 of the 157 entries and wrong
+for the one that is not.
 
 **Melhores momentos**:
 The highlights section of a **Página da partida**, shown for **any** match that
