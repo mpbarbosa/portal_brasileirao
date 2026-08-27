@@ -343,11 +343,29 @@ host-side change and a rehearsal. Doing the ten-minute thing first is not the
 same as thinking it matters more, and the severity ordering is recorded here so
 the sequence is not misread as a ranking.
 
-*Exit:* `.github/dependabot.yml` is on `main`. The observable exit — a first
-grouped pull request, green — arrives on GitHub's schedule rather than ours:
-Dependabot evaluates the manifests shortly after the file lands and then weekly
-on Monday mornings, so it is the one phase here whose confirmation cannot be
-made to happen on demand.
+*Exit:* met, and sooner than expected. This was written saying the exit could
+not be made to happen on demand — Dependabot in fact evaluated the manifests
+within minutes of the file landing and opened five pull requests: two grouped
+(`actions`, `npm-minor-and-patch`) and three isolated majors (`typescript`,
+`@types/node`, `@vitejs/plugin-react`). The split worked exactly as designed.
+GitHub also validates the file itself, as a `.github/dependabot.yml` check run.
+
+**Two refinements came out of that first run, and both are now in the file.**
+This is the useful shape for a phase like this: the config was wrong in ways
+only its own output could reveal.
+
+- **`vite` and `@vitejs/plugin-react` are a pair.** Isolating every major
+  offered plugin-react 6 against vite 6, and plugin-react 6 declares
+  `peer vite@^8` — so the pull request failed at `npm ci` with ERESOLVE before
+  any code ran. Unmergeable by construction, and it would have returned every
+  Monday. They are grouped now, so their majors arrive together or not at all.
+- **`esbuild` is 0.x, where the minor is the breaking position.** Semver calls
+  0.25 → 0.28 a minor and it was grouped as one; for a 0.x package that is a
+  major in all but the number, and esbuild bundles `server.ts` into
+  `dist/server.cjs`. Isolated now — though honestly the weaker of the two, since
+  `check` builds the bundle, boots it and smoke-tests three endpoints, so that
+  bump was in fact well covered and went green. It buys an unambiguous failure,
+  not new safety.
 
 ### D5 — A bad release does not become an outage
 
