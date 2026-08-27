@@ -359,15 +359,32 @@ read carefully and looked right.
 - `PRAGMA integrity_check` returns a column named **`integrity_check`**, not `result`.
   Destructuring the wrong name yields `undefined`, which is not `"ok"`, so every artefact
   failed verification and a perfectly good database exited 2.
-- **`2>&1` inside a command substitution folds stderr into the value.** `node:sqlite` is
-  experimental on the pinned major, so it warns on every invocation — and the warning
-  landed *inside* the row count, printing the number, the warning and the unit across
-  three lines. The backup still ran and still uploaded; the one number that says the
-  artefact has anything in it did not survive being printed. The fix is
-  `--disable-warning=ExperimentalWarning` at each `node` call in `09` and `10`.
+- **`2>&1` inside a command substitution folds stderr into the value.** That is the trap,
+  and it is not about backups: any `X="$(cmd 2>&1)"` inherits it, and an **experimental
+  builtin makes it fire on every invocation** rather than only when something goes wrong.
+  `node:sqlite` is experimental on the pinned major, so the warning landed *inside* the
+  row count, printing the number, the warning and the unit across three lines. The fix is
+  `--disable-warning=ExperimentalWarning` at each `node` call; `09` and `10` were the two
+  sites that had it, and nothing stops a third being written tomorrow.
+  **The blast radius was cosmetic, and saying so matters** — "a backup bug" reads as data
+  loss. The backup ran, verified and uploaded correctly; what was mangled was only the
+  printed count, which is the one number a person reads to see the artefact is not empty.
+  `10`'s copy was merely *lucky*: `read` takes the first line, which is the count only
+  because the warning is deferred past it. Ordering is not a guarantee to rest a restore on.
   This is the bug that only appears on the **pinned** major: Node 26 has `node:sqlite`
-  stable and silent, so a local green run said nothing about the host. It surfaced the
-  day CI began running the rehearsal on `.nvmrc`'s Node.
+  stable and silent, so a local green run said nothing about the host — and the host runs
+  **22.23.2**, read off `/api/health`, so this was live there rather than latent in CI. It
+  surfaced the day CI began running the rehearsal on `.nvmrc`'s Node.
+  **The catch was itself verified, by reverting only the flag** — the same discipline the
+  flip-back harness's three deliberate mutations record. Reverted: 22 ok / 1 not ok on Node
+  22, failing exactly on `did not count rows`; with the fix, 23 / 0. The *unfixed* script is
+  23 / 0 on Node 26, which is the leg that proves the harness is reading the runtime rather
+  than merely passing. Re-run it the way CI does before trusting a local pass:
+
+  ```sh
+  docker run --rm -v "$PWD":/repo:ro -w /repo node:22-bookworm \
+    ./scripts/rehearse-accounts-backup.sh
+  ```
 
 The database half is **real** in that harness — a real SQLite file through the real schema,
 real `VACUUM INTO`, real `integrity_check`, rows counted at both ends. Only `aws`,
