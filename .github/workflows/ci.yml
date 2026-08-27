@@ -110,6 +110,15 @@ jobs:
       - name: Rehearse the accounts backup round trip (shell_scripts/09, 10)
         run: ./scripts/rehearse-accounts-backup.sh
 
+      # The third one covers a *workflow*, not a host script, and needs no
+      # network either — a real bare repository on disk and a stubbed `gh`. It
+      # earns its place here for the reason the two above do, one step further:
+      # sync-broadcasts.yml runs on a schedule, so no pull request can ever
+      # exercise it, and a green tick on a change to that file certifies only
+      # that the other workflows still pass.
+      - name: Rehearse the broadcast sync's pull request (sync-broadcasts.yml)
+        run: ./scripts/rehearse-broadcast-sync-pr.sh
+
       # Everything above has passed, so THIS dist/ is the one that type-checked,
       # passed the unit suite, booted as a bundle and served three endpoints.
       # Packaging it here — rather than rebuilding in `deploy` — is what makes

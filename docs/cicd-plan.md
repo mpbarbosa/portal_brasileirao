@@ -381,11 +381,35 @@ needs a human to choose a target from a list. A lightweight tag per successful
 deploy (`deploy-YYYYMMDD-HHMMSS-<sha7>`) makes the rollback workflow's input
 something a person can pick rather than something they have to derive.
 
-**E. `sync-broadcasts` pushes straight to `main`.** It works today and will break
-the day branch protection is enabled — which is the next item. Have it open a PR
-instead; the data is not urgent enough to need direct-push privileges, and its own
-workflow already lints and unit-tests the result, so the PR would be green on
-arrival.
+**E. `sync-broadcasts` pushes straight to `main` — done.** It now commits to
+`automation/sync-broadcasts` and opens a pull request from it, so the data
+lands the way every other change does. An open pull request is **built on
+rather than replaced**: the sync merges into `broadcasts.ts` across the window
+it is asked about, so starting again from `main` each week would silently drop
+whatever had aged out of that window since.
+
+**"The PR would be green on arrival" was wrong, and the correction is the
+useful part of this item.** GitHub does not start a workflow run for an event
+raised with the repository's own `GITHUB_TOKEN`, so neither the push nor the
+pull request triggers `ci.yml`: the pull request arrives carrying **no checks
+at all**, not green ones. What the sync workflow lints and unit-tests is the
+file *before it commits it*, failing the job instead — a real gate, in a
+different place, and one that reports on the sync's own run rather than on the
+pull request.
+
+**That couples E to F harder than "do E first" suggested.** Requiring `check`
+and `e2e` as status checks would make this pull request permanently
+unmergeable, because those checks can never appear on it unattended. Whoever
+does F needs either a token that is not `GITHUB_TOKEN` here, or an explicit
+exemption for that branch — a decision, and cheaper to make now than to
+discover after protection is switched on.
+
+*Exit:* the Tuesday run opens a pull request instead of pushing, and `main`
+does not move. `scripts/rehearse-broadcast-sync-pr.sh` covers the shell in the
+meantime — five cases, thirty assertions, against a real git remote and a
+stubbed `gh`, run by `check` beside the other two rehearsals. It cannot prove
+the token behaviour above, which is a property of GitHub rather than of the
+shell; that is read off the first scheduled run.
 
 **F. `main` is protected by convention only.** `CLAUDE.md`'s protocol says "No
 session merges into `main`" and "propose, do not act", and that has held. It is
@@ -813,7 +837,7 @@ its entry went from six to a measured seventeen once it was actually queried.
 Gap B (no Deployments record) is **done** — see its entry above, including why
 `rollback.yml` was left out of it and what closing that would cost.
 
-What remains under D7: gaps D, E, F and G. The plan's own ordering still holds —
+What remains under D7: gaps D, F and G. The plan's own ordering still holds —
 F interacts with E and with the reconciling deploy, so E comes first; G is last
 and only in the shape its entry describes.
 

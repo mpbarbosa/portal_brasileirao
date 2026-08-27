@@ -411,9 +411,14 @@ looks exactly like a task nobody has picked up.
   job, so there is no Deployments tab, no per-environment history and nowhere to
   hang a protection rule later. Two lines, and it is what you want when
   reconstructing an incident.
-- **`sync-broadcasts` pushes straight to `main`.** It works today and breaks the
-  day branch protection is enabled. Have it open a pull request; its own workflow
-  already lints and unit-tests the result, so the PR would be green on arrival.
+- ~~**`sync-broadcasts` pushes straight to `main`.**~~ **Done** — it commits to
+  `automation/sync-broadcasts` and opens a pull request, building on an open one
+  rather than replacing it. One correction worth carrying: *"the PR would be
+  green on arrival"* is false. A pull request opened with the repository's own
+  `GITHUB_TOKEN` starts **no** workflow run, so it arrives with no checks rather
+  than passing ones — which means branch protection (the next item) would make
+  it unmergeable until somebody grants that branch an exemption or a different
+  token. `docs/cicd-plan.md` gap E has the detail.
 - **`main` is protected by convention only.** The rule that no session merges to
   `main` has held, but nothing enforces it. Requiring `check` and `e2e` as status
   checks interacts with the item above, so do that one first.
