@@ -165,6 +165,35 @@ jobs:
     # or, where the edit provably cannot reach a paint, owes a sentence saying
     # why. The check honours a `Screenshots-unaffected:` trailer and prints it;
     # scripts/check-screenshots.sh has the syntax and the case it was added for.
+    #
+    # AND it must not make the run LIE about the release either. That is a
+    # second failure with the same root, and it needs its own mechanism:
+    # staying out of `deploy`'s `needs` stops this blocking a release, and does
+    # nothing about it reddening the run that carried one. A failed job sets the
+    # whole run's conclusion to `failure`, so a release that built, shipped and
+    # verified its own commit at /api/health was reported as a failed run.
+    #
+    # Measured rather than estimated, over the 30 push-on-main runs before this
+    # change: 17 concluded `failure`, and in all 17 the ONLY job that failed was
+    # this one and `deploy` succeeded. Not "usually a false alarm" — every red
+    # push-on-main run in that window was this defect, and every one of them
+    # shipped. Six concluded `success`; the rest were cancelled or still
+    # running. CLAUDE.md carried a standing warning to read /api/health rather
+    # than the badge, which is a note asking people to distrust a signal rather
+    # than a signal worth trusting.
+    #
+    # `continue-on-error` separates the two. The job still runs, still goes red,
+    # and still says what is owed; the run concludes on whether the release
+    # worked. An advisory that can only speak by lying about the release is
+    # worse than one that speaks in the step summary — which is where the step
+    # below puts it, because a green run is one nobody opens.
+    #
+    # It also unjams `reconcile.yml`'s rollback hold. That asks for the last
+    # SUCCESSFUL ci.yml run on main and compares it against the last rollback,
+    # so every release this job reddened was invisible to it: after a rollback,
+    # a fix that deployed and was reddened here would have left the reconciler
+    # holding against a stale timestamp rather than clearing itself.
+    continue-on-error: true
     steps:
       - uses: actions/checkout@v7
         with:
@@ -173,7 +202,56 @@ jobs:
           # needs the history.
           fetch-depth: 0
 
-      - run: ./scripts/check-screenshots.sh
+      # The findings go to the step summary, not only to this job's log. Now
+      # that the run concludes on the release, a reader scanning main sees green
+      # and has no reason to open this job at all — so what is owed has to sit
+      # somewhere they land rather than somewhere they navigate to. The summary
+      # is the top of the run page and of the PR check's own page, and the pull
+      # request is where this debt is actionable: the change under review is
+      # what created it.
+      #
+      # The verdict is taken from the exit status and never by parsing the
+      # output. A summary that disagreed with the job's own result would be
+      # worse than no summary at all.
+      #
+      # The output is folded away because most of it is the refresh recipe,
+      # which matters once you have decided to act and buries the finding until
+      # then. The finding itself — which commits, and what would clear them —
+      # is in the first lines of that block.
+      - name: Check, and report what is owed in the run summary
+        run: |
+          report="$RUNNER_TEMP/check-screenshots.txt"
+          status=0
+          ./scripts/check-screenshots.sh >"$report" 2>&1 || status=$?
+
+          cat "$report"
+
+          {
+            if [ "$status" -eq 0 ]; then
+              echo "### README screenshots are current"
+            else
+              echo "### README screenshots need a refresh"
+              echo
+              echo "**The release is unaffected.** This job is advisory and is not in"
+              echo "\`deploy\`'s \`needs\`, so a run carrying it red can still have built,"
+              echo "shipped and verified a release. Read the \`deploy\` job for that."
+              echo
+              echo "Someone owes a capture of \`docs/screenshots\`, or a"
+              echo "\`Screenshots-unaffected:\` trailer saying why the edit cannot move a"
+              echo "rendered pixel. The output below names the commits."
+            fi
+
+            echo
+            echo "<details><summary>check-screenshots.sh</summary>"
+            echo
+            echo '```'
+            cat "$report"
+            echo '```'
+            echo
+            echo "</details>"
+          } >>"$GITHUB_STEP_SUMMARY"
+
+          exit "$status"
 
   e2e:
     name: End-to-end (Playwright)

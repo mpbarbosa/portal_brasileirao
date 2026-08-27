@@ -137,6 +137,52 @@ Two further options, either of which can follow later: move it to its own
 workflow so it has its own badge, or have it open/update a single issue. Neither
 is needed to stop the misreading.
 
+**Done.** `continue-on-error: true` on the job, and the check's findings written
+to `$GITHUB_STEP_SUMMARY` — the verdict taken from the exit status rather than by
+parsing the output, and the output folded into a `<details>` block because most
+of it is the refresh recipe, which buries the finding until you have decided to
+act.
+
+The count was understated here. Measured over the 30 push-on-main runs before the
+change: **17 concluded `failure`, in all 17 the only failing job was this one,
+and in all 17 `deploy` succeeded.** Not "usually a false alarm" — every red
+push-on-main run in that window was this defect, and every one of them shipped.
+Six concluded `success`.
+
+**It also unjammed something nobody had observed.** `reconcile.yml`'s rollback
+hold asks for the last *successful* `ci.yml` run on main and holds while a
+rollback is newer than it. Every release this job reddened was invisible to that
+query, so after a rollback a fix that deployed and was reddened here would have
+left the reconciler holding against a stale timestamp instead of clearing itself
+— and with `screenshots` red on main until someone refreshes, it would not have
+cleared at all. At the time of the change the newest successful run that query
+could see was **47 minutes and nine releases behind** the newest run. It had
+never fired only because a rollback has to happen first. The comment there is
+updated rather than deleted: the old defence was sound, and a reader who meets
+only the new state cannot tell that the hazard was removed at source rather than
+never having existed.
+
+**The other two options were weighed and not taken**, recorded because each is
+the obvious next suggestion:
+
+- **Its own workflow, its own badge.** The badge is per-workflow and per-default-
+  branch, so this would put a *permanently red* badge in the README beside the
+  very images it is complaining about. That reads well for one week and trains
+  readers to ignore badges thereafter, which is the failure mode this whole
+  defect is an instance of. It also duplicates the `fetch-depth: 0` checkout and
+  the trigger matrix, and would drop the signal from pull requests unless both
+  were maintained. The existing CI badge becoming *honest* is worth more than a
+  second badge that is permanently not.
+- **Open or update a single issue.** Needs `issues: write` on a job that today
+  needs nothing, and produces a bot notification on every merge while the debt
+  stands. An issue is the right shape for debt that nobody is otherwise looking
+  at; this debt is created by a pull request and is visible on that pull
+  request's own checks, which is where it is actionable.
+
+The summary was enough, for the reason the plan gave and one it did not: the
+debt is created by a change under review, and the pull request is where a person
+can still act on it cheaply. On `main` it is history.
+
 ### 5. There is no way back
 
 `07_install_release.sh` does `rsync -a --delete "$STAGING/dist/" "$DEPLOY_DIR/dist/"`.
@@ -623,10 +669,13 @@ Then reverted, rebuilt, and green again at 48.
 Previously D6. Defect 4 and gaps B, D, E, F, G — gap A having become D4.
 Small, independent, each one a commit.
 
-Defect 4 (the advisory `screenshots` job reddening a successful release) has now
-been observed **six times** in the runs behind this plan, including on three of
-its own pull requests. It is the cheapest item left and the one most likely to
-cause a real misreading, so take it first.
+Defect 4 (the advisory `screenshots` job reddening a successful release) is
+**done** — see its entry above, including the two options weighed and declined
+and the `reconcile.yml` hold it turned out to unjam. It was taken first as the
+cheapest item and the one most likely to cause a real misreading; the count in
+its entry went from six to a measured seventeen once it was actually queried.
+
+What remains under D7: gaps B, D, E, F and G.
 
 ---
 
@@ -690,5 +739,9 @@ says so.
   not while writing it: the deploy gate pins to `refs/heads/main`,
   `workflow_dispatch` cannot name a sha, and `main` is forward-only. D5 is where
   it becomes reachable.
-- **Defect 4's count is now six**, three of them on this plan's own pull
-  requests. It leads D7 for that reason.
+- **Defect 4's count was six, then seventeen, and is now zero.** Six was a count
+  of runs noticed while writing this plan; seventeen is what the API said when
+  the fix was written and the 30 most recent push-on-main runs were actually
+  queried. Worth keeping as a note about counting by noticing: it undercounted
+  by a factor of three, and the thing being undercounted was how often a green
+  release reported itself red.

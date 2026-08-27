@@ -1067,9 +1067,19 @@ exists.
 Never `scripts/deploy.sh` by hand: it builds from the **working tree**, not from
 a git ref, so it ships whatever is uncommitted — and it rsyncs `package.json`, so
 it can change the host's dependency set too. Merging to `main` deploys. Verify
-with `/api/health`, never with the CI badge: a red advisory job sets the whole
-run to `failure` while `deploy` succeeds, and that has been misread as a stopped
-pipeline more than once.
+with `/api/health`: the badge reports a run, and only the host reports what the
+host is serving.
+
+**The badge used to lie in one direction and no longer does**, which is worth
+knowing because this file told you to distrust it for months. The advisory
+`screenshots` job set the whole run to `failure` while `deploy` succeeded, and
+that was misread as a stopped pipeline more than once. Measured over the 30
+push-on-main runs before the fix: **17 concluded `failure`, all 17 for that job
+alone, and all 17 had deployed** — every red push-on-main run in the window was
+this and every one of them shipped. It now carries `continue-on-error`, so a red
+run on `main` means the release genuinely did not ship. `/api/health` is still
+the answer to *what is serving*; it is no longer the answer to *did anything ship
+at all*.
 
 **When a check tells you something alarming about someone else's work, run the
 other form before saying it out loud.** `git diff A..B` is symmetric and reports
