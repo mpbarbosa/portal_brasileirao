@@ -221,6 +221,31 @@ jobs:
       - name: Run end-to-end tests
         run: npm run test:e2e
 
+      # The bundle is what production runs, and until this step existed no spec
+      # had ever touched it: all of them boot `server.ts` through tsx with Vite
+      # in middleware mode, while `check` asks the bundle only three questions.
+      # The production branch of `server.ts` is genuinely different code — it
+      # serves `dist/` through express.static, reads the shell once at boot, and
+      # has no Vite — so `registerSpaFallback`, `injectMeta`, the 404 rules and
+      # the JSON-LD all reach a reader through a path nothing exercised.
+      #
+      # Only the three specs covering that path run here. Re-running the whole
+      # suite against the bundle would double the wall clock to re-assert what
+      # the dev run already proved.
+      #
+      # It builds its own payload rather than taking `check`'s artifact, and the
+      # distinction matters: this tests the production CODE PATH, not the shipped
+      # BYTES. D3's digest covers the bytes, and `check` only packages on a run
+      # that can deploy — so waiting for an artifact would leave every pull
+      # request without this.
+      - name: Build the production payload for the bundle run
+        run: npm run build
+
+      - name: Run the production-path specs against dist/server.cjs
+        env:
+          PLAYWRIGHT_TARGET: bundle
+        run: npx playwright test
+
       - name: Upload report on failure
         if: failure()
         uses: actions/upload-artifact@v7

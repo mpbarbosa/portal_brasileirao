@@ -16,6 +16,7 @@
     "deploy": "./scripts/deploy.sh",
     "deploy:preflight": "./scripts/deploy-preflight.sh",
     "test:e2e": "playwright test",
+    "test:e2e:bundle": "npm run build && PLAYWRIGHT_TARGET=bundle playwright test",
     "test:e2e:ui": "playwright test --ui",
     "sync-broadcasts": "tsx scripts/sync-broadcasts.ts",
     "screenshot": "tsx scripts/screenshot.ts",
