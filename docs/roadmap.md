@@ -993,14 +993,33 @@ incrementally — and the reason each phase can ship on its own.
 
 ## What is left
 
-Nothing in this migration. The remaining items are the pre-existing ones under
-**Near term** above — the highlights backfill and the weekly broadcast sync —
-plus the README viewport question noted at the top of this section, which is a
-product decision rather than work.
+Nothing in this migration. Everything still outstanding is written up where it
+belongs and is deliberately **not** restated here — this is an index of the
+sections, not a copy of them:
 
-Three lists elsewhere in this file are also outstanding and are deliberately not
-restated here: the thirteen items under **From the Brasileirão Pro import**, the
-host steps and Phase 2 under **Contas — what Phase 1 leaves outstanding**, and
-the four under **From the club-article fix**. The last is the one to read if you
-are about to write a sentence with a club's name in it, or a
-`Screenshots-unaffected:` trailer.
+- **Near term**
+- **The deploy pipeline — what is still open**
+- **From the Brasileirão Pro import**
+- **Contas — what Phase 1 leaves outstanding**
+- **From the club-article fix**
+
+No count is given for any of them, on purpose: a number here is a second copy of
+something four hundred lines away, and it is wrong the first time anybody adds an
+item. The index itself is still hand-kept and nothing checks it, so **add a line
+here when you add a section there** — this list was one short within the hour it
+was written. The last entry is the one to read if you are about to write a
+sentence with a club's name in it, or a `Screenshots-unaffected:` trailer.
+
+This line used to enumerate Near term as "the highlights backfill and the weekly
+broadcast sync". That was two bullets behind within a day of the list growing,
+and would have gone stale again on the next one: a summary standing three feet
+from the list it summarises is a hand-kept second copy, and nothing can tell you
+it has drifted. Do not re-add one.
+
+It also sent the reader to "the README viewport question noted at the top of this
+section", which never resolved — that note has sat at the **end** of
+**Constraints that must survive any redesign** since both were written in the
+same commit. It is still open, and still a product decision rather than work:
+every README image is a 960px capture, above the `sm` breakpoint, so the
+navigation bar that replaced the hamburger below that width appears in none of
+them.
