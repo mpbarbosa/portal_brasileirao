@@ -1,0 +1,167 @@
+name: Reconcile production
+
+# `main` deploys itself on push, and that is the normal path. This closes the
+# gap for when the push never becomes a deploy — which is not hypothetical:
+#
+#   - **A dropped push event.** During the Actions incident of 2026-08-26 no
+#     workflow run was ever created for 18e2014 or 321fdcd. Production sat
+#     behind main until somebody noticed.
+#   - **A run cancelled before it started.** The workflow concurrency group
+#     keeps at most ONE pending run per branch, so three merges landing inside
+#     a minute cancel the middle one. Eight of the thirty push-on-main runs
+#     before this was written ended `cancelled` for that reason — #58 through
+#     #62, #68, #69. Content still reaches production inside the next
+#     successful run, so nothing looks broken; but if the LAST push of a burst
+#     is the one cancelled, main stays ahead of production and no check says so.
+#
+# The evidence that this was needed is in the history: 6325fa5, e065a8d and
+# 8fa12e5 are empty commits whose only purpose was to emit a push event and
+# drag a stalled tip to the host. A pipeline that converges on "live == main"
+# cannot be defeated by a missing event; one that only reacts to pushes can,
+# and was.
+#
+# This job DECIDES; ci.yml deploys. It dispatches a normal run rather than
+# shipping a second copy of the deploy logic, so a reconciled release goes
+# through the same check, e2e, ancestry guard and live-commit assertion as
+# any other.
+
+on:
+  schedule:
+    # Every 15 minutes. The tick is a curl and a git compare — seconds — and
+    # the repository is public, so Actions minutes are free and the interval
+    # can be this tight without trading anything away. It dispatches the real
+    # pipeline only when there is an actual gap to close.
+    #
+    # Note GitHub disables scheduled workflows after 60 days with no repository
+    # activity, and delays them under load — the same load that drops the push
+    # events this exists to survive. It is a safety net, not a guarantee, and
+    # a push-triggered deploy remains the primary path.
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: reconcile-production
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  actions: write # to dispatch a deploy run of ci.yml
+
+jobs:
+  reconcile:
+    name: Deploy main if production is behind it
+    runs-on: ubuntu-latest
+    env:
+      SITE_URL: https://brasileirao.mpbarbosa.com
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          # Ancestry again, same reason as ci.yml's deploy job: a depth-1 clone
+          # holds neither the live commit nor the history joining it to main.
+          fetch-depth: 0
+          # Explicit rather than implied. A schedule already runs on the default
+          # branch, but a workflow_dispatch from some other branch would not.
+          ref: main
+
+      - name: Deploy main if production is behind it
+        run: |
+          set -euo pipefail
+
+          main_full="$(git rev-parse HEAD)"
+          main_short="$(git rev-parse --short HEAD)"
+
+          # Leave an in-flight run alone. The push path is the normal one; this
+          # exists only for when that path did not happen, and dispatching
+          # alongside a running deploy would just queue a second release of the
+          # same commit.
+          inflight="$(gh api \
+            "repos/${GITHUB_REPOSITORY}/actions/workflows/ci.yml/runs?branch=main&per_page=30" \
+            --jq '[.workflow_runs[] | select(.status=="in_progress" or .status=="queued" or .status=="waiting")] | length' \
+            2>/dev/null || echo unknown)"
+
+          if [ "$inflight" = "unknown" ]; then
+            echo "::warning::Could not ask whether a CI run is in flight — not dispatching this tick."
+            exit 0
+          fi
+          if [ "$inflight" -gt 0 ]; then
+            echo "A CI run for main is already in flight. Nothing to do."
+            exit 0
+          fi
+
+          # Everything below fails SAFE rather than open, which is the opposite
+          # of the ancestry guard in ci.yml and deliberately so. That guard
+          # decides whether a release a human asked for may proceed, and during
+          # an outage the ability to deploy is worth more than the ordering it
+          # protects. This one STARTS a release nobody asked for, unattended —
+          # so anything it cannot establish means it does nothing and says why.
+          if ! curl -sf --max-time 10 "${SITE_URL}/api/health" -o live.json; then
+            echo "::warning::${SITE_URL}/api/health is unreachable. Not dispatching — a site that is down is an incident, not a gap to close."
+            exit 0
+          fi
+
+          live_short="$(jq -r '.sha // empty' live.json)"
+          live_short="${live_short%-dirty}"
+          if [ -z "$live_short" ] || [ "$live_short" = "unknown" ]; then
+            echo "::warning::Live site reports no usable commit. Not dispatching."
+            exit 0
+          fi
+
+          if ! live="$(git rev-parse --verify --quiet "${live_short}^{commit}")"; then
+            echo "::warning::Live commit ${live_short} is not in this repository. Not dispatching."
+            exit 0
+          fi
+
+          if [ "$live" = "$main_full" ]; then
+            echo "In sync: production and main are both ${main_short}."
+            echo "In sync at \`${main_short}\`." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
+          if ! git merge-base --is-ancestor "$live" "$main_full"; then
+            echo "::warning::Production is ${live_short}, which is not an ancestor of main (${main_short}). Not dispatching — that needs a person, not a schedule."
+            {
+              echo "### Not reconciled"
+              echo "Production \`${live_short}\` is not an ancestor of main \`${main_short}\`."
+              echo "History was rewritten, or the live build came from somewhere this checkout cannot see."
+            } >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
+          # Have we already tried this exact commit and had it fail? Then
+          # re-dispatching it every quarter of an hour is not reconciliation,
+          # it is a loop that floods the Actions tab and hides the real
+          # problem. A `cancelled` run is deliberately NOT treated this way —
+          # that is precisely the case this workflow exists to recover from.
+          #
+          # The run conclusion is safe to read here despite the advisory
+          # `screenshots` job being able to redden a run whose deploy
+          # succeeded: such a run left production AT this commit, so the
+          # in-sync check above already returned and this line is unreachable.
+          # Reaching here with a `failure` means the deploy itself did not
+          # happen — check or e2e went red, or the install failed — and none
+          # of those get better by trying again on a timer.
+          last_attempt="$(gh api \
+            "repos/${GITHUB_REPOSITORY}/actions/workflows/ci.yml/runs?branch=main&per_page=30" \
+            --jq "[.workflow_runs[] | select(.head_sha==\"${main_full}\" and .status==\"completed\")] | first | .conclusion // empty" \
+            2>/dev/null || echo unknown)"
+
+          case "$last_attempt" in
+            failure | timed_out)
+              echo "::warning::main (${main_short}) already has a ${last_attempt} CI run. Not re-dispatching — this needs a person, not another tick."
+              {
+                echo "### Not reconciled"
+                echo "Production is \`${live_short}\`, behind main \`${main_short}\`, but main's own CI run **${last_attempt}**."
+                echo "Fix that run rather than waiting for this schedule."
+              } >> "$GITHUB_STEP_SUMMARY"
+              exit 0 ;;
+          esac
+
+          behind="$(git rev-list --count "${live}..${main_full}")"
+          echo "::notice::Production is ${live_short}, ${behind} commit(s) behind main (${main_short}). Dispatching a deploy."
+          gh workflow run ci.yml --ref main
+          {
+            echo "### Reconciling"
+            echo "Production was \`${live_short}\`, **${behind} commit(s) behind** main \`${main_short}\`."
+            echo "Dispatched \`ci.yml\` on \`main\`; the ancestry guard and the live-commit assertion still apply."
+          } >> "$GITHUB_STEP_SUMMARY"

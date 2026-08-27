@@ -1254,6 +1254,35 @@ was no way to carry a merged commit to the host, and `6325fa5`, `e065a8d` and
 makes the guard testable at all — `main` only moves forward, so no push can ever
 present an ancestor to refuse.
 
+**A push that never becomes a deploy is reconciled, not noticed by hand.**
+`.github/workflows/reconcile.yml` compares `main` against the sha at
+`/api/health` every 15 minutes and dispatches `ci.yml` when production is behind.
+Two things defeat the push path, both observed: a **dropped push event** (during
+the 2026-08-26 Actions incident no run was ever created for `18e2014` or
+`321fdcd`), and a **run cancelled before it started** — the workflow concurrency
+group keeps at most one *pending* run per branch, so three merges inside a minute
+cancel the middle one, which is what eight of thirty push-on-`main` runs did.
+Neither looks broken, because the content still ships inside the next successful
+run; the failure is when the **last** push of a burst is the cancelled one, and
+then `main` sits ahead of production with nothing red to say so. `6325fa5`,
+`e065a8d` and `8fa12e5` are empty commits that exist only to have emitted a push
+event, which is the symptom this removes.
+
+It **decides**; `ci.yml` deploys. A reconciled release is dispatched as an
+ordinary run, so it passes the same `check`, `e2e`, ancestry guard and
+live-commit assertion — a second copy of the deploy logic is how the scheduled
+path comes to differ from the pushed one.
+
+**Its bias is the opposite of the guard's, deliberately.** The guard fails
+**open** because it judges a release a person asked for, and in an outage
+deploying matters more than ordering. The reconciler fails **safe** because it
+starts a release nobody asked for, unattended: an unreachable site, an unusable
+live sha, a commit it cannot resolve, a divergent history, or a CI run already in
+flight all mean it does nothing and says why. A site that is down is an incident,
+not a gap to close. Note the schedule is a safety net rather than a guarantee —
+GitHub delays scheduled runs under exactly the load that drops push events, and
+disables them after 60 days of repository inactivity.
+
 **The host is too small to build on.** It receives a prebuilt payload and runs
 `npm ci --omit=dev`; nothing compiles there. That is also why a runtime dependency
 stranded in `devDependencies` stays invisible until the bundle boots, which is the
