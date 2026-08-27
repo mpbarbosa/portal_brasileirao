@@ -82,3 +82,26 @@ updates:
         patterns: ["*"]
         update-types: [minor, patch]
     open-pull-requests-limit: 5
+
+    # @types/node is not an ordinary dependency, and its major is not an
+    # ordinary bump. `tsconfig.json` sets `types: ["node"]`, so these typings
+    # are the WHOLE ambient type surface — and `tsc --noEmit` is this repo's
+    # only lint gate. A major that runs ahead of the runtime therefore does not
+    # break a build; it quietly widens what the gate certifies.
+    #
+    # It has already happened once. #91 took 22 -> 26 and went green, after
+    # which `import { connect } from "node:quic"` type-checked clean while
+    # `node -e "require('node:quic')"` threw ERR_UNKNOWN_BUILTIN_MODULE.
+    #
+    # And raising the runtime is not the escape it looks like: node:ffi,
+    # node:quic, node:stream/iter and node:zlib/iter are absent from Node 26
+    # itself, flags included, and node:vfs needs --experimental-vfs. These
+    # typings describe DefinitelyTyped's surface, which includes APIs no
+    # released Node exposes. There is no version to "catch up" to.
+    #
+    # So the major tracks the runtime instead, and moves when .nvmrc moves —
+    # by hand, with tests/node-version.test.ts refusing the two to disagree.
+    # Minor and patch within the line still arrive normally, above.
+    ignore:
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major"]
