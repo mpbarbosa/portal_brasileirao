@@ -300,3 +300,28 @@ export const broadcasterMarkUrl = (name: string): string | null => {
   const mark = MARKS[markKey(name)];
   return mark ? `/marks/${mark.slug}.png` : null;
 };
+
+/**
+ * Channels that are deliberately shown as their own wordmark, and why.
+ *
+ * The set of channels is **data** — `sync-broadcasts` merges whatever CBF names
+ * as the season advances — so "watch for broadcasters we render as wordmarks"
+ * was a standing instruction that nothing could carry out: a new channel simply
+ * appears on the page as text, which is also what a correct wordmark looks like.
+ * The two are indistinguishable by eye, and that is the whole problem.
+ *
+ * Recording the judgement here makes the difference visible. A channel in this
+ * map has been looked at and answered; one in neither map has not, and
+ * `tests/broadcast-core.test.ts` fails until somebody decides which it is. The
+ * fix is one line either way — a `MARKS` entry, or an entry here with the
+ * reason — and that is deliberate: the point is to force the *decision*, not to
+ * make adding a mark the only way to go green.
+ *
+ * Keys are `markKey` output, not the spelling CBF uses; a raw name here would
+ * silently never match, which a test also covers.
+ */
+export const WORDMARK_ONLY: Record<string, string> = {
+  RECORD:
+    "no free national logo exists on Commons — see the note on MARKS above for " +
+    "where that was searched, and why the CC0 1982 logo is not a fallback",
+};
