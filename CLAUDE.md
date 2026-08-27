@@ -930,6 +930,29 @@ nothing about whether it is new or modified. Every one of those produced a
 confident, specific, wrong claim about another session in a single day. Two
 commands is cheaper than the retraction.
 
+**And when the claim is about a shared ref, state the anchor inside it.** The
+four traps above are about running the *wrong* command; this one is about
+running the right one too early. `main` moves every few minutes here, so an
+ancestry answer has a shelf life — it can be true when you measure it and false
+by the time a peer reads it. On 2026-08-27 a session told another that a branch
+was "pushed but unmerged", anchored to its own merge `a6d2a38` (02:59:05); the
+merge that landed that branch was `30c19bc` at **03:01:35**, two and a half
+minutes later. Both sessions were right, about different instants:
+
+```
+066d8c9 ancestor of origin/main (5f6c124)   -> YES
+066d8c9 ancestor of a6d2a38     (the anchor) -> NO
+066d8c9 ancestor of main        (42c0ea9)    -> NO   # local main lags
+```
+
+So write *"not an ancestor of `a6d2a38`, my merge, as of 02:59"* rather than
+*"unmerged"*. The bare form asserts a property of the branch; the anchored form
+asserts what it actually is — a reading, taken somewhere, at a time — and lets
+the receiver see the shelf life without re-deriving it. **The sender pays that
+cost, because only the sender knows the anchor.** It is the same discipline
+`/api/health` applies to a running build: report the commit you were built from,
+not merely that you are up.
+
 ## Key conventions
 
 - **Colours are semantic tokens, never palette shades.** `src/index.css` defines the
