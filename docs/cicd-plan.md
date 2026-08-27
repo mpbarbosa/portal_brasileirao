@@ -671,8 +671,9 @@ process before being written down. It drills the starts-but-unhealthy mode,
 which is the one systemd cannot catch, and which keeps every page serving while
 it runs.
 
-**Stage 2 is DONE. Run `33079608222`, 2026-08-27, against production.** The exit
-criterion is met by demonstration:
+**Stage 2 is DONE, both modes.** Runs `33079608222` (`health`) and
+`33096969376` (`crash`), 2026-08-27, against production. The exit criterion is
+met by demonstration; the `health` run first:
 
 ```
 PATCHED=1
@@ -690,6 +691,35 @@ SEVEN_EXIT=2
 on `8ed6f60` — the release that was live before the drill. `/`, `/classificacao`
 and `/ao-vivo` all served 200 throughout, which is the property the
 starts-but-unhealthy variant was chosen for.
+
+**Both failure modes have now been drilled, and the second is the one that
+matters most.** Run `33096969376`, `mode=crash`: `process.exit(1);` prepended to
+the bundle, so the process dies on boot and **systemd cannot help** — there is
+nothing healthy to restart into, which is precisely why `Restart=on-failure`
+was never a substitute for this. Same verdict: `07 exit: 2`, `ROLLED BACK: yes`,
+health back on `0e07d83`.
+
+**The outage it caused was measured, not estimated.** Polling `/api/health` from
+outside every two seconds for the length of the run caught exactly three non-200
+samples, `17:10:05` to `17:10:09` — between four and eight seconds, against a
+written estimate of ten to fifteen. Quote the measured number: that is what an
+unbootable release now costs, and it is the figure someone weighing whether to
+trust the mechanism should be given.
+
+So the two modes divide as intended. `starts-but-unhealthy` is invisible to
+systemd (the process is alive) and cost **no downtime at all**;
+`crash-on-boot` is visible to systemd and unfixable by it, and cost seconds.
+
+**A hazard the crash rehearsal found, closed before the drill ran.** A crash loop
+is the one thing that can *strand* this service rather than interrupt it: the
+unit sets `RestartSec=5` and no `StartLimit*`, so if restarts breach systemd's
+default burst the unit enters `failed` and `systemctl restart` is **refused** —
+which would make the flip-back exit 3 *and* leave `rollback.yml` unable to
+recover, since it ends in the same restart. Tested against real systemd both
+ways: at `RestartSec=5` the limit is not reached (six crash-restarts, restart
+still succeeded), and with it deliberately tripped only `reset-failed` got out.
+`06_redeploy.sh` now calls `reset-failed` before every restart. It stayed a no-op
+during the real drill, as predicted.
 
 **One wording correction the run forces.** This phase said the proof would be the
 `deploy` job going *red*. It is not, and should not be: the drill is dispatched,
