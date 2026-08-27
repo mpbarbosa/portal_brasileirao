@@ -571,18 +571,20 @@ these — it deploys and behaves exactly as it did before.
   last-write-wins, which §4 sketched; the argument for the simpler rule is in
   `preferences-core.ts` beside `planSync` and summarised in `CLAUDE.md`.
 - ~~Session pruning on a schedule~~ — **done.** Hourly, and once at boot.
-- **Backups — written and rehearsed; one step left, and it is yours.**
+- ~~Backups~~ — **done, and verified end to end on 2026-08-27.**
   `09_backup_accounts.sh`, `10_restore_accounts.sh` and the timer in
-  `11_install_backup_timer.sh` exist, and `scripts/rehearse-accounts-backup.sh`
-  drives the round trip end to end — real SQLite, real `VACUUM INTO`, real
-  integrity check, rows counted at both ends, 23 cases. It caught three real
-  bugs in scripts that read as correct, which is the argument for having it.
-  **What it cannot prove is the AWS half**: `aws` is stubbed, so the instance
-  role's `s3:PutObject` on the backup prefix, the bucket policy and the
-  lifecycle rule are all unexercised. Grant the permission, install the timer,
-  then **run the service unit once by hand** — that first upload is the only
-  thing that turns this from rehearsed into done, and it is the remaining reason
-  accounts should not be switched on.
+  `11_install_backup_timer.sh` ship, and `scripts/rehearse-accounts-backup.sh`
+  drives the round trip in 23 cases — real SQLite, real `VACUUM INTO`, real
+  integrity check, rows counted at both ends. It caught three real bugs in
+  scripts that read as correct, which is the argument for having it.
+  The half it **could not** prove — `aws` is stubbed there — has now been proven
+  against the real account: a throwaway database on the host, the service run,
+  and the resulting object **pulled back down and opened** (integrity ok, schema
+  v2, the planted row present), then the probe removed from host and bucket. The
+  timer is enabled on `i-03a9afc8a469edc89`, next 04:17 UTC, running as `ubuntu`.
+  So this is no longer the reason accounts should stay off. What remains before
+  switching them on is the Google side only: the two credentials on the host, a
+  test user under **Público-alvo**, and one manual sign-in.
 - **The retention promise, or its removal from the notice.** An unenforced
   retention promise is worse than no promise. The notice as shipped makes **no**
   retention claim, so nothing is currently false; adding one means implementing

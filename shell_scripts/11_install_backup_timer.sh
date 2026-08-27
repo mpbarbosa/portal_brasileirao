@@ -22,12 +22,29 @@
 #      claim there, add the rule here in the same change.
 #
 # ---------------------------------------------------------------------------
-# Prerequisite 1 is DONE for account 655139684612, applied 2026-08-27:
+# Prerequisite 1 is DONE and VERIFIED for account 655139684612, 2026-08-27:
 #
 #   bucket   portal-brasileirao-backups-655139684612  (sa-east-1)
 #   access   all four public-access blocks on
 #   policy   accounts-backup-write on role portal-brasileirao-ssm,
 #            s3:PutObject on arn:aws:s3:::…-backups-…/accounts/* and nothing else
+#   timer    enabled on i-03a9afc8a469edc89, next 04:17 UTC, User=ubuntu
+#
+# **Verified by restoring, not by reading a log line.** A throwaway database was
+# created on the host, the service run, and the resulting object pulled back down
+# and opened: `integrity_check` ok, `user_version` 2, and the one planted row
+# present. Then the probe was deleted from both the host and the bucket. Without
+# that last step the bucket holds an artefact somebody could restore in an
+# incident, which is a worse landmine than having no backup at all.
+#
+# Two things that pass unnoticed and are worth knowing:
+#
+#   * The probe **refused to run if a real accounts.db already existed.** The
+#     thing that proves your backups must never be the thing that overwrites one.
+#   * Deleting the probe object needed an admin profile, because the instance
+#     role has `PutObject` and nothing else — **the host cannot delete its own
+#     backups.** That is the property that makes them worth having, and it was
+#     confirmed here by accident rather than by design.
 #
 # The commands are kept below because they are the record of what was run, and
 # because rebuilding this account — or standing up a second one — needs them
