@@ -359,40 +359,28 @@ looks exactly like a task nobody has picked up.
   script — latent rather than live, since `CLAUDE.md` already forbids running it
   by hand.
 
-  **One qualification on "closed", and it is the whole of what is still owed:
-  the flip-back has never run.** What the merge of #111 demonstrated live is the
-  *forward* half — `ci.yml` invokes `07_install_release.sh` from the staging
-  tarball, so the new script ran on the host immediately and its stdout carries
-  `==> Retaining the current release in /var/www/portal_brasileirao/previous`,
-  then healthy at `42c0ea9`. Retention is therefore proven in production. The
-  **restore** path — the branch that actually saves a bad release — has only
-  ever run against stubs.
+  **The flip-back has now run against production, and it worked.** Drill
+  `33079608222` on 2026-08-27 installed a payload byte-identical to the live
+  release except for the health literal, and the host answered:
 
-  That is by design rather than neglect: `docs/cicd-plan.md` D5 asks for two
-  rehearsal stages, and stage 2 is *"one controlled live exercise, in a
-  low-traffic window, with the forward path ready to re-run."* It needs a
-  deliberately bad release, so it is scheduled work, not something a green
-  pipeline will ever produce on its own. **Nothing will prompt for it** — every
-  healthy deploy exercises retention and skips the restore, so the untested
-  branch stays untested precisely while everything looks fine.
+  ```
+  Error: portal-brasileirao did not become healthy.
+  ==> Flipping back to the retained release in …/previous...
+  ROLLED BACK: portal-brasileirao is serving the PREVIOUS release
+  SEVEN_EXIT=2
+  ```
 
-  **The runbook is written: [`flip-back-drill.md`](flip-back-drill.md).** It
-  drills the *starts-but-unhealthy* mode by installing a payload byte-identical
-  to what is live except the health literal, so the site keeps serving every
-  page for the length of the exercise and only `/api/health` reports otherwise —
-  including if the flip-back itself fails. The crash-on-boot mode, which does
-  take the site down, is deliberately left to a separate window.
+  `/api/health` came back `ok` on `8ed6f60` — the release that was live before —
+  and `/`, `/classificacao` and `/ao-vivo` served 200 throughout, which is what
+  the starts-but-unhealthy variant was chosen for. Both halves of D5 are now
+  demonstrated in production: retention on every deploy, and the restore on
+  demand via [`flip-back-drill.md`](flip-back-drill.md).
 
-  The observable that will close it: `/api/health` reporting the **previous**
-  sha while the `deploy` job is red, with `ROLLED BACK` and the retained path in
-  the host stdout of the "Install the release on the host" step. Read the job,
-  not the run conclusion — the advisory screenshots job reddens the rollup
-  independently.
+  **What is still not drilled: the crash-on-boot mode.** A bundle that exits
+  immediately leaves systemd restart-looping against whatever is in `dist/`, and
+  that is the variant which actually takes the site down. It deserves its own
+  window and is not covered by the run above.
 
-  Until then the honest statement is: *a bad release can no longer destroy the
-  only copy of the good one*, which is the property that mattered and is now
-  structurally true; *and* the automatic recovery built on top of it is verified
-  by rehearsal rather than by production.
 - **`scripts/rehearse-flip-back.sh` is the only behavioural coverage the two
   host scripts have, and nothing runs it.** `npm run lint` is TypeScript and
   cannot see shell; CI only shellchecks them. It drives all eight branches
