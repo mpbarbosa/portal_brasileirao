@@ -314,6 +314,39 @@ test("the sede is filled in from the committed club list", () => {
   assert.equal(withClubDetails(live, [])[0].address, undefined);
 });
 
+test("the home state is filled in from the committed club list", () => {
+  // The one field of the seven that was missing from the merge, and the only
+  // bug here a test could never have seen: every suite runs against the frozen
+  // snapshot, where the seed already carries `state`. Only the live payload —
+  // which nothing asserts against — arrives without it.
+  const live = [club("1765", "Fluminense", "fluminense")];
+  const known = [{ ...club("1765", "Fluminense", "fluminense"), state: "RJ" }];
+
+  assert.equal(withClubDetails(live, known)[0].state, "RJ");
+  assert.equal(withClubDetails(live, [])[0].state, undefined);
+});
+
+test("every detail the club page reads survives one merge", () => {
+  // A field-by-field test passes while the merge drops a field nobody listed,
+  // which is exactly how `state` went missing. Assert the whole set at once, so
+  // the eighth is added here or not at all.
+  const known = [
+    {
+      ...club("1765", "Fluminense", "fluminense"),
+      website: "https://www.fluminense.com.br/",
+      instagram: "fluminensefc",
+      hymn: "abcdefghijk",
+      wikipedia: "Fluminense Football Club",
+      address: "Rua Álvaro Chaves 41, Bairro Laranjeiras Rio de Janeiro, RJ 22231-220",
+      coach: "Renato Gaúcho",
+      state: "RJ",
+    },
+  ];
+  const merged = withClubDetails([club("1765", "Fluminense", "fluminense")], known)[0];
+
+  assert.deepEqual(merged, known[0]);
+});
+
 test("a handle becomes the canonical profile address", () => {
   assert.equal(instagramUrl("palmeiras"), "https://www.instagram.com/palmeiras/");
   assert.equal(instagramUrl("@palmeiras"), "https://www.instagram.com/palmeiras/");

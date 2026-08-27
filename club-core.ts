@@ -342,15 +342,24 @@ export const clubAddress = (raw: string | null | undefined): string | null => {
  * Fill in details the live payloads omit.
  *
  * Club objects embedded in standings and fixtures carry only id, name, crest
- * and abbreviation — the website, the sede and the head coach come from the
- * teams endpoint, and the Instagram handle, the hymn and the Wikipedia article
- * from no endpoint at all. So the committed club list supplies all six at
- * request time.
+ * and abbreviation — the website, the sede, the head coach and the home state
+ * come from the teams endpoint, and the Instagram handle, the hymn and the
+ * Wikipedia article from no endpoint at all. So the committed club list supplies
+ * all seven at request time.
  *
- * The coach is the one of the six that goes stale between snapshots — a club
+ * The coach is the one of the seven that goes stale between snapshots — a club
  * changes técnico far more often than it moves or renames itself — which is why
  * it is also served live by `/api/coaches`. What the seed supplies here is the
  * floor, not the whole answer.
+ *
+ * **`state` was missing from this list for as long as the list existed**, and
+ * nothing could have caught it. It is the UF beside the club's full name, so a
+ * production page read "Fluminense FC" where the offline one read "Fluminense FC
+ * · RJ" — and every test in the suite runs against the frozen snapshot
+ * (`DISABLE_FOOTBALL_DATA=true`), where the seed carries the field and the line
+ * is therefore correct. The only build that rendered the bug was the one nothing
+ * asserts against. Worth remembering before adding the eighth: this function is
+ * the one place where "works in CI" and "works in production" genuinely differ.
  */
 export const withClubDetails = (clubs: Club[], known: Club[]): Club[] => {
   const byCode = new Map(known.map((club) => [club.code, club]));
@@ -363,6 +372,7 @@ export const withClubDetails = (clubs: Club[], known: Club[]): Club[] => {
     const wikipedia = club.wikipedia ?? source?.wikipedia;
     const address = club.address ?? source?.address;
     const coach = club.coach ?? source?.coach;
+    const state = club.state ?? source?.state;
 
     return {
       ...club,
@@ -372,6 +382,7 @@ export const withClubDetails = (clubs: Club[], known: Club[]): Club[] => {
       ...(wikipedia ? { wikipedia } : {}),
       ...(address ? { address } : {}),
       ...(coach ? { coach } : {}),
+      ...(state ? { state } : {}),
     };
   });
 };
