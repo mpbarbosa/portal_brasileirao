@@ -101,48 +101,6 @@ to abort a whole run, and the end-to-end specs depended on some fixture in round
   found and de-counted rather than refreshed (D6's "all 316 specs", M1's "70
   pairings"), because in both the count was never the point.
 
-### Node: one major, and a date it has to move
-
-`.nvmrc` now holds the single Node major, and `package.json`'s `engines`, the
-`@types/node` pin, `REQUIRED_NODE_MAJOR` in `shell_scripts/01` and both
-workflows' `node-version-file` are asserted equal to it by
-`tests/node-version.test.ts` (#103). The reasoning — including why raising the
-runtime to meet the typings is *not* the fix — is in `CLAUDE.md` under **CI**.
-
-One of the two questions this raised is now answered; the other has a deadline.
-
-**What the host runs is now a measured fact: Node 22.23.2.** Read off
-`/api/health` at sha `45b5531` on 2026-08-27, minutes after #103 deployed. It
-had never been knowable before — nothing in the repo pinned it and the endpoint
-did not report it, so every statement about it was an assumption.
-
-The answer vindicates the pin: production was on 22, CI was on 22, and the
-typings had been on **26** since #91 — four majors ahead of the runtime they
-were certifying. Had this come back 24, the right move would have been to raise
-the five numbers to meet the host rather than to assume the host was wrong; it
-did not, so nothing further is owed here.
-
-**22 is already the maintenance line.** Read off nodejs/Release on 2026-08-27:
-
-| line | status today | end of life |
-| --- | --- | --- |
-| 22 | maintenance since 2025-10-21 | **2027-04-30** |
-| 24 | **active LTS** since 2025-10-28 | 2028-04-30 |
-| 26 | becomes LTS 2026-10-28 | 2029-04-30 |
-
-So 22 was the right pin to land — it is what CI **and the host** were already
-running, and changing the runtime and the typings in one commit would have made
-a failure ambiguous — but it is not the right pin to *stay* on. The move is to
-**24**, the active LTS, and it is a deliberate five-file commit starting at
-`.nvmrc`, with `npm run test:unit` refusing anything partial. It needs the host
-raised to 24 first, since `shell_scripts/01` requires an exact major.
-
-**Nothing will remind you.** `.github/dependabot.yml` ignores the *major* for
-`@types/node` by design, which is what stops the typings running ahead of the
-runtime again — and the cost of that is precisely that no pull request will ever
-appear proposing it. This entry is the reminder, and it is now the only
-thing tracking it. Before 2027-04-30.
-
 Left over from **Árbitro** (item 1 below), which surfaced more about the
 provider than it needed to build:
 
@@ -291,6 +249,48 @@ provider than it needed to build:
   entries, and the one exception is an **upstream error**: a French official
   recorded against Coritiba × Chapecoense in round 22. So the field offers one
   word repeated on every page, plus one that is wrong.
+
+### Node: one major, and a date it has to move
+
+`.nvmrc` now holds the single Node major, and `package.json`'s `engines`, the
+`@types/node` pin, `REQUIRED_NODE_MAJOR` in `shell_scripts/01` and both
+workflows' `node-version-file` are asserted equal to it by
+`tests/node-version.test.ts` (#103). The reasoning — including why raising the
+runtime to meet the typings is *not* the fix — is in `CLAUDE.md` under **CI**.
+
+One of the two questions this raised is now answered; the other has a deadline.
+
+**What the host runs is now a measured fact: Node 22.23.2.** Read off
+`/api/health` at sha `45b5531` on 2026-08-27, minutes after #103 deployed. It
+had never been knowable before — nothing in the repo pinned it and the endpoint
+did not report it, so every statement about it was an assumption.
+
+The answer vindicates the pin: production was on 22, CI was on 22, and the
+typings had been on **26** since #91 — four majors ahead of the runtime they
+were certifying. Had this come back 24, the right move would have been to raise
+the five numbers to meet the host rather than to assume the host was wrong; it
+did not, so nothing further is owed here.
+
+**22 is already the maintenance line.** Read off nodejs/Release on 2026-08-27:
+
+| line | status today | end of life |
+| --- | --- | --- |
+| 22 | maintenance since 2025-10-21 | **2027-04-30** |
+| 24 | **active LTS** since 2025-10-28 | 2028-04-30 |
+| 26 | becomes LTS 2026-10-28 | 2029-04-30 |
+
+So 22 was the right pin to land — it is what CI **and the host** were already
+running, and changing the runtime and the typings in one commit would have made
+a failure ambiguous — but it is not the right pin to *stay* on. The move is to
+**24**, the active LTS, and it is a deliberate five-file commit starting at
+`.nvmrc`, with `npm run test:unit` refusing anything partial. It needs the host
+raised to 24 first, since `shell_scripts/01` requires an exact major.
+
+**Nothing will remind you.** `.github/dependabot.yml` ignores the *major* for
+`@types/node` by design, which is what stops the typings running ahead of the
+runtime again — and the cost of that is precisely that no pull request will ever
+appear proposing it. This entry is the reminder, and it is now the only
+thing tracking it. Before 2027-04-30.
 
 ## The deploy pipeline — what is still open
 
