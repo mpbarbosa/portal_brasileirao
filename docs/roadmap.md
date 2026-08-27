@@ -150,9 +150,59 @@ provider than it needed to build:
   agreed between sessions — capture last, once, after everything lands — is still
   right; it was simply costed against two changes and now covers several.
 
-  The árbitro row renders **only against live data**, so the sequence remains:
-  merge, deploy, capture from the live site. Re-check the diff above before
-  starting, since `main` moves.
+  ~~The árbitro row renders **only against live data**, so the sequence remains:
+  merge, deploy, capture from the live site.~~ **That was done — #118 refreshed
+  all sixteen and `CAPTURED` now reads `10b7c1a` — and it did not photograph the
+  árbitro row, because it never could.** See the next item. Re-check the diff
+  above before starting anything here, since `main` moves.
+- **The árbitro row cannot be photographed by any refresh, and needs the capture
+  set pointed at a different fixture.** This is the one item on this page that
+  waiting does *not* fix, which is why it is stated separately from the refresh
+  above rather than as a caveat inside it.
+
+  `partida-554977` is the only match page in the capture set, and the provider
+  reports no officials for it. Measured against production on 2026-08-27, and
+  again after #118 landed:
+
+  ```
+  380 fixtures, 157 carry `referees`
+  554977 -> None
+  554740 -> [{"name": "Bruno de Araújo", "role": "REFEREE"}]
+  ```
+
+  `MatchPage` renders `match.referees ?? []`, so that pair shows nothing
+  whenever and however it is captured.
+
+  **Whether it might fill in on its own is worth stating precisely, because the
+  obvious summary is wrong.** 554977 is **round 24**, FINISHED, and carries no
+  officials. Coverage is not a simple prefix: rounds **1–15 and 20–22** carry
+  them; **16–19 and 23 onward** do not. So upstream demonstrably *does* backfill
+  out of order — 20–22 arrived after 16–19 did not — and round 24 may gain one
+  later. But nothing guarantees it, nothing schedules it, and **nothing would
+  notice if it happened**: the gate compares appearance *sources* and cannot see
+  what a picture depicts. Waiting is therefore not a plan, only a hope.
+
+  The fix is a change to **what is photographed**: point the match-page capture
+  at a fixture that names an official (554740 is one), and rewrite that pair's
+  README alt text, which describes the page as it stands today. That is a change
+  to the capture set, not a refresh of it — different work, different review.
+
+  **Do not treat the green gate as evidence this is done.** #118 cleared it by
+  advancing `CAPTURED` past #104, so the images are now certified current for a
+  commit whose headline feature they do not show. The gate is working as
+  designed; it was never a claim about content.
+- **A local production build can commit an image production cannot serve, and
+  nothing in the toolchain can catch it.** `scripts/screenshot.ts` accepts a
+  capture whose build matches HEAD on the appearance paths and is serving real
+  provider data. A **local** production build with `GOOGLE_CLIENT_ID`/`SECRET`
+  in its `.env` satisfies both — and renders the Contas "Entrar" control, which
+  the host does not: `/api/account/me` is **404**
+  (`Contas não estão disponíveis nesta instalação.`) on production, so
+  `AccountView` returns `null` there. The resulting image would land in
+  `docs/screenshots` looking exactly like a good capture, showing an affordance
+  no visitor has. Capture from the live site, or from a local build whose `.env`
+  matches the host's. Contas, unlike árbitro, *is* a scheduling problem: it
+  resolves the day credentials reach the host.
 - **Two of the sixteen captures can never come back byte-identical, and that is
   a property of the tooling rather than of any change.** `scripts/screenshot.ts`
   sets `fullPage = !mobile && route === "/"`, so `classificacao-dark.png` and
@@ -241,6 +291,44 @@ looks exactly like a task nobody has picked up.
   workstation path, which carries its own inline remote block and calls neither
   script — latent rather than live, since `CLAUDE.md` already forbids running it
   by hand.
+
+  **One qualification on "closed", and it is the whole of what is still owed:
+  the flip-back has never run.** What the merge of #111 demonstrated live is the
+  *forward* half — `ci.yml` invokes `07_install_release.sh` from the staging
+  tarball, so the new script ran on the host immediately and its stdout carries
+  `==> Retaining the current release in /var/www/portal_brasileirao/previous`,
+  then healthy at `42c0ea9`. Retention is therefore proven in production. The
+  **restore** path — the branch that actually saves a bad release — has only
+  ever run against stubs.
+
+  That is by design rather than neglect: `docs/cicd-plan.md` D5 asks for two
+  rehearsal stages, and stage 2 is *"one controlled live exercise, in a
+  low-traffic window, with the forward path ready to re-run."* It needs a
+  deliberately bad release, so it is scheduled work, not something a green
+  pipeline will ever produce on its own. **Nothing will prompt for it** — every
+  healthy deploy exercises retention and skips the restore, so the untested
+  branch stays untested precisely while everything looks fine.
+
+  The observable that will close it: `/api/health` reporting the **previous**
+  sha while the `deploy` job is red, with `ROLLED BACK` and the retained path in
+  the host stdout of the "Install the release on the host" step. Read the job,
+  not the run conclusion — the advisory screenshots job reddens the rollup
+  independently.
+
+  Until then the honest statement is: *a bad release can no longer destroy the
+  only copy of the good one*, which is the property that mattered and is now
+  structurally true; *and* the automatic recovery built on top of it is verified
+  by rehearsal rather than by production.
+- **`scripts/rehearse-flip-back.sh` is the only behavioural coverage the two
+  host scripts have, and nothing runs it.** `npm run lint` is TypeScript and
+  cannot see shell; CI only shellchecks them. It drives all eight branches
+  against stubs — 31 assertions, including the flip-back-itself-fails case — and
+  three deliberate mutations were used to confirm it goes red rather than
+  passing vacuously. **Re-run it by hand after editing `06_redeploy.sh` or
+  `07_install_release.sh`.** The reason this matters more than for a normal
+  hand-run checker: `shell_scripts/` travels *inside the release tarball*, so a
+  broken edit ships with the release that carries it and the host executes it
+  immediately, before anything has a chance to health-check the result.
 - **D6 — the end-to-end suite boots the dev server, never the bundle.** All 316
   specs run against `npx tsx server.ts`, so `dist/server.cjs` — what production
   actually runs — is only asked three questions by `check`'s smoke test. The
