@@ -367,7 +367,7 @@ only its own output could reveal.
   bump was in fact well covered and went green. It buys an unambiguous failure,
   not new safety.
 
-### D5 — A bad release does not become an outage
+### D5 — A bad release does not become an outage — **half done**
 
 Defect 5. Previously D4; renumbered when the item above was promoted.
 
@@ -428,7 +428,74 @@ it in two stages rather than by deliberately breaking a real release:
    forward path ready to re-run.
 
 *Exit:* a payload that fails its health check on the host leaves the **previous**
-build serving and the workflow red — demonstrated, not argued.
+build serving and the workflow red — demonstrated, not argued. **Not yet met**;
+see below.
+
+#### What shipped: `.github/workflows/rollback.yml`
+
+The low-risk half, as the risk ordering above says it should be. It installs a
+release S3 already holds, over whatever is live, in about forty seconds and
+with no build. It deliberately does not route through `ci.yml`: those bytes
+were built, booted and smoke-tested by `check` when they were made, and
+rebuilding them to roll back would re-test them with a *newer* toolchain, which
+is the one thing you do not want when the point is known-good bytes. It carries
+no ancestry guard for the same reason — going backwards is the purpose here,
+where in `ci.yml` it is the accident.
+
+It shares `ci.yml`'s `deploy-production` concurrency group, so a rollback and a
+release can never install at the same moment.
+
+**The precondition got answered operationally instead of in advance.**
+Dispatching with an empty sha lists what the bucket holds and changes nothing.
+Nothing in this repository defines a lifecycle policy on `releases/` and no
+session working from a checkout can read one, so rather than guess a retention
+window, the workflow's safe default *is* the question: run it and look. The
+listing is best-effort — the deploy role demonstrably holds `s3:PutObject` and
+the SSM permissions, and may or may not hold `s3:ListBucket` — and a failure to
+list says which permission is missing and does not stop a rollback, because the
+host's own `aws s3 cp` is what proves the object is there.
+
+#### The finding that made this phase necessary rather than merely nice
+
+**The reconciler would have undone every rollback within fifteen minutes.**
+After a rollback, production is behind `main` — which is *exactly* the shape
+D2 exists to close. Nothing distinguished a deliberate rollback from a dropped
+push event, so `reconcile.yml` would have dispatched `ci.yml` and rolled
+production forward again while somebody was still working out what broke.
+
+`reconcile.yml` now holds when a successful `rollback.yml` run is newer than the
+last successful `ci.yml` run on `main`. That test is **stateless on purpose**:
+no flag is set, so none can be left set. It clears itself the moment a fix
+reaches `main` and deploys, because that run then becomes the newer of the two.
+Fifteen cases exercised against the shipped script — the five new ones plus all
+ten from D2, which had to keep passing.
+
+#### Correction: `allow_non_descendant` still has no door
+
+This plan said D5 was where `ci.yml`'s override would become reachable. Having
+designed the phase, that turns out to be wrong. `rollback.yml` does its own SSM
+install and never enters `ci.yml`, so the override remains reachable only if
+`main` is moved backwards. It is not costing anything and it is the correct
+escape hatch for a guard that must be overridable — but the door is still not
+there, and a later phase should either build one or remove it deliberately
+rather than leaving this note to rot.
+
+#### What remains: the half that can leave production down
+
+Untouched, and still the reason this phase wants a window rather than a gap
+between other things:
+
+- `07_install_release.sh` still does `rsync -a --delete` into `dist/`, so a
+  payload that fails its health check leaves the service down with **nothing on
+  disk to return to**. `rollback.yml` shortens that outage from "find the sha,
+  drive SSM by hand" to one dispatch, which is worth having — but it still
+  needs a person.
+- The automatic flip-back on a failed health check, which needs no person at
+  all, is the item that actually closes defect 5.
+
+Do that with the two-stage rehearsal above: stub `systemctl` and the health URL
+and drive every branch — writing *flip-back itself fails* first — before any
+live exercise.
 
 ### D6 — The bundle is what gets tested
 
