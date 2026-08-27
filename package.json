@@ -46,7 +46,7 @@
     "@types/react-dom": "^19.2.5",
     "esbuild": "^0.28.2",
     "tsx": "^4.21.0",
-    "typescript": "~5.8.2",
+    "typescript": "~7.0.2",
     "vite": "^6.0.0"
   }
 }
