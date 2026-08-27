@@ -61,6 +61,15 @@ jobs:
       HEALTH_ATTEMPTS: ${{ github.event.inputs.health_attempts || '5' }}
     steps:
       - uses: actions/checkout@v7
+        with:
+          # fetch-depth: 0 for the same reason ci.yml's ancestry guard needs it.
+          # The live sha is resolved against this checkout, and a depth-1 clone
+          # holds only the tip — so the moment main moves ahead of what is
+          # deployed, `git rev-parse <live>` fails and the drill refuses. That is
+          # not hypothetical: the first dispatch of this workflow refused with
+          # "Live reports 8e5a969, which is not a commit in this checkout",
+          # because a later commit had already landed on main.
+          fetch-depth: 0
 
       - uses: aws-actions/configure-aws-credentials@v6
         with:
