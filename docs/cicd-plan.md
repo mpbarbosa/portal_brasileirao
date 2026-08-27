@@ -358,10 +358,25 @@ commits behind before anyone read a deploy log rather than the run's colour.
 
 Nothing about the change looked wrong, which is the part worth carrying: the job
 was untouched, and the entry below said in good faith that its behaviour was
-unchanged. **The order to do this in is trust policy first** — accept
-`…:environment:production`, or match both with `StringLike` — then confirm a
+unchanged. **The order to do this in is trust policy first** — then confirm a
 release deploys, then re-add the block. Re-adding it alone takes production down
 silently, and the failure reads as an AWS problem rather than a workflow one.
+
+**Read the claim; do not derive it.** `.github/workflows/oidc-subject-probe.yml`
+prints the `sub` GitHub actually issues here, in both forms, and touches no AWS.
+It exists because this repository's subject carries suffixes no document predicts
+(`mpbarbosa@19806781/portal_brasileirao@1344118398`), so inferring the
+environment form from the ref form is a guess — and a trust policy built on a
+wrong guess fails exactly the way the original bug did, at credential
+configuration, with production frozen until someone reads a deploy log.
+
+**The policy must accept BOTH forms, and this is the part most likely to be got
+wrong.** Only `ci.yml`'s deploy job would carry the environment; `rollback.yml`
+and `flip-back-drill.yml` have none and keep sending the ref form. A policy that
+*replaces* the ref subject rather than adding to it leaves production deployable
+and **unrecoverable** — the rollback and the drill lose access at the moment they
+are most needed. `docs/oidc-trust-policy.json` is the widened document, differing
+from the live policy only in that `sub` becomes a two-element list.
 
 The original entry follows.
 
