@@ -145,14 +145,34 @@ line on `MatchPage` — no request, no cache change, no budget.
 
 It is the only item on this list that adds information the app does not currently possess.
 
-**Caveats to verify before building**, both cheap: the array is frequently **empty** for
-scheduled fixtures and populates near kickoff, so the line must be absent rather than blank
-— the same rule the player card already follows for every optional field. And the entries
-carry a `type` (`REFEREE`, `ASSISTANT_REFEREE_N1`, …) whose vocabulary should be translated
-at the edge under the rule `positionLabel` and `nationalityLabel` already establish: an
-unmapped value renders **verbatim**, never guessed at and never blank.
+**This section named two caveats to verify. Both were verified, and both came back
+different from what is written above.** Corrected here rather than quietly edited away,
+because the wrong version of each is the intuitive one and would otherwise be re-derived
+by the next person:
 
-**Recommendation**: adopt. Smallest genuine win here.
+- **The role vocabulary is a single value.** The original text guessed at a family
+  (`REFEREE`, `ASSISTANT_REFEREE_N1`, …). Across BSA, Premier League and Champions
+  League — 356 entries on 949 fixtures — **every** `type` is `REFEREE`. No assistant,
+  fourth official or VAR exists on this tier. So one role is translated, and listing the
+  documented others would be a claim the app cannot check, which is exactly what
+  `NATIONALITY_LABELS` argues against at length.
+- **The array fills in retroactively, not near kickoff.** The original text said it
+  "populates near kickoff". It does not: officials appear *after* the match. On BSA, 157
+  of 380 fixtures name someone and **every one of them is FINISHED**; zero SCHEDULED,
+  TIMED or POSTPONED fixtures carry one. Nor is finishing sufficient — 78 finished
+  fixtures still name nobody. So the árbitro is a **retrospective record on roughly two
+  match pages in five**, never information about who is officiating tonight.
+  "Empty until kickoff" is the wrong model to build the absence rule around.
+
+What survives unchanged is the contract: an unmapped value renders **verbatim** under the
+rule `positionLabel` and `nationalityLabel` establish, and an empty array renders **no row
+at all** rather than a dash. Neither correction altered the recommended design.
+
+**Recommendation**: adopt. Smallest genuine win here — **implemented in
+[#104](https://github.com/mpbarbosa/portal_brasileirao/pull/104)**, which is also where
+the two findings above were established. Note the field is **live-only**: the seed
+snapshot carries no officials and the e2e suite boots `DISABLE_FOOTBALL_DATA=true`, so no
+browser test in this repo can see it, and green e2e is not evidence that it renders.
 
 ---
 
