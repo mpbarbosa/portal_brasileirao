@@ -233,7 +233,10 @@ test.describe("Jogadores", () => {
     const panel = firstPanel(page);
     const slug = await panel.getAttribute("data-squad");
     await panel.locator("summary").click();
-    await panel.getByRole("button", { name: /^Ver a página do/ }).click();
+    // `d[oa]` rather than `do`: the link carries the club's own article, and the
+    // first panel is only alphabetically first — a promoted Portuguesa would
+    // sort ahead of Athletico-PR and read "da".
+    await panel.getByRole("button", { name: /^Ver a página d[oa] / }).click();
 
     await expect(page).toHaveURL(new RegExp(`/clube/${slug}$`));
   });

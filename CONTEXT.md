@@ -372,6 +372,31 @@ The three-letter abbreviation upstream reports for a club (`FLA`, `PAL`, `CAP`).
 Carried on `Club` for compact display only. **Not an identity** — see **Clube**.
 _Avoid_: using it as a map key, a React `key`, or a foreign key of any kind.
 
+**Artigo do clube**:
+The **o** or **a** a Brazilian puts in front of a club's popular name — o
+Palmeiras, a Chapecoense — and the contracted **do**/**da** that almost every
+sentence about a club actually needs. Both come from `club-core.ts`, beside
+**slug**, because the article belongs to the *name* rather than to whatever page
+is printing it: a club relegated and promoted again keeps its article and may
+not keep its `code`. `ofClub` is the form to reach for; `clubArticle` returns
+the bare word and has one caller, the **Meu time** control, which puts a verb in
+front of it.
+Hand-kept, and it has to be: no provider reports grammatical gender and the
+spelling does not give it away — "a Chapecoense" and "o Fluminense" end
+identically. The table is **exhaustive** over `src/data/clubs.ts` rather than a
+list of the exceptions, and a club with no entry fails the build; masculine
+survives only as a runtime default, for a club the live payload names and the
+snapshot does not. The exceptions-plus-default shape shipped first and could not
+see an *unknown* feminine club arriving, which is the same silence as the bug it
+was written to fix.
+A list of clubs repeats it — **Casa do Fluminense e do Flamengo**, not "Casa do
+Fluminense e Flamengo" — which is what `ofClubs` is for.
+_Avoid_: writing `do ${shortName}` at a call site (it was wrong in four files at
+once, two of them page metadata that reaches every link preview), inferring
+gender from the final letter, keying the table on `code` or on **tla**, and
+dropping a club's state suffix from the *name* rather than only from the lookup
+key.
+
 **Partida**:
 A single fixture between two clubs, modelled as `Match`. Carries `round`,
 `kickoff` (always an ISO-8601 UTC instant), a `MatchStatus`, the two club codes,
@@ -987,11 +1012,10 @@ home page, because a permanent nag is the soft end of the same thing a sign-in
 wall is, and guests are first class. And a stored club that the current payload
 does not name is **kept**, not cleared — the strip says so and the preference
 stands, since a provider outage is not a reader changing their mind.
-The control's label carries the club's article — **o** Palmeiras, **a**
-Chapecoense — from a hand-kept set in `preferences-core.ts`, because no provider
-reports grammatical gender and the spelling does not give it away: "a
-Chapecoense" and "o Fluminense" end identically. Masculine is the default
-because it covers nineteen of the twenty.
+The control's label carries the club's **Artigo do clube** — "Seguir **a**
+Chapecoense" — and is the one caller that wants the bare `o`/`a` rather than the
+contracted `do`/`da`, because a verb comes in front of it. The table itself is
+`club-core.ts`'s, not this module's.
 _Avoid_: "time favorito" or "favorito" (reads as a bookmark, and the mark is a
 star for a reason — it says *mine*, not *starred*), "time do coração" (warm, and
 what a broadcaster says, but this is a setting rather than a declaration),
