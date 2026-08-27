@@ -31,6 +31,12 @@ on:
         description: 'Type DRILL to confirm. Anything else lists the preflight and stops.'
         required: false
         type: string
+      mode:
+        description: 'health = starts but unhealthy (site keeps serving). crash = exits on boot (SITE GOES DOWN ~15s).'
+        required: false
+        default: 'health'
+        type: choice
+        options: ['health', 'crash']
       health_attempts:
         description: 'Seconds to wait for the bad payload to become healthy before flipping back.'
         required: false
@@ -59,6 +65,7 @@ jobs:
       INSTANCE_ID: i-03a9afc8a469edc89
       SITE_URL: https://brasileirao.mpbarbosa.com
       HEALTH_ATTEMPTS: ${{ github.event.inputs.health_attempts || '5' }}
+      MODE: ${{ github.event.inputs.mode || 'health' }}
     steps:
       - uses: actions/checkout@v7
         with:
@@ -94,10 +101,14 @@ jobs:
           echo "live_short=${live}" >> "$GITHUB_OUTPUT"
           echo "live_full=${full}"  >> "$GITHUB_OUTPUT"
           echo "Live before the drill: ${live} (${full})"
+          if [ "$MODE" = crash ]; then
+            echo "::warning::mode=crash — the bundle exits on boot, so the SITE IS DOWN until the flip-back completes (~15s). mode=health keeps every page serving."
+          fi
           {
             echo "### Flip-back drill"
             echo "Live before: \`${live}\`"
             echo "Recovery target (full sha): \`${full}\`"
+            echo "Mode: \`${MODE}\`"
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Preflight on the host — changes nothing
@@ -166,7 +177,7 @@ jobs:
           # SEVEN_EXIT on stdout. Letting it exit non-zero would make SSM report
           # Failed for the SUCCESS case (07 exits 2 when it has rolled back),
           # and that inversion is exactly the thing people misread.
-          params=$(jq -n --arg ha "$HEALTH_ATTEMPTS" '{commands: [
+          params=$(jq -n --arg ha "$HEALTH_ATTEMPTS" --arg mode "$MODE" '{commands: [
             "set -eu",
             "D=/var/www/portal_brasileirao",
             "S=$(sudo -u ubuntu mktemp -d /tmp/drill-XXXXXXXX)",
@@ -174,8 +185,8 @@ jobs:
             "sudo -u ubuntu cp \"$D/package.json\" \"$D/package-lock.json\" \"$S/\"",
             "sudo -u ubuntu mkdir -p \"$S/shell_scripts\"",
             "sudo -u ubuntu cp \"$D\"/shell_scripts/*.sh \"$S/shell_scripts/\"",
-            "sudo -u ubuntu sed -i \u0027s/status: \"ok\"/status: \"drill\"/\u0027 \"$S/dist/server.cjs\"",
-            "n=$(grep -c \u0027status: \"drill\"\u0027 \"$S/dist/server.cjs\" || true)",
+            "if [ \($mode) = crash ]; then sudo -u ubuntu sed -i \u00271i process.exit(1);\u0027 \"$S/dist/server.cjs\"; else sudo -u ubuntu sed -i \u0027s/status: \"ok\"/status: \"drill\"/\u0027 \"$S/dist/server.cjs\"; fi",
+            "if [ \($mode) = crash ]; then n=$(head -1 \"$S/dist/server.cjs\" | grep -c \u0027process.exit(1);\u0027 || true); else n=$(grep -c \u0027status: \"drill\"\u0027 \"$S/dist/server.cjs\" || true); fi",
             "echo PATCHED=$n",
             "if [ \"$n\" != 1 ]; then echo ABORTED_AT_GATE; rm -rf \"$S\"; echo SEVEN_EXIT=9; exit 0; fi",
             "rc=0",

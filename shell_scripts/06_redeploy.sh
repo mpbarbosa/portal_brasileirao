@@ -49,6 +49,17 @@ install_and_restart() {
     # Pick up any unit-file change shipped with this release, and silence the
     # "unit file changed on disk" warning that otherwise masks a real one.
     sudo systemctl daemon-reload || return 1
+    # Clear a start-limit lockout before restarting. A bundle that crashes on
+    # boot leaves systemd restarting it on a timer, and if those attempts breach
+    # StartLimitBurst the unit enters `failed` and `systemctl restart` REFUSES —
+    # so the flip-back would exit 3 and rollback.yml could not recover either,
+    # since it ends in this same restart. `reset-failed` is the only way out.
+    #
+    # At the unit's RestartSec=5 the limit is not reached in practice, verified
+    # against real systemd: six crash-restarts, and the restart still succeeded.
+    # This is here for the case where it is — a stranded service is a far worse
+    # outcome than a no-op on a unit that is not failed, which is all this is.
+    sudo systemctl reset-failed "$SERVICE_NAME" 2>/dev/null || true
     sudo systemctl restart "$SERVICE_NAME" || return 1
 }
 
