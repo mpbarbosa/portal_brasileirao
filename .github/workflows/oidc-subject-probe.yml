@@ -1,0 +1,72 @@
+name: OIDC subject probe
+
+# Prints the `sub` claim GitHub puts in this repository's OIDC token, with and
+# without an environment, and nothing else.
+#
+# WHY IT EXISTS. #151 attached the deploy job to `environment: production`, which
+# rewrites that claim, and the IAM trust policy pins it with StringEquals — so
+# every release failed for ten commits with "Not authorized to perform
+# sts:AssumeRoleWithWebIdentity" (#156 reverted it). Landing the Deployments
+# record means widening the trust policy to accept the environment form as well,
+# and the exact string is what the policy has to match character for character.
+#
+# GitHub documents the format as `repo:<owner>/<repo>:environment:<name>`, but
+# this repository's subject carries suffixes that no document predicts
+# (`mpbarbosa@19806781/portal_brasileirao@1344118398`). Guessing the environment
+# form from the ref form is an inference, and an IAM policy built on a wrong
+# guess fails exactly the way the original bug did: at credential configuration,
+# looking like an AWS problem. Read it instead.
+#
+# SAFETY. This assumes no role, touches no AWS, and changes nothing. It requests
+# an OIDC token and prints only `sub` and `aud` from the payload. The raw token
+# is a short-lived credential and is never echoed.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  ref-form:
+    name: Subject with NO environment (what rollback.yml and the drill send)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Print the subject claim
+        run: |
+          set -euo pipefail
+          tok=$(curl -sSf -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+                 "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=sts.amazonaws.com" | jq -r '.value')
+          # Payload only, and only two claims of it. Never print $tok.
+          payload=$(printf '%s' "$tok" | cut -d. -f2)
+          case $(( ${#payload} % 4 )) in 2) payload="${payload}==" ;; 3) payload="${payload}=" ;; esac
+          claims=$(printf '%s' "$payload" | tr '_-' '/+' | base64 -d 2>/dev/null)
+          sub=$(printf '%s' "$claims" | jq -r '.sub')
+          aud=$(printf '%s' "$claims" | jq -r '.aud')
+          echo "sub = ${sub}"
+          echo "aud = ${aud}"
+          { echo "### Subject claims"; echo ""; echo "| form | sub |"; echo "| --- | --- |";
+            echo "| no environment | \`${sub}\` |"; } >> "$GITHUB_STEP_SUMMARY"
+
+  environment-form:
+    name: Subject WITH environment production (what a gap-B deploy would send)
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: https://brasileirao.mpbarbosa.com
+    steps:
+      - name: Print the subject claim
+        run: |
+          set -euo pipefail
+          tok=$(curl -sSf -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+                 "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=sts.amazonaws.com" | jq -r '.value')
+          payload=$(printf '%s' "$tok" | cut -d. -f2)
+          case $(( ${#payload} % 4 )) in 2) payload="${payload}==" ;; 3) payload="${payload}=" ;; esac
+          claims=$(printf '%s' "$payload" | tr '_-' '/+' | base64 -d 2>/dev/null)
+          sub=$(printf '%s' "$claims" | jq -r '.sub')
+          echo "sub = ${sub}"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "| environment: production | \`${sub}\` |" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "Both strings above must appear in the trust policy on \`portal-brasileirao-deploy\`, or the workflow whose form is missing loses its access." >> "$GITHUB_STEP_SUMMARY"
