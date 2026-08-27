@@ -27,7 +27,7 @@ RUN_USER="$(id -un)"
 # and a floor cannot catch the failure that matters: `tsc --noEmit` certifies
 # against @types/node, so a host running a DIFFERENT major than the typings is
 # running code the gate never checked — whether that major is older or newer.
-REQUIRED_NODE_MAJOR=22
+REQUIRED_NODE_MAJOR=24
 
 if ! command -v node > /dev/null; then
     echo "Error: node not found. Install Node.js ${REQUIRED_NODE_MAJOR}.x first." >&2
