@@ -156,13 +156,20 @@ by the next person:
   fourth official or VAR exists on this tier. So one role is translated, and listing the
   documented others would be a claim the app cannot check, which is exactly what
   `NATIONALITY_LABELS` argues against at length.
-- **The array fills in retroactively, not near kickoff.** The original text said it
-  "populates near kickoff". It does not: officials appear *after* the match. On BSA, 157
-  of 380 fixtures name someone and **every one of them is FINISHED**; zero SCHEDULED,
-  TIMED or POSTPONED fixtures carry one. Nor is finishing sufficient — 78 finished
-  fixtures still name nobody. So the árbitro is a **retrospective record on roughly two
-  match pages in five**, never information about who is officiating tonight.
-  "Empty until kickoff" is the wrong model to build the absence rule around.
+- **No unfinished fixture carried an official.** The original text said the array
+  "populates near kickoff". What was measured, in one capture of all 380 BSA fixtures on
+  2026-08-27: 157 name someone and **every one of them is FINISHED**, while **0 of the
+  145** SCHEDULED, TIMED or POSTPONED fixtures carry one. Nor is finishing sufficient —
+  78 finished fixtures still name nobody. So the row renders on **roughly two match pages
+  in five** (41.3%), and on none that has yet to be played.
+
+  Stated that way on purpose: the measurement is a snapshot, not a claim about when
+  upstream writes the field. A provider that populated it an hour before kickoff for some
+  matches would look identical in a capture taken between rounds. The design conclusion
+  does not depend on the mechanism — 0 of 145 is enough to reject "empty until kickoff"
+  as the model for the absence rule — but "officials appear after the final whistle"
+  would be an inference, and this document should not spend one where it has a
+  measurement.
 
 What survives unchanged is the contract: an unmapped value renders **verbatim** under the
 rule `positionLabel` and `nationalityLabel` establish, and an empty array renders **no row
