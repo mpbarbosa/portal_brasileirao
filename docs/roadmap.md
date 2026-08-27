@@ -23,9 +23,9 @@ pipeline — what is still open** below carries what they did not close.
   curated on a workstation and committed: broadcasts, venues, highlights, club
   Instagram handles, broadcaster marks.
 - **Shape** — 27 pure `*-core.ts` modules, every one with its own
-  `tests/<name>-core.test.ts`, and 22 components, one Express process serving the
+  `tests/<name>-core.test.ts`, and 23 components, one Express process serving the
   API and the SPA. Counted on 2026-08-27: `ls *-core.ts`, `ls src/components/*.tsx`.
-- **Tests** — 558 unit and 548 end-to-end across desktop and mobile on
+- **Tests** — 570 unit and 548 end-to-end across desktop and mobile on
   2026-08-27 (`npm run test:unit`, `npx playwright test --list`), all against a
   frozen snapshot so a red build always means the code broke.
 - **Design** — Tailwind v4 with **Material Design 3** throughout: 47 colour
@@ -391,14 +391,14 @@ looks exactly like a task nobody has picked up.
   hand-run checker: `shell_scripts/` travels *inside the release tarball*, so a
   broken edit ships with the release that carries it and the host executes it
   immediately, before anything has a chance to health-check the result.
-- **D6 — the end-to-end suite boots the dev server, never the bundle.** Every
+- ~~**D6 — the end-to-end suite boots the dev server, never the bundle.**~~ **Landed** in #122: `playwright.config.ts` takes a target, `isBundle` boots `node dist/server.cjs`, and CI drives the suite against it. The reasoning, kept: Every
   spec runs against `npx tsx server.ts`, so `dist/server.cjs` — what production
   actually runs — is only asked three questions by `check`'s smoke test. The
   production-only paths (`registerSpaFallback`, `injectMeta`, the 404 rules, the
   JSON-LD) are the gap. Related, and worth fixing together: since D3 gates
   packaging to deploy-capable runs, **the promotion path is never exercised on a
   pull request at all** — its first run each time is the merge.
-- **D7 — hygiene, led by the advisory job that reddens successful releases.**
+- ~~**D7 — hygiene, led by the advisory job that reddens successful releases.**~~ **Landed:** `ci.yml` carries `continue-on-error: true` on the screenshots job, so a red advisory no longer concludes a successful release as failure. The reasoning, kept:
   `screenshots` is deliberately outside `deploy`'s `needs`, which is right; but a
   red advisory sets the whole run to `failure` while the deploy succeeds, and
   that has now been observed doing so more than half a dozen times, including on
