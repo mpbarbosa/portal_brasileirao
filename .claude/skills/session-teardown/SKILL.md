@@ -74,6 +74,11 @@ that spends it. Without that record you are recalling branch names at the point
 where being wrong deletes someone else's work — which is the one place the
 measure-don't-recall rule matters most.
 
+**If you adopted a worktree rather than creating it, rename it to match the
+branch you put on it.** Otherwise its name still advertises the previous
+occupant's work: the creator cannot tell it from one they forgot they
+re-pointed, and neither can you. `CLAUDE.md` carries the mechanism.
+
 **A worktree the harness gave you is still yours, and there is no moment of
 creation to have recorded.** A session can start already inside one — provisioned
 before the first turn, `.env` and `node_modules` absent, branch already named.

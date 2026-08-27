@@ -96,6 +96,13 @@ forbids, and peers' worktrees may already be gone so the listing cannot correct
 you. This has already failed inside a run of this skill: a session reported
 holding no worktrees, then found one of its own on a later listing.
 
+**And if you take over a worktree someone else created, rename it to match the
+branch you put on it.** Adoption is what makes a directory unattributable — its
+name still describes the previous occupant's work, so the creator cannot tell it
+from one they forgot they re-pointed, and neither can you. Renaming keeps
+`git worktree list` self-describing, which matters because that listing is the
+thing everyone actually runs. `CLAUDE.md` carries the mechanism.
+
 One worktree the record cannot cover: **the one the harness gave you**, which a
 session can be started inside before its first turn. There was no moment of
 creation to write down, so it is invisible to the rule above while still being
