@@ -231,6 +231,45 @@ experiment: one maintainer, a short window, and an appearance-path filter that
 counts commits touching a file without necessarily moving a pixel. Re-measure
 before concluding the floor held. The mechanism is settled; the outcome is not.
 
+**Correction: that floor is optimistic, because of how it was measured.** It
+pairs each appearance commit with *the next commit touching `docs/screenshots` by
+timestamp*, which credits a refresh that was **shot before the change and merely
+committed after it** — the exact case `CAPTURED` exists to expose, and one the
+measurement predated using.
+
+The episode that revealed it is the one named above. `a9521f1` reached `main` in
+`22f7740`; the measurement credited `50cffbd`, merged **two minutes** later, and
+scored the episode at **0.03 hours**. But `50cffbd`'s own `CAPTURED` reads
+`6045f2e` — a capture taken before `a9521f1` existed — so it cleared nothing. The
+check stayed red for another **2.99 hours** across nine releases until `3ca6ee6`
+landed a re-shoot anchored at `218707e`. A refresh being *newer than* the change
+is not the same as its depicting the change, which is the same distinction
+`check-screenshots.sh` draws and the measurement did not.
+
+Re-measured the way the check actually decides — a refresh clears an appearance
+commit only when the sha in its `CAPTURED` has that commit as an ancestor — over
+the window where `CAPTURED` exists at all (13 refreshes, 18 episodes; every
+refresh in that window has a readable anchor, and the 22 without one all predate
+the file):
+
+| | naive (next by timestamp) | anchored on `CAPTURED` |
+|---|---|---|
+| median hours | 0.40 | **0.78** |
+| p90 hours | 1.81 | **2.99** |
+| max hours | 10.94 | 10.94 |
+| episodes over 24h | 0 | 0 |
+
+So roughly **double on the median** and **1.6× at p90**. The headline figures
+above cannot simply be restated in anchored form — they cover a wider window in
+which `CAPTURED` does not exist for most episodes, so there is nothing to anchor
+on — but the correction factor found where both can be computed is the right way
+to read them. Treat the floor as optimistic by about that much.
+
+**What does not change is the conclusion.** No episode exceeds a day under either
+method, the maximum is identical, and the debt is still cleared the same day. The
+floor is softer than it was stated to be; it is not a different verdict. Anchor
+any future re-measurement on `CAPTURED` rather than on commit order.
+
 ### 5. There is no way back
 
 `07_install_release.sh` does `rsync -a --delete "$STAGING/dist/" "$DEPLOY_DIR/dist/"`.
@@ -808,3 +847,13 @@ says so.
   proposal stands and the objection was overstated. What remains unmeasured is
   whether the debt is still cleared as quickly as the red made it; the entry
   records the floor to hold it to and the caveats on that number.
+- **And that floor was then corrected downward.** It was measured by pairing each
+  appearance commit with the next commit touching `docs/screenshots` by timestamp,
+  which credits a refresh shot *before* the change and committed after it. The
+  first episode measured after the assessment merged exposed it: scored at 0.03
+  hours, actually 2.99, because the crediting refresh's `CAPTURED` named a capture
+  predating the change. Re-measured anchored on `CAPTURED` — the test the check
+  itself applies — the median roughly doubles and p90 rises by 1.6×. The verdict
+  is unchanged (still nothing over a day, identical maximum); the number is
+  softer than it was published as. Recorded rather than quietly restated, since
+  the floor was offered as the bar a replacement must clear.
