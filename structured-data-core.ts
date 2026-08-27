@@ -206,6 +206,14 @@ const trailFor = (route: Route, context: MetaContext): Array<{ name: string; pat
       return [HOME_CRUMB, { name: "Artilharia", path: "/artilharia" }];
     case "jogadores":
       return [HOME_CRUMB, { name: "Jogadores", path: "/jogadores" }];
+    // A breadcrumb for a page no crawler may index is not describing anything
+    // to anybody, so both stop at the site root. They are here because the
+    // compiler requires them — this switch returns a value, which is what makes
+    // it the one file of the four that cannot be forgotten.
+    case "conta":
+      return [HOME_CRUMB, { name: "Minha conta", path: "/conta" }];
+    case "entrar":
+      return [HOME_CRUMB, { name: "Entrar", path: "/entrar" }];
     case "jogos": {
       const jogos = { name: "Jogos", path: "/jogos" };
       return route.round === null

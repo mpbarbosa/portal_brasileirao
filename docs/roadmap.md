@@ -47,6 +47,26 @@ to abort a whole run, and the end-to-end specs depended on some fixture in round
 - Re-run `sync-broadcasts` weekly as the season advances; the cron already does.
 - Watch for broadcasters CBF names that we render as wordmarks — ESPN/Disney+,
   Band, SportyNet — and add marks where a public-domain one exists.
+- Move the Node major from 22 to 24 before 2027-04-30, host first — see below.
+  Nothing will open a pull request for this.
+- Watch `tests/e2e/scorers.spec.ts` "switching away and back keeps the table"
+  (**mobile only**, Pixel 7). One failure on 2026-08-27, passing on re-run and
+  on both #103 and #108 in CI. Recorded rather than diagnosed — one occurrence is
+  not a flake diagnosis — but with what a second occurrence would need, since
+  the evidence is gone by then: it aborted on the **`.click()`** of the Artilharia
+  nav link (`scorers.spec.ts:4:57`) reached from **line 73**, i.e. the *second*
+  navigation, after Classificação — not on the table assertion below it and not
+  in `beforeEach`, both of which had already passed in the same test. Playwright
+  auto-waits for actionability on a click, so a timeout there says the link
+  never became **stable**, which points at layout movement rather than at data or a
+  missing row. Two things in this repo make that the expected place for it, both
+  documented in `CLAUDE.md`: the nav bar is deliberately at its width limit on a
+  phone (five 64dp MD3 indicators is 320dp exactly, degrading to `w-14` under
+  `min-[360px]:`), and Classificação is the heaviest layout in the suite — 20
+  rows, two frozen columns and 20 sparklines — so returning *from* it is the one
+  transition where the bar is most likely to still be settling. Capture the
+  trace next time rather than re-running; `settle`'s existence is the precedent
+  that MD3's 200ms transitions are real in tests.
 - **`scripts/deploy.sh` neither retains the previous release nor flips back to
   it.** D5b gave that to the pipeline — `07_install_release.sh` keeps the
   outgoing release in `$DEPLOY_DIR/previous/` and `06_redeploy.sh` restores it
@@ -60,6 +80,74 @@ to abort a whole run, and the end-to-end specs depended on some fixture in round
   already forbids running `deploy.sh` by hand, so this is a latent trap rather
   than a live one: it springs the first time someone reaches for it during an
   incident, which is exactly when the previous release matters most.
+
+### Node: one major, and a date it has to move
+
+`.nvmrc` now holds the single Node major, and `package.json`'s `engines`, the
+`@types/node` pin, `REQUIRED_NODE_MAJOR` in `shell_scripts/01` and both
+workflows' `node-version-file` are asserted equal to it by
+`tests/node-version.test.ts` (#103). The reasoning — including why raising the
+runtime to meet the typings is *not* the fix — is in `CLAUDE.md` under **CI**.
+
+One of the two questions this raised is now answered; the other has a deadline.
+
+**What the host runs is now a measured fact: Node 22.23.2.** Read off
+`/api/health` at sha `45b5531` on 2026-08-27, minutes after #103 deployed. It
+had never been knowable before — nothing in the repo pinned it and the endpoint
+did not report it, so every statement about it was an assumption.
+
+The answer vindicates the pin: production was on 22, CI was on 22, and the
+typings had been on **26** since #91 — four majors ahead of the runtime they
+were certifying. Had this come back 24, the right move would have been to raise
+the five numbers to meet the host rather than to assume the host was wrong; it
+did not, so nothing further is owed here.
+
+**22 is already the maintenance line.** Read off nodejs/Release on 2026-08-27:
+
+| line | status today | end of life |
+| --- | --- | --- |
+| 22 | maintenance since 2025-10-21 | **2027-04-30** |
+| 24 | **active LTS** since 2025-10-28 | 2028-04-30 |
+| 26 | becomes LTS 2026-10-28 | 2029-04-30 |
+
+So 22 was the right pin to land — it is what CI **and the host** were already
+running, and changing the runtime and the typings in one commit would have made
+a failure ambiguous — but it is not the right pin to *stay* on. The move is to
+**24**, the active LTS, and it is a deliberate five-file commit starting at
+`.nvmrc`, with `npm run test:unit` refusing anything partial. It needs the host
+raised to 24 first, since `shell_scripts/01` requires an exact major.
+
+**Nothing will remind you.** `.github/dependabot.yml` ignores the *major* for
+`@types/node` by design, which is what stops the typings running ahead of the
+runtime again — and the cost of that is precisely that no pull request will ever
+appear proposing it. This entry is the reminder, and it is now the only
+thing tracking it. Before 2027-04-30.
+
+Left over from **Árbitro** (item 1 below), which surfaced more about the
+provider than it needed to build:
+
+- **Refresh the README screenshots once PR #104 deploys.** `MatchPage` gained a
+  row, which is an appearance path, so the capture job is red by design — no
+  `Screenshots-unaffected:` trailer applies, because the change genuinely
+  reaches a paint. The catch is that the row renders **only against live data**,
+  so a local capture cannot show it either: the sequence is merge, deploy, then
+  capture from the live site.
+- **Watch whether upstream backfills the officials for rounds 16–24.** BSA names
+  a referee on 157 of 380 fixtures — rounds 1–15 complete, 16 onward mostly not
+  — so the row is absent from roughly 60% of match pages today. It fills in
+  **retroactively**, since finished matches gain one, so this may resolve
+  itself and nothing in the app needs changing if it does. Worth knowing before
+  someone reads a missing row as a bug and goes looking for one.
+- **Do not translate a role the payload has not sent, and do not prettify one it
+  has.** `refereeRoleLabel` maps `REFEREE` alone, because that is every one of
+  the 356 entries across BSA, PL and CL. If the tier ever widens, an assistant
+  reaches the page as `ASSISTANT_REFEREE_N1` — ugly on purpose, and the visible
+  prompt to add the row rather than a rendering defect to patch over.
+- **The officials' `nationality` is deliberately dropped, and the reason is a
+  live example rather than a principle.** It reads `Brazil` for 156 of the 157
+  entries, and the one exception is an **upstream error**: a French official
+  recorded against Coritiba × Chapecoense in round 22. So the field offers one
+  word repeated on every page, plus one that is wrong.
 
 ## From the Brasileirão Pro import
 
@@ -77,15 +165,29 @@ provider already sends; the rest are derivations or rules.
 **Now — no decision to make.** Six of these are one attribute, one element or a
 paragraph of prose.
 
-1. **Árbitro on the match page.** `referees` rides on every football-data match
-   object and `football-data-core.ts` drops it. Translate the role vocabulary at
-   the edge like `positionLabel` does, and render nothing when the array is empty.
+1. ~~**Árbitro on the match page.**~~ **Shipped.** `refereeRoleLabel` translates
+   at the edge and the row is absent when upstream names nobody, which is 223 of
+   the 380 fixtures — finished ones included, so the field fills in
+   retroactively rather than at kickoff. Two things the payload settled that the
+   proposal could only guess at: **every** one of the 356 entries across BSA, PL
+   and CL is `REFEREE`, so the wider vocabulary it predicted is not reachable on
+   this tier and only that one value is translated; and the field is
+   **live-only**, since the seed snapshot carries no officials and the e2e suite
+   boots frozen. Green e2e is therefore not evidence that it renders —
+   `tests/football-data-core.test.ts` covers the mapper against a captured
+   payload, per the rule in `CLAUDE.md`.
 2. **Aproveitamento (%).** `pontos / (jogos × 3)`. The metric a Brazilian reader
    quotes by default, and the one that survives a postponed fixture honestly.
    Needs a `CONTEXT.md` entry in the same commit.
-3. **A legend for the G4/Z4 rail.** `zoneClass` paints the rail and nothing on the
-   page says what the colours mean. It is also hue-only, where the same data on
-   the club page carries a letter *and* a colour.
+3. **A legend for the G4/Z4 rail.** — **done.** `zoneClass` painted the rail and
+   nothing on the page said what the colours meant. It was also hue-only, where
+   the same data on the club page carries a letter *and* a colour. The key sits
+   outside the table's scroll container and names *which positions* each zone
+   covers, which is what puts the fact on a channel other than hue — the rail now
+   confirms the key rather than being the only place the zones are stated. A
+   **row** still announces no zone of its own to a screen reader; the rail is a
+   CSS border. That is a separate, larger change (`sr-only` text in twenty
+   position cells) and is not done.
 4. **`referrerPolicy="no-referrer"` on crests.** They are the one asset class still
    hotlinked (principle 4 below), so every row tells the provider's CDN which page
    the reader is on.
@@ -126,6 +228,122 @@ escalações and match statistics (no reachable tier carries them); título/Z4
 probabilities as the prototype presents them; the localStorage image-URL manager
 (the inverse of the vendoring-with-attribution rule); the webfont pair; the
 hand-picked hexes; club-brand colours; the desktop sidebar.
+
+## Contas — what Phase 1 leaves outstanding
+
+Phase 1 ships sign-in with Google, sessions in SQLite, `/entrar`, `/conta`, and
+the rule that the whole feature is absent unless the host is configured for it.
+What follows is everything flagged while building it and not done, recorded here
+rather than left in a pull-request thread.
+
+**On the host, before accounts do anything.** Nothing in the code waits on any of
+these — it deploys and behaves exactly as it did before.
+
+- `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` into the host's `.env`. Note
+  `02_create_env.sh` rewrites the **whole** file after a confirm, so the same run
+  must re-enter `FOOTBALL_DATA_TOKEN` or the site drops to seed data.
+- Google Auth Platform → **Público-alvo**: add a test user, or publish. While the
+  client is in *Testing* with no test users, every sign-in returns "acesso
+  bloqueado" — which looks exactly like a bug in the code, and is the most
+  likely first hour lost.
+- **Confirm the host's exact Node.** `01_setup_app_directory.sh` now pins major
+  **22**, which is enough — but `node:sqlite` arrived in **22.5**, so a host
+  sitting on 22.0–22.4 satisfies the pin and still has no store. The code
+  degrades rather than crashing (`openStore` loads it through `createRequire`
+  precisely so such a host boots with accounts simply absent), so this is a
+  check for the day accounts are switched on, never a deploy blocker.
+- **One manual pass of the Google round trip.** CI cannot cover it: it needs a
+  secret and a network, and CI has neither by design. Verify once against the
+  deployed host and record it in the runbook, the way the live provider path was.
+
+**Phase 2, in the order `docs/accounts.md` sets.**
+
+- **`/privacidade`.** A real route, so a four-file change, and it blocks twice
+  over: §5 says the notice blocks launch, and Google's Branding tab wants the URL
+  before the consent screen can be published.
+- **The preferences table, and the merge that gives it a caller.** *Meu time*
+  stops being device-local and becomes the first thing an account syncs. Deferred
+  from Phase 1 deliberately — shipping the schema alone would be a table nobody
+  reads, which is the same smell as a component variant with no call site.
+- **Backups.** The accounts database is the first state in this app that nothing
+  can regenerate: lose the volume and the readers are gone. Nightly `VACUUM INTO`
+  to S3, on a prefix separate from the deploy bucket, and a restore **rehearsed
+  on a scratch instance** rather than documented.
+- **Session pruning on a schedule.** `pruneSessions` exists and nothing calls it.
+  Expired rows are harmless to authentication and are still a record of when a
+  person was last here, kept for no stated purpose.
+- **The retention promise, or its removal from the notice.** An unenforced
+  retention promise is worse than no promise.
+
+**Screenshots.** The top app bar gained a control, so the advisory job is red and
+should be. But that control is invisible until a host is configured, so a refresh
+today photographs no change at all — take it after the credentials are live, not
+after the merge.
+
+**One rule to follow rather than an item to do.** Every string that puts a
+preposition in front of a club name goes through `club-core.ts`, whose article
+table is **exhaustive over `src/data/clubs.ts`** — a club with no entry fails the
+build until somebody writes its article down, the way `NATIONALITY_LABELS` works
+over `squads.ts`. That landed after this section was first drafted, and it is
+worth knowing before writing any Phase 2 copy: `/privacidade` and the account
+pages will want "a sua conta", not a club name, but the moment anything says
+"do <clube>" it belongs in that helper and not in a template literal.
+
+## From the club-article fix
+
+[#101](https://github.com/mpbarbosa/portal_brasileirao/pull/101) made the
+**Artigo do clube** a table exhaustive over `src/data/clubs.ts` and moved it to
+`club-core.ts`, after the first attempt shipped a set of the four exceptions and
+a silent masculine default — which could catch a *known* feminine club being
+promoted and not an unknown one. Four things it did not close. None of them is
+red anywhere, which is the only reason they are written down.
+
+1. **Coverage stops at the snapshot, and no test can extend it.** The
+   exhaustiveness guard runs over `CLUBS`, so it bites at `sync-seed-data` and
+   nowhere else. Upstream already names clubs the seed does not — that is why
+   `/api/matches` ships the clubs it saw — and one of those falls through to "o"
+   with nothing to say so. A live test cannot close it: CI has no network by
+   design, and adding one would trade a red build that always means the code
+   broke for one that sometimes means the upstream had a bad minute. The place
+   that *can* is `scripts/sync-seed-data.ts`, which runs on a workstation at the
+   exact moment the division changes: have it refuse, or at least warn, when it
+   writes a club `hasClubArticle` does not know. That is the same shape as the
+   generator's existing duplicate-slug check.
+
+2. **Only *de* is contracted.** `ofClub` returns "do"/"da" and nothing else,
+   because that is what all four call sites needed. pt-BR contracts three more
+   prepositions with the article — em → "no"/"na", a → "ao"/"à", por →
+   "pelo"/"pela" — so the first line of copy reading "no Flamengo" or "pela
+   Chapecoense" will hand-write the article again, which is precisely how it came
+   to be wrong in four files at once. Extend the module rather than inlining at
+   the call site — which is the same rule **Contas** states just above, from the
+   other side. The *un*contracted case already has its answer: `clubArticle`
+   returns the bare word, which is what "contra a Chapecoense" and the **Meu
+   time** control both want.
+
+3. **A `Screenshots-unaffected:` trailer outside the last paragraph is not a
+   trailer.** Git's trailer block is the final paragraph of the message only, so
+   one sitting in its own paragraph above `Co-Authored-By:` is body prose:
+   `git interpret-trailers --parse` returns nothing for it and
+   `check-screenshots.sh` reports the commit as unaccounted while a correct,
+   specific reason sits six lines up in the same message. Cost was a red advisory
+   job, an amend and a force-push. The script already prints the trailer's syntax
+   on failure; what it cannot currently say is *this*. It reads only the parsed
+   side, through `%(trailers:key=…)`, so an unparsed claim is indistinguishable
+   from no claim at all — but a second `--format=%B` over the same commits would
+   separate them, and a line present in the message and absent from the trailers
+   is exactly the case worth naming instead of printing the generic how-to at
+   somebody who has already followed it. Worth stating in the help text either
+   way: continuation lines must be **indented**, and the block must be last.
+
+4. **A spec keyed on which club sorts first.** `tests/e2e/players.spec.ts`
+   selected the club link by `/^Ver a página do/`. The "do" was never a fact
+   about the page — it was Athletico-PR happening to sort first in the snapshot,
+   and a promoted Portuguesa would have turned that locator red on a change that
+   had nothing to do with it. `CLAUDE.md` already carries "assert shape, not
+   value" for rounds and scorelines; this is the same rule applied to **copy that
+   varies by club**, which was not on the list. No sweep has been done for
+   others.
 
 ## Constraints that must survive any redesign
 
@@ -693,3 +911,10 @@ Nothing in this migration. The remaining items are the pre-existing ones under
 **Near term** above — the highlights backfill and the weekly broadcast sync —
 plus the README viewport question noted at the top of this section, which is a
 product decision rather than work.
+
+Three lists elsewhere in this file are also outstanding and are deliberately not
+restated here: the thirteen items under **From the Brasileirão Pro import**, the
+host steps and Phase 2 under **Contas — what Phase 1 leaves outstanding**, and
+the four under **From the club-article fix**. The last is the one to read if you
+are about to write a sentence with a club's name in it, or a
+`Screenshots-unaffected:` trailer.

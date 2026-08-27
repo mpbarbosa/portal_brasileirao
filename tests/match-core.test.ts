@@ -8,6 +8,7 @@ import {
   highlights,
   hasHighlights,
   isHighlightUrl,
+  refereeRoleLabel,
   withHighlights,
 } from "@/match-core";
 import type { Club, Match } from "@/src/types";
@@ -139,4 +140,23 @@ test("a match with only invalid entries carries none", () => {
 
 test("a match with no entry carries none", () => {
   assert.deepEqual(highlights(match()), []);
+});
+
+test("translates the one role the provider actually sends", () => {
+  assert.equal(refereeRoleLabel("REFEREE"), "Árbitro");
+});
+
+test("an unmapped role renders verbatim rather than as a guess", () => {
+  // The rule `positionLabel` and `nationalityLabel` establish. The published
+  // vocabulary is wider than what the free tier sends — no assistant appears in
+  // 356 entries across BSA, PL and CL — so anything else reaches the page as
+  // the provider wrote it, which is a visible prompt to add the row.
+  assert.equal(refereeRoleLabel("ASSISTANT_REFEREE_N1"), "ASSISTANT_REFEREE_N1");
+});
+
+test("a named official with no role gets the collective noun", () => {
+  // It claims only that they officiated, which is all the payload said.
+  assert.equal(refereeRoleLabel(""), "Arbitragem");
+  assert.equal(refereeRoleLabel("  "), "Arbitragem");
+  assert.equal(refereeRoleLabel(undefined), "Arbitragem");
 });

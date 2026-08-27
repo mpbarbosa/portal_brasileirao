@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import { createServer as createHttpServer } from "node:http";
 import { createServer as createNetServer } from "node:net";
 import { readFileSync } from "node:fs";
@@ -51,6 +52,40 @@ import {
   sitemapEntries,
   sitemapXml,
 } from "@/seo-core";
+import {
+  newAccountId,
+  normaliseDisplayName,
+  publicAccount,
+  type Account,
+} from "@/account-core";
+import { openStore } from "@/account-store";
+import {
+  authorizeUrl,
+  challengeFor,
+  decodeIdTokenClaims,
+  GOOGLE_TOKEN_URL,
+  newVerifier,
+  verifyClaims,
+} from "@/oauth-core";
+import {
+  evictFull,
+  freshBucket,
+  spend,
+  type Bucket,
+  type BucketPolicy,
+} from "@/rate-limit-core";
+import {
+  clearCookie,
+  digestsMatch,
+  hashToken,
+  mintToken,
+  readCookie,
+  serialiseCookie,
+  SESSION_COOKIE,
+  SESSION_TTL_MS,
+  sessionState,
+  shouldRenew,
+} from "@/session-core";
 import { jsonLdScript, structuredData } from "@/structured-data-core";
 import { sortSquads } from "@/squad-core";
 import { computeStandings } from "@/standings-core";
@@ -437,6 +472,433 @@ const decodable = (value: string): boolean => {
  * first and, when it cannot, hands the request to the same renderer as any
  * other address that names nothing: the app, and a 404.
  */
+/* ------------------------------------------------------------------ *
+ * Contas
+ *
+ * Phase 1 of `docs/accounts.md`. Everything below is inert unless the host
+ * is configured for it — see `accountsEnabled`.
+ * ------------------------------------------------------------------ */
+
+/**
+ * There is deliberately **no `SESSION_SECRET`**, and the plan's §3.9 expected
+ * one.
+ *
+ * That section spends its length on the fact that a session secret has no safe
+ * default: random-per-boot signs everybody out on every restart, and a
+ * committed constant is a forged-session vulnerability in a public repo. Both
+ * are true of a *signed* cookie. This does not have one. A session is 256 bits
+ * of randomness stored as a SHA-256 digest in a table, so there is nothing to
+ * sign, nothing to rotate, and no secret whose absence has to be handled.
+ *
+ * The same reasoning covers the sign-in transaction below: `state`, `nonce` and
+ * the PKCE verifier only have to survive from our own response to our own next
+ * request, and the `__Host-` prefix is what a browser enforces to keep any
+ * other origin — including a sibling subdomain — from writing that cookie.
+ */
+const GOOGLE_CLIENT_ID = (process.env.GOOGLE_CLIENT_ID ?? "").trim();
+const GOOGLE_CLIENT_SECRET = (process.env.GOOGLE_CLIENT_SECRET ?? "").trim();
+
+/**
+ * Where the database lives.
+ *
+ * Default is under the app directory rather than `/var/lib`, and that is a
+ * property of the host rather than a preference: the systemd unit sets
+ * `ProtectSystem=strict` with `ReadWritePaths=${DEPLOY_DIR}`, so anywhere else
+ * is read-only to the process until `03_install_systemd_service.sh` is edited.
+ * It is outside `dist/`, which both rsyncs delete and `express.static` serves.
+ */
+const ACCOUNTS_DB = process.env.ACCOUNTS_DB ?? path.join(process.cwd(), "data", "accounts.db");
+
+/**
+ * A local identity, for tests only.
+ *
+ * An OAuth round trip in the end-to-end suite would need a Google client and
+ * network access, which would break the rule that a red build always means the
+ * code broke. This is the `DISABLE_FOOTBALL_DATA` shape applied to sign-in.
+ *
+ * **It refuses to exist in production, and the check is at boot rather than per
+ * request** — a misconfigured host dies loudly on start instead of serving an
+ * open door that looks exactly like a working site.
+ */
+const ACCOUNTS_DEV_LOGIN = process.env.ACCOUNTS_DEV_LOGIN === "true";
+if (ACCOUNTS_DEV_LOGIN && IS_PRODUCTION) {
+  console.error(
+    "[accounts] ACCOUNTS_DEV_LOGIN is set in production. That endpoint mints a session " +
+      "for anybody who asks. Refusing to start.",
+  );
+  process.exit(1);
+}
+
+const GOOGLE_CONFIGURED = Boolean(GOOGLE_CLIENT_ID && GOOGLE_CLIENT_SECRET);
+
+/**
+ * Opened once, at boot, and `null` when it cannot be.
+ *
+ * Null is a supported state: a fresh clone with an empty `.env` gets the app it
+ * has always had, minus a feature it never mentions. Nothing here half-renders
+ * — the control does not appear, and the routes 404.
+ */
+const accountStore =
+  GOOGLE_CONFIGURED || ACCOUNTS_DEV_LOGIN ? openStore(ACCOUNTS_DB) : null;
+
+const accountsEnabled = (): boolean => accountStore !== null;
+
+/**
+ * `Secure`, always — never from the request, and not from configuration either.
+ *
+ * Two separate reasons, and the second one is the one that bites.
+ *
+ * Behind nginx `req.protocol` is `"http"`, because Express's `trust proxy` is
+ * off here on purpose (`TRUST_PROXY` is this app's own flag and feeds only the
+ * canonical origin). A cookie that believed the request would ship without
+ * `Secure` in production, which is a session that leaks over any plaintext hop.
+ *
+ * And a **`__Host-` cookie without `Secure` is refused by the browser
+ * outright** — the prefix is a rule the browser enforces, not a naming
+ * convention. Deriving this from `APP_URL` therefore made sign-in *silently do
+ * nothing* on a fresh clone with no `.env`: the server set the cookie, the
+ * browser dropped it, `/api/account/me` answered null, and nothing anywhere
+ * reported an error. Found by trying it.
+ *
+ * Unconditional is safe for local development because `localhost` and
+ * `127.0.0.1` are secure contexts, so a `Secure` cookie is accepted there over
+ * plain http. (`curl` declines to *send* one over http, which is a property of
+ * curl rather than of the browser — verify this path with Playwright.)
+ */
+const cookieOptions = { secure: true };
+
+/** Every account response is personal. There is an nginx in front of this app,
+ *  and that file is rewritten by certbot and by `04_setup_nginx.sh`, so "there
+ *  is no shared cache in front" is a fact about a file nobody owns. */
+const noStore = (res: express.Response): void => {
+  res.set("Cache-Control", "private, no-store");
+  res.set("Vary", "Cookie");
+};
+
+/**
+ * Reject a state-changing request that did not come from our own pages.
+ *
+ * `SameSite=Lax` already blocks a cross-site POST, so this is the second lock:
+ * it fails closed, needs no token plumbed through the client, and costs one
+ * header comparison. A token scheme is only worth it if this app ever needs
+ * `SameSite=None`.
+ */
+const sameOrigin = (req: express.Request): boolean => {
+  const origin = req.get("origin");
+  if (!origin) return true; // Not sent on same-origin form posts by every browser.
+  return origin === originFor(req);
+};
+
+const SIGN_IN_POLICY: BucketPolicy = { capacity: 10, refillMs: 60_000 };
+const signInBuckets = new Map<string, Bucket>();
+
+/** Keyed on the client-most forwarded address, the same rule `firstHeaderValue`
+ *  already implements for the canonical origin. In memory because there is one
+ *  process; it resets on deploy, which is acceptable and is written down here
+ *  rather than remembered. */
+const rateLimited = (req: express.Request, now: number): boolean => {
+  const key = firstHeaderValue(req.get("x-forwarded-for")) ?? req.ip ?? "unknown";
+  const decision = spend(signInBuckets.get(key) ?? freshBucket(SIGN_IN_POLICY, now), SIGN_IN_POLICY, now);
+  signInBuckets.set(key, decision.bucket);
+  if (signInBuckets.size > 1000) evictFull(signInBuckets, SIGN_IN_POLICY, now);
+  return !decision.allowed;
+};
+
+const TRANSACTION_COOKIE = "__Host-pb_auth";
+const TRANSACTION_TTL_MS = 10 * 60 * 1000;
+
+interface SignInTransaction {
+  state: string;
+  nonce: string;
+  verifier: string;
+}
+
+/**
+ * The session behind a request, or null.
+ *
+ * Renews on the way past when the session is more than halfway through its
+ * life, which mints a **new** token rather than extending the old one: a
+ * renewed session should not keep a value that has been in flight for a month.
+ */
+const currentAccount = (req: express.Request, res: express.Response): Account | null => {
+  if (!accountStore) return null;
+
+  const token = readCookie(req.get("cookie"), SESSION_COOKIE);
+  if (!token) return null;
+
+  const session = accountStore.findSession(hashToken(token));
+  if (!session) return null;
+
+  const now = Date.now();
+  if (sessionState(session, now) === "expired") {
+    accountStore.endSession(session.tokenHash);
+    res.append("Set-Cookie", clearCookie(SESSION_COOKIE, cookieOptions));
+    return null;
+  }
+
+  if (shouldRenew(session, now)) {
+    const next = mintToken();
+    accountStore.replaceSession(session.tokenHash, {
+      tokenHash: hashToken(next),
+      accountId: session.accountId,
+      createdAt: now,
+      expiresAt: now + SESSION_TTL_MS,
+    });
+    res.append(
+      "Set-Cookie",
+      serialiseCookie(SESSION_COOKIE, next, { ...cookieOptions, maxAgeMs: SESSION_TTL_MS }),
+    );
+  }
+
+  return accountStore.findAccount(session.accountId);
+};
+
+/** Start a session for an account, rotating any token the request arrived with.
+ *  Never adopt a session identifier from outside. */
+const beginSession = (res: express.Response, accountId: string, now: number): void => {
+  if (!accountStore) return;
+  const token = mintToken();
+  accountStore.startSession({
+    tokenHash: hashToken(token),
+    accountId,
+    createdAt: now,
+    expiresAt: now + SESSION_TTL_MS,
+  });
+  res.append(
+    "Set-Cookie",
+    serialiseCookie(SESSION_COOKIE, token, { ...cookieOptions, maxAgeMs: SESSION_TTL_MS }),
+  );
+};
+
+/** Absent feature, not broken feature. */
+const requireAccounts = (res: express.Response): boolean => {
+  if (accountsEnabled()) return true;
+  noStore(res);
+  res.status(404).json({ error: "Contas não estão disponíveis nesta instalação." });
+  return false;
+};
+
+app.get("/api/auth/google", (req, res) => {
+  if (!requireAccounts(res)) return;
+  noStore(res);
+
+  if (!GOOGLE_CONFIGURED) {
+    res.status(404).json({ error: "Entrar com o Google não está disponível." });
+    return;
+  }
+  if (rateLimited(req, Date.now())) {
+    res.status(429).json({ error: "Muitas tentativas. Tente de novo em instantes." });
+    return;
+  }
+
+  const transaction: SignInTransaction = {
+    state: mintToken(),
+    nonce: mintToken(),
+    verifier: newVerifier(),
+  };
+
+  res.append(
+    "Set-Cookie",
+    serialiseCookie(
+      TRANSACTION_COOKIE,
+      Buffer.from(JSON.stringify(transaction)).toString("base64url"),
+      { ...cookieOptions, maxAgeMs: TRANSACTION_TTL_MS },
+    ),
+  );
+
+  res.redirect(
+    authorizeUrl({
+      clientId: GOOGLE_CLIENT_ID,
+      redirectUri: `${originFor(req)}/api/auth/callback`,
+      state: transaction.state,
+      nonce: transaction.nonce,
+      codeChallenge: challengeFor(transaction.verifier),
+    }),
+  );
+});
+
+/**
+ * Where Google sends the reader back.
+ *
+ * Every exit from here is a **redirect**, never a JSON body: this is a
+ * top-level navigation in a browser, and the reader must end up on a page. The
+ * failure exits carry a short reason in the query, which `SignInView` turns
+ * into one pt-BR sentence — deliberately vaguer than the reason logged here,
+ * because "audience mismatch" tells a reader nothing and an attacker probing
+ * the callback a great deal.
+ */
+app.get("/api/auth/callback", async (req, res) => {
+  if (!requireAccounts(res)) return;
+  noStore(res);
+
+  const fail = (reason: string, detail?: string) => {
+    console.warn(`[accounts] sign-in refused: ${detail ?? reason}`);
+    res.redirect(`/entrar?erro=${encodeURIComponent(reason)}`);
+  };
+
+  if (typeof req.query.error === "string") return fail("denied", `provider: ${req.query.error}`);
+
+  const raw = readCookie(req.get("cookie"), TRANSACTION_COOKIE);
+  // The transaction cookie is cleared on every exit, success or not: a state
+  // that has been presented once must never be presentable again.
+  res.append("Set-Cookie", clearCookie(TRANSACTION_COOKIE, cookieOptions));
+
+  if (!raw) return fail("state", "no transaction cookie");
+
+  let transaction: SignInTransaction;
+  try {
+    transaction = JSON.parse(Buffer.from(raw, "base64url").toString("utf8")) as SignInTransaction;
+  } catch {
+    return fail("state", "unreadable transaction cookie");
+  }
+
+  const code = req.query.code;
+  const state = req.query.state;
+  if (typeof code !== "string" || typeof state !== "string") return fail("state", "missing code");
+  if (!digestsMatch(state, transaction.state)) return fail("state", "state mismatch");
+
+  let idToken: string;
+  try {
+    const response = await fetch(GOOGLE_TOKEN_URL, {
+      method: "POST",
+      headers: { "content-type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        code,
+        client_id: GOOGLE_CLIENT_ID,
+        client_secret: GOOGLE_CLIENT_SECRET,
+        redirect_uri: `${originFor(req)}/api/auth/callback`,
+        grant_type: "authorization_code",
+        code_verifier: transaction.verifier,
+      }),
+      signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+    });
+
+    if (!response.ok) return fail("provider", `token endpoint ${response.status}`);
+    const payload = (await response.json()) as { id_token?: unknown };
+    if (typeof payload.id_token !== "string") return fail("provider", "no id_token");
+    idToken = payload.id_token;
+  } catch (error) {
+    return fail("provider", `token exchange failed: ${(error as Error).message}`);
+  }
+
+  const now = Date.now();
+  const verdict = verifyClaims(decodeIdTokenClaims(idToken), {
+    clientId: GOOGLE_CLIENT_ID,
+    nonce: transaction.nonce,
+    now,
+  });
+  if (!verdict.ok) return fail("provider", `claims: ${verdict.reason}`);
+
+  const account = accountStore!.upsertAccount({
+    id: newAccountId(() => randomUUID().replace(/-/g, "")),
+    provider: "google",
+    subject: verdict.subject,
+    displayName: normaliseDisplayName(verdict.name),
+    now,
+  });
+
+  beginSession(res, account.id, now);
+  // Log the account id, which is opaque by construction, and never the
+  // subject, the name, or anything that identifies a person.
+  console.log(`[accounts] signed in ${account.id}`);
+  res.redirect("/conta");
+});
+
+/**
+ * A session with no third party, for tests.
+ *
+ * Registered only when `ACCOUNTS_DEV_LOGIN` is set, which cannot happen in
+ * production — the process refuses to start above. Registering it conditionally
+ * rather than guarding inside the handler means that in production the route
+ * does not exist at all, which is a stronger statement than a route that exists
+ * and declines.
+ */
+if (ACCOUNTS_DEV_LOGIN) {
+  app.post("/api/auth/dev-login", express.json(), (req, res) => {
+    if (!requireAccounts(res)) return;
+    noStore(res);
+    if (!sameOrigin(req)) {
+      res.status(403).json({ error: "Origem inválida." });
+      return;
+    }
+
+    const body = (req.body ?? {}) as { subject?: unknown; name?: unknown };
+    const subject = typeof body.subject === "string" && body.subject ? body.subject : "dev";
+    const now = Date.now();
+
+    const account = accountStore!.upsertAccount({
+      id: newAccountId(() => randomUUID().replace(/-/g, "")),
+      provider: "dev",
+      subject,
+      displayName: normaliseDisplayName(typeof body.name === "string" ? body.name : "Torcedor"),
+      now,
+    });
+
+    beginSession(res, account.id, now);
+    res.json(publicAccount(account));
+  });
+}
+
+/**
+ * Who is asking, or `null`.
+ *
+ * **Null rather than 401**, and that is not laziness: this is called on every
+ * page load by a client that mostly has no session, and a 401 would put a red
+ * line in the console of a perfectly healthy page for every signed-out reader —
+ * which is most of them, permanently, by design.
+ */
+app.get("/api/account/me", (req, res) => {
+  if (!requireAccounts(res)) return;
+  noStore(res);
+  const account = currentAccount(req, res);
+  res.json(account ? publicAccount(account) : null);
+});
+
+app.post("/api/auth/logout", (req, res) => {
+  if (!requireAccounts(res)) return;
+  noStore(res);
+  if (!sameOrigin(req)) {
+    res.status(403).json({ error: "Origem inválida." });
+    return;
+  }
+
+  const token = readCookie(req.get("cookie"), SESSION_COOKIE);
+  const all = req.query.todos === "true";
+
+  if (token && accountStore) {
+    const session = accountStore.findSession(hashToken(token));
+    if (session) {
+      if (all) accountStore.endAllSessions(session.accountId);
+      else accountStore.endSession(session.tokenHash);
+    }
+  }
+
+  res.append("Set-Cookie", clearCookie(SESSION_COOKIE, cookieOptions));
+  res.status(204).end();
+});
+
+/** The LGPD erasure right: a delete, in one transaction, cascading to every
+ *  session. Not a flag, and not a support ticket. */
+app.delete("/api/account", (req, res) => {
+  if (!requireAccounts(res)) return;
+  noStore(res);
+  if (!sameOrigin(req)) {
+    res.status(403).json({ error: "Origem inválida." });
+    return;
+  }
+
+  const account = currentAccount(req, res);
+  if (!account) {
+    res.status(401).json({ error: "Você não está conectado." });
+    return;
+  }
+
+  accountStore!.deleteAccount(account.id);
+  res.append("Set-Cookie", clearCookie(SESSION_COOKIE, cookieOptions));
+  console.log(`[accounts] deleted ${account.id}`);
+  res.status(204).end();
+});
+
 const registerSpaFallback = (shellFor: (req: express.Request) => Promise<string>): void => {
   const serve: express.RequestHandler = async (req, res, next) => {
     try {
