@@ -471,6 +471,69 @@ red anywhere, which is the only reason they are written down.
    varies by club**, which was not on the list. No sweep has been done for
    others.
 
+## From the account-store test fix
+
+[#113](https://github.com/mpbarbosa/portal_brasileirao/pull/113) made
+`an unopenable path is null, not a throw` provoke its failure with a **regular
+file standing where a directory has to be**, after it had used a merely missing
+one. A missing directory is the one case `openStore` is built to survive — it
+mkdirs deliberately, for `${DEPLOY_DIR}/data` before the first deploy (§3.2) and
+`./test-results` before Playwright runs (§3.11) — so the old assertion was
+unopenable only for a uid that cannot mkdir at `/`. It passed on CI's
+unprivileged runner and failed in a root container. Three things it did not
+close. None of them is red anywhere, which is the only reason they are written
+down.
+
+1. **The rule it followed is not written down anywhere.** `CLAUDE.md` carries
+   "assert shape, not value" for rounds and scorelines, and the club-article
+   section above adds the same rule for **copy that varies by club**. Neither
+   covers this one: *a test that provokes a failure must provoke it the same way
+   for every uid.* The sweep was done rather than assumed — only two test files
+   touch the real filesystem, `check-screenshots.test.ts` builds histories rather
+   than provoking failures, and the full suite is 558/558 at uid 0 **and** at uid
+   1000. So there is no second instance today and the gap is entirely
+   prospective; it bites on the next test that reaches for a path it expects to
+   be unopenable. The distinction worth recording beside the rule is the
+   mechanism, because it is not obvious: resolving a path *through* a regular
+   file is `ENOTDIR` for every uid, while a permission failure is not — root's
+   `CAP_DAC_OVERRIDE` relaxes permission checks and does not relax path
+   resolution. Naming the file directly as the parent is a third thing again
+   (`EEXIST`, out of Node's own recursive-mkdir bookkeeping) and a weaker thing
+   to rest a guarantee on.
+
+2. **CI cannot go red on this class, by construction.** The runner is
+   unprivileged, so a uid-dependent test passes there and fails only on the
+   machine of whoever is developing in a root container — the reverse of the
+   usual asymmetry, where CI is the strict one and the workstation is lax. That
+   is what makes the class worth naming at all: the normal safety net is the part
+   that cannot see it. A second unit-test job running the suite as `-u 0` would
+   close it, and it is **not** obviously worth doing — it buys one narrow class
+   of defect for a whole job, against a class with exactly one known instance,
+   now fixed. The cheap half is a one-line check a person can run when writing
+   such a test, and it needs no CI change:
+
+   ```sh
+   docker run --rm -u 0 -v "$PWD:/app:ro" -w /app node:26-bookworm \
+     sh -c 'npm run test:unit'
+   ```
+
+   Prefer stating the rule next to that command; revisit the job only if a second
+   instance ever appears.
+
+3. **A `Screenshots-unaffected:` trailer on a commit touching no appearance path
+   is inert, and nothing says so.** The gate's accounting set is
+   `git log "$anchor..HEAD" -- "${SURFACE[@]}"` (`check-screenshots.sh`), and
+   `scripts/appearance-paths.txt` names four paths, none of them under `tests/`.
+   So the trailer #113 carried — correct, specific, well-formed — was never read,
+   and the run was green for a reason unrelated to it. This is the neighbour of
+   item 3 in the club-article section, not a repeat of it: that one is a
+   *malformed* trailer being reported as absent, this one is a *well-formed*
+   trailer with nothing to attach to. It costs nothing today, which is why it is
+   a note rather than a task. The risk it carries is a reader learning the
+   trailer as "the way to keep the advisory job green" and reaching for it on
+   commits that never needed one — or concluding from a green run that their
+   trailer was accepted, when the paths were doing the work.
+
 ## Constraints that must survive any redesign
 
 Recorded here because they are easy to undo by accident:
@@ -1042,13 +1105,19 @@ sections, not a copy of them:
 - **From the Brasileirão Pro import**
 - **Contas — what Phase 1 leaves outstanding**
 - **From the club-article fix**
+- **From the account-store test fix**
 
 No count is given for any of them, on purpose: a number here is a second copy of
 something four hundred lines away, and it is wrong the first time anybody adds an
 item. The index itself is still hand-kept and nothing checks it, so **add a line
 here when you add a section there** — this list was one short within the hour it
-was written. The last entry is the one to read if you are about to write a
-sentence with a club's name in it, or a `Screenshots-unaffected:` trailer.
+was written. **From the club-article fix** is the one to read before writing a
+sentence with a club's name in it; it and **From the account-store test fix**
+hold half each of what there is to know about a `Screenshots-unaffected:`
+trailer — a malformed one, and a well-formed one with nothing to attach to.
+Named rather than pointed at by position: this sentence said "the last entry"
+until a section was appended after it, at which point it silently meant the
+wrong one.
 
 This line used to enumerate Near term as "the highlights backfill and the weekly
 broadcast sync". That was two bullets behind within a day of the list growing,
