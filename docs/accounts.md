@@ -118,8 +118,41 @@ answer, and the wrong first one: it is more code than B, and the recovery story
 for a reader who loses their only device is either "you lose the account" or
 "you also need one of A or B". Add it as a second factor path later.
 
-**Decision:** B for v1, C additive later, A only if a product reason appears
-that Google sign-in cannot serve (and then accept the email dependency openly).
+### D. Magic link (passwordless email)
+
+The reader types an address, receives a one-time link, and lands signed in. No
+password at rest, and no reset flow — because the reset flow *is* this. That is
+the observation worth carrying back to A: **email + password is this option plus
+a credential database**, so A is never cheaper than D and never safer.
+
+Its cost is the one A hides, and it is worth pricing concretely rather than as
+"a deliverability problem". On this stack it means Amazon SES in `sa-east-1`,
+where the instance already is; DKIM records on the sending domain; and — the
+part with a lead time nobody plans for — **leaving the SES sandbox**, which is a
+support request a human reviews, can take a day or more, and asks how bounces
+and complaints are handled. Until then an account can only send to addresses it
+has itself verified. Start that request before the code, not when the code is
+blocked on it.
+
+Two rules it brings, if it is ever chosen:
+
+- **The request endpoint answers identically** whether or not the address
+  belongs to an account. Anything else is an oracle for "does this person use
+  this site", which is both a privacy leak and the first step of a targeted
+  attack.
+- **The link is a bearer credential living in a URL**, and URLs leak — into
+  browser history, into the `Referer` of anything the landing page loads, into
+  every log in between. Single use, short TTL, consumed on sight, and a redirect
+  that drops the query so the address bar never holds it.
+
+**Not recommended for v1**, for the same reason A is not: B needs no mail at
+all. It is the first thing to reach for if the transfer-abroad point in §5 makes
+Google unacceptable, or if some later feature needs a verified email anyway — at
+which point one mail path serves both.
+
+**Decision:** B for v1, C additive later. A and D both buy an email dependency
+that B does not need; between those two, D is strictly the smaller, so if a
+product reason ever forces email, it is D and not A that gets built.
 
 ---
 
@@ -369,6 +402,12 @@ never `devDependencies`, or the production `npm ci --omit=dev` strands it and
 CI's "verify the bundled server boots" step catches it, which is exactly the
 step that exists for this.
 
+**Rotate on sign-in.** Issue a new token whenever a session is created, even if
+the request already carried one, and never adopt a session identifier that
+arrived from outside. Session fixation is a few lines to prevent here and
+awkward to retrofit, because by then something is relying on the id being
+stable across a sign-in.
+
 ### 3.13 There is no rate limiter, and sign-in is the first endpoint that needs one
 
 Every route today is a cached GET in front of a circuit breaker. An auth
@@ -388,6 +427,27 @@ header check on every state-changing request (reject when present and not our
 own origin) rather than a token round trip: no plumbing through the client, no
 hidden field, and it fails closed. A token scheme is worth it only if the app
 ever needs `SameSite=None`.
+
+### 3.15 A stored club is not evidence the club still exists
+
+`seo-core.ts` already holds this rule for a different reason: `pageStatus`
+declares a club missing only when the club list actually arrived, because
+otherwise a provider outage 404s all 380 fixture pages at once and a crawler
+drops them over an incident lasting minutes.
+
+The same trap is waiting for **Meu time**, and it bites harder here. A
+preference holding a club id that does not resolve looks exactly like a dangling
+reference, so the tempting fix is a nightly "tidy up orphaned preferences" pass
+— which, the first time football-data has a bad five minutes and the club list
+comes back empty, deletes every reader's club at once, from the one table
+nothing can regenerate (§3.1).
+
+**Rule: never drop a preference because its referent failed to resolve.** The UI
+says it cannot find the club right now; the row stays; a club id is cleared only
+when the reader clears it. This applies identically to Phase 0's `localStorage`
+copy, where the temptation is greater still because the parse step is already
+there — `preferences-core.ts` tolerating junk must not tolerate it by discarding
+a value it merely cannot resolve today.
 
 ---
 
@@ -546,6 +606,18 @@ deployed host, once, and recorded in the runbook.
 | **1** | Store, sessions, Google sign-in, `/entrar`, `/conta`, header control, SEO verdicts, feature flag off by default | ~900 lines, 3–4 days |
 | **2** | Preference sync (Phase 0's data becomes the account's), deletion, privacy notice, backups + restore script | ~400 lines, 2 days |
 | **3** | Whatever actually needed the account: notifications, palpites | out of scope here |
+
+**Exit criteria**, since a size estimate is not a finish line:
+
+- **0** — a reader's club survives a reload and a redeploy; no server-side
+  behaviour changed at all; `preferences-core` is listed in `test:unit`.
+- **1** — with the flag unset, the deployed app behaves exactly as the previous
+  release did, asserted by the spec in §6 rather than observed; with the flag
+  set on the host, one real Google account signs in, signs out, and signs back
+  in against the same row.
+- **2** — a backup taken today has been restored into a running app, and a
+  `DELETE /api/account` has been verified as *gone from the database* rather
+  than flagged.
 
 Phase 1 is deployable with accounts **disabled**, and should be deployed that
 way first: the flag makes the release a no-op for every existing reader, which
