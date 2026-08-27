@@ -52,8 +52,12 @@ the work has landed:
 |---|---|---|
 | `rm` an untracked file | destroys the only copy | restores on next checkout |
 | `git worktree remove` | loses uncommitted work | frees a directory |
-| `git branch -d` | refuses, correctly | routine |
+| `git branch -d` | **succeeds anyway**, once pushed | routine |
 | stopping a server | breaks something mid-run | frees a port |
+
+That third row is the one that surprises: `-d` is the only command here that
+*looks* like it checks, and the check it runs is not the one you want. See
+**Branches** below.
 
 So establish landing *before* each one, not once at the top:
 
@@ -133,16 +137,40 @@ guard against *something new having appeared*. Only the record does that.
 quiet is equally a finished session, a live session reading files, and an
 abandoned one — and it has been each of those here.
 
-**Branches:** `git branch -d`, never `-D`. The refusal is the safety feature; if
-`-d` refuses, find out why rather than overriding it. Note it compares against
-the branch's **upstream**, not against `main`, so a branch fast-forwarded past
-its own upstream will refuse while being fully merged. The property you want is
-`git rev-list --count origin/main..<branch>` = 0.
+**Branches:** `git branch -d`, never `-D` — but do not mistake `-d` for a guard.
+It compares against the branch's **upstream**, not against `main`, and that cuts
+both ways:
+
+- It **refuses** a branch fast-forwarded past its own upstream, while that branch
+  is fully merged. A false alarm; annoying.
+- It **accepts** a branch that has merged nowhere, whenever the branch still
+  tracks its own identical pushed copy — exit **0**, with a warning rather than a
+  refusal. A false all-clear; destructive.
+
+The second is the one to hold on to, because the condition that triggers it is
+*having pushed*, which is the state every branch is in while its PR sits open:
+
+    warning: deleting branch 'feature' that has been merged to
+             'refs/remotes/origin/feature', but not yet merged to HEAD
+    Deleted branch feature
+
+A branch was deleted this way here on 2026-08-27 while its PR was open and
+unmerged; nothing was lost only because the commit was already on the remote. So
+`-d`'s **refusal** is worth respecting — find out why rather than overriding it —
+while `-d`'s **success** says nothing at all. Run the property that answers, in
+the same turn as the deletion:
+
+```sh
+git rev-list --count origin/main..<branch>    # 0 => landed
+```
 
 **Local and remote are two deletions, and the remote one may already be done.**
-Where the repository deletes merged branches automatically — this one does —
-`git push origin --delete <branch>` reports a *failure* for the case where you
-have nothing left to do:
+`delete_branch_on_merge` is **false** on this repository — checked, and visible in
+merged branches that still have a remote ref — so merging does *not* remove the
+remote branch and the second deletion is usually still yours to make. It may
+nonetheless already be gone, because a person clicked the button on the merged PR
+or another session removed it. In that case `git push origin --delete <branch>`
+reports a *failure* for the case where you have nothing left to do:
 
     error: unable to delete '<branch>': remote ref does not exist
     error: failed to push some refs to '<remote>'
