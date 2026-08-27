@@ -28,9 +28,18 @@
 #     upload is still a first.**
 #   - `systemctl` and `sudo`, as in rehearse-flip-back.sh.
 #
-# Nothing runs this automatically, like check-hymns and rehearse-flip-back:
-# re-run it by hand after editing either script. It needs bash, node, gzip —
-# no network, no AWS, no token.
+# CI runs this in `check`, on every push and pull request, alongside
+# rehearse-flip-back.sh; re-run it by hand too when editing either script. It is
+# hermetic — bash, node, gzip, no network, no AWS, no token — which is what lets
+# it gate a release where check-hymns cannot.
+#
+# CI runs it on .nvmrc's Node, and that is load-bearing rather than incidental.
+# node:sqlite is experimental on the pinned major and stable on newer ones, so
+# the runtime differs in what it prints to stderr; the first bug this harness
+# caught under CI was invisible on a developer's newer Node. Reproduce a failure
+# here on the pinned major before concluding it does not reproduce:
+#   docker run --rm -v "$PWD":/repo:ro -w /repo node:22-bookworm \
+#     ./scripts/rehearse-accounts-backup.sh
 #
 # Exit codes:
 #   0  Every case behaved as described.

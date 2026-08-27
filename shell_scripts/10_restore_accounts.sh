@@ -120,7 +120,11 @@ db.close();
 console.log(n + " " + v);
 JS
 
-SUMMARY="$(node -e "$RESTORE_VERIFY_JS" "$CANDIDATE" 2>&1)" || {
+# Same folding trap as 09, and this one was merely lucky rather than correct:
+# `read` below takes the first line, which is the count only because the warning
+# is deferred past it. Ordering is not a guarantee to rest a restore on.
+SUMMARY="$(node --disable-warning=ExperimentalWarning \
+    -e "$RESTORE_VERIFY_JS" "$CANDIDATE" 2>&1)" || {
     echo "Error: $SOURCE did not verify: $SUMMARY" >&2
     echo "Nothing has been changed." >&2
     exit 1

@@ -347,7 +347,7 @@ beside; leaving them next to a *different* database is how a restored copy is re
 another database's uncommitted tail.
 
 **`scripts/rehearse-accounts-backup.sh` is the only behavioural coverage these have**, and
-it is worth running rather than reading: it caught three real bugs in scripts that had been
+it is worth running rather than reading: it caught four real bugs in scripts that had been
 read carefully and looked right.
 
 - `JSON.stringify` for the `VACUUM INTO` path emits **double** quotes, which SQLite reads
@@ -359,6 +359,15 @@ read carefully and looked right.
 - `PRAGMA integrity_check` returns a column named **`integrity_check`**, not `result`.
   Destructuring the wrong name yields `undefined`, which is not `"ok"`, so every artefact
   failed verification and a perfectly good database exited 2.
+- **`2>&1` inside a command substitution folds stderr into the value.** `node:sqlite` is
+  experimental on the pinned major, so it warns on every invocation — and the warning
+  landed *inside* the row count, printing the number, the warning and the unit across
+  three lines. The backup still ran and still uploaded; the one number that says the
+  artefact has anything in it did not survive being printed. The fix is
+  `--disable-warning=ExperimentalWarning` at each `node` call in `09` and `10`.
+  This is the bug that only appears on the **pinned** major: Node 26 has `node:sqlite`
+  stable and silent, so a local green run said nothing about the host. It surfaced the
+  day CI began running the rehearsal on `.nvmrc`'s Node.
 
 The database half is **real** in that harness — a real SQLite file through the real schema,
 real `VACUUM INTO`, real `integrity_check`, rows counted at both ends. Only `aws`,
@@ -1436,8 +1445,14 @@ Rules that follow from that:
 in two parallel jobs:
 
 - **check** — `tsc --noEmit`, unit tests, build, then boots `dist/server.cjs` and
-  smoke-tests it, plus shellcheck over the deploy scripts. The boot step is the
-  one that catches a runtime dependency stranded in `devDependencies`.
+  smoke-tests it, then shellchecks the deploy scripts and **runs both
+  rehearsals** against them. The boot step is the one that catches a runtime
+  dependency stranded in `devDependencies`; the rehearsals are the only thing
+  that catches a host script which no longer does what it says. They gate the
+  deploy because `shell_scripts/` is packaged into the payload by this same job,
+  a few steps later — so the bytes that ship have been exercised, not just read.
+  They run on `.nvmrc`'s Node rather than a developer's, which is the whole
+  point: the first bug this placement found was invisible on a newer major.
 - **e2e** — Playwright, with the browser cached on the exact `@playwright/test`
   version. A version bump needs a matching browser build, so the cache key must
   include it or the run fails with "Executable doesn't exist".
@@ -1613,10 +1628,17 @@ Four things about it are deliberate, and three are load-bearing:
 scripts have.** `npm run lint` is TypeScript and cannot see shell; CI only
 shellchecks them. It drives all eight branches against a stubbed `systemctl`,
 `sudo`, `npm` and `journalctl`, with a real HTTP server for the health endpoint
-so the real `curl -sf` runs. Nothing invokes it automatically, like
-`check-hymns` — **re-run it by hand after editing either script.** Note the two
-travel *inside the release tarball*, so a broken one ships with the release that
-carries it and the host runs it immediately.
+so the real `curl -sf` runs. **CI runs it on every push and pull request**, in
+`check`, so a broken flip-back cannot reach the host — which matters because the
+two travel *inside the release tarball*, so a broken one ships with the release
+that carries it and the host runs it immediately.
+
+That is deliberately the opposite of `check-hymns`, and the distinction is the
+one worth carrying: `check-hymns` stays manual because it depends on a third
+party, so a red build would mean somebody else's server had a bad minute. Both
+rehearsals are hermetic — bash, python3, rsync, curl, node, gzip, no network, no
+AWS, no token — so a red build here always means *this commit* broke something.
+Hermetic is the test, not "is it a rehearsal a person reads".
 
 One trap it caught, worth keeping: **`rsync -a`'s quick-check compares size and
 mtime, not bytes.** Two fixture releases differing only in a sha, written in the
