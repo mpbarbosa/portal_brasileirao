@@ -367,6 +367,29 @@ jobs:
       github.ref == 'refs/heads/main' &&
       (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
     runs-on: ubuntu-latest
+    # Gives the repository a Deployments record: what went to production, when,
+    # from which run, and whether it succeeded. Until now the only account of a
+    # release was the CI run that performed it, which is a poor thing to
+    # reconstruct an incident from — runs are listed by workflow rather than by
+    # what they changed, and the one that matters is indistinguishable from the
+    # 400 that did not deploy. Defect 1 was reconstructed by hand from run
+    # timestamps for exactly this reason.
+    #
+    # It is also the only place a protection rule can be hung. None exists today
+    # and the job's behaviour is therefore unchanged; note that adding a required
+    # reviewer to the `production` environment later would make every deploy wait
+    # for a human, which is a deliberate choice to make and not a side effect to
+    # discover.
+    #
+    # `rollback.yml` deliberately does NOT carry this, so the record is one of
+    # forward releases only and will name the wrong sha as live after a rollback.
+    # That is a known incompleteness rather than an oversight: its single job also
+    # serves the list-only mode, which changes nothing on the host, and recording
+    # a deployment for a run that only read a bucket would be worse than the gap.
+    # Closing it means splitting that job in two — see docs/cicd-plan.md, gap B.
+    environment:
+      name: production
+      url: https://brasileirao.mpbarbosa.com
     permissions:
       contents: read
       id-token: write        # required to mint the OIDC token AWS trusts

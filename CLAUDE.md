@@ -1667,6 +1667,21 @@ whatever host it lands on. The workflow compares that against the sha it just
 built — strictly stronger than an uptime heuristic, which a fast restart of the
 *previous* bundle would also satisfy.
 
+**Releases are recorded as GitHub Deployments**, because `deploy` declares
+`environment: production`. That gives a per-environment history — what shipped,
+when, from which run — which the Actions list cannot: runs are grouped by
+workflow, and the one that deployed is indistinguishable from the four hundred
+that did not. Defect 1 in `docs/cicd-plan.md` was reconstructed by hand from run
+timestamps for exactly that reason.
+
+Two things follow. **No protection rule exists on that environment and adding one
+is a decision, not a tidy-up** — a required reviewer would make every deploy wait
+for a human, the reconciler's unattended ones included. And **`rollback.yml` does
+not declare it**, so the record is one of forward releases only and names the
+wrong sha as live after a rollback; that is deliberate, because the same job also
+serves the list-only mode, which changes nothing on the host and must not appear
+as a deployment. `docs/cicd-plan.md` gap B has what closing it would cost.
+
 **A failed release flips back to the previous one, and the pipeline still goes
 red.** `07_install_release.sh` copies the release already on disk into
 `$DEPLOY_DIR/previous/` before the rsync destroys it, and hands
