@@ -6,13 +6,17 @@ import { CLUB_HYMNS } from "@/src/data/club-hymns";
 import { CLUB_WIKIPEDIA } from "@/src/data/club-wikipedia";
 import {
   clubAddress,
+  clubArticle,
   clubKey,
   clubMatches,
   coachOf,
   coachesOf,
   findClub,
+  hasClubArticle,
   lastFixture,
   nextFixture,
+  ofClub,
+  ofClubs,
   playsIn,
   recentForm,
   resultFor,
@@ -599,4 +603,81 @@ test("a coach already on a live club is not overwritten by the snapshot", () => 
   const known = [{ ...club("1769", "Palmeiras", "palmeiras"), coach: "Técnico Antigo" }];
 
   assert.equal(withClubDetails(live, known)[0].coach, "Técnico Atual");
+});
+
+test("every club in the snapshot has a definite article written down", () => {
+  // The guard that stops the table falling behind the division, and the one
+  // the first version of this got wrong. Asserting *which* clubs take "a"
+  // catches a known feminine club being promoted and misses an unknown one: a
+  // Caldense or an Aparecidense falls through to the masculine default and the
+  // list of feminine clubs reads exactly as it did before. `CLUBS.length ===
+  // 20` cannot help either — Série A is always twenty, so a promotion is a
+  // swap. Only an entry per club turns the next `sync-seed-data` red instead of
+  // silently shipping "do Chapecoense".
+  const missing = CLUBS.filter((club) => !hasClubArticle(club)).map((club) => club.shortName);
+
+  assert.deepEqual(missing, [], `no article recorded for: ${missing.join(", ")}`);
+});
+
+test("the clubs Brazilians call 'a' are the ones that get it", () => {
+  // Exhaustiveness says every club has *an* article; this says the articles are
+  // right. Chapecoense is 20th in the division, so "o Chapecoense" is a string
+  // a reader meets rather than one a linguist imagines.
+  const feminine = CLUBS.filter((club) => clubArticle(club) === "a").map((club) => club.shortName);
+
+  assert.deepEqual(feminine, ["Chapecoense"]);
+});
+
+test("the definite article survives accents and spacing, because slugify normalises both", () => {
+  assert.equal(clubArticle(club("x", "Ferroviária")), "a");
+  assert.equal(clubArticle(club("y", "Ponte Preta")), "a");
+});
+
+test("a state suffix does not hide a club from its own definite article", () => {
+  // Athletico-PR and Atlético-MG are both in the snapshot, so a promoted
+  // Portuguesa-RJ is the shape to expect rather than a hypothetical one: it
+  // slugs to `portuguesa-rj` and would miss an entry keyed on `portuguesa`.
+  assert.equal(clubArticle(club("z", "Portuguesa-RJ")), "a");
+  assert.equal(clubArticle(club("w", "Portuguesa-SP")), "a");
+  assert.equal(clubArticle(club("v", "Athletico-PR")), "o");
+
+  // …and the two spellings stay two clubs, one letter apart.
+  assert.equal(hasClubArticle(club("v", "Athletico-PR")), true);
+  assert.equal(hasClubArticle(club("u", "Atlético-MG")), true);
+});
+
+test("a club the table has never seen still renders, masculine", () => {
+  // Club objects also arrive from the live payload, which names clubs the
+  // frozen snapshot does not. The default is what a reader sees; the
+  // exhaustiveness test above is what stops it being load-bearing.
+  assert.equal(clubArticle(club("q", "Clube Inventado")), "o");
+  assert.equal(hasClubArticle(club("q", "Clube Inventado")), false);
+});
+
+test("the possessive form contracts the article rather than leaving it bare", () => {
+  assert.equal(ofClub(club("1783", "Flamengo")), "do Flamengo");
+  assert.equal(ofClub(club("1772", "Chapecoense")), "da Chapecoense");
+});
+
+test("a list of clubs repeats the article rather than sharing one", () => {
+  // "Casa do Fluminense e Flamengo" is wrong even where both clubs are
+  // masculine, and a ground shared with Chapecoense has no single article that
+  // could serve both.
+  assert.equal(
+    ofClubs([club("1765", "Fluminense"), club("1783", "Flamengo")]),
+    "do Fluminense e do Flamengo",
+  );
+  assert.equal(
+    ofClubs([club("1772", "Chapecoense"), club("1783", "Flamengo")]),
+    "da Chapecoense e do Flamengo",
+  );
+  assert.equal(
+    ofClubs([club("a", "Fluminense"), club("b", "Flamengo"), club("c", "Vasco da Gama")]),
+    "do Fluminense, do Flamengo e do Vasco da Gama",
+  );
+});
+
+test("one club needs no join, and none needs no article", () => {
+  assert.equal(ofClubs([club("1783", "Flamengo")]), "do Flamengo");
+  assert.equal(ofClubs([]), "");
 });

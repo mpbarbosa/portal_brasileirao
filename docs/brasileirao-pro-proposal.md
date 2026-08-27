@@ -145,14 +145,41 @@ line on `MatchPage` — no request, no cache change, no budget.
 
 It is the only item on this list that adds information the app does not currently possess.
 
-**Caveats to verify before building**, both cheap: the array is frequently **empty** for
-scheduled fixtures and populates near kickoff, so the line must be absent rather than blank
-— the same rule the player card already follows for every optional field. And the entries
-carry a `type` (`REFEREE`, `ASSISTANT_REFEREE_N1`, …) whose vocabulary should be translated
-at the edge under the rule `positionLabel` and `nationalityLabel` already establish: an
-unmapped value renders **verbatim**, never guessed at and never blank.
+**This section named two caveats to verify. Both were verified, and both came back
+different from what is written above.** Corrected here rather than quietly edited away,
+because the wrong version of each is the intuitive one and would otherwise be re-derived
+by the next person:
 
-**Recommendation**: adopt. Smallest genuine win here.
+- **The role vocabulary is a single value.** The original text guessed at a family
+  (`REFEREE`, `ASSISTANT_REFEREE_N1`, …). Across BSA, Premier League and Champions
+  League — 356 entries on 949 fixtures — **every** `type` is `REFEREE`. No assistant,
+  fourth official or VAR exists on this tier. So one role is translated, and listing the
+  documented others would be a claim the app cannot check, which is exactly what
+  `NATIONALITY_LABELS` argues against at length.
+- **No unfinished fixture carried an official.** The original text said the array
+  "populates near kickoff". What was measured, in one capture of all 380 BSA fixtures on
+  2026-08-27: 157 name someone and **every one of them is FINISHED**, while **0 of the
+  145** SCHEDULED, TIMED or POSTPONED fixtures carry one. Nor is finishing sufficient —
+  78 finished fixtures still name nobody. So the row renders on **roughly two match pages
+  in five** (41.3%), and on none that has yet to be played.
+
+  Stated that way on purpose: the measurement is a snapshot, not a claim about when
+  upstream writes the field. A provider that populated it an hour before kickoff for some
+  matches would look identical in a capture taken between rounds. The design conclusion
+  does not depend on the mechanism — 0 of 145 is enough to reject "empty until kickoff"
+  as the model for the absence rule — but "officials appear after the final whistle"
+  would be an inference, and this document should not spend one where it has a
+  measurement.
+
+What survives unchanged is the contract: an unmapped value renders **verbatim** under the
+rule `positionLabel` and `nationalityLabel` establish, and an empty array renders **no row
+at all** rather than a dash. Neither correction altered the recommended design.
+
+**Recommendation**: adopt. Smallest genuine win here — **implemented in
+[#104](https://github.com/mpbarbosa/portal_brasileirao/pull/104)**, which is also where
+the two findings above were established. Note the field is **live-only**: the seed
+snapshot carries no officials and the e2e suite boots `DISABLE_FOOTBALL_DATA=true`, so no
+browser test in this repo can see it, and green e2e is not evidence that it renders.
 
 ---
 

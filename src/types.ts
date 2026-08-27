@@ -225,6 +225,26 @@ export interface Stadium {
   matchCount: number;
 }
 
+/**
+ * A match official, as football-data reports one.
+ *
+ * `role` carries the **provider's own vocabulary** (`REFEREE`) rather than a
+ * Portuguese label, exactly as `Player.position` carries the English word:
+ * translation is a display concern and belongs at the edge, in
+ * `refereeRoleLabel`.
+ *
+ * Neither the upstream `id` nor its `nationality` is kept. The id leads
+ * nowhere — `/api/players/:id` answers about footballers, and an official is
+ * not one — and the nationality is `Brazil` for 156 of the 157 entries the
+ * division carries, so printing it would be the same word on every page. The
+ * one exception is an upstream error rather than a fact worth surfacing: a
+ * French official is recorded against Coritiba × Chapecoense.
+ */
+export interface Referee {
+  name: string;
+  role: string;
+}
+
 export type MatchStatus =
   | "SCHEDULED"
   | "LIVE"
@@ -258,6 +278,22 @@ export interface Match {
    * search instead.
    */
   highlights?: Highlight[];
+  /**
+   * The officials, from the provider's `referees` array — the one field on this
+   * interface that comes from **no local file at all**.
+   *
+   * That makes it **live-only**: `src/data/matches.ts` carries no officials, so
+   * it is absent for every fixture the end-to-end suite sees, which boots with
+   * `DISABLE_FOOTBALL_DATA=true`. Green e2e is therefore not evidence that this
+   * renders; `tests/football-data-core.test.ts` covers the mapping against a
+   * captured payload instead, which is what `CLAUDE.md` prescribes for a live
+   * path.
+   *
+   * Absent rather than empty when upstream reports nobody, which it does for
+   * 223 of the season's 380 fixtures — including finished ones, so this fills
+   * in retroactively rather than at kickoff.
+   */
+  referees?: Referee[];
 }
 
 export interface StandingsRow {

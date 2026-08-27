@@ -372,6 +372,31 @@ The three-letter abbreviation upstream reports for a club (`FLA`, `PAL`, `CAP`).
 Carried on `Club` for compact display only. **Not an identity** — see **Clube**.
 _Avoid_: using it as a map key, a React `key`, or a foreign key of any kind.
 
+**Artigo do clube**:
+The **o** or **a** a Brazilian puts in front of a club's popular name — o
+Palmeiras, a Chapecoense — and the contracted **do**/**da** that almost every
+sentence about a club actually needs. Both come from `club-core.ts`, beside
+**slug**, because the article belongs to the *name* rather than to whatever page
+is printing it: a club relegated and promoted again keeps its article and may
+not keep its `code`. `ofClub` is the form to reach for; `clubArticle` returns
+the bare word and has one caller, the **Meu time** control, which puts a verb in
+front of it.
+Hand-kept, and it has to be: no provider reports grammatical gender and the
+spelling does not give it away — "a Chapecoense" and "o Fluminense" end
+identically. The table is **exhaustive** over `src/data/clubs.ts` rather than a
+list of the exceptions, and a club with no entry fails the build; masculine
+survives only as a runtime default, for a club the live payload names and the
+snapshot does not. The exceptions-plus-default shape shipped first and could not
+see an *unknown* feminine club arriving, which is the same silence as the bug it
+was written to fix.
+A list of clubs repeats it — **Casa do Fluminense e do Flamengo**, not "Casa do
+Fluminense e Flamengo" — which is what `ofClubs` is for.
+_Avoid_: writing `do ${shortName}` at a call site (it was wrong in four files at
+once, two of them page metadata that reaches every link preview), inferring
+gender from the final letter, keying the table on `code` or on **tla**, and
+dropping a club's state suffix from the *name* rather than only from the lookup
+key.
+
 **Partida**:
 A single fixture between two clubs, modelled as `Match`. Carries `round`,
 `kickoff` (always an ISO-8601 UTC instant), a `MatchStatus`, the two club codes,
@@ -381,8 +406,8 @@ a count, not a fixture), "event".
 
 **Página da partida**:
 The detail page for one fixture, at `/partida/<id>`, reached from the fixture
-list. Shows the scoreboard, round, status, kickoff, **Estádio** and — depending
-on state — either **Onde assistir** or a link to the goals. Every field beyond
+list. Shows the scoreboard, round, status, kickoff, **Estádio**, **Árbitro**
+and — depending on state — either **Onde assistir** or a link to the goals. Every field beyond
 the score is optional, since the provider supplies neither venue nor channels,
 so each section renders only when its data exists.
 _Avoid_: rendering an empty row for a field the sync has not filled, showing a
@@ -466,6 +491,25 @@ pipeline carries any of them.
 _Avoid_: printing it when it merely restates the popular name ("Arena MRV /
 Arena MRV"), calling it "apelido" — the nickname is the *popular* name here, and
 naming both the same thing is how one row ends up rendering twice.
+
+**Árbitro**:
+Who officiated a **Partida**, from football-data's `referees` array — the one
+field on `Match` that comes from **no local file**, so it is **live-only**:
+`src/data/matches.ts` carries none and the end-to-end suite, which boots frozen,
+never sees one. Rendered as its own row of the match page's `<dl>`, labelled by
+role: `REFEREE` → "Árbitro", and a named official whose role upstream omitted
+gets "Arbitragem", the collective noun, since that is all the payload claimed.
+Any other role reaches the page **verbatim**, the rule **Posição** and
+**Nacionalidade** already follow — every one of the 356 entries across BSA, PL
+and CL is `REFEREE`, so translating an assistant's token would be a claim this
+app cannot check. Upstream names nobody for 223 of the season's 380 fixtures,
+finished ones included, so it fills in retroactively rather than at kickoff.
+_Avoid_: "arbitragem" for the person (it is the collective — the activity and
+the crew, which is exactly why it stands in when the role is unknown); "juiz"
+(the spoken word, but CBF and the provider both say *árbitro*); rendering an
+empty row, a dash or "a definir" for the 223 fixtures with no official; printing
+the reported nationality, which is `Brazil` for 156 of the 157 entries and wrong
+for the one that is not.
 
 **Melhores momentos**:
 The highlights section of a **Página da partida**, shown for **any** match that
@@ -995,11 +1039,10 @@ home page, because a permanent nag is the soft end of the same thing a sign-in
 wall is, and guests are first class. And a stored club that the current payload
 does not name is **kept**, not cleared — the strip says so and the preference
 stands, since a provider outage is not a reader changing their mind.
-The control's label carries the club's article — **o** Palmeiras, **a**
-Chapecoense — from a hand-kept set in `preferences-core.ts`, because no provider
-reports grammatical gender and the spelling does not give it away: "a
-Chapecoense" and "o Fluminense" end identically. Masculine is the default
-because it covers nineteen of the twenty.
+The control's label carries the club's **Artigo do clube** — "Seguir **a**
+Chapecoense" — and is the one caller that wants the bare `o`/`a` rather than the
+contracted `do`/`da`, because a verb comes in front of it. The table itself is
+`club-core.ts`'s, not this module's.
 _Avoid_: "time favorito" or "favorito" (reads as a bookmark, and the mark is a
 star for a reason — it says *mine*, not *starred*), "time do coração" (warm, and
 what a broadcaster says, but this is a setting rather than a declaration),
@@ -1021,3 +1064,37 @@ will not be remembered is a message about their browser dressed as a message
 about the app, delivered at the moment they did something that otherwise worked.
 _Avoid_: "configurações" (suggests a settings page, which there is not),
 "ajustes", "perfil" (that is a person, and there are no accounts).
+
+**Conta**:
+A reader's account, held only so that what they choose can follow them between
+aparelhos. One row per person in `accounts`, keyed by an opaque id of ours and
+never by the provider's `sub` or by an email — both can be reassigned, and a
+primary key may not. Rendered by `AccountView` at `/conta`; `/api/account/me`
+answers `PublicAccount`, which names the id and the display name and nothing
+else.
+Distinguish from **Conta para a classificação**, which is a verb — whether a
+match counts toward the table — and was in this glossary first.
+Signing in is always an **offer**: every page works without one, and none may be
+gated behind one. See `docs/accounts.md`, whose guest invariant this is.
+_Avoid_: "usuário" (the app says conta, and "usuário" reads as a row in a
+database rather than a person), "perfil" (suggests a public page and a bio,
+neither of which exists), "cadastro" (there is no registration form — Google has
+already said who this is).
+
+**Entrar / Sair**:
+Signing in and out. **Entrar** is at `/entrar`, offers one provider today, and
+says plainly that everything works without it. **Sair** ends this session;
+**Sair de todos os aparelhos** ends every session the account has, which is the
+operation a signed token could not really perform and the reason sessions are
+rows in a table.
+_Avoid_: "login"/"logout" as verbs in pt-BR copy, "logar", "deslogar",
+"autenticar" (a machine's word for it), "conectar-se".
+
+**Sessão**:
+One signed-in browser, not one person: `sessions` holds a row per aparelho. What
+is stored is the SHA-256 of the cookie value, never the value itself, so reading
+the database yields no usable session. Thirty days, renewed once past halfway —
+a reader who visits at all regularly never meets an expiry, and one who
+disappears for a month is signed out, which is the point of having one.
+_Avoid_: "token" in user-facing copy, "login" as a noun for it, "sessão" for the
+`ApiEnvelope` cache window (a different thing entirely).

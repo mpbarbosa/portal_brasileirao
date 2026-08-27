@@ -13,21 +13,27 @@ does, and they win.
 Live at <https://brasileirao.mpbarbosa.com>, deployed from `main` by GitHub
 Actions through OIDC → S3 → SSM, with no long-lived credentials and no SSH.
 Every running instance reports the commit it was built from at `/api/health`,
-and the deploy asserts that the live commit is the one it just built.
+and the deploy asserts that the live commit is the one it just built. That
+pipeline has since gained an ancestry guard, a reconciler, build-once-promote
+and a rollback; `docs/cicd-plan.md` carries the phases and **The deploy
+pipeline — what is still open** below carries what they did not close.
 
 - **Data** — football-data.org free tier (`BSA`, 10 requests/minute), cached
   60s/15s with a circuit breaker. Everything the provider does not carry is
   curated on a workstation and committed: broadcasts, venues, highlights, club
   Instagram handles, broadcaster marks.
-- **Shape** — 14 pure `*-core.ts` modules (no I/O, unit-tested), 15 components,
-  one Express process serving the API and the SPA.
-- **Tests** — 256 unit, 316 end-to-end across desktop and mobile, all against a
+- **Shape** — 27 pure `*-core.ts` modules, every one with its own
+  `tests/<name>-core.test.ts`, and 22 components, one Express process serving the
+  API and the SPA. Counted on 2026-08-27: `ls *-core.ts`, `ls src/components/*.tsx`.
+- **Tests** — 558 unit and 548 end-to-end across desktop and mobile on
+  2026-08-27 (`npm run test:unit`, `npx playwright test --list`), all against a
   frozen snapshot so a red build always means the code broke.
 - **Design** — Tailwind v4 with **Material Design 3** throughout: 47 colour
   tokens generated from one seed, a shape scale, a type scale, state layers and
   motion, in two themes. Contrast is **enforced rather than recorded** —
   `npm run test:tokens` runs in CI and refuses a palette whose text pairings
-  fall below AA. Worst text pairing 4.59 across 70 pairings. Primitives:
+  fall below AA. Worst text pairing 4.59, across 76 pairings on 2026-08-27 —
+  both figures are printed by that command rather than kept here. Primitives:
   `Surface`, `Button`, `StatusChip`, and the interaction constants.
 
 ## In progress
@@ -47,6 +53,343 @@ to abort a whole run, and the end-to-end specs depended on some fixture in round
 - Re-run `sync-broadcasts` weekly as the season advances; the cron already does.
 - Watch for broadcasters CBF names that we render as wordmarks — ESPN/Disney+,
   Band, SportyNet — and add marks where a public-domain one exists.
+- Move the Node major from 22 to 24 before 2027-04-30, host first — see below.
+  Nothing will open a pull request for this.
+- Watch `tests/e2e/scorers.spec.ts` "switching away and back keeps the table"
+  (**mobile only**, Pixel 7). One failure on 2026-08-27, passing on re-run and
+  on both #103 and #108 in CI. Recorded rather than diagnosed — one occurrence is
+  not a flake diagnosis — but with what a second occurrence would need, since
+  the evidence is gone by then: it aborted on the **`.click()`** of the Artilharia
+  nav link (`scorers.spec.ts:4:57`) reached from **line 73**, i.e. the *second*
+  navigation, after Classificação — not on the table assertion below it and not
+  in `beforeEach`, both of which had already passed in the same test. Playwright
+  auto-waits for actionability on a click, so a timeout there says the link
+  never became **stable**, which points at layout movement rather than at data or a
+  missing row. Two things in this repo make that the expected place for it, both
+  documented in `CLAUDE.md`: the nav bar is deliberately at its width limit on a
+  phone (five 64dp MD3 indicators is 320dp exactly, degrading to `w-14` under
+  `min-[360px]:`), and Classificação is the heaviest layout in the suite — 20
+  rows, two frozen columns and 20 sparklines — so returning *from* it is the one
+  transition where the bar is most likely to still be settling. Capture the
+  trace next time rather than re-running; `settle`'s existence is the precedent
+  that MD3's 200ms transitions are real in tests.
+- **`scripts/deploy.sh` neither retains the previous release nor flips back to
+  it.** D5b gave that to the pipeline — `07_install_release.sh` keeps the
+  outgoing release in `$DEPLOY_DIR/previous/` and `06_redeploy.sh` restores it
+  when the health check fails — but `deploy.sh` carries its own inline remote
+  block and never calls either script, so the manual path still destroys the
+  running build before the new one is proven. Documented rather than fixed:
+  teaching it the same trick means a **third** copy of the restart-and-health
+  logic, and two is already one more than anyone reconciles. The honest fix is
+  to make `deploy.sh` hand off to `07` the way CI does, which is a bigger change
+  than it looks — see [`cicd-plan.md`](cicd-plan.md) D5. Note `CLAUDE.md`
+  already forbids running `deploy.sh` by hand, so this is a latent trap rather
+  than a live one: it springs the first time someone reaches for it during an
+  incident, which is exactly when the previous release matters most.
+- **The summary's figures are hand-kept, and every one that could drift had.**
+  On 2026-08-27 **Where the project is** claimed 14 `*-core.ts` modules against
+  27, 15 components against 22, 256 unit tests against 558 and 316 end-to-end
+  against 548 — each roughly half the truth, in the first screen a new reader
+  meets. Corrected against measurement, and each figure now carries its date and
+  the command that prints it, which is the pattern #108 already used for the
+  host's Node version. Two figures had **not** drifted, and they are the two
+  describing a generated artefact that has not moved since M1: 47 colour tokens
+  and the 4.59 worst pairing. That is the whole argument for dating a number or
+  not writing it down — **nothing in CI reads this file**, so a count here is a
+  hand-kept copy of something a command already prints, exactly as
+  `What is left` was of **Near term**. Two more copies of the same numbers were
+  found and de-counted rather than refreshed (D6's "all 316 specs", M1's "70
+  pairings"), because in both the count was never the point.
+
+### Node: one major, and a date it has to move
+
+`.nvmrc` now holds the single Node major, and `package.json`'s `engines`, the
+`@types/node` pin, `REQUIRED_NODE_MAJOR` in `shell_scripts/01` and both
+workflows' `node-version-file` are asserted equal to it by
+`tests/node-version.test.ts` (#103). The reasoning — including why raising the
+runtime to meet the typings is *not* the fix — is in `CLAUDE.md` under **CI**.
+
+One of the two questions this raised is now answered; the other has a deadline.
+
+**What the host runs is now a measured fact: Node 22.23.2.** Read off
+`/api/health` at sha `45b5531` on 2026-08-27, minutes after #103 deployed. It
+had never been knowable before — nothing in the repo pinned it and the endpoint
+did not report it, so every statement about it was an assumption.
+
+The answer vindicates the pin: production was on 22, CI was on 22, and the
+typings had been on **26** since #91 — four majors ahead of the runtime they
+were certifying. Had this come back 24, the right move would have been to raise
+the five numbers to meet the host rather than to assume the host was wrong; it
+did not, so nothing further is owed here.
+
+**22 is already the maintenance line.** Read off nodejs/Release on 2026-08-27:
+
+| line | status today | end of life |
+| --- | --- | --- |
+| 22 | maintenance since 2025-10-21 | **2027-04-30** |
+| 24 | **active LTS** since 2025-10-28 | 2028-04-30 |
+| 26 | becomes LTS 2026-10-28 | 2029-04-30 |
+
+So 22 was the right pin to land — it is what CI **and the host** were already
+running, and changing the runtime and the typings in one commit would have made
+a failure ambiguous — but it is not the right pin to *stay* on. The move is to
+**24**, the active LTS, and it is a deliberate five-file commit starting at
+`.nvmrc`, with `npm run test:unit` refusing anything partial. It needs the host
+raised to 24 first, since `shell_scripts/01` requires an exact major.
+
+**Nothing will remind you.** `.github/dependabot.yml` ignores the *major* for
+`@types/node` by design, which is what stops the typings running ahead of the
+runtime again — and the cost of that is precisely that no pull request will ever
+appear proposing it. This entry is the reminder, and it is now the only
+thing tracking it. Before 2027-04-30.
+
+Left over from **Árbitro** (item 1 below), which surfaced more about the
+provider than it needed to build:
+
+- **Refresh the README screenshots — now due, and larger than this item.**
+  #104, #106 and #107 are merged and deployed; `/api/health` served `f72c169`
+  while this was written. So the precondition is met and the capture job is red
+  on `main`. No `Screenshots-unaffected:` trailer applies — the changes reach a
+  paint.
+
+  **The scope grew while it was queued, and whoever takes it should size it from
+  the diff rather than from this list.** Comparing `docs/screenshots/CAPTURED`
+  (`00fecde`) against `main` at the time of writing, **five** appearance paths
+  had moved, not the one this item was written for:
+
+  ```
+  src/App.tsx  ·  src/components/AccountView.tsx  ·  src/components/MatchPage.tsx
+  src/components/NavBar.tsx  ·  src/components/PlayersView.tsx
+  ```
+
+  `NavBar` is the one that decides the cost: the bar is on every route, so the
+  refresh is **all sixteen images**, not the two `MatchPage` owns. The plan
+  agreed between sessions — capture last, once, after everything lands — is still
+  right; it was simply costed against two changes and now covers several.
+
+  ~~The árbitro row renders **only against live data**, so the sequence remains:
+  merge, deploy, capture from the live site.~~ **That was done — #118 refreshed
+  all sixteen and `CAPTURED` now reads `10b7c1a` — and it did not photograph the
+  árbitro row, because it never could.** See the next item. Re-check the diff
+  above before starting anything here, since `main` moves.
+
+  **It was also wrong, which is worth separating from its being finished.** It
+  named production as the *only* route; the check's own failure text does not,
+  accepting "a local production build of HEAD (`npm run build && npm start`) —
+  the normal case, and the only one available while a change is unreleased". The
+  rule is the one stated two items below — the live site, or a local build whose
+  `.env` matches the host's. And when that sentence was written **neither route
+  worked**: `fetchAccount` held the 404's response stream open, so no capture
+  reached `networkidle` from anywhere until #118. A struck claim still teaches
+  whoever reads the strikethrough, and this one should not be read as a rule that
+  was right and has now been carried out.
+- **The árbitro row cannot be photographed by any refresh, and needs the capture
+  set pointed at a different fixture.** This is the one item on this page that
+  waiting does *not* fix, which is why it is stated separately from the refresh
+  above rather than as a caveat inside it.
+
+  `partida-554977` is the only match page in the capture set, and the provider
+  reports no officials for it. Measured against production on 2026-08-27, and
+  again after #118 landed:
+
+  ```
+  380 fixtures, 157 carry `referees`
+  554977 -> None
+  554740 -> [{"name": "Bruno de Araújo", "role": "REFEREE"}]
+  ```
+
+  `MatchPage` renders `match.referees ?? []`, so that pair shows nothing
+  whenever and however it is captured.
+
+  **Whether it might fill in on its own is worth stating precisely, because the
+  obvious summary is wrong.** 554977 is **round 24**, FINISHED, and carries no
+  officials. Coverage is not a simple prefix: rounds **1–15 and 20–22** carry
+  them; **16–19 and 23 onward** do not. So upstream demonstrably *does* backfill
+  out of order — 20–22 arrived after 16–19 did not — and round 24 may gain one
+  later. But nothing guarantees it, nothing schedules it, and **nothing would
+  notice if it happened**: the gate compares appearance *sources* and cannot see
+  what a picture depicts. Waiting is therefore not a plan, only a hope.
+
+  The fix is a change to **what is photographed**: point the match-page capture
+  at a fixture that names an official (554740 is one), and rewrite that pair's
+  README alt text, which describes the page as it stands today. That is a change
+  to the capture set, not a refresh of it — different work, different review.
+
+  **Do not treat the green gate as evidence this is done.** #118 cleared it by
+  advancing `CAPTURED` past #104, so the images are now certified current for a
+  commit whose headline feature they do not show. The gate is working as
+  designed; it was never a claim about content.
+- **A local production build can commit an image production cannot serve, and
+  nothing in the toolchain can catch it.** `scripts/screenshot.ts` accepts a
+  capture whose build matches HEAD on the appearance paths and is serving real
+  provider data. A **local** production build with `GOOGLE_CLIENT_ID`/`SECRET`
+  in its `.env` satisfies both — and renders the Contas "Entrar" control, which
+  the host does not: `/api/account/me` is **404**
+  (`Contas não estão disponíveis nesta instalação.`) on production, so
+  `AccountView` returns `null` there. The resulting image would land in
+  `docs/screenshots` looking exactly like a good capture, showing an affordance
+  no visitor has. Capture from the live site, or from a local build whose `.env`
+  matches the host's. Contas, unlike árbitro, *is* a scheduling problem: it
+  resolves the day credentials reach the host.
+- **Two of the sixteen captures can never come back byte-identical, and that is
+  a property of the tooling rather than of any change.** `scripts/screenshot.ts`
+  sets `fullPage = !mobile && route === "/"`, so `classificacao-dark.png` and
+  `classificacao-light.png` are the only full-page shots — and a full-page `/`
+  includes the rodapé, which prints `Versão <sha>`. Those two therefore change
+  on **every** deploy whatever the code did. The consequence worth carrying:
+  *"the refresh showed no pixel change"* is not an observable state for them, so
+  the capture set cannot distinguish "nothing changed" from "something changed"
+  on the page most likely to be looked at. `CAPTURED`'s mechanical answer — that
+  a refresh always leaves something to commit — is trivially true there and
+  proves nothing. Do not read a two-image delta after a deploy as a regression;
+  the delta is the sha plus whatever live data moved.
+
+  A useful companion property, in the other direction: **a committed capture's
+  provider state is provable from its path.** `screenshot-core.ts` refuses any
+  provider that is not `football-data` ("frozen seed data") and
+  `scripts/screenshot.ts` writes refused captures to `docs/screenshots/local`
+  instead. So an image sitting in `docs/screenshots` cannot have been shot
+  against the seed, and a reviewer need not take the capturer's word for it. It
+  says nothing about which *host* was captured — a local production build with a
+  token passes identically, and only the rodapé sha distinguishes it.
+
+- **Watch whether upstream backfills the officials for rounds 16–24.** BSA names
+  a referee on 157 of 380 fixtures — rounds 1–15 complete, 16 onward mostly not
+  — so the row is absent from roughly 60% of match pages today. It fills in
+  **retroactively**, since finished matches gain one, so this may resolve
+  itself and nothing in the app needs changing if it does. Worth knowing before
+  someone reads a missing row as a bug and goes looking for one.
+- **Do not translate a role the payload has not sent, and do not prettify one it
+  has.** `refereeRoleLabel` maps `REFEREE` alone, because that is every one of
+  the 356 entries across BSA, PL and CL. If the tier ever widens, an assistant
+  reaches the page as `ASSISTANT_REFEREE_N1` — ugly on purpose, and the visible
+  prompt to add the row rather than a rendering defect to patch over.
+- **The officials' `nationality` is deliberately dropped, and the reason is a
+  live example rather than a principle.** It reads `Brazil` for 156 of the 157
+  entries, and the one exception is an **upstream error**: a French official
+  recorded against Coritiba × Chapecoense in round 22. So the field offers one
+  word repeated on every page, plus one that is wrong.
+
+## The deploy pipeline — what is still open
+
+The phased plan and its reasoning live in `docs/cicd-plan.md`; D0 through D5a
+are done and each was verified against production rather than against CI. What
+follows is only what is **still open**, split by whether it needs a decision or
+needs work — because the two get confused, and a question waiting on an answer
+looks exactly like a task nobody has picked up.
+
+### Questions, not work
+
+- **What does the release bucket actually retain?** Nothing in this repository
+  defines a lifecycle policy on `s3://…/releases/`, and no session working from
+  a checkout can read one. This is the precondition for `rollback.yml` being
+  worth anything: a 30-day expiry would make an artifact-reinstall rollback fail
+  precisely when a long-lived regression is found, and would push the design
+  toward keeping the previous release **on the host** instead. Dispatching
+  `rollback.yml` with an **empty sha** lists what is there and changes nothing;
+  the first attempt could not distinguish "empty" from "not permitted", which
+  PR #110 fixes. Run it once while nothing is on fire.
+- **Does the deploy role hold `s3:ListBucket`?** Probably not — the release path
+  has never needed it, so the listing above is the first thing to ask. Small IAM
+  decision, and a rollback works without it: naming a sha explicitly has the
+  host fetch the object with permissions the daily release already exercises.
+- **`allow_non_descendant` has no door.** The ancestry guard's override is
+  reachable only if `main` is moved backwards, because `deploy` is gated on
+  `refs/heads/main` and `workflow_dispatch` cannot name a bare sha. `rollback.yml`
+  does its own SSM install and never enters `ci.yml`, so D5 did not give it one
+  after all. Either build a door or remove it deliberately — leaving it is how
+  a later reader diagnoses it as dead code and deletes the escape hatch instead.
+- **#90 (`@vitejs/plugin-react` 5 → 6) cannot merge and will not fix itself.**
+  It needs `vite@^8` against this repo's `^6`, so it fails at `npm ci` before any
+  code runs. `dependabot.yml` now groups the two so their majors travel together,
+  but grouping does not retroactively repair an open pull request. Close it
+  deliberately, or do the Vite 6 → 8 upgrade, which is real work rather than a
+  merge.
+
+### Work, sequenced in `docs/cicd-plan.md`
+
+- **D5b landed while this section was being written, and what is left of it is
+  recorded above under the deploy-script note rather than here.**
+  `07_install_release.sh` now keeps the outgoing release in
+  `$DEPLOY_DIR/previous/` and `06_redeploy.sh` restores it when the health check
+  fails, so the CI path no longer destroys the running build before the new one
+  is proven. `rollback.yml` remains the deliberate, operator-driven way back;
+  the flip-back is the automatic one, and between them the defect is closed for
+  releases that go through CI. The gap that survives is `deploy.sh`, the
+  workstation path, which carries its own inline remote block and calls neither
+  script — latent rather than live, since `CLAUDE.md` already forbids running it
+  by hand.
+
+  **One qualification on "closed", and it is the whole of what is still owed:
+  the flip-back has never run.** What the merge of #111 demonstrated live is the
+  *forward* half — `ci.yml` invokes `07_install_release.sh` from the staging
+  tarball, so the new script ran on the host immediately and its stdout carries
+  `==> Retaining the current release in /var/www/portal_brasileirao/previous`,
+  then healthy at `42c0ea9`. Retention is therefore proven in production. The
+  **restore** path — the branch that actually saves a bad release — has only
+  ever run against stubs.
+
+  That is by design rather than neglect: `docs/cicd-plan.md` D5 asks for two
+  rehearsal stages, and stage 2 is *"one controlled live exercise, in a
+  low-traffic window, with the forward path ready to re-run."* It needs a
+  deliberately bad release, so it is scheduled work, not something a green
+  pipeline will ever produce on its own. **Nothing will prompt for it** — every
+  healthy deploy exercises retention and skips the restore, so the untested
+  branch stays untested precisely while everything looks fine.
+
+  The observable that will close it: `/api/health` reporting the **previous**
+  sha while the `deploy` job is red, with `ROLLED BACK` and the retained path in
+  the host stdout of the "Install the release on the host" step. Read the job,
+  not the run conclusion — the advisory screenshots job reddens the rollup
+  independently.
+
+  Until then the honest statement is: *a bad release can no longer destroy the
+  only copy of the good one*, which is the property that mattered and is now
+  structurally true; *and* the automatic recovery built on top of it is verified
+  by rehearsal rather than by production.
+- **`scripts/rehearse-flip-back.sh` is the only behavioural coverage the two
+  host scripts have, and nothing runs it.** `npm run lint` is TypeScript and
+  cannot see shell; CI only shellchecks them. It drives all eight branches
+  against stubs — 31 assertions, including the flip-back-itself-fails case — and
+  three deliberate mutations were used to confirm it goes red rather than
+  passing vacuously. **Re-run it by hand after editing `06_redeploy.sh` or
+  `07_install_release.sh`.** The reason this matters more than for a normal
+  hand-run checker: `shell_scripts/` travels *inside the release tarball*, so a
+  broken edit ships with the release that carries it and the host executes it
+  immediately, before anything has a chance to health-check the result.
+- **D6 — the end-to-end suite boots the dev server, never the bundle.** Every
+  spec runs against `npx tsx server.ts`, so `dist/server.cjs` — what production
+  actually runs — is only asked three questions by `check`'s smoke test. The
+  production-only paths (`registerSpaFallback`, `injectMeta`, the 404 rules, the
+  JSON-LD) are the gap. Related, and worth fixing together: since D3 gates
+  packaging to deploy-capable runs, **the promotion path is never exercised on a
+  pull request at all** — its first run each time is the merge.
+- **D7 — hygiene, led by the advisory job that reddens successful releases.**
+  `screenshots` is deliberately outside `deploy`'s `needs`, which is right; but a
+  red advisory sets the whole run to `failure` while the deploy succeeds, and
+  that has now been observed doing so more than half a dozen times, including on
+  this plan's own pull requests. `continue-on-error: true` plus a step summary
+  keeps the debt visible without lying about the release.
+
+### Smaller, recorded so they are not rediscovered
+
+- **Deployments are invisible to GitHub.** No `environment:` on the `deploy`
+  job, so there is no Deployments tab, no per-environment history and nowhere to
+  hang a protection rule later. Two lines, and it is what you want when
+  reconstructing an incident.
+- **`sync-broadcasts` pushes straight to `main`.** It works today and breaks the
+  day branch protection is enabled. Have it open a pull request; its own workflow
+  already lints and unit-tests the result, so the PR would be green on arrival.
+- **`main` is protected by convention only.** The rule that no session merges to
+  `main` has held, but nothing enforces it. Requiring `check` and `e2e` as status
+  checks interacts with the item above, so do that one first.
+- **The curated-data checkers never run on their own** — `check-hymns`,
+  `check-stadium-photos`, `check-player-wikipedia`, `check-player-photos`. That
+  is deliberate and must stay so: CI has no network dependency on a third party,
+  and a link rotting on someone else's server is not a reason for a red build on
+  a commit that did not touch it. A **scheduled monthly workflow that opens an
+  issue** honours that exactly — it is not CI on a commit and cannot redden
+  anything. Worth doing last, and only in that shape.
 
 ## From the Brasileirão Pro import
 
@@ -64,9 +407,17 @@ provider already sends; the rest are derivations or rules.
 **Now — no decision to make.** Six of these are one attribute, one element or a
 paragraph of prose.
 
-1. **Árbitro on the match page.** `referees` rides on every football-data match
-   object and `football-data-core.ts` drops it. Translate the role vocabulary at
-   the edge like `positionLabel` does, and render nothing when the array is empty.
+1. ~~**Árbitro on the match page.**~~ **Shipped.** `refereeRoleLabel` translates
+   at the edge and the row is absent when upstream names nobody, which is 223 of
+   the 380 fixtures — finished ones included, so the field fills in
+   retroactively rather than at kickoff. Two things the payload settled that the
+   proposal could only guess at: **every** one of the 356 entries across BSA, PL
+   and CL is `REFEREE`, so the wider vocabulary it predicted is not reachable on
+   this tier and only that one value is translated; and the field is
+   **live-only**, since the seed snapshot carries no officials and the e2e suite
+   boots frozen. Green e2e is therefore not evidence that it renders —
+   `tests/football-data-core.test.ts` covers the mapper against a captured
+   payload, per the rule in `CLAUDE.md`.
 2. **Aproveitamento (%).** `pontos / (jogos × 3)`. The metric a Brazilian reader
    quotes by default, and the one that survives a postponed fixture honestly.
    Needs a `CONTEXT.md` entry in the same commit.
@@ -136,6 +487,185 @@ escalações and match statistics (no reachable tier carries them); título/Z4
 probabilities as the prototype presents them; the localStorage image-URL manager
 (the inverse of the vendoring-with-attribution rule); the webfont pair; the
 hand-picked hexes; club-brand colours; the desktop sidebar.
+
+## Contas — what Phase 1 leaves outstanding
+
+Phase 1 ships sign-in with Google, sessions in SQLite, `/entrar`, `/conta`, and
+the rule that the whole feature is absent unless the host is configured for it.
+What follows is everything flagged while building it and not done, recorded here
+rather than left in a pull-request thread.
+
+**On the host, before accounts do anything.** Nothing in the code waits on any of
+these — it deploys and behaves exactly as it did before.
+
+- `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` into the host's `.env`. Note
+  `02_create_env.sh` rewrites the **whole** file after a confirm, so the same run
+  must re-enter `FOOTBALL_DATA_TOKEN` or the site drops to seed data.
+- Google Auth Platform → **Público-alvo**: add a test user, or publish. While the
+  client is in *Testing* with no test users, every sign-in returns "acesso
+  bloqueado" — which looks exactly like a bug in the code, and is the most
+  likely first hour lost.
+- **Confirm the host's exact Node.** `01_setup_app_directory.sh` now pins major
+  **22**, which is enough — but `node:sqlite` arrived in **22.5**, so a host
+  sitting on 22.0–22.4 satisfies the pin and still has no store. The code
+  degrades rather than crashing (`openStore` loads it through `createRequire`
+  precisely so such a host boots with accounts simply absent), so this is a
+  check for the day accounts are switched on, never a deploy blocker.
+- **One manual pass of the Google round trip.** CI cannot cover it: it needs a
+  secret and a network, and CI has neither by design. Verify once against the
+  deployed host and record it in the runbook, the way the live provider path was.
+
+**Phase 2, in the order `docs/accounts.md` sets.**
+
+- **`/privacidade`.** A real route, so a four-file change, and it blocks twice
+  over: §5 says the notice blocks launch, and Google's Branding tab wants the URL
+  before the consent screen can be published.
+- **The preferences table, and the merge that gives it a caller.** *Meu time*
+  stops being device-local and becomes the first thing an account syncs. Deferred
+  from Phase 1 deliberately — shipping the schema alone would be a table nobody
+  reads, which is the same smell as a component variant with no call site.
+- **Backups.** The accounts database is the first state in this app that nothing
+  can regenerate: lose the volume and the readers are gone. Nightly `VACUUM INTO`
+  to S3, on a prefix separate from the deploy bucket, and a restore **rehearsed
+  on a scratch instance** rather than documented.
+- **Session pruning on a schedule.** `pruneSessions` exists and nothing calls it.
+  Expired rows are harmless to authentication and are still a record of when a
+  person was last here, kept for no stated purpose.
+- **The retention promise, or its removal from the notice.** An unenforced
+  retention promise is worse than no promise.
+
+**Screenshots.** The top app bar gained a control, so the advisory job is red and
+should be. But that control is invisible until a host is configured, so a refresh
+today photographs no change at all — take it after the credentials are live, not
+after the merge.
+
+**One rule to follow rather than an item to do.** Every string that puts a
+preposition in front of a club name goes through `club-core.ts`, whose article
+table is **exhaustive over `src/data/clubs.ts`** — a club with no entry fails the
+build until somebody writes its article down, the way `NATIONALITY_LABELS` works
+over `squads.ts`. That landed after this section was first drafted, and it is
+worth knowing before writing any Phase 2 copy: `/privacidade` and the account
+pages will want "a sua conta", not a club name, but the moment anything says
+"do <clube>" it belongs in that helper and not in a template literal.
+
+## From the club-article fix
+
+[#101](https://github.com/mpbarbosa/portal_brasileirao/pull/101) made the
+**Artigo do clube** a table exhaustive over `src/data/clubs.ts` and moved it to
+`club-core.ts`, after the first attempt shipped a set of the four exceptions and
+a silent masculine default — which could catch a *known* feminine club being
+promoted and not an unknown one. Four things it did not close. None of them is
+red anywhere, which is the only reason they are written down.
+
+1. **Coverage stops at the snapshot, and no test can extend it.** The
+   exhaustiveness guard runs over `CLUBS`, so it bites at `sync-seed-data` and
+   nowhere else. Upstream already names clubs the seed does not — that is why
+   `/api/matches` ships the clubs it saw — and one of those falls through to "o"
+   with nothing to say so. A live test cannot close it: CI has no network by
+   design, and adding one would trade a red build that always means the code
+   broke for one that sometimes means the upstream had a bad minute. The place
+   that *can* is `scripts/sync-seed-data.ts`, which runs on a workstation at the
+   exact moment the division changes: have it refuse, or at least warn, when it
+   writes a club `hasClubArticle` does not know. That is the same shape as the
+   generator's existing duplicate-slug check.
+
+2. **Only *de* is contracted.** `ofClub` returns "do"/"da" and nothing else,
+   because that is what all four call sites needed. pt-BR contracts three more
+   prepositions with the article — em → "no"/"na", a → "ao"/"à", por →
+   "pelo"/"pela" — so the first line of copy reading "no Flamengo" or "pela
+   Chapecoense" will hand-write the article again, which is precisely how it came
+   to be wrong in four files at once. Extend the module rather than inlining at
+   the call site — which is the same rule **Contas** states just above, from the
+   other side. The *un*contracted case already has its answer: `clubArticle`
+   returns the bare word, which is what "contra a Chapecoense" and the **Meu
+   time** control both want.
+
+3. **A `Screenshots-unaffected:` trailer outside the last paragraph is not a
+   trailer.** Git's trailer block is the final paragraph of the message only, so
+   one sitting in its own paragraph above `Co-Authored-By:` is body prose:
+   `git interpret-trailers --parse` returns nothing for it and
+   `check-screenshots.sh` reports the commit as unaccounted while a correct,
+   specific reason sits six lines up in the same message. Cost was a red advisory
+   job, an amend and a force-push. The script already prints the trailer's syntax
+   on failure; what it cannot currently say is *this*. It reads only the parsed
+   side, through `%(trailers:key=…)`, so an unparsed claim is indistinguishable
+   from no claim at all — but a second `--format=%B` over the same commits would
+   separate them, and a line present in the message and absent from the trailers
+   is exactly the case worth naming instead of printing the generic how-to at
+   somebody who has already followed it. Worth stating in the help text either
+   way: continuation lines must be **indented**, and the block must be last.
+
+4. **A spec keyed on which club sorts first.** `tests/e2e/players.spec.ts`
+   selected the club link by `/^Ver a página do/`. The "do" was never a fact
+   about the page — it was Athletico-PR happening to sort first in the snapshot,
+   and a promoted Portuguesa would have turned that locator red on a change that
+   had nothing to do with it. `CLAUDE.md` already carries "assert shape, not
+   value" for rounds and scorelines; this is the same rule applied to **copy that
+   varies by club**, which was not on the list. No sweep has been done for
+   others.
+
+## From the account-store test fix
+
+[#113](https://github.com/mpbarbosa/portal_brasileirao/pull/113) made
+`an unopenable path is null, not a throw` provoke its failure with a **regular
+file standing where a directory has to be**, after it had used a merely missing
+one. A missing directory is the one case `openStore` is built to survive — it
+mkdirs deliberately, for `${DEPLOY_DIR}/data` before the first deploy (§3.2) and
+`./test-results` before Playwright runs (§3.11) — so the old assertion was
+unopenable only for a uid that cannot mkdir at `/`. It passed on CI's
+unprivileged runner and failed in a root container. Three things it did not
+close. None of them is red anywhere, which is the only reason they are written
+down.
+
+1. **The rule it followed is not written down anywhere.** `CLAUDE.md` carries
+   "assert shape, not value" for rounds and scorelines, and the club-article
+   section above adds the same rule for **copy that varies by club**. Neither
+   covers this one: *a test that provokes a failure must provoke it the same way
+   for every uid.* The sweep was done rather than assumed — only two test files
+   touch the real filesystem, `check-screenshots.test.ts` builds histories rather
+   than provoking failures, and the full suite is 558/558 at uid 0 **and** at uid
+   1000. So there is no second instance today and the gap is entirely
+   prospective; it bites on the next test that reaches for a path it expects to
+   be unopenable. The distinction worth recording beside the rule is the
+   mechanism, because it is not obvious: resolving a path *through* a regular
+   file is `ENOTDIR` for every uid, while a permission failure is not — root's
+   `CAP_DAC_OVERRIDE` relaxes permission checks and does not relax path
+   resolution. Naming the file directly as the parent is a third thing again
+   (`EEXIST`, out of Node's own recursive-mkdir bookkeeping) and a weaker thing
+   to rest a guarantee on.
+
+2. **CI cannot go red on this class, by construction.** The runner is
+   unprivileged, so a uid-dependent test passes there and fails only on the
+   machine of whoever is developing in a root container — the reverse of the
+   usual asymmetry, where CI is the strict one and the workstation is lax. That
+   is what makes the class worth naming at all: the normal safety net is the part
+   that cannot see it. A second unit-test job running the suite as `-u 0` would
+   close it, and it is **not** obviously worth doing — it buys one narrow class
+   of defect for a whole job, against a class with exactly one known instance,
+   now fixed. The cheap half is a one-line check a person can run when writing
+   such a test, and it needs no CI change:
+
+   ```sh
+   docker run --rm -u 0 -v "$PWD:/app:ro" -w /app node:26-bookworm \
+     sh -c 'npm run test:unit'
+   ```
+
+   Prefer stating the rule next to that command; revisit the job only if a second
+   instance ever appears.
+
+3. **A `Screenshots-unaffected:` trailer on a commit touching no appearance path
+   is inert, and nothing says so.** The gate's accounting set is
+   `git log "$anchor..HEAD" -- "${SURFACE[@]}"` (`check-screenshots.sh`), and
+   `scripts/appearance-paths.txt` names four paths, none of them under `tests/`.
+   So the trailer #113 carried — correct, specific, well-formed — was never read,
+   and the run was green for a reason unrelated to it. This is the neighbour of
+   item 3 in the club-article section, not a repeat of it: that one is a
+   *malformed* trailer being reported as absent, this one is a *well-formed*
+   trailer with nothing to attach to. It costs nothing today, which is why it is
+   a note rather than a task. The risk it carries is a reader learning the
+   trailer as "the way to keep the advisory job green" and reaching for it on
+   commits that never needed one — or concluding from a green run that their
+   trailer was accepted, when the paths were doing the work.
 
 ## Constraints that must survive any redesign
 
@@ -338,7 +868,8 @@ trap that springs the first time someone puts faint text on a badge, a hover
 state or a dialog — and it would ship silently, because a contrast figure
 recorded in a comment ages the moment anyone adds a background token. The
 generator now tests every text token against all three backgrounds on every
-run. **Worst text pairing is 4.59:1 across 70 pairings, both themes.**
+run. **Worst text pairing is 4.59:1, across every pairing it checks, both
+themes.**
 
 The theme-invariant tokens survived: `scrim` is MD3's own neutral tone 0, and
 the `plate` trio is excluded from the tonal system by name, so the broadcaster
@@ -699,7 +1230,39 @@ incrementally — and the reason each phase can ship on its own.
 
 ## What is left
 
-Nothing in this migration. The remaining items are the pre-existing ones under
-**Near term** above — the highlights backfill and the weekly broadcast sync —
-plus the README viewport question noted at the top of this section, which is a
-product decision rather than work.
+Nothing in this migration. Everything still outstanding is written up where it
+belongs and is deliberately **not** restated here — this is an index of the
+sections, not a copy of them:
+
+- **Near term**
+- **The deploy pipeline — what is still open**
+- **From the Brasileirão Pro import**
+- **Contas — what Phase 1 leaves outstanding**
+- **From the club-article fix**
+- **From the account-store test fix**
+
+No count is given for any of them, on purpose: a number here is a second copy of
+something four hundred lines away, and it is wrong the first time anybody adds an
+item. The index itself is still hand-kept and nothing checks it, so **add a line
+here when you add a section there** — this list was one short within the hour it
+was written. **From the club-article fix** is the one to read before writing a
+sentence with a club's name in it; it and **From the account-store test fix**
+hold half each of what there is to know about a `Screenshots-unaffected:`
+trailer — a malformed one, and a well-formed one with nothing to attach to.
+Named rather than pointed at by position: this sentence said "the last entry"
+until a section was appended after it, at which point it silently meant the
+wrong one.
+
+This line used to enumerate Near term as "the highlights backfill and the weekly
+broadcast sync". That was two bullets behind within a day of the list growing,
+and would have gone stale again on the next one: a summary standing three feet
+from the list it summarises is a hand-kept second copy, and nothing can tell you
+it has drifted. Do not re-add one.
+
+It also sent the reader to "the README viewport question noted at the top of this
+section", which never resolved — that note has sat at the **end** of
+**Constraints that must survive any redesign** since both were written in the
+same commit. It is still open, and still a product decision rather than work:
+every README image is a 960px capture, above the `sm` breakpoint, so the
+navigation bar that replaced the hamburger below that width appears in none of
+them.

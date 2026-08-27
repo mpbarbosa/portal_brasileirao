@@ -10,6 +10,12 @@
 #               06_redeploy.sh, and only the transport differs (S3 for CI,
 #               rsync-over-SSH for a workstation).
 #
+#               Before overwriting dist/, the release currently on disk is
+#               retained under $DEPLOY_DIR/previous/, and 06_redeploy.sh is told
+#               where it is. A payload that fails its health check is then
+#               flipped back to it automatically, so the default outcome of a bad
+#               release is the previous release running rather than nothing.
+#
 # Usage:        ./shell_scripts/07_install_release.sh <staging-dir>
 #
 # Prerequisites:
@@ -23,7 +29,10 @@
 #
 # Exit codes:
 #   0  Release installed and the service is healthy.
-#   1  Bad staging directory, or the redeploy failed.
+#   1  Bad staging directory, could not retain the current release, or the
+#      redeploy failed with nothing to flip back to.
+#   2  The release was unhealthy and the PREVIOUS release is now serving.
+#   3  The release was unhealthy and the flip-back also failed: service down.
 
 set -euo pipefail
 
@@ -47,6 +56,41 @@ if [[ ! -w "$DEPLOY_DIR" ]]; then
     exit 1
 fi
 
+PREVIOUS="$DEPLOY_DIR/previous"
+INCOMING="$DEPLOY_DIR/previous.incoming"
+
+# Retain the release that is on disk before anything overwrites it. package.json
+# and package-lock.json travel with dist/ because 06_redeploy.sh runs
+# `npm ci --omit=dev`, which prunes: a release that drops a dependency would
+# otherwise leave node_modules unable to satisfy the release before it, and the
+# flip-back would restore a build whose modules had just been deleted.
+#
+# Staged into previous.incoming/ and moved into place, so an interrupted copy is
+# never mistaken for a usable rollback target — 06_redeploy.sh checks the three
+# files below, and a half-written previous/ passing that check is exactly how a
+# recoverable bad release becomes an unrecoverable one.
+#
+# A first-ever deploy has nothing to retain and simply gets no rollback target.
+if [[ -f "$DEPLOY_DIR/dist/server.cjs" ]]; then
+    echo "==> Retaining the current release in ${PREVIOUS}"
+    # Failing here stops the deploy rather than proceeding without a way back.
+    # The usual cause is a full disk, which is also what makes `npm ci` and the
+    # restart fail moments later — better to refuse while the running release is
+    # still intact than to destroy it and discover the same problem.
+    rm -rf "$INCOMING"
+    mkdir -p "$INCOMING"
+    rsync -a --delete "$DEPLOY_DIR/dist/" "$INCOMING/dist/"
+    for carried in package.json package-lock.json; do
+        if [[ -f "$DEPLOY_DIR/$carried" ]]; then
+            cp "$DEPLOY_DIR/$carried" "$INCOMING/$carried"
+        fi
+    done
+    rm -rf "$PREVIOUS"
+    mv "$INCOMING" "$PREVIOUS"
+else
+    echo "==> No release on disk to retain; this deploy has no flip-back target."
+fi
+
 echo "==> Installing release into ${DEPLOY_DIR}"
 # --delete on dist/ only: it is fully regenerated, while the app root holds
 # .env and node_modules, which must survive.
@@ -60,4 +104,8 @@ cp "$STAGING"/shell_scripts/*.sh "$DEPLOY_DIR/shell_scripts/"
 chmod +x "$DEPLOY_DIR"/shell_scripts/*.sh
 
 echo "==> Handing off to 06_redeploy.sh"
+# Only offer a flip-back target if the retention above actually produced one.
+if [[ -f "$PREVIOUS/dist/server.cjs" ]]; then
+    export ROLLBACK_FROM="$PREVIOUS"
+fi
 exec bash "$DEPLOY_DIR/shell_scripts/06_redeploy.sh"

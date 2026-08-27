@@ -29,7 +29,18 @@ export type Route =
    * a match or a club, not a nav destination — there is no stadium without a
    * fixture that names one, exactly as there is no `clube` without a club.
    */
-  | { section: "estadio"; key: string };
+  | { section: "estadio"; key: string }
+  /**
+   * The reader's own account, and the page that offers to create one.
+   *
+   * Neither takes an argument, and neither is a nav destination: `NAV_ITEMS` is
+   * at MD3's maximum of five, and an account is a persistent affordance in the
+   * top app bar rather than a sixth place to go. Both are `PRIVATE` in
+   * `pageStatus` — a real page that must never be indexed, since what it says
+   * differs per requester.
+   */
+  | { section: "conta" }
+  | { section: "entrar" };
 
 export const HOME: Route = { section: "classificacao" };
 
@@ -80,6 +91,12 @@ export const parseRoute = (pathname: string): Route => {
     case "jogadores":
       return { section: "jogadores" };
 
+    case "conta":
+      return { section: "conta" };
+
+    case "entrar":
+      return { section: "entrar" };
+
     case "clube":
       return second ? { section: "clube", key: second } : HOME;
 
@@ -107,6 +124,10 @@ export const formatRoute = (route: Route): string => {
       return "/artilharia";
     case "jogadores":
       return "/jogadores";
+    case "conta":
+      return "/conta";
+    case "entrar":
+      return "/entrar";
     case "clube":
       return `/clube/${encodeURIComponent(route.key)}`;
     case "partida":

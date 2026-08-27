@@ -367,7 +367,7 @@ only its own output could reveal.
   bump was in fact well covered and went green. It buys an unambiguous failure,
   not new safety.
 
-### D5 — A bad release does not become an outage
+### D5 — A bad release does not become an outage — **done, bar one live exercise**
 
 Defect 5. Previously D4; renumbered when the item above was promoted.
 
@@ -428,7 +428,150 @@ it in two stages rather than by deliberately breaking a real release:
    forward path ready to re-run.
 
 *Exit:* a payload that fails its health check on the host leaves the **previous**
-build serving and the workflow red — demonstrated, not argued.
+build serving and the workflow red — demonstrated, not argued. **Met against
+stubs; the live half is still outstanding** — see both sections below.
+
+#### What shipped: retention and flip-back on the host
+
+The higher-risk half, and the one the phase said actually matters. It is the
+**smaller** of the two designs the plan offered: `07_install_release.sh` copies
+the release already on disk into `$DEPLOY_DIR/previous/` before the rsync
+destroys it, and tells `06_redeploy.sh` where it went. Nothing outside those two
+scripts changes — no `releases/<sha>/`, no `current` symlink, and so no edit to
+`03_install_systemd_service.sh`. The unit still runs `dist/server.cjs` from
+`WorkingDirectory=$DEPLOY_DIR`, which is exactly why swapping the contents of
+`dist/` is enough.
+
+**`package.json` and `package-lock.json` are retained alongside `dist/`, and
+that is not tidiness.** `06_redeploy.sh` runs `npm ci --omit=dev`, which
+*prunes*. A release that drops a dependency therefore deletes modules the
+release before it still needs, so restoring `dist/` alone would flip back to a
+build whose `node_modules` had just been removed — a flip-back that reliably
+fails on precisely the kind of change most likely to need one.
+
+**The retention is staged, then moved into place.** `previous.incoming/` is
+built first and renamed over `previous/` only when complete, because
+`06_redeploy.sh` decides a rollback target is usable by checking that three
+files exist. A half-copied directory passing that check is how a recoverable bad
+release becomes an unrecoverable one.
+
+**A failed retention stops the deploy.** The usual cause is a full disk, which
+is also what makes the `npm ci` and the restart fail moments later; refusing
+while the running release is still intact beats destroying it and then
+discovering the same problem.
+
+**Flip-back is opt-in, and `07` is the only thing that opts in.** `06` reads
+`ROLLBACK_FROM`; a standalone run — the operator redeploying after an `.env`
+change, which is what `06` is documented for — leaves it unset and behaves
+exactly as it did before. Having `previous/` on disk is deliberately not enough
+to trigger a rollback, or an operator would find the build swapped underneath
+them.
+
+**Exit codes now distinguish the three outcomes**, because "the deploy failed"
+and "the site is down" need different responses at different hours: `2` means the
+previous release is serving and the pipeline should be red, `3` means the
+flip-back also failed and a person is needed. `1` keeps its old meaning. `ci.yml`
+treats every non-zero the same way, so nothing downstream had to change.
+
+**Rehearsal: stage 1 is done and is committed as
+`scripts/rehearse-flip-back.sh`.** It drives all eight branches against a stubbed
+`systemctl`, `sudo`, `npm` and `journalctl`, with a real HTTP server standing in
+for the health endpoint so the real `curl -sf` is exercised. The `systemctl` stub
+reloads whatever `dist/` holds at that moment, so health after a restart is a
+property of the bytes the script put there rather than of the harness. 31
+assertions, and the flip-back-fails case was written first as the plan asks.
+
+Three deliberate mutations were run against it to check it has teeth: a
+`flip_back` that returns success without restoring anything, a `07` that never
+retains, and a flip-back that fires on a *healthy* release. All three go red —
+10, 12 and 5 assertions respectively.
+
+**One thing the rehearsal caught that reading would not have.** `rsync -a`'s
+quick-check compares size and mtime, not bytes, so the first fixtures — two
+releases whose `server.cjs` differed only in a sha and were written in the same
+second — were silently *not installed*, and the case still passed because both
+were healthy. That is a property of the harness rather than of production, where
+a release tarball carries the build's own mtime, but it is the exact shape of
+failure that makes a green run meaningless.
+
+**Still outstanding: stage 2, the controlled live exercise.** Nothing here has
+run against the host. The observable that will prove it is `/api/health`
+reporting the **previous** sha while the `deploy` job is red — and the host
+stdout in the "Install the release on the host" step carrying `ROLLED BACK` and
+the retained path. Until that has been read, this is verified logic on an
+unexercised path, which is what `CLAUDE.md` already says about all of
+`shell_scripts/`.
+
+**Not covered, and deliberately:** `scripts/deploy.sh` neither retains nor flips
+back. It carries its own inline remote block and never calls `06` or `07`, so it
+is untouched by this change. `CLAUDE.md` already forbids running it by hand, and
+teaching it this would mean a third copy of the restart-and-health logic.
+
+#### What shipped: `.github/workflows/rollback.yml`
+
+The low-risk half, as the risk ordering above says it should be. It installs a
+release S3 already holds, over whatever is live, in about forty seconds and
+with no build. It deliberately does not route through `ci.yml`: those bytes
+were built, booted and smoke-tested by `check` when they were made, and
+rebuilding them to roll back would re-test them with a *newer* toolchain, which
+is the one thing you do not want when the point is known-good bytes. It carries
+no ancestry guard for the same reason — going backwards is the purpose here,
+where in `ci.yml` it is the accident.
+
+It shares `ci.yml`'s `deploy-production` concurrency group, so a rollback and a
+release can never install at the same moment.
+
+**The precondition got answered operationally instead of in advance.**
+Dispatching with an empty sha lists what the bucket holds and changes nothing.
+Nothing in this repository defines a lifecycle policy on `releases/` and no
+session working from a checkout can read one, so rather than guess a retention
+window, the workflow's safe default *is* the question: run it and look. The
+listing is best-effort — the deploy role demonstrably holds `s3:PutObject` and
+the SSM permissions, and may or may not hold `s3:ListBucket` — and a failure to
+list says which permission is missing and does not stop a rollback, because the
+host's own `aws s3 cp` is what proves the object is there.
+
+#### The finding that made this phase necessary rather than merely nice
+
+**The reconciler would have undone every rollback within fifteen minutes.**
+After a rollback, production is behind `main` — which is *exactly* the shape
+D2 exists to close. Nothing distinguished a deliberate rollback from a dropped
+push event, so `reconcile.yml` would have dispatched `ci.yml` and rolled
+production forward again while somebody was still working out what broke.
+
+`reconcile.yml` now holds when a successful `rollback.yml` run is newer than the
+last successful `ci.yml` run on `main`. That test is **stateless on purpose**:
+no flag is set, so none can be left set. It clears itself the moment a fix
+reaches `main` and deploys, because that run then becomes the newer of the two.
+Fifteen cases exercised against the shipped script — the five new ones plus all
+ten from D2, which had to keep passing.
+
+#### Correction: `allow_non_descendant` still has no door
+
+This plan said D5 was where `ci.yml`'s override would become reachable. Having
+designed the phase, that turns out to be wrong. `rollback.yml` does its own SSM
+install and never enters `ci.yml`, so the override remains reachable only if
+`main` is moved backwards. It is not costing anything and it is the correct
+escape hatch for a guard that must be overridable — but the door is still not
+there, and a later phase should either build one or remove it deliberately
+rather than leaving this note to rot.
+
+#### What remains: the half that can leave production down
+
+Untouched, and still the reason this phase wants a window rather than a gap
+between other things:
+
+- `07_install_release.sh` still does `rsync -a --delete` into `dist/`, so a
+  payload that fails its health check leaves the service down with **nothing on
+  disk to return to**. `rollback.yml` shortens that outage from "find the sha,
+  drive SSM by hand" to one dispatch, which is worth having — but it still
+  needs a person.
+- The automatic flip-back on a failed health check, which needs no person at
+  all, is the item that actually closes defect 5.
+
+Do that with the two-stage rehearsal above: stub `systemctl` and the health URL
+and drive every branch — writing *flip-back itself fails* first — before any
+live exercise.
 
 ### D6 — The bundle is what gets tested
 

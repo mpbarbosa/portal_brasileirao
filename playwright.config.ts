@@ -43,6 +43,16 @@ export default defineConfig({
       // them would make every run a coin flip. The kill switch also keeps the
       // suite from spending the 10 req/min free-tier budget.
       DISABLE_FOOTBALL_DATA: "true",
+      // A local identity, so sign-in is exercised without a Google client and
+      // without network. `server.ts` refuses to start with this set when
+      // NODE_ENV is production, so the suite cannot enable it anywhere real.
+      ACCOUNTS_DEV_LOGIN: "true",
+      // One database per run, thrown away with test-results. Sessions are
+      // shared state and the suite is `fullyParallel`, so a file per port is
+      // what keeps two worktrees — and two projects — from writing each
+      // other's rows. E2E_PORT is already the knob for running alongside
+      // another session.
+      ACCOUNTS_DB: `./test-results/accounts-${port}.db`,
     },
   },
 });

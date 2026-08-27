@@ -162,6 +162,13 @@ what makes the logic testable without mocking HTTP.
   the moment the payload lands rather than per render, because `now` moves and
   `uptime` does not.
 
+- `session-core.ts`, `account-core.ts`, `oauth-core.ts`, `rate-limit-core.ts` — the
+  **Conta** subsystem's judgement, all pure and all taking `now` as a parameter like
+  `cache-core.ts`. Expiry, rolling renewal, PKCE, the `id_token` claim checks and the
+  token bucket are unit-tested without a database, a browser or a Google client.
+  `account-store.ts` is the only file that knows SQL, which is the same split
+  `commons-core.ts` and `scripts/commons-api.ts` already draw.
+
 Extract to a core module before logic in `server.ts` grows a branch worth testing.
 
 ### Data provider
@@ -240,6 +247,65 @@ carries a coach),
 note its `currentTeam` is often a national team, which is why the card prefers the
 club the page already knew),
 `/api/matches` (optional `?round=` — a non-integer or `< 1` is a 400).
+
+### Contas
+
+Phase 1 of `docs/accounts.md`: sign in with Google, `/entrar` and `/conta`, sessions in
+SQLite. **Off unless configured**, and that is the whole of its deployment story —
+`GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` unset means the feature is *absent*: no
+control renders, `/api/auth/*` and `/api/account/*` answer 404, and the app is exactly
+what it was. The same idiom as `FOOTBALL_DATA_TOKEN`, and it is what lets this ship to a
+host nobody has configured yet.
+
+**`/api/account/*` and `/api/auth/*` are the documented exception to the `ApiEnvelope`
+rule**, and this paragraph is where that exception lives so the rule above stays
+believable. `source`, `note` and `updatedAt` answer "how fresh is this third party's data
+and how far has it degraded" — an account has no upstream, no staleness and no honest
+fallback, and "não foi possível ler a sua conta" must be a real status code rather than a
+cheerful envelope containing somebody else's defaults. Plain JSON, real codes, `{ error }`
+in pt-BR. `/api/health` was the first exception; these are the second.
+
+**There is no `SESSION_SECRET`, and the plan expected one.** A session is 256 bits of
+randomness stored as a SHA-256 digest in a table, so there is nothing to sign, nothing to
+rotate, and no secret whose absence needs a safe default. The same reasoning covers the
+sign-in transaction: `state`, `nonce` and the PKCE verifier only have to survive from our
+own response to our own next request, and the `__Host-` prefix is what stops any other
+origin writing that cookie.
+
+Traps, each of which cost something to find:
+
+- **A `__Host-` cookie without `Secure` is refused by the browser**, silently. Deriving
+  `Secure` from `APP_URL` made sign-in *appear* to work on a fresh clone: the server set
+  the cookie, the browser dropped it, `/api/account/me` answered null, nothing errored.
+  It is now unconditional — `localhost` and `127.0.0.1` are secure contexts, so plain http
+  development is unaffected. Note `curl` declines to *send* a `Secure` cookie over http,
+  which is a property of curl and not of the browser: verify this path with Playwright.
+- **`node:sqlite` is loaded with `createRequire` inside `openStore`, never imported at the
+  top.** A static import is evaluated at boot, so a runtime without the module throws
+  `ERR_UNKNOWN_BUILTIN_MODULE` and the **whole process fails to start** — a site that is
+  down, on a release that only added a feature nobody had switched on. The host pins Node
+  22, which is not the same as having this: the module arrived in **22.5**, so 22.0–22.4
+  satisfies the pin and still lacks it. The pin is not a substitute for the lazy load.
+- **SQLite creates the file but not the directory above it**, and fails with a message that
+  reads like a permissions problem. `openStore` makes its own directory.
+- **`PRAGMA foreign_keys` is OFF by default**, which would make `ON DELETE CASCADE`
+  decorative — a deleted account would leave working sessions pointing at a row that is
+  gone.
+- **`ACCOUNTS_DEV_LOGIN` mints a session for anybody who asks.** It exists so the e2e suite
+  can test sign-in without a Google client or a network, keeping CI secret-free. The server
+  **refuses to start** with it set when `NODE_ENV=production`, and the route is registered
+  conditionally, so in production it does not exist rather than existing and declining.
+- `pageStatus` gained **`PRIVATE`** — 200, `index: false` — because `/conta` is a real page
+  whose content differs per requester. The type always allowed it; no constructor produced
+  it, because until accounts every page this app served was the same for everybody. Both
+  sections are `Disallow`ed in `robots.txt` and absent from the sitemap.
+
+The database lives at `ACCOUNTS_DB`, defaulting to `./data/accounts.db`. On the host it
+must stay **inside `DEPLOY_DIR`** — the systemd unit sets `ProtectSystem=strict` with
+`ReadWritePaths=${DEPLOY_DIR}`, so `/var/lib` is read-only to the process — and **outside
+`dist/`**, which both rsyncs delete with `--delete` and `express.static` serves over HTTP.
+It is the first state in this app that no script can regenerate, so backups are now an
+obligation rather than a nicety; that is Phase 2, and `docs/accounts.md` §3.1 is the plan.
 
 Adding a section is: a `NAV_ITEMS` entry in `src/navigation.ts`, a `Route` variant plus
 parse/format cases in `route-core.ts`, a case in `App`'s view switch, and — if it needs new
@@ -1151,10 +1217,24 @@ not something the check can verify.
 **An appearance path can move without a pixel moving.** A rule that is never in effect
 during a paint, a selector nothing matches, a comment: the edit is real and the render is
 identical. `docs/screenshots/CAPTURED` records which commit the images depict, so a refresh
-always leaves something to commit even when all sixteen PNGs come back byte-identical —
-that is the mechanical answer and it is the right one wherever it applies. But it still
-charges sixteen captures from a live-data production build to certify that nothing changed,
-and records no reason. Where an edit *provably* cannot reach a paint, say so instead:
+always leaves something to commit — that is the mechanical answer and it is the right one
+wherever it applies. But it still charges sixteen captures from a live-data production
+build to certify that nothing changed, and records no reason.
+
+**Two of the sixteen can no longer come back byte-identical, and this paragraph used to
+say they could.** `fullPage` is `!mobile && route === "/"`, so the desktop Classificação
+pair photographs the whole page — including the **Rodapé**, whose Saúde do serviço prints
+`Versão`, `Compilado` and `No ar desde`. All three move on every deploy, so those two
+images differ on every refresh whatever the code did. `bb223e2` is where that started, and
+`0719e73 Re-shoot at bb7a2ec: sixteen captures, zero pixels moved` is an outcome that can
+no longer occur.
+
+Nothing automated is affected — `check-screenshots.sh` compares appearance *sources*
+between CAPTURED's sha and HEAD and never compares image bytes. What is lost is a **human**
+signal: "classificacao-light.png changed" used to mean the table looks different, and now
+means a deploy happened, on the two most information-dense images in the set. Accepted
+rather than fixed, because the alternatives all give up something real — the rodapé is in
+that frame deliberately, and the README alt text describes it. Where an edit *provably* cannot reach a paint, say so instead:
 
 ```
 Screenshots-unaffected: <why no rendered pixel can change>
@@ -1231,9 +1311,11 @@ push to main ──▶ check ──▶ build ──▶ boot the bundle, smoke-te
                                               ├─▶ s3://…/releases/<sha>.tar.gz
                                               ├─▶ ancestry guard vs live /api/health
                                               ├─▶ ssm send-command ──▶ host
-                                              │     07_install_release.sh  (rsync into place)
+                                              │     07_install_release.sh  (retain previous/,
+                                              │                             rsync into place)
                                               │     06_redeploy.sh         (npm ci --omit=dev,
-                                              │                             restart, health)
+                                              │                             restart, health,
+                                              │                             flip back if unhealthy)
                                               └─▶ assert <sha> at /api/health
 ```
 
@@ -1254,6 +1336,49 @@ bundle at esbuild time, so `/api/health` reports the commit it was built from
 whatever host it lands on. The workflow compares that against the sha it just
 built — strictly stronger than an uptime heuristic, which a fast restart of the
 *previous* bundle would also satisfy.
+
+**A failed release flips back to the previous one, and the pipeline still goes
+red.** `07_install_release.sh` copies the release already on disk into
+`$DEPLOY_DIR/previous/` before the rsync destroys it, and hands
+`06_redeploy.sh` the path in `ROLLBACK_FROM`. If the new payload will not
+install, will not restart, or never reports healthy, `06` restores that
+directory, reinstalls and restarts, and exits **2** — the previous build serving,
+the workflow red. If the flip-back *itself* fails it exits **3** and says
+`CRITICAL`, because "the deploy failed" and "the site is down" need different
+responses. Before this, `rsync -a --delete` destroyed the previous build first,
+so a bad release left systemd restart-looping every five seconds against nothing.
+
+Four things about it are deliberate, and three are load-bearing:
+
+- **`package.json` and `package-lock.json` are retained with `dist/`.** `npm ci
+  --omit=dev` prunes, so a release that drops a dependency deletes modules the
+  release before it needs. Restoring `dist/` alone would flip back to a build
+  whose `node_modules` had just been removed — failing on exactly the change
+  most likely to need a rollback.
+- **The retained copy is staged as `previous.incoming/` and renamed into place.**
+  `06` decides a target is usable by checking three files exist; a half-copied
+  directory that passes is how a recoverable bad release becomes unrecoverable.
+- **Flip-back is opt-in and only `07` opts in.** A standalone `06` — the operator
+  redeploying after an `.env` change, which is what it is documented for — leaves
+  `ROLLBACK_FROM` unset and behaves as it always did. `previous/` merely existing
+  must not swap the build underneath someone.
+- **A failed retention stops the deploy** rather than proceeding without a way
+  back. The usual cause is a full disk, which is what makes the `npm ci` fail
+  moments later anyway.
+
+**`scripts/rehearse-flip-back.sh` is the only behavioural coverage these two
+scripts have.** `npm run lint` is TypeScript and cannot see shell; CI only
+shellchecks them. It drives all eight branches against a stubbed `systemctl`,
+`sudo`, `npm` and `journalctl`, with a real HTTP server for the health endpoint
+so the real `curl -sf` runs. Nothing invokes it automatically, like
+`check-hymns` — **re-run it by hand after editing either script.** Note the two
+travel *inside the release tarball*, so a broken one ships with the release that
+carries it and the host runs it immediately.
+
+One trap it caught, worth keeping: **`rsync -a`'s quick-check compares size and
+mtime, not bytes.** Two fixture releases differing only in a sha, written in the
+same second, were silently not installed at all — and the case still passed,
+because both were healthy.
 
 **A release must be a descendant of what is live.** `concurrency: deploy-production`
 serialises releases but does **not** order them, and on 2026-08-26 a queue that
@@ -1313,6 +1438,28 @@ not a gap to close. Note the schedule is a safety net rather than a guarantee �
 GitHub delays scheduled runs under exactly the load that drops push events, and
 disables them after 60 days of repository inactivity.
 
+**Rolling back is `.github/workflows/rollback.yml`, and it does not go through
+`ci.yml`.** It installs a release S3 already holds, over whatever is live, in
+about forty seconds and with no build — because those bytes were built, booted
+and smoke-tested by `check` when they were made, and rebuilding them to roll
+back would re-test them with a *newer* toolchain, which is the one thing you do
+not want when the point is known-good bytes. It carries no ancestry guard for
+the same reason the deploy does: going backwards is the purpose here and the
+accident there. It shares the `deploy-production` concurrency group, so a
+rollback and a release can never install at once. Dispatching it with an **empty
+sha lists what the bucket holds and changes nothing** — which is also how you
+find out what the bucket's lifecycle policy has left you, since nothing in this
+repository defines one.
+
+**A rollback pauses reconciliation, and nothing has to remember that it did.**
+After a rollback production is behind `main`, which is precisely the shape
+`reconcile.yml` exists to close — so without this it would dispatch `ci.yml` and
+undo the rollback within fifteen minutes, while someone was still working out
+what broke. The reconciler now holds whenever a successful `rollback.yml` run is
+newer than the last successful `ci.yml` run on `main`. The test is **stateless**:
+no flag is set, so none can be left set, and it clears itself the moment a fix
+reaches `main` and deploys.
+
 **The host is too small to build on.** It receives a prebuilt payload and runs
 `npm ci --omit=dev`; nothing compiles there. That is also why a runtime dependency
 stranded in `devDependencies` stays invisible until the bundle boots, which is the
@@ -1337,6 +1484,54 @@ alongside other sessions** above says never to run it by hand.
 
 What is still missing from this pipeline, and the phased plan for closing it, is
 `docs/cicd-plan.md`.
+
+### One Node major, named in five places
+
+`.nvmrc` holds it. `package.json`'s `engines`, the `@types/node` devDependency,
+`REQUIRED_NODE_MAJOR` in `shell_scripts/01_setup_app_directory.sh` and both
+workflows' `node-version-file` all have to agree with it, and
+`tests/node-version.test.ts` fails when they do not.
+
+**The trap this closes is quiet by construction.** `tsconfig.json` sets
+`types: ["node"]`, which makes `@types/node` the *entire* ambient type surface,
+and `tsc --noEmit` is this repo's only lint gate. So the typings decide what the
+gate certifies while the host decides what actually runs, and when those are
+different majors the gate certifies code the host cannot execute — without a red
+build anywhere. #91 took the typings 22 → 26 and went green; afterwards
+`import { connect } from "node:quic"` type-checked clean while
+`node -e "require('node:quic')"` threw `ERR_UNKNOWN_BUILTIN_MODULE`.
+
+**Do not close that by raising the runtime instead.** `node:ffi`, `node:quic`,
+`node:stream/iter` and `node:zlib/iter` are absent from Node **26** as well,
+experimental flags included, and `node:vfs` needs `--experimental-vfs`. These
+typings describe DefinitelyTyped's surface, which includes APIs no released Node
+exposes at all — there is no version to catch up to, so the typings track the
+runtime and not the other way round. `.github/dependabot.yml` therefore ignores
+the **major** for `@types/node` only; minor and patch within the line still
+arrive normally.
+
+Moving Node is consequently a deliberate five-file commit starting at `.nvmrc`,
+which is the point — before this, four of the five were literals that could each
+move alone.
+
+**The host floor is an exact major, not a floor**, for the same reason: a host
+one major *older* than the typings is running unchecked code just as surely as
+one newer. That script is one-time provisioning and is not run by `deploy.sh`,
+so tightening it cannot break an existing deploy.
+
+`/api/health` reports `node` — `process.versions.node`, what the host is
+**actually** running, as against what the five files say it is supposed to be.
+Nothing renders it: `parseHealth` in `health-core.ts` builds its result field by
+field, so the extra key is dropped and the **Rodapé** is unchanged. It is a
+diagnostic, and deliberately not a line in the footer — a Node version is
+nothing to a reader of a football table, and the rodapé sits in two committed
+full-page captures.
+
+One TypeScript note that is part of the same hole rather than a separate tidy:
+`noUncheckedSideEffectImports` is on because without it a **bare** side-effect
+import (`import "node:quic";`) resolves nothing and reports **no error at all**,
+whichever `@types/node` is pinned. Pinning the typings does not close that; the
+flag does.
 
 ## Not built yet
 

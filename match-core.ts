@@ -88,3 +88,33 @@ export const highlightsSearchUrl = (home: string, away: string): string => {
  */
 export const hasHighlights = (match: Match): boolean => countsTowardStandings(match);
 
+/**
+ * football-data names an official's role in English, in its own SCREAMING_SNAKE
+ * vocabulary. Translated here for the reason `positionLabel` and
+ * `nationalityLabel` are: the provider's word must not reach the page in an app
+ * whose every other word is Portuguese.
+ *
+ * **One value, and that is measured rather than assumed.** The published
+ * vocabulary is wider — assistants and a fourth official are documented — but
+ * across BSA, PL and CL every one of the 356 entries on 949 fixtures is
+ * `REFEREE`. Listing the others would be a claim this file cannot check, which
+ * is the rule `NATIONALITY_LABELS` states at greater length.
+ *
+ * So an unmapped role renders **verbatim**, exactly as an unmapped position
+ * does. It will read as an English token rather than a Portuguese word, which
+ * is ugly and is the point: it is a visible prompt to add the row, where a
+ * prettified guess would look finished and say something untrue.
+ *
+ * A named official whose role upstream omits gets the collective noun instead
+ * of the specific one — it claims only that they officiated, which is all the
+ * payload said.
+ */
+const REFEREE_ROLE_LABELS: Record<string, string> = {
+  REFEREE: "Árbitro",
+};
+
+export const refereeRoleLabel = (role: string | undefined): string => {
+  const raw = role?.trim();
+  if (!raw) return "Arbitragem";
+  return REFEREE_ROLE_LABELS[raw] ?? raw;
+};

@@ -7,7 +7,7 @@
  * A link preview never runs JavaScript, so without the server half a shared
  * `/clube/flamengo` would unfurl as the generic site name.
  */
-import { findClub } from "@/club-core";
+import { findClub, ofClub, ofClubs } from "@/club-core";
 import { findMatch } from "@/match-core";
 import type { Route } from "@/route-core";
 import { capacityLabel, findStadium, stadiumLocation } from "@/venue-core";
@@ -96,12 +96,12 @@ const siteImage = (origin: string): PreviewImage | undefined =>
 /** A club's crest, which is genuinely what its page is about. */
 const crestImage = (club: Club): PreviewImage | undefined =>
   club.crest
-    ? { url: club.crest, shape: "square", alt: `Escudo do ${club.shortName}` }
+    ? { url: club.crest, shape: "square", alt: `Escudo ${ofClub(club)}` }
     : undefined;
 
 const clubDescription = (club: Club, standings: StandingsRow[] | undefined): string => {
   const row = standings?.find((entry) => entry.club.code === club.code);
-  if (!row) return `Jogos, elenco e artilheiros do ${club.shortName} no Brasileirão Série A.`;
+  if (!row) return `Jogos, elenco e artilheiros ${ofClub(club)} no Brasileirão Série A.`;
 
   return (
     `${club.shortName}: ${row.position}º lugar com ${row.points} ` +
@@ -129,10 +129,10 @@ const matchDescription = (match: Match, home: string, away: string): string => {
 const stadiumDescription = (stadium: Stadium): string => {
   const parts: string[] = [`${stadium.name}, em ${stadiumLocation(stadium)}`];
 
-  if (stadium.homeClubs.length) {
-    const names = stadium.homeClubs.map((club) => club.shortName).join(" e ");
-    parts.push(`Casa do ${names}`);
-  }
+  // `ofClubs` rather than a join, because the article belongs to each club
+  // rather than to the head of the list: "Casa do Fluminense e Flamengo" is
+  // wrong even where both are masculine.
+  if (stadium.homeClubs.length) parts.push(`Casa ${ofClubs(stadium.homeClubs)}`);
 
   const capacity = capacityLabel(stadium);
   if (capacity) parts.push(`Capacidade de ${capacity} lugares`);
@@ -190,6 +190,23 @@ export const pageMeta = (
       return {
         title: suffix("Artilharia"),
         description: "Os maiores goleadores do Campeonato Brasileiro Série A.",
+        image: site,
+      };
+
+    case "conta":
+      return {
+        // No `suffix` and no description worth writing: this page is
+        // `noindex`, never shared, and never unfurled. What it needs is a
+        // browser tab a reader can find among twenty.
+        title: suffix("Minha conta"),
+        description: "A sua conta no Portal Brasileirão.",
+        image: site,
+      };
+
+    case "entrar":
+      return {
+        title: suffix("Entrar"),
+        description: "Entre para guardar as suas preferências no Portal Brasileirão.",
         image: site,
       };
 

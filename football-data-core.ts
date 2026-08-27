@@ -15,6 +15,7 @@ import type {
   Match,
   MatchStatus,
   Player,
+  Referee,
   Scorer,
   Squad,
   StandingsRow,
@@ -90,6 +91,23 @@ interface RawTeam {
   coach?: RawCoach | null;
 }
 
+/**
+ * One official on a match object.
+ *
+ * `type` is the provider's role vocabulary. Its documented breadth is wider
+ * than what the free tier sends: across BSA, PL and CL — 356 entries over 949
+ * fixtures — **every single one is `REFEREE`**, and no assistant, fourth
+ * official or VAR appears anywhere. `refereeRoleLabel` therefore maps that one
+ * value and lets the rest through verbatim, rather than translating a
+ * vocabulary nobody has seen.
+ */
+interface RawReferee {
+  id?: number;
+  name?: string | null;
+  type?: string | null;
+  nationality?: string | null;
+}
+
 interface RawMatch {
   id?: number;
   utcDate?: string;
@@ -100,6 +118,8 @@ interface RawMatch {
   /** v4 reports `fullTime.home` / `fullTime.away` — verified against a live
    *  payload. Note `0` is a real score; only `null` means unplayed. */
   score?: { fullTime?: { home?: number | null; away?: number | null } };
+  /** Empty for 223 of the season's 380 fixtures, finished ones included. */
+  referees?: RawReferee[];
 }
 
 interface RawTableEntry {
@@ -260,12 +280,27 @@ export const clubFromTeam = (team: RawTeam | undefined): Club | null => {
  * A fixture missing an id, a kickoff, or either club is dropped rather than
  * rendered half-built — one bad row upstream should not break the round.
  */
+/**
+ * The officials of a match, keeping the provider's role vocabulary intact.
+ *
+ * An entry with no name is dropped rather than rendered as an anonymous role —
+ * a page reading "Árbitro" with nothing beside it is worse than one that says
+ * nothing. The role, in contrast, may be missing and the entry still stands: a
+ * named official is the fact worth having, and `refereeRoleLabel` has a heading
+ * for the roleless case.
+ */
+export const mapReferees = (raw: RawReferee[] | undefined): Referee[] =>
+  (raw ?? [])
+    .map((entry) => ({ name: entry.name?.trim() ?? "", role: entry.type?.trim() ?? "" }))
+    .filter((entry) => entry.name !== "");
+
 export const mapMatch = (raw: RawMatch): Match | null => {
   const home = clubFromTeam(raw.homeTeam);
   const away = clubFromTeam(raw.awayTeam);
   if (!isNumber(raw.id) || !raw.utcDate || !home || !away) return null;
 
   const fullTime = raw.score?.fullTime;
+  const referees = mapReferees(raw.referees);
 
   return {
     id: String(raw.id),
@@ -276,6 +311,10 @@ export const mapMatch = (raw: RawMatch): Match | null => {
     awayCode: away.code,
     homeGoals: isNumber(fullTime?.home) ? fullTime.home : null,
     awayGoals: isNumber(fullTime?.away) ? fullTime.away : null,
+    // Conditional for the reason `crest` is, one mapper up: upstream reports an
+    // empty array for most fixtures, and a present-but-empty key would make
+    // `"referees" in match` lie about what the provider actually said.
+    ...(referees.length ? { referees } : {}),
   };
 };
 

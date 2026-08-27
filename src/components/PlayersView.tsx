@@ -2,7 +2,7 @@ import { ageOn } from "@/player-core";
 import { ClubCrest } from "@/src/components/ClubCrest";
 import { LINK_UNDERLINE, STATE_LAYER } from "@/src/components/interaction";
 import { Surface } from "@/src/components/Surface";
-import { clubKey } from "@/club-core";
+import { clubKey, ofClub } from "@/club-core";
 import { playerPositionLabel, squadSections, totalPlayers } from "@/squad-core";
 import type { Club, Player, Squad } from "@/src/types";
 
@@ -147,7 +147,7 @@ function SquadPanel({
                     onClick={() => onSelectClub(key)}
                     className={`rounded-x-small text-body-small ${LINK_UNDERLINE}`}
                   >
-                    Ver a página do {squad.club.shortName}
+                    Ver a página {ofClub(squad.club)}
                   </button>
                 </p>
               )}

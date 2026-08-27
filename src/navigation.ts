@@ -33,7 +33,18 @@ export type SectionId =
   | "jogadores"
   | "clube"
   | "partida"
-  | "estadio";
+  | "estadio"
+  /**
+   * `conta` and `entrar` are not destinations either, and for a different
+   * reason than the three above: those are drill-downs into something chosen,
+   * while these are the reader's own account, reached from a persistent
+   * affordance in the top app bar. They are absent from NAV_ITEMS because the
+   * bar is **full** at MD3's maximum of five — but they would not belong in it
+   * at six, which is the point. An account is not a section of a football
+   * portal.
+   */
+  | "conta"
+  | "entrar";
 
 export interface NavItem {
   id: SectionId;
