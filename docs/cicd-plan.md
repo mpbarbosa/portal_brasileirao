@@ -346,7 +346,26 @@ there. `npm audit --audit-level=high` belongs in its own advisory job for the
 same reason `screenshots` is advisory — an upstream advisory published on a
 Tuesday must not stop an unrelated release.
 
-**B. Deployments are invisible to GitHub — done.** There was no `environment:` on
+**B. Deployments are invisible to GitHub — REVERTED, and blocked on an IAM
+change.** Shipped in #151, it broke every release for ten commits and was removed
+in #155. Attaching the job to an environment **rewrites the OIDC subject claim**:
+without one it is `repo:<owner>/<repo>:ref:refs/heads/main`, with one it becomes
+`repo:<owner>/<repo>:environment:production`. The trust policy on
+`portal-brasileirao-deploy` pins the first form with `StringEquals`, so STS
+answered `Not authorized to perform sts:AssumeRoleWithWebIdentity` and the deploy
+job died before reaching the host. Three merges failed and production sat ten
+commits behind before anyone read a deploy log rather than the run's colour.
+
+Nothing about the change looked wrong, which is the part worth carrying: the job
+was untouched, and the entry below said in good faith that its behaviour was
+unchanged. **The order to do this in is trust policy first** — accept
+`…:environment:production`, or match both with `StringLike` — then confirm a
+release deploys, then re-add the block. Re-adding it alone takes production down
+silently, and the failure reads as an AWS problem rather than a workflow one.
+
+The original entry follows.
+
+**B (as shipped, now reverted). Deployments are invisible to GitHub.** There was no `environment:` on
 the `deploy` job, so there was no Deployments tab, no per-environment history, no
 URL badge, and no place to hang a protection rule later. The job now declares
 `environment: {name: production, url: https://brasileirao.mpbarbosa.com}`, which
@@ -810,8 +829,9 @@ and the `reconcile.yml` hold it turned out to unjam. It was taken first as the
 cheapest item and the one most likely to cause a real misreading; the count in
 its entry went from six to a measured seventeen once it was actually queried.
 
-Gap B (no Deployments record) is **done** — see its entry above, including why
-`rollback.yml` was left out of it and what closing that would cost.
+Gap B (no Deployments record) is **reverted and blocked** — it shipped, broke
+every release for ten commits, and was removed in #155. It needs an IAM trust
+policy change before it can be attempted again; see its entry above.
 
 What remains under D7: gaps D, E, F and G. The plan's own ordering still holds —
 F interacts with E and with the reconciling deploy, so E comes first; G is last
