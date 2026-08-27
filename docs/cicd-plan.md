@@ -494,7 +494,13 @@ were healthy. That is a property of the harness rather than of production, where
 a release tarball carries the build's own mtime, but it is the exact shape of
 failure that makes a green run meaningless.
 
-**Still outstanding: stage 2, the controlled live exercise.** Nothing here has
+**Stage 2 now has a runbook: [`flip-back-drill.md`](flip-back-drill.md)**, whose
+command block was dry-run in full against a real bundle and a real server
+process before being written down. It drills the starts-but-unhealthy mode,
+which is the one systemd cannot catch, and which keeps every page serving while
+it runs.
+
+**Still outstanding: stage 2 itself, the controlled live exercise.** Nothing here has
 run against the host. The observable that will prove it is `/api/health`
 reporting the **previous** sha while the `deploy` job is red — and the host
 stdout in the "Install the release on the host" step carrying `ROLLED BACK` and

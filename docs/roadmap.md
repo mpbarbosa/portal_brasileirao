@@ -359,6 +359,13 @@ looks exactly like a task nobody has picked up.
   healthy deploy exercises retention and skips the restore, so the untested
   branch stays untested precisely while everything looks fine.
 
+  **The runbook is written: [`flip-back-drill.md`](flip-back-drill.md).** It
+  drills the *starts-but-unhealthy* mode by installing a payload byte-identical
+  to what is live except the health literal, so the site keeps serving every
+  page for the length of the exercise and only `/api/health` reports otherwise —
+  including if the flip-back itself fails. The crash-on-boot mode, which does
+  take the site down, is deliberately left to a separate window.
+
   The observable that will close it: `/api/health` reporting the **previous**
   sha while the `deploy` job is red, with `ROLLED BACK` and the retained path in
   the host stdout of the "Install the release on the host" step. Read the job,
