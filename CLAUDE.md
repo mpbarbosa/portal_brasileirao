@@ -1186,6 +1186,27 @@ Rules that follow from that:
 - `getByText("...")` is case-insensitive substring matching by default. A bare
   `getByText("Ao vivo")` also matches the banner's "…para dados ao vivo". Scope the
   locator and pass `exact: true`.
+- **`page.route` fulfilment completes Playwright's own request accounting, so a stub
+  cannot reproduce a failure whose nature is that the accounting never completes.**
+  `useAccount` returned on a 404 without reading the response body; Chromium held the
+  stream open, the request never reached `finished`, and `waitUntil: "networkidle"`
+  therefore never resolved — which broke every `screenshot.ts` capture while the page
+  itself rendered perfectly. The obvious guard is to stub that 404 with `page.route` and
+  assert the page reaches idle. It was written, run against the **known-broken** code,
+  and **passed**: Playwright settles what it fulfils. A test that passes against the bug
+  it names is worse than no test, because it converts an open question into a false
+  answer — the next reader sees green and stops. It was deleted; the reasoning lives in
+  `src/useAccount.ts` where the next person will meet it. Where a stub cannot reach,
+  measure the real thing: `requestfinished` against a real server is what settled this.
+- **The harness does not merely miss some configurations — it configures the app out of
+  them.** `env` in `playwright.config.ts` sets `DISABLE_FOOTBALL_DATA: "true"` *and*
+  `ACCOUNTS_DEV_LOGIN: "true"`. That second one is why nothing caught the bug above:
+  with dev login on, `/api/account/me` answers 200 and the body is consumed by
+  `response.json()` on the way past, so the suite never takes the 404 branch at all —
+  and the 404 branch is **production's** shape, and every fresh clone's. A green suite
+  says the app works in a configuration nothing ships. Before trusting coverage of
+  anything touching accounts or the provider, check which side of that `env` block the
+  code under test falls on.
 
 ## CI
 
