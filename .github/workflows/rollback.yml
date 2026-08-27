@@ -73,15 +73,40 @@ jobs:
           # may or may not hold s3:ListBucket. A failure here is reported and
           # does NOT stop a rollback, because the host is what actually fetches
           # the object and its `aws s3 cp` will fail loudly if the key is gone.
+          #
+          # stdout and stderr are captured TOGETHER into one variable, so a
+          # failure carries AWS's own words. The first version of this wrote
+          # stderr to a file and printed `head -1` of it, which came back blank
+          # on the first real run — leaving "Could not list the bucket — " and
+          # nothing after the dash. A diagnostic that loses the diagnosis is
+          # worse than none, because it looks like it reported something.
+          #
+          # The query is null-safe for the same class of reason: jmespath's
+          # sort_by throws on a null `Contents`, which is what an EMPTY prefix
+          # returns. Without `|| ` + backtick-empty-list, "the bucket is empty"
+          # and "you may not list the bucket" are indistinguishable — and those
+          # two want very different responses.
           echo ""
           echo "Releases in s3://${ARTIFACT_BUCKET}/releases/ (newest last):"
-          if aws s3api list-objects-v2 --bucket "$ARTIFACT_BUCKET" --prefix releases/ \
-               --query 'sort_by(Contents,&LastModified)[].[LastModified,Size,Key]' \
-               --output text 2>/tmp/list-err; then
-            :
+          if listing="$(aws s3api list-objects-v2 --bucket "$ARTIFACT_BUCKET" --prefix releases/ \
+               --query 'sort_by(Contents || `[]`, &LastModified)[].[LastModified,Size,Key]' \
+               --output text 2>&1)"; then
+            if [ -z "$listing" ] || [ "$listing" = "None" ]; then
+              echo "::warning::The bucket answered and releases/ is EMPTY. There is nothing to roll back to."
+              echo "::warning::Every stored release has been expired — the bucket has a lifecycle policy, and nothing in this repository defines it."
+            else
+              printf '%s\n' "$listing"
+            fi
           else
-            echo "::warning::Could not list the bucket — $(head -1 /tmp/list-err)"
-            echo "::warning::If this is an AccessDenied, the deploy role needs s3:ListBucket to offer this listing."
+            echo "::warning::Could not list the bucket. AWS said:"
+            printf '%s\n' "$listing" | sed 's/^/    /'
+            # Only offer the IAM reading when AWS actually said AccessDenied.
+            # Printing it unconditionally sends someone to edit a role policy
+            # over a NoSuchBucket or a network error, which is a worse outcome
+            # than saying nothing.
+            if printf '%s' "$listing" | grep -q 'AccessDenied'; then
+              echo "::warning::The deploy role needs s3:ListBucket to offer this listing — the release path never needed it, which is why this is the first time it shows."
+            fi
             echo "A rollback can still proceed: name the sha explicitly and the host will fetch it."
           fi
 

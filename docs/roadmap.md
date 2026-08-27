@@ -13,7 +13,10 @@ does, and they win.
 Live at <https://brasileirao.mpbarbosa.com>, deployed from `main` by GitHub
 Actions through OIDC → S3 → SSM, with no long-lived credentials and no SSH.
 Every running instance reports the commit it was built from at `/api/health`,
-and the deploy asserts that the live commit is the one it just built.
+and the deploy asserts that the live commit is the one it just built. That
+pipeline has since gained an ancestry guard, a reconciler, build-once-promote
+and a rollback; `docs/cicd-plan.md` carries the phases and **The deploy
+pipeline — what is still open** below carries what they did not close.
 
 - **Data** — football-data.org free tier (`BSA`, 10 requests/minute), cached
   60s/15s with a circuit breaker. Everything the provider does not carry is
@@ -148,6 +151,89 @@ provider than it needed to build:
   entries, and the one exception is an **upstream error**: a French official
   recorded against Coritiba × Chapecoense in round 22. So the field offers one
   word repeated on every page, plus one that is wrong.
+
+## The deploy pipeline — what is still open
+
+The phased plan and its reasoning live in `docs/cicd-plan.md`; D0 through D5a
+are done and each was verified against production rather than against CI. What
+follows is only what is **still open**, split by whether it needs a decision or
+needs work — because the two get confused, and a question waiting on an answer
+looks exactly like a task nobody has picked up.
+
+### Questions, not work
+
+- **What does the release bucket actually retain?** Nothing in this repository
+  defines a lifecycle policy on `s3://…/releases/`, and no session working from
+  a checkout can read one. This is the precondition for `rollback.yml` being
+  worth anything: a 30-day expiry would make an artifact-reinstall rollback fail
+  precisely when a long-lived regression is found, and would push the design
+  toward keeping the previous release **on the host** instead. Dispatching
+  `rollback.yml` with an **empty sha** lists what is there and changes nothing;
+  the first attempt could not distinguish "empty" from "not permitted", which
+  PR #110 fixes. Run it once while nothing is on fire.
+- **Does the deploy role hold `s3:ListBucket`?** Probably not — the release path
+  has never needed it, so the listing above is the first thing to ask. Small IAM
+  decision, and a rollback works without it: naming a sha explicitly has the
+  host fetch the object with permissions the daily release already exercises.
+- **`allow_non_descendant` has no door.** The ancestry guard's override is
+  reachable only if `main` is moved backwards, because `deploy` is gated on
+  `refs/heads/main` and `workflow_dispatch` cannot name a bare sha. `rollback.yml`
+  does its own SSM install and never enters `ci.yml`, so D5 did not give it one
+  after all. Either build a door or remove it deliberately — leaving it is how
+  a later reader diagnoses it as dead code and deletes the escape hatch instead.
+- **#90 (`@vitejs/plugin-react` 5 → 6) cannot merge and will not fix itself.**
+  It needs `vite@^8` against this repo's `^6`, so it fails at `npm ci` before any
+  code runs. `dependabot.yml` now groups the two so their majors travel together,
+  but grouping does not retroactively repair an open pull request. Close it
+  deliberately, or do the Vite 6 → 8 upgrade, which is real work rather than a
+  merge.
+
+### Work, sequenced in `docs/cicd-plan.md`
+
+- **D5b landed while this section was being written, and what is left of it is
+  recorded above under the deploy-script note rather than here.**
+  `07_install_release.sh` now keeps the outgoing release in
+  `$DEPLOY_DIR/previous/` and `06_redeploy.sh` restores it when the health check
+  fails, so the CI path no longer destroys the running build before the new one
+  is proven. `rollback.yml` remains the deliberate, operator-driven way back;
+  the flip-back is the automatic one, and between them the defect is closed for
+  releases that go through CI. The gap that survives is `deploy.sh`, the
+  workstation path, which carries its own inline remote block and calls neither
+  script — latent rather than live, since `CLAUDE.md` already forbids running it
+  by hand.
+- **D6 — the end-to-end suite boots the dev server, never the bundle.** All 316
+  specs run against `npx tsx server.ts`, so `dist/server.cjs` — what production
+  actually runs — is only asked three questions by `check`'s smoke test. The
+  production-only paths (`registerSpaFallback`, `injectMeta`, the 404 rules, the
+  JSON-LD) are the gap. Related, and worth fixing together: since D3 gates
+  packaging to deploy-capable runs, **the promotion path is never exercised on a
+  pull request at all** — its first run each time is the merge.
+- **D7 — hygiene, led by the advisory job that reddens successful releases.**
+  `screenshots` is deliberately outside `deploy`'s `needs`, which is right; but a
+  red advisory sets the whole run to `failure` while the deploy succeeds, and
+  that has now been observed doing so more than half a dozen times, including on
+  this plan's own pull requests. `continue-on-error: true` plus a step summary
+  keeps the debt visible without lying about the release.
+
+### Smaller, recorded so they are not rediscovered
+
+- **Deployments are invisible to GitHub.** No `environment:` on the `deploy`
+  job, so there is no Deployments tab, no per-environment history and nowhere to
+  hang a protection rule later. Two lines, and it is what you want when
+  reconstructing an incident.
+- **`sync-broadcasts` pushes straight to `main`.** It works today and breaks the
+  day branch protection is enabled. Have it open a pull request; its own workflow
+  already lints and unit-tests the result, so the PR would be green on arrival.
+- **`main` is protected by convention only.** The rule that no session merges to
+  `main` has held, but nothing enforces it. Requiring `check` and `e2e` as status
+  checks interacts with the item above, so do that one first.
+- **The curated-data checkers never run on their own** — `check-hymns`,
+  `check-stadium-photos`, `check-player-wikipedia`, `check-player-photos`. That
+  is deliberate and must stay so: CI has no network dependency on a third party,
+  and a link rotting on someone else's server is not a reason for a red build on
+  a commit that did not touch it. A **scheduled monthly workflow that opens an
+  issue** honours that exactly — it is not CI on a commit and cannot redden
+  anything. Worth doing last, and only in that shape.
 
 ## From the Brasileirão Pro import
 
