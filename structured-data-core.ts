@@ -214,6 +214,8 @@ const trailFor = (route: Route, context: MetaContext): Array<{ name: string; pat
       return [HOME_CRUMB, { name: "Minha conta", path: "/conta" }];
     case "entrar":
       return [HOME_CRUMB, { name: "Entrar", path: "/entrar" }];
+    case "privacidade":
+      return [HOME_CRUMB, { name: "Privacidade", path: "/privacidade" }];
     case "jogos": {
       const jogos = { name: "Jogos", path: "/jogos" };
       return route.round === null

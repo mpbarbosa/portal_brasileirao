@@ -14,6 +14,7 @@ import { ClubView } from "@/src/components/ClubView";
 import { Footer } from "@/src/components/Footer";
 import { LiveView } from "@/src/components/LiveView";
 import { AccountButton, AccountView, SignInView } from "@/src/components/AccountView";
+import { PrivacyView } from "@/src/components/PrivacyView";
 import { MeuTimeStrip } from "@/src/components/MeuTime";
 import { MatchPage } from "@/src/components/MatchPage";
 import { NavBar } from "@/src/components/NavBar";
@@ -40,8 +41,13 @@ import type { ClubCode, Player, Scorer, Squad, StandingsRow } from "@/src/types"
 export function App() {
   const { route, navigate } = useRoute();
   const { theme, toggle: toggleTheme } = useTheme();
-  const { preferences, toggleClub } = usePreferences();
   const { state: accountState, signOut, deleteAccount } = useAccount();
+  // Meu time is device-local until an account is known, and reconciles with it
+  // once one is — see `planSync`. Signed out, this is exactly Phase 0.
+  const { preferences, toggleClub } = usePreferences({
+    id: accountState.status === "signed-in" ? accountState.account.id : null,
+    preferences: accountState.status === "signed-in" ? accountState.account.preferences : null,
+  });
   const [standings, setStandings] = useState<StandingsRow[]>([]);
   const [matches, setMatches] = useState<MatchesPayload | null>(null);
   const [scorers, setScorers] = useState<Scorer[]>([]);
@@ -425,6 +431,10 @@ export function App() {
               error={new URLSearchParams(window.location.search).get("erro")}
               onBack={() => navigate({ section: "classificacao" })}
             />
+          )}
+
+          {route.section === "privacidade" && (
+            <PrivacyView onBack={() => navigate({ section: "classificacao" })} />
           )}
 
           {route.section === "conta" && (

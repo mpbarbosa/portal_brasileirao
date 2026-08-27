@@ -515,24 +515,28 @@ these — it deploys and behaves exactly as it did before.
   secret and a network, and CI has neither by design. Verify once against the
   deployed host and record it in the runbook, the way the live provider path was.
 
-**Phase 2, in the order `docs/accounts.md` sets.**
+**Phase 2 — three of five done.**
 
-- **`/privacidade`.** A real route, so a four-file change, and it blocks twice
-  over: §5 says the notice blocks launch, and Google's Branding tab wants the URL
-  before the consent screen can be published.
-- **The preferences table, and the merge that gives it a caller.** *Meu time*
-  stops being device-local and becomes the first thing an account syncs. Deferred
-  from Phase 1 deliberately — shipping the schema alone would be a table nobody
-  reads, which is the same smell as a component variant with no call site.
-- **Backups.** The accounts database is the first state in this app that nothing
-  can regenerate: lose the volume and the readers are gone. Nightly `VACUUM INTO`
-  to S3, on a prefix separate from the deploy bucket, and a restore **rehearsed
-  on a scratch instance** rather than documented.
-- **Session pruning on a schedule.** `pruneSessions` exists and nothing calls it.
-  Expired rows are harmless to authentication and are still a record of when a
-  person was last here, kept for no stated purpose.
+- ~~`/privacidade`~~ — **done.** Public and indexable, unlike the account pages,
+  and in the sitemap because the only links to it sit on two pages a crawler is
+  told not to fetch.
+- ~~The preferences table and the merge that gives it a caller~~ — **done.**
+  *Meu time* now follows the account between aparelhos. The merge is **not**
+  last-write-wins, which §4 sketched; the argument for the simpler rule is in
+  `preferences-core.ts` beside `planSync` and summarised in `CLAUDE.md`.
+- ~~Session pruning on a schedule~~ — **done.** Hourly, and once at boot.
+- **Backups — the one that still matters, and the reason accounts must not be
+  switched on yet.** The database is the first state in this app that nothing can
+  regenerate: lose the volume and the readers are gone. Nightly `VACUUM INTO` to
+  S3, on a prefix separate from the deploy bucket, and a restore **rehearsed on a
+  scratch instance** rather than documented. Deliberately not written blind —
+  scripts nobody has run against a real host would look like a backup story
+  without being one, and the exit criterion here is a restore that happened, not
+  a file that exists.
 - **The retention promise, or its removal from the notice.** An unenforced
-  retention promise is worse than no promise.
+  retention promise is worse than no promise. The notice as shipped makes **no**
+  retention claim, so nothing is currently false; adding one means implementing
+  it in the same commit.
 
 **Screenshots.** The top app bar gained a control, so the advisory job is red and
 should be. But that control is invisible until a host is configured, so a refresh

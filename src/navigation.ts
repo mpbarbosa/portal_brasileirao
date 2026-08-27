@@ -44,7 +44,8 @@ export type SectionId =
    * portal.
    */
   | "conta"
-  | "entrar";
+  | "entrar"
+  | "privacidade";
 
 export interface NavItem {
   id: SectionId;

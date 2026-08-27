@@ -4,6 +4,7 @@ import { test } from "node:test";
 import {
   followLabel,
   followState,
+  planSync,
   isFollowing,
   NO_PREFERENCES,
   parsePreferences,
@@ -107,4 +108,44 @@ test("a club Brazilians call 'a' gets the right article", () => {
   const chape: Club = { code: "1772", name: "Chapecoense AF", shortName: "Chapecoense" };
   assert.equal(followLabel(chape, false), "Seguir a Chapecoense");
   assert.equal(followLabel(chape, true), "Deixar de seguir a Chapecoense");
+});
+
+
+test("an account that names a club wins, and nothing is uploaded", () => {
+  // The account is the source of truth: this is the case that makes the same
+  // club appear on a second aparelho.
+  const plan = planSync({ club: "1783" }, { club: "1769" });
+  assert.deepEqual(plan.device, { club: "1769" });
+  assert.equal(plan.upload, null);
+});
+
+test("a device seeds an account that has no club yet", () => {
+  // The case docs/accounts.md actually cared about: signing in must never
+  // silently discard the choice the reader just made.
+  const plan = planSync({ club: "1769" }, NO_PREFERENCES);
+  assert.deepEqual(plan.device, { club: "1769" });
+  assert.deepEqual(plan.upload, { club: "1769" });
+});
+
+test("two empties stay empty, and cost no request", () => {
+  const plan = planSync(NO_PREFERENCES, NO_PREFERENCES);
+  assert.deepEqual(plan.device, NO_PREFERENCES);
+  assert.equal(plan.upload, null);
+});
+
+test("the plan is idempotent — running it twice changes nothing", () => {
+  // The hook re-runs this whenever the account id changes, and a rule that
+  // drifted on a second pass would move somebody's club on a reload.
+  const first = planSync({ club: "1783" }, { club: "1769" });
+  const second = planSync(first.device, { club: "1769" });
+  assert.deepEqual(second.device, first.device);
+  assert.equal(second.upload, null);
+});
+
+test("planSync mutates neither side", () => {
+  const device = { club: "1769" };
+  const account = { club: null };
+  planSync(device, account);
+  assert.deepEqual(device, { club: "1769" });
+  assert.deepEqual(account, { club: null });
 });

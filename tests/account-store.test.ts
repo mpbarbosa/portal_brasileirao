@@ -235,3 +235,47 @@ test("the schema survives being opened twice — migrations are idempotent", () 
   assert.equal(second.findAccount("acc_1")?.displayName, "Ana");
   second.close();
 });
+
+
+test("a preference round-trips, and clearing it removes the row", () => {
+  const store = freshStore();
+  const account = signIn(store);
+
+  store.writePreference(account.id, "preferences", '{"club":"1769"}', NOW);
+  assert.deepEqual(store.readPreferences(account.id), { preferences: '{"club":"1769"}' });
+
+  // null deletes rather than storing a null, so "follows nobody" and "has never
+  // chosen" are the same state — which is what planSync assumes when it decides
+  // whether a device may seed the account.
+  store.writePreference(account.id, "preferences", null, NOW);
+  assert.deepEqual(store.readPreferences(account.id), {});
+});
+
+test("writing the same key twice replaces rather than duplicating", () => {
+  const store = freshStore();
+  const account = signIn(store);
+
+  store.writePreference(account.id, "preferences", '{"club":"1769"}', NOW);
+  store.writePreference(account.id, "preferences", '{"club":"1783"}', NOW + 1);
+  assert.deepEqual(store.readPreferences(account.id), { preferences: '{"club":"1783"}' });
+});
+
+test("deleting an account takes its preferences with it", () => {
+  // The cascade is only real because PRAGMA foreign_keys is ON — off, this
+  // assertion is what would fail.
+  const store = freshStore();
+  const account = signIn(store);
+  store.writePreference(account.id, "preferences", '{"club":"1769"}', NOW);
+
+  store.deleteAccount(account.id);
+  assert.deepEqual(store.readPreferences(account.id), {});
+});
+
+test("one account's preferences are invisible to another", () => {
+  const store = freshStore();
+  const ana = signIn(store, "sub-ana", "Ana");
+  const bruno = signIn(store, "sub-bruno", "Bruno");
+
+  store.writePreference(ana.id, "preferences", '{"club":"1769"}', NOW);
+  assert.deepEqual(store.readPreferences(bruno.id), {});
+});

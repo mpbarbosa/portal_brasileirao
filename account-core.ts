@@ -7,6 +7,8 @@
  * and `scripts/commons-api.ts` already draw.
  */
 
+import type { Preferences } from "@/preferences-core";
+
 export type AuthProvider = "google" | "dev";
 
 export interface Account {
@@ -37,11 +39,21 @@ export interface Account {
 export interface PublicAccount {
   id: string;
   displayName: string;
+  /**
+   * The account's preferences, carried here rather than behind a second
+   * endpoint.
+   *
+   * A signed-in reader needs both on every page load, and `/api/account/me` is
+   * already that request. A separate `GET /api/account/preferences` would
+   * double it for the only readers who have anything to fetch.
+   */
+  preferences: Preferences;
 }
 
-export const publicAccount = (account: Account): PublicAccount => ({
+export const publicAccount = (account: Account, preferences: Preferences): PublicAccount => ({
   id: account.id,
   displayName: account.displayName,
+  preferences,
 });
 
 /** Longer than this is a display bug rather than a name. */

@@ -178,7 +178,16 @@ test("robots omits the sitemap line when there is no origin to make it absolute"
 test("the sitemap carries the sections even with no data loaded", () => {
   const paths = sitemapEntries({}).map((entry) => entry.path);
 
-  assert.deepEqual(paths, ["/", "/ao-vivo", "/jogos", "/artilharia", "/jogadores"]);
+  assert.deepEqual(paths, [
+    "/",
+    "/ao-vivo",
+    "/jogos",
+    "/artilharia",
+    "/jogadores",
+    // Reachable only from /entrar and /conta, both of which are Disallowed, so
+    // without this line a crawler has no route to the privacy notice at all.
+    "/privacidade",
+  ]);
 });
 
 test("every round, club and fixture is listed", () => {

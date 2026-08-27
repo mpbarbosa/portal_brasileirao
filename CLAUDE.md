@@ -300,6 +300,28 @@ Traps, each of which cost something to find:
   it, because until accounts every page this app served was the same for everybody. Both
   sections are `Disallow`ed in `robots.txt` and absent from the sitemap.
 
+Phase 2 adds the **preferences** table and `/privacidade`. Two things about it are
+decisions rather than mechanics:
+
+- **`planSync` is not last-write-wins**, which §4 sketched. There is one key, so
+  timestamps would resolve exactly one case — signed out on device A, changed there, then
+  signed in on device B — and would cost a stamp beside every value, a storage-shape
+  migration for everyone who already has a preference, and a rule nobody can predict from
+  outside because the deciding value is invisible. The rule instead is one sentence: **the
+  account is the source of truth, and a device seeds an account that has none yet.** That
+  keeps the case the plan actually cared about (a sign-in never discards the choice just
+  made) and gives up the A-then-B case. Revisit at the second key.
+- **The upload is fire-and-forget**, so the page is usable before it lands. That is right
+  for a reader and a trap for a test: a spec that follows a club and immediately asks the
+  API what the account holds is racing it. Poll, or assert through the browser.
+
+And one testing trap that is a property of the cookie rather than of the code: **`page.request` cannot carry a session.** It is a Node-side fetch with no notion of a
+potentially trustworthy origin, so it will not send a `Secure` `__Host-` cookie over
+`http://127.0.0.1` — every signed-in call through it answers 401 while the browser beside
+it is signed in. It is still fine for *establishing* a session, because the `Set-Cookie` it
+receives lands in the context's jar and the browser is what later sends it. Read and write
+account state with `page.evaluate(fetch)`.
+
 The database lives at `ACCOUNTS_DB`, defaulting to `./data/accounts.db`. On the host it
 must stay **inside `DEPLOY_DIR`** — the systemd unit sets `ProtectSystem=strict` with
 `ReadWritePaths=${DEPLOY_DIR}`, so `/var/lib` is read-only to the process — and **outside

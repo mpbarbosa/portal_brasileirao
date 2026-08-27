@@ -34,6 +34,7 @@ const SECTIONS = new Set([
   "estadio",
   "conta",
   "entrar",
+  "privacidade",
 ]);
 
 /**
@@ -233,6 +234,12 @@ export const pageStatus = (pathname: string, context: MetaContext = {}): PageSta
       return FOUND;
     }
 
+    // Not listed beside `conta` and `entrar` below: this one is FOUND, which is
+    // the `default` branch's answer, and the point of saying so here is that
+    // the two are next to each other and a reader will wonder.
+    case "privacidade":
+      return second === undefined ? FOUND : missing("unknown-section");
+
     case "conta":
     case "entrar":
       // Explicit rather than left to the `default` below, which would answer
@@ -316,6 +323,10 @@ export const sitemapEntries = (context: {
     // Weekly, not daily: an elenco moves in a transfer window, and telling a
     // crawler otherwise is the same lie as a fixture claiming today's lastmod.
     { path: "/jogadores", lastmod: updatedAt, changefreq: "weekly", priority: 0.7 },
+    // Low priority and rarely changing, but present: it is reachable only from
+    // /entrar and /conta, both of which are Disallowed, so without this line a
+    // crawler has no route to it at all.
+    { path: "/privacidade", changefreq: "yearly", priority: 0.2 },
   ];
 
   for (const round of roundsOf(context.matches ?? [])) {
