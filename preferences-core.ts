@@ -15,6 +15,7 @@
  * one key per decision rather than a bag of loose values.
  */
 
+import { slugify } from "@/club-core";
 import type { Club, ClubCode } from "@/src/types";
 
 export interface Preferences {
@@ -114,16 +115,44 @@ export const toggleFollow = (preferences: Preferences, code: ClubCode): Preferen
 });
 
 /**
+ * Clubs a Brazilian says **a** rather than **o** about.
+ *
+ * Hand-kept, and it has to be: no provider reports grammatical gender, and the
+ * article does not follow from the spelling — "a Chapecoense" and "o Fluminense"
+ * end the same way, and "a Portuguesa" and "o Palmeiras" differ from each other
+ * only in the word itself. Any rule on the final letter gets both pairs wrong.
+ *
+ * The article belongs to the **name**, not to the club, which is why this is
+ * keyed by the slug of the short name rather than by `code`. A club that is
+ * relegated and promoted again keeps its article and may not keep its id, and
+ * the four below are the ones Brazilian football actually says "a" about — the
+ * others are here so that a promotion does not reintroduce the bug this set
+ * exists to fix.
+ *
+ * `slugify` is reused rather than reimplemented, exactly as `venue-core` reuses
+ * it: a second normaliser is how "Ponte Preta" and "ponte-preta" come to
+ * disagree about the same club.
+ */
+const FEMININE_CLUBS = new Set(["chapecoense", "portuguesa", "ponte-preta", "ferroviaria"]);
+
+/** "o" or "a", for a club's popular name. Masculine is the default because it
+ *  covers nineteen of the current twenty. */
+export const clubArticle = (club: Club): string =>
+  FEMININE_CLUBS.has(slugify(club.shortName)) ? "a" : "o";
+
+/**
  * pt-BR label for the control that follows or unfollows a club.
  *
- * The article is hardcoded masculine, and that is a real limitation rather than
- * an oversight: all twenty clubs in the division take "o" — o Palmeiras, o
- * Grêmio, o Athletico — and nothing in any payload reports grammatical gender,
- * so there is nothing to derive it from. A promoted Chapecoense or Portuguesa
- * would read "Seguir o Chapecoense", which is wrong. The fix when that day
- * comes is a small hand-kept set in this file beside the club data, the same
- * answer `NATIONALITY_LABELS` gives to the same shape of problem — not a
- * heuristic on the final letter, which "Sport" and "Bahia" both defeat.
+ * The article is not decoration. "Seguir o Chapecoense" is wrong pt-BR, and
+ * Chapecoense is in the division — 20th at the time of writing — so this is a
+ * live defect rather than a hypothetical one. It shipped in 52ab8b9 behind a
+ * comment claiming all twenty clubs take "o", which was written without reading
+ * the twenty names in `clubs.ts`. That is the whole lesson: the list was one
+ * grep away.
  */
-export const followLabel = (club: Club, following: boolean): string =>
-  following ? `Deixar de seguir o ${club.shortName}` : `Seguir o ${club.shortName}`;
+export const followLabel = (club: Club, following: boolean): string => {
+  const article = clubArticle(club);
+  return following
+    ? `Deixar de seguir ${article} ${club.shortName}`
+    : `Seguir ${article} ${club.shortName}`;
+};

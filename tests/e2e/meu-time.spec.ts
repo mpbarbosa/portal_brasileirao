@@ -13,10 +13,19 @@ import { expect, test, type Page } from "@playwright/test";
 const followControl = (page: Page) => page.locator("[data-follow]");
 const strip = (page: Page) => page.locator("[data-meu-time]");
 
-/** Open a club page directly; the URL takes a slug or a code. */
+/**
+ * Open a club page directly; the URL takes a slug or a code.
+ *
+ * Waits for the follow control rather than for the heading. The heading renders
+ * from the same data, so it looks equivalent — but it is not what these tests
+ * need, and under seven parallel workers hitting one dev server the default
+ * timeout was occasionally reached before the club resolved. Waiting for the
+ * thing each test is about to click is both the stronger precondition and the
+ * one that cannot pass while the page is still deciding which club this is.
+ */
 const openClub = async (page: Page, key = "palmeiras") => {
   await page.goto(`/clube/${key}`);
-  await expect(page.getByRole("heading", { level: 2 })).toBeVisible();
+  await expect(followControl(page)).toBeVisible();
 };
 
 test.describe("Meu time", () => {
