@@ -367,26 +367,46 @@ jobs:
       github.ref == 'refs/heads/main' &&
       (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
     runs-on: ubuntu-latest
-    # NO `environment:` BLOCK HERE, AND THAT IS LOAD-BEARING. It was added by
-    # #151 to give the repository a Deployments record, and it broke every
-    # release for ten commits until it was removed:
+    # Gives the repository a Deployments record: what went to production, when,
+    # from which run, and whether it succeeded. Until this existed, the only
+    # account of a release was the CI run that performed it — runs are listed by
+    # workflow rather than by what they changed, and the one that matters is
+    # indistinguishable from the hundreds that did not deploy.
     #
-    #     Could not assume role with OIDC:
-    #     Not authorized to perform sts:AssumeRoleWithWebIdentity
+    # THIS BLOCK REWRITES THE OIDC SUBJECT CLAIM, AND THAT IS WHY IT FAILED THE
+    # FIRST TIME. Without an environment the claim is
+    # `…:ref:refs/heads/main`; with one it is `…:environment:production`. #151
+    # added the block while the trust policy on portal-brasileirao-deploy pinned
+    # the ref form alone with StringEquals, so every release died at credential
+    # configuration with "Not authorized to perform sts:AssumeRoleWithWebIdentity"
+    # — three merges, production ten commits behind, and nothing in the workflow
+    # looking wrong. #156 reverted it.
     #
-    # Attaching a job to an environment REWRITES the OIDC subject claim. Without
-    # one it is `repo:<owner>/<repo>:ref:refs/heads/main`; with one it becomes
-    # `repo:<owner>/<repo>:environment:production`. The IAM trust policy on
-    # portal-brasileirao-deploy pins the first form with StringEquals, so the
-    # token stops matching and STS refuses. Nothing in the workflow looks wrong
-    # and nothing in the job changed — which is why #151's own comment said "the
-    # job's behaviour is therefore unchanged", in good faith.
+    # The policy now accepts BOTH subjects, and both were read from the token
+    # rather than derived: `.github/workflows/oidc-subject-probe.yml` prints them
+    # and was run twice. Both forms are needed, not just this one — rollback.yml
+    # and flip-back-drill.yml carry no environment and keep sending the ref form,
+    # so a policy holding only this one would leave production deployable and
+    # unrecoverable.
     #
-    # The Deployments record is still worth having. To restore it, change the
-    # TRUST POLICY FIRST — accept `…:environment:production`, or match both forms
-    # with StringLike — confirm a release deploys, and only then re-add this
-    # block. Re-adding it alone will take production down again, silently, and
-    # the failure will look like an AWS problem rather than a workflow one.
+    # IF YOU REMOVE THIS BLOCK, the ref form still covers everything and nothing
+    # breaks. If you CHANGE the environment name, the claim changes with it and
+    # the trust policy must be widened again first — same failure, same
+    # misleading shape.
+    #
+    # No protection rule is attached, so the job's timing is unchanged. Adding a
+    # required reviewer to the `production` environment later would make every
+    # deploy wait for a human: a deliberate choice to make, not a side effect to
+    # discover.
+    #
+    # rollback.yml deliberately does NOT carry this, so the record is one of
+    # forward releases only and will name the wrong sha as live after a rollback.
+    # That is a known incompleteness: its single job also serves the list-only
+    # mode, which changes nothing on the host, and recording a deployment for a
+    # run that only read a bucket would be worse than the gap.
+    environment:
+      name: production
+      url: https://brasileirao.mpbarbosa.com
     permissions:
       contents: read
       id-token: write        # required to mint the OIDC token AWS trusts
