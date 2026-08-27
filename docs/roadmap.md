@@ -126,12 +126,52 @@ thing tracking it. Before 2027-04-30.
 Left over from **Árbitro** (item 1 below), which surfaced more about the
 provider than it needed to build:
 
-- **Refresh the README screenshots once PR #104 deploys.** `MatchPage` gained a
-  row, which is an appearance path, so the capture job is red by design — no
-  `Screenshots-unaffected:` trailer applies, because the change genuinely
-  reaches a paint. The catch is that the row renders **only against live data**,
-  so a local capture cannot show it either: the sequence is merge, deploy, then
-  capture from the live site.
+- **Refresh the README screenshots — now due, and larger than this item.**
+  #104, #106 and #107 are merged and deployed; `/api/health` served `f72c169`
+  while this was written. So the precondition is met and the capture job is red
+  on `main`. No `Screenshots-unaffected:` trailer applies — the changes reach a
+  paint.
+
+  **The scope grew while it was queued, and whoever takes it should size it from
+  the diff rather than from this list.** Comparing `docs/screenshots/CAPTURED`
+  (`00fecde`) against `main` at the time of writing, **five** appearance paths
+  had moved, not the one this item was written for:
+
+  ```
+  src/App.tsx  ·  src/components/AccountView.tsx  ·  src/components/MatchPage.tsx
+  src/components/NavBar.tsx  ·  src/components/PlayersView.tsx
+  ```
+
+  `NavBar` is the one that decides the cost: the bar is on every route, so the
+  refresh is **all sixteen images**, not the two `MatchPage` owns. The plan
+  agreed between sessions — capture last, once, after everything lands — is still
+  right; it was simply costed against two changes and now covers several.
+
+  The árbitro row renders **only against live data**, so the sequence remains:
+  merge, deploy, capture from the live site. Re-check the diff above before
+  starting, since `main` moves.
+- **Two of the sixteen captures can never come back byte-identical, and that is
+  a property of the tooling rather than of any change.** `scripts/screenshot.ts`
+  sets `fullPage = !mobile && route === "/"`, so `classificacao-dark.png` and
+  `classificacao-light.png` are the only full-page shots — and a full-page `/`
+  includes the rodapé, which prints `Versão <sha>`. Those two therefore change
+  on **every** deploy whatever the code did. The consequence worth carrying:
+  *"the refresh showed no pixel change"* is not an observable state for them, so
+  the capture set cannot distinguish "nothing changed" from "something changed"
+  on the page most likely to be looked at. `CAPTURED`'s mechanical answer — that
+  a refresh always leaves something to commit — is trivially true there and
+  proves nothing. Do not read a two-image delta after a deploy as a regression;
+  the delta is the sha plus whatever live data moved.
+
+  A useful companion property, in the other direction: **a committed capture's
+  provider state is provable from its path.** `screenshot-core.ts` refuses any
+  provider that is not `football-data` ("frozen seed data") and
+  `scripts/screenshot.ts` writes refused captures to `docs/screenshots/local`
+  instead. So an image sitting in `docs/screenshots` cannot have been shot
+  against the seed, and a reviewer need not take the capturer's word for it. It
+  says nothing about which *host* was captured — a local production build with a
+  token passes identically, and only the rodapé sha distinguishes it.
+
 - **Watch whether upstream backfills the officials for rounds 16–24.** BSA names
   a referee on 157 of 380 fixtures — rounds 1–15 complete, 16 onward mostly not
   — so the row is absent from roughly 60% of match pages today. It fills in
