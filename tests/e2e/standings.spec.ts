@@ -266,4 +266,55 @@ test.describe("Classificação", () => {
 
     expect(played.x - (mark.x + mark.width)).toBeLessThan(32);
   });
+
+  const zoneKey = (page: Page) =>
+    page.getByRole("list", { name: /legenda das zonas/i });
+
+  test("the zone rail has a key naming both zones", async ({ page }) => {
+    // The rail existed for months with nothing on the page saying what either
+    // colour meant; the only explanation was a comment in the source.
+    const key = zoneKey(page);
+
+    await expect(key.getByRole("listitem")).toHaveCount(2);
+    await expect(key).toContainText("G4");
+    await expect(key).toContainText("Libertadores");
+    await expect(key).toContainText("Z4");
+    await expect(key).toContainText("Rebaixamento");
+  });
+
+  test("the key says which positions each zone covers, not just its colour", async ({ page }) => {
+    // The rail is a border colour and nothing else, so hue is its only
+    // channel — worthless to a red/green-colourblind reader and in any
+    // grayscale capture. Naming the positions puts the same fact on the
+    // position column, which every reader has. Asserted on text alone, since
+    // that is precisely the half that survives without colour.
+    const items = await zoneKey(page).getByRole("listitem").allInnerTexts();
+
+    expect(items).toHaveLength(2);
+    expect(items.find((item) => item.includes("G4"))).toMatch(/primeiras/i);
+    expect(items.find((item) => item.includes("Z4"))).toMatch(/últimas/i);
+
+    // Counted in from the ends rather than written as ordinals: Z4 is derived
+    // from the row count, so a hard-coded "17º ao 20º" would go quietly wrong
+    // if the division ever changed size. See CONTEXT.md, G4 / Z4.
+    expect(items.join(" ")).not.toMatch(/\d+\s*º/);
+  });
+
+  test("the key does not scroll away with the table", async ({ page }) => {
+    // The table sits in a horizontally scrolling Surface. A key placed inside
+    // it slides off to the left on exactly the narrow screen where a reader
+    // needs it — and looks perfect on a desktop, where the table never
+    // scrolls at all.
+    await page.setViewportSize(NARROW);
+
+    const key = zoneKey(page);
+    const before = (await key.boundingBox())!;
+
+    expect(await scrollTableRight(page)).toBeGreaterThan(0);
+
+    const after = (await key.boundingBox())!;
+    expect(after.x).toBeCloseTo(before.x, 0);
+    expect(after.x).toBeGreaterThanOrEqual(0);
+    expect(after.x + after.width).toBeLessThanOrEqual(NARROW.width + 1);
+  });
 });

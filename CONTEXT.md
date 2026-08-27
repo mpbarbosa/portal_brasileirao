@@ -556,8 +556,16 @@ not count).
 The Libertadores places (positions 1–4) and the relegation zone (the last four
 positions), marked with a coloured rail in `StandingsTable` via `zoneClass`. Z4 is
 computed from the row count rather than hard-coded to 17–20, so the table stays
-correct if the division ever changes size.
-_Avoid_: hard-coding `position > 16`; "top four"/"bottom four" in pt-BR copy.
+correct if the division ever changes size. The **legenda das zonas** beneath the
+table is where those two names reach the reader — "G4 Libertadores — as quatro
+primeiras posições", "Z4 Rebaixamento — as quatro últimas posições". It counts in
+from the ends of the table in words rather than naming ordinals, both because Z4
+is derived from the row count and because that sentence is the whole of what a
+colourblind reader or a grayscale capture gets: the rail carries hue and nothing
+else.
+_Avoid_: hard-coding `position > 16`; "top four"/"bottom four" in pt-BR copy;
+"17º ao 20º" in the key; a key that names only the colours ("verde",
+"vermelho") — that is the single-channel encoding again, one line further down.
 
 **P, J, V, E, D, SG**:
 The `Classificação` column headers: pontos, jogos, vitórias, empates, derrotas,

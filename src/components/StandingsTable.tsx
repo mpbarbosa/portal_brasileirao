@@ -10,14 +10,60 @@ import { formatRoute } from "@/route-core";
 import { Surface } from "@/src/components/Surface";
 import type { ClubCode, ClubRankHistory, RankAtRound, StandingsRow } from "@/src/types";
 
+/** Both zones are four places deep — the count the abbreviations themselves
+ *  carry. Named because the key below states the same rule in words, and a
+ *  rail that disagreed with its own key would be worse than an unexplained
+ *  rail. `ZONE_DEPTH_WORD` is that number spelled out: the key is prose, and
+ *  "as 4 primeiras" reads as a scoreline rather than as a sentence. Nothing
+ *  can check the two against each other, so they sit together. */
+const ZONE_DEPTH = 4;
+const ZONE_DEPTH_WORD = "quatro";
+
+/** The two rail colours, shared between the cell and the key so a change to
+ *  either colour cannot leave the other describing the old one. */
+const G4_RAIL = "border-l-2 border-l-positive";
+const Z4_RAIL = "border-l-2 border-l-negative";
+
 /** Libertadores places (G4) and the relegation zone (Z4) get a rail colour.
  *  It rides on the first cell, not the row: the row scrolls horizontally and
  *  would carry the rail away underneath the frozen columns. */
 const zoneClass = (position: number, total: number): string => {
-  if (position <= 4) return "border-l-2 border-l-positive";
-  if (position > total - 4) return "border-l-2 border-l-negative";
+  if (position <= ZONE_DEPTH) return G4_RAIL;
+  if (position > total - ZONE_DEPTH) return Z4_RAIL;
   return "border-l-2 border-l-transparent";
 };
+
+/**
+ * The key to the rail.
+ *
+ * `where` is the load-bearing half, not a gloss on the term. The rail is a
+ * border colour and nothing else, so **hue is its only channel**: it says
+ * nothing to a red/green-colourblind reader, and nothing in a grayscale
+ * capture. Naming which positions each zone covers moves the fact onto a
+ * channel every reader already has — the position column — after which the
+ * rail confirms what the key said rather than being the only place it is said.
+ * That is the same bargain the club page's form pills strike by carrying a
+ * letter beside the colour.
+ *
+ * It counts in from the ends of the table rather than naming 17º–20º, because
+ * Z4 is derived from the row count (see `zoneClass`, and `CONTEXT.md`): a
+ * division that changed size would leave hard-coded ordinals wrong on the page
+ * with nothing to catch it.
+ */
+const ZONE_KEY = [
+  {
+    rail: G4_RAIL,
+    term: "G4",
+    zone: "Libertadores",
+    where: `as ${ZONE_DEPTH_WORD} primeiras posições`,
+  },
+  {
+    rail: Z4_RAIL,
+    term: "Z4",
+    zone: "Rebaixamento",
+    where: `as ${ZONE_DEPTH_WORD} últimas posições`,
+  },
+];
 
 /** The row separator. It lives on every cell because the table is
  *  `border-separate` (see below), and that model does not paint borders set on
@@ -120,102 +166,136 @@ export function StandingsTable({
   const showCampaign = lastRound > 0;
 
   return (
-    <Surface className="overflow-x-auto">
-      {/* `border-separate` rather than the default collapse: in the collapsed
-          model a cell's borders belong to the table, so they scroll out from
-          under a sticky cell and the zone rail vanishes mid-scroll. */}
-      <table
-        className={`w-full border-separate border-spacing-0 text-body-medium ${
-          showCampaign ? "min-w-[40rem]" : "min-w-[34rem]"
-        }`}
-      >
-        <caption className="sr-only">Classificação do Campeonato Brasileiro Série A</caption>
-        <thead className="bg-surface-container-low text-label-medium uppercase text-ink-muted">
-          <tr>
-            <th scope="col" className={`${STICKY_POSITION} bg-surface-container-low px-3 py-2 text-left`}>#</th>
-            <th scope="col" className={`${STICKY_CLUB} ${CLUB_PADDING} bg-surface-container-low py-2 text-left`}>Clube</th>
-            <th scope="col" className="px-2 py-2 text-right">P</th>
-            {/* Beside the points rather than after SG: the campanha is read
-                against the total, and a narrow screen scrolls the tallies away
-                from it rather than it away from the tallies. */}
-            {showCampaign && <th scope="col" className={`${CAMPAIGN_COLUMN} py-2 text-left`}>Campanha</th>}
-            <th scope="col" className="px-2 py-2 text-right">J</th>
-            <th scope="col" className="px-2 py-2 text-right">V</th>
-            <th scope="col" className="px-2 py-2 text-right">E</th>
-            <th scope="col" className="px-2 py-2 text-right">D</th>
-            <th scope="col" className="px-2 py-2 text-right">SG</th>
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((row) => (
-            <tr key={row.club.code}>
-              <td
-                className={`${ROW_LINE} ${STICKY_POSITION} ${zoneClass(row.position, rows.length)} bg-surface px-3 py-2 tabular-nums text-ink-muted`}
-              >
-                {row.position}
-              </td>
-              <td className={`${ROW_LINE} ${STICKY_CLUB} ${CLUB_PADDING} bg-surface py-2 font-medium`}>
-                <span className="mr-2 inline-flex align-middle">
-                  <ClubCrest club={row.club} size={18} />
-                </span>
-                {row.club.code === followedCode && (
-                  <>
-                    <StarGlyph filled className="mr-1 inline-block h-[1em] w-[1em] align-[-0.125em] text-primary" />
-                    {/* The star says which row to a reader who can see it and
-                        nothing at all to one who cannot, so the fact is carried
-                        in text as well. */}
-                    <span className="sr-only">Meu time: </span>
-                  </>
-                )}
-                {/* Name and state are separate elements: they are distinct data,
-                    and running them together reads as one string to assistive
-                    tech and to any text-based assertion. */}
-                {onSelectClub ? (
-                  <a
-                    href={formatRoute({ section: "clube", key: clubKey(row.club) })}
-                    onClick={(event) => {
-                      // Let modified clicks open a new tab, as any link should.
-                      if (
-                        event.metaKey || event.ctrlKey || event.shiftKey ||
-                        event.altKey || event.button !== 0
-                      ) {
-                        return;
-                      }
-                      event.preventDefault();
-                      onSelectClub(clubKey(row.club));
-                    }}
-                    className={`rounded-x-small ${LINK_UNDERLINE}`}
-                  >
-                    {row.club.shortName}
-                  </a>
-                ) : (
-                  <span>{row.club.shortName}</span>
-                )}
-                {row.club.state && (
-                  <span className="ml-2 text-body-small text-ink-faint">{row.club.state}</span>
-                )}
-              </td>
-              <td className={`${ROW_LINE} px-2 py-2 text-right font-semibold tabular-nums`}>{row.points}</td>
-              {showCampaign && (
-                <td className={`${ROW_LINE} ${CAMPAIGN_COLUMN} py-2`}>
-                  <RankSparkline
-                    entries={campaigns.get(row.club.code) ?? []}
-                    clubCount={rows.length}
-                    lastRound={lastRound}
-                  />
-                </td>
-              )}
-              <td className={`${ROW_LINE} px-2 py-2 text-right tabular-nums text-ink-muted`}>{row.played}</td>
-              <td className={`${ROW_LINE} px-2 py-2 text-right tabular-nums text-ink-muted`}>{row.wins}</td>
-              <td className={`${ROW_LINE} px-2 py-2 text-right tabular-nums text-ink-muted`}>{row.draws}</td>
-              <td className={`${ROW_LINE} px-2 py-2 text-right tabular-nums text-ink-muted`}>{row.losses}</td>
-              <td className={`${ROW_LINE} px-2 py-2 text-right tabular-nums text-ink-muted`}>
-                {row.goalDifference > 0 ? `+${row.goalDifference}` : row.goalDifference}
-              </td>
+    <>
+      <Surface className="overflow-x-auto">
+        {/* `border-separate` rather than the default collapse: in the collapsed
+            model a cell's borders belong to the table, so they scroll out from
+            under a sticky cell and the zone rail vanishes mid-scroll. */}
+        <table
+          className={`w-full border-separate border-spacing-0 text-body-medium ${
+            showCampaign ? "min-w-[40rem]" : "min-w-[34rem]"
+          }`}
+        >
+          <caption className="sr-only">Classificação do Campeonato Brasileiro Série A</caption>
+          <thead className="bg-surface-container-low text-label-medium uppercase text-ink-muted">
+            <tr>
+              <th scope="col" className={`${STICKY_POSITION} bg-surface-container-low px-3 py-2 text-left`}>#</th>
+              <th scope="col" className={`${STICKY_CLUB} ${CLUB_PADDING} bg-surface-container-low py-2 text-left`}>Clube</th>
+              <th scope="col" className="px-2 py-2 text-right">P</th>
+              {/* Beside the points rather than after SG: the campanha is read
+                  against the total, and a narrow screen scrolls the tallies away
+                  from it rather than it away from the tallies. */}
+              {showCampaign && <th scope="col" className={`${CAMPAIGN_COLUMN} py-2 text-left`}>Campanha</th>}
+              <th scope="col" className="px-2 py-2 text-right">J</th>
+              <th scope="col" className="px-2 py-2 text-right">V</th>
+              <th scope="col" className="px-2 py-2 text-right">E</th>
+              <th scope="col" className="px-2 py-2 text-right">D</th>
+              <th scope="col" className="px-2 py-2 text-right">SG</th>
             </tr>
+          </thead>
+          <tbody>
+            {rows.map((row) => (
+              <tr key={row.club.code}>
+                <td
+                  className={`${ROW_LINE} ${STICKY_POSITION} ${zoneClass(row.position, rows.length)} bg-surface px-3 py-2 tabular-nums text-ink-muted`}
+                >
+                  {row.position}
+                </td>
+                <td className={`${ROW_LINE} ${STICKY_CLUB} ${CLUB_PADDING} bg-surface py-2 font-medium`}>
+                  <span className="mr-2 inline-flex align-middle">
+                    <ClubCrest club={row.club} size={18} />
+                  </span>
+                  {row.club.code === followedCode && (
+                    <>
+                      <StarGlyph filled className="mr-1 inline-block h-[1em] w-[1em] align-[-0.125em] text-primary" />
+                      {/* The star says which row to a reader who can see it and
+                          nothing at all to one who cannot, so the fact is carried
+                          in text as well. */}
+                      <span className="sr-only">Meu time: </span>
+                    </>
+                  )}
+                  {/* Name and state are separate elements: they are distinct data,
+                      and running them together reads as one string to assistive
+                      tech and to any text-based assertion. */}
+                  {onSelectClub ? (
+                    <a
+                      href={formatRoute({ section: "clube", key: clubKey(row.club) })}
+                      onClick={(event) => {
+                        // Let modified clicks open a new tab, as any link should.
+                        if (
+                          event.metaKey || event.ctrlKey || event.shiftKey ||
+                          event.altKey || event.button !== 0
+                        ) {
+                          return;
+                        }
+                        event.preventDefault();
+                        onSelectClub(clubKey(row.club));
+                      }}
+                      className={`rounded-x-small ${LINK_UNDERLINE}`}
+                    >
+                      {row.club.shortName}
+                    </a>
+                  ) : (
+                    <span>{row.club.shortName}</span>
+                  )}
+                  {row.club.state && (
+                    <span className="ml-2 text-body-small text-ink-faint">{row.club.state}</span>
+                  )}
+                </td>
+                <td className={`${ROW_LINE} px-2 py-2 text-right font-semibold tabular-nums`}>{row.points}</td>
+                {showCampaign && (
+                  <td className={`${ROW_LINE} ${CAMPAIGN_COLUMN} py-2`}>
+                    <RankSparkline
+                      entries={campaigns.get(row.club.code) ?? []}
+                      clubCount={rows.length}
+                      lastRound={lastRound}
+                    />
+                  </td>
+                )}
+                <td className={`${ROW_LINE} px-2 py-2 text-right tabular-nums text-ink-muted`}>{row.played}</td>
+                <td className={`${ROW_LINE} px-2 py-2 text-right tabular-nums text-ink-muted`}>{row.wins}</td>
+                <td className={`${ROW_LINE} px-2 py-2 text-right tabular-nums text-ink-muted`}>{row.draws}</td>
+                <td className={`${ROW_LINE} px-2 py-2 text-right tabular-nums text-ink-muted`}>{row.losses}</td>
+                <td className={`${ROW_LINE} px-2 py-2 text-right tabular-nums text-ink-muted`}>
+                  {row.goalDifference > 0 ? `+${row.goalDifference}` : row.goalDifference}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </Surface>
+
+      {/* Outside the Surface above, deliberately: that Surface *is* the scroll
+          container, so a key placed within it slides off to the left the moment
+          the table is scrolled — on exactly the narrow screen where the reader
+          most needs it, and never on the desktop where this would be checked.
+          It lives in this component rather than at the call site because it
+          describes `zoneClass`, which lives here; a key one file away from the
+          rule it explains is a key that goes stale unnoticed.
+
+          Nothing to explain before the rows land: with no rows there is no
+          rail, and a key to marks that are not on the page reads as a fault. */}
+      {rows.length > 0 && (
+        <ul
+          aria-label="Legenda das zonas da classificação"
+          className="mt-2 flex flex-wrap gap-x-4 gap-y-1 px-1 text-body-small text-ink-muted"
+        >
+          {ZONE_KEY.map((zone) => (
+            <li key={zone.term} className="flex items-center gap-2">
+              {/* The swatch repeats the rail's own utilities rather than
+                  restating its colour, so the reader matches one mark to the
+                  other. Hidden from assistive tech for the reason the crests
+                  carry an empty `alt`: it says exactly what the text beside it
+                  says, and naming it would announce each zone twice. */}
+              <span aria-hidden="true" className={`${zone.rail} inline-block h-4`} />
+              <span>
+                <span className="font-semibold text-ink-soft">{zone.term}</span> {zone.zone} —{" "}
+                {zone.where}
+              </span>
+            </li>
           ))}
-        </tbody>
-      </table>
-    </Surface>
+        </ul>
+      )}
+    </>
   );
 }
