@@ -266,8 +266,18 @@ jobs:
       # never the bytes `check` smoke-tested — only a second build of the same
       # commit. It now promotes the proven artifact instead. Everything left
       # here needs aws, jq, git and curl, all present on the runner.
+      # v8, beside `upload-artifact@v6` in `check`. That asymmetry looks like an
+      # oversight and is not one: the two live in separate repositories and
+      # version independently, and `download-artifact` did not reach node24 until
+      # v7 while `upload-artifact` was already there at v6. Runners currently
+      # force a node20 action onto node24 and warn; eventually they stop forcing
+      # and start failing. Do not "correct" these two to match.
+      #
+      # v8 also errors on a digest mismatch rather than warning, which layers
+      # with the step below rather than duplicating it: GitHub checks the
+      # artifact is what was uploaded, that step checks it is what `check` proved.
       - name: Download the payload that check proved
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v8
         with:
           name: release-${{ github.sha }}
 
@@ -300,8 +310,13 @@ jobs:
       # shape silently never matches. If role assumption starts failing with
       # "Not authorized to perform sts:AssumeRoleWithWebIdentity", print the
       # claim before touching anything else.
+      #
+      # v6 is the first node24 release of this action. Its only breaking change
+      # is that runtime and the runner floor (v2.327.1) that comes with it —
+      # role-to-assume, role-session-name and aws-region are unchanged, which is
+      # the part that matters here given the claim-matching above.
       - name: Assume the deploy role
-        uses: aws-actions/configure-aws-credentials@v5
+        uses: aws-actions/configure-aws-credentials@v6
         with:
           role-to-assume: arn:aws:iam::655139684612:role/portal-brasileirao-deploy
           role-session-name: gha-deploy-${{ github.run_id }}
