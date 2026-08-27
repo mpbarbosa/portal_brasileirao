@@ -47,6 +47,19 @@ to abort a whole run, and the end-to-end specs depended on some fixture in round
 - Re-run `sync-broadcasts` weekly as the season advances; the cron already does.
 - Watch for broadcasters CBF names that we render as wordmarks — ESPN/Disney+,
   Band, SportyNet — and add marks where a public-domain one exists.
+- **`scripts/deploy.sh` neither retains the previous release nor flips back to
+  it.** D5b gave that to the pipeline — `07_install_release.sh` keeps the
+  outgoing release in `$DEPLOY_DIR/previous/` and `06_redeploy.sh` restores it
+  when the health check fails — but `deploy.sh` carries its own inline remote
+  block and never calls either script, so the manual path still destroys the
+  running build before the new one is proven. Documented rather than fixed:
+  teaching it the same trick means a **third** copy of the restart-and-health
+  logic, and two is already one more than anyone reconciles. The honest fix is
+  to make `deploy.sh` hand off to `07` the way CI does, which is a bigger change
+  than it looks — see [`cicd-plan.md`](cicd-plan.md) D5. Note `CLAUDE.md`
+  already forbids running `deploy.sh` by hand, so this is a latent trap rather
+  than a live one: it springs the first time someone reaches for it during an
+  incident, which is exactly when the previous release matters most.
 
 ## From the Brasileirão Pro import
 
