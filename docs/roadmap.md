@@ -165,16 +165,14 @@ should be. But that control is invisible until a host is configured, so a refres
 today photographs no change at all — take it after the credentials are live, not
 after the merge.
 
-**One correctness item, already handed off.** The club-article fix covered one
-call site of five: `page-meta-core.ts` still renders "Escudo **do** Chapecoense",
-"artilheiros **do** Chapecoense" and "Casa **do** Chapecoense", and
-`PlayersView` still says "Ver a página **do** Chapecoense". Two of those are
-metadata that feeds link previews. The guard added with the fix does not guard —
-it asserts the feminine list is exactly `["Chapecoense"]`, so a *known* feminine
-club arriving turns it red while an unknown one falls through to the masculine
-default silently. Making the table exhaustive over `src/data/clubs.ts`, the way
-`NATIONALITY_LABELS` is over `squads.ts`, is the fix. A worktree and brief are
-prepared at `.claude/worktrees/artigo-do-clube`.
+**One rule to follow rather than an item to do.** Every string that puts a
+preposition in front of a club name goes through `club-core.ts`, whose article
+table is **exhaustive over `src/data/clubs.ts`** — a club with no entry fails the
+build until somebody writes its article down, the way `NATIONALITY_LABELS` works
+over `squads.ts`. That landed after this section was first drafted, and it is
+worth knowing before writing any Phase 2 copy: `/privacidade` and the account
+pages will want "a sua conta", not a club name, but the moment anything says
+"do <clube>" it belongs in that helper and not in a template literal.
 
 
 ## Constraints that must survive any redesign
