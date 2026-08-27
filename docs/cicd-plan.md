@@ -261,16 +261,31 @@ input for rollbacks.
 *Exit:* a manually-dispatched deploy of a known ancestor is refused, naming both
 commits; a normal push still deploys.
 
-### D2 — Every commit on `main` reaches production
+### D2 — Every commit on `main` reaches production — **done**
 
-Defect 2. Reconciling scheduled job.
+Defect 2. `.github/workflows/reconcile.yml`, every 15 minutes.
 
-**Half of this shipped with D1**, and the reason is worth recording: the
-`event_name == 'push'` gate had to go before the ancestry guard could be tested
-at all, because `main` only moves forward and no push can present an ancestor to
-refuse. So `deploy` already runs for a `workflow_dispatch` on `main`, and what is
-left here is the reconciler — the scheduled job that compares `origin/main`
-against the sha at `/api/health` and closes the gap without anyone asking.
+**Half of this shipped with D1**: the `event_name == 'push'` gate had to go
+before the ancestry guard could be tested at all, because `main` only moves
+forward and no push can present an ancestor to refuse. The reconciler is the
+other half.
+
+It **decides**; `ci.yml` deploys. Dispatching a normal run rather than carrying
+a second copy of the deploy logic means a reconciled release goes through the
+same `check`, `e2e`, ancestry guard and live-commit assertion as any other.
+
+Its bias is the **opposite** of the ancestry guard's, and that asymmetry is the
+design. The guard fails **open** — it decides whether a release a person asked
+for may proceed, and during an outage deployability beats ordering. The
+reconciler fails **safe** — it starts a release nobody asked for, unattended, so
+anything it cannot establish means it does nothing and says why. It hands off on
+an unreachable site (that is an incident, not a gap), an unusable or unknown live
+sha, a live commit absent from the checkout, a divergent history, and whenever a
+CI run for `main` is already in flight.
+
+*Exit:* met. Nine cases exercised against the shipped script; it dispatches in
+exactly one — a real gap where `main` descends from live — and holds in the other
+eight.
 
 *Exit:* delete the tip's workflow run mid-flight (or dispatch from a stale state)
 and observe the reconciler deploy within one interval, once. Then no more empty
