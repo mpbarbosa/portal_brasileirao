@@ -51,6 +51,33 @@ updates:
       time: "06:00"
       timezone: Etc/UTC
     groups:
+      # Both of the groups below exist because of what the FIRST run of this
+      # file produced. Order matters: a dependency joins the first group it
+      # matches, so the specific ones must precede the catch-all.
+
+      # vite and its React plugin are a pair, not two packages. plugin-react 6
+      # declares `peer vite@^8`, so Dependabot offering it against vite 6
+      # produced a pull request that could not install, let alone merge — it
+      # failed at `npm ci` with ERESOLVE before any code ran. Grouping them
+      # means their majors arrive as one reviewable change, or not at all.
+      vite:
+        patterns: ["vite", "@vitejs/*"]
+
+      # esbuild is 0.x, where the MINOR is the breaking position — semver says
+      # 0.25 -> 0.28 is a minor, and Dependabot correctly grouped it as one,
+      # but for a 0.x package that is a major in everything except the number.
+      # It bundles server.ts into dist/server.cjs, so a surprise there changes
+      # the artifact that ships.
+      #
+      # This one is the more marginal of the two, and the reason is worth
+      # stating: `check` builds the bundle AND boots it AND smoke-tests three
+      # endpoints, so the 0.25 -> 0.28 bump was in fact well covered and went
+      # green. Isolating it does not add safety the gates lack; it makes a
+      # FAILURE unambiguous, by keeping the one package whose breakage is
+      # mis-classified by semver out of a group of five.
+      esbuild:
+        patterns: ["esbuild"]
+
       npm-minor-and-patch:
         patterns: ["*"]
         update-types: [minor, patch]
