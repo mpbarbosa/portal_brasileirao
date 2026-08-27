@@ -346,8 +346,35 @@ there. `npm audit --audit-level=high` belongs in its own advisory job for the
 same reason `screenshots` is advisory — an upstream advisory published on a
 Tuesday must not stop an unrelated release.
 
-**B. Deployments are invisible to GitHub — REVERTED, and blocked on an IAM
-change.** Shipped in #151, it broke every release for ten commits and was removed
+**B. Deployments are invisible to GitHub — done, on the second attempt.**
+Shipped in #151, reverted in #156 because it took production down for ten
+commits, and relanded once the trust policy accepted the claim it produces.
+
+**What actually blocked it was IAM write access, not knowledge of the change.**
+Worth recording, because two attempts were spent discovering it: the deploying
+account (`user/mpb`) holds neither `iam:UpdateAssumeRolePolicy` under its default
+credentials nor `sts:AssumeRole` on the deploy role, so the widening had to be
+applied under a different profile. Anyone re-attempting this class of change
+should establish *who can edit the role* before designing anything, the way the
+phase's own precondition rule says.
+
+**Both subjects were read, not derived.**
+`.github/workflows/oidc-subject-probe.yml` prints the claim GitHub issues here,
+with and without an environment, and touches no AWS. Run twice, independently,
+with identical results — this repository's subject carries suffixes no document
+predicts, so inference would have been a coin flip on a change whose failure mode
+is a silent production freeze.
+
+**The order that made it safe**, and the step most likely to be skipped: policy
+first, then *confirm an ordinary release still deploys* (`192b50f`, an empty
+commit, exercising the `ref` form against the widened condition), and only then
+re-add the block. Reading a policy back proves it parses; only a deploy proves
+STS evaluates it as intended.
+
+**The original entry follows.**
+
+**B (first attempt, reverted). Deployments are invisible to GitHub — blocked on
+an IAM change.** Shipped in #151, it broke every release for ten commits and was removed
 in #155. Attaching the job to an environment **rewrites the OIDC subject claim**:
 without one it is `repo:<owner>/<repo>:ref:refs/heads/main`, with one it becomes
 `repo:<owner>/<repo>:environment:production`. The trust policy on
