@@ -162,6 +162,13 @@ what makes the logic testable without mocking HTTP.
   the moment the payload lands rather than per render, because `now` moves and
   `uptime` does not.
 
+- `session-core.ts`, `account-core.ts`, `oauth-core.ts`, `rate-limit-core.ts` — the
+  **Conta** subsystem's judgement, all pure and all taking `now` as a parameter like
+  `cache-core.ts`. Expiry, rolling renewal, PKCE, the `id_token` claim checks and the
+  token bucket are unit-tested without a database, a browser or a Google client.
+  `account-store.ts` is the only file that knows SQL, which is the same split
+  `commons-core.ts` and `scripts/commons-api.ts` already draw.
+
 Extract to a core module before logic in `server.ts` grows a branch worth testing.
 
 ### Data provider
@@ -240,6 +247,66 @@ carries a coach),
 note its `currentTeam` is often a national team, which is why the card prefers the
 club the page already knew),
 `/api/matches` (optional `?round=` — a non-integer or `< 1` is a 400).
+
+### Contas
+
+Phase 1 of `docs/accounts.md`: sign in with Google, `/entrar` and `/conta`, sessions in
+SQLite. **Off unless configured**, and that is the whole of its deployment story —
+`GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` unset means the feature is *absent*: no
+control renders, `/api/auth/*` and `/api/account/*` answer 404, and the app is exactly
+what it was. The same idiom as `FOOTBALL_DATA_TOKEN`, and it is what lets this ship to a
+host nobody has configured yet.
+
+**`/api/account/*` and `/api/auth/*` are the documented exception to the `ApiEnvelope`
+rule**, and this paragraph is where that exception lives so the rule above stays
+believable. `source`, `note` and `updatedAt` answer "how fresh is this third party's data
+and how far has it degraded" — an account has no upstream, no staleness and no honest
+fallback, and "não foi possível ler a sua conta" must be a real status code rather than a
+cheerful envelope containing somebody else's defaults. Plain JSON, real codes, `{ error }`
+in pt-BR. `/api/health` was the first exception; these are the second.
+
+**There is no `SESSION_SECRET`, and the plan expected one.** A session is 256 bits of
+randomness stored as a SHA-256 digest in a table, so there is nothing to sign, nothing to
+rotate, and no secret whose absence needs a safe default. The same reasoning covers the
+sign-in transaction: `state`, `nonce` and the PKCE verifier only have to survive from our
+own response to our own next request, and the `__Host-` prefix is what stops any other
+origin writing that cookie.
+
+Traps, each of which cost something to find:
+
+- **A `__Host-` cookie without `Secure` is refused by the browser**, silently. Deriving
+  `Secure` from `APP_URL` made sign-in *appear* to work on a fresh clone: the server set
+  the cookie, the browser dropped it, `/api/account/me` answered null, nothing errored.
+  It is now unconditional — `localhost` and `127.0.0.1` are secure contexts, so plain http
+  development is unaffected. Note `curl` declines to *send* a `Secure` cookie over http,
+  which is a property of curl and not of the browser: verify this path with Playwright.
+- **`node:sqlite` is loaded with `createRequire` inside `openStore`, never imported at the
+  top.** A static import is evaluated at boot, and on Node 20 — still the floor
+  `01_setup_app_directory.sh` accepts — the module does not exist, so the **whole process
+  fails to start**. That turns "this host is a version behind" into a site that is down,
+  on a release that only added a feature nobody had switched on. Raising the host floor to
+  22 is an ops step for when accounts are actually enabled, not a prerequisite for
+  deploying the code.
+- **SQLite creates the file but not the directory above it**, and fails with a message that
+  reads like a permissions problem. `openStore` makes its own directory.
+- **`PRAGMA foreign_keys` is OFF by default**, which would make `ON DELETE CASCADE`
+  decorative — a deleted account would leave working sessions pointing at a row that is
+  gone.
+- **`ACCOUNTS_DEV_LOGIN` mints a session for anybody who asks.** It exists so the e2e suite
+  can test sign-in without a Google client or a network, keeping CI secret-free. The server
+  **refuses to start** with it set when `NODE_ENV=production`, and the route is registered
+  conditionally, so in production it does not exist rather than existing and declining.
+- `pageStatus` gained **`PRIVATE`** — 200, `index: false` — because `/conta` is a real page
+  whose content differs per requester. The type always allowed it; no constructor produced
+  it, because until accounts every page this app served was the same for everybody. Both
+  sections are `Disallow`ed in `robots.txt` and absent from the sitemap.
+
+The database lives at `ACCOUNTS_DB`, defaulting to `./data/accounts.db`. On the host it
+must stay **inside `DEPLOY_DIR`** — the systemd unit sets `ProtectSystem=strict` with
+`ReadWritePaths=${DEPLOY_DIR}`, so `/var/lib` is read-only to the process — and **outside
+`dist/`**, which both rsyncs delete with `--delete` and `express.static` serves over HTTP.
+It is the first state in this app that no script can regenerate, so backups are now an
+obligation rather than a nicety; that is Phase 2, and `docs/accounts.md` §3.1 is the plan.
 
 Adding a section is: a `NAV_ITEMS` entry in `src/navigation.ts`, a `Route` variant plus
 parse/format cases in `route-core.ts`, a case in `App`'s view switch, and — if it needs new

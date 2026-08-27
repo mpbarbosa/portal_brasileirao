@@ -1,0 +1,305 @@
+/**
+ * The only file that knows SQL.
+ *
+ * Everything that decides *what should happen* lives in `account-core.ts` and
+ * `session-core.ts`, which are pure and take `now` as a parameter. This file
+ * decides only where the bytes go. That split is what lets expiry, renewal and
+ * claim-checking be unit-tested without a database, exactly as
+ * `commons-core.ts` is tested without a network while `scripts/commons-api.ts`
+ * does the fetching.
+ *
+ * `node:sqlite` rather than `better-sqlite3`: it is in core Node, so there is no
+ * native module for `npm ci --omit=dev` to build on a production box the deploy
+ * scripts already avoid compiling on. It emits an `ExperimentalWarning` on
+ * boot — that is expected, and belongs in the runbook rather than in an
+ * incident.
+ */
+
+import { createRequire } from "node:module";
+import { mkdirSync } from "node:fs";
+import path from "node:path";
+
+import type { DatabaseSync as DatabaseSyncType } from "node:sqlite";
+
+type DatabaseSync = DatabaseSyncType;
+
+/**
+ * `node:sqlite` is loaded **lazily**, and that is not a style choice.
+ *
+ * A static import is evaluated when `server.ts` is loaded, and on Node 20 —
+ * which `01_setup_app_directory.sh` still accepts as the floor — the module
+ * does not exist, so importing it throws `ERR_UNKNOWN_BUILTIN_MODULE` and the
+ * **whole process fails to boot**. That would turn "this host is a version
+ * behind" into a site that is down, on a release that only meant to add a
+ * feature nobody had switched on.
+ *
+ * Loading it here instead keeps the contract the rest of this file states: an
+ * unavailable store is a feature that is absent, never an app that is broken.
+ * Raising the host's floor to 22 is an ops step for whenever accounts are
+ * actually enabled — not a prerequisite for deploying this code.
+ */
+const loadDatabaseSync = (): new (path: string) => DatabaseSync => {
+  const require = createRequire(import.meta.url);
+  return (require("node:sqlite") as { DatabaseSync: new (path: string) => DatabaseSync })
+    .DatabaseSync;
+};
+
+import type { Account, AuthProvider } from "@/account-core";
+import type { SessionRecord } from "@/session-core";
+
+/**
+ * Migrations, applied in order, tracked by SQLite's own `PRAGMA user_version`.
+ *
+ * No framework: there will be a handful of these in this app's lifetime, and a
+ * migration tool is a dependency plus a directory plus a lockfile to hold five
+ * statements. The index in this array **is** the version, so entries are only
+ * ever appended — editing one that has run somewhere is how two databases come
+ * to disagree about what version 1 means.
+ */
+const MIGRATIONS: string[] = [
+  `
+  CREATE TABLE accounts (
+    id            TEXT PRIMARY KEY,
+    provider      TEXT NOT NULL,
+    subject       TEXT NOT NULL,
+    display_name  TEXT NOT NULL,
+    created_at    INTEGER NOT NULL,
+    last_seen_at  INTEGER NOT NULL,
+    UNIQUE(provider, subject)
+  );
+
+  CREATE TABLE sessions (
+    token_hash  TEXT PRIMARY KEY,
+    account_id  TEXT NOT NULL REFERENCES accounts(id) ON DELETE CASCADE,
+    created_at  INTEGER NOT NULL,
+    expires_at  INTEGER NOT NULL
+  );
+
+  CREATE INDEX sessions_by_account ON sessions(account_id);
+  `,
+];
+
+interface AccountRow {
+  id: string;
+  provider: string;
+  subject: string;
+  display_name: string;
+  created_at: number;
+  last_seen_at: number;
+}
+
+const toAccount = (row: AccountRow): Account => ({
+  id: row.id,
+  provider: row.provider as AuthProvider,
+  subject: row.subject,
+  displayName: row.display_name,
+  createdAt: row.created_at,
+  lastSeenAt: row.last_seen_at,
+});
+
+export interface AccountStore {
+  /**
+   * Find the account for this provider subject, or create one.
+   *
+   * The upsert is the whole of "sign up": there is no separate registration,
+   * because Google has already established who this is and asking again would
+   * be a form that adds nothing.
+   */
+  upsertAccount(input: {
+    id: string;
+    provider: AuthProvider;
+    subject: string;
+    displayName: string;
+    now: number;
+  }): Account;
+
+  /** The session row for a token hash, or null. Expiry is not judged here — see
+   *  `sessionState`, which is pure and takes `now`. */
+  findSession(tokenHash: string): SessionRecord | null;
+
+  findAccount(id: string): Account | null;
+
+  startSession(session: SessionRecord): void;
+
+  /** Replace one session's token and expiry, keeping the account. Used by
+   *  rolling renewal, which mints a new token rather than extending the old
+   *  one — a renewed session should not keep a value that has been in flight
+   *  for a month. */
+  replaceSession(oldHash: string, session: SessionRecord): void;
+
+  endSession(tokenHash: string): void;
+
+  /** "Sair de todos os dispositivos". This is the operation a JWT cannot
+   *  actually perform, and the reason sessions are rows. */
+  endAllSessions(accountId: string): void;
+
+  /** Hard delete, cascading to sessions, in one transaction — the LGPD
+   *  erasure right, and not a soft-delete flag. */
+  deleteAccount(accountId: string): void;
+
+  /** Drop sessions that have expired. Nothing reads them, and keeping them is
+   *  a record of when a person was last here, retained for no stated purpose. */
+  pruneSessions(now: number): number;
+
+  close(): void;
+}
+
+const migrate = (db: DatabaseSync): void => {
+  const [{ user_version: version }] = db.prepare("PRAGMA user_version").all() as {
+    user_version: number;
+  }[];
+
+  for (let index = version; index < MIGRATIONS.length; index += 1) {
+    db.exec("BEGIN");
+    try {
+      db.exec(MIGRATIONS[index]);
+      // `PRAGMA` does not accept a bound parameter, and the value is a loop
+      // index rather than anything a request supplies.
+      db.exec(`PRAGMA user_version = ${index + 1}`);
+      db.exec("COMMIT");
+    } catch (error) {
+      db.exec("ROLLBACK");
+      throw error;
+    }
+  }
+};
+
+/**
+ * Open the store, or return `null`.
+ *
+ * **Null is a supported state, not an error path.** `FOOTBALL_DATA_TOKEN` unset
+ * already means "serve seed data and say so"; an unopenable account store means
+ * the accounts feature is *absent* — no control renders, the routes 404 — rather
+ * than broken. A fresh clone with an empty `.env` gets an app that works, minus
+ * a feature it never mentions.
+ */
+export const openStore = (file: string): AccountStore | null => {
+  let db: DatabaseSync;
+  try {
+    // SQLite creates the file but not the directory above it, and fails with a
+    // bare "unable to open database file" that reads like a permissions
+    // problem. Both real callers point at a directory that may not exist yet:
+    // the host's `${DEPLOY_DIR}/data` before the first deploy that needs it,
+    // and `./test-results` before Playwright has written anything.
+    mkdirSync(path.dirname(file), { recursive: true });
+    const DatabaseSyncCtor = loadDatabaseSync();
+    db = new DatabaseSyncCtor(file);
+    // Foreign keys are OFF by default in SQLite, which would quietly make
+    // `ON DELETE CASCADE` above decorative — deleting an account would leave
+    // its sessions behind, still valid, pointing at a row that is gone.
+    db.exec("PRAGMA foreign_keys = ON");
+    // WAL: readers do not block the writer. One process, but the health check
+    // and a sign-in genuinely overlap.
+    db.exec("PRAGMA journal_mode = WAL");
+    migrate(db);
+  } catch (error) {
+    console.error("[accounts] store unavailable:", (error as Error).message);
+    return null;
+  }
+
+  const insertAccount = db.prepare(
+    `INSERT INTO accounts (id, provider, subject, display_name, created_at, last_seen_at)
+     VALUES (?, ?, ?, ?, ?, ?)`,
+  );
+  const selectBySubject = db.prepare("SELECT * FROM accounts WHERE provider = ? AND subject = ?");
+  const selectById = db.prepare("SELECT * FROM accounts WHERE id = ?");
+  const touchAccount = db.prepare(
+    "UPDATE accounts SET last_seen_at = ?, display_name = ? WHERE id = ?",
+  );
+  const insertSession = db.prepare(
+    "INSERT INTO sessions (token_hash, account_id, created_at, expires_at) VALUES (?, ?, ?, ?)",
+  );
+  const selectSession = db.prepare("SELECT * FROM sessions WHERE token_hash = ?");
+  const deleteSession = db.prepare("DELETE FROM sessions WHERE token_hash = ?");
+  const deleteSessionsFor = db.prepare("DELETE FROM sessions WHERE account_id = ?");
+  const deleteExpired = db.prepare("DELETE FROM sessions WHERE expires_at <= ?");
+  const deleteAccountRow = db.prepare("DELETE FROM accounts WHERE id = ?");
+
+  return {
+    upsertAccount({ id, provider, subject, displayName, now }) {
+      const existing = selectBySubject.get(provider, subject) as AccountRow | undefined;
+      if (existing) {
+        // The display name is refreshed on every sign-in rather than frozen at
+        // first: somebody who changes their name at Google has changed it, and
+        // this app has no field for them to correct it in.
+        touchAccount.run(now, displayName, existing.id);
+        return toAccount({ ...existing, last_seen_at: now, display_name: displayName });
+      }
+
+      insertAccount.run(id, provider, subject, displayName, now, now);
+      return { id, provider, subject, displayName, createdAt: now, lastSeenAt: now };
+    },
+
+    findSession(tokenHash) {
+      const row = selectSession.get(tokenHash) as
+        | { token_hash: string; account_id: string; created_at: number; expires_at: number }
+        | undefined;
+      if (!row) return null;
+      return {
+        tokenHash: row.token_hash,
+        accountId: row.account_id,
+        createdAt: row.created_at,
+        expiresAt: row.expires_at,
+      };
+    },
+
+    findAccount(id) {
+      const row = selectById.get(id) as AccountRow | undefined;
+      return row ? toAccount(row) : null;
+    },
+
+    startSession(session) {
+      insertSession.run(
+        session.tokenHash,
+        session.accountId,
+        session.createdAt,
+        session.expiresAt,
+      );
+    },
+
+    replaceSession(oldHash, session) {
+      db.exec("BEGIN");
+      try {
+        deleteSession.run(oldHash);
+        insertSession.run(
+          session.tokenHash,
+          session.accountId,
+          session.createdAt,
+          session.expiresAt,
+        );
+        db.exec("COMMIT");
+      } catch (error) {
+        db.exec("ROLLBACK");
+        throw error;
+      }
+    },
+
+    endSession(tokenHash) {
+      deleteSession.run(tokenHash);
+    },
+
+    endAllSessions(accountId) {
+      deleteSessionsFor.run(accountId);
+    },
+
+    deleteAccount(accountId) {
+      db.exec("BEGIN");
+      try {
+        deleteSessionsFor.run(accountId);
+        deleteAccountRow.run(accountId);
+        db.exec("COMMIT");
+      } catch (error) {
+        db.exec("ROLLBACK");
+        throw error;
+      }
+    },
+
+    pruneSessions(now) {
+      return Number(deleteExpired.run(now).changes);
+    },
+
+    close() {
+      db.close();
+    },
+  };
+};
