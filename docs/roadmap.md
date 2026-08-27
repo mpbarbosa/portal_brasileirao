@@ -47,6 +47,68 @@ to abort a whole run, and the end-to-end specs depended on some fixture in round
 - Re-run `sync-broadcasts` weekly as the season advances; the cron already does.
 - Watch for broadcasters CBF names that we render as wordmarks — ESPN/Disney+,
   Band, SportyNet — and add marks where a public-domain one exists.
+- Move the Node major from 22 to 24 before 2027-04-30, host first — see below.
+  Nothing will open a pull request for this.
+- Watch `tests/e2e/scorers.spec.ts` "switching away and back keeps the table"
+  (**mobile only**, Pixel 7). One failure on 2026-08-27, passing on re-run and
+  on both #103 and #108 in CI. Recorded rather than diagnosed — one occurrence is
+  not a flake diagnosis — but with what a second occurrence would need, since
+  the evidence is gone by then: it aborted on the **`.click()`** of the Artilharia
+  nav link (`scorers.spec.ts:4:57`) reached from **line 73**, i.e. the *second*
+  navigation, after Classificação — not on the table assertion below it and not
+  in `beforeEach`, both of which had already passed in the same test. Playwright
+  auto-waits for actionability on a click, so a timeout there says the link
+  never became **stable**, which points at layout movement rather than at data or a
+  missing row. Two things in this repo make that the expected place for it, both
+  documented in `CLAUDE.md`: the nav bar is deliberately at its width limit on a
+  phone (five 64dp MD3 indicators is 320dp exactly, degrading to `w-14` under
+  `min-[360px]:`), and Classificação is the heaviest layout in the suite — 20
+  rows, two frozen columns and 20 sparklines — so returning *from* it is the one
+  transition where the bar is most likely to still be settling. Capture the
+  trace next time rather than re-running; `settle`'s existence is the precedent
+  that MD3's 200ms transitions are real in tests.
+
+### Node: one major, and a date it has to move
+
+`.nvmrc` now holds the single Node major, and `package.json`'s `engines`, the
+`@types/node` pin, `REQUIRED_NODE_MAJOR` in `shell_scripts/01` and both
+workflows' `node-version-file` are asserted equal to it by
+`tests/node-version.test.ts` (#103). The reasoning — including why raising the
+runtime to meet the typings is *not* the fix — is in `CLAUDE.md` under **CI**.
+
+One of the two questions this raised is now answered; the other has a deadline.
+
+**What the host runs is now a measured fact: Node 22.23.2.** Read off
+`/api/health` at sha `45b5531` on 2026-08-27, minutes after #103 deployed. It
+had never been knowable before — nothing in the repo pinned it and the endpoint
+did not report it, so every statement about it was an assumption.
+
+The answer vindicates the pin: production was on 22, CI was on 22, and the
+typings had been on **26** since #91 — four majors ahead of the runtime they
+were certifying. Had this come back 24, the right move would have been to raise
+the five numbers to meet the host rather than to assume the host was wrong; it
+did not, so nothing further is owed here.
+
+**22 is already the maintenance line.** Read off nodejs/Release on 2026-08-27:
+
+| line | status today | end of life |
+| --- | --- | --- |
+| 22 | maintenance since 2025-10-21 | **2027-04-30** |
+| 24 | **active LTS** since 2025-10-28 | 2028-04-30 |
+| 26 | becomes LTS 2026-10-28 | 2029-04-30 |
+
+So 22 was the right pin to land — it is what CI **and the host** were already
+running, and changing the runtime and the typings in one commit would have made
+a failure ambiguous — but it is not the right pin to *stay* on. The move is to
+**24**, the active LTS, and it is a deliberate five-file commit starting at
+`.nvmrc`, with `npm run test:unit` refusing anything partial. It needs the host
+raised to 24 first, since `shell_scripts/01` requires an exact major.
+
+**Nothing will remind you.** `.github/dependabot.yml` ignores the *major* for
+`@types/node` by design, which is what stops the typings running ahead of the
+runtime again — and the cost of that is precisely that no pull request will ever
+appear proposing it. This entry is the reminder, and it is now the only
+thing tracking it. Before 2027-04-30.
 
 ## From the Brasileirão Pro import
 
