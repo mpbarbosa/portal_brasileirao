@@ -925,6 +925,13 @@ app.get("/api/health", (_req, res) => {
     sha: BUILD_SHA,
     builtAt: BUILD_TIME,
     uptime: process.uptime(),
+    // The Node the host is ACTUALLY running, which nothing else could answer.
+    // `tsc --noEmit` is the only lint gate and it checks against @types/node,
+    // so the host's major is what decides whether the gate checked the code
+    // that shipped — and until this line, no file in the repo pinned it and no
+    // endpoint reported it. The .nvmrc/engines/@types/node trio says what it
+    // is SUPPOSED to be; this says what it is.
+    node: process.versions.node,
     provider: providerEnabled() ? "football-data" : "seed",
   });
 });

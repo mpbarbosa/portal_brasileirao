@@ -48,6 +48,72 @@ to abort a whole run, and the end-to-end specs depended on some fixture in round
 - Watch for broadcasters CBF names that we render as wordmarks — ESPN/Disney+,
   Band, SportyNet — and add marks where a public-domain one exists.
 
+## From the Brasileirão Pro import
+
+`brasileirao-pro.zip` — an AI Studio prototype of a Série A analytics dashboard —
+was read for ideas on 2026-08-27. Its design spec is imported verbatim at
+[`brasileirao-pro-design.md`](brasileirao-pro-design.md) and the full judgement,
+including six rejections and the reason for each, is
+[`brasileirao-pro-proposal.md`](brasileirao-pro-proposal.md). **Read the proposal
+before starting any of these** — every item below carries a trap that is stated
+there and not repeated here.
+
+Nothing in this list needs a new upstream request. One item surfaces a field the
+provider already sends; the rest are derivations or rules.
+
+**Now — no decision to make.** Six of these are one attribute, one element or a
+paragraph of prose.
+
+1. **Árbitro on the match page.** `referees` rides on every football-data match
+   object and `football-data-core.ts` drops it. Translate the role vocabulary at
+   the edge like `positionLabel` does, and render nothing when the array is empty.
+2. **Aproveitamento (%).** `pontos / (jogos × 3)`. The metric a Brazilian reader
+   quotes by default, and the one that survives a postponed fixture honestly.
+   Needs a `CONTEXT.md` entry in the same commit.
+3. **A legend for the G4/Z4 rail.** `zoneClass` paints the rail and nothing on the
+   page says what the colours mean. It is also hue-only, where the same data on
+   the club page carries a letter *and* a colour.
+4. **`referrerPolicy="no-referrer"` on crests.** They are the one asset class still
+   hotlinked (principle 4 below), so every row tells the provider's CDN which page
+   the reader is on.
+5. **A crest fallback.** `ClubCrest` has no error path; twenty broken images is the
+   current failure mode. Note `tla` is optional and `code` may be `FD-<id>`.
+6. **`sr-only` names on the existing form pills.** `ClubView` names them with
+   `title` alone. `RankSparkline` is the pattern that gets this right.
+7. **Write down the radius step-down rule.** The shape scale exists; the rule for
+   which step at which nesting depth does not, which is what let the scoreboard's
+   radius drift until M2 caught it. Documentation only — it is already true.
+8. **A name filter on Jogadores.** Twenty clubs do not need one; 948 players behind
+   twenty `<details>` do.
+
+**Next — one decision each, stated in the proposal.**
+
+9. **Distinguish the leader.** Position 1 currently reads as identical to 2nd–4th.
+   Do **not** also tier 5–6 or 7–12: those boundaries move with the cup winners,
+   and a hard-coded `position <= 6` becomes false in a season nobody re-reads.
+10. **Forma in the classificação.** `recentForm` and the pills already exist — this
+    is only the column, and the column is a **table-width** problem. It is a
+    fixed-width mark, so it needs `w-0` for the reason `CAMPAIGN_COLUMN` does.
+11. **Casa / Fora split.** Compute all three views locally. Taking the splits from
+    upstream's HOME/AWAY groups reintroduces the IN_PLAY difference and puts a
+    contradiction on one screen.
+12. **Derived league statistics.** Melhores ataques, melhores defesas, total and
+    average goals. Under the Classificação — **not** a sixth `NAV_ITEMS` entry; the
+    bar is full and nothing in the tooling will tell you so.
+13. **Inset the scoreline.** Needs `surface-dim` emitted from `sync-md3-tokens` and
+    a contrast-gate pairing, so it is a generator change rather than a class swap.
+
+**Alongside**: `--color-tertiary` and `--color-tertiary-container` are emitted into
+all three theme blocks and referenced by **zero** components. The accent is already
+generated, toned and contrast-checked; it has simply never been spent. Pick it up
+with item 9 rather than giving it an item of its own.
+
+**Explicitly not doing**, each with the reason in the proposal: lance a lance,
+escalações and match statistics (no reachable tier carries them); título/Z4
+probabilities as the prototype presents them; the localStorage image-URL manager
+(the inverse of the vendoring-with-attribution rule); the webfont pair; the
+hand-picked hexes; club-brand colours; the desktop sidebar.
+
 ## Contas — what Phase 1 leaves outstanding
 
 Phase 1 ships sign-in with Google, sessions in SQLite, `/entrar`, `/conta`, and
@@ -65,10 +131,12 @@ these — it deploys and behaves exactly as it did before.
   client is in *Testing* with no test users, every sign-in returns "acesso
   bloqueado" — which looks exactly like a bug in the code, and is the most
   likely first hour lost.
-- The **Node floor**. `01_setup_app_directory.sh` accepts 20; `node:sqlite`
-  arrived in 22.5. The code degrades rather than crashing — `openStore` loads it
-  through `createRequire` precisely so an old host boots with accounts absent —
-  so this is a step for the day accounts are switched on, not a deploy blocker.
+- **Confirm the host's exact Node.** `01_setup_app_directory.sh` now pins major
+  **22**, which is enough — but `node:sqlite` arrived in **22.5**, so a host
+  sitting on 22.0–22.4 satisfies the pin and still has no store. The code
+  degrades rather than crashing (`openStore` loads it through `createRequire`
+  precisely so such a host boots with accounts simply absent), so this is a
+  check for the day accounts are switched on, never a deploy blocker.
 - **One manual pass of the Google round trip.** CI cannot cover it: it needs a
   secret and a network, and CI has neither by design. Verify once against the
   deployed host and record it in the runbook, the way the live provider path was.
@@ -107,6 +175,7 @@ club arriving turns it red while an unknown one falls through to the masculine
 default silently. Making the table exhaustive over `src/data/clubs.ts`, the way
 `NATIONALITY_LABELS` is over `squads.ts`, is the fix. A worktree and brief are
 prepared at `.claude/worktrees/artigo-do-clube`.
+
 
 ## Constraints that must survive any redesign
 

@@ -26,17 +26,18 @@ type DatabaseSync = DatabaseSyncType;
 /**
  * `node:sqlite` is loaded **lazily**, and that is not a style choice.
  *
- * A static import is evaluated when `server.ts` is loaded, and on Node 20 —
- * which `01_setup_app_directory.sh` still accepts as the floor — the module
- * does not exist, so importing it throws `ERR_UNKNOWN_BUILTIN_MODULE` and the
- * **whole process fails to boot**. That would turn "this host is a version
- * behind" into a site that is down, on a release that only meant to add a
- * feature nobody had switched on.
+ * A static import is evaluated when `server.ts` is loaded, so a runtime without
+ * the module throws `ERR_UNKNOWN_BUILTIN_MODULE` at import time and the **whole
+ * process fails to boot** — a site that is down, on a release that only meant to
+ * add a feature nobody had switched on.
  *
- * Loading it here instead keeps the contract the rest of this file states: an
+ * The host pins Node 22, which is not quite the same as having this: the module
+ * arrived in **22.5**, so 22.0–22.4 satisfies the pin and still lacks it. That
+ * is exactly the gap this guards, and it is why the pin is not a substitute for
+ * loading it here.
+ *
+ * Loading it lazily keeps the contract the rest of this file states: an
  * unavailable store is a feature that is absent, never an app that is broken.
- * Raising the host's floor to 22 is an ops step for whenever accounts are
- * actually enabled — not a prerequisite for deploying this code.
  */
 const loadDatabaseSync = (): new (path: string) => DatabaseSync => {
   const require = createRequire(import.meta.url);

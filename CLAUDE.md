@@ -281,12 +281,11 @@ Traps, each of which cost something to find:
   development is unaffected. Note `curl` declines to *send* a `Secure` cookie over http,
   which is a property of curl and not of the browser: verify this path with Playwright.
 - **`node:sqlite` is loaded with `createRequire` inside `openStore`, never imported at the
-  top.** A static import is evaluated at boot, and on Node 20 — still the floor
-  `01_setup_app_directory.sh` accepts — the module does not exist, so the **whole process
-  fails to start**. That turns "this host is a version behind" into a site that is down,
-  on a release that only added a feature nobody had switched on. Raising the host floor to
-  22 is an ops step for when accounts are actually enabled, not a prerequisite for
-  deploying the code.
+  top.** A static import is evaluated at boot, so a runtime without the module throws
+  `ERR_UNKNOWN_BUILTIN_MODULE` and the **whole process fails to start** — a site that is
+  down, on a release that only added a feature nobody had switched on. The host pins Node
+  22, which is not the same as having this: the module arrived in **22.5**, so 22.0–22.4
+  satisfies the pin and still lacks it. The pin is not a substitute for the lazy load.
 - **SQLite creates the file but not the directory above it**, and fails with a message that
   reads like a permissions problem. `openStore` makes its own directory.
 - **`PRAGMA foreign_keys` is OFF by default**, which would make `ON DELETE CASCADE`
@@ -1380,6 +1379,28 @@ not a gap to close. Note the schedule is a safety net rather than a guarantee �
 GitHub delays scheduled runs under exactly the load that drops push events, and
 disables them after 60 days of repository inactivity.
 
+**Rolling back is `.github/workflows/rollback.yml`, and it does not go through
+`ci.yml`.** It installs a release S3 already holds, over whatever is live, in
+about forty seconds and with no build — because those bytes were built, booted
+and smoke-tested by `check` when they were made, and rebuilding them to roll
+back would re-test them with a *newer* toolchain, which is the one thing you do
+not want when the point is known-good bytes. It carries no ancestry guard for
+the same reason the deploy does: going backwards is the purpose here and the
+accident there. It shares the `deploy-production` concurrency group, so a
+rollback and a release can never install at once. Dispatching it with an **empty
+sha lists what the bucket holds and changes nothing** — which is also how you
+find out what the bucket's lifecycle policy has left you, since nothing in this
+repository defines one.
+
+**A rollback pauses reconciliation, and nothing has to remember that it did.**
+After a rollback production is behind `main`, which is precisely the shape
+`reconcile.yml` exists to close — so without this it would dispatch `ci.yml` and
+undo the rollback within fifteen minutes, while someone was still working out
+what broke. The reconciler now holds whenever a successful `rollback.yml` run is
+newer than the last successful `ci.yml` run on `main`. The test is **stateless**:
+no flag is set, so none can be left set, and it clears itself the moment a fix
+reaches `main` and deploys.
+
 **The host is too small to build on.** It receives a prebuilt payload and runs
 `npm ci --omit=dev`; nothing compiles there. That is also why a runtime dependency
 stranded in `devDependencies` stays invisible until the bundle boots, which is the
@@ -1404,6 +1425,54 @@ alongside other sessions** above says never to run it by hand.
 
 What is still missing from this pipeline, and the phased plan for closing it, is
 `docs/cicd-plan.md`.
+
+### One Node major, named in five places
+
+`.nvmrc` holds it. `package.json`'s `engines`, the `@types/node` devDependency,
+`REQUIRED_NODE_MAJOR` in `shell_scripts/01_setup_app_directory.sh` and both
+workflows' `node-version-file` all have to agree with it, and
+`tests/node-version.test.ts` fails when they do not.
+
+**The trap this closes is quiet by construction.** `tsconfig.json` sets
+`types: ["node"]`, which makes `@types/node` the *entire* ambient type surface,
+and `tsc --noEmit` is this repo's only lint gate. So the typings decide what the
+gate certifies while the host decides what actually runs, and when those are
+different majors the gate certifies code the host cannot execute — without a red
+build anywhere. #91 took the typings 22 → 26 and went green; afterwards
+`import { connect } from "node:quic"` type-checked clean while
+`node -e "require('node:quic')"` threw `ERR_UNKNOWN_BUILTIN_MODULE`.
+
+**Do not close that by raising the runtime instead.** `node:ffi`, `node:quic`,
+`node:stream/iter` and `node:zlib/iter` are absent from Node **26** as well,
+experimental flags included, and `node:vfs` needs `--experimental-vfs`. These
+typings describe DefinitelyTyped's surface, which includes APIs no released Node
+exposes at all — there is no version to catch up to, so the typings track the
+runtime and not the other way round. `.github/dependabot.yml` therefore ignores
+the **major** for `@types/node` only; minor and patch within the line still
+arrive normally.
+
+Moving Node is consequently a deliberate five-file commit starting at `.nvmrc`,
+which is the point — before this, four of the five were literals that could each
+move alone.
+
+**The host floor is an exact major, not a floor**, for the same reason: a host
+one major *older* than the typings is running unchecked code just as surely as
+one newer. That script is one-time provisioning and is not run by `deploy.sh`,
+so tightening it cannot break an existing deploy.
+
+`/api/health` reports `node` — `process.versions.node`, what the host is
+**actually** running, as against what the five files say it is supposed to be.
+Nothing renders it: `parseHealth` in `health-core.ts` builds its result field by
+field, so the extra key is dropped and the **Rodapé** is unchanged. It is a
+diagnostic, and deliberately not a line in the footer — a Node version is
+nothing to a reader of a football table, and the rodapé sits in two committed
+full-page captures.
+
+One TypeScript note that is part of the same hole rather than a separate tidy:
+`noUncheckedSideEffectImports` is on because without it a **bare** side-effect
+import (`import "node:quic";`) resolves nothing and reports **no error at all**,
+whichever `@types/node` is pinned. Pinning the typings does not close that; the
+flag does.
 
 ## Not built yet
 
