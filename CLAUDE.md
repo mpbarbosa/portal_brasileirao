@@ -322,6 +322,58 @@ it is signed in. It is still fine for *establishing* a session, because the `Set
 receives lands in the context's jar and the browser is what later sends it. Read and write
 account state with `page.evaluate(fetch)`.
 
+### Backing the accounts database up
+
+`09_backup_accounts.sh` snapshots it to S3 nightly; `10_restore_accounts.sh` puts one
+back; `11_install_backup_timer.sh` installs the systemd timer. All three travel inside
+the release tarball, like the deploy scripts.
+
+**`VACUUM INTO`, never `cp`.** SQLite in WAL mode keeps recent commits in a sidecar, so
+copying `accounts.db` alone captures a database missing its most recent writes — and it
+*looks* fine, because the result opens. There is a case in the rehearsal that inserts a
+row, leaves the connection open so it never checkpoints, and asserts the row is in the
+snapshot.
+
+**Every artefact is opened and read before it is trusted** — on the way out by the backup,
+and again on the way in by the restore, *before* anything is stopped or moved. A restore
+that takes the site down and then discovers the artefact is unreadable has turned a
+recoverable morning into an outage. An unreadable database exits **2** where a failed
+upload exits 1: "the upload failed" is a retry and "the database will not open" is an
+incident, and a timer reporting both the same way is one nobody reads.
+
+**The displaced database is never deleted** — moved aside with a timestamp and left. And
+its `-wal`/`-shm` are removed with it, because those belong to the file they were written
+beside; leaving them next to a *different* database is how a restored copy is read with
+another database's uncommitted tail.
+
+**`scripts/rehearse-accounts-backup.sh` is the only behavioural coverage these have**, and
+it is worth running rather than reading: it caught three real bugs in scripts that had been
+read carefully and looked right.
+
+- `JSON.stringify` for the `VACUUM INTO` path emits **double** quotes, which SQLite reads
+  as an *identifier* — so the statement failed with "no such column: /var/www/…" and the
+  backup had never once worked.
+- A single-quoted `node -e '…'` body **cannot contain a single quote**, and SQL string
+  literals are single-quoted. The shell silently ended the argument and handed node bare
+  words. Both programs are quoted heredocs now, where nothing is special.
+- `PRAGMA integrity_check` returns a column named **`integrity_check`**, not `result`.
+  Destructuring the wrong name yields `undefined`, which is not `"ok"`, so every artefact
+  failed verification and a perfectly good database exited 2.
+
+The database half is **real** in that harness — a real SQLite file through the real schema,
+real `VACUUM INTO`, real `integrity_check`, rows counted at both ends. Only `aws`,
+`systemctl` and `sudo` are stubbed. So **S3 credentials, the bucket policy, the instance
+profile's `s3:PutObject` and the lifecycle rule are unexercised, and the first real upload
+is still a first.** Run the service unit by hand once after installing the timer; that is
+the only thing that proves the IAM permission exists.
+
+Each case in the harness uses its **own bucket prefix**. They shared one at first and case
+8's `latest` resolved to case 3's artefact — restoring four accounts where nine were
+expected, with the restore exiting 0 because it did exactly what it was asked. Snapshot
+names carry a one-second timestamp and several cases back up inside the same second, so
+"newest" was not well defined across them. Same shape as the end-to-end suite sharing one
+database across two projects.
+
 The database lives at `ACCOUNTS_DB`, defaulting to `./data/accounts.db`. On the host it
 must stay **inside `DEPLOY_DIR`** — the systemd unit sets `ProtectSystem=strict` with
 `ReadWritePaths=${DEPLOY_DIR}`, so `/var/lib` is read-only to the process — and **outside
