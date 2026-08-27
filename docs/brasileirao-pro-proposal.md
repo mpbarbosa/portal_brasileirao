@@ -34,7 +34,8 @@ So the ideas below are sorted by that question, not by how good they look.
 
 Five of these need **no new upstream request at all** — they are derivations of payloads
 the app already holds. One surfaces a field the provider sends today and the mapper throws
-away. That is the whole of the adoptable set, and it is a deliberately short list.
+away. A further five, which are about *rules* rather than data, are in
+**Adopt from the design system itself** below.
 
 ### 1. Forma — the last five results, as pills
 
@@ -64,14 +65,23 @@ straight into.**
   tallies is already tight. Forma should be `hidden md:table-cell`, following the campanha
   column's own precedent, and the club page should carry it unconditionally.
 
-**Recommendation**: build it in `standings-core.ts` as `recentForm(matches, club, n = 5)`,
-render it on the **club page first**, and only then decide whether the table has room. The
-core function is the valuable half and it is testable without touching a layout.
+**Half of this is already built, which changes the recommendation.** `recentForm` exists in
+`club-core.ts` and the **club page already renders the V/E/D pills** — same three results,
+same colour-plus-letter encoding, in `ClubView`'s `FORM_CLASS`. So there is no core function
+to write and no club-page work to do. What is genuinely open is **only the standings
+column**, which is the part carrying both traps above.
 
-**Accessibility note worth generalising**: the prototype puts `title="Vitória"` on every
-pill. A glyph-only mark needs a name. This repo's `StatusChip` and `RankSparkline` are the
-existing precedent for getting that right; match them rather than the prototype, which uses
-`title` where an `aria-label` or visually-hidden text belongs.
+**Recommendation**: treat this as a layout question, not a feature. Reuse `recentForm`
+unchanged — a second implementation of "the last five results" is how the club page and the
+table come to disagree, the same argument `computeRankHistory` makes about re-running
+`computeStandings` rather than keeping its own tally.
+
+**One accessibility fix that belongs to the existing code, not to the new column.**
+`ClubView` names each pill with a `title` attribute — the same thing the prototype does, and
+`title` is not reliably announced by screen readers or reachable by touch. `RankSparkline`
+is the in-repo precedent that gets this right: `title` **plus** an `sr-only` span **plus**
+`aria-label`. Bring the form pills up to it, and any table column inherits the fix rather
+than copying the defect.
 
 ---
 
@@ -209,6 +219,104 @@ reason. This is small, and it is the only robustness item on the list.
 
 ---
 
+---
+
+## Adopt from the design system itself
+
+The rejections below are all about the imported spec's **values** — its hexes, its
+typefaces, its layout. Its **rules** are a different matter, and four of them are worth
+taking. Two describe things this repo already does, which is worth knowing; four are
+gaps.
+
+### D1. The zone rail has no key
+
+`StandingsTable`'s `zoneClass` paints a 2px rail on the position cell — `positive` for the
+top four, `negative` for the bottom four — and **nothing on the page says what either colour
+means**. The only explanation is a code comment. The prototype prints a legend under its
+table ("● Libertadores (G4) ● Rebaixamento (Z4)"), which is the whole idea.
+
+It is also a **single-channel encoding**: hue is the only carrier, so it is invisible to a
+red/green-colourblind reader and to anyone reading a grayscale capture. The app already
+knows better about the same data — the club page's form pills carry a **letter and** a
+colour, so a reader who cannot separate the hues still reads `V`/`E`/`D`. The standings rail
+is the inconsistent one.
+
+**Recommendation**: adopt the legend. Cheapest real accessibility win in this document.
+
+### D2. Distinguish the leader — and stop there
+
+The prototype tiers its position badges four ways: 1, 2–4, 5–6, 17–20. One of those four is
+worth copying and the rest are a hazard.
+
+**Worth copying**: position 1 is currently indistinguishable from positions 2–4, and the
+leader's row is the single most-looked-at row on the page.
+
+**The hazard**: 5–6 (pré-Libertadores) and 7–12 (Sul-Americana) are not fixed. Those
+boundaries shift with who wins the Copa do Brasil and the continental cups, so a hard-coded
+`position <= 6` is a claim that quietly becomes false in a season nobody re-reads this file.
+That is the same class of error as an invented stadium capacity — *a plausible number is
+indistinguishable from a correct one* to a reader, which is why `stadiums.ts` was checked
+against Wikipedia article by article rather than filled in.
+
+**Recommendation**: leader emphasis and the D1 legend. Leave the intermediate zones alone
+until the app carries the qualification rules as data rather than as a magic number.
+
+### D3. Nested radii step down — a rule the shape scale does not state
+
+Imported §4.3 gives outer cards 12px, inner containers 8px, badges 4px. The point is not
+those numbers; it is that **radius decreases with nesting depth**, so a box inside a box
+reads as inside it.
+
+This repo has the MD3 shape scale and no rule for which step goes at which depth — `Surface`
+hard-codes `rounded-small` for every panel regardless of nesting. And this has already cost
+something: `CLAUDE.md` records that `MatchPage`'s scoreboard *"was hand-rolled with a
+different radius than every other card until M2 folded it back in"*. A written step-down
+rule is what makes that kind of drift visible while it is being written rather than during a
+migration.
+
+**Recommendation**: document the rule beside the shape scale — outer panel `rounded-small`,
+nested container one step down, pill-sized marks `rounded-x-small` — which is what the
+components already do by hand in `StatusChip`, `BroadcasterMark` and the form pills. Writing
+it down costs nothing and it is already true; the value is that the next nested surface has
+an answer to look up.
+
+### D4. The score wants an inset, not just bold type
+
+Imported §6.3 sets the scoreline in an **inset tray** — numerals on a surface *darker* than
+the card holding them. `MatchPage`'s scoreboard is currently a `Surface filled` with the
+score as `text-headline-medium` inside it, on the same background as everything else in the
+card. It is the one number the whole page exists for and it is distinguished by weight
+alone.
+
+**Honest cost**: the surface ladder only steps *upward* from the card
+(`surface-container-low` → `container` → `high`), and MD3's role for a step *below* is
+`surface-dim`, which `sync-md3-tokens` does **not** currently emit. So this is a generator
+change plus a contrast-gate pairing, not a class swap — larger than it looks, and the reason
+it is last here rather than first.
+
+### D5. `referrerPolicy="no-referrer"` on hotlinked crests
+
+Imported §7.1 puts `referrerpolicy="no-referrer"` on every remote image. `ClubCrest`
+hotlinks the provider's CDN and sets no referrer policy, so **every crest request tells that
+CDN which page of this site the reader is on** — twenty times per standings render.
+
+This is the same instinct that had stadium and player photographs vendored to this origin;
+crests are the one image class still served from somebody else's host, and this is the
+one-attribute version of the same care. It also hardens the D5-adjacent case for item 7's
+fallback: a CDN that starts refusing referrer-bearing requests fails exactly this way.
+
+**Recommendation**: adopt, in the same change as item 7.
+
+### Two rules it states that this repo already follows
+
+Worth recording so nobody re-litigates them:
+
+- **Elevation by tonal stepping and hairline outlines, never glow** (§5) — this is
+  `docs/roadmap.md` M2, arrived at independently.
+- **Monospace-uppercase table headers** (§3.2, "Label Caps") — `StandingsTable`'s `thead` is
+  already `text-label-medium uppercase text-ink-muted`, which is the MD3 spelling of the
+  same idea without the webfont.
+
 ## Reject, with reasons
 
 ### 1. Lance a lance, escalações, estatísticas de partida
@@ -284,10 +392,13 @@ colours are twenty uncontrolled values, several of them — Vasco's black, Botaf
 Corinthians' black — invisible on a dark surface and untestable by `test:tokens`, which
 only knows about tokens.
 
-**One idea here is worth keeping.** The gold `secondary: #ffdf0a` used for the champion row
-and the live badge names a real gap: this app has no accent distinct from `primary`. The
-right way to get it is to **emit a tertiary role from `sync-md3-tokens`** so it arrives with
-a tone, a contrast check and a light-theme counterpart — not to add a hex.
+**One idea here is worth keeping, and it is cheaper than it looks.** The gold
+`secondary: #ffdf0a`, used for the champion row and the live badge, names a real gap: no
+component in this app renders an accent distinct from `primary`. But the role to fill it
+**already exists** — `--color-tertiary` and `--color-tertiary-container` are emitted by
+`sync-md3-tokens` into all three theme blocks, with a tone, a light-theme counterpart and a
+contrast-checked value, and **not one component references either**. The accent was tooled
+for and never spent. Spend it; do not add a hex.
 
 ### 6. The sidebar, and the dashboard grid
 
@@ -316,13 +427,20 @@ where noted.
 | 2 | Aproveitamento (%) | derived | XS | none |
 | 3 | Crest fallback monogram | none | XS | none |
 | 4 | Name filter on Jogadores | none | S | none |
-| 5 | `recentForm` + Forma on the club page | derived | S | none |
-| 6 | Forma column in the classificação | — | M | **table width**; see item 1's traps |
-| 7 | Casa / Fora split | derived | M | must compute locally, never from upstream groups |
-| 8 | Estatísticas panel under the Classificação | derived; shares item 7's predicate | M | must not become a sixth nav entry |
+| 5 | D1 — a legend for the G4/Z4 rail | none | XS | none |
+| 6 | D5 — `referrerPolicy` on crests *(fold into 3)* | none | XS | none |
+| 7 | D3 — write down the radius step-down rule | none | XS | docs only |
+| 8 | `sr-only` names on the existing form pills | none | XS | none |
+| 9 | D2 — distinguish the leader | none | S | **do not** tier 5–6 or 7–12 |
+| 10 | Forma column in the classificação | reuses `recentForm` | M | **table width**; see item 1's traps |
+| 11 | Casa / Fora split | derived | M | must compute locally, never from upstream groups |
+| 12 | Estatísticas panel under the Classificação | derived; shares item 11's predicate | M | must not become a sixth nav entry |
+| 13 | D4 — inset the scoreline | none | M | needs `surface-dim` emitted + contrast-gated |
+| — | Spend the unused `tertiary` role | none | — | no item of its own; pick it up with D2 |
 
-Items 1–5 are a day's work between them and carry no architectural decision. Items 6–8 each
-carry exactly one, and it is named in their sections.
+Items 1–8 are a day's work between them and carry no architectural decision — six of the
+eight are a single attribute, a single element or a paragraph of documentation. Items 9–13
+each carry exactly one decision, named in their sections.
 
 ## Checks any of this must still clear
 
