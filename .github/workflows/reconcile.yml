@@ -55,7 +55,7 @@ jobs:
       SITE_URL: https://brasileirao.mpbarbosa.com
       GH_TOKEN: ${{ github.token }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         with:
           # Ancestry again, same reason as ci.yml's deploy job: a depth-1 clone
           # holds neither the live commit nor the history joining it to main.

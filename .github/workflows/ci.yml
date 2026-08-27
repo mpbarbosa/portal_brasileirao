@@ -34,9 +34,9 @@ jobs:
       # build" is a checked fact rather than an assumption about determinism.
       payload_sha256: ${{ steps.package.outputs.sha256 }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v5
+      - uses: actions/setup-node@v7
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
@@ -121,7 +121,7 @@ jobs:
         if: >-
           github.ref == 'refs/heads/main' &&
           (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: release-${{ github.sha }}
           path: release.tar.gz
@@ -164,7 +164,7 @@ jobs:
     # why. The check honours a `Screenshots-unaffected:` trailer and prints it;
     # scripts/check-screenshots.sh has the syntax and the case it was added for.
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         with:
           # The check reads trees and walks commits across the range since the
           # last capture, which a depth-1 clone cannot answer. Only this job
@@ -177,9 +177,9 @@ jobs:
     name: End-to-end (Playwright)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v5
+      - uses: actions/setup-node@v7
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
@@ -216,7 +216,7 @@ jobs:
 
       - name: Upload report on failure
         if: failure()
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: playwright-report
           path: |
@@ -252,7 +252,7 @@ jobs:
       ARTIFACT_BUCKET: portal-brasileirao-deploy-655139684612
       SITE_URL: https://brasileirao.mpbarbosa.com
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         with:
           # The ancestry guard below asks whether the commit being released is an
           # ancestor of the one already live. A depth-1 clone does not contain the
