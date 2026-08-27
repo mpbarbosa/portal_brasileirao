@@ -973,6 +973,36 @@ Your worktree, your branch, force-pushing your own branch, closing your own PR
 and deleting your own merged branch (`-d`, never `-D`, so an unmerged one
 refuses) need nobody's permission.
 
+**`-d` will refuse a branch that is fully merged, and the message is
+misleading twice over.** It says "not fully merged", which reads as *you are
+about to lose work*; what it means is "not merged into whatever I compared
+against". It compares against the branch's **upstream**, not `main` — and this
+repository deletes merged branches on the remote automatically, so by the time
+you clean up, the upstream is usually gone and `-d` silently falls back to
+**HEAD**. In the shared root that is local `main`, which lags `origin/main` by
+however many merges landed while you worked. Both fallbacks refuse work that is
+demonstrably on `origin/main`.
+
+Give the check the right comparison rather than switching it off:
+
+```sh
+git branch --set-upstream-to=origin/main <branch>
+git branch -d <branch>
+```
+
+Git then deletes it and says so in as many words — *"merged to
+`refs/remotes/origin/main`, but not yet merged to HEAD"*. **Do not reach for
+`-D`**: the refusal is the safety feature, and this keeps it doing its job
+against a ref that actually contains the commits. And **do not detach the root
+checkout's HEAD to satisfy it** — that works, and it is the one thing the
+worktree rule at the top of this file exists to prevent.
+
+The independent check, if you want one that does not depend on any of that, is
+`git rev-list --count origin/main..<branch>` = 0. Note its sibling
+`git merge-base --is-ancestor origin/<branch> origin/main` is a trap once the
+remote branch is gone: an unresolvable ref exits **128**, and inside an
+`&& … || …` that renders as a confident "not merged".
+
 **3. Merge: propose, do not act.**
 
 **No session merges into `main`.** Open the PR, verify it, and hand it to the
