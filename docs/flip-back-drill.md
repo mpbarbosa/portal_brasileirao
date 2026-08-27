@@ -101,6 +101,40 @@ gh workflow run flip-back-drill.yml
 gh run watch "$(gh run list --workflow flip-back-drill.yml --limit 1 --json databaseId --jq '.[0].databaseId')"
 ```
 
+## The two modes
+
+`mode=health` (the default) installs a payload byte-identical to live except the
+health literal. The process stays up, every page serves 200, and only
+`/api/health` reports otherwise. **Ran and passed on 2026-08-27**, run
+`33079608222`.
+
+`mode=crash` prepends `process.exit(1);` to the bundle, so the process dies on
+boot and systemd restarts it on a timer against a bundle that cannot start.
+**This one takes the site down** — roughly 10–15s, from the restart until the
+flip-back's restart answers: a 5s health wait plus `npm ci` (~3s on the host)
+plus restart and health.
+
+### The start-limit hazard, and why the flip-back now clears it
+
+A crash loop is the one thing that can strand this service. The unit sets
+`Restart=on-failure` / `RestartSec=5` and no `StartLimit*`, so systemd's defaults
+apply (burst 5). If those attempts breach the burst the unit enters **`failed`**
+and `systemctl restart` is **refused** — which would make the flip-back exit 3
+*and* leave `rollback.yml` unable to recover, because it ends in the same
+restart. Only `systemctl reset-failed` gets out.
+
+Both halves of that were tested against real systemd rather than reasoned about:
+
+| setup | result |
+| --- | --- |
+| `RestartSec=5` (production's value), 6 crash-restarts | `systemctl restart` **succeeded**; unit came back active and healthy |
+| `RestartSec=0`, limit deliberately tripped | unit `failed`; `systemctl restart` **refused**; `reset-failed` + restart rescued it |
+
+So the lockout does not occur at the setting production runs. `06_redeploy.sh`
+now calls `systemctl reset-failed` before every restart anyway — a no-op on a
+unit that is not failed, and the difference between a 15s drill and a stranded
+service in the case where it is.
+
 ## Step 1 — run it
 
 Dispatch with `confirm` set to exactly `DRILL`. `health_attempts` defaults to
@@ -109,7 +143,8 @@ fires — 5s rather than the standard 30s, which is what `HEALTH_ATTEMPTS` was
 added for.
 
 ```sh
-gh workflow run flip-back-drill.yml -f confirm=DRILL
+gh workflow run flip-back-drill.yml -f confirm=DRILL                  # health mode
+gh workflow run flip-back-drill.yml -f confirm=DRILL -f mode=crash    # takes the site down
 ```
 
 ## Step 2 — read the verdict
