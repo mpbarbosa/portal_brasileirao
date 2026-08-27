@@ -13,6 +13,7 @@ import {
 import { ClubView } from "@/src/components/ClubView";
 import { Footer } from "@/src/components/Footer";
 import { LiveView } from "@/src/components/LiveView";
+import { MeuTimeStrip } from "@/src/components/MeuTime";
 import { MatchPage } from "@/src/components/MatchPage";
 import { NavBar } from "@/src/components/NavBar";
 import { PlayerOverlayCard } from "@/src/components/PlayerOverlayCard";
@@ -26,8 +27,10 @@ import { findMatch } from "@/match-core";
 import { computeRankHistory } from "@/rank-history-core";
 import { buildStadiums } from "@/venue-core";
 import { STADIUMS } from "@/src/data/stadiums";
+import { followState } from "@/preferences-core";
 import { parseRoute } from "@/route-core";
 import { usePageMeta } from "@/src/usePageMeta";
+import { usePreferences } from "@/src/usePreferences";
 import { useTheme } from "@/src/useTheme";
 import { useRoute } from "@/src/useRoute";
 import type { ClubCode, Player, Scorer, Squad, StandingsRow } from "@/src/types";
@@ -35,6 +38,7 @@ import type { ClubCode, Player, Scorer, Squad, StandingsRow } from "@/src/types"
 export function App() {
   const { route, navigate } = useRoute();
   const { theme, toggle: toggleTheme } = useTheme();
+  const { preferences, toggleClub } = usePreferences();
   const [standings, setStandings] = useState<StandingsRow[]>([]);
   const [matches, setMatches] = useState<MatchesPayload | null>(null);
   const [scorers, setScorers] = useState<Scorer[]>([]);
@@ -68,6 +72,22 @@ export function App() {
    *  since both look like an empty list, and answering "não encontrado" while
    *  the request is still in flight tells the reader something untrue. */
   const [loading, setLoading] = useState(true);
+  /**
+   * Every club the app currently knows, for resolving **Meu time**.
+   *
+   * The standings carry a club on every row and land first on the home page;
+   * `/api/matches` ships the clubs it saw, which is the list that survives a
+   * standings failure. Preferring whichever has arrived is not belt-and-braces:
+   * with only one of them, a reader's club renders as unresolved for as long as
+   * the other request takes — and the honest "could not load" line would be
+   * showing while the answer was sitting in the other payload.
+   */
+  const knownClubs = useMemo(() => {
+    const fromStandings = standings.map((row) => row.club);
+    return fromStandings.length > 0 ? fromStandings : matches?.clubs;
+  }, [standings, matches]);
+
+  const follow = useMemo(() => followState(preferences, knownClubs), [preferences, knownClubs]);
 
   /**
    * The campanha behind every row of the Classificação, computed here rather
@@ -313,11 +333,19 @@ export function App() {
 
         <main>
           {route.section === "classificacao" && (
-            <StandingsTable
-              rows={standings}
-              onSelectClub={(key) => navigate({ section: "clube", key })}
-              rankHistory={rankHistory}
-            />
+            <>
+              <MeuTimeStrip
+                state={follow}
+                loading={loading}
+                onSelectClub={(key) => navigate({ section: "clube", key })}
+              />
+              <StandingsTable
+                rows={standings}
+                onSelectClub={(key) => navigate({ section: "clube", key })}
+                rankHistory={rankHistory}
+                followedCode={preferences.club ?? undefined}
+              />
+            </>
           )}
 
           {route.section === "ao-vivo" && (
@@ -355,6 +383,8 @@ export function App() {
               coaches={coaches ?? undefined}
               onBack={() => navigate({ section: "classificacao" })}
               onSelectMatch={(id) => navigate({ section: "partida", id })}
+              followedCode={preferences.club ?? undefined}
+              onToggleFollow={toggleClub}
             />
           )}
 

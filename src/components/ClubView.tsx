@@ -15,6 +15,7 @@ import { ClubCrest } from "@/src/components/ClubCrest";
 import { GLYPH, InstagramLink, WikipediaLink } from "@/src/components/ClubLinks";
 import { BACK_LINK, LINK_UNDERLINE } from "@/src/components/interaction";
 import { MatchList } from "@/src/components/MatchList";
+import { FollowButton } from "@/src/components/MeuTime";
 import { RankSparkline } from "@/src/components/RankSparkline";
 import { Surface } from "@/src/components/Surface";
 import type {
@@ -47,6 +48,22 @@ interface ClubViewProps {
    * is usually nothing. The line is left out rather than filled with a dash.
    */
   coaches?: Record<ClubCode, string>;
+  /**
+   * The club this reader follows, if any — **Meu time**.
+   *
+   * A code rather than a boolean, because the caller does not know which club
+   * this page resolved to: the URL carries a slug or a code, and `findClub`
+   * settles it here. Asking the caller to compute "is this the followed one"
+   * would mean resolving the club twice, in two places, from two lists.
+   */
+  followedCode?: ClubCode;
+  /**
+   * Follow or unfollow. Omit and no control renders at all — which is what the
+   * page does before preferences are wired in, and what it must keep doing if
+   * they are ever switched off. A club page that only works for somebody with a
+   * preference stored is not what this feature is for.
+   */
+  onToggleFollow?: (code: ClubCode) => void;
 }
 
 const FORM_CLASS: Record<FormResult, string> = {
@@ -132,6 +149,8 @@ export function ClubView({
   onSelectMatch,
   rankHistory,
   coaches,
+  followedCode,
+  onToggleFollow,
 }: ClubViewProps) {
   // The URL may name the club by slug or by code, and the club itself may only
   // appear in one of the two lists, so search both before giving up.
@@ -184,7 +203,9 @@ export function ClubView({
 
       <header className="mt-3 flex items-center gap-3">
         <ClubCrest club={club} size={44} />
-        <div className="min-w-0">
+        {/* `min-w-0` on the growing half, so the truncating lines inside it
+            shorten instead of pushing the control off the row. */}
+        <div className="min-w-0 grow">
           <h2 className="truncate text-title-large font-bold">{club.shortName}</h2>
           <p className="truncate text-body-medium text-ink-muted">
             {club.name}
@@ -251,6 +272,15 @@ export function ClubView({
             <WikipediaLink title={club.wikipedia} subject="do clube" />
           </div>
         </div>
+        {/* Last in the row and outside the growing half, so it keeps its size
+            while the club's name and address truncate around it. */}
+        {onToggleFollow && (
+          <FollowButton
+            club={club}
+            following={club.code === followedCode}
+            onToggle={() => onToggleFollow(club.code)}
+          />
+        )}
       </header>
 
       {row && (

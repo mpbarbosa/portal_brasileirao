@@ -970,3 +970,40 @@ _Avoid_: "status" (the app says estado; `Status da partida` is a different
 thing and is a match's), "uptime" in user-facing copy, "versão" for
 `package.json`'s number — it sat at 0.1.0 for every deploy ever made and
 answered nothing, so the commit is what the rodapé shows.
+
+**Meu time**:
+The one club a reader follows, chosen from the **Clube** page and remembered on
+that device. Held as `Preferences.club` in `preferences-core.ts` — the club's
+`code`, which is the upstream numeric id, never the **tla** and never the
+**slug**. It renders in exactly two places: a strip above the **Classificação**
+naming the club, and a star on that club's row in the table.
+It is **one** club, not a list: choosing another is a change of allegiance, so
+`toggleFollow` replaces rather than appends. And it is per-device, deliberately
+— no account, no server, nothing that can be lost by anyone but its owner. See
+`docs/accounts.md`, whose Phase 0 this is.
+Two rules the copy and the code both turn on. A reader who has chosen nobody is
+shown **nothing at all** about it: no strip, no prompt, no invitation on the
+home page, because a permanent nag is the soft end of the same thing a sign-in
+wall is, and guests are first class. And a stored club that the current payload
+does not name is **kept**, not cleared — the strip says so and the preference
+stands, since a provider outage is not a reader changing their mind.
+_Avoid_: "time favorito" or "favorito" (reads as a bookmark, and the mark is a
+star for a reason — it says *mine*, not *starred*), "time do coração" (warm, and
+what a broadcaster says, but this is a setting rather than a declaration),
+"seguir" as a noun, "clube preferido".
+
+**Preferências**:
+What the app remembers about a reader on this device, as one object with one key
+per decision — today **Meu time** alone. Parsed by `parsePreferences`, which
+tolerates anything at all in storage, and bound to `localStorage` by
+`usePreferences` under `portal-brasileirao:preferences`, beside the theme's own
+key.
+The **Tema** is deliberately *not* one of them, though it is stored the same
+way: it belongs to the device and the light in the room rather than to the
+person, which is why `useTheme` keeps its own key and why syncing it to an
+account later would be a conflict-resolution problem bought for nothing.
+A failed write is silent. Telling somebody in private mode that their choice
+will not be remembered is a message about their browser dressed as a message
+about the app, delivered at the moment they did something that otherwise worked.
+_Avoid_: "configurações" (suggests a settings page, which there is not),
+"ajustes", "perfil" (that is a person, and there are no accounts).
