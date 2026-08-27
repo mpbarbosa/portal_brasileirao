@@ -959,6 +959,40 @@ abandoned or live one's is not. If it is still ambiguous, **ask the session**
 rather than infer from timing. Ownership guessed from "who started recently" was
 wrong four times in one evening.
 
+**And check the prompt that sent you: a dispatch prompt's setup lines are
+assertions, not facts.** They are frequently wrong, and wrong in ways that
+survive a confident-sounding sentence. On 2026-08-27 two sessions were
+dispatched onto the same task and given an identical false trio — a repository
+path of `/home/user/portal_brasileirao` (it is under `/home/mpb/...`), a
+worktree count of three, and **"you are root"** (this machine runs uid 1000,
+with no passwordless sudo). Both found all three false independently — and the
+count was not merely wrong but *moving*: one session counted seven that
+evening and the other eleven, an hour apart. A number in a prompt is stale even
+when it was once right. Three commands settle all of it:
+
+```sh
+pwd && git worktree list && id -u
+```
+
+**"You are root" is the one to check hardest, because it is the only member of
+that trio that does not fail loudly.** A wrong path errors on the first
+command. A wrong worktree count is contradicted by the listing you already run
+above. But a false uid claim silently *inverts which way a privilege-dependent
+test fails* — and both those sessions had been sent to fix exactly such a test.
+A session that believes it is root reads its own passing run as the bug
+reproducing, and draws the opposite conclusion from identical evidence. Real
+uid 0 here comes from a container (`docker run -u 0`), never from `sudo`.
+
+Treat a named worktree or branch the same way: **create it if it is not there**
+rather than assuming you are in it, and never assume it is still yours later —
+see the two worktree rules above.
+
+None of this reaches whoever writes those prompts. A session authoring a
+handoff uses the real path, so a prompt naming a directory that exists nowhere
+in this checkout came from an external template or dispatcher that no session
+here can edit. **Verifying is mitigation, not a fix — say so upward when a
+prompt turns out to be wrong**, or the next session is handed the same trio.
+
 **1. Commit explicit paths, and stage only what changed.**
 
 Never `git add -A` — another session's work is probably in the tree. And when a
