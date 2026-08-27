@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdtempSync, rmSync } from "node:fs";
+import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { after, test } from "node:test";
@@ -39,10 +39,42 @@ const signIn = (store: AccountStore, subject = "sub-1", name = "Ana") =>
   });
 
 test("an unopenable path is null, not a throw — the feature is absent, not broken", () => {
-  // A directory that does not exist is what an unconfigured or misconfigured
-  // host looks like. `docs/accounts.md` §3.9: unset must mean the feature is
-  // simply not there, the way an unset FOOTBALL_DATA_TOKEN means seed data.
-  assert.equal(openStore("/nonexistent-directory-pb/accounts.db"), null);
+  // `docs/accounts.md` §3.9: an unopenable store must mean the feature is
+  // simply *absent*, the way an unset FOOTBALL_DATA_TOKEN means seed data.
+  //
+  // Provoked with a regular file standing where a directory has to be, rather
+  // than with a merely absent directory. An absent one does not provoke it:
+  // `openStore` deliberately creates a missing directory (the test below), so
+  // `/nonexistent-directory-pb/accounts.db` — what this asserted first — is
+  // unopenable only for a uid that cannot mkdir at `/`. That passed on CI's
+  // unprivileged runner and failed for anyone developing in a root container,
+  // which is a result that tracks the uid of whoever ran it rather than the
+  // contract being claimed.
+  //
+  // Resolving a path *through* a regular file is ENOTDIR for every uid: root's
+  // CAP_DAC_OVERRIDE relaxes permission checks, and this is not one. Note the
+  // extra segment is load-bearing — naming the file directly as the parent
+  // throws EEXIST from Node's own recursive-mkdir bookkeeping instead, which
+  // is a weaker thing to rest this on than kernel path resolution.
+  const notADirectory = path.join(dir, "not-a-directory");
+  writeFileSync(notADirectory, "");
+
+  assert.equal(openStore(path.join(notADirectory, "sub", "accounts.db")), null);
+});
+
+test("a missing directory is created rather than refused — the fresh-host case", () => {
+  // The counterpart to the rule above, and the reason it cannot be provoked by
+  // an absent directory. `account-store.ts` mkdirs deliberately because both
+  // real callers name one that may not exist yet: the host's
+  // `${DEPLOY_DIR}/data` before the first deploy, and `./test-results` before
+  // Playwright has written anything (`docs/accounts.md` §3.11).
+  //
+  // Pinned here so that a future reader who meets the test above does not
+  // "fix" it by deleting the mkdir, which would leave a fresh host with the
+  // accounts feature silently absent.
+  const store = openStore(path.join(dir, "absent", "nested", "accounts.db"));
+  assert.ok(store, "a store beneath a missing directory must open, not return null");
+  store.close();
 });
 
 test("the same provider subject signs in to the same account", () => {
