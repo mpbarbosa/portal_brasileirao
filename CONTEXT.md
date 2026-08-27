@@ -1056,3 +1056,37 @@ will not be remembered is a message about their browser dressed as a message
 about the app, delivered at the moment they did something that otherwise worked.
 _Avoid_: "configurações" (suggests a settings page, which there is not),
 "ajustes", "perfil" (that is a person, and there are no accounts).
+
+**Conta**:
+A reader's account, held only so that what they choose can follow them between
+aparelhos. One row per person in `accounts`, keyed by an opaque id of ours and
+never by the provider's `sub` or by an email — both can be reassigned, and a
+primary key may not. Rendered by `AccountView` at `/conta`; `/api/account/me`
+answers `PublicAccount`, which names the id and the display name and nothing
+else.
+Distinguish from **Conta para a classificação**, which is a verb — whether a
+match counts toward the table — and was in this glossary first.
+Signing in is always an **offer**: every page works without one, and none may be
+gated behind one. See `docs/accounts.md`, whose guest invariant this is.
+_Avoid_: "usuário" (the app says conta, and "usuário" reads as a row in a
+database rather than a person), "perfil" (suggests a public page and a bio,
+neither of which exists), "cadastro" (there is no registration form — Google has
+already said who this is).
+
+**Entrar / Sair**:
+Signing in and out. **Entrar** is at `/entrar`, offers one provider today, and
+says plainly that everything works without it. **Sair** ends this session;
+**Sair de todos os aparelhos** ends every session the account has, which is the
+operation a signed token could not really perform and the reason sessions are
+rows in a table.
+_Avoid_: "login"/"logout" as verbs in pt-BR copy, "logar", "deslogar",
+"autenticar" (a machine's word for it), "conectar-se".
+
+**Sessão**:
+One signed-in browser, not one person: `sessions` holds a row per aparelho. What
+is stored is the SHA-256 of the cookie value, never the value itself, so reading
+the database yields no usable session. Thirty days, renewed once past halfway —
+a reader who visits at all regularly never meets an expiry, and one who
+disappears for a month is signed out, which is the point of having one.
+_Avoid_: "token" in user-facing copy, "login" as a noun for it, "sessão" for the
+`ApiEnvelope` cache window (a different thing entirely).

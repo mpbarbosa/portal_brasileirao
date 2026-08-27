@@ -13,6 +13,7 @@ import {
 import { ClubView } from "@/src/components/ClubView";
 import { Footer } from "@/src/components/Footer";
 import { LiveView } from "@/src/components/LiveView";
+import { AccountButton, AccountView, SignInView } from "@/src/components/AccountView";
 import { MeuTimeStrip } from "@/src/components/MeuTime";
 import { MatchPage } from "@/src/components/MatchPage";
 import { NavBar } from "@/src/components/NavBar";
@@ -30,6 +31,7 @@ import { STADIUMS } from "@/src/data/stadiums";
 import { followState } from "@/preferences-core";
 import { parseRoute } from "@/route-core";
 import { usePageMeta } from "@/src/usePageMeta";
+import { useAccount } from "@/src/useAccount";
 import { usePreferences } from "@/src/usePreferences";
 import { useTheme } from "@/src/useTheme";
 import { useRoute } from "@/src/useRoute";
@@ -39,6 +41,7 @@ export function App() {
   const { route, navigate } = useRoute();
   const { theme, toggle: toggleTheme } = useTheme();
   const { preferences, toggleClub } = usePreferences();
+  const { state: accountState, signOut, deleteAccount } = useAccount();
   const [standings, setStandings] = useState<StandingsRow[]>([]);
   const [matches, setMatches] = useState<MatchesPayload | null>(null);
   const [scorers, setScorers] = useState<Scorer[]>([]);
@@ -310,6 +313,7 @@ export function App() {
         onNavigate={navigate}
         theme={theme}
         onToggleTheme={toggleTheme}
+        accountControl={<AccountButton state={accountState} />}
       />
 
       {/* `pb-28` on small screens clears the navigation bar fixed to the bottom
@@ -409,6 +413,30 @@ export function App() {
               onBack={() => navigate({ section: "jogos", round: null })}
               onSelectMatch={(id) => navigate({ section: "partida", id })}
               onSelectClub={(key) => navigate({ section: "clube", key })}
+            />
+          )}
+
+          {route.section === "entrar" && (
+            <SignInView
+              state={accountState}
+              // Read from the address bar rather than held in state: the
+              // callback redirects here carrying it, so it arrives on a fresh
+              // document load and there is no earlier render to have kept it.
+              error={new URLSearchParams(window.location.search).get("erro")}
+              onBack={() => navigate({ section: "classificacao" })}
+            />
+          )}
+
+          {route.section === "conta" && (
+            <AccountView
+              state={accountState}
+              onSignOut={(everywhere) => {
+                void signOut(everywhere).then(() => navigate({ section: "classificacao" }));
+              }}
+              onDelete={() => {
+                void deleteAccount().then(() => navigate({ section: "classificacao" }));
+              }}
+              onBack={() => navigate({ section: "classificacao" })}
             />
           )}
 

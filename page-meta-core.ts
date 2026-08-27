@@ -193,6 +193,23 @@ export const pageMeta = (
         image: site,
       };
 
+    case "conta":
+      return {
+        // No `suffix` and no description worth writing: this page is
+        // `noindex`, never shared, and never unfurled. What it needs is a
+        // browser tab a reader can find among twenty.
+        title: suffix("Minha conta"),
+        description: "A sua conta no Portal Brasileirão.",
+        image: site,
+      };
+
+    case "entrar":
+      return {
+        title: suffix("Entrar"),
+        description: "Entre para guardar as suas preferências no Portal Brasileirão.",
+        image: site,
+      };
+
     case "jogadores":
       return {
         title: suffix("Jogadores"),

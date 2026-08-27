@@ -32,6 +32,8 @@ const SECTIONS = new Set([
   "clube",
   "partida",
   "estadio",
+  "conta",
+  "entrar",
 ]);
 
 /**
@@ -132,7 +134,9 @@ export type StatusReason =
   | "unknown-round"
   | "unknown-club"
   | "unknown-match"
-  | "unknown-stadium";
+  | "unknown-stadium"
+  /** A real page, served with a 200, that must never be indexed. */
+  | "private";
 
 export interface PageStatus {
   status: 200 | 404;
@@ -143,6 +147,17 @@ export interface PageStatus {
 }
 
 const FOUND: PageStatus = { status: 200, index: true, reason: "ok" };
+
+/**
+ * A page that exists and must not be indexed.
+ *
+ * The type has always permitted this — `status` and `index` are independent —
+ * and no constructor produced it, because until accounts every page this app
+ * served was the same for everybody. `/conta` is not: what it says depends on
+ * who is asking, which is the definition of something a crawler must not
+ * cache, index, or offer as a search result to a different person.
+ */
+const PRIVATE: PageStatus = { status: 200, index: false, reason: "private" };
 const missing = (reason: StatusReason): PageStatus => ({ status: 404, index: false, reason });
 
 /** `decodeURIComponent` throws on a malformed escape like `%E0%A4%A`, and a
@@ -218,6 +233,14 @@ export const pageStatus = (pathname: string, context: MetaContext = {}): PageSta
       return FOUND;
     }
 
+    case "conta":
+    case "entrar":
+      // Explicit rather than left to the `default` below, which would answer
+      // FOUND — a 200 offering a per-requester page to the index. That is the
+      // silent half of the four-file change `CLAUDE.md` warns about: nothing
+      // fails, no test goes red, and the page is simply crawlable.
+      return second === undefined ? PRIVATE : missing("unknown-section");
+
     default:
       // A section that takes no argument does not acquire one.
       return second === undefined ? FOUND : missing("unknown-section");
@@ -234,7 +257,17 @@ export const pageStatus = (pathname: string, context: MetaContext = {}): PageSta
  * simply ignored, which looks like a working line that does nothing.
  */
 export const robotsTxt = (origin: string): string => {
-  const lines = ["User-agent: *", "Allow: /", "Disallow: /api/", ""];
+  const lines = [
+    "User-agent: *",
+    "Allow: /",
+    "Disallow: /api/",
+    // Per-requester pages. `noindex` on the page itself is the binding
+    // instruction; this saves a crawler the fetch, and saves us serving a
+    // personal page to one.
+    "Disallow: /conta",
+    "Disallow: /entrar",
+    "",
+  ];
   if (origin) lines.push(`Sitemap: ${origin}/sitemap.xml`, "");
   return lines.join("\n");
 };

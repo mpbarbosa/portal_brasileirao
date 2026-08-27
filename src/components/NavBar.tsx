@@ -1,3 +1,5 @@
+import type { ReactNode } from "react";
+
 import { Button } from "@/src/components/Button";
 import { FOCUS_RING, STATE_LAYER } from "@/src/components/interaction";
 import { NAV_ITEMS, type SectionId } from "@/src/navigation";
@@ -9,6 +11,14 @@ interface NavBarProps {
   onNavigate: (route: Route) => void;
   theme: Theme;
   onToggleTheme: () => void;
+  /**
+   * The account affordance, or nothing.
+   *
+   * Passed in rather than rendered here, because `NavBar` knows about sections
+   * and this is not one — and because it must disappear entirely on a host with
+   * accounts switched off, which is a fact `NavBar` has no way to learn.
+   */
+  accountControl?: ReactNode;
 }
 
 /** The route a menu entry points at. Sections other than these are drill-downs. */
@@ -112,7 +122,13 @@ function NavigationBar({
  * the outside-click listener and the Escape handler all existed to manage a
  * disclosure that no longer exists — three destinations are simply shown.
  */
-export function NavBar({ current, onNavigate, theme, onToggleTheme }: NavBarProps) {
+export function NavBar({
+  current,
+  onNavigate,
+  theme,
+  onToggleTheme,
+  accountControl,
+}: NavBarProps) {
   const select = (event: React.MouseEvent, id: SectionId) => {
     if (!isPlainClick(event)) return;
     event.preventDefault();
@@ -159,13 +175,25 @@ export function NavBar({ current, onNavigate, theme, onToggleTheme }: NavBarProp
             ))}
           </nav>
 
-          <Button
-            onClick={onToggleTheme}
-            aria-label={themeToggleLabel(theme)}
-            title={themeToggleLabel(theme)}
-          >
-            <span aria-hidden="true">{theme === "light" ? "☽" : "☀"}</span>
-          </Button>
+          {/* MD3 puts trailing actions at the end of the top app bar. The
+              account control sits before the theme toggle because it is the one
+              that changes what the page says; the toggle changes how it looks.
+
+              `shrink-0` on the pair: above `sm` the header already carries the
+              brand block and five inline tabs inside `max-w-3xl`, and adding a
+              second control eats slack that was measured for one. See the
+              header-width spec — the bottom bar's fifth entry was clipped with
+              no scroll to reveal it, and this is that failure one breakpoint up. */}
+          <div className="flex shrink-0 items-center gap-1">
+            {accountControl}
+            <Button
+              onClick={onToggleTheme}
+              aria-label={themeToggleLabel(theme)}
+              title={themeToggleLabel(theme)}
+            >
+              <span aria-hidden="true">{theme === "light" ? "☽" : "☀"}</span>
+            </Button>
+          </div>
         </div>
       </header>
 
