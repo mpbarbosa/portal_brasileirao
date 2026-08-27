@@ -1206,17 +1206,32 @@ drives the host over SSM — so the security group stays pinned to the maintaine
 address and GitHub holds no key that outlives the run.
 
 ```
-push to main ──▶ check ─┐
-                        ├─▶ deploy ──▶ tar(dist, package.json, package-lock.json, shell_scripts)
-                 e2e ───┘               │
-                                        ├─▶ OIDC ──▶ sts:AssumeRoleWithWebIdentity
-                                        ├─▶ s3://…/releases/<sha>.tar.gz
-                                        ├─▶ ssm send-command ──▶ host
-                                        │     07_install_release.sh  (rsync into place)
-                                        │     06_redeploy.sh         (npm ci --omit=dev,
-                                        │                             restart, health)
-                                        └─▶ assert <sha> at /api/health
+push to main ──▶ check ──▶ build ──▶ boot the bundle, smoke-test 3 endpoints
+                   │                      │
+                   │                      └─▶ tar ──▶ artifact + sha256 ──┐
+                 e2e                                                      │
+                   │                                                      ▼
+                   └──────────────────────▶ deploy ──▶ assert sha256 == check's
+                                              ├─▶ OIDC ──▶ sts:AssumeRoleWithWebIdentity
+                                              ├─▶ s3://…/releases/<sha>.tar.gz
+                                              ├─▶ ancestry guard vs live /api/health
+                                              ├─▶ ssm send-command ──▶ host
+                                              │     07_install_release.sh  (rsync into place)
+                                              │     06_redeploy.sh         (npm ci --omit=dev,
+                                              │                             restart, health)
+                                              └─▶ assert <sha> at /api/health
 ```
+
+**The payload is built once and promoted, never rebuilt.** `check` builds it,
+boots it, smoke-tests three endpoints, then packages *that* `dist/` and uploads
+it with its sha256; `deploy` downloads it and refuses to continue unless the
+digest still matches. `deploy` therefore runs no `npm ci` and no build at all.
+Before this the two jobs each built their own payload, so the bytes that reached
+production were never the bytes anything had tested — only a second build of the
+same commit. They agreed in practice, and "in practice" was doing the work that
+build-once-promote does structurally. Note `check` packages only on a run that
+can deploy: a `pull_request` run builds and smoke-tests identically, but its HEAD
+is the synthetic merge ref rather than a commit that will ever ship.
 
 **The release is self-describing, and that is what makes the last step mean
 something.** `scripts/build.sh` stamps the commit and the build time into the

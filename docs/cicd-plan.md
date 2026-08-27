@@ -291,13 +291,22 @@ eight.
 and observe the reconciler deploy within one interval, once. Then no more empty
 nudge commits, ever.
 
-### D3 — Build once, promote
+### D3 — Build once, promote — **done**
 
-Defect 3. `check` produces `release.tar.gz` as a workflow artifact; `deploy`
-consumes it. Depends on nothing; unblocks D5.
+Defect 3. `check` packages the `dist/` it just booted and smoke-tested, uploads
+it with its sha256, and publishes that digest as a job output. `deploy`
+downloads the artifact and refuses to continue unless it still hashes to the
+same value — so "the tested build is the shipped build" is a checked fact, not
+an assumption about the build being deterministic. `deploy` now runs no
+`setup-node`, no `npm ci` and no build.
 
-*Exit:* the sha inside the deployed bundle's `/api/health` matches a payload the
-smoke test ran against in the same run; `deploy` no longer runs `npm run build`.
+`check` packages only on a run that can deploy. A `pull_request` run builds and
+smoke-tests identically, but its HEAD is the synthetic merge ref rather than a
+commit that will ever ship, so uploading 19 MB per PR would buy nothing.
+
+*Exit:* met. `deploy` no longer runs `npm run build`; the digest check was
+exercised on a real 19 MB payload across its three branches — matching digest
+promotes, mismatched digest refuses, absent digest refuses.
 
 ### D4 — A bad release does not become an outage
 
