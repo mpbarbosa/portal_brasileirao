@@ -573,13 +573,44 @@ Do that with the two-stage rehearsal above: stub `systemctl` and the health URL
 and drive every branch — writing *flip-back itself fails* first — before any
 live exercise.
 
-### D6 — The bundle is what gets tested
+### D6 — The bundle is what gets tested — **done**
 
-Defect 6. Previously D5. `PLAYWRIGHT_TARGET=bundle`; SEO/metadata/404 specs run
-against `dist/server.cjs` from the D3 artifact.
+Defect 6. Previously D5. `PLAYWRIGHT_TARGET=bundle` boots `dist/server.cjs`
+under `NODE_ENV=production` instead of `server.ts` through tsx, and runs the
+three specs — `seo`, `page-meta`, `routing` — that cover a path production has
+and development does not. 48 tests.
 
-*Exit:* deliberately breaking `registerSpaFallback` for the production branch
-only turns the suite red.
+Only those three. Re-running the whole suite against the bundle would double
+the wall clock to re-assert what the Vite run already proved; the production
+branch of `server.ts` differs in exactly one region — `express.static` over
+`dist/`, the shell read **once at boot**, and no Vite — and that is what these
+reach through `registerSpaFallback` and `injectMeta`.
+
+**It builds its own payload rather than consuming D3's artifact**, and the
+distinction is worth stating: this tests the production **code path**, not the
+shipped **bytes**. D3's digest already covers the bytes, and `check` packages
+only on a run that can deploy — so waiting for an artifact would leave every
+pull request without this, which is precisely where it earns its keep.
+
+One trap, and it is a hard failure rather than a subtle one: `server.ts`
+**refuses to start** with `ACCOUNTS_DEV_LOGIN` set when `NODE_ENV` is
+production. The config empties it in bundle mode rather than omitting it, so a
+value inherited from the surrounding shell cannot take the whole run down; the
+Contas specs stay outside `testMatch` there for the same reason.
+
+*Exit:* met, and demonstrated rather than argued. `express.static(distPath,
+{ index: false })` — a line that exists only in the production branch — was
+flipped to `{ index: "index.html" }`, which is the exact failure `CLAUDE.md`
+records for Vite's own SPA fallback: the static handler serves the shell for
+`/` and takes `registerSpaFallback` out of the loop, so no metadata is
+injected. The result:
+
+| mode | outcome |
+|---|---|
+| **dev** — the suite as it was | **48 passed**, entirely blind to it |
+| **bundle** | **1 failed** — `seo.spec.ts:128 › the table describes the site` |
+
+Then reverted, rebuilt, and green again at 48.
 
 ### D7 — Hygiene
 

@@ -1163,6 +1163,17 @@ commands is cheaper than the retraction.
 
 ## End-to-end tests
 
+**Two targets.** The default boots `server.ts` through tsx with Vite in
+middleware mode. `PLAYWRIGHT_TARGET=bundle` boots **`dist/server.cjs` under
+`NODE_ENV=production`** instead — the branch the host actually runs, which
+serves `dist/` through `express.static`, reads the shell once at boot and has
+no Vite. Only `seo`, `page-meta` and `routing` run there, because those are the
+specs reaching `registerSpaFallback` and `injectMeta`; the rest would re-assert
+what the Vite run already proved. `npm run test:e2e:bundle` builds and runs it.
+**`server.ts` refuses to start with `ACCOUNTS_DEV_LOGIN` set when `NODE_ENV` is
+production**, so the config empties that variable in bundle mode rather than
+omitting it — an inherited value would otherwise take the whole run down.
+
 `tests/e2e/` runs against a server the config boots itself with
 `DISABLE_FOOTBALL_DATA=true`, so the suite always sees the **frozen snapshot**.
 This is deliberate and load-bearing: live scores, table positions and the current
