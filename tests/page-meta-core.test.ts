@@ -24,6 +24,10 @@ const club = (code: string, shortName: string, slug: string, crest?: string): Cl
 const CLUBS = [
   club("1783", "Flamengo", "flamengo", "https://crests.football-data.org/1783.png"),
   club("1770", "Botafogo", "botafogo"),
+  club("1765", "Fluminense", "fluminense"),
+  // In the fixture because the article is what these tests are about, and
+  // Chapecoense is the club in the division that takes "a".
+  club("1772", "Chapecoense", "chapecoense", "https://crests.football-data.org/1772_large.png"),
 ];
 
 const MATCH: Match = {
@@ -37,23 +41,21 @@ const MATCH: Match = {
   awayGoals: 1,
 };
 
-const STADIUMS = buildStadiums(
-  [
-    {
-      id: "1",
-      round: 24,
-      kickoff: "2026-08-01T20:00:00Z",
-      status: "FINISHED",
-      homeCode: "1783",
-      awayCode: "1770",
-      homeGoals: 1,
-      awayGoals: 0,
-      venue: { stadium: "Maracanã", city: "Rio de Janeiro", state: "RJ" },
-    },
-  ],
-  CLUBS,
-  { maracana: { name: "Maracanã", capacity: 78838 } },
-);
+const FIXTURE: Match = {
+  id: "1",
+  round: 24,
+  kickoff: "2026-08-01T20:00:00Z",
+  status: "FINISHED",
+  homeCode: "1783",
+  awayCode: "1770",
+  homeGoals: 1,
+  awayGoals: 0,
+  venue: { stadium: "Maracanã", city: "Rio de Janeiro", state: "RJ" },
+};
+
+const STADIUMS = buildStadiums([FIXTURE], CLUBS, {
+  maracana: { name: "Maracanã", capacity: 78838 },
+});
 
 test("the table is the site's own title, not a suffixed section", () => {
   const meta = pageMeta({ section: "classificacao" });
@@ -106,6 +108,17 @@ test("singular and plural agree in the description", () => {
 
   assert.match(meta.description, /1 ponto\b/);
   assert.match(meta.description, /1 jogo\b/);
+});
+
+test("a club page carries the club's own article, in the description and the alt", () => {
+  // Both of these are *metadata*, which is what makes the article more than a
+  // nicety: `page-meta-core` is read by the client and injected by the server,
+  // so "do Chapecoense" unfurls into every link preview of the page. The club
+  // is 20th in the division rather than hypothetical.
+  const meta = pageMeta({ section: "clube", key: "chapecoense" }, { clubs: CLUBS });
+
+  assert.match(meta.description, /artilheiros da Chapecoense no Brasileirão/);
+  assert.equal(meta.image?.alt, "Escudo da Chapecoense");
 });
 
 test("a match page names both clubs and the score", () => {
@@ -275,6 +288,24 @@ test("a stadium page names the ground and who plays there", () => {
   assert.match(meta.description, /Rio de Janeiro – RJ/);
   assert.match(meta.description, /Casa do Flamengo/);
   assert.match(meta.description, /78\.838/);
+});
+
+test("a shared ground gives each of its tenants its own article", () => {
+  // The join is the trap, not the article: "Casa do Fluminense e Flamengo" is
+  // wrong even where both clubs are masculine, and one feminine tenant makes a
+  // single shared article impossible.
+  const shared = buildStadiums(
+    [
+      { ...FIXTURE, id: "2", homeCode: "1765" },
+      { ...FIXTURE, id: "3", homeCode: "1772" },
+      FIXTURE,
+    ],
+    CLUBS,
+    { maracana: { name: "Maracanã", capacity: 78838 } },
+  );
+  const meta = pageMeta({ section: "estadio", key: "maracana" }, { stadiums: shared });
+
+  assert.match(meta.description, /Casa do Fluminense, da Chapecoense e do Flamengo/);
 });
 
 test("an unknown stadium still gets a truthful title, not undefined", () => {

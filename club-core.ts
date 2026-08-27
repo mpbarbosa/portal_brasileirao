@@ -40,6 +40,135 @@ export const findClub = (clubs: Club[], key: string): Club | null => {
   );
 };
 
+/**
+ * The article a Brazilian puts in front of a club's popular name: **o**
+ * Palmeiras, **a** Chapecoense.
+ *
+ * Hand-kept, and it has to be. No provider reports grammatical gender, and the
+ * article does not follow from the spelling — "a Chapecoense" and "o
+ * Fluminense" end the same way, and "a Portuguesa" and "o Palmeiras" differ
+ * from each other only in the word itself. Any rule on the final letter gets
+ * both pairs wrong.
+ *
+ * **The table is exhaustive over `src/data/clubs.ts`, and that is the point of
+ * it.** The first version was a set holding the four clubs that take "a", with
+ * masculine as a silent default for everything else — which is the same shape
+ * as the bug it was written to fix. It caught a *known* feminine club being
+ * promoted and could not catch an unknown one: a Caldense or an Aparecidense
+ * arriving in the division falls through to "o", the set of feminine clubs
+ * still reads exactly as it did, and every test stays green while the wrong
+ * article ships. `CLUBS.length === 20` cannot help either, since Série A is
+ * always twenty and a promotion is a swap.
+ *
+ * So `tests/club-core.test.ts` asserts an entry per club instead, and a club
+ * with none fails the build until a person writes its article down. That is
+ * the rule `NATIONALITY_LABELS` already follows one module over, for the same
+ * reason and after the same kind of incident.
+ *
+ * The three entries that are not in the division are the feminine names Série
+ * B is likeliest to send up. They cost nothing, and they are exactly what an
+ * exhaustiveness check cannot supply on its own — a judgement nobody has
+ * written down yet.
+ *
+ * `clubArticle` still defaults to masculine at **runtime**, deliberately: club
+ * objects also arrive from the live payload, which legitimately names clubs the
+ * frozen snapshot does not, and a page has to render for them. The default is
+ * what a reader sees; the test is what stops the default being load-bearing.
+ */
+export type ClubArticle = "o" | "a";
+
+/**
+ * Brazil's federative units, as they are suffixed to a club's popular name.
+ *
+ * `Athletico-PR` and `Atlético-MG` are in the snapshot today, so a promoted
+ * `Portuguesa-RJ` would slug to `portuguesa-rj` and miss a table keyed on
+ * `portuguesa`. The article belongs to the **name** rather than to the state —
+ * "a Portuguesa" is "a Portuguesa" in any of them — so the suffix comes off
+ * before the lookup and the table holds one entry per name.
+ *
+ * Anchored to the end and restricted to the 27 real UFs rather than matching
+ * any two-letter tail, so a club whose name happens to end in a short word is
+ * not silently truncated into somebody else's entry.
+ */
+const STATE_SUFFIX =
+  /-(?:ac|al|am|ap|ba|ce|df|es|go|ma|mg|ms|mt|pa|pb|pe|pi|pr|rj|rn|ro|rr|rs|sc|se|sp|to)$/;
+
+/**
+ * The key a club's article is filed under. `slugify` is reused rather than
+ * reimplemented, exactly as `venue-core` reuses it: a second normaliser is how
+ * "Ponte Preta" and "ponte-preta" come to disagree about the same club.
+ */
+const articleKey = (club: Club): string => slugify(club.shortName).replace(STATE_SUFFIX, "");
+
+const CLUB_ARTICLES: Record<string, ClubArticle> = {
+  // The twenty in `src/data/clubs.ts`, keyed as above.
+  athletico: "o", // Athletico-PR
+  atletico: "o", // Atlético-MG
+  bahia: "o",
+  botafogo: "o",
+  bragantino: "o",
+  chapecoense: "a",
+  "clube-do-remo": "o",
+  corinthians: "o",
+  coritiba: "o",
+  cruzeiro: "o",
+  flamengo: "o",
+  fluminense: "o",
+  gremio: "o",
+  internacional: "o",
+  mirassol: "o",
+  palmeiras: "o",
+  santos: "o",
+  "sao-paulo": "o",
+  "vasco-da-gama": "o",
+  vitoria: "o",
+
+  // Not in the division, written down ahead of a promotion.
+  ferroviaria: "a",
+  "ponte-preta": "a",
+  portuguesa: "a",
+};
+
+/**
+ * Whether the table names this club — the exhaustiveness guard's whole
+ * question, phrased so the test does not need a copy of the key rule.
+ */
+export const hasClubArticle = (club: Club): boolean =>
+  Object.hasOwn(CLUB_ARTICLES, articleKey(club));
+
+/** "o" or "a", for a club's popular name. */
+export const clubArticle = (club: Club): ClubArticle => CLUB_ARTICLES[articleKey(club)] ?? "o";
+
+const CONTRACTED: Record<ClubArticle, string> = { o: "do", a: "da" };
+
+/**
+ * A club in the possessive — "do Flamengo", "da Chapecoense".
+ *
+ * Exported beside the bare article because every caller but `followLabel`
+ * wants *this* form, and a caller writing `` `do ${club.shortName}` `` for
+ * itself is precisely how one wrong article came to be in four files at once.
+ */
+export const ofClub = (club: Club): string => `${CONTRACTED[clubArticle(club)]} ${club.shortName}`;
+
+/**
+ * Several clubs in the possessive, joined the way pt-BR joins a list: "do
+ * Fluminense e do Flamengo", "do A, do B e do C".
+ *
+ * The article is repeated per club rather than applied once to the head of the
+ * list. "Casa do Fluminense e Flamengo" is wrong even where both clubs are
+ * masculine, and a ground shared by Chapecoense and anybody else has no single
+ * article that could serve both.
+ *
+ * An empty list returns an empty string rather than a dangling "do", which the
+ * caller avoids reaching by omitting the clause entirely.
+ */
+export const ofClubs = (clubs: Club[]): string => {
+  const parts = clubs.map(ofClub);
+  if (parts.length < 2) return parts[0] ?? "";
+
+  return `${parts.slice(0, -1).join(", ")} e ${parts[parts.length - 1]}`;
+};
+
 export type FormResult = "V" | "E" | "D";
 
 export const playsIn = (match: Match, code: ClubCode): boolean =>
