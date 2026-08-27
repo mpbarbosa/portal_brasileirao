@@ -183,8 +183,8 @@ provider than it needed to build:
   reached `networkidle` from anywhere until #118. A struck claim still teaches
   whoever reads the strikethrough, and this one should not be read as a rule that
   was right and has now been carried out.
-- **The árbitro row cannot be photographed by any refresh, and needs the capture
-  set pointed at a different fixture.** This is the one item on this page that
+- **The árbitro row cannot be photographed by any refresh, and needs a second
+  fixture in the capture set.** This is the one item on this page that
   waiting does *not* fix, which is why it is stated separately from the refresh
   above rather than as a caveat inside it.
 
@@ -204,16 +204,38 @@ provider than it needed to build:
   **Whether it might fill in on its own is worth stating precisely, because the
   obvious summary is wrong.** 554977 is **round 24**, FINISHED, and carries no
   officials. Coverage is not a simple prefix: rounds **1–15 and 20–22** carry
-  them; **16–19 and 23 onward** do not. So upstream demonstrably *does* backfill
-  out of order — 20–22 arrived after 16–19 did not — and round 24 may gain one
-  later. But nothing guarantees it, nothing schedules it, and **nothing would
-  notice if it happened**: the gate compares appearance *sources* and cannot see
-  what a picture depicts. Waiting is therefore not a plan, only a hope.
+  them; **16–19 and 23 onward** do not. Rounds 23 and 24 are FINISHED and carry
+  none while earlier finished rounds do, so officials plainly do not arrive with
+  the result, and round 24 may gain one later. (A snapshot cannot see *when* any
+  of it arrived, so the arrival order is not observable from here; what is
+  observable is that a played round can sit empty.) But nothing guarantees it,
+  nothing schedules it, and **nothing would notice if it happened**: the gate
+  compares appearance *sources* and cannot see what a picture depicts. Waiting
+  is therefore not a plan, only a hope.
 
-  The fix is a change to **what is photographed**: point the match-page capture
-  at a fixture that names an official (554740 is one), and rewrite that pair's
-  README alt text, which describes the page as it stands today. That is a change
-  to the capture set, not a refresh of it — different work, different review.
+  The fix is a change to **what is photographed** — but **not** by repointing the
+  existing pair, which is the obvious move and costs more than it buys. No
+  fixture can carry both the árbitro line and the Estádio and emissoras lines:
+
+  ```
+  referees           157 fixtures, rounds 1-15 and 20-22   (from the provider)
+  venue + emissoras   30 fixtures, rounds 24, 25 and 26    (curated forward)
+  intersection         0 — not one shared round
+  ```
+
+  `venues.ts` and `broadcasts.ts` are written by the same `sync-broadcasts` run
+  and cover *coming* rounds, while the provider names officials for *played*
+  ones — so the disjointness is structural, not a fact about today's data.
+  Repointing 554977 would trade the Estádio line, the stadium link and the
+  broadcaster marks for the árbitro line, taking `BroadcasterMark` out of the
+  captured surface entirely — a component nine e2e specs select on.
+
+  So the set gains a **second** match page rather than exchanging the one it has.
+  **PR #124** adds `partida-554951` — Botafogo 1x1 Fluminense, round 22, Bruno
+  Arleu de Araujo — in both themes, with its own alt text. Note that is a
+  seventeenth *and* eighteenth image: every entry in the set is a light/dark
+  pair, so no capture is ever added singly. Either way it is a change to the
+  capture set, not a refresh of it — different work, different review.
 
   **Do not treat the green gate as evidence this is done.** #118 cleared it by
   advancing `CAPTURED` past #104, so the images are now certified current for a
