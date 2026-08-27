@@ -63,6 +63,15 @@ export interface Club {
   /** Home state (e.g. "RJ"). Absent for clubs derived from a provider that
    *  doesn't carry it — render it conditionally. */
   state?: string;
+  /**
+   * The club's sede as one line ("Rua Álvaro Chaves 41, Bairro Laranjeiras Rio
+   * de Janeiro, RJ 22231-220"), already cleaned by `clubAddress` — see there
+   * for why the raw upstream string cannot be rendered as it arrives, and why
+   * this is a line rather than parsed components. Absent for a club whose
+   * provider does not carry one, and for one whose address is nothing but the
+   * city; render it conditionally.
+   */
+  address?: string;
 }
 
 /**
@@ -358,4 +367,29 @@ export interface ApiEnvelope<T> {
   note: string;
   updatedAt: string;
   data: T;
+}
+
+/**
+ * What `/api/health` reports about the process answering.
+ *
+ * Deliberately **not** an `ApiEnvelope`: this describes the server, not the
+ * championship, so there is no `source` to distinguish and nothing to degrade
+ * to. Every field but `status` is optional because the endpoint genuinely
+ * omits them — running from source there is no bundler to stamp a build time —
+ * and because the client reading this may be a different build from the server
+ * answering it. `health-core.ts` narrows the body; the **Rodapé** renders only
+ * the fields that arrived.
+ */
+export interface Health {
+  /** `"ok"` from every build so far. Anything else is shown verbatim. */
+  status: string;
+  /** The commit that was built, or `"dev"` when running from source. */
+  sha: string | null;
+  /** ISO instant the bundle was built. Absent under `tsx`. */
+  builtAt: string | null;
+  /** Seconds the process has been up. */
+  uptime: number | null;
+  /** The **configured** provider — `"football-data"` or `"seed"`. Not a claim
+   *  that the last upstream request succeeded; that is the envelope's job. */
+  provider: string | null;
 }

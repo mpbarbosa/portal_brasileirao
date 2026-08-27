@@ -293,10 +293,10 @@ export const coachOf = (
 /**
  * The coaches a club list knows about, keyed by club code.
  *
- * The inverse of `withCoaches`, and what `/api/coaches` answers with: a club
- * with no coach is left out entirely rather than mapped to an empty string, so
- * the absence survives the round trip instead of arriving as a value the page
- * would have to test for a second time.
+ * The inverse of `coachOf`, and what `/api/coaches` answers with: a club with no
+ * coach is left out entirely rather than mapped to an empty string, so the
+ * absence survives the round trip instead of arriving as a value the page would
+ * have to test for a second time.
  */
 export const coachesOf = (clubs: Club[]): Record<ClubCode, string> => {
   const coaches: Record<ClubCode, string> = {};
@@ -309,17 +309,48 @@ export const coachesOf = (clubs: Club[]): Record<ClubCode, string> => {
 };
 
 /**
+ * The club's **sede** as one readable line, or null when there is nothing to
+ * show.
+ *
+ * football-data builds this field by interpolation and does not check its own
+ * columns first, so a club whose street or postcode is unknown arrives with the
+ * literal word `null` standing in that position — three of the twenty read
+ * `"null São Paulo, SP null"`. Rendered verbatim, that is what the page says,
+ * and it looks like our bug rather than upstream's.
+ *
+ * Only a **leading and a trailing** token is stripped, anchored rather than
+ * replaced wherever it occurs: everything between them is a street and a
+ * neighbourhood copied as upstream wrote them, and an address this app cannot
+ * parse is not one it should be editing. It cannot parse it because there is no
+ * separator between the neighbourhood and the city — `"Bairro Laranjeiras Rio de
+ * Janeiro, RJ"` — which is also why the result is a line rather than components.
+ *
+ * A club left with only its city keeps that; a club left with nothing at all
+ * returns null, so the caller omits the row instead of printing an empty one.
+ */
+export const clubAddress = (raw: string | null | undefined): string | null => {
+  const line = (raw ?? "")
+    .replace(/^\s*null\b\s*/i, "")
+    .replace(/\s*\bnull\s*$/i, "")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  return line || null;
+};
+
+/**
  * Fill in details the live payloads omit.
  *
  * Club objects embedded in standings and fixtures carry only id, name, crest
- * and abbreviation — the website and the head coach come from the teams
- * endpoint, and the Instagram handle, the hymn and the Wikipedia article from
- * no endpoint at all. So the committed club list supplies all five at request
- * time.
+ * and abbreviation — the website, the sede and the head coach come from the
+ * teams endpoint, and the Instagram handle, the hymn and the Wikipedia article
+ * from no endpoint at all. So the committed club list supplies all six at
+ * request time.
  *
- * The coach is the one of the five that goes stale between snapshots, which is
- * why it is also served live by `/api/coaches`; what the seed supplies here is
- * the floor, not the whole answer.
+ * The coach is the one of the six that goes stale between snapshots — a club
+ * changes técnico far more often than it moves or renames itself — which is why
+ * it is also served live by `/api/coaches`. What the seed supplies here is the
+ * floor, not the whole answer.
  */
 export const withClubDetails = (clubs: Club[], known: Club[]): Club[] => {
   const byCode = new Map(known.map((club) => [club.code, club]));
@@ -330,6 +361,7 @@ export const withClubDetails = (clubs: Club[], known: Club[]): Club[] => {
     const instagram = club.instagram ?? source?.instagram;
     const hymn = club.hymn ?? source?.hymn;
     const wikipedia = club.wikipedia ?? source?.wikipedia;
+    const address = club.address ?? source?.address;
     const coach = club.coach ?? source?.coach;
 
     return {
@@ -338,6 +370,7 @@ export const withClubDetails = (clubs: Club[], known: Club[]): Club[] => {
       ...(instagram ? { instagram } : {}),
       ...(hymn ? { hymn } : {}),
       ...(wikipedia ? { wikipedia } : {}),
+      ...(address ? { address } : {}),
       ...(coach ? { coach } : {}),
     };
   });

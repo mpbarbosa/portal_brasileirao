@@ -6,7 +6,7 @@ import type { Squad } from "@/src/types";
  * Regenerate with: npx tsx scripts/sync-seed-data.ts
  *
  * Frozen elencos (20 clubs, 948 players), taken
- * 2026-08-25 from football-data.org. The offline fallback behind
+ * 2026-08-26 from football-data.org. The offline fallback behind
  * `/api/squads`, so it goes stale the moment a transfer window opens.
  *
  * Clubs are referenced through `CLUBS_BY_CODE` rather than restated, so this

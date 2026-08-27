@@ -141,6 +141,26 @@ what makes the logic testable without mocking HTTP.
   for anyone in the division. Athletico-PR really does list two Dudus, which is
   what the tie-break is for.
 
+- `health-core.ts` — the **Saúde do serviço** the **Rodapé** carries. It is the
+  only core module whose input is *this app's own* API rather than a provider's,
+  and it exists for the reason an adapter usually does: `/api/health` is the one
+  endpoint that is deliberately **not** an `ApiEnvelope` — it describes the
+  process, so it has no `source`, no `note` and nothing to degrade to — which
+  also makes it the one payload the client cannot assume it understands, since
+  a host still serving last week's bundle answers the shape *that* build
+  emitted. `parseHealth` narrows field by field and lets every field but the
+  status be absent; the rodapé then omits an item rather than printing
+  `undefined`. `providerLabel` names what is **configured** and never claims
+  "ao vivo" — whether the last upstream request succeeded is the envelope's
+  `source`, which the banner above already carries, and claiming otherwise here
+  would contradict a `fallback` banner three lines up. `startInstant` turns the
+  reported uptime into the instant the process started, which is not a
+  presentation preference: an elapsed label is different every time it renders,
+  and the home route is one of the committed **full-page** captures, so that
+  band would change between two captures of the same build and be committed as
+  noise on every refresh — the failure `settle` was written for. It is read at
+  the moment the payload lands rather than per render, because `now` moves and
+  `uptime` does not.
 
 Extract to a core module before logic in `server.ts` grows a branch worth testing.
 

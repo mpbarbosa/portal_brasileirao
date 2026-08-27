@@ -2,13 +2,16 @@ import { useEffect, useMemo, useState } from "react";
 
 import {
   fetchCoaches,
+  fetchHealth,
   fetchMatches,
   fetchScorers,
   fetchSquads,
   fetchStandings,
+  type HealthReading,
   type MatchesPayload,
 } from "@/src/api";
 import { ClubView } from "@/src/components/ClubView";
+import { Footer } from "@/src/components/Footer";
 import { LiveView } from "@/src/components/LiveView";
 import { MatchPage } from "@/src/components/MatchPage";
 import { NavBar } from "@/src/components/NavBar";
@@ -53,6 +56,11 @@ export function App() {
    * a reload that the overlay should not.
    */
   const [openPlayer, setOpenPlayer] = useState<{ player: Player; scorer?: Scorer } | null>(null);
+  /**
+   * What `/api/health` said, for the **Rodapé**. Undefined until it settles,
+   * which is what lets the footer render whole rather than growing a row.
+   */
+  const [health, setHealth] = useState<HealthReading | undefined>(undefined);
   const [note, setNote] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   /** True until the first load settles. A page that names something — a club, a
@@ -122,6 +130,41 @@ export function App() {
         // Also on failure: the request has settled, and leaving the page
         // reading "carregando" forever would be its own kind of lie.
         if (!cancelled) setLoading(false);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  /**
+   * The process answering, read once at startup and never again.
+   *
+   * Deliberately its own effect rather than a fourth entry in the `Promise.all`
+   * above: that one is `all`, so a health endpoint having a bad minute would
+   * take the table, the fixtures and the artilharia down with it and raise the
+   * error banner over a page whose data arrived perfectly. A footer is never a
+   * reason to fail a page, the same rule `page-meta-core.ts` keeps for
+   * metadata.
+   *
+   * Not refetched. Every fact it carries is fixed for the life of the process —
+   * the commit, the build time, the configured provider and the instant it
+   * started — so polling would spend requests re-reading constants. A restart
+   * is picked up on the next load, which is when a reader could act on it
+   * anyway.
+   */
+  useEffect(() => {
+    let cancelled = false;
+
+    void (async () => {
+      try {
+        const reading = await fetchHealth();
+        if (!cancelled) setHealth(reading);
+      } catch {
+        // A lost connection reads the same as an unreadable body: the rodapé
+        // says the state could not be read and the rest of the page is intact.
+        if (!cancelled) setHealth({ health: null, readAt: Date.now() });
       }
     })();
 
@@ -363,6 +406,8 @@ export function App() {
             </>
           )}
         </main>
+
+        <Footer reading={health} />
       </div>
 
       {openPlayer && (

@@ -1,5 +1,16 @@
 import { expect, test, type Page } from "@playwright/test";
 
+/**
+ * The heading naming what this page is about.
+ *
+ * Scoped to `main` because the rodapé carries an `sr-only` level-2 heading of
+ * its own on every page, and the player card another — an unscoped
+ * `getByRole("heading", { level: 2 })` resolves to two elements and fails
+ * strict mode. These specs were unambiguous only until the page grew a second
+ * top-level section, which is the accident the scope removes.
+ */
+const pageHeading = (page: Page) => page.getByRole("main").getByRole("heading", { level: 2 });
+
 const goToJogos = async (page: Page) => {
   await page.getByRole("link", { name: /^Jogos/ }).click();
   await expect(page.getByRole("combobox", { name: "Rodada" })).toBeVisible();
@@ -18,7 +29,7 @@ test.describe("Jogos", () => {
     const round = await currentRound(page);
 
     expect(round).toBeGreaterThan(0);
-    await expect(page.getByRole("heading", { level: 2 })).toHaveText(`${round}ª rodada`);
+    await expect(pageHeading(page)).toHaveText(`${round}ª rodada`);
     expect(await page.locator("main ul > li").count()).toBeGreaterThan(0);
   });
 
@@ -34,7 +45,7 @@ test.describe("Jogos", () => {
     await page.getByRole("button", { name: "Próxima rodada" }).click();
 
     expect(await currentRound(page)).toBe(before + 1);
-    await expect(page.getByRole("heading", { level: 2 })).toHaveText(`${before + 1}ª rodada`);
+    await expect(pageHeading(page)).toHaveText(`${before + 1}ª rodada`);
   });
 
   test("the previous control goes back one round", async ({ page }) => {
@@ -47,7 +58,7 @@ test.describe("Jogos", () => {
   test("selecting a round from the list jumps to it", async ({ page }) => {
     await page.getByRole("combobox", { name: "Rodada" }).selectOption("1");
 
-    await expect(page.getByRole("heading", { level: 2 })).toHaveText("1ª rodada");
+    await expect(pageHeading(page)).toHaveText("1ª rodada");
     expect(await page.locator("main ul > li").count()).toBeGreaterThan(0);
   });
 
@@ -92,6 +103,6 @@ test.describe("Jogos", () => {
     await goToJogos(page);
 
     await expect(page).toHaveURL(/\/jogos$/);
-    await expect(page.getByRole("heading", { level: 2 })).toHaveText(`${current}ª rodada`);
+    await expect(pageHeading(page)).toHaveText(`${current}ª rodada`);
   });
 });

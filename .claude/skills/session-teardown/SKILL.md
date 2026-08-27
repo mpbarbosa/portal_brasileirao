@@ -74,6 +74,14 @@ that spends it. Without that record you are recalling branch names at the point
 where being wrong deletes someone else's work — which is the one place the
 measure-don't-recall rule matters most.
 
+**A worktree the harness gave you is still yours, and there is no moment of
+creation to have recorded.** A session can start already inside one — provisioned
+before the first turn, `.env` and `node_modules` absent, branch already named.
+The record rule has nothing to say about it, and "remove only what you created"
+read literally leaves it behind forever. **The session's starting directory is
+the record** in that case, and it is as good as any you would have written: no
+peer can start where you started.
+
 **Subtract your record from the listing, never the reverse.** Deriving the
 removal list *from* the listing cannot distinguish something you forgot you made
 from something that arrived while you were working — and the arrival is the more
@@ -93,6 +101,31 @@ abandoned one — and it has been each of those here.
 the branch's **upstream**, not against `main`, so a branch fast-forwarded past
 its own upstream will refuse while being fully merged. The property you want is
 `git rev-list --count origin/main..<branch>` = 0.
+
+**Local and remote are two deletions, and the remote one may already be done.**
+Where the repository deletes merged branches automatically — this one does —
+`git push origin --delete <branch>` reports a *failure* for the case where you
+have nothing left to do:
+
+    error: unable to delete '<branch>': remote ref does not exist
+    error: failed to push some refs to '<remote>'
+
+Two lines beginning `error`, a non-zero exit, and the end state you wanted
+already holds. **Ask before deleting, and read that message as success:**
+
+```sh
+git ls-remote --heads origin <branch>    # empty => the remote is already gone
+```
+
+This matters more than it looks, because the section below primes you to read
+any failure here as real: removal *can* partly fail, and telling the two apart
+by exit code alone is not possible.
+
+**Deleting a local branch does not prune its remote-tracking ref.** So
+`origin/<branch>` keeps appearing in `git branch -a` after both deletions have
+succeeded, which reads as a leftover and is not one. Clear it with
+`git branch -dr origin/<branch>`, and see the verify step below for why that
+listing is the wrong one to confirm against.
 
 **Servers:** stop by **recorded PID**. `pkill -f <pattern>` matches every
 session's process, and has. If you did not record the PID, attribute it first
@@ -121,10 +154,19 @@ Removal can partly fail, and a push can be rejected. Re-run the checks and repor
 what is actually gone:
 
 ```sh
-git worktree list && git branch -a && git ls-remote --heads origin
+git worktree list
+git branch --format='%(refname:short)'       # local only
+git ls-remote --heads origin                 # asks the remote, not a cached ref
 ss -ltn 2>/dev/null | grep -E ':3[0-9]{3}'
 git status --porcelain -uall
 ```
+
+**Not `git branch -a` — it answers from a cache.** Remote-tracking refs are
+whatever the last fetch left behind, and deleting a branch does not prune its
+own, so `git branch -a` lists `origin/<branch>` after both deletions succeeded.
+Confirming a *deletion* against it is the mistake this document spends its first
+half warning about: reading a signal for what it resembles rather than what it
+measures. `git ls-remote` asks the remote.
 
 ## An empty teardown is the good outcome
 

@@ -147,6 +147,9 @@ over the copy `sync-seed-data` froze into `clubs.ts`: a Série A club changes
 coach several times a season and the snapshot is regenerated far less often than
 that. The frozen value is the floor, kept so a failed request still names
 someone.
+It sits directly above the **Sede**, and the three lines are a descending
+ladder rather than a list: the club's name, then who it plays under, then where
+it keeps its office, each step fainter than the one before.
 A club upstream lists no coach for has **no line at all** — never a dash, and
 never a bare label.
 _Avoid_: "treinador" (correct Portuguese, but "técnico" is what Brazilian
@@ -155,6 +158,26 @@ football says and what every source the app reads writes), "coach", "manager",
 name in a **Ficha** tile (a name is a word, not a figure — see **Linha do
 cartão** for the same split on the player card).
 
+**Sede**:
+The club's headquarters as a postal address, carried on `Club.address` and shown
+on the **Clube** page under the club's name, above the row of links, as a pin
+glyph followed by one line of text. The pin is the only mark in that header that
+is not a link: the app holds no map, so it says "this is a place" and stops.
+Comes from the provider's teams endpoint, like the **Site oficial**, and is the
+same field the club's `state` is already parsed out of — so it costs no request
+that was not already being made.
+Cleaned by `clubAddress` before it is written down, because football-data
+interpolates the string without checking its own columns: a club missing a street
+or a postcode arrives as the literal `"null São Paulo, SP null"`, and three of the
+twenty do. Only a leading and a trailing `null` token is stripped. Everything
+between them is left verbatim — there is no separator between the neighbourhood
+and the city (`"Bairro Laranjeiras Rio de Janeiro, RJ"`), so the address cannot be
+split into components, which is why it is **a line rather than fields**.
+_Avoid_: "endereço" on the page (it is the club's seat, not a delivery address,
+and "endereço" also reads as a URL — which is exactly what the three links beside
+it are), "localização" (reads as a map pin the app cannot honour), parsing the
+line into street/bairro/cidade, truncating it (the cut falls on the city and the
+state, which is the half worth reading).
 **Site oficial**:
 The club's own website, linked from its page and shown as a globe glyph followed
 by the bare host (`palmeiras.com.br`). The globe distinguishes the club's *own*
@@ -912,3 +935,38 @@ feedback does not. Durations go near-zero rather than to `none`, so
 _Avoid_: removing hover and focus feedback along with the movement — a control
 that stops reacting is harder to use, not calmer; treating it as optional
 polish, since it is the reader stating a need rather than a preference.
+
+**Rodapé**:
+The strip closing every page: what this site is, and what is currently serving
+it. Rendered by `Footer`, and placed **inside** the page container rather than
+under it, so the `pb-28` that clears the navigation bar on a phone clears the
+rodapé too — under it, the last line would sit beneath the bar and be invisible
+until someone scrolled to the end of a twenty-club table. It is a sibling of
+`<main>`, not a child, because a drill-down replaces what is inside `main` and
+the rodapé must survive it.
+_Avoid_: "footer" in user-facing copy (upstream's word, not the reader's),
+putting navigation in it (the destinations are `NAV_ITEMS` and the bar is
+already full — see the bound in CLAUDE.md), treating it as the place to park
+anything with nowhere else to go.
+
+**Saúde do serviço**:
+What `/api/health` reports about the process that answered — its state, the
+provider it is **configured** with, the commit it was built from, when it was
+built, and when it started. Read once at load, narrowed by `parseHealth` in
+`health-core.ts`, and rendered as the second half of the **Rodapé**.
+Two distinctions the wording turns on. The **Fonte** here names what is
+configured, never what the last request returned: `/api/health` knows whether a
+token is present and the kill switch is off, and whether the upstream answered a
+minute ago is the envelope's `source`, which the banner above already carries.
+Saying "dados ao vivo" here would contradict a `fallback` banner three lines up.
+And **No ar desde** is an instant rather than an elapsed count, though the
+endpoint reports elapsed seconds: an instant answers "did it restart?" without
+the reader subtracting, and it holds still, where a "há 5 h 12 min" would differ
+between two captures of the same running process and commit that band as noise
+every screenshot refresh.
+Every field but the state may be absent — from source there is no build time —
+and an absent one is a missing item, never a dash.
+_Avoid_: "status" (the app says estado; `Status da partida` is a different
+thing and is a match's), "uptime" in user-facing copy, "versão" for
+`package.json`'s number — it sat at 0.1.0 for every deploy ever made and
+answered nothing, so the commit is what the rodapé shows.

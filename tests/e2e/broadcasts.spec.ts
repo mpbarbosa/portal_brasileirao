@@ -13,7 +13,7 @@ const UNCURATED_ROUND = "1";
 
 const goToRound = async (page: Page, round: string) => {
   await page.goto(`/jogos/${round}`);
-  await expect(page.getByRole("heading", { level: 2 })).toHaveText(`${round}ª rodada`);
+  await expect(page.getByRole("main").getByRole("heading", { level: 2 })).toHaveText(`${round}ª rodada`);
   await expect(page.locator("main ul > li").first()).toBeVisible();
 };
 

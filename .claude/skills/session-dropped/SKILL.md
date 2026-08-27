@@ -17,7 +17,7 @@ listings.
 
 ## What "clear" means
 
-Nothing of yours remains **in any of the four places state hides**, and each has
+Nothing of yours remains **in any of the five places state hides**, and each has
 been the one that survived at least once:
 
 ```sh

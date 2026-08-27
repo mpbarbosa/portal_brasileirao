@@ -1,11 +1,22 @@
 import { expect, test, type Page } from "@playwright/test";
 
+/**
+ * The heading naming what this page is about.
+ *
+ * Scoped to `main` because the rodapé carries an `sr-only` level-2 heading of
+ * its own on every page, and the player card another — an unscoped
+ * `getByRole("heading", { level: 2 })` resolves to two elements and fails
+ * strict mode. These specs were unambiguous only until the page grew a second
+ * top-level section, which is the accident the scope removes.
+ */
+const pageHeading = (page: Page) => page.getByRole("main").getByRole("heading", { level: 2 });
+
 /** Open the club sitting at a given standings position. */
 const openClubAt = async (page: Page, position: number) => {
   const row = page.locator("table tbody tr").nth(position - 1);
   const name = (await row.locator("td:nth-child(2) a").innerText()).trim();
   await row.locator("td:nth-child(2) a").click();
-  await expect(page.getByRole("heading", { level: 2 })).toHaveText(name);
+  await expect(pageHeading(page)).toHaveText(name);
   return name;
 };
 
@@ -26,7 +37,7 @@ test.describe("Clube", () => {
   test("choosing a club opens its page", async ({ page }) => {
     const name = await openClubAt(page, 1);
 
-    await expect(page.getByRole("heading", { level: 2 })).toHaveText(name);
+    await expect(pageHeading(page)).toHaveText(name);
     await expect(page.locator("table")).toHaveCount(0);
   });
 
@@ -303,6 +314,36 @@ test.describe("Clube", () => {
     await openClubAt(page, 1);
     await expect.poll(() => asked.length).toBeGreaterThan(0);
   });
+
+  test("the club page names the club's sede", async ({ page }) => {
+    await page.goto("/clube/palmeiras");
+
+    // One line, verbatim from the provider: there is no separator between the
+    // neighbourhood and the city, so it is not split into fields.
+    await expect(page.locator("main [data-sede]")).toHaveText(
+      /Rua Palestra Italia .*Perdizes São Paulo, SP 05005-030$/,
+    );
+  });
+
+  test("a half-empty address shows the city, never upstream's word null", async ({ page }) => {
+    // football-data interpolates this field without checking its own columns,
+    // so Flamengo, Mirassol and São Paulo arrive as "null <city>, <UF> null".
+    // Rendered raw that is what the most-visited club page in the app says.
+    for (const slug of ["flamengo", "mirassol", "sao-paulo"]) {
+      await page.goto(`/clube/${slug}`);
+
+      const sede = page.locator("main [data-sede]");
+      await expect(sede).toHaveText(/^[A-ZÁ-Ú][^,]+, [A-Z]{2}$/);
+      expect(await page.locator("main").innerText()).not.toMatch(/\bnull\b/i);
+    }
+  });
+
+  test("the sede is announced as one, since its mark is aria-hidden", async ({ page }) => {
+    await page.goto("/clube/palmeiras");
+
+    // Without the screen-reader label the address reads out as a bare string
+    // with nothing saying what it is.
+    await expect(page.locator("main [data-sede] .sr-only")).toHaveText("Sede:");  });
 
   test("every club carries all four links", async ({ page }) => {
     // A missing handle renders as no link at all rather than a broken one, so

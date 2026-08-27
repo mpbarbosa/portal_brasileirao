@@ -96,6 +96,12 @@ forbids, and peers' worktrees may already be gone so the listing cannot correct
 you. This has already failed inside a run of this skill: a session reported
 holding no worktrees, then found one of its own on a later listing.
 
+One worktree the record cannot cover: **the one the harness gave you**, which a
+session can be started inside before its first turn. There was no moment of
+creation to write down, so it is invisible to the rule above while still being
+yours. The session's starting directory identifies it — no peer can start where
+you started.
+
 **5. Servers you started, attributed.** A port number is not an owner:
 ```sh
 ss -ltnp 2>/dev/null | grep -E ':3[0-9]{3}'
