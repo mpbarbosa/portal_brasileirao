@@ -547,14 +547,18 @@ these — it deploys and behaves exactly as it did before.
   last-write-wins, which §4 sketched; the argument for the simpler rule is in
   `preferences-core.ts` beside `planSync` and summarised in `CLAUDE.md`.
 - ~~Session pruning on a schedule~~ — **done.** Hourly, and once at boot.
-- **Backups — the one that still matters, and the reason accounts must not be
-  switched on yet.** The database is the first state in this app that nothing can
-  regenerate: lose the volume and the readers are gone. Nightly `VACUUM INTO` to
-  S3, on a prefix separate from the deploy bucket, and a restore **rehearsed on a
-  scratch instance** rather than documented. Deliberately not written blind —
-  scripts nobody has run against a real host would look like a backup story
-  without being one, and the exit criterion here is a restore that happened, not
-  a file that exists.
+- **Backups — written and rehearsed; one step left, and it is yours.**
+  `09_backup_accounts.sh`, `10_restore_accounts.sh` and the timer in
+  `11_install_backup_timer.sh` exist, and `scripts/rehearse-accounts-backup.sh`
+  drives the round trip end to end — real SQLite, real `VACUUM INTO`, real
+  integrity check, rows counted at both ends, 23 cases. It caught three real
+  bugs in scripts that read as correct, which is the argument for having it.
+  **What it cannot prove is the AWS half**: `aws` is stubbed, so the instance
+  role's `s3:PutObject` on the backup prefix, the bucket policy and the
+  lifecycle rule are all unexercised. Grant the permission, install the timer,
+  then **run the service unit once by hand** — that first upload is the only
+  thing that turns this from rehearsed into done, and it is the remaining reason
+  accounts should not be switched on.
 - **The retention promise, or its removal from the notice.** An unenforced
   retention promise is worse than no promise. The notice as shipped makes **no**
   retention claim, so nothing is currently false; adding one means implementing
