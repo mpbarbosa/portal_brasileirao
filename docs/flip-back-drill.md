@@ -40,114 +40,87 @@ actually takes the site down. **Drill the health variant first.** Only consider
 the crash variant once this one has passed, and treat it as a separate exercise
 with its own window.
 
+## Who can run it, and why it is a workflow
+
+**A workstation cannot drive this drill.** That is measured, not assumed, and it
+was discovered by a preflight after the first version of this runbook told
+readers to run `aws ssm send-command` themselves:
+
+```
+ssm:SendCommand as user/mpb          -> AccessDenied
+sts:AssumeRole  on the deploy role   -> AccessDenied
+the role's trust policy              -> Federated: GitHub OIDC only,
+                                        sub = repo:…:ref:refs/heads/main
+```
+
+`sts get-caller-identity` succeeding proves *identity*, not *authorisation*, and
+inferring one from the other is what put the wrong instruction here. The only
+principal that can reach the host over SSM is a GitHub Actions run on `main`.
+
+So the drill is `.github/workflows/flip-back-drill.yml`. That is not a
+workaround — it is better in one way that matters: the workflow joins the
+**`deploy-production` concurrency group**, the same one `ci.yml`'s deploy and
+`rollback.yml` use. A workstation could not, and the hazard is real: a release
+landing midway through the drill would retain the *patched* bundle as
+`previous/`, poisoning the rollback target the drill exists to test.
+
 ## Preconditions
 
-- A window when a failed drill would cost least. This is a Brasileirão companion,
-  so traffic tracks the fixture calendar: a **weekday morning, Brazil time, on a
-  day with no round** is the reasoning. That is inference from the domain, not a
-  measurement — `08_install_cloudwatch_agent.sh` is what would answer it properly,
-  and nobody has asked it.
-- No deploy in flight. `ci.yml`'s `deploy` and `rollback.yml` share the
-  `deploy-production` concurrency group, but this drill is driven from a
-  workstation and is **outside** that group, so check by hand.
-- The forward path ready: know the **full 40-character sha** that is live before
-  you start. `rollback.yml` refuses an abbreviation, and you do not want to be
-  looking it up during a bad drill.
+The workflow enforces most of them and refuses rather than guessing:
 
-```sh
-LIVE=$(curl -sf https://brasileirao.mpbarbosa.com/api/health | jq -r .sha)
-git rev-parse "$LIVE"          # the full sha — write it down
-gh run list --workflow ci.yml --branch main --limit 3   # nothing in progress
-```
+| checked by the workflow | refusal |
+| --- | --- |
+| `/api/health` answers with a sha it can resolve | won't drill a host whose state is unknown |
+| `previous/` holds a `dist/server.cjs` | no retained release, so no flip-back to prove |
+| the health literal appears exactly **once** | a `0` means the patch would leave the payload *healthy* and the drill would pass having tested nothing |
+| a deploy is mid-flight | handled by the concurrency group, not by a check |
+
+What it does **not** check, and you should: that no round is being played. This
+is a Brasileirão companion, so traffic tracks the fixture calendar — a weekday
+morning Brazil time with no fixtures is the reasoning. **That is inference from
+the domain, not measurement**; `08_install_cloudwatch_agent.sh` is what would
+answer it properly and nobody has asked it.
 
 ## Step 0 — preflight, changes nothing
 
-Proves the SSM path works and your credentials carry `ssm:SendCommand`, before
-anything is at stake.
+Dispatch with `confirm` **empty**. It reads the host, prints what it found, and
+stops before installing anything.
 
 ```sh
-aws ssm send-command --region sa-east-1 \
-  --instance-ids i-03a9afc8a469edc89 \
-  --document-name AWS-RunShellScript \
-  --comment "flip-back drill preflight" \
-  --parameters 'commands=["set -eu","ls -la /var/www/portal_brasileirao","ls -la /var/www/portal_brasileirao/previous || echo NO-PREVIOUS-YET","grep -c '\''status: \"ok\"'\'' /var/www/portal_brasileirao/dist/server.cjs"]' \
-  --query 'Command.CommandId' --output text
+gh workflow run flip-back-drill.yml
+gh run watch "$(gh run list --workflow flip-back-drill.yml --limit 1 --json databaseId --jq '.[0].databaseId')"
 ```
 
-Read it back with the id it prints:
+## Step 1 — run it
+
+Dispatch with `confirm` set to exactly `DRILL`. `health_attempts` defaults to
+`5`, which is how long the bad payload is allowed to try before the flip-back
+fires — 5s rather than the standard 30s, which is what `HEALTH_ATTEMPTS` was
+added for.
 
 ```sh
-aws ssm get-command-invocation --region sa-east-1 \
-  --instance-id i-03a9afc8a469edc89 --command-id <id> \
-  --query 'StandardOutputContent' --output text
+gh workflow run flip-back-drill.yml -f confirm=DRILL
 ```
 
-**Three things must hold before you go on.** `previous/` exists and holds a
-`dist/server.cjs` — no `previous/`, no flip-back, and the drill would prove
-nothing except that. The `grep -c` must print **1**: the bundle is not minified,
-so the literal appears exactly once, and if it prints `0` the sed below would
-silently produce a *healthy* payload and the drill would pass without testing
-anything.
+## Step 2 — read the verdict
 
-## Step 1 — run the drill
+The workflow judges the outcome itself and writes a table to the run summary.
+**It fails the job for every outcome except a genuine pass**, including the two
+that look like success:
 
-Builds the staging directory from the release already on the host, so the
-payload is the live one plus three bytes. Nothing is downloaded and nothing is
-built.
+| 07 exit | meaning | job |
+| --- | --- | --- |
+| `2` + `ROLLED BACK` + live healthy on the pre-drill sha | the unhealthy release was rolled back | **pass** |
+| `0` | the payload was not actually unhealthy — **proves nothing** | fail |
+| `3` | the flip-back itself failed; host serves the patched bundle | fail, loudly |
+| `9` | aborted at the patch gate; nothing installed | fail |
 
-```sh
-aws ssm send-command --region sa-east-1 \
-  --instance-ids i-03a9afc8a469edc89 \
-  --document-name AWS-RunShellScript \
-  --comment "flip-back drill" \
-  --parameters file://drill.json \
-  --query 'Command.CommandId' --output text
-```
-
-with `drill.json`:
-
-```json
-{ "commands": [
-  "set -eu",
-  "D=/var/www/portal_brasileirao",
-  "S=$(sudo -u ubuntu mktemp -d /tmp/drill-XXXXXXXX)",
-  "sudo -u ubuntu cp -r \"$D/dist\" \"$S/dist\"",
-  "sudo -u ubuntu cp \"$D/package.json\" \"$D/package-lock.json\" \"$S/\"",
-  "sudo -u ubuntu mkdir -p \"$S/shell_scripts\"",
-  "sudo -u ubuntu cp \"$D\"/shell_scripts/*.sh \"$S/shell_scripts/\"",
-  "sudo -u ubuntu sed -i 's/status: \"ok\"/status: \"drill\"/' \"$S/dist/server.cjs\"",
-  "grep -c 'status: \"drill\"' \"$S/dist/server.cjs\" | sed 's/^/patched occurrences (must be 1): /'",
-  "sudo -u ubuntu env HEALTH_ATTEMPTS=5 bash \"$S/shell_scripts/07_install_release.sh\" \"$S\" || echo \"07 exited $?\"",
-  "rm -rf \"$S\""
-] }
-```
-
-`HEALTH_ATTEMPTS=5` shortens the failed health wait from 30s to 5s. It exists for
-this: the flag was added with the flip-back and is the reason the unhealthy
-window is seconds rather than half a minute.
-
-The scripts are taken from the **host**, not shipped, because the drill is
-testing what is installed there. `shell_scripts/` normally travels inside the
-release tarball; copying the host's own copy keeps the drill from smuggling in a
-different version of the thing under test.
-
-## Step 2 — read the result
-
-```sh
-aws ssm get-command-invocation --region sa-east-1 \
-  --instance-id i-03a9afc8a469edc89 --command-id <id> \
-  --query '[Status,StandardOutputContent,StandardErrorContent]' --output text
-```
-
-**A `Failed` SSM status is the SUCCESS case.** `07` exits 2 when it has rolled
-back, so SSM reports the command as failed. Read the output, not the status —
-this is the same inversion as the advisory screenshots job reddening a run whose
-deploy succeeded.
-
-Success looks like this, in order:
+The host transcript appears under *host stdout* in the run. A genuine pass looks
+like this — reproduced from an actual run of these exact commands against a real
+bundle and a real server process, with the paths substituted:
 
 ```
-patched occurrences (must be 1): 1
+PATCHED=1
 ==> Retaining the current release in /var/www/portal_brasileirao/previous
 ==> Installing release into /var/www/portal_brasileirao
 ==> Handing off to 06_redeploy.sh
@@ -158,56 +131,35 @@ Error: portal-brasileirao did not become healthy.
 ==> Flipping back to the retained release in /var/www/portal_brasileirao/previous...
 
 ROLLED BACK: portal-brasileirao is serving the PREVIOUS release from …/previous.
-Health: {"status":"ok","sha":"<the sha you wrote down>",…}
+Health: {"status":"ok","sha":"<the pre-drill sha>",…}
 The release that was being installed is NOT live. Failing so the pipeline goes red.
-07 exited 2
+SEVEN_EXIT=2
 ```
 
-**That transcript is not written from memory.** The command block above was
-dry-run in full against a real built bundle and a real server process — a fake
-`$DEPLOY_DIR` holding the actual `dist/server.cjs`, with `systemctl` stubbed to
-start and stop the genuine binary so health reflected the bytes on disk rather
-than a mock. The lines above are that run's output with the paths and service
-name substituted. `07 exited 2`, and `/api/health` came back `ok` on the
-restored release.
-
-Then, from outside:
-
-```sh
-curl -sf https://brasileirao.mpbarbosa.com/api/health
-# -> {"status":"ok","sha":"<the sha you wrote down>",…}
-```
-
-**Failure to recognise, and what each means:**
-
-| what you see | meaning |
-| --- | --- |
-| `Healthy:` and `07 exited 0` | the payload was not actually bad. Check `patched:` printed 1. **The drill proved nothing** — do not record it as a pass. |
-| `07 exited 2` + health `ok` | pass. The restore fired and the previous release is serving. |
-| `CRITICAL` + `07 exited 3` | the flip-back failed. This is the outcome the drill exists to discover. Go to recovery. |
-| no `Retaining` line | there was no `previous/` to keep. Preflight should have caught it. |
+**Note the SSM script always exits 0 and reports 07's real code as
+`SEVEN_EXIT`.** Letting it exit non-zero would make SSM report `Failed` for the
+*success* case, since `07` exits 2 when it has rolled back — and that inversion
+is precisely what gets misread. The workflow reads the number, not the status.
 
 ## Recovery
 
 **After a pass, nothing is owed.** The flip-back already restored `dist/` and
-restarted; `previous/` still holds the good release. Confirm the sha and stop.
+restarted; `previous/` still holds the good release. The workflow has already
+confirmed `/api/health` is `ok` on the pre-drill sha.
 
-**After exit 3**, the site is serving the patched bundle — every page works,
-`/api/health` lies. Restore by dispatching `rollback.yml` with the full sha you
-wrote down:
+**After exit 3**, the host is serving the patched bundle: every page renders,
+`/api/health` lies. The workflow prints the exact recovery command with the full
+sha filled in:
 
 ```sh
 gh workflow run rollback.yml -f sha=<full-40-char-sha>
 ```
 
-Dispatching with an **empty** sha lists what S3 holds and changes nothing, which
-is the safe way to check the artifact is still there first. Note nothing in this
-repository defines a lifecycle policy on `releases/`, so confirm rather than
-assume.
-
-If S3 has expired the artifact, the way back is an ordinary empty commit to
-`main`, which rebuilds and redeploys through the pipeline — about four minutes
-against the rollback's forty seconds.
+Dispatching `rollback.yml` with an **empty** sha lists what S3 holds and changes
+nothing, which is the safe way to confirm the artifact is still there first —
+nothing in this repository defines a lifecycle policy on `releases/`. If it has
+expired, an empty commit to `main` rebuilds and redeploys through the pipeline:
+about four minutes against the rollback's forty seconds.
 
 ## What this does not cover
 
