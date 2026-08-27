@@ -2,6 +2,7 @@ import { useMemo } from "react";
 
 import { clubKey } from "@/club-core";
 import { ClubCrest } from "@/src/components/ClubCrest";
+import { StarGlyph } from "@/src/components/MeuTime";
 import { LINK_UNDERLINE } from "@/src/components/interaction";
 import { lastRecordedRound } from "@/rank-history-core";
 import { RankSparkline } from "@/src/components/RankSparkline";
@@ -87,9 +88,25 @@ interface StandingsTableProps {
   /** Each club's position after every round. Omit and the campanha column is
    *  left out entirely — the table predates it and still stands without it. */
   rankHistory?: ClubRankHistory[];
+  /**
+   * The club this reader follows, if any — **Meu time**.
+   *
+   * Marks one row rather than colouring it. A background would have to be set
+   * on every cell including the two frozen ones, which carry their own
+   * `bg-surface` precisely so the rows underneath do not show through while
+   * scrolling; and it would put text on a container the contrast gate has never
+   * measured, since that gate checks `canvas`, `surface` and `raised` and
+   * nothing else. A glyph in the club cell costs neither.
+   */
+  followedCode?: ClubCode;
 }
 
-export function StandingsTable({ rows, onSelectClub, rankHistory }: StandingsTableProps) {
+export function StandingsTable({
+  rows,
+  onSelectClub,
+  rankHistory,
+  followedCode,
+}: StandingsTableProps) {
   const campaigns = useMemo(
     () => new Map<ClubCode, RankAtRound[]>((rankHistory ?? []).map((c) => [c.clubCode, c.entries])),
     [rankHistory],
@@ -141,6 +158,15 @@ export function StandingsTable({ rows, onSelectClub, rankHistory }: StandingsTab
                 <span className="mr-2 inline-flex align-middle">
                   <ClubCrest club={row.club} size={18} />
                 </span>
+                {row.club.code === followedCode && (
+                  <>
+                    <StarGlyph filled className="mr-1 inline-block h-[1em] w-[1em] align-[-0.125em] text-primary" />
+                    {/* The star says which row to a reader who can see it and
+                        nothing at all to one who cannot, so the fact is carried
+                        in text as well. */}
+                    <span className="sr-only">Meu time: </span>
+                  </>
+                )}
                 {/* Name and state are separate elements: they are distinct data,
                     and running them together reads as one string to assistive
                     tech and to any text-based assertion. */}
