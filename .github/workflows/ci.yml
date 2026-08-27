@@ -28,6 +28,11 @@ jobs:
   check:
     name: Type-check, unit tests, build
     runs-on: ubuntu-latest
+    outputs:
+      # The digest of the payload this job proved. `deploy` asserts the artifact
+      # it downloads still hashes to this, so "the tested build is the shipped
+      # build" is a checked fact rather than an assumption about determinism.
+      payload_sha256: ${{ steps.package.outputs.sha256 }}
     steps:
       - uses: actions/checkout@v5
 
@@ -84,6 +89,47 @@ jobs:
 
       - name: Shellcheck the deploy scripts
         run: shellcheck scripts/*.sh shell_scripts/*.sh
+
+      # Everything above has passed, so THIS dist/ is the one that type-checked,
+      # passed the unit suite, booted as a bundle and served three endpoints.
+      # Packaging it here — rather than rebuilding in `deploy` — is what makes
+      # the artifact that ships the artifact that was tested. The two builds
+      # agreed in practice, but "in practice" was doing the work that
+      # build-once-promote does structurally, and the divergence it guards
+      # against is the kind that appears once, under a toolchain change, at the
+      # worst possible moment.
+      #
+      # Only on a run that could deploy. A pull_request run builds and
+      # smoke-tests exactly the same way, but its HEAD is the synthetic merge
+      # ref rather than a commit that will ever ship, so uploading 19 MB per PR
+      # would buy nothing.
+      - name: Package the release
+        id: package
+        if: >-
+          github.ref == 'refs/heads/main' &&
+          (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+        run: |
+          set -euo pipefail
+          # shell_scripts travels inside the payload so the host always runs the
+          # deploy logic matching the release it just received.
+          tar -czf release.tar.gz dist package.json package-lock.json shell_scripts
+          digest="$(sha256sum release.tar.gz | cut -d' ' -f1)"
+          echo "sha256=${digest}" >> "$GITHUB_OUTPUT"
+          echo "Packaged $(du -h release.tar.gz | cut -f1), sha256 ${digest}"
+
+      - name: Upload the release payload
+        if: >-
+          github.ref == 'refs/heads/main' &&
+          (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+        uses: actions/upload-artifact@v6
+        with:
+          name: release-${{ github.sha }}
+          path: release.tar.gz
+          # S3 is the durable store and the rollback source; this is only the
+          # handoff between two jobs of one run.
+          retention-days: 3
+          if-no-files-found: error
+          overwrite: true
 
   screenshots:
     name: README screenshots are current
@@ -215,21 +261,35 @@ jobs:
           # nothing. Same reason the `screenshots` job takes the full history.
           fetch-depth: 0
 
-      - uses: actions/setup-node@v5
+      # No setup-node, no `npm ci`, no build. This job used to rebuild the
+      # payload from scratch, which meant the bytes that reached production were
+      # never the bytes `check` smoke-tested — only a second build of the same
+      # commit. It now promotes the proven artifact instead. Everything left
+      # here needs aws, jq, git and curl, all present on the runner.
+      - name: Download the payload that check proved
+        uses: actions/download-artifact@v6
         with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: npm
+          name: release-${{ github.sha }}
 
-      - run: npm ci
-
-      - name: Build production payload
-        run: npm run build
-
-      - name: Package the release
-        # shell_scripts travels with the payload so the host always runs the
-        # deploy logic that matches the release it just received.
+      - name: Verify it is byte-for-byte the payload that was tested
+        # Promotion is only worth anything if the thing promoted is the thing
+        # tested. `check` published the digest of what it proved; if these ever
+        # disagree, something rewrote the payload between the two jobs and this
+        # release must not go out.
+        env:
+          EXPECTED: ${{ needs.check.outputs.payload_sha256 }}
         run: |
-          tar -czf release.tar.gz dist package.json package-lock.json shell_scripts
+          set -euo pipefail
+          if [ -z "$EXPECTED" ]; then
+            echo "::error::check published no payload digest — refusing to ship an unverified payload."
+            exit 1
+          fi
+          actual="$(sha256sum release.tar.gz | cut -d' ' -f1)"
+          if [ "$actual" != "$EXPECTED" ]; then
+            echo "::error::Payload digest mismatch. check proved ${EXPECTED}, this is ${actual}."
+            exit 1
+          fi
+          echo "Payload sha256 ${actual} — byte-for-byte what check booted and smoke-tested."
           ls -lh release.tar.gz
 
       # OIDC: no long-lived AWS keys live in GitHub. The role's trust policy
