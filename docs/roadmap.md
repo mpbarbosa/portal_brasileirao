@@ -291,6 +291,44 @@ looks exactly like a task nobody has picked up.
   workstation path, which carries its own inline remote block and calls neither
   script — latent rather than live, since `CLAUDE.md` already forbids running it
   by hand.
+
+  **One qualification on "closed", and it is the whole of what is still owed:
+  the flip-back has never run.** What the merge of #111 demonstrated live is the
+  *forward* half — `ci.yml` invokes `07_install_release.sh` from the staging
+  tarball, so the new script ran on the host immediately and its stdout carries
+  `==> Retaining the current release in /var/www/portal_brasileirao/previous`,
+  then healthy at `42c0ea9`. Retention is therefore proven in production. The
+  **restore** path — the branch that actually saves a bad release — has only
+  ever run against stubs.
+
+  That is by design rather than neglect: `docs/cicd-plan.md` D5 asks for two
+  rehearsal stages, and stage 2 is *"one controlled live exercise, in a
+  low-traffic window, with the forward path ready to re-run."* It needs a
+  deliberately bad release, so it is scheduled work, not something a green
+  pipeline will ever produce on its own. **Nothing will prompt for it** — every
+  healthy deploy exercises retention and skips the restore, so the untested
+  branch stays untested precisely while everything looks fine.
+
+  The observable that will close it: `/api/health` reporting the **previous**
+  sha while the `deploy` job is red, with `ROLLED BACK` and the retained path in
+  the host stdout of the "Install the release on the host" step. Read the job,
+  not the run conclusion — the advisory screenshots job reddens the rollup
+  independently.
+
+  Until then the honest statement is: *a bad release can no longer destroy the
+  only copy of the good one*, which is the property that mattered and is now
+  structurally true; *and* the automatic recovery built on top of it is verified
+  by rehearsal rather than by production.
+- **`scripts/rehearse-flip-back.sh` is the only behavioural coverage the two
+  host scripts have, and nothing runs it.** `npm run lint` is TypeScript and
+  cannot see shell; CI only shellchecks them. It drives all eight branches
+  against stubs — 31 assertions, including the flip-back-itself-fails case — and
+  three deliberate mutations were used to confirm it goes red rather than
+  passing vacuously. **Re-run it by hand after editing `06_redeploy.sh` or
+  `07_install_release.sh`.** The reason this matters more than for a normal
+  hand-run checker: `shell_scripts/` travels *inside the release tarball*, so a
+  broken edit ships with the release that carries it and the host executes it
+  immediately, before anything has a chance to health-check the result.
 - **D6 — the end-to-end suite boots the dev server, never the bundle.** All 316
   specs run against `npx tsx server.ts`, so `dist/server.cjs` — what production
   actually runs — is only asked three questions by `check`'s smoke test. The
