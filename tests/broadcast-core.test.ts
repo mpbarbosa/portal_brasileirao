@@ -15,7 +15,9 @@ import {
   markKey,
   broadcasterMarkUrl,
   MARKS,
+  WORDMARK_ONLY,
 } from "@/broadcast-core";
+import { BROADCASTS } from "@/src/data/broadcasts";
 import type { Club, Match } from "@/src/types";
 
 const match = (id: string): Match => ({
@@ -368,9 +370,53 @@ test("every mark is a plain path needing no escaping", () => {
 });
 
 test("an unknown broadcaster yields no mark rather than a guess", () => {
-  // CBF's feed already names these, and the UI renders them as wordmarks.
+  // The UI renders these as wordmarks. Record is the only one of the three
+  // curated anywhere today; the other two are the shape CBF might yet send.
   assert.equal(broadcasterMarkUrl("ESPN / Disney+"), null);
   assert.equal(broadcasterMarkUrl("SportyNet"), null);
   assert.equal(broadcasterMarkUrl("Record"), null);
   assert.equal(broadcasterMarkUrl(""), null);
+});
+
+test("every curated channel is either marked or recorded as a wordmark", () => {
+  // The guard that stops the marks falling behind the broadcast data. Channels
+  // are *data* — `sync-broadcasts` merges whatever CBF names as rounds are
+  // added — and a channel nobody has judged renders as plain text, which is
+  // exactly what a correctly-judged wordmark also renders as. Nothing on the
+  // page distinguishes them, so without this the standing instruction to watch
+  // for new broadcasters had no way to be carried out.
+  const unaccounted = [
+    ...new Set(Object.values(BROADCASTS).flat()),
+  ]
+    .filter((name) => !MARKS[markKey(name)] && !WORDMARK_ONLY[markKey(name)])
+    .sort();
+
+  assert.deepEqual(
+    unaccounted,
+    [],
+    `decide these in broadcast-core.ts — a MARKS entry if a public-domain logo ` +
+      `exists, a WORDMARK_ONLY entry with the reason if not: ${unaccounted.join(", ")}`,
+  );
+});
+
+test("a channel is not both marked and recorded as a wordmark", () => {
+  // The two maps are answers to the same question, so an overlap means one of
+  // them is stale — most likely a wordmark entry left behind after a mark was
+  // finally found, which would leave the reason in the tree asserting something
+  // that is no longer true.
+  const both = Object.keys(WORDMARK_ONLY)
+    .filter((key) => MARKS[key])
+    .sort();
+
+  assert.deepEqual(both, [], `drop these from WORDMARK_ONLY, they now have marks: ${both.join(", ")}`);
+});
+
+test("wordmark keys are normalised, and each carries a reason", () => {
+  // A key written the way CBF spells it — "Record", "Cazé TV" — would never
+  // match a lookup and the entry would silently do nothing, which reads in the
+  // diff exactly like an entry that works.
+  for (const [key, reason] of Object.entries(WORDMARK_ONLY)) {
+    assert.equal(key, markKey(key), `WORDMARK_ONLY key ${key} is not markKey output`);
+    assert.ok(reason.trim().length > 20, `WORDMARK_ONLY.${key} needs a real reason, not "${reason}"`);
+  }
 });

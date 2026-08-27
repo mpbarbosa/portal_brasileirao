@@ -1,0 +1,259 @@
+name: Flip-back drill
+
+# Stage 2 of docs/cicd-plan.md D5: prove on the real host that a release which
+# fails its health check leaves the PREVIOUS release serving.
+#
+# Retention is already proven — every deploy prints "Retaining the current
+# release". The RESTORE branch is not, and never will be by accident: a healthy
+# deploy exercises retention and skips the restore, so the untested half stays
+# untested precisely while everything looks fine.
+#
+# WHY THIS IS A WORKFLOW AND NOT A RUNBOOK COMMAND. Only this role can reach the
+# host over SSM, and its trust policy admits GitHub OIDC alone, restricted to
+# refs/heads/main. A workstation cannot drive it: the IAM user has neither
+# ssm:SendCommand nor sts:AssumeRole on the role. Measured, after a runbook was
+# written assuming otherwise.
+#
+# WHAT IT BREAKS. A payload byte-identical to what is live except the health
+# literal: status: "ok" becomes status: "drill". That is failure mode 2 —
+# starts-but-unhealthy — which systemd cannot catch, because the process is
+# alive and Restart=on-failure never fires.
+#
+# The site keeps serving every page throughout; only /api/health reports
+# otherwise. Even the worst case (the flip-back itself failing) leaves a bundle
+# that renders correctly and lies on one endpoint. The crash-on-boot mode DOES
+# take the site down and is deliberately not drilled here.
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: 'Type DRILL to confirm. Anything else lists the preflight and stops.'
+        required: false
+        type: string
+      health_attempts:
+        description: 'Seconds to wait for the bad payload to become healthy before flipping back.'
+        required: false
+        default: '5'
+        type: string
+
+# The same group ci.yml's deploy and rollback.yml use. This is load-bearing: the
+# drill installs a deliberately bad payload, and a release landing midway could
+# retain THAT as previous/, poisoning the rollback target the drill exists to
+# test. The workstation runbook could not join this group, which is the second
+# reason this is a workflow.
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  drill:
+    name: Install a deliberately unhealthy release and prove the flip-back
+    runs-on: ubuntu-latest
+    env:
+      AWS_REGION: sa-east-1
+      INSTANCE_ID: i-03a9afc8a469edc89
+      SITE_URL: https://brasileirao.mpbarbosa.com
+      HEALTH_ATTEMPTS: ${{ github.event.inputs.health_attempts || '5' }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: aws-actions/configure-aws-credentials@v6
+        with:
+          role-to-assume: arn:aws:iam::655139684612:role/portal-brasileirao-deploy
+          role-session-name: gha-drill-${{ github.run_id }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Record what is live, and refuse if it is not settled
+        id: live
+        run: |
+          set -euo pipefail
+          live="$(curl -sf --max-time 10 "${SITE_URL}/api/health" | jq -r '.sha // empty')"
+          if [ -z "$live" ]; then
+            echo "::error::Could not read a sha from ${SITE_URL}/api/health. Not drilling a host whose state is unknown."
+            exit 1
+          fi
+          full="$(git rev-parse --verify --quiet "${live}^{commit}" || true)"
+          if [ -z "$full" ]; then
+            echo "::error::Live reports ${live}, which is not a commit in this checkout."
+            exit 1
+          fi
+          echo "live_short=${live}" >> "$GITHUB_OUTPUT"
+          echo "live_full=${full}"  >> "$GITHUB_OUTPUT"
+          echo "Live before the drill: ${live} (${full})"
+          {
+            echo "### Flip-back drill"
+            echo "Live before: \`${live}\`"
+            echo "Recovery target (full sha): \`${full}\`"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Preflight on the host — changes nothing
+        id: preflight
+        run: |
+          set -euo pipefail
+          # Apostrophes inside the jq program are written \u0027, the same way
+          # ci.yml writes them. A literal ' would close the single-quoted shell
+          # argument and leave jq with a syntax error — which is what the first
+          # version of this step did, caught by running it rather than reading it.
+          params=$(jq -n '{commands: [
+            "set -eu",
+            "D=/var/www/portal_brasileirao",
+            "echo PREVIOUS_PRESENT=$([ -f \"$D/previous/dist/server.cjs\" ] && echo yes || echo no)",
+            "echo LITERAL_COUNT=$(grep -c \u0027status: \"ok\"\u0027 \"$D/dist/server.cjs\" || true)",
+            "echo SERVICE=$(systemctl is-active portal-brasileirao || true)"
+          ]}')
+          id=$(aws ssm send-command --instance-ids "$INSTANCE_ID" \
+                 --document-name AWS-RunShellScript --parameters "$params" \
+                 --comment "flip-back drill preflight" \
+                 --query 'Command.CommandId' --output text)
+          for _ in $(seq 1 30); do
+            s=$(aws ssm get-command-invocation --command-id "$id" --instance-id "$INSTANCE_ID" \
+                  --query 'Status' --output text 2>/dev/null || echo Pending)
+            case "$s" in Success|Failed|TimedOut|Cancelled) break ;; esac
+            sleep 3
+          done
+          out=$(aws ssm get-command-invocation --command-id "$id" --instance-id "$INSTANCE_ID" \
+                  --query 'StandardOutputContent' --output text)
+          printf '%s\n' "$out"
+
+          prev=$(printf '%s' "$out" | sed -n 's/^PREVIOUS_PRESENT=//p')
+          lit=$(printf  '%s' "$out" | sed -n 's/^LITERAL_COUNT=//p')
+
+          # No previous/, no flip-back — the drill would prove only that.
+          if [ "$prev" != "yes" ]; then
+            echo "::error::No retained release on the host. Deploy once through ci.yml first."
+            exit 1
+          fi
+          # The bundle is not minified, so the literal appears exactly once. A 0
+          # here means the sed below would produce a HEALTHY payload and the
+          # drill would pass without testing anything.
+          if [ "$lit" != "1" ]; then
+            echo "::error::Expected exactly 1 occurrence of the health literal, found '${lit}'. Refusing: the patch would not make the payload unhealthy."
+            exit 1
+          fi
+          echo "Preflight OK: previous/ present, health literal appears once."
+
+      - name: Stop unless DRILL was typed
+        if: ${{ github.event.inputs.confirm != 'DRILL' }}
+        run: |
+          echo "Preflight only — nothing was installed."
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "Preflight only. Re-run with \`confirm: DRILL\` to install the unhealthy payload." >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Run the drill
+        id: run
+        if: ${{ github.event.inputs.confirm == 'DRILL' }}
+        run: |
+          set -euo pipefail
+          # The payload is built ON THE HOST from the release already installed
+          # there, so nothing is downloaded, nothing is built, no artifact is
+          # uploaded and no knowingly-broken commit reaches main.
+          #
+          # The SSM script always exits 0 and reports 07's real code as
+          # SEVEN_EXIT on stdout. Letting it exit non-zero would make SSM report
+          # Failed for the SUCCESS case (07 exits 2 when it has rolled back),
+          # and that inversion is exactly the thing people misread.
+          params=$(jq -n --arg ha "$HEALTH_ATTEMPTS" '{commands: [
+            "set -eu",
+            "D=/var/www/portal_brasileirao",
+            "S=$(sudo -u ubuntu mktemp -d /tmp/drill-XXXXXXXX)",
+            "sudo -u ubuntu cp -r \"$D/dist\" \"$S/dist\"",
+            "sudo -u ubuntu cp \"$D/package.json\" \"$D/package-lock.json\" \"$S/\"",
+            "sudo -u ubuntu mkdir -p \"$S/shell_scripts\"",
+            "sudo -u ubuntu cp \"$D\"/shell_scripts/*.sh \"$S/shell_scripts/\"",
+            "sudo -u ubuntu sed -i \u0027s/status: \"ok\"/status: \"drill\"/\u0027 \"$S/dist/server.cjs\"",
+            "n=$(grep -c \u0027status: \"drill\"\u0027 \"$S/dist/server.cjs\" || true)",
+            "echo PATCHED=$n",
+            "if [ \"$n\" != 1 ]; then echo ABORTED_AT_GATE; rm -rf \"$S\"; echo SEVEN_EXIT=9; exit 0; fi",
+            "rc=0",
+            "sudo -u ubuntu env HEALTH_ATTEMPTS=\($ha) bash \"$S/shell_scripts/07_install_release.sh\" \"$S\" || rc=$?",
+            "echo SEVEN_EXIT=$rc",
+            "rm -rf \"$S\""
+          ]}')
+          id=$(aws ssm send-command --instance-ids "$INSTANCE_ID" \
+                 --document-name AWS-RunShellScript --parameters "$params" \
+                 --comment "flip-back drill (run ${GITHUB_RUN_ID})" \
+                 --query 'Command.CommandId' --output text)
+          echo "SSM command: $id"
+
+          for _ in $(seq 1 80); do
+            s=$(aws ssm get-command-invocation --command-id "$id" --instance-id "$INSTANCE_ID" \
+                  --query 'Status' --output text 2>/dev/null || echo Pending)
+            case "$s" in Success|Failed|TimedOut|Cancelled) break ;; esac
+            sleep 5
+          done
+
+          out=$(aws ssm get-command-invocation --command-id "$id" --instance-id "$INSTANCE_ID" \
+                  --query 'StandardOutputContent' --output text || true)
+          err=$(aws ssm get-command-invocation --command-id "$id" --instance-id "$INSTANCE_ID" \
+                  --query 'StandardErrorContent' --output text || true)
+          echo "--- host stdout ---"; printf '%s\n' "$out"
+          echo "--- host stderr ---"; printf '%s\n' "$err"
+
+          rc=$(printf '%s\n%s\n' "$out" "$err" | sed -n 's/^SEVEN_EXIT=//p' | tail -1)
+          echo "seven_exit=${rc:-unknown}" >> "$GITHUB_OUTPUT"
+          {
+            printf '%s\n' "$out" > /tmp/drill.out
+            printf '%s\n' "$err" >> /tmp/drill.out
+          }
+
+      - name: Judge the outcome
+        if: ${{ github.event.inputs.confirm == 'DRILL' }}
+        run: |
+          set -euo pipefail
+          rc='${{ steps.run.outputs.seven_exit }}'
+          expected='${{ steps.live.outputs.live_short }}'
+          rolled=no; grep -q 'ROLLED BACK' /tmp/drill.out && rolled=yes
+          crit=no;   grep -q 'CRITICAL'    /tmp/drill.out && crit=yes
+
+          echo "07 exit: ${rc}   ROLLED BACK: ${rolled}   CRITICAL: ${crit}"
+
+          # Health from outside, and it must be the release we started on.
+          live=$(curl -sf --max-time 10 "${SITE_URL}/api/health" | jq -r '.sha // empty' || true)
+          status=$(curl -sf --max-time 10 "${SITE_URL}/api/health" | jq -r '.status // empty' || true)
+          echo "Live after the drill: sha=${live} status=${status}"
+
+          {
+            echo ""
+            echo "| check | value |"
+            echo "| --- | --- |"
+            echo "| 07 exit code | \`${rc}\` |"
+            echo "| ROLLED BACK printed | ${rolled} |"
+            echo "| live sha after | \`${live}\` |"
+            echo "| live status after | \`${status}\` |"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          case "$rc" in
+            2)
+              if [ "$rolled" != yes ]; then
+                echo "::error::07 exited 2 but never printed ROLLED BACK. Read the host output."; exit 1
+              fi
+              if [ "$status" != "ok" ] || [ "$live" != "$expected" ]; then
+                echo "::error::Flipped back, but the site is not serving ${expected} healthily (sha=${live} status=${status})."; exit 1
+              fi
+              echo "::notice::PASS — the unhealthy release was rolled back and ${expected} is serving."
+              echo "" >> "$GITHUB_STEP_SUMMARY"
+              echo "**PASS** — D5 stage 2 satisfied: a payload that failed its health check left the previous release serving." >> "$GITHUB_STEP_SUMMARY"
+              ;;
+            0)
+              echo "::error::07 exited 0 — the payload was NOT unhealthy, so the drill proved nothing. Do not record this as a pass."
+              exit 1
+              ;;
+            3)
+              echo "::error::07 exited 3 — the flip-back ITSELF failed. The host is serving the patched bundle: pages render, /api/health lies."
+              echo "::error::Recover with: gh workflow run rollback.yml -f sha=${{ steps.live.outputs.live_full }}"
+              exit 1
+              ;;
+            9)
+              echo "::error::Aborted at the patch gate — nothing was installed and the host is untouched."
+              exit 1
+              ;;
+            *)
+              echo "::error::Unexpected 07 exit '${rc}'. Read the host output above before acting."
+              exit 1
+              ;;
+          esac
