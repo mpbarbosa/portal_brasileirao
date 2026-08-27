@@ -307,12 +307,30 @@ there. `npm audit --audit-level=high` belongs in its own advisory job for the
 same reason `screenshots` is advisory — an upstream advisory published on a
 Tuesday must not stop an unrelated release.
 
-**B. Deployments are invisible to GitHub.** No `environment:` on the `deploy`
-job, so there is no Deployments tab, no per-environment history, no URL badge,
-and no place to hang a protection rule later. Adding
-`environment: {name: production, url: https://brasileirao.mpbarbosa.com}` costs
-two lines and gives the pipeline a record of what went where and when — which is
-the thing you want when reconstructing an incident like defect 1.
+**B. Deployments are invisible to GitHub — done.** There was no `environment:` on
+the `deploy` job, so there was no Deployments tab, no per-environment history, no
+URL badge, and no place to hang a protection rule later. The job now declares
+`environment: {name: production, url: https://brasileirao.mpbarbosa.com}`, which
+gives the pipeline a record of what went where and when — the thing you want when
+reconstructing an incident like defect 1, which was in fact reconstructed by hand
+from run timestamps.
+
+No protection rule exists on that environment, so the job's behaviour is
+unchanged. Worth knowing before anyone adds one: a required reviewer on
+`production` would make **every** deploy wait for a human, including the
+reconciler's unattended ones. That is a deliberate choice to make, not a side
+effect to discover.
+
+**`rollback.yml` deliberately does not carry it, so the record covers forward
+releases only** and will name the wrong sha as live after a rollback. That is a
+known incompleteness rather than an oversight, and the reason is its shape: the
+same single job also serves the **list-only mode**, which reads a bucket and
+changes nothing on the host, and recording a deployment for that run would make
+the record actively wrong rather than merely incomplete. `environment` is
+job-level, so there is no per-step escape. Closing it means splitting that job in
+two — a `list` job that always runs and an `install` job gated on a non-empty
+`sha` — which is a real change to a workflow that has now been exercised against
+production, and not one to make in passing.
 
 **C. Redundant installs.** `check`, `e2e` and `deploy` each run `npm ci`.
 `setup-node`'s cache makes this cheap but not free. Folding the built payload
@@ -723,7 +741,12 @@ and the `reconcile.yml` hold it turned out to unjam. It was taken first as the
 cheapest item and the one most likely to cause a real misreading; the count in
 its entry went from six to a measured seventeen once it was actually queried.
 
-What remains under D7: gaps B, D, E, F and G.
+Gap B (no Deployments record) is **done** — see its entry above, including why
+`rollback.yml` was left out of it and what closing that would cost.
+
+What remains under D7: gaps D, E, F and G. The plan's own ordering still holds —
+F interacts with E and with the reconciling deploy, so E comes first; G is last
+and only in the shape its entry describes.
 
 ---
 
