@@ -1338,6 +1338,54 @@ alongside other sessions** above says never to run it by hand.
 What is still missing from this pipeline, and the phased plan for closing it, is
 `docs/cicd-plan.md`.
 
+### One Node major, named in five places
+
+`.nvmrc` holds it. `package.json`'s `engines`, the `@types/node` devDependency,
+`REQUIRED_NODE_MAJOR` in `shell_scripts/01_setup_app_directory.sh` and both
+workflows' `node-version-file` all have to agree with it, and
+`tests/node-version.test.ts` fails when they do not.
+
+**The trap this closes is quiet by construction.** `tsconfig.json` sets
+`types: ["node"]`, which makes `@types/node` the *entire* ambient type surface,
+and `tsc --noEmit` is this repo's only lint gate. So the typings decide what the
+gate certifies while the host decides what actually runs, and when those are
+different majors the gate certifies code the host cannot execute — without a red
+build anywhere. #91 took the typings 22 → 26 and went green; afterwards
+`import { connect } from "node:quic"` type-checked clean while
+`node -e "require('node:quic')"` threw `ERR_UNKNOWN_BUILTIN_MODULE`.
+
+**Do not close that by raising the runtime instead.** `node:ffi`, `node:quic`,
+`node:stream/iter` and `node:zlib/iter` are absent from Node **26** as well,
+experimental flags included, and `node:vfs` needs `--experimental-vfs`. These
+typings describe DefinitelyTyped's surface, which includes APIs no released Node
+exposes at all — there is no version to catch up to, so the typings track the
+runtime and not the other way round. `.github/dependabot.yml` therefore ignores
+the **major** for `@types/node` only; minor and patch within the line still
+arrive normally.
+
+Moving Node is consequently a deliberate five-file commit starting at `.nvmrc`,
+which is the point — before this, four of the five were literals that could each
+move alone.
+
+**The host floor is an exact major, not a floor**, for the same reason: a host
+one major *older* than the typings is running unchecked code just as surely as
+one newer. That script is one-time provisioning and is not run by `deploy.sh`,
+so tightening it cannot break an existing deploy.
+
+`/api/health` reports `node` — `process.versions.node`, what the host is
+**actually** running, as against what the five files say it is supposed to be.
+Nothing renders it: `parseHealth` in `health-core.ts` builds its result field by
+field, so the extra key is dropped and the **Rodapé** is unchanged. It is a
+diagnostic, and deliberately not a line in the footer — a Node version is
+nothing to a reader of a football table, and the rodapé sits in two committed
+full-page captures.
+
+One TypeScript note that is part of the same hole rather than a separate tidy:
+`noUncheckedSideEffectImports` is on because without it a **bare** side-effect
+import (`import "node:quic";`) resolves nothing and reports **no error at all**,
+whichever `@types/node` is pinned. Pinning the typings does not close that; the
+flag does.
+
 ## Not built yet
 
 *(Nothing outstanding — deploys are automated; see below.)*

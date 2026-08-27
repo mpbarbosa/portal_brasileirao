@@ -21,9 +21,6 @@ concurrency:
 permissions:
   contents: read
 
-env:
-  NODE_VERSION: "22"
-
 jobs:
   check:
     name: Type-check, unit tests, build
@@ -38,7 +35,12 @@ jobs:
 
       - uses: actions/setup-node@v7
         with:
-          node-version: ${{ env.NODE_VERSION }}
+          # Read from .nvmrc rather than repeated here. Both jobs, the
+          # sync-broadcasts workflow, package.json's `engines` and the host
+          # floor in shell_scripts/01 all have to name one Node major, and a
+          # literal per file is how they came to disagree. See
+          # tests/node-version.test.ts, which fails when they do.
+          node-version-file: .nvmrc
           cache: npm
 
       - run: npm ci
@@ -181,7 +183,12 @@ jobs:
 
       - uses: actions/setup-node@v7
         with:
-          node-version: ${{ env.NODE_VERSION }}
+          # Read from .nvmrc rather than repeated here. Both jobs, the
+          # sync-broadcasts workflow, package.json's `engines` and the host
+          # floor in shell_scripts/01 all have to name one Node major, and a
+          # literal per file is how they came to disagree. See
+          # tests/node-version.test.ts, which fails when they do.
+          node-version-file: .nvmrc
           cache: npm
 
       - run: npm ci

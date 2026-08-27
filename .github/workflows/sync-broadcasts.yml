@@ -29,7 +29,8 @@ jobs:
 
       - uses: actions/setup-node@v7
         with:
-          node-version: "22"
+          # One Node major, named in .nvmrc — see tests/node-version.test.ts.
+          node-version-file: .nvmrc
           cache: npm
 
       - run: npm ci
