@@ -987,10 +987,16 @@ home page, because a permanent nag is the soft end of the same thing a sign-in
 wall is, and guests are first class. And a stored club that the current payload
 does not name is **kept**, not cleared — the strip says so and the preference
 stands, since a provider outage is not a reader changing their mind.
+The control's label carries the club's article — **o** Palmeiras, **a**
+Chapecoense — from a hand-kept set in `preferences-core.ts`, because no provider
+reports grammatical gender and the spelling does not give it away: "a
+Chapecoense" and "o Fluminense" end identically. Masculine is the default
+because it covers nineteen of the twenty.
 _Avoid_: "time favorito" or "favorito" (reads as a bookmark, and the mark is a
 star for a reason — it says *mine*, not *starred*), "time do coração" (warm, and
 what a broadcaster says, but this is a setting rather than a declaration),
-"seguir" as a noun, "clube preferido".
+"seguir" as a noun, "clube preferido", and "Seguir o Chapecoense" — which is
+what shipped first.
 
 **Preferências**:
 What the app remembers about a reader on this device, as one object with one key

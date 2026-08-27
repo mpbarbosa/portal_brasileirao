@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import {
+  clubArticle,
   followLabel,
   followState,
   isFollowing,
@@ -10,6 +11,7 @@ import {
   serialisePreferences,
   toggleFollow,
 } from "@/preferences-core";
+import { CLUBS } from "@/src/data/clubs";
 import type { Club } from "@/src/types";
 
 const palmeiras: Club = { code: "1769", name: "SE Palmeiras", shortName: "Palmeiras" };
@@ -99,4 +101,28 @@ test("following a second club replaces the first", () => {
 test("the label says which club, and which direction", () => {
   assert.equal(followLabel(palmeiras, false), "Seguir o Palmeiras");
   assert.equal(followLabel(palmeiras, true), "Deixar de seguir o Palmeiras");
+});
+
+test("a club Brazilians call 'a' gets the right article", () => {
+  // Chapecoense is in the division, so "Seguir o Chapecoense" is a defect a
+  // reader meets rather than one a linguist imagines.
+  const chape: Club = { code: "1772", name: "Chapecoense AF", shortName: "Chapecoense" };
+  assert.equal(followLabel(chape, false), "Seguir a Chapecoense");
+  assert.equal(followLabel(chape, true), "Deixar de seguir a Chapecoense");
+});
+
+test("every club in the snapshot gets an article, and only the right ones get 'a'", () => {
+  // The check that would have caught this when it was written: read the twenty
+  // names rather than assert something about them. Feminine is the exception,
+  // so the assertion is that the exceptions are exactly who they should be.
+  const feminine = CLUBS.filter((club) => clubArticle(club) === "a").map((c) => c.shortName);
+  assert.deepEqual(feminine, ["Chapecoense"]);
+  assert.equal(CLUBS.length, 20);
+});
+
+test("the article survives accents and spacing, because slugify normalises both", () => {
+  const ferroviaria: Club = { code: "x", name: "AF Ferroviária", shortName: "Ferroviária" };
+  const ponte: Club = { code: "y", name: "AA Ponte Preta", shortName: "Ponte Preta" };
+  assert.equal(clubArticle(ferroviaria), "a");
+  assert.equal(clubArticle(ponte), "a");
 });
