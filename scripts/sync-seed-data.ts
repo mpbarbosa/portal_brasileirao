@@ -65,10 +65,11 @@ const get = async <T>(url: string): Promise<T> => {
 };
 
 /**
- * The competition's team list, read for three things at once: the club rows,
- * the postal address the state is parsed out of, and the `squad` each team
- * carries. That last one is why the elenco snapshot costs **no extra request** —
- * the payload was already being fetched for the other two.
+ * The competition's team list, read for four things at once: the club rows, the
+ * postal address the state is parsed out of, the `coach` each team names, and
+ * the `squad` it carries. The last two are why the elenco and coach snapshots
+ * cost **no extra request** — the payload was already being fetched for the
+ * first two.
  */
 interface SeedTeamsResponse {
   season?: { startDate?: string; endDate?: string };
@@ -129,6 +130,17 @@ if (clubs.length === 0) {
   process.exit(1);
 }
 
+// Not fatal, on the same reasoning as an empty squad below: a club genuinely
+// between coaches has none to report, and the page says nothing rather than
+// inventing one. Worth printing, because a whole column of blanks is what a
+// mapping regression looks like and nothing else would show it.
+const coachless = clubs.filter((club) => !club.coach);
+if (coachless.length) {
+  console.warn(
+    `Warning: no coach listed for ${coachless.map((club) => club.shortName).join(", ")}`,
+  );
+}
+
 const generatedOn = new Date().toISOString().slice(0, 10);
 const season = teamsPayload.season ?? {};
 
@@ -145,6 +157,10 @@ writeFileSync(
  *
  * \`code\` is the upstream numeric id, not \`tla\`: the abbreviation is not unique
  * (Corinthians and Coritiba both report "COR").
+ *
+ * \`coach\` is frozen at the snapshot date and a Série A club changes coach
+ * mid-season, so it is the **floor** rather than the answer: \`/api/coaches\`
+ * reads the live team list and wins over it wherever it has one.
  */
 export const CLUBS: Club[] = [
 ${clubs
@@ -155,6 +171,7 @@ ${clubs
       (club.slug ? `, slug: ${ts(club.slug)}` : "") +
       (club.crest ? `, crest: ${ts(club.crest)}` : "") +
       (club.website ? `, website: ${ts(club.website)}` : "") +
+      (club.coach ? `, coach: ${ts(club.coach)}` : "") +
       (club.state ? `, state: ${ts(club.state)}` : "") +
       (club.address ? `, address: ${ts(club.address)}` : "") +
       ` },`,

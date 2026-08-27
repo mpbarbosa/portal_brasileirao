@@ -4,6 +4,7 @@ import { test } from "node:test";
 import {
   authHeaders,
   clubFromTeam,
+  coachName,
   clubsFromMatches,
   mapMatch,
   mapMatches,
@@ -480,4 +481,60 @@ test("a member with no id or no name is dropped, the rest of the squad is not", 
 test("a team with no name yields nothing rather than a squad with no owner", () => {
   assert.deepEqual(mapSquads({ teams: [{ id: 1783, squad: [{ id: 1, name: "X" }] }] }), []);
   assert.deepEqual(mapSquads({}), []);
+});
+
+test("the head coach comes off the team list, whichever field upstream filled in", () => {
+  // `name` is what the payload normally carries; the split form is the fallback
+  // that keeps a coach on the page rather than dropping one over a null.
+  assert.equal(coachName({ name: "Filipe Luís" }), "Filipe Luís");
+  assert.equal(coachName({ name: null, firstName: "Abel", lastName: "Ferreira" }), "Abel Ferreira");
+  assert.equal(coachName({ firstName: "Dorival", lastName: null }), "Dorival");
+  assert.equal(coachName({ name: "  Tite  " }), "Tite");
+});
+
+test("a club between coaches has none, rather than an empty name", () => {
+  // The page prints nothing where there is nothing; it never renders a dash.
+  assert.equal(coachName(undefined), undefined);
+  assert.equal(coachName(null), undefined);
+  assert.equal(coachName({}), undefined);
+  assert.equal(coachName({ name: "   ", firstName: null, lastName: null }), undefined);
+});
+
+test("a club carries the coach the teams endpoint names", () => {
+  const club = clubFromTeam({
+    id: 1783,
+    name: "CR Flamengo",
+    shortName: "Flamengo",
+    tla: "FLA",
+    coach: { name: "Filipe Luís" },
+  });
+
+  assert.equal(club?.coach, "Filipe Luís");
+});
+
+test("a club from a fixture has no coach key at all", () => {
+  // Only the teams endpoint reports one. Absent means the key is missing, not
+  // present-and-undefined — the same rule the crest follows.
+  const club = clubFromTeam({ id: 1783, name: "CR Flamengo", shortName: "Flamengo" });
+
+  assert.equal(club?.coach, undefined);
+  assert.equal("coach" in club!, false);
+});
+
+test("every elenco carries its club's coach, from the one request", () => {
+  // The coach and the squad ride on the same team object, which is why
+  // /api/coaches is a projection of this payload rather than a second fetch.
+  const squads = mapSquads({
+    teams: [
+      {
+        id: 1783,
+        name: "CR Flamengo",
+        shortName: "Flamengo",
+        coach: { name: "Filipe Luís" },
+        squad: [{ id: 1077, name: "Pedro" }],
+      },
+    ],
+  });
+
+  assert.equal(squads[0].club.coach, "Filipe Luís");
 });

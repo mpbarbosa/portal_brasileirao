@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 
 import {
+  fetchCoaches,
   fetchHealth,
   fetchMatches,
   fetchScorers,
@@ -29,7 +30,7 @@ import { parseRoute } from "@/route-core";
 import { usePageMeta } from "@/src/usePageMeta";
 import { useTheme } from "@/src/useTheme";
 import { useRoute } from "@/src/useRoute";
-import type { Player, Scorer, Squad, StandingsRow } from "@/src/types";
+import type { ClubCode, Player, Scorer, Squad, StandingsRow } from "@/src/types";
 
 export function App() {
   const { route, navigate } = useRoute();
@@ -40,6 +41,8 @@ export function App() {
   /** Null until the Jogadores page is opened — see the lazy fetch below. */
   const [squads, setSquads] = useState<Squad[] | null>(null);
   const [squadsLoading, setSquadsLoading] = useState(false);
+  /** Null until a club page is opened — see the lazy fetch below. */
+  const [coaches, setCoaches] = useState<Record<ClubCode, string> | null>(null);
   /** The round the URL asks for; null means "whatever is current". */
   const [currentRound, setCurrentRound] = useState<number | null>(null);
   /**
@@ -208,6 +211,40 @@ export function App() {
   }, [route.section, squads]);
 
   /**
+   * The head coaches, fetched **only when a club page is opened**, and only
+   * once — the same shape as the elencos above, and for a related reason.
+   *
+   * They are not in the opening `Promise.all` because one page in eight shows
+   * them, and they are not taken from the elenco payload, which already carries
+   * them on each club, because that payload is ~110 KB and this one is twenty
+   * names. The endpoint is a projection of the same cached team list, so the
+   * separate request costs nothing upstream.
+   *
+   * A failure leaves the map null rather than empty, which is what makes the
+   * next club page a retry — and the page still names whatever coach the
+   * committed club list froze, because `coachOf` falls back to it.
+   */
+  useEffect(() => {
+    if (route.section !== "clube" || coaches !== null) return;
+
+    let cancelled = false;
+
+    void (async () => {
+      try {
+        const response = await fetchCoaches();
+        if (!cancelled) setCoaches(response.data);
+      } catch {
+        // Degrades to the club list's own value; say nothing and try again on
+        // the next visit.
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [route.section, coaches]);
+
+  /**
    * The **Ao vivo** page refetches; every other view is a snapshot of what
    * arrived once, which is right for a table and wrong for a scoreboard.
    *
@@ -315,6 +352,7 @@ export function App() {
               clubs={matches?.clubs}
               scorers={scorers}
               rankHistory={rankHistory}
+              coaches={coaches ?? undefined}
               onBack={() => navigate({ section: "classificacao" })}
               onSelectMatch={(id) => navigate({ section: "partida", id })}
             />

@@ -1,5 +1,6 @@
 import {
   clubMatches,
+  coachOf,
   findClub,
   nextFixture,
   hymnUrl,
@@ -16,7 +17,14 @@ import { BACK_LINK, LINK_UNDERLINE } from "@/src/components/interaction";
 import { MatchList } from "@/src/components/MatchList";
 import { RankSparkline } from "@/src/components/RankSparkline";
 import { Surface } from "@/src/components/Surface";
-import type { Club, ClubRankHistory, Match, Scorer, StandingsRow } from "@/src/types";
+import type {
+  Club,
+  ClubCode,
+  ClubRankHistory,
+  Match,
+  Scorer,
+  StandingsRow,
+} from "@/src/types";
 
 interface ClubViewProps {
   /** Slug or code, straight from the URL. */
@@ -33,6 +41,12 @@ interface ClubViewProps {
   onSelectMatch?: (id: string) => void;
   /** Every club's campanha. Omit and the section is left out entirely. */
   rankHistory?: ClubRankHistory[];
+  /**
+   * Head coaches by club code, from `/api/coaches`. Omit — as every caller does
+   * until that request lands — and the club's own frozen value stands in, which
+   * is usually nothing. The line is left out rather than filled with a dash.
+   */
+  coaches?: Record<ClubCode, string>;
 }
 
 const FORM_CLASS: Record<FormResult, string> = {
@@ -117,6 +131,7 @@ export function ClubView({
   onBack,
   onSelectMatch,
   rankHistory,
+  coaches,
 }: ClubViewProps) {
   // The URL may name the club by slug or by code, and the club itself may only
   // appear in one of the two lists, so search both before giving up.
@@ -146,6 +161,7 @@ export function ClubView({
   const played = fixtures.filter((match) => resultFor(match, code) !== null).reverse();
   const clubScorers = scorersFor(scorers, code);
   const hymn = hymnUrl(club.hymn);
+  const coach = coachOf(club, coaches);
 
   // Same domains as the Classificação, so the shape a reader recognises in the
   // table is the shape they find here — only the box is bigger. `clubCount`
@@ -174,6 +190,20 @@ export function ClubView({
             {club.name}
             {club.state ? ` · ${club.state}` : ""}
           </p>
+          {/* Identity, not a statistic: who the club is under, printed beside
+              its name rather than in a tile with the tallies. The label is what
+              recedes and the name is what is read, which is why the two carry
+              different inks — a técnico nobody reports simply has no line, the
+              same rule every optional fact on this page follows.
+
+              Above the sede, and the two are a descending ladder rather than a
+              pair: the club's name, then who it plays under, then where it
+              keeps its office — each step a little fainter than the last. */}
+          {coach && (
+            <p className="truncate text-body-medium text-ink-muted">
+              Técnico: <span className="font-medium text-ink">{coach}</span>
+            </p>
+          )}
           {/* The one line here that is allowed to wrap. Truncating an address
               cuts from the right, which is where the city and the state are —
               the half a reader who is not going there actually wants. */}

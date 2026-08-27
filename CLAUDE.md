@@ -185,10 +185,16 @@ Mapping notes, all covered by tests:
 - Club codes prefer the upstream `tla` (FLA, PAL, …), which lines up with the local seed
   codes, falling back to a synthetic `FD-<id>`.
 - Standings read the `TOTAL` group only, never the HOME/AWAY splits.
-- **Squads arrive embedded in the competition's team list**, not from a per-team
-  endpoint: `/competitions/BSA/teams` carries a `squad` array on each of the
-  twenty clubs, so `mapSquads` builds the whole division's elencos from **one**
-  request rather than twenty. That is the only reason the Jogadores page is
+- A coach is read from `name` first and from `firstName`/`lastName` as a fallback,
+  because `lastName` is frequently null for a coach known by one name. A club
+  between coaches reports none at all, which is an **absence** — the club page
+  leaves the line out rather than printing a dash. `clubFromTeam` therefore omits
+  the key entirely, as it already does for a missing crest.
+- **Squads and coaches arrive embedded in the competition's team list**, not from
+  a per-team endpoint: `/competitions/BSA/teams` carries a `squad` array and a
+  `coach` object on each of the twenty clubs, so `mapSquads` builds the whole
+  division's elencos from **one** request rather than twenty, and the técnicos
+  ride along on the same payload for nothing. That is the only reason the Jogadores page is
   affordable at 10 req/minute. The listing has **no `shirtNumber` and no
   `currentTeam`** for any player — the person endpoint has both, which is what
   the player card fills in when one is opened. `mapSquads` deliberately does not
@@ -226,6 +232,10 @@ rather than returning a 500.
 
 Current routes: `/api/health`, `/api/clubs`, `/api/standings`, `/api/scorers`,
 `/api/squads` (every club's elenco; one upstream request serves all twenty),
+`/api/coaches` (every club's técnico, keyed by club code — a **projection of the
+squads payload**, so it shares that cache entry and costs nothing upstream; it
+exists because the club page is built from fixtures and standings, and neither
+carries a coach),
 `/api/players/:id` (numeric id, else 400 — enrichment only, answers `null` offline;
 note its `currentTeam` is often a national team, which is why the card prefers the
 club the page already knew),
@@ -707,6 +717,15 @@ Do not hand-edit them; hand-maintenance is what let the original list drift to t
 division. The generator validates its own output: it rejects duplicate club codes, rejects
 duplicate display names, and rejects a duplicate display name, which is what an override keyed to the
 wrong club id produces.
+
+**A club's `coach` in that snapshot is a floor, not the answer.** It is captured
+from the same teams payload as everything else there, so it costs no extra
+request — but a Série A club changes técnico several times a season and
+`clubs.ts` is regenerated far less often than that. `coachOf` in `club-core.ts`
+therefore prefers `/api/coaches`, which reads the live team list, and falls back
+to the frozen name only so a failed request still leaves the club page naming
+someone. This is the reverse of `withClubDetails`' rule, where the committed list
+supplies what no live payload carries at all; do not collapse the two.
 
 **Club identity is the upstream numeric id, never `tla`.** The abbreviation is not unique:
 Corinthians and Coritiba both report `tla: "COR"`, so keying on it merges two clubs into

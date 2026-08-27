@@ -270,6 +270,51 @@ test.describe("Clube", () => {
     expect(text).not.toContain("wikipedia.org");
   });
 
+  test("the club page names the club's head coach", async ({ page }) => {
+    // Stubbed rather than read off the snapshot, deliberately. The coach comes
+    // from the teams endpoint, this suite runs with the provider disabled, and
+    // `clubs.ts` carries one only once someone has re-run sync-seed-data with a
+    // token — so asserting against the seed would test the fixture's age. What
+    // is under test is that the map reaches the page and is printed.
+    const clubs = await (await page.request.get("/api/clubs")).json();
+    const palmeiras = clubs.data.find((club: { slug?: string }) => club.slug === "palmeiras");
+
+    await page.route("**/api/coaches", (route) =>
+      route.fulfill({
+        json: {
+          source: "football-data",
+          note: "Dados do football-data.org (Campeonato Brasileiro Série A).",
+          updatedAt: new Date().toISOString(),
+          data: { [palmeiras.code]: "Abel Ferreira" },
+        },
+      }),
+    );
+
+    await page.goto("/clube/palmeiras");
+
+    // Scoped to the header: the name belongs beside the club's, not among the
+    // tallies. The label and the name are two elements, hence a text match on
+    // the block rather than on either of them.
+    await expect(page.locator("main header")).toContainText("Técnico: Abel Ferreira");
+  });
+
+  test("the coaches are not fetched until a club page is opened", async ({ page }) => {
+    // One page in eight shows a coach, so the map is not in the opening
+    // Promise.all — the same call the elencos get, and just as invisible from
+    // the rendered page. Only the request log shows it.
+    const asked: string[] = [];
+    page.on("request", (request) => {
+      if (request.url().includes("/api/coaches")) asked.push(request.url());
+    });
+
+    await page.goto("/");
+    await expect(page.locator("table tbody tr")).toHaveCount(20);
+    expect(asked).toHaveLength(0);
+
+    await openClubAt(page, 1);
+    await expect.poll(() => asked.length).toBeGreaterThan(0);
+  });
+
   test("the club page names the club's sede", async ({ page }) => {
     await page.goto("/clube/palmeiras");
 
@@ -298,8 +343,7 @@ test.describe("Clube", () => {
 
     // Without the screen-reader label the address reads out as a bare string
     // with nothing saying what it is.
-    await expect(page.locator("main [data-sede] .sr-only")).toHaveText("Sede:");
-  });
+    await expect(page.locator("main [data-sede] .sr-only")).toHaveText("Sede:");  });
 
   test("every club carries all four links", async ({ page }) => {
     // A missing handle renders as no link at all rather than a broken one, so

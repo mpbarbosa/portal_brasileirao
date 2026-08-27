@@ -37,7 +37,7 @@ import {
 } from "@/football-data-core";
 import { withBroadcasters, withVenues } from "@/broadcast-core";
 import { withHighlights } from "@/match-core";
-import { withClubDetails, withHymns, withInstagram, withWikipedia } from "@/club-core";
+import { coachesOf, withClubDetails, withHymns, withInstagram, withWikipedia } from "@/club-core";
 import { compareForFeed, currentRound, matchesForRound, roundsOf } from "@/matches-core";
 import { injectMeta, pageMeta, type MetaContext } from "@/page-meta-core";
 import { parseRoute, type Route } from "@/route-core";
@@ -67,6 +67,7 @@ import { SEED_SQUADS } from "@/src/data/squads";
 import type {
   ApiEnvelope,
   Club,
+  ClubCode,
   Match,
   Player,
   Scorer,
@@ -510,6 +511,38 @@ const loadSquads = (): Promise<ApiEnvelope<Squad[]>> =>
 app.get("/api/squads", async (_req, res) => {
   const payload = await loadSquads();
   // An elenco is the most static thing the app serves; see SQUADS_CACHE_TTL_MS.
+  res.set("Cache-Control", "public, max-age=3600");
+  res.json(payload);
+});
+
+/**
+ * Every club's head coach, keyed by club code.
+ *
+ * **A projection of the squads payload, not a second fetch.** The coach and the
+ * elenco arrive on the same team objects, so this reads `loadSquads()` and
+ * therefore shares its cache entry in both directions: opening a club page
+ * warms the Jogadores page and vice versa, and the endpoint costs **nothing**
+ * beyond the one team-list request the app already makes.
+ *
+ * It exists at all because the club page is not built from that payload. A
+ * fixture names two clubs and no coach, and neither does a standings row, so
+ * without this route the club page could only show whatever coach the last
+ * `sync-seed-data` froze into `clubs.ts` — which for a Série A club is a claim
+ * that expires quickly. Twenty names is a payload small enough that fetching it
+ * separately is cheaper than putting the elenco behind the club page.
+ *
+ * A club upstream lists no coach for is **absent from the map** rather than
+ * present with an empty name; see `coachesOf`.
+ */
+const loadCoaches = async (): Promise<ApiEnvelope<Record<ClubCode, string>>> => {
+  const squads = await loadSquads();
+  return { ...squads, data: coachesOf(squads.data.map((squad) => squad.club)) };
+};
+
+app.get("/api/coaches", async (_req, res) => {
+  const payload = await loadCoaches();
+  // Same cache as the elenco it is projected from, for the same reason: a coach
+  // changes between matches at worst, never between requests.
   res.set("Cache-Control", "public, max-age=3600");
   res.json(payload);
 });
