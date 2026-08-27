@@ -1010,12 +1010,19 @@ refuses) need nobody's permission.
 **`-d` will refuse a branch that is fully merged, and the message is
 misleading twice over.** It says "not fully merged", which reads as *you are
 about to lose work*; what it means is "not merged into whatever I compared
-against". It compares against the branch's **upstream**, not `main` — and this
-repository deletes merged branches on the remote automatically, so by the time
-you clean up, the upstream is usually gone and `-d` silently falls back to
-**HEAD**. In the shared root that is local `main`, which lags `origin/main` by
-however many merges landed while you worked. Both fallbacks refuse work that is
-demonstrably on `origin/main`.
+against", and there are two such comparisons.
+
+It compares against the branch's **upstream** when one is set. If your branch
+still tracks its own pushed copy and that copy is identical, `-d` succeeds
+trivially — which is the common case and why this often just works. But
+`delete_branch_on_merge` is **false** on this repository, so a merged branch
+stays on the remote until somebody removes it; once someone does (the button on
+the merged PR, or `git push origin --delete`) and you `fetch --prune`, the
+upstream is gone.
+
+With no upstream `-d` silently falls back to **HEAD** — in the shared root,
+local `main`, which lags `origin/main` by however many merges landed while you
+worked. That fallback refuses work that is demonstrably on `origin/main`.
 
 Give the check the right comparison rather than switching it off:
 
