@@ -16,9 +16,9 @@ agent Claude Code.
 > `FOOTBALL_DATA_TOKEN` is set; without a token the app serves a frozen snapshot, so a
 > fresh clone runs with no signup.
 
-![Classificação do Campeonato Brasileiro Série A no tema claro: os 20 clubes com escudo, pontos, o gráfico da campanha, jogos, vitórias, empates, derrotas e saldo de gols. Os quatro primeiros trazem uma faixa verde (G4) e os quatro últimos uma faixa vermelha (Z4). Ao pé da página, o rodapé diz que o projeto é independente e sem vínculo com a CBF ou com os clubes, e traz a saúde do serviço: estado, fonte dos dados, versão, quando foi compilado e desde quando está no ar.](docs/screenshots/classificacao-light.png)
+![Classificação do Campeonato Brasileiro Série A no tema claro: os 20 clubes com escudo, pontos, o gráfico da campanha, jogos, vitórias, empates, derrotas e saldo de gols. Os quatro primeiros trazem uma faixa verde (G4) e os quatro últimos uma faixa vermelha (Z4), e logo abaixo da tabela uma legenda diz o que cada faixa significa: G4 Libertadores, as quatro primeiras posições, e Z4 Rebaixamento, as quatro últimas. Ao pé da página, o rodapé diz que o projeto é independente e sem vínculo com a CBF ou com os clubes, e traz a saúde do serviço: estado, fonte dos dados, versão, quando foi compilado e desde quando está no ar.](docs/screenshots/classificacao-light.png)
 
-![A mesma classificação no tema escuro, com as mesmas 20 posições, faixas do G4 e do Z4, gráficos da campanha e o mesmo rodapé com a saúde do serviço.](docs/screenshots/classificacao-dark.png)
+![A mesma classificação no tema escuro, com as mesmas 20 posições, faixas do G4 e do Z4, a mesma legenda das duas zonas sob a tabela, gráficos da campanha e o mesmo rodapé com a saúde do serviço.](docs/screenshots/classificacao-dark.png)
 
 *Classificação, light and dark. The app follows your system setting and remembers an explicit
 choice; the control in the header switches between them. **Campanha** is the club's position
