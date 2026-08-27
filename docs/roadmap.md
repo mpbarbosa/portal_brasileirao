@@ -64,9 +64,17 @@ provider already sends; the rest are derivations or rules.
 **Now — no decision to make.** Six of these are one attribute, one element or a
 paragraph of prose.
 
-1. **Árbitro on the match page.** `referees` rides on every football-data match
-   object and `football-data-core.ts` drops it. Translate the role vocabulary at
-   the edge like `positionLabel` does, and render nothing when the array is empty.
+1. ~~**Árbitro on the match page.**~~ **Shipped.** `refereeRoleLabel` translates
+   at the edge and the row is absent when upstream names nobody, which is 223 of
+   the 380 fixtures — finished ones included, so the field fills in
+   retroactively rather than at kickoff. Two things the payload settled that the
+   proposal could only guess at: **every** one of the 356 entries across BSA, PL
+   and CL is `REFEREE`, so the wider vocabulary it predicted is not reachable on
+   this tier and only that one value is translated; and the field is
+   **live-only**, since the seed snapshot carries no officials and the e2e suite
+   boots frozen. Green e2e is therefore not evidence that it renders —
+   `tests/football-data-core.test.ts` covers the mapper against a captured
+   payload, per the rule in `CLAUDE.md`.
 2. **Aproveitamento (%).** `pontos / (jogos × 3)`. The metric a Brazilian reader
    quotes by default, and the one that survives a postponed fixture honestly.
    Needs a `CONTEXT.md` entry in the same commit.

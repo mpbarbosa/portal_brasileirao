@@ -8,6 +8,7 @@ import {
   clubsFromMatches,
   mapMatch,
   mapMatches,
+  mapReferees,
   mapStandings,
   mapPerson,
   mapScorers,
@@ -146,6 +147,58 @@ test("a bad fixture is skipped without losing the good ones", () => {
 test("an empty or missing matches array yields an empty list", () => {
   assert.deepEqual(mapMatches({}), []);
   assert.deepEqual(mapMatches({ matches: [] }), []);
+});
+
+/*
+ * The officials are a **live-only** field: `src/data/matches.ts` carries none,
+ * and the end-to-end suite boots with `DISABLE_FOOTBALL_DATA=true`, so no
+ * browser test can ever see one render. These cover the mapping against a
+ * payload captured from `/v4/competitions/BSA/matches` on 2026-08-27 instead —
+ * which is what CLAUDE.md prescribes when a live path needs coverage.
+ *
+ * Measured in that capture, and the reason each assertion below exists: 157 of
+ * 380 fixtures name an official, every one of them a single entry, and every
+ * `type` is `REFEREE`. Rounds 1–15 are complete and 16–24 mostly are not,
+ * including finished matches — so the field fills in retroactively rather than
+ * at kickoff, and an empty array is the ordinary state of a played fixture.
+ */
+const CAPTURED_REFEREE = { id: 206800, name: "Bruno de Araújo", type: "REFEREE", nationality: "Brazil" };
+
+test("carries the officials a captured payload reports", () => {
+  const mapped = mapMatch({ ...FIXTURE, referees: [CAPTURED_REFEREE] });
+
+  assert.deepEqual(mapped?.referees, [{ name: "Bruno de Araújo", role: "REFEREE" }]);
+});
+
+test("a fixture upstream names nobody for has no referees key at all", () => {
+  // Present-and-empty would make `"referees" in match` lie about what upstream
+  // said, and 223 of the season's 380 fixtures are in exactly this state.
+  assert.equal("referees" in (mapMatch({ ...FIXTURE, referees: [] }) ?? {}), false);
+  assert.equal("referees" in (mapMatch(FIXTURE) ?? {}), false);
+});
+
+test("keeps the provider's role vocabulary rather than translating in the mapper", () => {
+  // Translation belongs at the edge, in `refereeRoleLabel`, exactly as
+  // `Player.position` carries the English word for `positionLabel` to read.
+  assert.deepEqual(mapReferees([CAPTURED_REFEREE])[0]?.role, "REFEREE");
+});
+
+test("drops an official with no name but keeps one with no role", () => {
+  // A row reading "Árbitro" with nothing beside it is worse than no row; a
+  // named official whose role upstream omitted is still a fact worth having.
+  assert.deepEqual(
+    mapReferees([
+      { id: 1, type: "REFEREE" },
+      { id: 2, name: "   ", type: "REFEREE" },
+      { id: 3, name: "Sem Função" },
+    ]),
+    [{ name: "Sem Função", role: "" }],
+  );
+});
+
+test("an absent referees array maps to an empty list", () => {
+  assert.deepEqual(mapReferees(undefined), []);
+  assert.deepEqual(mapReferees([]), []);
 });
 
 test("collects each club once from a fixture list, ordered by name", () => {
