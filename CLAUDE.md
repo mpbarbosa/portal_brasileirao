@@ -1231,9 +1231,11 @@ push to main ──▶ check ──▶ build ──▶ boot the bundle, smoke-te
                                               ├─▶ s3://…/releases/<sha>.tar.gz
                                               ├─▶ ancestry guard vs live /api/health
                                               ├─▶ ssm send-command ──▶ host
-                                              │     07_install_release.sh  (rsync into place)
+                                              │     07_install_release.sh  (retain previous/,
+                                              │                             rsync into place)
                                               │     06_redeploy.sh         (npm ci --omit=dev,
-                                              │                             restart, health)
+                                              │                             restart, health,
+                                              │                             flip back if unhealthy)
                                               └─▶ assert <sha> at /api/health
 ```
 
@@ -1254,6 +1256,49 @@ bundle at esbuild time, so `/api/health` reports the commit it was built from
 whatever host it lands on. The workflow compares that against the sha it just
 built — strictly stronger than an uptime heuristic, which a fast restart of the
 *previous* bundle would also satisfy.
+
+**A failed release flips back to the previous one, and the pipeline still goes
+red.** `07_install_release.sh` copies the release already on disk into
+`$DEPLOY_DIR/previous/` before the rsync destroys it, and hands
+`06_redeploy.sh` the path in `ROLLBACK_FROM`. If the new payload will not
+install, will not restart, or never reports healthy, `06` restores that
+directory, reinstalls and restarts, and exits **2** — the previous build serving,
+the workflow red. If the flip-back *itself* fails it exits **3** and says
+`CRITICAL`, because "the deploy failed" and "the site is down" need different
+responses. Before this, `rsync -a --delete` destroyed the previous build first,
+so a bad release left systemd restart-looping every five seconds against nothing.
+
+Four things about it are deliberate, and three are load-bearing:
+
+- **`package.json` and `package-lock.json` are retained with `dist/`.** `npm ci
+  --omit=dev` prunes, so a release that drops a dependency deletes modules the
+  release before it needs. Restoring `dist/` alone would flip back to a build
+  whose `node_modules` had just been removed — failing on exactly the change
+  most likely to need a rollback.
+- **The retained copy is staged as `previous.incoming/` and renamed into place.**
+  `06` decides a target is usable by checking three files exist; a half-copied
+  directory that passes is how a recoverable bad release becomes unrecoverable.
+- **Flip-back is opt-in and only `07` opts in.** A standalone `06` — the operator
+  redeploying after an `.env` change, which is what it is documented for — leaves
+  `ROLLBACK_FROM` unset and behaves as it always did. `previous/` merely existing
+  must not swap the build underneath someone.
+- **A failed retention stops the deploy** rather than proceeding without a way
+  back. The usual cause is a full disk, which is what makes the `npm ci` fail
+  moments later anyway.
+
+**`scripts/rehearse-flip-back.sh` is the only behavioural coverage these two
+scripts have.** `npm run lint` is TypeScript and cannot see shell; CI only
+shellchecks them. It drives all eight branches against a stubbed `systemctl`,
+`sudo`, `npm` and `journalctl`, with a real HTTP server for the health endpoint
+so the real `curl -sf` runs. Nothing invokes it automatically, like
+`check-hymns` — **re-run it by hand after editing either script.** Note the two
+travel *inside the release tarball*, so a broken one ships with the release that
+carries it and the host runs it immediately.
+
+One trap it caught, worth keeping: **`rsync -a`'s quick-check compares size and
+mtime, not bytes.** Two fixture releases differing only in a sha, written in the
+same second, were silently not installed at all — and the case still passed,
+because both were healthy.
 
 **A release must be a descendant of what is live.** `concurrency: deploy-production`
 serialises releases but does **not** order them, and on 2026-08-26 a queue that
