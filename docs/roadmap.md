@@ -61,8 +61,15 @@ nobody re-runs. The check is two lines of Python over `matches.ts` and
 ## Near term
 
 - Re-run `sync-broadcasts` weekly as the season advances; the cron already does.
-- Watch for broadcasters CBF names that we render as wordmarks — ESPN/Disney+,
-  Band, SportyNet — and add marks where a public-domain one exists.
+- Watch for broadcasters CBF names that we render as wordmarks, and add marks
+  where a public-domain one exists. **Surveyed 2026-08-27 and there is nothing
+  to add**: of the 8 channels in `broadcasts.ts` only Record lacks a mark, and
+  Commons has no free national Record logo — the category tree, Wikidata's
+  `P154` and five title searches all come back empty, and the one CC0 file is
+  the 1982 rainbow logo. `broadcast-core.ts` carries the full finding so it is
+  not re-derived. ESPN/Disney+, Band and SportyNet were named here from a doc
+  comment illustrating separator parsing, not from data — none has ever been in
+  `broadcasts.ts`. Re-check when a sync introduces a channel, not before.
 - Move the Node major from 22 to 24 before 2027-04-30, host first — see below.
   Nothing will open a pull request for this.
 - Watch `tests/e2e/scorers.spec.ts` "switching away and back keeps the table"
