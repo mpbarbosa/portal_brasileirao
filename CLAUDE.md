@@ -1217,10 +1217,24 @@ not something the check can verify.
 **An appearance path can move without a pixel moving.** A rule that is never in effect
 during a paint, a selector nothing matches, a comment: the edit is real and the render is
 identical. `docs/screenshots/CAPTURED` records which commit the images depict, so a refresh
-always leaves something to commit even when all sixteen PNGs come back byte-identical —
-that is the mechanical answer and it is the right one wherever it applies. But it still
-charges sixteen captures from a live-data production build to certify that nothing changed,
-and records no reason. Where an edit *provably* cannot reach a paint, say so instead:
+always leaves something to commit — that is the mechanical answer and it is the right one
+wherever it applies. But it still charges sixteen captures from a live-data production
+build to certify that nothing changed, and records no reason.
+
+**Two of the sixteen can no longer come back byte-identical, and this paragraph used to
+say they could.** `fullPage` is `!mobile && route === "/"`, so the desktop Classificação
+pair photographs the whole page — including the **Rodapé**, whose Saúde do serviço prints
+`Versão`, `Compilado` and `No ar desde`. All three move on every deploy, so those two
+images differ on every refresh whatever the code did. `bb223e2` is where that started, and
+`0719e73 Re-shoot at bb7a2ec: sixteen captures, zero pixels moved` is an outcome that can
+no longer occur.
+
+Nothing automated is affected — `check-screenshots.sh` compares appearance *sources*
+between CAPTURED's sha and HEAD and never compares image bytes. What is lost is a **human**
+signal: "classificacao-light.png changed" used to mean the table looks different, and now
+means a deploy happened, on the two most information-dense images in the set. Accepted
+rather than fixed, because the alternatives all give up something real — the rodapé is in
+that frame deliberately, and the README alt text describes it. Where an edit *provably* cannot reach a paint, say so instead:
 
 ```
 Screenshots-unaffected: <why no rendered pixel can change>
