@@ -128,6 +128,46 @@ jobs:
             exit 0
           fi
 
+          # Has production been rolled back on purpose? Then it is BEHIND main
+          # by design, which looks identical to the gap this workflow exists to
+          # close — and closing it would undo the rollback within fifteen
+          # minutes, automatically, while someone is still working out what
+          # broke.
+          #
+          # The test is stateless on purpose: a successful `rollback.yml` run
+          # NEWER than the last successful `ci.yml` run on main means a
+          # deliberate rollback is the most recent thing to have decided what
+          # production runs. No flag is set and none has to be remembered —
+          # it clears itself the moment a fix reaches main and deploys, because
+          # that ci.yml run then becomes the newer of the two.
+          last_rollback="$(gh api \
+            "repos/${GITHUB_REPOSITORY}/actions/workflows/rollback.yml/runs?status=success&per_page=1" \
+            --jq '.workflow_runs[0].run_started_at // empty' 2>/dev/null || echo unknown)"
+
+          if [ "$last_rollback" = "unknown" ]; then
+            # rollback.yml may simply not exist yet, or the query failed. Either
+            # way this is not a reason to refuse to reconcile.
+            last_rollback=""
+          fi
+
+          if [ -n "$last_rollback" ]; then
+            last_release="$(gh api \
+              "repos/${GITHUB_REPOSITORY}/actions/workflows/ci.yml/runs?branch=main&status=success&per_page=1" \
+              --jq '.workflow_runs[0].run_started_at // empty' 2>/dev/null || echo "")"
+
+            # RFC3339 in UTC from the same API, so a string compare is a time
+            # compare. An absent release timestamp means the rollback wins.
+            if [ -z "$last_release" ] || [ "$last_rollback" \> "$last_release" ]; then
+              echo "::warning::Production was rolled back deliberately at ${last_rollback}, more recently than the last successful release. Holding — reconciling would undo it."
+              {
+                echo "### Not reconciled"
+                echo "A deliberate rollback at \`${last_rollback}\` is newer than the last successful release."
+                echo "Holding so it is not undone. This clears itself once a fix reaches \`main\` and deploys."
+              } >> "$GITHUB_STEP_SUMMARY"
+              exit 0
+            fi
+          fi
+
           # Have we already tried this exact commit and had it fail? Then
           # re-dispatching it every quarter of an hour is not reconciliation,
           # it is a loop that floods the Actions tab and hides the real

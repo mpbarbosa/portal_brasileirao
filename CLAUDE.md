@@ -1313,6 +1313,28 @@ not a gap to close. Note the schedule is a safety net rather than a guarantee �
 GitHub delays scheduled runs under exactly the load that drops push events, and
 disables them after 60 days of repository inactivity.
 
+**Rolling back is `.github/workflows/rollback.yml`, and it does not go through
+`ci.yml`.** It installs a release S3 already holds, over whatever is live, in
+about forty seconds and with no build — because those bytes were built, booted
+and smoke-tested by `check` when they were made, and rebuilding them to roll
+back would re-test them with a *newer* toolchain, which is the one thing you do
+not want when the point is known-good bytes. It carries no ancestry guard for
+the same reason the deploy does: going backwards is the purpose here and the
+accident there. It shares the `deploy-production` concurrency group, so a
+rollback and a release can never install at once. Dispatching it with an **empty
+sha lists what the bucket holds and changes nothing** — which is also how you
+find out what the bucket's lifecycle policy has left you, since nothing in this
+repository defines one.
+
+**A rollback pauses reconciliation, and nothing has to remember that it did.**
+After a rollback production is behind `main`, which is precisely the shape
+`reconcile.yml` exists to close — so without this it would dispatch `ci.yml` and
+undo the rollback within fifteen minutes, while someone was still working out
+what broke. The reconciler now holds whenever a successful `rollback.yml` run is
+newer than the last successful `ci.yml` run on `main`. The test is **stateless**:
+no flag is set, so none can be left set, and it clears itself the moment a fix
+reaches `main` and deploys.
+
 **The host is too small to build on.** It receives a prebuilt payload and runs
 `npm ci --omit=dev`; nothing compiles there. That is also why a runtime dependency
 stranded in `devDependencies` stays invisible until the bundle boots, which is the
