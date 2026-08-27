@@ -30,6 +30,16 @@ list` shows who is where. The rules — explicit paths on every commit, never
 `git stash`, no session merges to `main` — are in `CLAUDE.md` under **Working
 alongside other sessions**.
 
+Who is in which worktree, and why, is the ledger at:
+
+    /home/mpb/Documents/GitHub/portal_brasileirao/.claude/worktrees/COORDINATION.md
+
+It is inside the gitignored directory it describes, so it exists only in the root
+checkout and no worktree can see it — hence the absolute path, here and
+everywhere else it is named. Add an entry when you create or adopt a worktree:
+without one, a prepared worktree is indistinguishable from a finished one by any
+git command, and has been swept as such.
+
 ## Machine and runtime
 
 - Hostname: `tatooine`

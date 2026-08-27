@@ -60,7 +60,23 @@ So establish landing *before* each one, not once at the top:
 ```sh
 git log --oneline origin/main -- <path>          # has this file landed?
 git merge-base --is-ancestor <branch> origin/main # has this branch landed?
+born=$(git reflog show <branch> --format='%H' | tail -1)   # ...or never started?
 ```
+
+**The ancestry test says "landed" for a branch that was never worked in**, which
+is how a prepared worktree gets swept as a finished one. `git worktree add -b`
+leaves the branch on the commit it was created from, so `--is-ancestor` succeeds
+and `git rev-list --count origin/main..<branch>` is 0 — the answers a merged
+branch gives. On 2026-08-27 four branches stood here, two merged and two never
+started, and all four answered identically. The third line separates them: if
+`$born` still equals `git rev-parse <branch>`, the branch has never held a
+commit, so it did not land — it never left. An **empty** `$born` is a reflog that
+expired, which is `UNKNOWN` and never "merged".
+
+Read that as *has this branch ever held work that removing it would destroy*,
+not as *is its session finished* — no command answers the second. It fails safe:
+a worktree holding uncommitted work also reports "never held a commit", and that
+is a reason to leave it alone rather than a reason to doubt the test.
 
 ## Only yours — and the listings will not tell you
 
@@ -73,6 +89,22 @@ write down each worktree and branch *at the moment you make it*; this is the ste
 that spends it. Without that record you are recalling branch names at the point
 where being wrong deletes someone else's work — which is the one place the
 measure-don't-recall rule matters most.
+
+**The record is a shared file, and it has an address:**
+
+    /home/mpb/Documents/GitHub/portal_brasileirao/.claude/worktrees/COORDINATION.md
+
+Yours makes your own removals safe; *theirs* is what makes a peer's worktree
+legible to you, and it is the only thing that can distinguish a prepared worktree
+from a finished one before you delete it. It is gitignored, so it is invisible
+from inside a worktree — read it by that absolute path, always. `CLAUDE.md`
+carries the same address under **Working alongside other sessions**, and is
+reachable from where you are.
+
+**A report that a branch merged is not evidence that it merged**, whoever sent
+it. Re-run the ancestry check in the same turn as the removal, not in the turn
+that decided on it: a merge reported here was the neighbouring PR's, four minutes
+earlier, and that re-run is the only reason an unmerged branch survived.
 
 **If you adopted a worktree rather than creating it, rename it to match the
 branch you put on it.** Otherwise its name still advertises the previous
