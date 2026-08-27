@@ -48,6 +48,66 @@ to abort a whole run, and the end-to-end specs depended on some fixture in round
 - Watch for broadcasters CBF names that we render as wordmarks — ESPN/Disney+,
   Band, SportyNet — and add marks where a public-domain one exists.
 
+## Contas — what Phase 1 leaves outstanding
+
+Phase 1 ships sign-in with Google, sessions in SQLite, `/entrar`, `/conta`, and
+the rule that the whole feature is absent unless the host is configured for it.
+What follows is everything flagged while building it and not done, recorded here
+rather than left in a pull-request thread.
+
+**On the host, before accounts do anything.** Nothing in the code waits on any of
+these — it deploys and behaves exactly as it did before.
+
+- `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` into the host's `.env`. Note
+  `02_create_env.sh` rewrites the **whole** file after a confirm, so the same run
+  must re-enter `FOOTBALL_DATA_TOKEN` or the site drops to seed data.
+- Google Auth Platform → **Público-alvo**: add a test user, or publish. While the
+  client is in *Testing* with no test users, every sign-in returns "acesso
+  bloqueado" — which looks exactly like a bug in the code, and is the most
+  likely first hour lost.
+- The **Node floor**. `01_setup_app_directory.sh` accepts 20; `node:sqlite`
+  arrived in 22.5. The code degrades rather than crashing — `openStore` loads it
+  through `createRequire` precisely so an old host boots with accounts absent —
+  so this is a step for the day accounts are switched on, not a deploy blocker.
+- **One manual pass of the Google round trip.** CI cannot cover it: it needs a
+  secret and a network, and CI has neither by design. Verify once against the
+  deployed host and record it in the runbook, the way the live provider path was.
+
+**Phase 2, in the order `docs/accounts.md` sets.**
+
+- **`/privacidade`.** A real route, so a four-file change, and it blocks twice
+  over: §5 says the notice blocks launch, and Google's Branding tab wants the URL
+  before the consent screen can be published.
+- **The preferences table, and the merge that gives it a caller.** *Meu time*
+  stops being device-local and becomes the first thing an account syncs. Deferred
+  from Phase 1 deliberately — shipping the schema alone would be a table nobody
+  reads, which is the same smell as a component variant with no call site.
+- **Backups.** The accounts database is the first state in this app that nothing
+  can regenerate: lose the volume and the readers are gone. Nightly `VACUUM INTO`
+  to S3, on a prefix separate from the deploy bucket, and a restore **rehearsed
+  on a scratch instance** rather than documented.
+- **Session pruning on a schedule.** `pruneSessions` exists and nothing calls it.
+  Expired rows are harmless to authentication and are still a record of when a
+  person was last here, kept for no stated purpose.
+- **The retention promise, or its removal from the notice.** An unenforced
+  retention promise is worse than no promise.
+
+**Screenshots.** The top app bar gained a control, so the advisory job is red and
+should be. But that control is invisible until a host is configured, so a refresh
+today photographs no change at all — take it after the credentials are live, not
+after the merge.
+
+**One correctness item, already handed off.** The club-article fix covered one
+call site of five: `page-meta-core.ts` still renders "Escudo **do** Chapecoense",
+"artilheiros **do** Chapecoense" and "Casa **do** Chapecoense", and
+`PlayersView` still says "Ver a página **do** Chapecoense". Two of those are
+metadata that feeds link previews. The guard added with the fix does not guard —
+it asserts the feminine list is exactly `["Chapecoense"]`, so a *known* feminine
+club arriving turns it red while an unknown one falls through to the masculine
+default silently. Making the table exhaustive over `src/data/clubs.ts`, the way
+`NATIONALITY_LABELS` is over `squads.ts`, is the fix. A worktree and brief are
+prepared at `.claude/worktrees/artigo-do-clube`.
+
 ## Constraints that must survive any redesign
 
 Recorded here because they are easy to undo by accident:
