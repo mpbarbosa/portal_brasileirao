@@ -1,0 +1,57 @@
+# Keep the pins current so a runtime deprecation arrives as a pull request
+# rather than as a red build on a commit that changed nothing.
+#
+# This exists because the alternative was measured rather than imagined. The
+# deploy of 35a7074 ended with a warning that actions/download-artifact@v6 and
+# aws-actions/configure-aws-credentials@v5 were being force-run on node24, and
+# closing it by hand cost a survey of six actions across three workflows, two
+# release-note readings for the breaking changes, a pull request, a merge and a
+# deploy. Dependabot would have opened that pull request itself, before the
+# warning ever appeared. See docs/cicd-plan.md, D4.
+#
+# It needs no secrets to be useful here, which is not true of every repository:
+# `check` and `e2e` run against the frozen snapshot with no token by design, so
+# a Dependabot pull request — which gets a read-only token and no secrets — sees
+# exactly the same signal as any other. That is a property of "CI needs no
+# secrets" in CLAUDE.md, and a reason not to trade it away later.
+
+version: 2
+updates:
+  # The half that has already cost something, and the cheaper half to accept: an
+  # action pin is a few lines, the blast radius of a bad bump is one workflow,
+  # and CI reports it on the pull request itself. So all of them are grouped
+  # into one.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: Etc/UTC
+    groups:
+      actions:
+        patterns: ["*"]
+    open-pull-requests-limit: 5
+
+  # The npm half is split on purpose. Minor and patch arrive as ONE grouped pull
+  # request, because twenty separate ones is how a person starts merging them
+  # without looking. A major arrives on its OWN, because express, vite or react
+  # crossing a major is a change to read rather than a change to approve — and
+  # anything in `dependencies` ships to the host, which installs it with
+  # `npm ci --omit=dev`.
+  #
+  # Monday rather than Tuesday: sync-broadcasts already runs Tuesday 09:00 UTC,
+  # and two automated pushes landing on one morning is how the second gets
+  # merged unread alongside the first.
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: Etc/UTC
+    groups:
+      npm-minor-and-patch:
+        patterns: ["*"]
+        update-types: [minor, patch]
+    open-pull-requests-limit: 5

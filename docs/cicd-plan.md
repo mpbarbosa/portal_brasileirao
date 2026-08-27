@@ -323,7 +323,7 @@ commit that will ever ship, so uploading 19 MB per PR would buy nothing.
 exercised on a real 19 MB payload across its three branches — matching digest
 promotes, mismatched digest refuses, absent digest refuses.
 
-### D4 — Dependencies stay current without anyone watching
+### D4 — Dependencies stay current without anyone watching — **done**
 
 Gap A, promoted out of the "not yet cost anything" list because it stopped
 qualifying — the node24 episode above is the evidence. `.github/dependabot.yml`
@@ -343,7 +343,11 @@ host-side change and a rehearsal. Doing the ten-minute thing first is not the
 same as thinking it matters more, and the severity ordering is recorded here so
 the sequence is not misread as a ranking.
 
-*Exit:* Dependabot opens its first grouped pull request, and CI is green on it.
+*Exit:* `.github/dependabot.yml` is on `main`. The observable exit — a first
+grouped pull request, green — arrives on GitHub's schedule rather than ours:
+Dependabot evaluates the manifests shortly after the file lands and then weekly
+on Monday mornings, so it is the one phase here whose confirmation cannot be
+made to happen on demand.
 
 ### D5 — A bad release does not become an outage
 
