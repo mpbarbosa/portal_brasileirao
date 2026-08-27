@@ -14,6 +14,36 @@ processes personal data under the LGPD, and (c) breaks four documented
 invariants at once. None of that makes it a bad idea; all of it makes the
 sequencing matter more than the code does.
 
+**Guests are first class, and stay that way.** Every page this app serves today
+works for somebody who has never signed in, and that stays true after accounts
+exist. An account may *add* to a page — a marked row, a reordered feed, a club
+remembered — and may never be the condition of reaching one. No gate, no wall,
+no interstitial, no "entre para continuar" over content that was public a
+release earlier, and nothing a guest has today moved behind sign-in tomorrow.
+Signing in is an offer, and an offer that is declined has to leave the app whole.
+
+Three reasons that is an invariant rather than a preference:
+
+- **It is what the app is for.** Someone checking a score at half time on mobile
+  data is the entire use case. A sign-in step in front of that is the product
+  failing at its one job, and no amount of personalisation behind it compensates.
+- **A crawler is a guest, permanently.** Every rule in `seo-core.ts` assumes the
+  content is reachable without a session — the canonical addresses, and the
+  442-URL sitemap that is the *only* route to nearly every fixture page, since
+  the round picker is a `<select>` and not a set of links. Gating any of that is
+  a de-indexing with extra steps.
+- **It is what keeps accounts optional to build.** As long as the signed-out
+  path is the complete product, `accountsEnabled()` being false is a *supported*
+  state and not a degraded one (§3.9), Phase 0 can be the whole feature (§1), and
+  every account bug is contained to the readers who chose to have one.
+
+The consequence for the code is small and the consequence for the design is not:
+account state arrives after paint on a page that was already complete without it
+(§3.8), so nothing may be *withheld* pending `/api/account/me` — a spinner over
+the Classificação while the app works out who is reading is the same wall, built
+accidentally. The spec that enforces all of this is in §6, and it is the most
+valuable one in the plan.
+
 ---
 
 ## 1. The decision that comes first
@@ -118,8 +148,41 @@ answer, and the wrong first one: it is more code than B, and the recovery story
 for a reader who loses their only device is either "you lose the account" or
 "you also need one of A or B". Add it as a second factor path later.
 
-**Decision:** B for v1, C additive later, A only if a product reason appears
-that Google sign-in cannot serve (and then accept the email dependency openly).
+### D. Magic link (passwordless email)
+
+The reader types an address, receives a one-time link, and lands signed in. No
+password at rest, and no reset flow — because the reset flow *is* this. That is
+the observation worth carrying back to A: **email + password is this option plus
+a credential database**, so A is never cheaper than D and never safer.
+
+Its cost is the one A hides, and it is worth pricing concretely rather than as
+"a deliverability problem". On this stack it means Amazon SES in `sa-east-1`,
+where the instance already is; DKIM records on the sending domain; and — the
+part with a lead time nobody plans for — **leaving the SES sandbox**, which is a
+support request a human reviews, can take a day or more, and asks how bounces
+and complaints are handled. Until then an account can only send to addresses it
+has itself verified. Start that request before the code, not when the code is
+blocked on it.
+
+Two rules it brings, if it is ever chosen:
+
+- **The request endpoint answers identically** whether or not the address
+  belongs to an account. Anything else is an oracle for "does this person use
+  this site", which is both a privacy leak and the first step of a targeted
+  attack.
+- **The link is a bearer credential living in a URL**, and URLs leak — into
+  browser history, into the `Referer` of anything the landing page loads, into
+  every log in between. Single use, short TTL, consumed on sight, and a redirect
+  that drops the query so the address bar never holds it.
+
+**Not recommended for v1**, for the same reason A is not: B needs no mail at
+all. It is the first thing to reach for if the transfer-abroad point in §5 makes
+Google unacceptable, or if some later feature needs a verified email anyway — at
+which point one mail path serves both.
+
+**Decision:** B for v1, C additive later. A and D both buy an email dependency
+that B does not need; between those two, D is strictly the smaller, so if a
+product reason ever forces email, it is D and not A that gets built.
 
 ---
 
@@ -369,6 +432,12 @@ never `devDependencies`, or the production `npm ci --omit=dev` strands it and
 CI's "verify the bundled server boots" step catches it, which is exactly the
 step that exists for this.
 
+**Rotate on sign-in.** Issue a new token whenever a session is created, even if
+the request already carried one, and never adopt a session identifier that
+arrived from outside. Session fixation is a few lines to prevent here and
+awkward to retrofit, because by then something is relying on the id being
+stable across a sign-in.
+
 ### 3.13 There is no rate limiter, and sign-in is the first endpoint that needs one
 
 Every route today is a cached GET in front of a circuit breaker. An auth
@@ -388,6 +457,27 @@ header check on every state-changing request (reject when present and not our
 own origin) rather than a token round trip: no plumbing through the client, no
 hidden field, and it fails closed. A token scheme is worth it only if the app
 ever needs `SameSite=None`.
+
+### 3.15 A stored club is not evidence the club still exists
+
+`seo-core.ts` already holds this rule for a different reason: `pageStatus`
+declares a club missing only when the club list actually arrived, because
+otherwise a provider outage 404s all 380 fixture pages at once and a crawler
+drops them over an incident lasting minutes.
+
+The same trap is waiting for **Meu time**, and it bites harder here. A
+preference holding a club id that does not resolve looks exactly like a dangling
+reference, so the tempting fix is a nightly "tidy up orphaned preferences" pass
+— which, the first time football-data has a bad five minutes and the club list
+comes back empty, deletes every reader's club at once, from the one table
+nothing can regenerate (§3.1).
+
+**Rule: never drop a preference because its referent failed to resolve.** The UI
+says it cannot find the club right now; the row stays; a club id is cleared only
+when the reader clears it. This applies identically to Phase 0's `localStorage`
+copy, where the temptation is greater still because the parse step is already
+there — `preferences-core.ts` tolerating junk must not tolerate it by discarding
+a value it merely cannot resolve today.
 
 ---
 
@@ -529,8 +619,16 @@ sign in → the header shows the account → reload keeps it → sign out clears
 `/conta` while signed out invites sign-in rather than erroring; `/conta` carries
 `noindex`; no account route ever answers `Cache-Control: public`; the header
 fits its box at 640, 768 and 1024px (§3.7); with accounts *disabled*, the app
-behaves exactly as it does today — which is the spec that protects every reader
-who is not signed in from every future account bug.
+behaves exactly as it does today.
+
+And the one that enforces the guest invariant, which is **not** the same spec:
+with accounts **enabled**, a browser that never signs in reaches every section,
+every club, every fixture and every stadium page, renders the Classificação with
+no marked row and no waiting, and is never shown a gate — asserted by walking the
+signed-out app, not by asserting the absence of a modal somebody has not written
+yet. The disabled case protects readers from account bugs; this one protects them
+from account *design*, which is the likelier failure and the one no flag turns
+off.
 
 **Deliberately not tested:** the Google round trip. It needs a secret and a
 network, and CI has neither by design. It is verified by hand against the
@@ -547,6 +645,18 @@ deployed host, once, and recorded in the runbook.
 | **2** | Preference sync (Phase 0's data becomes the account's), deletion, privacy notice, backups + restore script | ~400 lines, 2 days |
 | **3** | Whatever actually needed the account: notifications, palpites | out of scope here |
 
+**Exit criteria**, since a size estimate is not a finish line:
+
+- **0** — a reader's club survives a reload and a redeploy; no server-side
+  behaviour changed at all; `preferences-core` is listed in `test:unit`.
+- **1** — with the flag unset, the deployed app behaves exactly as the previous
+  release did, asserted by the spec in §6 rather than observed; with the flag
+  set on the host, one real Google account signs in, signs out, and signs back
+  in against the same row.
+- **2** — a backup taken today has been restored into a running app, and a
+  `DELETE /api/account` has been verified as *gone from the database* rather
+  than flagged.
+
 Phase 1 is deployable with accounts **disabled**, and should be deployed that
 way first: the flag makes the release a no-op for every existing reader, which
 is the only way to separate "the account code is broken" from "something else
@@ -559,6 +669,11 @@ regressed" on a single production instance with no staging.
 - **Accounts as a goal.** If the honest answer to "what for" is *Meu time*,
   Phase 0 is the whole feature and Phases 1–3 are cost with no return. Ask
   before building.
+- **Any wall, gate or interstitial**, including the soft ones: a modal on the
+  third visit, a blurred table with "entre para ver", a feature that is public
+  today and account-only next release. See the invariant at the top. This is the
+  item on the list most likely to arrive dressed as growth work, and the reason
+  the guest path has a spec of its own rather than a promise.
 - **Storing an email in v1.** Nothing in the plan needs it.
 - **Any personalisation of the server-rendered shell.** §3.8.
 - **Comments or palpites in the first cut.** They add moderation, abuse, and
