@@ -844,6 +844,15 @@ Rules that follow from sharing a repository:
   re-pointed at another session's branch, carrying a merged commit of theirs,
   **nineteen minutes** after its own PR merged. Deferring turned a one-command
   cleanup into an ownership hunt across a dozen sessions.
+- **If you adopt someone else's worktree, rename it to match the branch you put
+  on it.** `git worktree move .claude/worktrees/<old> .claude/worktrees/<new>`
+  is one command and makes `git worktree list` self-describing again. Adoption
+  itself is fine and usually sensible — a prepared checkout with `node_modules`
+  already installed is worth reusing — but an adopted directory still carrying
+  its creator's name is indistinguishable, from outside, from one that session
+  forgot it had re-pointed. This is the half that turned the incident above into
+  a broadcast to a dozen sessions: recording a worktree when you create it only
+  closes the loop if the **adopter** records too, and nothing prompts them to.
 - The root checkout is for integration. Do the work in a worktree.
 
 **Two separate questions, and the ancestor test only answers the first.**
