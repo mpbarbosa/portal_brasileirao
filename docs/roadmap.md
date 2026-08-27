@@ -22,15 +22,18 @@ pipeline — what is still open** below carries what they did not close.
   60s/15s with a circuit breaker. Everything the provider does not carry is
   curated on a workstation and committed: broadcasts, venues, highlights, club
   Instagram handles, broadcaster marks.
-- **Shape** — 14 pure `*-core.ts` modules (no I/O, unit-tested), 15 components,
-  one Express process serving the API and the SPA.
-- **Tests** — 256 unit, 316 end-to-end across desktop and mobile, all against a
+- **Shape** — 27 pure `*-core.ts` modules, every one with its own
+  `tests/<name>-core.test.ts`, and 22 components, one Express process serving the
+  API and the SPA. Counted on 2026-08-27: `ls *-core.ts`, `ls src/components/*.tsx`.
+- **Tests** — 558 unit and 548 end-to-end across desktop and mobile on
+  2026-08-27 (`npm run test:unit`, `npx playwright test --list`), all against a
   frozen snapshot so a red build always means the code broke.
 - **Design** — Tailwind v4 with **Material Design 3** throughout: 47 colour
   tokens generated from one seed, a shape scale, a type scale, state layers and
   motion, in two themes. Contrast is **enforced rather than recorded** —
   `npm run test:tokens` runs in CI and refuses a palette whose text pairings
-  fall below AA. Worst text pairing 4.59 across 70 pairings. Primitives:
+  fall below AA. Worst text pairing 4.59, across 76 pairings on 2026-08-27 —
+  both figures are printed by that command rather than kept here. Primitives:
   `Surface`, `Button`, `StatusChip`, and the interaction constants.
 
 ## In progress
@@ -83,6 +86,20 @@ to abort a whole run, and the end-to-end specs depended on some fixture in round
   already forbids running `deploy.sh` by hand, so this is a latent trap rather
   than a live one: it springs the first time someone reaches for it during an
   incident, which is exactly when the previous release matters most.
+- **The summary's figures are hand-kept, and every one that could drift had.**
+  On 2026-08-27 **Where the project is** claimed 14 `*-core.ts` modules against
+  27, 15 components against 22, 256 unit tests against 558 and 316 end-to-end
+  against 548 — each roughly half the truth, in the first screen a new reader
+  meets. Corrected against measurement, and each figure now carries its date and
+  the command that prints it, which is the pattern #108 already used for the
+  host's Node version. Two figures had **not** drifted, and they are the two
+  describing a generated artefact that has not moved since M1: 47 colour tokens
+  and the 4.59 worst pairing. That is the whole argument for dating a number or
+  not writing it down — **nothing in CI reads this file**, so a count here is a
+  hand-kept copy of something a command already prints, exactly as
+  `What is left` was of **Near term**. Two more copies of the same numbers were
+  found and de-counted rather than refreshed (D6's "all 316 specs", M1's "70
+  pairings"), because in both the count was never the point.
 
 ### Node: one major, and a date it has to move
 
@@ -329,8 +346,8 @@ looks exactly like a task nobody has picked up.
   hand-run checker: `shell_scripts/` travels *inside the release tarball*, so a
   broken edit ships with the release that carries it and the host executes it
   immediately, before anything has a chance to health-check the result.
-- **D6 — the end-to-end suite boots the dev server, never the bundle.** All 316
-  specs run against `npx tsx server.ts`, so `dist/server.cjs` — what production
+- **D6 — the end-to-end suite boots the dev server, never the bundle.** Every
+  spec runs against `npx tsx server.ts`, so `dist/server.cjs` — what production
   actually runs — is only asked three questions by `check`'s smoke test. The
   production-only paths (`registerSpaFallback`, `injectMeta`, the 404 rules, the
   JSON-LD) are the gap. Related, and worth fixing together: since D3 gates
@@ -760,7 +777,8 @@ trap that springs the first time someone puts faint text on a badge, a hover
 state or a dialog — and it would ship silently, because a contrast figure
 recorded in a comment ages the moment anyone adds a background token. The
 generator now tests every text token against all three backgrounds on every
-run. **Worst text pairing is 4.59:1 across 70 pairings, both themes.**
+run. **Worst text pairing is 4.59:1, across every pairing it checks, both
+themes.**
 
 The theme-invariant tokens survived: `scrim` is MD3's own neutral tone 0, and
 the `plate` trio is excluded from the tonal system by name, so the broadcaster
