@@ -228,10 +228,29 @@ export const withVenues = (
  * than a broadcaster's own site, where no licence comes with the file.
  *
  * A name with no entry here is not a gap to apologise for — `BroadcasterMark`
- * renders it as its own wordmark instead. That path is load-bearing: CBF's feed
- * already names ESPN/Disney+, Band, SportyNet and a dozen others we have no
- * mark for, and Record's only Commons logo is CC BY-SA, whose attribution
- * requirement is not worth taking on for the one fixture it appears in.
+ * renders it as its own wordmark instead. That path is load-bearing, and today
+ * exactly one curated channel takes it: **Record**, on 3 of the 30 fixtures that
+ * carry channels. The other seven all have marks.
+ *
+ * **Record has no free mark, and this is the record of looking rather than a
+ * guess** — the search is tedious enough to be worth not repeating. Commons has
+ * no national Record logo under any licence we can serve: `Category:Record (TV)`
+ * holds 73 files whose only logos are `Record 4K` and `Record tv minas`, both
+ * CC BY-SA and neither the network; Wikidata's `Q1458581` carries **no `P154`
+ * logo image at all**, which is what a brand with no free logo looks like; and
+ * the current mark exists on pt.wikipedia as a non-free upload (`Conteúdo
+ * restrito`), which is fair use there and not redistributable here.
+ *
+ * The one CC0 file, `Logotipo da Rede Record 1981.svg`, is a **trap and not a
+ * fallback.** The rule below — prefer an older public-domain version, as SporTV
+ * and Globo do — does not reach it: that logo is rainbow arcs over a blocky
+ * wordmark, against the silver sphere Record uses now, and its own uploader
+ * describes it as the mark "since 1982". Shipping it would not be a dated logo,
+ * it would be a different one. Leave Record as a wordmark.
+ *
+ * The same reasoning covers any channel CBF may add — ESPN/Disney+, Band and
+ * SportyNet are the usual candidates, though none has yet appeared in
+ * `broadcasts.ts`. A wordmark is the correct answer, not a placeholder.
  */
 export interface MarkSource {
   /** Served as `/marks/<slug>.png`. */
