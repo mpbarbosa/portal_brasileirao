@@ -70,9 +70,15 @@ paragraph of prose.
 2. **Aproveitamento (%).** `pontos / (jogos × 3)`. The metric a Brazilian reader
    quotes by default, and the one that survives a postponed fixture honestly.
    Needs a `CONTEXT.md` entry in the same commit.
-3. **A legend for the G4/Z4 rail.** `zoneClass` paints the rail and nothing on the
-   page says what the colours mean. It is also hue-only, where the same data on
-   the club page carries a letter *and* a colour.
+3. **A legend for the G4/Z4 rail.** — **done.** `zoneClass` painted the rail and
+   nothing on the page said what the colours meant. It was also hue-only, where
+   the same data on the club page carries a letter *and* a colour. The key sits
+   outside the table's scroll container and names *which positions* each zone
+   covers, which is what puts the fact on a channel other than hue — the rail now
+   confirms the key rather than being the only place the zones are stated. A
+   **row** still announces no zone of its own to a screen reader; the rail is a
+   CSS border. That is a separate, larger change (`sr-only` text in twenty
+   position cells) and is not done.
 4. **`referrerPolicy="no-referrer"` on crests.** They are the one asset class still
    hotlinked (principle 4 below), so every row tells the provider's CDN which page
    the reader is on.
