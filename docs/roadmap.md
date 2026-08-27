@@ -190,17 +190,17 @@ looks exactly like a task nobody has picked up.
 
 ### Work, sequenced in `docs/cicd-plan.md`
 
-- **D5b — the half that still needs a person.** `07_install_release.sh` does
-  `rsync -a --delete` into `dist/`, so the previous build is destroyed before the
-  new one is proven, and `06_redeploy.sh` exits 1 on a failed health check
-  without reverting. With `Restart=on-failure` and `RestartSec=5`, a crashing
-  bundle then restart-loops indefinitely against an empty `dist/`; a bundle that
-  starts but is unhealthy stays up serving broken responses, because systemd sees
-  a live process. `rollback.yml` shortens recovery to one dispatch — it does not
-  remove the person, which is what actually closes the defect. A worktree exists
-  at `.claude/worktrees/host-flip-back`. **This is the one phase that can leave
-  production down, so it wants a window and the two-stage rehearsal the plan
-  describes, not a gap between other things.**
+- **D5b landed while this section was being written, and what is left of it is
+  recorded above under the deploy-script note rather than here.**
+  `07_install_release.sh` now keeps the outgoing release in
+  `$DEPLOY_DIR/previous/` and `06_redeploy.sh` restores it when the health check
+  fails, so the CI path no longer destroys the running build before the new one
+  is proven. `rollback.yml` remains the deliberate, operator-driven way back;
+  the flip-back is the automatic one, and between them the defect is closed for
+  releases that go through CI. The gap that survives is `deploy.sh`, the
+  workstation path, which carries its own inline remote block and calls neither
+  script — latent rather than live, since `CLAUDE.md` already forbids running it
+  by hand.
 - **D6 — the end-to-end suite boots the dev server, never the bundle.** All 316
   specs run against `npx tsx server.ts`, so `dist/server.cjs` — what production
   actually runs — is only asked three questions by `check`'s smoke test. The
