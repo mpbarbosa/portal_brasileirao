@@ -1101,6 +1101,29 @@ stays on the remote until somebody removes it; once someone does (the button on
 the merged PR, or `git push origin --delete`) and you `fetch --prune`, the
 upstream is gone.
 
+**That trivial success is also why `-d` protects nothing while a PR is open**,
+and this half is worth more than the half above it: the paragraph you just read
+describes the *convenience*, and it is the same sentence. The comparison is
+against the branch's own pushed copy, so it is satisfied by the act of **pushing**
+rather than by the work **landing** — and a branch awaiting review is in precisely
+that state. Reproduced in a throwaway repo on a branch that was not an ancestor of
+`origin/main`:
+
+    warning: deleting branch 'feature' that has been merged to
+             'refs/remotes/origin/feature', but not yet merged to HEAD
+    Deleted branch feature (was ab0e1df)
+
+Exit **0** — a warning, not a refusal. It is the misleading-message family again
+in the opposite direction: there the wording cries loss where there is none, here
+it names the comparison it actually made and is read as a routine notice.
+`worktree-check-before-destroy` was deleted this way on 2026-08-27 while PR #146
+sat open and unmerged, and nothing was lost only because the commit was already
+on the remote. So prefer `-d` to `-D` still — but **its success is not evidence
+that a branch landed**. "The refusal is the safety feature", said below and in
+`session-teardown`, holds only once the comparison has been pointed somewhere
+worth comparing against: the recipe below does exactly that, and a branch left
+tracking its own push has not.
+
 With no upstream `-d` silently falls back to **HEAD** — in the shared root,
 local `main`, which lags `origin/main` by however many merges landed while you
 worked. That fallback refuses work that is demonstrably on `origin/main`.
@@ -1119,8 +1142,9 @@ against a ref that actually contains the commits. And **do not detach the root
 checkout's HEAD to satisfy it** — that works, and it is the one thing the
 worktree rule at the top of this file exists to prevent.
 
-The independent check, if you want one that does not depend on any of that, is
-`git rev-list --count origin/main..<branch>` = 0. Note its sibling
+The independent check — and after the paragraph above it is the one to run
+rather than an optional extra — is `git rev-list --count origin/main..<branch>`
+= 0, in the **same turn** as the deletion. Note its sibling
 `git merge-base --is-ancestor origin/<branch> origin/main` is a trap once the
 remote branch is gone: an unresolvable ref exits **128**, and inside an
 `&& … || …` that renders as a confident "not merged".
