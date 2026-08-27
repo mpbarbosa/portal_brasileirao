@@ -32,8 +32,35 @@ export type AccountState =
 const fetchAccount = async (): Promise<AccountState> => {
   const response = await fetch("/api/account/me", { credentials: "same-origin" });
 
-  if (response.status === 404) return { status: "disabled" };
-  if (!response.ok) return { status: "signed-out" };
+  /**
+   * Read the body even though nothing wants it.
+   *
+   * A discarded body is not a closed one: both these answers used to return
+   * without touching it, Chromium held the response stream open, and the
+   * request never reached "finished". The page renders perfectly and the
+   * network never goes idle — so `waitUntil: "networkidle"` waits forever, and
+   * that broke **every** `screenshot.ts` capture, all sixteen, from the commit
+   * this hook shipped in. Measured against the deployed site: `response` at
+   * 153ms, no `requestfinished` at 20s. With the read, 110ms and finished.
+   *
+   * Read rather than `body.cancel()`. Cancelling closes the stream too, but it
+   * lands in devtools as a *failed* request, which is a false lead for whoever
+   * next debugs this page. The payload is one short sentence.
+   *
+   * **The suite cannot catch this and a stub does not either.** The 404 is
+   * `requireAccounts` refusing an installation with no accounts configured —
+   * production's shape, and every fresh clone's — while the e2e harness boots
+   * with `ACCOUNTS_DEV_LOGIN=true`, where this endpoint answers 200 and the
+   * body is consumed by `response.json()` below. Stubbing the 404 with
+   * `page.route` looks like the answer and is not: Playwright completes the
+   * request accounting when it fulfils, so the spec passes against the broken
+   * code. Verified, rather than assumed. What catches this is a capture, or
+   * the measurement above against a build with accounts disabled.
+   */
+  if (response.status === 404 || !response.ok) {
+    await response.text().catch(() => undefined);
+    return { status: response.status === 404 ? "disabled" : "signed-out" };
+  }
 
   const account = (await response.json()) as PublicAccount | null;
   return account ? { status: "signed-in", account } : { status: "signed-out" };
