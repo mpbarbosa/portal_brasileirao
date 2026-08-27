@@ -1189,6 +1189,21 @@ whose build differs from HEAD on any appearance path, which stays a plain file c
 its refusal writes to `docs/screenshots/local` and self-clears on the next deploy, so it is
 a nuisance where the gate was a deadlock.
 
+**Dependabot keeps the pins current**, weekly on Monday, for `github-actions`
+and `npm` (`.github/dependabot.yml`). Actions are grouped into one pull request;
+npm's minor and patch updates are grouped while a **major arrives on its own**,
+because `express`, `vite` or `react` crossing a major is a change to read rather
+than one to approve. Monday rather than Tuesday, because `sync-broadcasts`
+already runs Tuesday and two automated pushes on one morning is how the second
+gets merged unread beside the first.
+
+It exists because the manual alternative was measured: a node20 deprecation
+warning on the deploy of `35a7074` cost a survey of six actions across three
+workflows, two release-note readings, a PR, a merge and a deploy — all of which
+Dependabot would have pre-empted. Note the rule below is what makes it work
+without further configuration: a Dependabot pull request gets a read-only token
+and no secrets, and since CI needs neither, it sees the same signal as any other.
+
 **CI needs no secrets.** Both jobs run against the frozen snapshot with no token,
 so a red build always means the code broke — never that the upstream had a bad
 minute or the free-tier budget ran out. Keep it that way: do not add
