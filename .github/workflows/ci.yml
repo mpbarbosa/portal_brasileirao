@@ -92,6 +92,24 @@ jobs:
       - name: Shellcheck the deploy scripts
         run: shellcheck scripts/*.sh shell_scripts/*.sh
 
+      # Shellcheck reads those scripts; these two run them. shell_scripts/
+      # travels inside the payload packaged below and the host executes it on
+      # arrival, so a flip-back that no longer flips back ships with the very
+      # release that needs it, and a backup that cannot restore is discovered
+      # on the morning it is wanted. Both harnesses are hermetic — no network,
+      # no AWS, no token, ~17s together — which is precisely why these can gate
+      # a release where check-hymns and check-stadium-photos cannot: a red build
+      # here means this commit broke something, never that a third party had a
+      # bad minute.
+      #
+      # They sit before Package the release deliberately. Everything the tarball
+      # carries has now been exercised rather than only read.
+      - name: Rehearse the flip-back (shell_scripts/06, 07)
+        run: ./scripts/rehearse-flip-back.sh
+
+      - name: Rehearse the accounts backup round trip (shell_scripts/09, 10)
+        run: ./scripts/rehearse-accounts-backup.sh
+
       # Everything above has passed, so THIS dist/ is the one that type-checked,
       # passed the unit suite, booted as a bundle and served three endpoints.
       # Packaging it here — rather than rebuilding in `deploy` — is what makes

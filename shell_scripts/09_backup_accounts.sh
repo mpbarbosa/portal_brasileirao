@@ -105,7 +105,8 @@ db.close();
 console.log(n);
 JS
 
-if ! node -e "$SNAPSHOT_JS" "$ACCOUNTS_DB" "$SNAPSHOT" 2>&1; then
+if ! node --disable-warning=ExperimentalWarning \
+        -e "$SNAPSHOT_JS" "$ACCOUNTS_DB" "$SNAPSHOT" 2>&1; then
     echo "Error: could not snapshot $ACCOUNTS_DB." >&2
     exit 2
 fi
@@ -114,7 +115,21 @@ fi
 #
 # Read the copy, not the original. The question is whether *this artefact*
 # restores, and the only way to answer it is to open it.
-VERIFY="$(node -e "$VERIFY_JS" "$SNAPSHOT" 2>&1)" || {
+# `--disable-warning=ExperimentalWarning` is load-bearing here, not tidiness.
+# node:sqlite is experimental on the pinned major, so every invocation above and
+# below emits a warning on stderr — and `2>&1` *inside* a command substitution
+# folds that warning into the value. The count reaches the pipe at exit while the
+# warning is deferred to nextTick, so VERIFY became "7\n(node:19) Experimental
+# Warning: SQLite…\n(Use `node --trace-warnings`…)" and the line below printed the
+# number, the warning and the unit across three lines. The backup still ran and
+# still uploaded; what did not survive being printed is the one number that says
+# the artefact has anything in it.
+#
+# Found by scripts/rehearse-accounts-backup.sh once CI began running it on the
+# pinned major. It passes under Node 26, where node:sqlite is stable and silent —
+# so a local green run was never evidence about the host.
+VERIFY="$(node --disable-warning=ExperimentalWarning \
+    -e "$VERIFY_JS" "$SNAPSHOT" 2>&1)" || {
     echo "Error: the snapshot did not verify: $VERIFY" >&2
     rm -f "$SNAPSHOT"
     exit 2

@@ -13,10 +13,15 @@
 #
 # Usage:        ./scripts/rehearse-flip-back.sh
 #
-# Nothing runs this automatically, for the same reason as check-hymns: it is a
-# rehearsal a person reads, and it must be re-run by whoever next edits either
-# script. It needs only bash, python3, rsync and curl — no network, no AWS, no
-# token.
+# CI runs this in `check`, on every push and pull request, before the release is
+# packaged — so a broken flip-back cannot reach the host inside the very tarball
+# that carries it. Re-run it by hand too when editing either script; CI is the
+# floor, not a substitute for reading the output.
+#
+# It can gate a release precisely because it is hermetic: bash, python3, rsync
+# and curl, no network, no AWS, no token. That is what separates it from
+# check-hymns, which stays manual because a third party's server going down is
+# not a reason to redden a commit that did not touch it.
 #
 # What is stubbed, and what deliberately is not:
 #   - systemctl, journalctl, sudo, npm   stubbed; the systemctl stub reloads
