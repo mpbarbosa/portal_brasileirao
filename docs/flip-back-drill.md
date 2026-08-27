@@ -75,6 +75,16 @@ The workflow enforces most of them and refuses rather than guessing:
 | the health literal appears exactly **once** | a `0` means the patch would leave the payload *healthy* and the drill would pass having tested nothing |
 | a deploy is mid-flight | handled by the concurrency group, not by a check |
 
+The live-sha check resolves the deployed commit against the workflow's own
+checkout, which is why the job uses **`fetch-depth: 0`** — the same reason
+`ci.yml`'s ancestry guard does. A depth-1 clone holds only the tip, so the moment
+`main` moves ahead of what is deployed the lookup fails and the drill refuses.
+The first dispatch of this workflow did exactly that: *"Live reports 8e5a969,
+which is not a commit in this checkout"*, because a later commit had already
+landed. It failed **safe** — refusing to drill a host whose state it could not
+verify — which is the direction a guard on a deliberately destructive action
+should fail.
+
 What it does **not** check, and you should: that no round is being played. This
 is a Brasileirão companion, so traffic tracks the fixture calendar — a weekday
 morning Brazil time with no fixtures is the reasoning. **That is inference from
