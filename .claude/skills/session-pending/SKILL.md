@@ -28,6 +28,21 @@ Every listing here shows the whole machine, not your share of it. Before check 1
 write down what is actually yours: **the branches and worktrees you created this
 session.** Then read every listing against that.
 
+**Write it somewhere a peer can read, not somewhere only you can.** The shared
+ledger is:
+
+    /home/mpb/Documents/GitHub/portal_brasileirao/.claude/worktrees/COORDINATION.md
+
+It is gitignored, so it lives only in the root checkout and cannot be seen from
+inside a worktree — open it by that absolute path or you will conclude it was
+deleted, as a session already has. Record a worktree when you **create** it and
+again when you **adopt** one, because the entry is what tells the next session
+that a clean, quiet directory is prepared rather than finished. A worktree with
+no entry and no commits is indistinguishable from a merged one by any command,
+and one was swept on exactly that reading. `CLAUDE.md` carries the same address
+under **Working alongside other sessions**, which is reachable from where you
+are working.
+
 This matters most in check 1. Uncommitted files in a shared checkout are usually
 *someone else's* — committing them is the exact accident the worktree rule
 exists to prevent. Never widen a commit to something you did not write.

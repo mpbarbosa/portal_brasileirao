@@ -938,6 +938,74 @@ next task already started. Where you cannot establish both, leave it standing
 and say so: an idle directory costs a little tidiness, and `git worktree prune`
 collects it once its owner is done.
 
+**A branch that was never worked in is an ancestor of `origin/main` too**, and
+that is the blind spot in the paragraph above rather than a footnote to it.
+`git worktree add -b worktree-<name>` leaves the new branch pointing at the
+commit it was created from, so `--is-ancestor` says yes and
+`git rev-list --count origin/main..<branch>` says 0 — the two answers a merged
+branch gives. Measured across the branches standing on 2026-08-27:
+`worktree-shots-refresh` and `worktree-drill-workflow` had merged,
+`worktree-check-before-destroy` and `worktree-rehearsal-in-ci` had never held a
+commit, and **all four** answered `ancestor=yes, ahead=0`. A prepared worktree
+was swept on exactly that reading.
+
+The branch reflog separates them, and it is readable from inside a worktree
+because every worktree shares the root checkout's `.git`:
+
+```sh
+born=$(git reflog show <branch> --format='%H' | tail -1)
+test -z "$born" && echo "UNKNOWN — reflog expired; do not delete"
+test "$born" = "$(git rev-parse <branch>)" && echo "never held a commit — not merged, unstarted"
+```
+
+A branch that has never held a commit has exactly one reflog entry, `branch:
+Created from …`, and its tip still equals it. Note what the test actually
+answers — not *finished* versus *abandoned*, which no command can tell you, but
+**has this branch ever held work that deleting it would destroy**, which is the
+question the destructive step needs. It fails safe: a worktree holding
+*uncommitted* work also answers "never held a commit", and that is a stronger
+reason to leave it standing, not a weaker one. It fails unsafe only once the
+reflog has expired — 90 days by default, against branches that live for hours —
+so an **empty** reflog is `UNKNOWN` and never "merged".
+
+**The record that would have settled it is `COORDINATION.md`, and until this
+paragraph nothing committed named it:**
+
+    /home/mpb/Documents/GitHub/portal_brasileirao/.claude/worktrees/COORDINATION.md
+
+`.gitignore` excludes `.claude/worktrees/`, so the ledger exists only in the root
+checkout and is invisible from every worktree — which is the only place sessions
+work. Before this commit `git grep COORDINATION origin/main` returned nothing at
+all, so no session had a reachable way to learn the file existed; that is the
+mechanical reason recording gets skipped, and it is not a discipline problem.
+Four committed files name it now — this one, `docs/development-environment-memory.md`
+and the `session-pending` and `session-teardown` skills — which is deliberate
+redundancy rather than duplication: the address has to be wherever the question
+is being asked, and the two skills are what a session reads while deciding to
+delete something. Read it by that absolute path,
+and add an entry at the moment you create **or adopt** a worktree. The rules stay
+here, in the file that travels into every worktree; the ledger is the running log
+and the trap catalogue, and it says so itself.
+
+**A report that something merged is not evidence that it merged.** A peer's
+message, a PR list read a minute ago and your own recollection are readings taken
+somewhere else at some other time — #139 was reported merged when it was #138
+that had merged, four minutes earlier. Re-run `git merge-base --is-ancestor
+<branch> origin/main` in the same turn as the `git worktree remove`, not in the
+turn that decided to remove it; that re-run is the only reason an unmerged branch
+survived. It is the destructive-step twin of *a status message is not consent*
+below, and the same discipline as anchoring a claim about a shared ref.
+
+**A probe that reverts its own subject reports the absence of what it was testing
+as a pass.** A `git checkout -- <file>` inside a probe silently undid the
+uncommitted edit the guard existed to catch; the guard then ran against a clean
+file, found nothing to complain about, and exited green — which reads as
+*verified* and is its opposite. Before believing a green probe, make the subject
+fail on purpose once and watch the probe go red. Same failure as the Playwright
+stub under **End-to-end tests**, which passed against the very bug it named, and
+worth stating twice because the first statement was filed under a section nobody
+reaches while debugging shell.
+
 ### The protocol for commit, push, merge and deploy
 
 Four verbs, in order. Each has one check that makes it safe, and each check
@@ -953,11 +1021,15 @@ gh pr list --state all --limit 10
 Someone may already be doing it. A worktree that is clean, stale and untouched
 for an hour is **not** evidence of abandonment — that is also exactly what one
 looks like immediately after its owner pushed and merged, and what a live session
-looks like while it reads files and runs tests. To tell the three apart, ask
-whether its branch is an ancestor of `origin/main`: a finished one's is, an
-abandoned or live one's is not. If it is still ambiguous, **ask the session**
-rather than infer from timing. Ownership guessed from "who started recently" was
-wrong four times in one evening.
+looks like while it reads files and runs tests. Ask two things, not one: whether
+its branch is an ancestor of `origin/main`, **and** whether that branch has ever
+held a commit. A finished one is an ancestor and has; a prepared or unstarted one
+is an ancestor and has not; a live or abandoned one is usually neither. The
+ancestor test alone answers *yes, finished* for a worktree nobody has started —
+see **A branch that was never worked in** above for why, and for the second
+command. If it is still ambiguous, **ask the session** rather than infer from
+timing. Ownership guessed from "who started recently" was wrong four times in one
+evening.
 
 **And check the prompt that sent you: a dispatch prompt's setup lines are
 assertions, not facts.** They are frequently wrong, and wrong in ways that
