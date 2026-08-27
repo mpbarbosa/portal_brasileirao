@@ -183,6 +183,54 @@ The summary was enough, for the reason the plan gave and one it did not: the
 debt is created by a change under review, and the pull request is where a person
 can still act on it cheaply. On `main` it is history.
 
+**And the claim that the debt stays visible was checked rather than assumed.** It
+was this entry's weakest-evidenced clause, because `continue-on-error: true` at
+**job** level has two possible renderings and nothing in this repository could
+distinguish them — there was no `continue-on-error` anywhere in `.github/` to read
+a run history from. Either the job still reports `failure` and the checks list
+still shows a red row, only the *run's* conclusion flipping; or the job is
+reported to the Checks API as succeeded, the pull request says "All checks have
+passed", and the summary tab is the only trace. The first costs almost nothing.
+The second is the objection: a visible debt traded for an invisible one, which is
+the failure mode this defect is already an instance of.
+
+The merge of the change is the first observation of the **full** scenario — a red
+`screenshots` beside a **green `deploy`** — which no pull request can show,
+because `deploy` is skipped there. Run `33074799866` (head `339a037`), against the
+push-on-main run immediately before it under the old behaviour, `33067205785`
+(head `27ea045`):
+
+| surface | without (`27ea045`) | with (`339a037`) |
+|---|---|---|
+| run conclusion | `failure` | **`success`** |
+| jobs API — `README screenshots are current` | `failure` | `failure` |
+| jobs API — `Deploy to production` | `success` | `success` |
+| check runs for the head sha — `README screenshots are current` | `failure` | `failure` |
+
+The last row is what the question turned on. `/commits/{sha}/check-runs` is the
+surface the pull request's checks list renders, and it still says `failure`; the
+three surfaces can disagree, so reading the run conclusion alone would not have
+answered this either way. Every conclusion is identical across the two arms except
+the run's. So the reading is the first one: the debt keeps the red row it had, in
+the place a person actually looks, and the only thing removed was the run's claim
+about the release. The job log confirms it was not silenced from the other
+direction either — it carries the check's real finding (`a9521f1`) and
+`Process completed with exit code 1`. How GitHub *renders* the folded `<details>`
+block remains unobserved; only that it was written without error.
+
+**What this does not settle is whether the debt still gets cleared as fast.** The
+signal being replaced was working. Over `origin/main`'s first-parent history since
+the check began firing, an appearance commit was followed by a refresh in a median
+of **0.50 hours**, p90 **3.70**, max **10.94**, with **no episode over a day**
+across 51 commits; the three episodes over a day in the full history all predate
+the check. That is the floor a replacement has to hold — but it is a *pre-change*
+measurement, taken minutes after the change landed, and the one debt outstanding
+(`a9521f1`, 3.7 hours old at the time of writing) accrued almost entirely under
+the old behaviour. It is also a floor on responsiveness rather than a controlled
+experiment: one maintainer, a short window, and an appearance-path filter that
+counts commits touching a file without necessarily moving a pixel. Re-measure
+before concluding the floor held. The mechanism is settled; the outcome is not.
+
 ### 5. There is no way back
 
 `07_install_release.sh` does `rsync -a --delete "$STAGING/dist/" "$DEPLOY_DIR/dist/"`.
@@ -745,3 +793,18 @@ says so.
   queried. Worth keeping as a note about counting by noticing: it undercounted
   by a factor of three, and the thing being undercounted was how often a green
   release reported itself red.
+- **Defect 4's fix was challenged, and upheld on evidence that did not exist when
+  it was proposed.** The clause saying the debt would stay visible was this plan's
+  weakest-evidenced claim, and it was load-bearing: job-level `continue-on-error`
+  could equally have reported the job as *succeeded*, which would have left the
+  step summary as the only trace and sent D7 to one of the two alternatives
+  recorded in the entry — its own workflow and badge, or a single open/updated
+  issue. It could not be settled from the run history, because there was no
+  `continue-on-error` in `.github/` to read one from. The merge run `33074799866`
+  settled it: `screenshots` still concludes `failure` on the jobs API and,
+  decisively, on `/commits/{sha}/check-runs`, which is the surface the checks list
+  renders — while the run concludes `success`. Against `33067205785` immediately
+  before it, the only difference between the two arms is the run conclusion. The
+  proposal stands and the objection was overstated. What remains unmeasured is
+  whether the debt is still cleared as quickly as the red made it; the entry
+  records the floor to hold it to and the caveats on that number.
