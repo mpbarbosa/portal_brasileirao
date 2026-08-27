@@ -461,7 +461,7 @@ only its own output could reveal.
   bump was in fact well covered and went green. It buys an unambiguous failure,
   not new safety.
 
-### D5 — A bad release does not become an outage — **done, bar one live exercise**
+### D5 — A bad release does not become an outage — **done**
 
 Defect 5. Previously D4; renumbered when the item above was promoted.
 
@@ -522,8 +522,9 @@ it in two stages rather than by deliberately breaking a real release:
    forward path ready to re-run.
 
 *Exit:* a payload that fails its health check on the host leaves the **previous**
-build serving and the workflow red — demonstrated, not argued. **Met against
-stubs; the live half is still outstanding** — see both sections below.
+build serving — demonstrated, not argued. **Met**, against stubs and then against
+production: drill run `33079608222`, 2026-08-27. See below, including the one
+wording this exit line got wrong ("and the workflow red").
 
 #### What shipped: retention and flip-back on the host
 
@@ -594,13 +595,42 @@ process before being written down. It drills the starts-but-unhealthy mode,
 which is the one systemd cannot catch, and which keeps every page serving while
 it runs.
 
-**Still outstanding: stage 2 itself, the controlled live exercise.** Nothing here has
-run against the host. The observable that will prove it is `/api/health`
-reporting the **previous** sha while the `deploy` job is red — and the host
-stdout in the "Install the release on the host" step carrying `ROLLED BACK` and
-the retained path. Until that has been read, this is verified logic on an
-unexercised path, which is what `CLAUDE.md` already says about all of
-`shell_scripts/`.
+**Stage 2 is DONE. Run `33079608222`, 2026-08-27, against production.** The exit
+criterion is met by demonstration:
+
+```
+PATCHED=1
+==> Retaining the current release in /var/www/portal_brasileirao/previous
+==> Installing release into /var/www/portal_brasileirao
+==> Handing off to 06_redeploy.sh
+Error: portal-brasileirao did not become healthy.
+==> Flipping back to the retained release in …/previous...
+ROLLED BACK: portal-brasileirao is serving the PREVIOUS release from …/previous.
+Health: {"status":"ok","sha":"8ed6f60",…}
+SEVEN_EXIT=2
+```
+
+`07 exit: 2 · ROLLED BACK: yes · CRITICAL: no`, and `/api/health` came back `ok`
+on `8ed6f60` — the release that was live before the drill. `/`, `/classificacao`
+and `/ao-vivo` all served 200 throughout, which is the property the
+starts-but-unhealthy variant was chosen for.
+
+**One wording correction the run forces.** This phase said the proof would be the
+`deploy` job going *red*. It is not, and should not be: the drill is dispatched,
+not pushed, and its workflow goes **green** when the flip-back works, because a
+drill that fails to roll back is the failure. Red remains correct for `ci.yml`,
+where a rolled-back release really is a failed release. The observable that
+matters is `SEVEN_EXIT=2` plus `ROLLED BACK` in the host stdout, not the colour
+of a run.
+
+**Three defects were found on the way, none by reading.** The workstation SSM
+path in the first runbook did not exist — the IAM user holds neither
+`ssm:SendCommand` nor `sts:AssumeRole`, and the deploy role trusts GitHub OIDC
+alone, restricted to `refs/heads/main`. The drill workflow's jq program failed to
+compile, because single quotes inside a single-quoted shell argument close it.
+And the workflow checked out at depth 1, so it could not resolve the deployed
+commit the moment `main` moved ahead — it refused rather than drilling a host it
+could not describe, which is the direction that guard should fail.
 
 **Not covered, and deliberately:** `scripts/deploy.sh` neither retains nor flips
 back. It carries its own inline remote block and never calls `06` or `07`, so it
