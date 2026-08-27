@@ -189,14 +189,29 @@ the dev-server run is the fast feedback and should stay.
 
 ## The gaps that have not cost anything yet
 
-Lower urgency, and each is genuinely small.
+Lower urgency, and each is genuinely small — with one exception, which has since
+stopped qualifying and is recorded first.
 
-**A. Supply chain.** No Dependabot, no `npm audit`, no CodeQL. `dependencies`
-ships to production via `npm ci --omit=dev` on the host, so a vulnerable
-transitive dependency runs there. Add `.github/dependabot.yml` (npm + actions,
-weekly, grouped) and an `npm audit --audit-level=high` step. Run audit in its own
-advisory job for the same reason `screenshots` is advisory: an upstream advisory
-published on a Tuesday must not be able to stop an unrelated release.
+**A. Supply chain — this one has now cost something, and is promoted to a phase
+of its own.** It was filed here on the reasoning that nothing had gone wrong yet.
+Then the deploy of `35a7074` ended with a deprecation warning that
+`actions/download-artifact@v6` and `aws-actions/configure-aws-credentials@v5`
+were being force-run on node24, and closing it by hand took a survey of all six
+actions across three workflows, two release-note readings for the breaking
+changes, a pull request, a merge and a deploy.
+
+Dependabot would have opened that pull request itself, before the warning ever
+appeared. The cost was not large, but it was **real, avoidable and recurring** —
+the next runtime deprecation arrives on GitHub's schedule, and the failure mode
+is silence until a build turns red on a commit that changed nothing. Everything
+else in this section is still genuinely theoretical; this stopped being so. It
+is **D4** below.
+
+The rest of the item stands as written: `dependencies` ships to production via
+`npm ci --omit=dev` on the host, so a vulnerable transitive dependency runs
+there. `npm audit --audit-level=high` belongs in its own advisory job for the
+same reason `screenshots` is advisory — an upstream advisory published on a
+Tuesday must not stop an unrelated release.
 
 **B. Deployments are invisible to GitHub.** No `environment:` on the `deploy`
 job, so there is no Deployments tab, no per-environment history, no URL badge,
@@ -308,27 +323,108 @@ commit that will ever ship, so uploading 19 MB per PR would buy nothing.
 exercised on a real 19 MB payload across its three branches — matching digest
 promotes, mismatched digest refuses, absent digest refuses.
 
-### D4 — A bad release does not become an outage
+### D4 — Dependencies stay current without anyone watching
 
-Defect 5. Previous release retained, automatic flip-back on a failed health
-check, `rollback.yml` with a sha input. Verify the S3 lifecycle policy first.
+Gap A, promoted out of the "not yet cost anything" list because it stopped
+qualifying — the node24 episode above is the evidence. `.github/dependabot.yml`
+covering **`github-actions` and `npm`**, weekly, grouped so twenty minor bumps
+arrive as one pull request rather than twenty.
 
-*Exit:* a deliberately-broken payload deployed to the host leaves the *previous*
-build serving and the workflow red. This is the one phase that must be rehearsed
-rather than reasoned about.
+The actions ecosystem is the half that just proved itself and is also the
+cheaper half: action pins are a handful of lines, the blast radius of a bad bump
+is one workflow, and CI tells you immediately. The npm half needs more care —
+a major bump to `express` or `vite` deserves reading, which is what grouping and
+a weekly cadence are for.
 
-### D5 — The bundle is what gets tested
+**This is deliberately placed before the rollback work even though rollback is
+the more severe gap.** The ordering is cheapness, not severity: this is one file
+and cannot break a release, while rollback needs a precondition established, a
+host-side change and a rehearsal. Doing the ten-minute thing first is not the
+same as thinking it matters more, and the severity ordering is recorded here so
+the sequence is not misread as a ranking.
 
-Defect 6. `PLAYWRIGHT_TARGET=bundle`; SEO/metadata/404 specs run against
-`dist/server.cjs` from the D3 artifact.
+*Exit:* Dependabot opens its first grouped pull request, and CI is green on it.
+
+### D5 — A bad release does not become an outage
+
+Defect 5. Previously D4; renumbered when the item above was promoted.
+
+**The value here is speed and autonomy, not possibility — and that is a
+correction to what this document said before.** "There is no way back" was too
+strong. In a forward-only `main` the idiomatic way back is `git revert`, which
+produces a new commit that deploys through the ordinary pipeline and takes about
+four minutes. What is missing is the part that needs no human at all, and the
+part that takes forty seconds instead of four minutes:
+
+1. **The previous release is destroyed in place.** `07_install_release.sh` does
+   `rsync -a --delete` into `dist/`, so when `06_redeploy.sh` finds the new build
+   unhealthy it exits 1 and leaves the service down with nothing on disk to
+   return to. **This is the item that matters**; the rest is convenience.
+2. **Recovery requires a person**, who must be present, notice, and know the
+   procedure — during exactly the window when the site is down.
+
+**A precondition, to be established before any of it is designed:** does the S3
+bucket have a lifecycle policy on `releases/`, and what does it retain? Nothing
+in this repository says. A 30-day expiry would make an artifact-reinstall
+rollback fail precisely when a long-lived regression is found, and would push the
+design toward keeping the previous release **on the host** instead. This
+determines the shape of the phase, so it is discovery, not a step.
+
+**A finding about D1 that belongs here.** The `allow_non_descendant` override
+shipped with the ancestry guard is, today, effectively **unreachable**. `deploy`
+is gated on `github.ref == 'refs/heads/main'`; `workflow_dispatch` accepts a
+branch or tag but never a bare sha; and `main` only moves forward. So the guard
+can only refuse a commit that is an ancestor of live when `main` itself has been
+moved backwards, which nobody should do. The override is not wrong — it is the
+correct escape hatch for a guard that must be overridable — but it has no door
+yet, and this phase is where it gets one. Worth knowing before someone reads it
+as dead code and deletes it.
+
+**Scope splits cleanly by risk, and should be shipped in that order:**
+
+- **Low risk:** a `rollback.yml` dispatch that installs a stored release by sha
+  over SSM. Touches no existing path; if it is wrong, nothing that works today
+  breaks.
+- **Higher risk:** retaining the previous release on the host and flipping back
+  to it automatically on a failed health check. This edits `06_redeploy.sh` and
+  `07_install_release.sh`, which run on every release. Note the `releases/<sha>/`
+  plus `current` symlink layout also drags in the systemd unit from
+  `03_install_systemd_service.sh` — provisioning, not deploy — whereas copying
+  `dist/` to `dist.previous/` before the rsync touches nothing outside the two
+  scripts. Prefer the smaller change unless the symlink layout earns itself.
+
+**Rehearsal, because this is the one phase that can leave production down.** Do
+it in two stages rather than by deliberately breaking a real release:
+
+1. **Stub the externals and exercise the logic locally**, the way the ancestry
+   guard and the reconciler were both exercised in this plan: extract the script,
+   fake `systemctl` and the health URL, and drive every branch — healthy,
+   unhealthy-with-a-previous, unhealthy-with-no-previous, flip-back-itself-fails.
+   That last one is the one worth writing first, because a flip-back that fails
+   silently is worse than no flip-back.
+2. **Then one controlled live exercise**, in a low-traffic window, with the
+   forward path ready to re-run.
+
+*Exit:* a payload that fails its health check on the host leaves the **previous**
+build serving and the workflow red — demonstrated, not argued.
+
+### D6 — The bundle is what gets tested
+
+Defect 6. Previously D5. `PLAYWRIGHT_TARGET=bundle`; SEO/metadata/404 specs run
+against `dist/server.cjs` from the D3 artifact.
 
 *Exit:* deliberately breaking `registerSpaFallback` for the production branch
 only turns the suite red.
 
-### D6 — Hygiene
+### D7 — Hygiene
 
-Defects 4 and gaps A, B, D, E, F, G, in that order. Small, independent, each one
-a commit.
+Previously D6. Defect 4 and gaps B, D, E, F, G — gap A having become D4.
+Small, independent, each one a commit.
+
+Defect 4 (the advisory `screenshots` job reddening a successful release) has now
+been observed **six times** in the runs behind this plan, including on three of
+its own pull requests. It is the cheapest item left and the one most likely to
+cause a real misreading, so take it first.
 
 ---
 
@@ -359,15 +455,38 @@ because each of these is the obvious next suggestion.
   minute. Nothing in this plan needs it. The `sync-broadcasts` workflow already
   holds it and that is the correct and only place.
 
-## Order, and the one thing to do today
+## Order, and what is left
 
-D0 and D1 are both an afternoon and both close things that have already gone
-wrong. D2 removes an entire category of manual intervention and is the phase that
-will feel like the pipeline stopped needing supervision. D4 is the one that needs
-a rehearsal rather than an argument, so give it a window rather than fitting it
-in.
+**D0 through D3 are done, merged, and each verified against production rather
+than against CI**: the ancestry guard printing `OK: 73810f3 is 5 commit(s) ahead
+of live c6e2f47`, the reconciler printing `In sync`, and — for build-once-promote
+— the live `builtAt` timestamp predating the deploy job that shipped it, which is
+the observable that only holds if the payload was carried forward rather than
+rebuilt. The node24 bump is merged too, verified by the deprecation warning's
+absence.
 
-If only one thing gets done: **D1**. Everything else in this document costs time.
-That one prevents the pipeline from silently undoing merged work, which is the
-only failure here that has already looked, to the people watching it, like data
-loss.
+What remains, in order: **D4** (Dependabot, one file), **D5** (rollback),
+**D6** (bundle-mode e2e), **D7** (hygiene).
+
+**D5 is the one to give a window to rather than fit in.** It is the only
+remaining change that can leave production down if it is wrong, and the only one
+with a precondition — the S3 lifecycle policy — that could change its design
+before a line is written. Everything else here can be done between other things.
+
+### How this plan has changed since it was written
+
+Recorded because a plan that quietly renumbers itself is worse than one that
+says so.
+
+- **Gap A became D4.** It was filed as theoretical; the node24 deprecation made
+  it concrete. The old D4–D6 shifted to D5–D7.
+- **"There is no way back" was too strong.** `git revert` plus the ordinary
+  pipeline is a way back. D5's case is now speed and autonomy — forty seconds
+  without a human, against four minutes with one — and specifically that
+  `rsync --delete` leaves nothing on disk to return to when a health check fails.
+- **D1's `allow_non_descendant` has no door.** Found while adjusting this plan,
+  not while writing it: the deploy gate pins to `refs/heads/main`,
+  `workflow_dispatch` cannot name a sha, and `main` is forward-only. D5 is where
+  it becomes reachable.
+- **Defect 4's count is now six**, three of them on this plan's own pull
+  requests. It leads D7 for that reason.
