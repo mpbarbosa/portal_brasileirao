@@ -427,9 +427,8 @@ paragraph of prose.
    outside the table's scroll container and names *which positions* each zone
    covers, which is what puts the fact on a channel other than hue — the rail now
    confirms the key rather than being the only place the zones are stated. A
-   **row** still announces no zone of its own to a screen reader; the rail is a
-   CSS border. That is a separate, larger change (`sr-only` text in twenty
-   position cells) and is not done.
+   **row** still announces no zone of its own to a screen reader — the rail is a
+   CSS border, and a border has no text. That half is item 14.
 4. **`referrerPolicy="no-referrer"` on crests.** They are the one asset class still
    hotlinked (principle 4 below), so every row tells the provider's CDN which page
    the reader is on.
@@ -459,6 +458,24 @@ paragraph of prose.
     bar is full and nothing in the tooling will tell you so.
 13. **Inset the scoreline.** Needs `surface-dim` emitted from `sync-md3-tokens` and
     a contrast-gate pairing, so it is a generator change rather than a class swap.
+14. **Say the zone on the row, not only in the key.** The other half of item 3, and
+    the half a legend cannot reach: the key names the zones and the rule, and then
+    twenty rows say nothing about which of them are in one, because the rail is a
+    `border-left` and a border carries no text. Not in the proposal — it came out
+    of building the key, so the decision is stated here rather than there.
+
+    **The decision is the wording and where it sits**, not whether to do it. An
+    `sr-only` span in the position cell is the mechanism, and the precedent is
+    three lines away in the same column: `Meu time: ` is announced exactly that
+    way, beside the value rather than replacing it. An `aria-label` on the cell
+    would replace the number, which is the trap.
+
+    Two things worth knowing before picking wording. It is **eight rows, not
+    twenty** — `zoneClass` paints the middle of the table transparent, and silence
+    is the correct announcement there. And the row should name the **zone**
+    ("Libertadores", "Rebaixamento"), never restate the rule: "as quatro primeiras
+    posições" is the key's sentence, and hearing it on each of four consecutive
+    rows is the verbosity that makes people switch tables off.
 
 **Alongside**: `--color-tertiary` and `--color-tertiary-container` are emitted into
 all three theme blocks and referenced by **zero** components. The accent is already
