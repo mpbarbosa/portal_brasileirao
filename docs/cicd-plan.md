@@ -375,7 +375,8 @@ STS evaluates it as intended.
 
 **B (first attempt, reverted). Deployments are invisible to GitHub — blocked on
 an IAM change.** Shipped in #151, it broke every release for ten commits and was removed
-in #155. Attaching the job to an environment **rewrites the OIDC subject claim**:
+in #156 — not #155, which this document said until the merge that corrected it,
+and which is in fact the broadcast-sync pull request in gap E below. Attaching the job to an environment **rewrites the OIDC subject claim**:
 without one it is `repo:<owner>/<repo>:ref:refs/heads/main`, with one it becomes
 `repo:<owner>/<repo>:environment:production`. The trust policy on
 `portal-brasileirao-deploy` pins the first form with `StringEquals`, so STS
@@ -483,11 +484,35 @@ Sidestepping it — a distinct `RESOLVED_SHA`, or a step output threaded through
 step-level `env` — means editing those three steps in a workflow that has now been
 exercised against production. Worth doing, not worth doing in passing.
 
-**E. `sync-broadcasts` pushes straight to `main`.** It works today and will break
-the day branch protection is enabled — which is the next item. Have it open a PR
-instead; the data is not urgent enough to need direct-push privileges, and its own
-workflow already lints and unit-tests the result, so the PR would be green on
-arrival.
+**E. `sync-broadcasts` pushes straight to `main` — done.** It now commits to
+`automation/sync-broadcasts` and opens a pull request from it, so the data
+lands the way every other change does. An open pull request is **built on
+rather than replaced**: the sync merges into `broadcasts.ts` across the window
+it is asked about, so starting again from `main` each week would silently drop
+whatever had aged out of that window since.
+
+**"The PR would be green on arrival" was wrong, and the correction is the
+useful part of this item.** GitHub does not start a workflow run for an event
+raised with the repository's own `GITHUB_TOKEN`, so neither the push nor the
+pull request triggers `ci.yml`: the pull request arrives carrying **no checks
+at all**, not green ones. What the sync workflow lints and unit-tests is the
+file *before it commits it*, failing the job instead — a real gate, in a
+different place, and one that reports on the sync's own run rather than on the
+pull request.
+
+**That couples E to F harder than "do E first" suggested.** Requiring `check`
+and `e2e` as status checks would make this pull request permanently
+unmergeable, because those checks can never appear on it unattended. Whoever
+does F needs either a token that is not `GITHUB_TOKEN` here, or an explicit
+exemption for that branch — a decision, and cheaper to make now than to
+discover after protection is switched on.
+
+*Exit:* the Tuesday run opens a pull request instead of pushing, and `main`
+does not move. `scripts/rehearse-broadcast-sync-pr.sh` covers the shell in the
+meantime — five cases, thirty assertions, against a real git remote and a
+stubbed `gh`, run by `check` beside the other two rehearsals. It cannot prove
+the token behaviour above, which is a property of GitHub rather than of the
+shell; that is read off the first scheduled run.
 
 **F. `main` is protected by convention only.** `CLAUDE.md`'s protocol says "No
 session merges into `main`" and "propose, do not act", and that has held. It is
@@ -944,7 +969,7 @@ its entry went from six to a measured seventeen once it was actually queried.
 
 Gap B (no Deployments record) is **done, on its second attempt.** It shipped in
 #151, broke every release for ten commits because attaching the job to an
-environment rewrites the OIDC subject claim, and was reverted in #155/#156. #159
+environment rewrites the OIDC subject claim, and was reverted in #156. #159
 relanded it after the trust policy was widened to accept **both** subject forms —
 read from the token by `oidc-subject-probe.yml` rather than derived. Both are
 needed: `rollback.yml` and `flip-back-drill.yml` carry no environment and keep
@@ -957,9 +982,15 @@ as the release inventory the missing `s3:ListBucket` permission denies, and the
 one piece left (teaching `rollback.yml` to accept a ref) with the trap that makes
 it more than a one-liner.
 
-What remains under D7: the rest of D, then gaps E, F and G. The plan's own
-ordering still holds — F interacts with E and with the reconciling deploy, so E
-comes first; G is last and only in the shape its entry describes.
+Gap E (`sync-broadcasts` pushing straight to `main`) is **done** — this change.
+It was F's precondition, so **F is now unblocked**, and its entry carries a
+correction worth reading before anyone relies on the same assumption elsewhere:
+the pull request the sync opens arrives with **no checks at all**, not green
+ones, because GitHub starts no workflow run for an event raised with the
+repository's own `GITHUB_TOKEN`.
+
+What remains under D7: the rest of D, then gaps F and G. G is last and only in
+the shape its entry describes.
 
 ---
 

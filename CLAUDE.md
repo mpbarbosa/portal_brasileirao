@@ -1640,6 +1640,32 @@ whose build differs from HEAD on any appearance path, which stays a plain file c
 its refusal writes to `docs/screenshots/local` and self-clears on the next deploy, so it is
 a nuisance where the gate was a deadlock.
 
+**The weekly broadcast sync opens a pull request; it does not push to `main`.**
+`sync-broadcasts.yml` commits the refreshed `broadcasts.ts` to
+`automation/sync-broadcasts` and opens a pull request from it, adding to the
+open one rather than replacing it when a previous week's is still waiting — the
+sync merges across the window it is asked about, so restarting from `main` each
+week would drop whatever had aged out of that window.
+
+**That pull request arrives with no checks on it, and that is the token rather
+than a fault.** GitHub starts no workflow run for an event raised with the
+repository's own `GITHUB_TOKEN`, so neither the push nor the pull request
+triggers `ci.yml`. The gate is inside the sync's own run instead: it lints and
+unit-tests the written file and fails the job rather than committing. Two things
+follow — an empty commit from a person is what gets the full suite to run on it,
+and **branch protection requiring `check` and `e2e` would make it permanently
+unmergeable** without an exemption or a different token. `docs/cicd-plan.md`
+gaps E and F carry that coupling.
+
+`scripts/rehearse-broadcast-sync-pr.sh` is that workflow's only behavioural
+coverage and `check` runs it, beside the two host-script rehearsals. It matters
+more than the shellcheck it sits next to: the workflow is **scheduled**, so no
+pull request can exercise it, and a green tick on a change to that file says
+only that the other workflows still pass. It extracts the steps from the shipped
+YAML rather than holding a copy — and refuses loudly when it cannot find them,
+because a rehearsal that quietly tests nothing reports as a broken workflow
+rather than as a broken rehearsal.
+
 **Dependabot keeps the pins current**, weekly on Monday, for `github-actions`
 and `npm` (`.github/dependabot.yml`). Actions are grouped into one pull request;
 npm's minor and patch updates are grouped while a **major arrives on its own**,

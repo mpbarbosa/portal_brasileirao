@@ -18,7 +18,8 @@ concurrency:
   cancel-in-progress: false
 
 permissions:
-  contents: write # to commit the refreshed data back
+  contents: write # to push the branch the refreshed data lands on
+  pull-requests: write # to open, or add to, the pull request carrying it
 
 jobs:
   sync:
@@ -26,6 +27,33 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+
+      - name: Decide which branch this run writes to
+        id: target
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          branch=automation/sync-broadcasts
+
+          # An open pull request from that branch means a previous sync is still
+          # waiting. Build on it rather than beside it: the sync merges into the
+          # file rather than replacing it, but only across the window it is
+          # asked about, so starting again from `main` would silently drop
+          # whatever has since aged out of that window.
+          existing=$(gh pr list --head "$branch" --state open --json number --jq '.[0].number // ""')
+
+          if [ -n "$existing" ]; then
+            echo "Continuing PR #${existing} on ${branch}."
+            git fetch --depth=1 origin "$branch"
+            git switch -c "$branch" FETCH_HEAD
+          else
+            echo "No open pull request from ${branch}; starting from ${GITHUB_SHA}."
+            git switch -c "$branch"
+          fi
+
+          echo "branch=${branch}" >> "$GITHUB_OUTPUT"
+          echo "pr=${existing}" >> "$GITHUB_OUTPUT"
 
       - uses: actions/setup-node@v7
         with:
@@ -68,8 +96,12 @@ jobs:
           npm run lint
           npm run test:unit
 
-      - name: Commit if anything changed
+      - name: Commit, and open or add to the pull request
         id: commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BRANCH: ${{ steps.target.outputs.branch }}
+          PR: ${{ steps.target.outputs.pr }}
         run: |
           set -euo pipefail
           if git diff --quiet -- src/data/broadcasts.ts; then
@@ -90,14 +122,41 @@ jobs:
           roughly two to three weeks ahead, so this tops the file up rather
           than replacing it."
 
-          git push
+          if [ -n "$PR" ]; then
+            # Building on the ref we fetched, so this is a fast-forward and a
+            # rejection would be real information — somebody pushed to the
+            # branch meanwhile. Do not force it away.
+            git push origin "HEAD:${BRANCH}"
+            echo "Added a commit to PR #${PR}."
+          else
+            # No open pull request, so the remote branch is either merged — in
+            # which case its commits are already ancestors of ours and this is a
+            # fast-forward regardless — or left behind by a closed one, which is
+            # exactly what should be replaced. The branch is bot-owned; nothing
+            # else writes to it.
+            git push --force origin "HEAD:${BRANCH}"
+            gh pr create \
+              --base main \
+              --head "$BRANCH" \
+              --title "Sync broadcast channels from CBF" \
+              --body-file .github/pull-request-body/sync-broadcasts.md
+            echo "Opened a pull request from ${BRANCH}."
+          fi
           echo "changed=true" >> "$GITHUB_OUTPUT"
 
       - name: Summary
+        env:
+          BRANCH: ${{ steps.target.outputs.branch }}
+          PR: ${{ steps.target.outputs.pr }}
         run: |
           if [ "${{ steps.commit.outputs.changed }}" = "true" ]; then
             echo "### Broadcasts updated" >> "$GITHUB_STEP_SUMMARY"
-            echo "The push will trigger CI, which deploys once tests pass." >> "$GITHUB_STEP_SUMMARY"
+            if [ -n "$PR" ]; then
+              echo "Added to the open pull request #${PR} on \`${BRANCH}\`." >> "$GITHUB_STEP_SUMMARY"
+            else
+              echo "Opened a pull request from \`${BRANCH}\`." >> "$GITHUB_STEP_SUMMARY"
+            fi
+            echo "Nothing deploys until it is merged — which is the point of the change." >> "$GITHUB_STEP_SUMMARY"
           else
             echo "### No change" >> "$GITHUB_STEP_SUMMARY"
             echo "CBF has published nothing new since the last run." >> "$GITHUB_STEP_SUMMARY"
