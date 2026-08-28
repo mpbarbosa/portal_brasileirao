@@ -301,10 +301,18 @@ pixel; the alias retirement is 186 call sites that no automated gate can check. 
 the gate in first and M6 lands with something watching it — including, if the
 `extra-` prefix is adopted, a rule that catches an alias that was missed.
 
-**M7 before M6 as well**, for a smaller reason: M7 deletes the one raw utility in
-`src/`, so M8's `shadow-*` rule can be absolute rather than carrying an exception
-for a file that a later phase was going to fix anyway. An exception in a new gate
-is how the gate comes to have three.
+**M7 before M6 as well**, for a smaller reason: M6's rename is the one phase
+with no gate of its own, so it should be the last thing to land into a codebase
+that is otherwise settled.
+
+**One rule does not ship with M8, and it is not an exception.** M8 comes before
+M7, so at the moment the gate lands there is still a `shadow-xl` on the player
+dialog and no elevation vocabulary to replace it with. Forbidding `shadow-*` in
+M8 would therefore mean shipping the gate with a carve-out for a file a later
+phase was going to fix — and a carve-out in a new gate is how the gate comes to
+have three. The rule ships in **M7 instead, in the same commit as the tokens
+that make it satisfiable**. A rule arrives with the vocabulary it enforces; it
+does not arrive early and wait.
 
 That gives **M8 → M7 → M6 → M9**, which is deliberately the reverse of the risk
 order and the reverse of the visible-benefit order. M9 is last because it is the
