@@ -23,7 +23,7 @@ on:
   workflow_dispatch:
     inputs:
       sha:
-        description: "Full 40-character commit sha to install. EMPTY = list what is available and do nothing."
+        description: "Commit sha, or a deploy-* tag (or any ref) to resolve. EMPTY = list what is available and do nothing."
         required: false
         type: string
 
@@ -53,6 +53,11 @@ jobs:
           # To say how far back the target is, and to refuse a sha that is not
           # a commit in this repository at all.
           fetch-depth: 0
+          # And so a `deploy-*` tag resolves. fetch-depth: 0 is documented to
+          # bring tags along, but this is the input a person reaches for in an
+          # incident and "documented to" is not the standard the rest of this
+          # pipeline is held to. Stating it costs nothing and cannot regress.
+          fetch-tags: true
 
       - uses: aws-actions/configure-aws-credentials@v6
         with:
@@ -115,19 +120,36 @@ jobs:
         run: |
           echo "No sha given — listing only, nothing installed."
           echo "" >> "$GITHUB_STEP_SUMMARY"
-          echo "Listing only. Re-run with a full 40-character sha to install one." >> "$GITHUB_STEP_SUMMARY"
+          echo "Listing only. Re-run with a sha or a \`deploy-*\` tag to install one." >> "$GITHUB_STEP_SUMMARY"
 
       - name: Check the target is a real commit, and say how far back it is
         if: ${{ github.event.inputs.sha != '' }}
         run: |
           set -euo pipefail
 
+          # The S3 key is the FULL sha, so that is what every later step needs.
+          # Anything else — a `deploy-*` tag, a branch, an abbreviation — is
+          # resolved here rather than refused, because the tag list is the only
+          # release inventory a person can read without `s3:ListBucket`, and
+          # making them expand it by hand mid-incident is the friction gap D
+          # exists to remove.
           if ! printf '%s' "$TARGET_SHA" | grep -qE '^[0-9a-f]{40}$'; then
-            echo "::error::'${TARGET_SHA}' is not a full 40-character sha. The S3 key is the full sha, so an abbreviation will not resolve."
-            exit 1
-          fi
-
-          if ! git rev-parse --verify --quiet "${TARGET_SHA}^{commit}" > /dev/null; then
+            if resolved="$(git rev-parse --verify --quiet "${TARGET_SHA}^{commit}")"; then
+              echo "::notice::Resolved '${TARGET_SHA}' to ${resolved}"
+              echo "Resolved \`${TARGET_SHA}\` → \`${resolved}\`" >> "$GITHUB_STEP_SUMMARY"
+              TARGET_SHA="$resolved"
+              # Every later step reads TARGET_SHA from the job-level `env:`,
+              # which holds the raw input. Writing here overrides it for them —
+              # verified rather than assumed, by a throwaway workflow whose job
+              # env said `from-job-env` and whose next step read
+              # `from-github-env`. A step-level `env:` would still win over
+              # this, and none of the later steps declares one.
+              echo "TARGET_SHA=${resolved}" >> "$GITHUB_ENV"
+            else
+              echo "::error::'${TARGET_SHA}' is neither a commit nor a ref in this repository. Dispatch with an empty sha to list what is available, or pick a deploy-* tag."
+              exit 1
+            fi
+          elif ! git rev-parse --verify --quiet "${TARGET_SHA}^{commit}" > /dev/null; then
             echo "::error::${TARGET_SHA} is not a commit in this repository."
             exit 1
           fi
