@@ -144,16 +144,68 @@ export function NavBar({
     onNavigate(routeFor(id));
   };
 
-  /** Desktop: destinations inline in the header, which reads as MD3 tabs. */
+  /**
+   * Desktop: destinations inline in the header, drawn as MD3 primary tabs.
+   *
+   * They were a **filled chip** until M9 — `on-surface` ground with
+   * `inverse-on-surface` text, which is an inverse-surface pairing MD3 uses for
+   * selection nowhere. The bottom navigation bar in this same component already
+   * used the right idiom, so the app stated "selected" two different ways at two
+   * breakpoints and a reader crossing the `sm` breakpoint met both.
+   *
+   * MD3 marks the active tab with the **label in `primary` over a 3dp
+   * indicator**, and that is what this is: the indicator is an `after`
+   * pseudo-element rather than a border, so it can be inset from the tab's own
+   * padding and take MD3's rounded top edge — a `border-b` would run the full
+   * box and square off.
+   *
+   * **The appearance is MD3's; the semantics stay navigation.** No `role="tab"`,
+   * because these are links that change the address, and a tab role promises a
+   * `tabpanel` relationship and arrow-key selection that do not exist here.
+   * `aria-current="page"` is the right announcement and it is what was already
+   * there.
+   *
+   * The active tab keeps the state layer now, where the chip could not take one
+   * — a veil of `on-surface` over an `on-surface` ground is invisible. So the
+   * ring no longer has to be composed separately for this one entry, though
+   * `STATE_LAYER` carries it for both.
+   */
   const tabClass = (id: SectionId) =>
     [
-      "rounded-small px-3 py-2 text-body-medium font-medium",
-      // The current entry is a filled chip and takes no veil — but it is still
-      // focusable, so it takes the ring on its own. Folding the ring into the
-      // state layer once left this one entry with the browser's 1px default.
+      // MD3's tab height is 48dp, which is also the touch-target floor — these
+      // are `sm:` and up, and a tablet at 768 is a touch device. `inline-flex`
+      // so the label centres against the taller box and the indicator sits
+      // clear of it.
+      //
+      // **`whitespace-nowrap` is redundant today and kept deliberately.** The
+      // header has been tight since the fifth section landed, and the trailing
+      // group grew by 9px when the theme toggle took the 48dp floor — enough to
+      // break "Ao vivo" onto two lines at 1280. The nowrap was the fix written
+      // first; the `inline-flex` this height needs turned out to prevent the
+      // wrap on its own, because a flex item does not shrink below its
+      // min-content width.
+      //
+      // Measured, all three ways: with **neither**, "Ao vivo" wraps at 640 and
+      // the spec goes red; with **either one alone**, it does not. So a green
+      // run after deleting one of them is not evidence that it was unnecessary
+      // — it is evidence the other is still there. Kept as the statement of
+      // intent that survives someone changing the display mode.
+      "relative inline-flex min-h-12 items-center whitespace-nowrap",
+      // `px-2` until `lg`, and this is the bottom bar's lesson one breakpoint
+      // up: MD3 specifies the indicator and not the padding, so the padding is
+      // what gives way when the row will not fit.
+      //
+      // It has to give here because `whitespace-nowrap` took away the layout's
+      // escape valve. Signed in at 640, the header used to fit only because
+      // "Ao vivo" was free to wrap onto two lines — so the nowrap turned a
+      // silent wrap into a 23px horizontal overflow, which the header-fits spec
+      // in `contas.spec.ts` caught. `px-2` on five tabs returns 40px, which is
+      // enough at every width the tabs are shown.
+      "rounded-small px-2 py-2 text-body-medium font-medium lg:px-3",
+      STATE_LAYER,
       id === current
-        ? `bg-on-surface text-inverse-on-surface ${FOCUS_RING}`
-        : `text-on-surface-variant ${STATE_LAYER}`,
+        ? "text-primary after:absolute after:inset-x-2 after:bottom-0 after:h-[3px] after:rounded-t-full after:bg-primary"
+        : "text-on-surface-variant",
     ].join(" ");
 
   return (

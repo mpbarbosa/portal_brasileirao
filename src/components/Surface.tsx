@@ -18,6 +18,16 @@ interface SurfaceProps extends Omit<ComponentPropsWithoutRef<"div">, "className"
 /**
  * The app's raised panel: rounded corners and a hairline border.
  *
+ * **In MD3's terms this is a fourth card, and naming that is the honest close
+ * rather than refactoring it into three.** MD3 has *elevated*, *filled* and
+ * *outlined* cards. This is outlined chrome — border, no shadow — that
+ * optionally takes the **filled** variant's container colour, which is neither.
+ * It works, every card in the app is consistent because they all come through
+ * here, and splitting it into three components where the app renders one shape
+ * would be a vocabulary with two speakers and a guess about the third. If a
+ * genuinely elevated card ever arrives, it takes `shadow-level-1` and this
+ * comment is where to record the split.
+ *
  * Exists because that chrome was hand-repeated in five components, which is how
  * a border ends up `line` in four places and `line-strong` in the fifth. Padding
  * and layout stay with the caller — those genuinely differ per use, and folding

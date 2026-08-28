@@ -281,7 +281,7 @@ load-bearing.
 (a new test file does **not** run until it is added there), and has been observed
 failing against a deliberate violation of each rule it carries.
 
-## M9 — The components MD3 specifies and this app draws by hand
+## M9 — The components MD3 specifies and this app draws by hand — **done, with one part handed on**
 
 M4 converted the components the app had. This phase is about the places where the
 app renders something MD3 has a component for, and does not use it — and, in three
@@ -328,6 +328,49 @@ refactor into three components where the app renders one.
 control measured at 48dp or above, with a spec that measures rather than asserts;
 the three "stays as it is" decisions written into `CLAUDE.md`'s **Key
 conventions** so the next session does not re-litigate them.
+
+**Done — and the middle criterion turned out to be wrong as written.**
+
+**Tabs.** Converted. The active label is `primary` over a 3dp indicator drawn as
+an `after` pseudo-element rather than a border, so it takes MD3's rounded top
+edge and sits inset from the tab's own padding. The appearance is MD3's; the
+semantics stay navigation, with no `role="tab"` — these change the address, and a
+tab role promises a `tabpanel` and arrow-key selection that do not exist.
+
+**"Every interactive control at 48dp" cannot be asserted, and asserting it would
+have cost the spec.** Measured at 375dp, the page holds twenty club-name links at
+16px, ten fixture links at 24px and — on Jogadores — roughly **950** player-name
+buttons at 24px. Those are links *inside* content, not targets beside it; MD3's
+floor is for touch targets, and raising them means re-laying-out three pages. A
+spec written to the criterion as stated would fail on all of them until somebody
+deleted it. So the spec **names** the set it measures, and the exclusions are
+recorded here rather than left looking like an oversight.
+
+Raised to 48dp: the round stepper (was 34×32), its picker (32×61), the theme
+toggle (38×39), `BACK_LINK` (20 tall), the tonal highlights links (36 and 40),
+and the tabs themselves. The floor lives in `controlClasses`, so it arrives at
+every control from one place.
+
+**Handed on, not done: the account control**, measured 36×44. PR #173 was
+rewriting it while this phase ran and had already set the trailing group to
+`h-10` — MD3's *visual* container size for a top-app-bar control, which is not
+the same as its 48dp *target*. The two reconcile either by going to 48 or by
+expanding the target with a pseudo-element; that is a decision for whoever lands
+#173, and doing it here would have overwritten a measured choice with an
+unmeasured one.
+
+**One thing the mutation testing found, worth more than the fix.** The wrap
+guard was first written as "every tab is 48px tall" — and it stayed green with
+`whitespace-nowrap` deleted, because the tab's own `min-h-12` holds it at 48 while
+a two-line label is only 40. A test that passes against the bug it names. It now
+counts the label's client rects, one per line box, which cannot be fooled that
+way; and with **both** `inline-flex` and the nowrap removed, "Ao vivo" wraps at
+640 and it goes red. Either alone prevents the wrap, so a green run after
+deleting one is not evidence it was unnecessary.
+
+**With M9 the four phases are done.** What the standard still asks of this app is
+in the section below, which is the same list it always was, and one item that is
+new: the account control's touch target, held for #173.
 
 ## What stays deliberately unadopted
 
