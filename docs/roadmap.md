@@ -392,16 +392,27 @@ looks exactly like a task nobody has picked up.
   systemd cannot detect, since the process is alive) and *crash-on-boot* (which
   it detects and cannot fix). Nothing about the flip-back is untested any more.
 
-- **`scripts/rehearse-flip-back.sh` is the only behavioural coverage the two
-  host scripts have, and nothing runs it.** `npm run lint` is TypeScript and
-  cannot see shell; CI only shellchecks them. It drives all eight branches
-  against stubs — 31 assertions, including the flip-back-itself-fails case — and
-  three deliberate mutations were used to confirm it goes red rather than
-  passing vacuously. **Re-run it by hand after editing `06_redeploy.sh` or
-  `07_install_release.sh`.** The reason this matters more than for a normal
-  hand-run checker: `shell_scripts/` travels *inside the release tarball*, so a
-  broken edit ships with the release that carries it and the host executes it
-  immediately, before anything has a chance to health-check the result.
+- ~~**`scripts/rehearse-flip-back.sh` is the only behavioural coverage the two
+  host scripts have, and nothing runs it.**~~ **Landed**: `check` runs it — and
+  `rehearse-accounts-backup.sh` beside it — on every push and pull request,
+  before the release is packaged. The reasoning, kept, because only the last
+  clause of it expired: `npm run lint` is TypeScript and cannot see shell, so
+  shellcheck is all CI asks of `06_redeploy.sh` and `07_install_release.sh`
+  statically, and the rehearsal remains their *only* behavioural coverage. It
+  drives all eight branches against stubs — 31 assertions, including the
+  flip-back-itself-fails case — and three deliberate mutations were used to
+  confirm it goes red rather than passing vacuously.
+
+  **What placing it in CI changed is the failure it can no longer reach the host
+  through.** `shell_scripts/` travels *inside the release tarball*, so a broken
+  edit ships with the release that carries it and the host executes it
+  immediately, before anything has a chance to health-check the result — which
+  is why it gates packaging rather than merely preceding it. It can gate at all
+  because it is hermetic: bash, python3, rsync, curl, no network, no AWS, no
+  token. That is the property that separates it from `check-hymns`, not whether
+  a person or a workflow types the command. Run it by hand while editing either
+  script anyway; CI is the floor, and reading the output is not the same as
+  seeing a green tick.
 - ~~**D6 — the end-to-end suite boots the dev server, never the bundle.**~~ **Landed** in #122: `playwright.config.ts` takes a target, `isBundle` boots `node dist/server.cjs`, and CI drives the suite against it. The reasoning, kept: Every
   spec runs against `npx tsx server.ts`, so `dist/server.cjs` — what production
   actually runs — is only asked three questions by `check`'s smoke test. The
