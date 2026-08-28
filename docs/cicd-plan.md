@@ -514,11 +514,88 @@ stubbed `gh`, run by `check` beside the other two rehearsals. It cannot prove
 the token behaviour above, which is a property of GitHub rather than of the
 shell; that is read off the first scheduled run.
 
-**F. `main` is protected by convention only.** `CLAUDE.md`'s protocol says "No
-session merges into `main`" and "propose, do not act", and that has held. It is
-a social rule with no mechanical backing: verify what branch protection actually
-exists and, if none does, require `check` and `e2e` as status checks. Note this
-interacts with E and with the reconciling deploy — do those first.
+**F. `main` is protected by convention only — verified, designed, and waiting on
+one action nobody here can take.** The first half is answered: the GitHub API
+reports `main` as **`protected: false`**. There is no rule set, no required check
+and no required review. Every merge in this repository's history was allowed by
+nothing but the protocol in `CLAUDE.md`.
+
+**But the motivation in the sentence above does not survive contact, and that is
+the most useful thing in this entry.** Required status checks stop a merge whose
+`check` or `e2e` is red. They do **not** stop a session from merging a green
+pull request — only *required approvals* would, and with a single human
+maintainer that setting blocks everything, because GitHub does not let an author
+approve their own pull request. So "No session merges into `main`" **stays a
+social rule whatever is configured here.** F buys two narrower things, both real:
+nothing can be pushed to `main` directly, and nothing red can be merged.
+
+**E was genuinely the precondition, and is now met.** Nothing pushes to `main` any
+more: `grep` over `.github/workflows/` and `scripts/` finds no `push … main`. The
+`tag` job pushes *tags*, which branch protection on `main` does not govern.
+
+### The settings, exactly
+
+On `main`: require a pull request before merging, **0 required approvals**;
+require status checks to pass; block force pushes and deletions. Leave
+**"require branches to be up to date"** OFF and **allow administrators to
+bypass**.
+
+Two required checks, and **they must be spelled as the job's `name`, not its
+id** — this is the trap that costs a day:
+
+| write this | not this |
+| --- | --- |
+| `Type-check, unit tests, build` | `check` |
+| `End-to-end (Playwright)` | `e2e` |
+
+A name that matches no check never arrives, and GitHub shows the pull request as
+*waiting* rather than misconfigured — indefinitely, on every pull request at once.
+
+### Four things that are deliberate, each with its reason
+
+- **0 required approvals.** One maintainer cannot approve their own pull request,
+  so any non-zero value blocks every merge including theirs. This is the setting
+  that would look like the rule being enforced and would in fact be an outage of
+  the merge path.
+- **`screenshots` is NOT required**, and must never be. It is `continue-on-error`,
+  so its check run still concludes `failure` while the run concludes `success` —
+  requiring it would block every merge carrying a screenshot debt, which is
+  exactly the deadlock D7's first item removed.
+- **"Up to date before merging" is off.** `main` moves several times an hour here;
+  requiring it turns every pull request into a rebase treadmill against a branch
+  that has already moved again.
+- **Administrators can bypass.** A locked-out maintainer during an incident is
+  worse than an unguarded merge. The guard is for the ordinary path.
+
+### The exemption E discovered, which is not optional
+
+`sync-broadcasts.yml` opens its weekly pull request with the repository's own
+`GITHUB_TOKEN`, and **GitHub starts no workflow run for an event raised with that
+token**. Its pull request therefore arrives carrying *no checks at all* — not
+pending ones, not green ones. Under required status checks it is **permanently
+unmergeable**, and the failure looks like the automation being broken rather than
+the rule being wrong.
+
+Two ways out, and the choice is a real one:
+
+1. **Exempt `automation/sync-broadcasts`** from the rule set. Simple, and honest
+   about what it gives up: that branch's data is then reviewed by a person and by
+   the sync's own in-run lint and unit tests, which is what gates it today.
+2. **Raise the pull request with a credential that is not `GITHUB_TOKEN`** — a
+   fine-grained PAT or a GitHub App. Checks then run normally, at the cost of a
+   secret to store and rotate, in a repository whose CI is deliberately
+   secret-free.
+
+Option 1 unless someone wants to own a token. Either way it must be decided
+**before** the rule set is enabled, not discovered on the Tuesday after.
+
+### What is left, and who can do it
+
+Applying it. No session can: branch protection is a repository **setting**, not a
+file, and it is reachable from neither the GitHub MCP server available here nor
+any checked-in configuration. This entry is the design; the maintainer applies it
+under Settings → Rules, and the observable afterwards is a pull request with a
+red `check` refusing to merge.
 
 **G. The curated-data checkers never run.** `check-hymns`,
 `check-stadium-photos`, `check-player-wikipedia`, `check-player-photos` are all
@@ -989,7 +1066,12 @@ the pull request the sync opens arrives with **no checks at all**, not green
 ones, because GitHub starts no workflow run for an event raised with the
 repository's own `GITHUB_TOKEN`.
 
-What remains under D7: the rest of D, then gaps F and G. G is last and only in
+Gap F is **designed and verified but not applied** — `main` is confirmed
+unprotected, the exact rule set and its four deliberate choices are in its entry
+above, and applying it is a repository setting no session can reach. Read the
+`GITHUB_TOKEN` exemption there before switching it on.
+
+What remains under D7: applying F, the rest of D, and gap G. G is last and only in
 the shape its entry describes.
 
 ---
