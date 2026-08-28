@@ -427,6 +427,15 @@ crawler, and nothing goes red. `/estadio/qualquer-coisa` did exactly this until 
 was added. Adding the variant is the easy half; grep the other three files for a sibling
 section (`"partida"` is the closest analogue) and follow it through.
 
+**The desktop destinations are MD3 primary tabs as of M9**, not the filled chip they
+were: the active label is `primary` over a 3dp indicator drawn as an `after`
+pseudo-element, and the bar now states "selected" the same way at both breakpoints.
+`bg-on-surface`/`text-inverse-on-surface` was an inverse-surface pairing MD3 uses for
+selection nowhere, so a reader crossing `sm` met two idioms for one idea. The
+appearance is MD3's and the semantics stay navigation — no `role="tab"`, because these
+change the address and a tab role promises a `tabpanel` and arrow-key selection that do
+not exist here.
+
 The `NAV_ITEMS` entry carries its own `Icon`, which is *why* `NavBar` never changes — an
 icon looked up by id inside `NavBar` would break that promise the first time anyone added
 a section.
@@ -1562,6 +1571,36 @@ enforces rather than early and carved-out.
   not stop the page scrolling. Two traps if you touch it: Escape arrives as `cancel`,
   not `keydown`; and Tailwind's preflight resets `margin: 0`, which kills the user
   agent's `dialog { margin: auto }`, so horizontal centring must be set explicitly.
+- **A control is at least 48dp, and an inline link is not a control.** MD3's
+  touch-target floor lives in `controlClasses`, so every button, the round
+  picker, the theme toggle and the tonal links get it from one place; the top
+  app bar's tabs and `BACK_LINK` carry it themselves. Measured at 375dp before
+  and after, because the plan's arithmetic under-counted: the stepper was 34×32,
+  its picker 32×61, the toggle 38×39, the back link 20 tall.
+  **The floor deliberately does not reach the inline links**, and that is the
+  part to understand before "fixing" it. Twenty club names at 16px in the
+  Classificação, ten fixture links at 24px on Jogos and roughly 950 player-name
+  buttons at 24px on Jogadores are links *inside* content, not targets beside
+  it; raising them means re-laying-out three pages, and a spec asserting "every
+  anchor is 48dp" would fail on all of them until someone deleted the spec.
+  `tests/e2e/tabs-and-targets.spec.ts` therefore names the set it measures
+  rather than inferring it, and the exclusions are written down in
+  `docs/md3-completion-plan.md` under M9 so they read as a decision.
+- **Three MD3 components this app deliberately does not adopt.** Recorded here
+  because each is a thing a later session would otherwise "fix":
+  - **The round picker stays a native `<select>`**, where MD3 would have a menu.
+    The platform control brings the mobile picker, the keyboard model and the
+    accessibility tree for nothing; a re-implementation buys an appearance and
+    owes focus management, typeahead and dismissal for ever. `controlClasses`
+    already makes it look like the buttons beside it.
+  - **The icons stay hand-drawn.** Material Symbols arrives with several hundred
+    glyphs to serve five, against an app that ships no UI dependency at all, and
+    `SectionIcons.tsx` already draws them in `currentColor` so they re-theme for
+    free.
+  - **`Surface` is a fourth card and stays one** — outlined chrome that
+    optionally takes the *filled* variant's container colour. Three components
+    where the app renders one shape is a vocabulary with two speakers. The
+    reasoning lives in the component.
 - **Controls use `Button` or `controlClasses`.** The bordered chrome was hand-written in
   six places, which is how a stepper ends up with a `transition` its neighbour lacks.
   Two variants exist — `outlined` and `tonal` — and MD3's other three are absent because

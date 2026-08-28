@@ -76,6 +76,12 @@ export const LINK_UNDERLINE = [
  * drift apart.
  */
 export const BACK_LINK = [
+  // `inline-flex` and a 48dp minimum: this is a standalone control on its own
+  // line, not a link inside a sentence, so MD3's touch-target floor applies to
+  // it the way it applies to a button. It measured **20px** tall. The minimum
+  // is on the box and not on the type, so the glyphs are unchanged and only the
+  // area a thumb can find grows.
+  "inline-flex min-h-12 items-center",
   "text-body-medium text-ink-muted transition hover:text-on-surface-variant",
   FOCUS_RING,
 ].join(" ");

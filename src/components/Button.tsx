@@ -67,6 +67,20 @@ export const controlClasses = (
 ): string =>
   [
     "text-body-medium",
+    // MD3's minimum touch target is 48dp, and every control here was under it:
+    // the round stepper measured 34x32, its picker 32x61, the highlights links
+    // 36 and 40 tall. Measured at 375dp rather than reasoned about, in the
+    // manner the nav bar's width arithmetic already is.
+    //
+    // A minimum rather than a height, so a control that is legitimately taller
+    // — a two-line label, a larger glyph — is not clamped down to the floor.
+    // `min-w` is a no-op on every text control and does the work on the icon
+    // ones, which is why one pair of utilities covers both.
+    //
+    // Buttons and selects centre their own content against a taller box; the
+    // three anchors that use this already carry `inline-flex items-center`, and
+    // a new one must too — `min-height` does nothing to an inline box.
+    "min-h-12 min-w-12",
     VARIANT[variant],
     // Hover, focus and pressed all come from one place — see `interaction.ts`.
     // Before M2 this was a bare `hover:bg-raised` with no focus state at all.
