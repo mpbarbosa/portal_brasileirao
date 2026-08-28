@@ -340,7 +340,7 @@ export function PlayerOverlayCard({ player, scorer, onClose }: PlayerOverlayCard
       //
       // Padding lives on the two inner blocks, not here, so the header band's
       // rule can run the full width of the card.
-      className="mx-auto mt-auto mb-4 flex max-h-[88dvh] w-full max-w-lg flex-col overflow-y-auto rounded-x-large border border-line-strong bg-surface-container-low text-ink shadow-xl backdrop:bg-scrim/70 backdrop:backdrop-blur-sm sm:my-auto"
+      className="mx-auto mt-auto mb-4 flex max-h-[88dvh] w-full max-w-lg flex-col overflow-y-auto rounded-x-large border border-line-strong bg-surface-container-low text-ink shadow-level-3 backdrop:bg-scrim/70 backdrop:backdrop-blur-sm sm:my-auto"
     >
       <header className="relative overflow-hidden border-b border-line px-5 py-4">
         {enriched.shirtNumber !== undefined && (

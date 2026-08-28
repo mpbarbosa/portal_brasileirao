@@ -1283,10 +1283,9 @@ fail in. And **`interaction.ts` is a definition site, not an exemption** —
 the way `index.css` is where a raw colour may be written. Nothing may be added
 there for a file that merely has a violation in it.
 
-`shadow-*` is deliberately **not** a rule yet. There is still a `shadow-xl` on
-the player dialog and no elevation vocabulary to replace it with; the rule ships
-with those tokens rather than early and carved-out. See
-`docs/md3-completion-plan.md`, M7.
+`shadow-*` became the seventh rule in M7, in the same commit as the elevation
+tokens that make it satisfiable — a rule arrives with the vocabulary it
+enforces rather than early and carved-out.
 
 - **Colours are semantic tokens, never palette shades.** `src/index.css` defines the
   full set under `@theme` — the `surface`/`surface-container-*` ladder,
@@ -1415,6 +1414,34 @@ with those tokens rather than early and carved-out. See
   the **gap to the next column** rather than about any column's width — which is what
   `the campanha column is no wider than the mark it holds` measures, at a desktop width,
   since a narrow screen sits near the table's `min-w` and has little surplus to misplace.
+- **Elevation comes from the MD3 level scale.** `shadow-level-0` …
+  `shadow-level-5`, defined in `src/index.css`. A bare `shadow`, `shadow-lg` or
+  `shadow-xl` is a regression, and the gate above catches it. Each level is
+  MD3's two shadows — a key light at 30% and an ambient at 15% — transcribed
+  from `material-web/elevation/internal/_elevation.scss` rather than from
+  memory, because a plausible shadow is indistinguishable from a correct one to
+  anyone reading the page.
+  **The name is `--shadow-level-*` and not `--elevation-*`, and the namespace is
+  why.** A Tailwind v4 utility exists only where a theme namespace says it does,
+  so `--elevation-3` would be a real custom property no `elevation-3` class
+  could reach — the same trap `--duration-short-4` records, where the class
+  compiles to nothing and silently leaves the default in place.
+  **Both themes carry the same shadows and dark simply renders them faintly**,
+  which is the spec and the reason tonal elevation exists at all. The cheap
+  alternative — shadows on light, tone alone on dark — is a third elevation
+  model nobody else implements, and it makes a component's elevation a property
+  of the theme rather than of the component. Verified by looking: on dark the
+  shadows are all but invisible and the tonal ladder plus the borders carry the
+  separation, exactly as predicted.
+  Assignments are deliberately few, because nothing should be given a level to
+  demonstrate the scale exists: both dialogs are **level 3**, the bottom
+  navigation bar is **level 2**, and the sticky top app bar is **level 0 at rest
+  and level 2 once content scrolls beneath it**. That last one is the only piece
+  of elevation here with a behaviour — `useScrolled` — and it is the reason
+  `tests/e2e/elevation.spec.ts` exists.
+  Both bars keep their border in every state. MD3 would drop the top app bar's
+  divider at rest; doing that is a visible restyle of every page rather than an
+  elevation, so it was left alone.
 - **Motion is MD3's, and `prefers-reduced-motion` is honoured.** A bare `transition`
   already means MD3 standard easing at 200ms, because `--default-transition-duration`
   and `--default-transition-timing-function` are overridden in `src/index.css` — do not
