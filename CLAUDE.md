@@ -1766,10 +1766,13 @@ needed — so re-dispatch it rather than believing this sentence. `git tag` need
 such permission and cannot answer differently tomorrow. Two things it does not
 tell you: a tag says a release **was** published, not that its
 S3 object survives — nothing defines a lifecycle policy on `releases/` — and tags
-begin at the commit that added the job, so older releases have none. Note
-`rollback.yml` still requires the **full** sha, so a tag is picked and then
-expanded (`git rev-parse <tag>`); `docs/cicd-plan.md` gap D has why that last step
-is not yet automated.
+begin at the commit that added the job, so older releases have none. **`rollback.yml` takes a
+tag directly** — it resolves a `deploy-*` tag, a branch or an abbreviation to the
+full sha the S3 key needs, and refuses only what is neither a commit nor a ref. It
+does that by writing the resolved value to `$GITHUB_ENV`, which **overrides the
+job-level `env:`** the three later steps read; that precedence was produced by a
+throwaway workflow rather than assumed, because it is the entire reason the change
+touches one step instead of four.
 
 **A failed release flips back to the previous one, and the pipeline still goes
 red.** `07_install_release.sh` copies the release already on disk into

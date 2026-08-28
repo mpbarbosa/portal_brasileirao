@@ -471,18 +471,39 @@ that its object still exists — nothing here defines a lifecycle policy on
 `releases/`, so S3 may have expired an object whose tag remains. And tags begin
 now, so releases before this one have none.
 
-**What is left of D: `rollback.yml` still demands a full 40-character sha**, and
-rejects an abbreviation explicitly because the S3 key is the full sha. So a person
-picks a tag and then still transcribes 40 hex characters from it — better than
-deriving which sha ever shipped, which is what the gap was about, but not yet
-"pick and go". Teaching it to resolve a ref is a small change with one trap that
-must be **settled empirically rather than by reading**: `TARGET_SHA` is a
-job-level `env`, three later steps consume it, and whether a value written to
-`$GITHUB_ENV` overrides a job-level `env` of the same name for subsequent steps is
-exactly the kind of thing that looks obvious and is worth a throwaway workflow.
-Sidestepping it — a distinct `RESOLVED_SHA`, or a step output threaded through
-step-level `env` — means editing those three steps in a workflow that has now been
-exercised against production. Worth doing, not worth doing in passing.
+**And `rollback.yml` now resolves a ref, so D is done.** It demanded a full
+40-character sha and refused an abbreviation, because the S3 key is the full sha —
+so a person picked a tag and then transcribed forty hex characters from it, mid
+incident. It now accepts a `deploy-*` tag, a branch, or an abbreviation and
+resolves it, refusing only what is neither a commit nor a ref.
+
+**The trap was real and the experiment made the change smaller, not bigger.**
+`TARGET_SHA` is a job-level `env` that three later steps consume, and whether a
+value written to `$GITHUB_ENV` overrides a job-level `env` of the same name was
+the whole design. Nothing in this repository did it, so a throwaway workflow
+produced the answer (run `33133690027`):
+
+| where | value |
+| --- | --- |
+| job-level `env`, in the writing step itself | `from-job-env` |
+| **the next step** | **`from-github-env`** |
+| a step re-declaring it at step level | `from-step-env` |
+
+So the resolution reaches all three consuming steps **with no edits to them at
+all** — where this entry had predicted touching three steps in a workflow already
+exercised against production. The prediction was wrong in the safe direction, and
+only because it was checked rather than acted on.
+
+Two things about the change beyond the resolution itself. The checkout now says
+`fetch-tags: true` — `fetch-depth: 0` is documented to bring tags along, but this
+is the input a person reaches for during an incident and "documented to" is not
+the standard the rest of this pipeline is held to. And `check-screenshots`-style
+coverage was not available, so the step's own extracted `run:` block was driven
+against a real repository with a real `deploy-*` tag across five inputs — full sha
+present, tag, abbreviation, garbage, and a full sha absent from the repository —
+then **mutated twice** to prove the drill was not vacuous: deleting the
+`$GITHUB_ENV` write empties it, and turning the failure branch into a no-op takes
+the garbage case from exit 1 to exit 0.
 
 **E. `sync-broadcasts` pushes straight to `main` — done.** It now commits to
 `automation/sync-broadcasts` and opens a pull request from it, so the data
@@ -1071,8 +1092,14 @@ unprotected, the exact rule set and its four deliberate choices are in its entry
 above, and applying it is a repository setting no session can reach. Read the
 `GITHUB_TOKEN` exemption there before switching it on.
 
-What remains under D7: applying F, the rest of D, and gap G. G is last and only in
-the shape its entry describes.
+Gap D is **done in full** — the tag half and, now, `rollback.yml` resolving a
+`deploy-*` tag rather than demanding forty hex characters. Its entry carries the
+`$GITHUB_ENV` precedence answer, which is worth reading before anyone writes a
+job-level `env` they intend to override.
+
+What remains under D7: **applying F**, which is a repository setting rather than a
+change to this repository, and **gap G** — last by design and only in the shape its
+entry describes.
 
 ---
 
