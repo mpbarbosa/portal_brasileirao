@@ -89,6 +89,50 @@ jobs:
           curl -sf http://127.0.0.1:3399/api/standings | grep -q '"source"'
           curl -sf http://127.0.0.1:3399/ | grep -q "Portal Brasileirão"
 
+      - name: Verify the bundle opens the account store when configured
+        # The step above boots the bundle with accounts OFF, so `openStore` is
+        # never called and the whole subsystem is untested in the one module
+        # system production actually uses. That gap shipped a real outage:
+        # `createRequire(import.meta.url)` is fine under tsx (ESM) and undefined
+        # once esbuild emits CommonJS, so the store failed to open on every
+        # configured host while every test stayed green.
+        #
+        # The credentials are deliberately fake. Nothing here signs in, so they
+        # are never sent anywhere — they exist only to make `accountsEnabled()`
+        # true, which is what puts `openStore` on the path. That keeps CI's
+        # no-secrets rule intact.
+        env:
+          NODE_ENV: production
+          PORT: "3400"
+          STRICT_PORT: "true"
+          FOOTBALL_DATA_TOKEN: ""
+          GOOGLE_CLIENT_ID: "ci-not-a-real-client.apps.googleusercontent.com"
+          GOOGLE_CLIENT_SECRET: "ci-not-a-real-secret"
+          ACCOUNTS_DB: "./test-results/ci-accounts.db"
+        run: |
+          node dist/server.cjs &
+          server_pid=$!
+          trap 'kill "$server_pid" 2>/dev/null || true' EXIT
+
+          for _ in $(seq 1 30); do
+            if curl -sf http://127.0.0.1:3400/api/health > /dev/null; then break; fi
+            if ! kill -0 "$server_pid" 2>/dev/null; then
+              echo "server exited during startup" >&2
+              exit 1
+            fi
+            sleep 1
+          done
+
+          # 200 with a null body means the store opened and nobody is signed in.
+          # 404 means it did not open — which is precisely the failure this
+          # exists to catch, and which looks identical to "accounts are off".
+          code="$(curl -s -o /tmp/me.json -w '%{http_code}' http://127.0.0.1:3400/api/account/me)"
+          if [ "$code" != "200" ]; then
+            echo "account store did not open: /api/account/me answered $code" >&2
+            exit 1
+          fi
+          grep -q '^null$' /tmp/me.json
+
       - name: Shellcheck the deploy scripts
         run: shellcheck scripts/*.sh shell_scripts/*.sh
 
@@ -377,25 +421,42 @@ jobs:
       (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
     runs-on: ubuntu-latest
     # Gives the repository a Deployments record: what went to production, when,
-    # from which run, and whether it succeeded. Until now the only account of a
-    # release was the CI run that performed it, which is a poor thing to
-    # reconstruct an incident from — runs are listed by workflow rather than by
-    # what they changed, and the one that matters is indistinguishable from the
-    # 400 that did not deploy. Defect 1 was reconstructed by hand from run
-    # timestamps for exactly this reason.
+    # from which run, and whether it succeeded. Until this existed, the only
+    # account of a release was the CI run that performed it — runs are listed by
+    # workflow rather than by what they changed, and the one that matters is
+    # indistinguishable from the hundreds that did not deploy.
     #
-    # It is also the only place a protection rule can be hung. None exists today
-    # and the job's behaviour is therefore unchanged; note that adding a required
-    # reviewer to the `production` environment later would make every deploy wait
-    # for a human, which is a deliberate choice to make and not a side effect to
+    # THIS BLOCK REWRITES THE OIDC SUBJECT CLAIM, AND THAT IS WHY IT FAILED THE
+    # FIRST TIME. Without an environment the claim is
+    # `…:ref:refs/heads/main`; with one it is `…:environment:production`. #151
+    # added the block while the trust policy on portal-brasileirao-deploy pinned
+    # the ref form alone with StringEquals, so every release died at credential
+    # configuration with "Not authorized to perform sts:AssumeRoleWithWebIdentity"
+    # — three merges, production ten commits behind, and nothing in the workflow
+    # looking wrong. #156 reverted it.
+    #
+    # The policy now accepts BOTH subjects, and both were read from the token
+    # rather than derived: `.github/workflows/oidc-subject-probe.yml` prints them
+    # and was run twice. Both forms are needed, not just this one — rollback.yml
+    # and flip-back-drill.yml carry no environment and keep sending the ref form,
+    # so a policy holding only this one would leave production deployable and
+    # unrecoverable.
+    #
+    # IF YOU REMOVE THIS BLOCK, the ref form still covers everything and nothing
+    # breaks. If you CHANGE the environment name, the claim changes with it and
+    # the trust policy must be widened again first — same failure, same
+    # misleading shape.
+    #
+    # No protection rule is attached, so the job's timing is unchanged. Adding a
+    # required reviewer to the `production` environment later would make every
+    # deploy wait for a human: a deliberate choice to make, not a side effect to
     # discover.
     #
-    # `rollback.yml` deliberately does NOT carry this, so the record is one of
+    # rollback.yml deliberately does NOT carry this, so the record is one of
     # forward releases only and will name the wrong sha as live after a rollback.
-    # That is a known incompleteness rather than an oversight: its single job also
-    # serves the list-only mode, which changes nothing on the host, and recording
-    # a deployment for a run that only read a bucket would be worse than the gap.
-    # Closing it means splitting that job in two — see docs/cicd-plan.md, gap B.
+    # That is a known incompleteness: its single job also serves the list-only
+    # mode, which changes nothing on the host, and recording a deployment for a
+    # run that only read a bucket would be worse than the gap.
     environment:
       name: production
       url: https://brasileirao.mpbarbosa.com
@@ -642,3 +703,53 @@ jobs:
 
           curl -sf --max-time 10 "${SITE_URL}/api/standings" | jq -e '.source' > /dev/null
           echo "Live at ${SITE_URL}"
+
+  tag:
+    name: Tag the release
+    # `needs: deploy` is the whole invariant: a deploy tag exists if and only if
+    # a release reached production and answered from it. A pull_request run
+    # skips `deploy`, so this skips with it — no `if:` of its own is needed, and
+    # a second copy of that condition is how the two come to disagree.
+    needs: deploy
+    runs-on: ubuntu-latest
+    # A bookkeeping failure must not report the release as failed. This is
+    # Defect 4's shape exactly — an advisory job reddening a run whose deploy
+    # succeeded — and #142 established what this flag actually does: the run
+    # concludes `success` while the job and its check run still conclude
+    # `failure`, so an untagged release keeps a red row where a person looks.
+    # Visible, and not at the release's expense.
+    continue-on-error: true
+    permissions:
+      # The only job here that can write to the repository, and it holds no AWS
+      # credentials — which is why it is a separate job rather than four lines
+      # at the end of `deploy`. That job carries the OIDC token and the release
+      # payload; giving it a writable repository token as well would widen the
+      # blast radius of the one job that already has the most reach.
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Record that this commit reached production
+        run: |
+          set -euo pipefail
+
+          # UTC, seconds resolution. `concurrency: deploy-production` serialises
+          # installs and one takes ~30s, so two tags cannot collide; a re-deploy
+          # of the same commit — which the reconciler can dispatch — deliberately
+          # gets a second tag, because two installs happened and the record
+          # should say so.
+          tag="deploy-$(date -u +%Y%m%d-%H%M%S)-${GITHUB_SHA:0:7}"
+
+          git tag "$tag" "$GITHUB_SHA"
+          git push origin "refs/tags/${tag}"
+
+          echo "::notice::Tagged ${tag}"
+          {
+            echo "Tagged \`${tag}\`"
+            echo ""
+            echo "Roll back to it with the **full** sha, which \`rollback.yml\` requires:"
+            echo ""
+            echo '```'
+            echo "git rev-parse ${tag}   # ${GITHUB_SHA}"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"

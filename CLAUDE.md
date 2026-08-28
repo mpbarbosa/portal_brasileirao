@@ -1749,6 +1749,28 @@ wrong sha as live after a rollback; that is deliberate, because the same job als
 serves the list-only mode, which changes nothing on the host and must not appear
 as a deployment. `docs/cicd-plan.md` gap B has what closing it would cost.
 
+**Every release that reaches production is tagged** `deploy-YYYYMMDD-HHMMSS-<sha7>`
+by the `tag` job. `needs: deploy` is the invariant — the tag exists if and only if
+the install happened and the live site answered with that commit — so the tag list
+is the record of what has actually shipped. It is a **separate job** because it
+needs `contents: write` and `deploy` holds the OIDC token and the payload, and it
+is `continue-on-error` because a bookkeeping failure must not report a good
+release as failed; per the entry above, that still leaves a red check row.
+
+**Those tags are a release inventory that costs no AWS permission**, which matters
+because the other one may not be readable: dispatched with an empty sha on
+2026-08-27, `rollback.yml`'s list-only mode answered `AccessDenied` naming
+`s3:ListBucket`. That is an observation of the role on that date, not a standing
+property — IAM has been edited since, for the trust policy the Deployments record
+needed — so re-dispatch it rather than believing this sentence. `git tag` needs no
+such permission and cannot answer differently tomorrow. Two things it does not
+tell you: a tag says a release **was** published, not that its
+S3 object survives — nothing defines a lifecycle policy on `releases/` — and tags
+begin at the commit that added the job, so older releases have none. Note
+`rollback.yml` still requires the **full** sha, so a tag is picked and then
+expanded (`git rev-parse <tag>`); `docs/cicd-plan.md` gap D has why that last step
+is not yet automated.
+
 **A failed release flips back to the previous one, and the pipeline still goes
 red.** `07_install_release.sh` copies the release already on disk into
 `$DEPLOY_DIR/previous/` before the rsync destroys it, and hands
@@ -1895,6 +1917,31 @@ owner and repo ids (`repo:owner@<id>/repo@<id>:ref:…`), not the documented
 form silently never matches. If role assumption starts failing with "Not authorized
 to perform sts:AssumeRoleWithWebIdentity", print the claim before touching anything
 else.
+
+**A second thing reshapes that claim, and it is not in AWS at all.** Attaching a
+job to a GitHub `environment:` rewrites the subject from `…:ref:refs/heads/main`
+to `…:environment:<name>`. #151 added `environment: production` to `deploy` while
+the trust policy pinned the ref form alone with `StringEquals`, and every release
+then died at credential configuration with that same "Not authorized" message:
+three merges failed and production sat ten commits behind. **Nothing in the
+workflow looked wrong**, because the job itself was untouched — the change was
+three lines declaring a record-keeping feature, and its own comment said in good
+faith that behaviour was unchanged. #156 reverted it; #159 relanded it once the
+policy accepted both subjects.
+
+So the rule is wider than the paragraph above: **anything that could reshape the
+claim is an IAM change first and a workflow change second.** Renaming the
+environment does it too.
+
+**Both subject forms are load-bearing, so never narrow the policy to one.**
+`rollback.yml` and `flip-back-drill.yml` carry no environment and keep sending the
+ref form; a policy holding only `…:environment:production` would leave production
+deployable and **unrecoverable**, which is the worst of the available states.
+
+**And read the claim rather than deriving it** —
+`.github/workflows/oidc-subject-probe.yml` prints what the token actually carries.
+Both subjects in the policy were read from it rather than reasoned out, which is
+the same discipline `/api/health` applies to a running build.
 
 `scripts/deploy.sh` is the workstation path — rsync over SSH — and ends in the same
 `06_redeploy.sh`, so both routes converge and only the transport differs. It builds

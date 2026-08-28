@@ -346,7 +346,69 @@ there. `npm audit --audit-level=high` belongs in its own advisory job for the
 same reason `screenshots` is advisory — an upstream advisory published on a
 Tuesday must not stop an unrelated release.
 
-**B. Deployments are invisible to GitHub — done.** There was no `environment:` on
+**B. Deployments are invisible to GitHub — done, on the second attempt.**
+Shipped in #151, reverted in #156 because it took production down for ten
+commits, and relanded once the trust policy accepted the claim it produces.
+
+**What actually blocked it was IAM write access, not knowledge of the change.**
+Worth recording, because two attempts were spent discovering it: the deploying
+account (`user/mpb`) holds neither `iam:UpdateAssumeRolePolicy` under its default
+credentials nor `sts:AssumeRole` on the deploy role, so the widening had to be
+applied under a different profile. Anyone re-attempting this class of change
+should establish *who can edit the role* before designing anything, the way the
+phase's own precondition rule says.
+
+**Both subjects were read, not derived.**
+`.github/workflows/oidc-subject-probe.yml` prints the claim GitHub issues here,
+with and without an environment, and touches no AWS. Run twice, independently,
+with identical results — this repository's subject carries suffixes no document
+predicts, so inference would have been a coin flip on a change whose failure mode
+is a silent production freeze.
+
+**The order that made it safe**, and the step most likely to be skipped: policy
+first, then *confirm an ordinary release still deploys* (`192b50f`, an empty
+commit, exercising the `ref` form against the widened condition), and only then
+re-add the block. Reading a policy back proves it parses; only a deploy proves
+STS evaluates it as intended.
+
+**The original entry follows.**
+
+**B (first attempt, reverted). Deployments are invisible to GitHub — blocked on
+an IAM change.** Shipped in #151, it broke every release for ten commits and was removed
+in #156 — not #155, which this document said until the merge that corrected it,
+and which is in fact the broadcast-sync pull request in gap E below. Attaching the job to an environment **rewrites the OIDC subject claim**:
+without one it is `repo:<owner>/<repo>:ref:refs/heads/main`, with one it becomes
+`repo:<owner>/<repo>:environment:production`. The trust policy on
+`portal-brasileirao-deploy` pins the first form with `StringEquals`, so STS
+answered `Not authorized to perform sts:AssumeRoleWithWebIdentity` and the deploy
+job died before reaching the host. Three merges failed and production sat ten
+commits behind before anyone read a deploy log rather than the run's colour.
+
+Nothing about the change looked wrong, which is the part worth carrying: the job
+was untouched, and the entry below said in good faith that its behaviour was
+unchanged. **The order to do this in is trust policy first** — then confirm a
+release deploys, then re-add the block. Re-adding it alone takes production down
+silently, and the failure reads as an AWS problem rather than a workflow one.
+
+**Read the claim; do not derive it.** `.github/workflows/oidc-subject-probe.yml`
+prints the `sub` GitHub actually issues here, in both forms, and touches no AWS.
+It exists because this repository's subject carries suffixes no document predicts
+(`mpbarbosa@19806781/portal_brasileirao@1344118398`), so inferring the
+environment form from the ref form is a guess — and a trust policy built on a
+wrong guess fails exactly the way the original bug did, at credential
+configuration, with production frozen until someone reads a deploy log.
+
+**The policy must accept BOTH forms, and this is the part most likely to be got
+wrong.** Only `ci.yml`'s deploy job would carry the environment; `rollback.yml`
+and `flip-back-drill.yml` have none and keep sending the ref form. A policy that
+*replaces* the ref subject rather than adding to it leaves production deployable
+and **unrecoverable** — the rollback and the drill lose access at the moment they
+are most needed. `docs/oidc-trust-policy.json` is the widened document, differing
+from the live policy only in that `sub` becomes a two-element list.
+
+The original entry follows.
+
+**B (as shipped, now reverted). Deployments are invisible to GitHub.** There was no `environment:` on
 the `deploy` job, so there was no Deployments tab, no per-environment history, no
 URL badge, and no place to hang a protection rule later. The job now declares
 `environment: {name: production, url: https://brasileirao.mpbarbosa.com}`, which
@@ -375,11 +437,52 @@ production, and not one to make in passing.
 `setup-node`'s cache makes this cheap but not free. Folding the built payload
 into an artifact (defect 3) removes one of the three.
 
-**D. No release identity beyond a sha.** No tags, no releases, no changelog.
-This is fine for a solo-maintained app and becomes not-fine the moment a rollback
-needs a human to choose a target from a list. A lightweight tag per successful
-deploy (`deploy-YYYYMMDD-HHMMSS-<sha7>`) makes the rollback workflow's input
-something a person can pick rather than something they have to derive.
+**D. No release identity beyond a sha — the tag half is done.** There were no
+tags, no releases and no changelog, which is fine for a solo-maintained app and
+becomes not-fine the moment a rollback needs a human to choose a target from a
+list. A `tag` job now writes `deploy-YYYYMMDD-HHMMSS-<sha7>` after every release
+that reached production and answered from it.
+
+Three things about its shape are deliberate:
+
+- **`needs: deploy` is the whole invariant.** A deploy tag exists if and only if
+  a release installed and the live site reported it. It carries no `if:` of its
+  own — a `pull_request` run skips `deploy` and this skips with it, and a second
+  copy of that condition is how the two come to disagree.
+- **It is a separate job rather than four lines at the end of `deploy`**, because
+  it needs `contents: write` and `deploy` holds the OIDC token and the release
+  payload. Splitting them keeps the writable repository token off the job with
+  the most reach.
+- **`continue-on-error: true`**, because this is Defect 4's shape exactly: an
+  advisory step that must not report a successful release as failed. What that
+  flag does is no longer assumed — the entry above establishes it leaves the job
+  and its check run concluding `failure` while the run concludes `success`, so an
+  untagged release keeps a red row where a person looks.
+
+**The tags are also a release inventory that costs no AWS permission**, which
+matters more than it sounds. Dispatched with an empty sha on 2026-08-27,
+`rollback.yml`'s list-only mode answered `AccessDenied` naming `s3:ListBucket` —
+an observation of the role on that date rather than a standing property, and IAM
+has been edited since for the reland's trust policy, so re-dispatch rather than
+trusting this line. The tag list answers the same question from git and cannot
+stop being readable. Two caveats, because the two
+lists are not the same list: a tag records that a release **was** published, not
+that its object still exists — nothing here defines a lifecycle policy on
+`releases/`, so S3 may have expired an object whose tag remains. And tags begin
+now, so releases before this one have none.
+
+**What is left of D: `rollback.yml` still demands a full 40-character sha**, and
+rejects an abbreviation explicitly because the S3 key is the full sha. So a person
+picks a tag and then still transcribes 40 hex characters from it — better than
+deriving which sha ever shipped, which is what the gap was about, but not yet
+"pick and go". Teaching it to resolve a ref is a small change with one trap that
+must be **settled empirically rather than by reading**: `TARGET_SHA` is a
+job-level `env`, three later steps consume it, and whether a value written to
+`$GITHUB_ENV` overrides a job-level `env` of the same name for subsequent steps is
+exactly the kind of thing that looks obvious and is worth a throwaway workflow.
+Sidestepping it — a distinct `RESOLVED_SHA`, or a step output threaded through
+step-level `env` — means editing those three steps in a workflow that has now been
+exercised against production. Worth doing, not worth doing in passing.
 
 **E. `sync-broadcasts` pushes straight to `main` — done.** It now commits to
 `automation/sync-broadcasts` and opens a pull request from it, so the data
@@ -676,8 +779,9 @@ process before being written down. It drills the starts-but-unhealthy mode,
 which is the one systemd cannot catch, and which keeps every page serving while
 it runs.
 
-**Stage 2 is DONE. Run `33079608222`, 2026-08-27, against production.** The exit
-criterion is met by demonstration:
+**Stage 2 is DONE, both modes.** Runs `33079608222` (`health`) and
+`33096969376` (`crash`), 2026-08-27, against production. The exit criterion is
+met by demonstration; the `health` run first:
 
 ```
 PATCHED=1
@@ -695,6 +799,35 @@ SEVEN_EXIT=2
 on `8ed6f60` — the release that was live before the drill. `/`, `/classificacao`
 and `/ao-vivo` all served 200 throughout, which is the property the
 starts-but-unhealthy variant was chosen for.
+
+**Both failure modes have now been drilled, and the second is the one that
+matters most.** Run `33096969376`, `mode=crash`: `process.exit(1);` prepended to
+the bundle, so the process dies on boot and **systemd cannot help** — there is
+nothing healthy to restart into, which is precisely why `Restart=on-failure`
+was never a substitute for this. Same verdict: `07 exit: 2`, `ROLLED BACK: yes`,
+health back on `0e07d83`.
+
+**The outage it caused was measured, not estimated.** Polling `/api/health` from
+outside every two seconds for the length of the run caught exactly three non-200
+samples, `17:10:05` to `17:10:09` — between four and eight seconds, against a
+written estimate of ten to fifteen. Quote the measured number: that is what an
+unbootable release now costs, and it is the figure someone weighing whether to
+trust the mechanism should be given.
+
+So the two modes divide as intended. `starts-but-unhealthy` is invisible to
+systemd (the process is alive) and cost **no downtime at all**;
+`crash-on-boot` is visible to systemd and unfixable by it, and cost seconds.
+
+**A hazard the crash rehearsal found, closed before the drill ran.** A crash loop
+is the one thing that can *strand* this service rather than interrupt it: the
+unit sets `RestartSec=5` and no `StartLimit*`, so if restarts breach systemd's
+default burst the unit enters `failed` and `systemctl restart` is **refused** —
+which would make the flip-back exit 3 *and* leave `rollback.yml` unable to
+recover, since it ends in the same restart. Tested against real systemd both
+ways: at `RestartSec=5` the limit is not reached (six crash-restarts, restart
+still succeeded), and with it deliberately tripped only `reset-failed` got out.
+`06_redeploy.sh` now calls `reset-failed` before every restart. It stayed a no-op
+during the real drill, as predicted.
 
 **One wording correction the run forces.** This phase said the proof would be the
 `deploy` job going *red*. It is not, and should not be: the drill is dispatched,
@@ -834,12 +967,30 @@ and the `reconcile.yml` hold it turned out to unjam. It was taken first as the
 cheapest item and the one most likely to cause a real misreading; the count in
 its entry went from six to a measured seventeen once it was actually queried.
 
-Gap B (no Deployments record) is **done** — see its entry above, including why
-`rollback.yml` was left out of it and what closing that would cost.
+Gap B (no Deployments record) is **done, on its second attempt.** It shipped in
+#151, broke every release for ten commits because attaching the job to an
+environment rewrites the OIDC subject claim, and was reverted in #156. #159
+relanded it after the trust policy was widened to accept **both** subject forms —
+read from the token by `oidc-subject-probe.yml` rather than derived. Both are
+needed: `rollback.yml` and `flip-back-drill.yml` carry no environment and keep
+sending the ref form. This paragraph said "reverted and blocked" for several
+merges after that stopped being true, which is the failure the entry itself is
+about.
 
-What remains under D7: gaps D, F and G. The plan's own ordering still holds —
-F interacts with E and with the reconciling deploy, so E comes first; G is last
-and only in the shape its entry describes.
+Gap D's tag half is **done** — see its entry above, including why the tags double
+as the release inventory the missing `s3:ListBucket` permission denies, and the
+one piece left (teaching `rollback.yml` to accept a ref) with the trap that makes
+it more than a one-liner.
+
+Gap E (`sync-broadcasts` pushing straight to `main`) is **done** — this change.
+It was F's precondition, so **F is now unblocked**, and its entry carries a
+correction worth reading before anyone relies on the same assumption elsewhere:
+the pull request the sync opens arrives with **no checks at all**, not green
+ones, because GitHub starts no workflow run for an event raised with the
+repository's own `GITHUB_TOKEN`.
+
+What remains under D7: the rest of D, then gaps F and G. G is last and only in
+the shape its entry describes.
 
 ---
 

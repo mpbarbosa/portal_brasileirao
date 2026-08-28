@@ -135,6 +135,42 @@ now calls `systemctl reset-failed` before every restart anyway — a no-op on a
 unit that is not failed, and the difference between a 15s drill and a stranded
 service in the case where it is.
 
+## Both modes have now run, against production
+
+| mode | run | 07 exit | outage |
+| --- | --- | --- | --- |
+| `health` | `33079608222` | 2, rolled back | **none** — every page served 200 |
+| `crash` | `33096969376` | 2, rolled back | **4–8s**, measured |
+
+The crash run's transcript, which is the one worth recognising because systemd
+cannot rescue it:
+
+```
+PATCHED=1
+==> Retaining the current release in /var/www/portal_brasileirao/previous
+==> Installing release into /var/www/portal_brasileirao
+==> Handing off to 06_redeploy.sh
+==> Installing production dependencies and restarting portal-brasileirao...
+==> Waiting for health...
+Error: portal-brasileirao did not become healthy.
+==> Flipping back to the retained release in …/previous...
+ROLLED BACK: portal-brasileirao is serving the PREVIOUS release from …/previous.
+Health: {"status":"ok","sha":"0e07d83",…}
+SEVEN_EXIT=2
+```
+
+**The outage was measured rather than estimated**, by polling `/api/health` from
+outside every two seconds for the length of the run: exactly three non-200
+samples, `17:10:05` through `17:10:09`. The written estimate had been 10–15s.
+Quote the measured figure — four to eight seconds is what an unbootable release
+now costs, and the difference matters when someone is deciding whether the
+mechanism is worth trusting.
+
+**The `reset-failed` call in `06_redeploy.sh` stayed a no-op**, as the
+real-systemd rehearsal predicted it would at `RestartSec=5`. It is insurance for
+the case where a crash loop breaches the start limit, not something this run
+exercised.
+
 ## Step 1 — run it
 
 Dispatch with `confirm` set to exactly `DRILL`. `health_attempts` defaults to
@@ -208,9 +244,8 @@ about four minutes against the rollback's forty seconds.
 
 ## What this does not cover
 
-- **The crash-on-boot mode.** A bundle that exits immediately leaves systemd
-  restart-looping every 5s against whatever is in `dist/`. That is the variant
-  that actually takes the site down, and it deserves its own window.
+- ~~The crash-on-boot mode.~~ **Drilled on 2026-08-27**, run `33096969376`; see
+  *Both modes have now run* above.
 - **`scripts/deploy.sh`.** The workstation path carries its own inline remote
   block and calls neither `06` nor `07`, so it neither retains nor flips back.
   Recorded under *Near term* in `roadmap.md`; `CLAUDE.md` forbids running it by

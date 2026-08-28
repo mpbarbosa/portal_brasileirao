@@ -376,10 +376,21 @@ looks exactly like a task nobody has picked up.
   demonstrated in production: retention on every deploy, and the restore on
   demand via [`flip-back-drill.md`](flip-back-drill.md).
 
-  **What is still not drilled: the crash-on-boot mode.** A bundle that exits
-  immediately leaves systemd restart-looping against whatever is in `dist/`, and
-  that is the variant which actually takes the site down. It deserves its own
-  window and is not covered by the run above.
+  **Crash-on-boot is drilled too, and it is the one that took the site down.**
+  Run `33096969376`, 2026-08-27, `mode=crash`: the bundle exits on boot, so
+  systemd has nothing healthy to restart into and `Restart=on-failure` cannot
+  help. Same verdict — `07 exit: 2`, `ROLLED BACK: yes`, health back on
+  `0e07d83`.
+
+  **The outage was measured, not estimated.** Polling production from outside
+  every 2s across the drill caught exactly three non-200 samples, `17:10:05` to
+  `17:10:09` — a real outage between four and eight seconds, against a written
+  estimate of ten to fifteen. That is the number to quote for what an unbootable
+  release now costs.
+
+  Both variants therefore hold in production: *starts-but-unhealthy* (which
+  systemd cannot detect, since the process is alive) and *crash-on-boot* (which
+  it detects and cannot fix). Nothing about the flip-back is untested any more.
 
 - **`scripts/rehearse-flip-back.sh` is the only behavioural coverage the two
   host scripts have, and nothing runs it.** `npm run lint` is TypeScript and
