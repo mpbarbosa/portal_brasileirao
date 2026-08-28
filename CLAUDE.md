@@ -1870,6 +1870,31 @@ form silently never matches. If role assumption starts failing with "Not authori
 to perform sts:AssumeRoleWithWebIdentity", print the claim before touching anything
 else.
 
+**A second thing reshapes that claim, and it is not in AWS at all.** Attaching a
+job to a GitHub `environment:` rewrites the subject from `…:ref:refs/heads/main`
+to `…:environment:<name>`. #151 added `environment: production` to `deploy` while
+the trust policy pinned the ref form alone with `StringEquals`, and every release
+then died at credential configuration with that same "Not authorized" message:
+three merges failed and production sat ten commits behind. **Nothing in the
+workflow looked wrong**, because the job itself was untouched — the change was
+three lines declaring a record-keeping feature, and its own comment said in good
+faith that behaviour was unchanged. #156 reverted it; #159 relanded it once the
+policy accepted both subjects.
+
+So the rule is wider than the paragraph above: **anything that could reshape the
+claim is an IAM change first and a workflow change second.** Renaming the
+environment does it too.
+
+**Both subject forms are load-bearing, so never narrow the policy to one.**
+`rollback.yml` and `flip-back-drill.yml` carry no environment and keep sending the
+ref form; a policy holding only `…:environment:production` would leave production
+deployable and **unrecoverable**, which is the worst of the available states.
+
+**And read the claim rather than deriving it** —
+`.github/workflows/oidc-subject-probe.yml` prints what the token actually carries.
+Both subjects in the policy were read from it rather than reasoned out, which is
+the same discipline `/api/health` applies to a running build.
+
 `scripts/deploy.sh` is the workstation path — rsync over SSH — and ends in the same
 `06_redeploy.sh`, so both routes converge and only the transport differs. It builds
 from the **working tree** rather than from a git ref, which is why **Working
