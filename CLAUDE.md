@@ -1219,6 +1219,30 @@ not merely that you are up.
 
 ## Key conventions
 
+**Six of these are now enforced rather than reviewed.**
+`tests/design-tokens-core.test.ts` sweeps every `.ts`/`.tsx` under `src/` and
+fails on a palette shade, a Tailwind radius, a bare type step, a `tracking-*`, a
+`duration-*`/`ease-*` utility or a hand-written `hover:`/`focus:` colour. It is a
+grep rather than ESLint on purpose — this repo has no ESLint by choice, and
+acquiring one to police six string patterns costs a dependency, a config and a
+plugin API against a rule set that fits on one screen.
+
+Two things about it are load-bearing. **Comments are stripped before the rules
+run**, because half the value of these files is prose that *names* the utility it
+replaced — `Button.tsx` quotes `hover:bg-raised` — and a gate that flags its own
+documentation gets switched off. The stripper is hand-written rather than a
+regex, because `https://` is not a comment and mistaking it for one blanks the
+rest of a real line, which is a false *negative*: the direction a gate must never
+fail in. And **`interaction.ts` is a definition site, not an exemption** —
+`DEFINITION_SITES` records the one module where a state colour may be written,
+the way `index.css` is where a raw colour may be written. Nothing may be added
+there for a file that merely has a violation in it.
+
+`shadow-*` is deliberately **not** a rule yet. There is still a `shadow-xl` on
+the player dialog and no elevation vocabulary to replace it with; the rule ships
+with those tokens rather than early and carved-out. See
+`docs/md3-completion-plan.md`, M7.
+
 - **Colours are semantic tokens, never palette shades.** `src/index.css` defines the
   full set under `@theme` — the `surface`/`surface-container-*` ladder,
   `line`/`line-strong`, `ink` through `ink-ghost`, and `positive`/`negative`/`warning`
