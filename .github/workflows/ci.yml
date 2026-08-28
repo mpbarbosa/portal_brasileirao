@@ -89,6 +89,50 @@ jobs:
           curl -sf http://127.0.0.1:3399/api/standings | grep -q '"source"'
           curl -sf http://127.0.0.1:3399/ | grep -q "Portal Brasileirão"
 
+      - name: Verify the bundle opens the account store when configured
+        # The step above boots the bundle with accounts OFF, so `openStore` is
+        # never called and the whole subsystem is untested in the one module
+        # system production actually uses. That gap shipped a real outage:
+        # `createRequire(import.meta.url)` is fine under tsx (ESM) and undefined
+        # once esbuild emits CommonJS, so the store failed to open on every
+        # configured host while every test stayed green.
+        #
+        # The credentials are deliberately fake. Nothing here signs in, so they
+        # are never sent anywhere — they exist only to make `accountsEnabled()`
+        # true, which is what puts `openStore` on the path. That keeps CI's
+        # no-secrets rule intact.
+        env:
+          NODE_ENV: production
+          PORT: "3400"
+          STRICT_PORT: "true"
+          FOOTBALL_DATA_TOKEN: ""
+          GOOGLE_CLIENT_ID: "ci-not-a-real-client.apps.googleusercontent.com"
+          GOOGLE_CLIENT_SECRET: "ci-not-a-real-secret"
+          ACCOUNTS_DB: "./test-results/ci-accounts.db"
+        run: |
+          node dist/server.cjs &
+          server_pid=$!
+          trap 'kill "$server_pid" 2>/dev/null || true' EXIT
+
+          for _ in $(seq 1 30); do
+            if curl -sf http://127.0.0.1:3400/api/health > /dev/null; then break; fi
+            if ! kill -0 "$server_pid" 2>/dev/null; then
+              echo "server exited during startup" >&2
+              exit 1
+            fi
+            sleep 1
+          done
+
+          # 200 with a null body means the store opened and nobody is signed in.
+          # 404 means it did not open — which is precisely the failure this
+          # exists to catch, and which looks identical to "accounts are off".
+          code="$(curl -s -o /tmp/me.json -w '%{http_code}' http://127.0.0.1:3400/api/account/me)"
+          if [ "$code" != "200" ]; then
+            echo "account store did not open: /api/account/me answered $code" >&2
+            exit 1
+          fi
+          grep -q '^null$' /tmp/me.json
+
       - name: Shellcheck the deploy scripts
         run: shellcheck scripts/*.sh shell_scripts/*.sh
 

@@ -40,7 +40,22 @@ type DatabaseSync = DatabaseSyncType;
  * unavailable store is a feature that is absent, never an app that is broken.
  */
 const loadDatabaseSync = (): new (path: string) => DatabaseSync => {
-  const require = createRequire(import.meta.url);
+  // The base path is `process.cwd()` and **not `import.meta.url`**, which is
+  // what this was and which worked everywhere except the one place that
+  // matters. esbuild bundles `server.ts` to **CommonJS**, where
+  // `import.meta.url` is `undefined`, so `createRequire` threw
+  // "The argument 'filename' must be … Received undefined" and the store failed
+  // to open — on every host with accounts configured, and nowhere else.
+  //
+  // Nothing caught it. The unit tests and the end-to-end suite both run under
+  // `tsx`, which is ESM; CI's bundle smoke test runs the real CommonJS build
+  // but left accounts unconfigured, so `openStore` was never called. The bug
+  // needed production's module system *and* production's configuration at once,
+  // and no harness had both. `check`'s smoke step now sets dummy Google
+  // credentials for exactly that reason.
+  //
+  // Any absolute path works: resolving a builtin never touches the filesystem.
+  const require = createRequire(path.join(process.cwd(), "resolve-base.cjs"));
   return (require("node:sqlite") as { DatabaseSync: new (path: string) => DatabaseSync })
     .DatabaseSync;
 };
