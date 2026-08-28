@@ -649,6 +649,27 @@ runs it automatically: CI has no network dependency on a third party by design,
 and a link that rots on someone else's server is not a reason for a red build on
 a commit that did not touch it.
 
+**A monthly workflow now runs all four, and it still is not CI.**
+`.github/workflows/curated-data.yml` runs `check-hymns`,
+`check-stadium-photos`, `check-player-wikipedia` and `check-player-photos` on the
+first of the month and reports into an **issue** — opening one, commenting while
+the failure persists, and closing it when everything resolves again. The job is
+**always green**, which is the whole design: a rotted third-party link is data
+for a person, never a red build on somebody's unrelated commit. `workflow_dispatch`
+is how to exercise it without waiting for the first.
+
+It creates its own `curated-data` label first, idempotently. That is not
+housekeeping: `gh issue create --label` fails on an unknown label, and the label
+did not exist when the workflow was written — so without it the job would have
+gone red on the first run where a checker genuinely failed, which is precisely
+when the always-green promise matters.
+
+**Do not "tidy" its `set -uo pipefail` into `set -euo pipefail`.** Today that
+changes nothing — a command in an `if` condition is exempt from `set -e` — but a
+bare `npm run check-…` added outside an `if` exits 0 as written and **1** under
+`set -euo`, which turns the rule above into a red build. The workflow says so at
+the line itself.
+
 `src/data/player-instagram.ts` holds players' own Instagram accounts, keyed by
 **player id** and hand-maintained for the same reason `club-instagram.ts` is: no
 provider carries a social account at any tier. Coverage is deliberately

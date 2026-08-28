@@ -1,0 +1,167 @@
+name: Curated data still resolves
+
+# The four curated-data checkers, once a month, reporting into an ISSUE and
+# never into a build.
+#
+# WHY IT IS NOT PART OF CI, AND MUST NOT BECOME PART OF CI. CLAUDE.md is
+# explicit: "CI has no network dependency on a third party by design, and a link
+# that rots on someone else's server is not a reason for a red build on a commit
+# that did not touch it." These four talk to YouTube, Wikimedia Commons and
+# Wikipedia. Wiring them into `check` would mean a contributor's typo fix goes
+# red because somebody deleted a video overnight — and, worse, that a genuinely
+# rotted link is indistinguishable from every other red build.
+#
+# So this job is ALWAYS GREEN. A checker's failure is data, carried to an issue.
+# The moment someone makes this able to fail, the rule above is gone and the
+# reason it existed is not written anywhere the failure will be read.
+#
+# Nothing keys off the issue, which sidesteps the trap gap E documents: GitHub
+# raises no workflow run for an event made with the repository's own
+# GITHUB_TOKEN, so an issue opened here starts nothing. That is fine — the issue
+# is for a person.
+#
+# Note a scheduled workflow is a safety net rather than a guarantee: GitHub
+# delays schedules under load and disables them entirely after 60 days of
+# repository inactivity. `workflow_dispatch` is how you exercise it on demand,
+# and is the only way to see it work before the first of a month.
+
+on:
+  schedule:
+    # 06:00 UTC on the 1st. Monthly because these are third-party links that rot
+    # over months, not hours, and each run spends someone else's rate limit:
+    # ~169 Wikipedia articles, 70 Commons files, 19 stadium photographs and 20
+    # YouTube lookups.
+    - cron: "0 6 1 * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write # the entire output of this workflow
+
+concurrency:
+  group: curated-data
+  cancel-in-progress: false
+
+jobs:
+  check:
+    name: Check the curated data
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - run: npm ci
+
+      - name: Run the four checkers
+        id: run
+        run: |
+          # Three things keep this step green, and they are not equally
+          # load-bearing — measured, because the obvious reading is wrong.
+          #
+          # Today it is the `if` below: a command in an `if` condition is exempt
+          # from `set -e` anyway, so switching this line to `set -euo` changes
+          # nothing at all. The final `exit 0` is likewise belt-and-braces —
+          # deleting it also leaves the step green.
+          #
+          # What the missing `-e` actually protects is the NEXT edit: a bare
+          # `npm run check-…` added outside an `if` exits 0 here and exits 1
+          # under `set -euo`. That is the whole reason it is spelled this way,
+          # and it is invisible from the current code.
+          set -uo pipefail
+
+          failed=""
+          : > report.md
+
+          for c in check-hymns check-stadium-photos check-player-wikipedia check-player-photos; do
+            echo "::group::${c}"
+            if npm run --silent "$c" > "out-${c}.txt" 2>&1; then
+              status="ok"
+            else
+              status="FAILED"
+              failed="${failed}${c} "
+            fi
+            cat "out-${c}.txt"
+            echo "::endgroup::"
+            echo "${status}: ${c}"
+
+            {
+              echo "<details><summary><code>${c}</code> — ${status}</summary>"
+              echo
+              echo '```'
+              # The tail, not the whole thing: check-player-wikipedia alone
+              # prints 169 rows and an issue body is capped at 65536 characters.
+              tail -n 40 "out-${c}.txt"
+              echo '```'
+              echo
+              echo "</details>"
+              echo
+            } >> report.md
+          done
+
+          {
+            echo "failed=${failed% }"
+            echo "any=$([ -n "$failed" ] && echo true || echo false)"
+          } >> "$GITHUB_OUTPUT"
+
+          # Always. See the header.
+          exit 0
+
+      - name: Open, update or close the issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ANY: ${{ steps.run.outputs.any }}
+          FAILED: ${{ steps.run.outputs.failed }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -euo pipefail
+
+          title="Curated data: a link no longer resolves"
+
+          # The label must exist before anything filters or creates on it:
+          # `gh issue create --label` FAILS on an unknown label, and this step
+          # keeps `set -e` on purpose — a broken `gh` is a fault in the workflow
+          # rather than a third-party link, and should be seen. Which means that
+          # without this line the job would go red on the first run where a
+          # checker genuinely failed, i.e. exactly when the always-green promise
+          # above matters. The label did not exist when this was written.
+          # Idempotent, so it also heals someone deleting it later.
+          gh label create curated-data \
+            --description "A curated third-party link stopped resolving" \
+            --color d4c5f9 2>/dev/null || true
+
+          existing=$(gh issue list --state open --label curated-data --limit 1 --json number --jq '.[0].number // ""')
+
+          if [ "$ANY" != "true" ]; then
+            if [ -n "$existing" ]; then
+              gh issue comment "$existing" --body "All four checkers pass as of ${RUN_URL}. Closing."
+              gh issue close "$existing"
+              echo "Closed #${existing} — everything resolves again."
+            else
+              echo "All four pass, and no issue was open."
+            fi
+            exit 0
+          fi
+
+          {
+            echo "\`${FAILED}\` did not pass on ${RUN_URL}."
+            echo
+            echo "This is **not** a build failure and nothing is broken in this repository:"
+            echo "these checkers read YouTube, Wikimedia Commons and Wikipedia, so a failure"
+            echo "usually means somebody else deleted, renamed or relicensed something."
+            echo "Read the table rather than only the failures — a title match narrows what a"
+            echo "person has to look at, it does not replace looking."
+            echo
+            cat report.md
+          } > body.md
+
+          if [ -n "$existing" ]; then
+            gh issue comment "$existing" --body-file body.md
+            echo "Added to #${existing}."
+          else
+            gh issue create --title "$title" --label curated-data --body-file body.md
+            echo "Opened an issue."
+          fi

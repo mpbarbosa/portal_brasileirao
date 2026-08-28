@@ -618,14 +618,51 @@ any checked-in configuration. This entry is the design; the maintainer applies i
 under Settings → Rules, and the observable afterwards is a pull request with a
 red `check` refusing to merge.
 
-**G. The curated-data checkers never run.** `check-hymns`,
-`check-stadium-photos`, `check-player-wikipedia`, `check-player-photos` are all
-manual. `CLAUDE.md` is explicit that this is deliberate — "CI has no network
-dependency on a third party by design, and a link that rots on someone else's
-server is not a reason for a red build on a commit that did not touch it" — and
-that rule is right and must not be softened. A **scheduled monthly workflow that
-opens an issue** rather than failing a build honours it exactly: it is not CI on
-a commit, and it cannot redden anything. Worth doing last, and only in that shape.
+**G. The curated-data checkers never run — done, in exactly the shape this entry
+required.** `check-hymns`, `check-stadium-photos`, `check-player-wikipedia` and
+`check-player-photos` were all manual. `CLAUDE.md` is explicit that this is
+deliberate — "CI has no network dependency on a third party by design, and a link
+that rots on someone else's server is not a reason for a red build on a commit
+that did not touch it" — and that rule is right and was not softened.
+
+`.github/workflows/curated-data.yml` runs the four monthly (`0 6 1 * *`, plus
+`workflow_dispatch`) and reports into an **issue**. It is always green: a failing
+checker is its subject, not a fault in it. It opens one issue, comments on it
+while the failure persists rather than opening a second, and **closes it** when
+everything resolves again.
+
+**What keeps it green was measured rather than asserted, and the first comment
+written for it was wrong.** A command in an `if` condition is exempt from
+`set -e`, so the `if` is what holds green today and switching `set -uo` to
+`set -euo` changes nothing; the trailing `exit 0` is belt-and-braces too. The
+missing `-e` protects the *next* edit — a bare `npm run check-…` outside an `if`
+exits 0 as written and 1 under `set -euo`. The comment now says that, because a
+future contributor tidying `set -uo` into `set -euo` is exactly how this rule
+gets softened by accident.
+
+Coverage is both steps' extracted `run:` blocks against stubbed `gh` and `npm`:
+four issue branches (open, add to, close, do nothing — and the do-nothing case
+makes exactly one `gh` call and creates nothing), and four runner branches. Each
+mutation is checked for having **applied** before its result is read, after three
+in this session silently did not — twice because a `sed` pattern carried the YAML
+indentation a block scalar strips, once because `s|…||…|` met a pattern containing
+`||` and emptied the file, where an empty script exits 0 and reads as a pass.
+
+**The drill found a real defect before merge, and it is the shape worth naming.**
+The workflow filters and creates on a `curated-data` label, and that label **did
+not exist**. `gh issue create --label` fails on an unknown label; the issue step
+keeps `set -e` deliberately, because a broken `gh` is a fault in the workflow
+rather than a rotted link. So the job would have gone red on the first run where a
+checker genuinely failed — the exact moment the always-green promise is load
+bearing, months after anyone remembered writing it. It now creates the label
+idempotently, and removing that guard turns the second run red, which is what
+makes it more than decoration.
+
+**The observable is a `workflow_dispatch` run**, and it has not been taken: a
+monthly cron means the alternative is waiting until the first. Dispatching it
+spends third-party rate limit (~169 Wikipedia articles, 70 Commons files, 19
+stadium photographs, 20 YouTube lookups) and may open a real issue, so it is the
+maintainer's to run rather than something to fire off unasked.
 
 ---
 
@@ -1098,8 +1135,8 @@ Gap D is **done in full** — the tag half and, now, `rollback.yml` resolving a
 job-level `env` they intend to override.
 
 What remains under D7: **applying F**, which is a repository setting rather than a
-change to this repository, and **gap G** — last by design and only in the shape its
-entry describes.
+change to this repository, and **dispatching G once** to see it work. Nothing else
+— every defect and every gap in this plan has shipped.
 
 ---
 
