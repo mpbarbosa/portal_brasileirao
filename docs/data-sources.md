@@ -201,8 +201,15 @@ data was opened and looked at.
 still renders at the width the page requests, and still carries the credit and
 licence recorded here. Like `check-hymns`, it prints the whole table rather than
 only the failures, and it cannot tell you the photograph is of the right ground —
-that part stays with whoever looks. Nothing runs it automatically: CI has no
-network dependency on a third party by design.
+that part stays with whoever looks. **No build runs it**: CI has no network
+dependency on a third party by design.
+
+`.github/workflows/curated-data.yml` does run it, on the first of the month,
+alongside `check-hymns`, `check-player-wikipedia` and `check-player-photos`. That
+is not a contradiction of the sentence above — the job is **always green** and
+reports into an *issue*, so a photograph that vanished from Commons overnight
+becomes something a person reads rather than a red build on an unrelated commit.
+`workflow_dispatch` exercises it without waiting for the first.
 
 ## Player photographs
 

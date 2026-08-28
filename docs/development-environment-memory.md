@@ -108,8 +108,21 @@ budget with production.
   machine's address, so a changed IP is why SSH stops working.
 - `scripts/rehearse-flip-back.sh` — drives all eight branches of
   `06_redeploy.sh` and `07_install_release.sh` against stubs. It is the only
-  behavioural coverage those two have, and nothing runs it automatically:
-  re-run it by hand after editing either.
+  behavioural coverage those two have, and **CI runs it in `check` on every push
+  and pull request**, before the release is packaged. It is hermetic — no
+  network, no AWS, no token — which is what lets it gate a release where
+  `check-hymns` cannot. Run it here too while editing either script: it takes
+  seconds, and CI is the floor rather than a substitute for reading the output.
+- `scripts/rehearse-accounts-backup.sh` — the same arrangement for
+  `09_backup_accounts.sh` and `10_restore_accounts.sh`, and it runs in `check`
+  beside the one above. Run it the way CI does rather than on this machine's
+  Node: the pinned major is where `node:sqlite` is still experimental, and the
+  warning it prints is what the last real bug there hid behind.
+
+  ```sh
+  docker run --rm -v "$PWD":/repo:ro -w /repo node:22-bookworm \
+    ./scripts/rehearse-accounts-backup.sh
+  ```
 - `shell_scripts/*` — provisioning and release scripts that travel *inside the
   release tarball* and execute on the host, not here.
 
