@@ -32,7 +32,7 @@ desktop shots above look no different. Five is Material Design 3's ceiling for t
 the bar is now at it: the labels fit at 375dp because the items carry no horizontal padding, and
 below 360dp the active indicator narrows rather than let the last destination fall off the edge.*
 
-![Página Ao vivo no tema claro: a secção Agora responde "Nenhuma partida em andamento agora", e A seguir lista os próximos jogos, cada um com data, horário, uma contagem regressiva em dias até o apito inicial e as marcas das emissoras que o transmitem.](docs/screenshots/ao-vivo-light.png)
+![Página Ao vivo no tema claro: a secção Agora responde "Nenhuma partida em andamento agora", e A seguir lista os próximos jogos, cada um com data, horário, uma contagem regressiva até o apito inicial — em horas e minutos para os jogos mais próximos, em dias para os seguintes e as marcas das emissoras que o transmitem.](docs/screenshots/ao-vivo-light.png)
 
 ![A mesma página Ao vivo no tema escuro, com as mesmas secções, contagens regressivas e marcas das emissoras sobre fundo claro.](docs/screenshots/ao-vivo-dark.png)
 
