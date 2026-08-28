@@ -1288,18 +1288,36 @@ tokens that make it satisfiable — a rule arrives with the vocabulary it
 enforces rather than early and carved-out.
 
 - **Colours are semantic tokens, never palette shades.** `src/index.css` defines the
-  full set under `@theme` — the `surface`/`surface-container-*` ladder,
-  `line`/`line-strong`, `ink` through `ink-ghost`, and `positive`/`negative`/`warning`
-  each with a lighter `-ink` for text. Components say `text-ink-muted`, not
-  `text-slate-400`. A raw `slate-*`, `emerald-*`, `rose-*` or `amber-*` utility in a
-  component is a regression: before tokens there were 32 distinct colour utilities and
+  full set under `@theme`: MD3's roles, and beside them a short list of
+  **extensions** — `ink-muted`, `ink-faint`, `ink-ghost` and
+  `positive`/`negative`/`warning` with their `-ink` pairs. A raw `slate-*`,
+  `emerald-*`, `rose-*` or `amber-*` utility in a component is a regression, and the
+  gate above catches it: before tokens there were 32 distinct colour utilities and
   five shades of grey text.
-  The surface ladder took its MD3 role names in M2: the page is **`surface`** (it was
-  `canvas`), a card is **`surface-container-low`** (it was `surface`, which is the trap
-  — MD3 means the page by that word), and `raised`/`raised-strong` became
-  `surface-container`/`surface-container-high`. The `ink` and `line` names are still
-  aliases onto `on-surface` and `outline-variant`; renaming those is a separate pass and
-  nothing to do with elevation.
+  **There are two vocabularies and the boundary is exact.** A role is MD3's and is
+  spelled MD3's way; an extension exists only where MD3 has no role — a surface gets
+  two inks and a standings table needs five, and MD3's colour system carries `error`
+  and nothing else of the kind. **No extension may duplicate a role**, and the
+  generator refuses to emit a palette where one does. That is not a style rule: until
+  M6 the palette carried seven colours twice under two names, `error` was emitted,
+  contrast-gated and rendered *nowhere* while the app's error colour reached the page
+  as `negative-ink`, and which name a component used was a matter of when the line was
+  written.
+  The renames landed in two passes. M2 took the surface ladder: the page is
+  **`surface`** (it was `canvas`), a card is **`surface-container-low`** (it was
+  `surface`, which is the trap — MD3 means the page by that word), and
+  `raised`/`raised-strong` became `surface-container`/`surface-container-high`. M6 took
+  the other seven across 51 call sites — `ink`→`on-surface`,
+  `ink-soft`→`on-surface-variant`, `ink-inverted`→`inverse-on-surface`,
+  `line`→`outline-variant`, `line-strong`→`outline`, `positive-ink`→`primary`,
+  `negative-ink`→`error`.
+  **The trap in that pass, if you ever do another: hex equality in one theme is not
+  identity.** `ink-faint` and `outline` are the same value on dark and different on
+  light, because the light theme's faint tone was pulled from 50 to 45 to clear AA
+  against `surface-container`. Merging them on the strength of the dark palette takes
+  that correction with them, silently. The gate therefore requires a match in **both**
+  themes before it calls something a duplicate, and a rename is driven from
+  `extensionTokens` in the generator rather than from the emitted CSS.
 - **The token *values* are generated, not chosen.** Since the Material Design 3
   migration (`docs/roadmap.md`, phase M1) everything between the `MD3-TOKENS`
   markers in `src/index.css` comes from `npm run sync-md3-tokens`. Do not hand-edit
@@ -1307,10 +1325,11 @@ enforces rather than early and carved-out.
   the generator, and it also re-runs the contrast gate. Each value is a *tone* from
   a tonal palette seeded by `#10b981`, so contrast is a property of the tone pair
   rather than something checked afterwards. The MD3 role names (`primary`,
-  `on-surface`, `outline`, the `surface-container` ladder) are emitted alongside the
-  names above, which are aliases onto them until M2 renames the call sites. One trap:
-  MD3 spells the page `surface`, but here that is still `canvas` and `surface` means
-  a card. `scripts/md3-color-core.ts` implements HCT so no runtime dependency is added.
+  `on-surface`, `outline`, the `surface-container` ladder) are what components spell
+  as of M6; the extensions beside them are the short list above.
+  `npm run test:tokens` runs **two** gates — contrast, and the duplicate-role check
+  M6 added — so a re-introduced alias fails CI rather than review.
+  `scripts/md3-color-core.ts` implements HCT so no runtime dependency is added.
 - **Two themes, one set of tokens.** `src/index.css` defines the palette under
   `@theme` (dark, the fallback) and again under `:root[data-theme="dark"]` and
   `:root[data-theme="light"]`. Components never change: only the values do. An inline

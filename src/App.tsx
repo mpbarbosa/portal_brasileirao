@@ -336,7 +336,7 @@ export function App() {
         )}
 
         {error && (
-          <p className="mb-4 rounded-small border border-negative/30 bg-negative/10 px-3 py-2 text-body-medium text-negative-ink">
+          <p className="mb-4 rounded-small border border-negative/30 bg-negative/10 px-3 py-2 text-body-medium text-error">
             {error}
           </p>
         )}

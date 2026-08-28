@@ -34,7 +34,7 @@ export function ScorersTable({ rows, onSelectPlayer }: ScorersTableProps) {
         </thead>
         <tbody>
           {rows.map((row) => (
-            <tr key={row.playerId} className="border-t border-line">
+            <tr key={row.playerId} className="border-t border-outline-variant">
               <td className="px-3 py-2 tabular-nums text-ink-muted">{row.position}</td>
               <td className="px-3 py-2">
                 {onSelectPlayer ? (
@@ -64,7 +64,7 @@ export function ScorersTable({ rows, onSelectPlayer }: ScorersTableProps) {
           ))}
         </tbody>
       </table>
-      <p className="border-t border-line px-3 py-2 text-body-small text-ink-faint">
+      <p className="border-t border-outline-variant px-3 py-2 text-body-small text-ink-faint">
         G gols · A assistências · P pênaltis · J jogos · — não informado
       </p>
     </Surface>

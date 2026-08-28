@@ -30,11 +30,11 @@ const LABEL: Record<Match["status"], string> = {
  * sit on.
  */
 const TONE: Record<Match["status"], string> = {
-  SCHEDULED: "bg-surface-container text-ink-soft",
-  LIVE: "bg-positive/20 text-positive-ink",
+  SCHEDULED: "bg-surface-container text-on-surface-variant",
+  LIVE: "bg-positive/20 text-primary",
   FINISHED: "bg-surface-container text-ink-muted",
   POSTPONED: "bg-warning/20 text-warning-ink",
-  CANCELLED: "bg-negative/20 text-negative-ink",
+  CANCELLED: "bg-negative/20 text-error",
 };
 
 /** The label alone, for callers that need the text without the chrome. */

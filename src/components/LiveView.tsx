@@ -64,7 +64,7 @@ function LiveMatchCard({
     <Surface as="li" filled className="p-4" data-live-match={match.id}>
       <div className="flex items-center justify-between gap-2 text-body-small text-ink-faint">
         <span>{match.round}ª rodada</span>
-        <span className="inline-flex items-center gap-1.5 text-positive-ink">
+        <span className="inline-flex items-center gap-1.5 text-primary">
           <span
             aria-hidden="true"
             className="inline-block h-2 w-2 shrink-0 animate-pulse rounded-full bg-positive"

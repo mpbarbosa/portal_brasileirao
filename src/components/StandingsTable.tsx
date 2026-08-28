@@ -68,7 +68,7 @@ const ZONE_KEY = [
 /** The row separator. It lives on every cell because the table is
  *  `border-separate` (see below), and that model does not paint borders set on
  *  a `<tr>` at all. */
-const ROW_LINE = "border-t border-line";
+const ROW_LINE = "border-t border-outline-variant";
 
 /** The two frozen columns. `#` is pinned flush left and given a fixed width so
  *  Clube can be offset by exactly that much — an auto-sized first column would
@@ -99,7 +99,7 @@ const STICKY_POSITION = "sticky left-0 z-10 w-12";
  *  second line — 12 of 20 rows went from 37px to 57px tall. That reads as a
  *  narrower column to anything measuring width alone, which is exactly how it
  *  survived the first round of measurements here. */
-const STICKY_CLUB = "sticky left-12 z-10 w-0 whitespace-nowrap border-r border-line";
+const STICKY_CLUB = "sticky left-12 z-10 w-0 whitespace-nowrap border-r border-outline-variant";
 
 /** Clube is the only column whose padding is worth a breakpoint: it is frozen,
  *  so every pixel it takes is one the numbers never get back, and only a narrow
@@ -289,7 +289,7 @@ export function StandingsTable({
                   says, and naming it would announce each zone twice. */}
               <span aria-hidden="true" className={`${zone.rail} inline-block h-4`} />
               <span>
-                <span className="font-semibold text-ink-soft">{zone.term}</span> {zone.zone} —{" "}
+                <span className="font-semibold text-on-surface-variant">{zone.term}</span> {zone.zone} —{" "}
                 {zone.where}
               </span>
             </li>

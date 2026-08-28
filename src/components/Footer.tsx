@@ -142,7 +142,7 @@ function HealthReadout({ health, readAt }: HealthReading) {
   return (
     <dl
       data-health="ok"
-      className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-body-small text-ink-soft"
+      className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-body-small text-on-surface-variant"
     >
       {items.map((item) => (
         <div key={item.id} data-health-item={item.id} className="flex items-center gap-1.5">
@@ -174,7 +174,7 @@ interface FooterProps {
  */
 export function Footer({ reading }: FooterProps) {
   return (
-    <footer className="mt-10 border-t border-line pt-4">
+    <footer className="mt-10 border-t border-outline-variant pt-4">
       <h2 className="sr-only">Rodapé</h2>
 
       <p className="text-body-small text-ink-muted">

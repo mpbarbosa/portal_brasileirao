@@ -83,13 +83,13 @@ export function MatchList({
                 className={`block truncate font-medium ${LINK_UNDERLINE}`}
               >
                 {clubName(match.homeCode)}{" "}
-                <span className="font-semibold tabular-nums text-ink-soft">{score(match)}</span>{" "}
+                <span className="font-semibold tabular-nums text-on-surface-variant">{score(match)}</span>{" "}
                 {clubName(match.awayCode)}
               </a>
             ) : (
               <p className="truncate font-medium">
                 {clubName(match.homeCode)}{" "}
-                <span className="font-semibold tabular-nums text-ink-soft">{score(match)}</span>{" "}
+                <span className="font-semibold tabular-nums text-on-surface-variant">{score(match)}</span>{" "}
                 {clubName(match.awayCode)}
               </p>
             )}

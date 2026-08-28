@@ -85,7 +85,7 @@ radii, no bare type steps, no hand-written hover colours — is enforced by a pe
 noticing. They have held so far, which is a fact about the reviewers and not about
 the repository.
 
-## M6 — Retire the alias vocabulary
+## M6 — Retire the alias vocabulary — **done, the roles half**
 
 **Two names for one colour is the state M2 explicitly deferred**, at 57 `ink`
 call sites and "a separate pass rather than a rider on this one". It is 186 now.
@@ -133,6 +133,37 @@ it.
 are deleted from `legacyTokens`; `npm run test:tokens` passes with the pairing
 labels renamed; a before/after capture in both themes shows no pixel change
 outside the rodapé's version band.
+
+**Done — the seven role renames, and the optional half deliberately not taken.**
+
+**51 call sites**, exactly as forecast. The `extra-` prefix for the remaining 135
+was **declined**: it is the larger half by churn and the smaller by value, and
+renaming `ink-muted` to `extra-ink-muted` buys legibility that a gate can buy
+outright. So instead the *invariant* became enforceable — `assertNoRoleDuplicates`
+in the generator refuses to emit a palette where an extension shares a value with
+a role, in **both** themes, and `npm run test:tokens` already runs in CI. Made to
+fail on purpose: re-adding `line-strong` exits **1** and names it.
+
+`legacyTokens` is now `extensionTokens`, which is what it holds. They are not
+legacy — nothing is waiting to rename them, and MD3 has no role for any of them.
+
+**The phase's own risk was answered with evidence rather than with care.** A
+colour rename that lands on the wrong token renders, type-checks and passes every
+test, so:
+
+- **Token-level identity.** Every one of the seven carries a byte-identical value
+  under its new name in both themes, the seven old names are gone, and no other
+  token moved. Checked by parsing the emitted CSS before and after, which is the
+  proof; the captures below are the corroboration.
+- **Nine of ten captures byte-identical** across five sections in both themes.
+  The tenth, `ao-vivo-light`, differs in **12 pixels of 1,024,000 at a maximum
+  channel delta of 2** — subpixel antialiasing between two Vite instances, not a
+  colour. Two captures of the same build were byte-identical, so the page is not
+  merely noisy.
+
+Three tests named a token rather than a behaviour and were updated with it:
+`button-classes` twice, and `theme.spec.ts`'s toggle spec, which reads
+`--color-on-surface-variant` where it read `--color-ink-soft`.
 
 ## M7 — Elevation — **done**
 

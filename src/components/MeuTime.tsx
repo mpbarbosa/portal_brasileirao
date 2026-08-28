@@ -132,12 +132,12 @@ export function MeuTimeStrip({
             event.preventDefault();
             onSelectClub(clubKey(club));
           }}
-          className={`truncate rounded-x-small font-medium text-ink ${LINK_UNDERLINE}`}
+          className={`truncate rounded-x-small font-medium text-on-surface ${LINK_UNDERLINE}`}
         >
           {club.shortName}
         </a>
       ) : (
-        <span className="truncate font-medium text-ink">{club.shortName}</span>
+        <span className="truncate font-medium text-on-surface">{club.shortName}</span>
       )}
     </Surface>
   );

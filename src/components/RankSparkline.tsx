@@ -99,7 +99,7 @@ export function RankSparkline({
       />
       {/* Where the club stands now. Also the entire mark when only one round
           has been played, since a one-point polyline draws nothing. */}
-      <circle cx={last.x} cy={last.y} r={DOT[size]} className="fill-ink" />
+      <circle cx={last.x} cy={last.y} r={DOT[size]} className="fill-on-surface" />
     </svg>
   );
 }

@@ -138,7 +138,13 @@ const roleTokens = (mode: "dark" | "light"): Tokens => {
 };
 
 /**
- * The names components actually use today, mapped onto the roles above.
+ * The app's **extensions** to MD3's colour system.
+ *
+ * Not aliases any more, which is what M6 changed: the seven names that were
+ * exactly a role are gone, and their call sites spell the role. What is left is
+ * what MD3 has no room for — a surface gets two inks and a standings table
+ * needs five, and the status fills have no counterpart at all because MD3
+ * carries `error` and nothing else of the kind.
  *
  * M1 changes values, not call sites: keeping these aliases for one phase means
  * a visual regression has exactly one possible cause. `docs/roadmap.md` records
@@ -146,21 +152,22 @@ const roleTokens = (mode: "dark" | "light"): Tokens => {
  * here still means a card. That rename lands in M2 along with the component
  * edits, rather than being smuggled into the phase that changes every colour.
  */
-const legacyTokens = (mode: "dark" | "light", role: Tokens): Tokens => {
+const extensionTokens = (mode: "dark" | "light"): Tokens => {
   const dark = mode === "dark";
   const t = <T>(darkValue: T, lightValue: T): T => (dark ? darkValue : lightValue);
 
   return {
-    // The surface ladder is gone from this list as of M2: `canvas`, `surface`,
-    // `raised` and `raised-strong` are now spelled with their MD3 role names at
-    // the call sites, so there is nothing left to alias. The ink and line names
-    // below are still aliases — renaming those is a separate, much larger pass
-    // (`ink` alone has 57 call sites) and has nothing to do with elevation.
-    line: role["outline-variant"],
-    "line-strong": role.outline,
-
-    ink: role["on-surface"],
-    "ink-soft": neutralVariant(t(80, 30)),
+    // The surface ladder went first, in M2. The seven aliases that were exactly
+    // an MD3 role — `ink`, `ink-soft`, `ink-inverted`, `line`, `line-strong`,
+    // `positive-ink`, `negative-ink` — went in M6, and their 51 call sites now
+    // name the role. What is left is genuinely an **extension**: MD3 gives a
+    // surface two inks and a standings table needs five, and the status fills
+    // have no role at all because MD3's colour system carries `error` and
+    // nothing else of the kind.
+    //
+    // Nothing here may duplicate a role again. `assertNoRoleDuplicates` below
+    // refuses to emit a palette where one does, in either theme — two names for
+    // one colour is the state M2 deferred and M6 spent 51 call sites clearing.
     "ink-muted": neutralVariant(t(70, 40)),
     // Light's faint tones run darker than the dark theme's run light. The
     // backgrounds are not mirror images — `surface-container` sits at tone 94 on
@@ -168,12 +175,9 @@ const legacyTokens = (mode: "dark" | "light", role: Tokens): Tokens => {
     // it before AA fails. Tone 50 here measured 3.86:1 against it; 45 clears it.
     "ink-faint": neutralVariant(t(60, 45)),
     "ink-ghost": neutralVariant(t(50, 55)),
-    "ink-inverted": role["inverse-on-surface"],
 
     positive: primary(t(70, 60)),
-    "positive-ink": primary(t(80, 40)),
     negative: error(t(60, 50)),
-    "negative-ink": error(t(80, 40)),
     warning: warning(t(70, 70)),
     "warning-ink": warning(t(85, 40)),
   };
@@ -219,21 +223,23 @@ const backgroundsFor = (
     name: "surface-container",
     hex: tokens["surface-container"],
     // Every call site — the status badges in MatchList and MatchPage, and the
-    // Button and NavBar state layers — pairs with `ink-soft` or `ink-muted`.
-    // Nothing paints the fainter inks on it.
-    live: (fg) => fg === "ink" || fg === "ink-soft" || fg === "ink-muted",
+    // Button and NavBar state layers — pairs with `on-surface-variant` or
+    // `ink-muted`. Nothing paints the fainter inks on it, and nothing paints
+    // `primary` as text on it: the stat tiles that do sit on a card.
+    live: (fg) =>
+      fg === "on-surface" || fg === "on-surface-variant" || fg === "ink-muted",
   },
 ];
 
 const pairingsFor = (mode: string, tokens: Tokens): Pairing[] => {
   const backgrounds = backgroundsFor(tokens);
   const text = [
-    "ink",
-    "ink-soft",
+    "on-surface",
+    "on-surface-variant",
     "ink-muted",
     "ink-faint",
-    "positive-ink",
-    "negative-ink",
+    "primary",
+    "error",
     "warning-ink",
   ];
 
@@ -262,28 +268,12 @@ const pairingsFor = (mode: string, tokens: Tokens): Pairing[] => {
     });
   }
 
-  // `primary` as *text*, which MD3 does not promise: its guarantee is that
-  // `on-primary` is readable on `primary`, and a role used as ink on a surface
-  // it was never paired with is exactly the latent trap this gate exists for.
-  // The player card's stat tiles are the first call site, so it is checked as a
-  // live pairing rather than recorded as having been fine when someone looked.
-  for (const bg of backgrounds) {
-    pairings.push({
-      label: `${mode}: primary as text on ${bg.name}`,
-      fg: tokens.primary,
-      bg: bg.hex,
-      floor: 4.5,
-      // The tiles sit on a card, and on the page behind it in no theme — but
-      // `surface-container` is not somewhere anything paints primary text.
-      live: bg.name !== "surface-container",
-    });
-  }
-
-  // The current nav entry is a filled chip: ink background, inverted text.
+  // The current nav entry is a filled chip: `on-surface` background with
+  // `inverse-on-surface` text. Both were spelled `ink`/`ink-inverted` until M6.
   pairings.push({
-    label: `${mode}: ink-inverted on ink (nav chip)`,
-    fg: tokens["ink-inverted"],
-    bg: tokens.ink,
+    label: `${mode}: inverse-on-surface on on-surface (nav chip)`,
+    fg: tokens["inverse-on-surface"],
+    bg: tokens["on-surface"],
     floor: 4.5,
     live: true,
   });
@@ -332,7 +322,7 @@ const block = (tokens: Tokens): string =>
     .map(([name, value]) => `  --color-${name}: ${value};`)
     .join("\n");
 
-const section = (role: Tokens, legacy: Tokens): string =>
+const section = (role: Tokens, extension: Tokens): string =>
   [
     "  /* MD3 roles. */",
     block(role),
@@ -340,15 +330,15 @@ const section = (role: Tokens, legacy: Tokens): string =>
     "  /* Theme-invariant, on purpose — see the note above. */",
     block(THEME_INVARIANT),
     "",
-    "  /* The names components use today, mapped onto the roles above. */",
-    block(legacy),
+    "  /* Extensions: what MD3 has no role for. None may duplicate one. */",
+    block(extension),
   ].join("\n");
 
 const render = (): string => {
   const darkRole = roleTokens("dark");
   const lightRole = roleTokens("light");
-  const darkLegacy = legacyTokens("dark", darkRole);
-  const lightLegacy = legacyTokens("light", lightRole);
+  const darkExtension = extensionTokens("dark");
+  const lightExtension = extensionTokens("light");
 
   return `${START}
 /**
@@ -366,17 +356,17 @@ const render = (): string => {
  * before first paint, so there is no flash of the wrong theme.
  */
 @theme {
-${section(darkRole, darkLegacy)}
+${section(darkRole, darkExtension)}
 }
 
 :root[data-theme="dark"] {
-${section(darkRole, darkLegacy)}
+${section(darkRole, darkExtension)}
 
   color-scheme: dark;
 }
 
 :root[data-theme="light"] {
-${section(lightRole, lightLegacy)}
+${section(lightRole, lightExtension)}
 
   color-scheme: light;
 }
@@ -390,12 +380,12 @@ const check = process.argv.includes("--check");
 const darkTokens = {
   ...roleTokens("dark"),
   ...THEME_INVARIANT,
-  ...legacyTokens("dark", roleTokens("dark")),
+  ...extensionTokens("dark"),
 };
 const lightTokens = {
   ...roleTokens("light"),
   ...THEME_INVARIANT,
-  ...legacyTokens("light", roleTokens("light")),
+  ...extensionTokens("light"),
 };
 
 const pairings = [
@@ -418,6 +408,52 @@ const measured = pairings
     return { ...pairing, ratio, headroom: ratio - pairing.floor };
   })
   .sort((a, b) => a.headroom - b.headroom);
+
+/**
+ * No extension may be a second name for a role.
+ *
+ * This is the defect M6 spent 51 call sites clearing, made unrepeatable. Before
+ * it the palette carried seven colours twice — `error` was emitted,
+ * contrast-gated and rendered nowhere while the app's error colour reached the
+ * page as `negative-ink` — and which name a component used was a matter of when
+ * the line was written.
+ *
+ * Checked in **both** themes, and that is the whole subtlety. `ink-faint` and
+ * `outline` are the same value on dark and different on light, because the
+ * light theme's faint tone was pulled from 50 to 45 to clear AA against
+ * `surface-container`. A guard reading one theme would demand they be merged
+ * and take that correction with them; a rename driven by hex equality in one
+ * theme is exactly the mistake this refuses.
+ */
+const assertNoRoleDuplicates = () => {
+  const roles = Object.keys(roleTokens("dark"));
+  const extensions = Object.keys(extensionTokens("dark"));
+
+  const clashes = extensions.flatMap((ext) =>
+    roles
+      .filter(
+        (role) =>
+          darkTokens[ext] === darkTokens[role] &&
+          lightTokens[ext] === lightTokens[role],
+      )
+      .map((role) => `  ${ext} is ${role} under another name`),
+  );
+
+  if (clashes.length > 0) {
+    console.error(
+      `\nDuplicate-role gate FAILED:\n${clashes.join("\n")}\n\n` +
+        "An extension exists because MD3 has no role for it. Spell the role at " +
+        "the call sites instead, and delete the alias.",
+    );
+    process.exit(1);
+  }
+
+  console.log(
+    `Duplicate-role gate passed (${extensions.length} extensions, none shadowing a role).`,
+  );
+};
+
+assertNoRoleDuplicates();
 
 const failures = measured.filter((m) => m.ratio < m.floor);
 const worstText = Math.min(

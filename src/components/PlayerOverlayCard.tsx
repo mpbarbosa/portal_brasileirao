@@ -61,7 +61,7 @@ function Tile({ label, value }: { label: string; value: string }) {
 /** A word, read once: label left, value right, on a hairline. */
 function Row({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex items-baseline justify-between gap-4 border-b border-line py-2.5">
+    <div className="flex items-baseline justify-between gap-4 border-b border-outline-variant py-2.5">
       <dt className="shrink-0 text-label-medium uppercase text-ink-faint">{label}</dt>
       <dd className="truncate text-body-medium font-medium">{value}</dd>
     </div>
@@ -340,9 +340,9 @@ export function PlayerOverlayCard({ player, scorer, onClose }: PlayerOverlayCard
       //
       // Padding lives on the two inner blocks, not here, so the header band's
       // rule can run the full width of the card.
-      className="mx-auto mt-auto mb-4 flex max-h-[88dvh] w-full max-w-lg flex-col overflow-y-auto rounded-x-large border border-line-strong bg-surface-container-low text-ink shadow-level-3 backdrop:bg-scrim/70 backdrop:backdrop-blur-sm sm:my-auto"
+      className="mx-auto mt-auto mb-4 flex max-h-[88dvh] w-full max-w-lg flex-col overflow-y-auto rounded-x-large border border-outline bg-surface-container-low text-on-surface shadow-level-3 backdrop:bg-scrim/70 backdrop:backdrop-blur-sm sm:my-auto"
     >
-      <header className="relative overflow-hidden border-b border-line px-5 py-4">
+      <header className="relative overflow-hidden border-b border-outline-variant px-5 py-4">
         {enriched.shirtNumber !== undefined && (
           /* The shirt, once, very large and nearly invisible — the one piece of
              decoration on the card. It is not a second copy of the `Camisa`
@@ -381,7 +381,7 @@ export function PlayerOverlayCard({ player, scorer, onClose }: PlayerOverlayCard
               width={64}
               height={64}
               decoding="async"
-              className="size-16 shrink-0 rounded-medium border border-line object-cover object-top"
+              className="size-16 shrink-0 rounded-medium border border-outline-variant object-cover object-top"
             />
           )}
 
@@ -415,7 +415,7 @@ export function PlayerOverlayCard({ player, scorer, onClose }: PlayerOverlayCard
         {rows.length > 0 && (
           /* The hairline above the first row is the section's own, so the block
              reads as a list whether or not there are tiles above it. */
-          <dl className="border-t border-line">
+          <dl className="border-t border-outline-variant">
             {rows.map((row) => (
               <Row key={row.label} {...row} />
             ))}
@@ -478,7 +478,7 @@ export function PlayerOverlayCard({ player, scorer, onClose }: PlayerOverlayCard
              At the foot of the card rather than under the image, because the
              image is 64px in a header row and a two-line credit beside it would
              crowd the player's name off the card on a phone. */
-          <p className="border-t border-line pt-4 text-body-small text-ink-faint">
+          <p className="border-t border-outline-variant pt-4 text-body-small text-ink-faint">
             Foto:{" "}
             <a
               href={playerPhotoPage(photo)}

@@ -67,9 +67,9 @@ interface ClubViewProps {
 }
 
 const FORM_CLASS: Record<FormResult, string> = {
-  V: "bg-positive/20 text-positive-ink",
-  E: "bg-surface-container-high text-ink-soft",
-  D: "bg-negative/20 text-negative-ink",
+  V: "bg-positive/20 text-primary",
+  E: "bg-surface-container-high text-on-surface-variant",
+  D: "bg-negative/20 text-error",
 };
 
 const FORM_TITLE: Record<FormResult, string> = {
@@ -222,7 +222,7 @@ export function ClubView({
               keeps its office — each step a little fainter than the last. */}
           {coach && (
             <p className="truncate text-body-medium text-ink-muted">
-              Técnico: <span className="font-medium text-ink">{coach}</span>
+              Técnico: <span className="font-medium text-on-surface">{coach}</span>
             </p>
           )}
           {/* The one line here that is allowed to wrap. Truncating an address

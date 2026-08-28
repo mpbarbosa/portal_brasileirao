@@ -8,8 +8,8 @@ test("every control shares the same chrome", () => {
   const classes = controlClasses();
 
   assert.match(classes, /rounded-small/);
-  assert.match(classes, /border-line-strong/);
-  assert.match(classes, /text-ink-soft/);
+  assert.match(classes, /border-outline/);
+  assert.match(classes, /text-on-surface-variant/);
 });
 
 test("controls take the shared state layer rather than their own hover", () => {
