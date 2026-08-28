@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { Button } from "@/src/components/Button";
 import { FOCUS_RING, STATE_LAYER } from "@/src/components/interaction";
 import { NAV_ITEMS, type SectionId } from "@/src/navigation";
+import { useScrolled } from "@/src/useScrolled";
 import { formatRoute, type Route } from "@/route-core";
 import { themeToggleLabel, type Theme } from "@/theme-core";
 
@@ -59,7 +60,13 @@ function NavigationBar({
   return (
     <nav
       aria-label="Seções"
-      className="fixed inset-x-0 bottom-0 z-20 border-t border-line bg-surface/95 backdrop-blur sm:hidden"
+      /* MD3 puts the navigation bar at level 2. The shadow points downward and
+         most of it is off the bottom of the screen, but the level-2 ambient
+         light carries a 2px spread and a 6px blur, so the edge that matters —
+         the one content scrolls under — does get its separation. The border
+         stays: it is what this bar has always used at rest, and removing it is
+         a restyle rather than an elevation. */
+      className="fixed inset-x-0 bottom-0 z-20 border-t border-line bg-surface/95 shadow-level-2 backdrop-blur sm:hidden"
     >
       <ul className="mx-auto flex max-w-3xl items-stretch justify-around">
         {NAV_ITEMS.map((item) => {
@@ -129,6 +136,8 @@ export function NavBar({
   onToggleTheme,
   accountControl,
 }: NavBarProps) {
+  const scrolled = useScrolled();
+
   const select = (event: React.MouseEvent, id: SectionId) => {
     if (!isPlainClick(event)) return;
     event.preventDefault();
@@ -149,7 +158,23 @@ export function NavBar({
 
   return (
     <>
-      <header className="sticky top-0 z-20 border-b border-line bg-surface/90 backdrop-blur">
+      {/* MD3's top app bar is level 0 at rest and level 2 once content scrolls
+          beneath it: the elevation is what says the bar is in front of
+          something, and at the top of the page there is nothing to be in front
+          of. `data-scrolled` is on the element rather than only in the class
+          list so an end-to-end spec can assert the state rather than the
+          shadow — a computed `box-shadow` mid-transition reports the value it
+          is leaving, which is the reading trap M2 recorded.
+
+          The border stays in both states. Dropping it at rest is what MD3
+          actually specifies, and it is a visible restyle of every page rather
+          than an elevation, so it is not this phase's to make. */}
+      <header
+        data-scrolled={scrolled ? "true" : "false"}
+        className={`sticky top-0 z-20 border-b border-line bg-surface/90 backdrop-blur transition ${
+          scrolled ? "shadow-level-2" : "shadow-level-0"
+        }`}
+      >
         <div className="mx-auto flex max-w-3xl items-center justify-between gap-3 px-4 py-3">
           <div className="min-w-0">
             <p className="truncate text-title-medium font-bold">Portal Brasileirão</p>

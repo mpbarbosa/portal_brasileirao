@@ -51,6 +51,13 @@ test("a motion utility is caught even though it compiles to nothing", () => {
   assert.deepEqual(fire('"transition"'), []);
 });
 
+test("Tailwind's shadows are caught and the elevation scale is not", () => {
+  assert.deepEqual(fire('"shadow-xl"'), ["tailwind-shadow"]);
+  assert.deepEqual(fire('"shadow"'), ["tailwind-shadow"]);
+  assert.deepEqual(fire('"shadow-inner"'), ["tailwind-shadow"]);
+  assert.deepEqual(fire('"shadow-level-0 shadow-level-3 shadow-level-5"'), []);
+});
+
 test("a hand-written state colour is caught", () => {
   assert.deepEqual(fire('"hover:bg-surface-container"'), ["hand-written-state"]);
   assert.deepEqual(fire('"focus-visible:outline-primary"'), ["hand-written-state"]);

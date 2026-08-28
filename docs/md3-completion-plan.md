@@ -134,7 +134,7 @@ are deleted from `legacyTokens`; `npm run test:tokens` passes with the pairing
 labels renamed; a before/after capture in both themes shows no pixel change
 outside the rodapé's version band.
 
-## M7 — Elevation
+## M7 — Elevation — **done**
 
 M2 is titled **"Shape, elevation and state layers"** and shipped two of the
 three. What it adopted is MD3's *tonal* elevation — a higher surface is a lighter
@@ -173,7 +173,36 @@ names a level; the scrolled/at-rest app bar distinction is asserted in an e2e
 spec, since it is the one piece of this phase with a behaviour rather than only
 an appearance.
 
-## M8 — Make the conventions enforceable
+**Done, and four things came out differently than written.**
+
+- **The tokens are `--shadow-level-0…5`, not `--elevation-0…5`.** A Tailwind v4
+  utility exists only where a theme namespace says it does, so the name this
+  section proposed would have been a real custom property that no class could
+  ever reach — the `--duration-short-4` trap, one scale over. The namespace
+  picks the name.
+- **The values were transcribed, not recalled.** MD3 computes each level's key
+  and ambient shadow from the level number in
+  `material-web/elevation/internal/_elevation.scss`; those are the numbers in
+  `src/index.css`. A plausible shadow is indistinguishable from a correct one to
+  anyone reading the page, which is the `stadiums.ts` argument applied to a
+  number nobody would ever catch.
+- **The shadows-in-dark recommendation was taken and then checked by looking.**
+  On dark they are all but invisible and the tonal ladder plus the borders carry
+  the separation; on light the scrolled app bar reads clearly. That is what the
+  spec predicts, and it is why tonal elevation exists.
+- **The mount read in `useScrolled` cannot be tested here, and the spec says so
+  rather than covering it.** The obvious test — scroll, reload, assert the bar
+  comes back raised — cannot work: Chromium restores a scroll position only
+  while the document is tall enough to hold it, and this app's content arrives
+  from `/api/standings` after load. Measured: scrolled to 365, reloaded,
+  `window.scrollY` was **0**. Such a test would assert the at-rest state and
+  pass, saying nothing at all.
+
+Both bars keep their border in every state. MD3 drops the top app bar's divider
+at rest; doing that is a visible restyle of every page rather than an elevation,
+so it was left for whoever takes that decision deliberately.
+
+## M8 — Make the conventions enforceable — **done**
 
 This is the phase that turns the whole migration from a state into a property.
 Everything M2, M3 and M4 established is currently guarded by review, and the

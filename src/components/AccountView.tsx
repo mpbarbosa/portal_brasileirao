@@ -247,7 +247,7 @@ export function AccountView({
         ref={dialogRef}
         // Tailwind's preflight resets margin to 0, which kills the user agent's
         // `dialog { margin: auto }` — so centring is explicit here.
-        className="m-auto max-w-sm rounded-medium border border-line bg-surface-container-low p-5 text-ink backdrop:bg-scrim/60"
+        className="m-auto max-w-sm rounded-medium border border-line bg-surface-container-low p-5 text-ink shadow-level-3 backdrop:bg-scrim/60"
         onCancel={() => dialogRef.current?.close()}
       >
         <h3 className="text-title-medium font-bold">Apagar a conta?</h3>

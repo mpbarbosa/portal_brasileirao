@@ -88,6 +88,18 @@ export const RULES: Rule[] = [
       "a bare `transition` already means MD3 standard easing at 200ms — and duration-short-4 compiles to nothing in Tailwind v4",
   },
   {
+    id: "tailwind-shadow",
+    // The elevation scale is `shadow-level-0` … `shadow-level-5`; everything
+    // else in the `shadow` family is Tailwind's own, at sizes MD3 does not
+    // define. This rule did not ship with the other five in M8: there was still
+    // a `shadow-xl` on the player dialog and no elevation vocabulary to replace
+    // it with, and a rule that arrives before the vocabulary it enforces has to
+    // arrive with a carve-out. It ships here, with the tokens.
+    pattern: /\bshadow(?:-(?:sm|md|lg|xl|2xl|inner|none))?\b(?!-)/,
+    guidance:
+      "use the MD3 elevation scale (shadow-level-0 … shadow-level-5) — a dialog is level 3, a navigation bar level 2",
+  },
+  {
     id: "hand-written-state",
     pattern: /\b(?:hover|focus|focus-visible|active):(?:bg|text|border|outline)-/,
     guidance:
