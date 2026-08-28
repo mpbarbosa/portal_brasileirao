@@ -1,0 +1,51 @@
+name: Assess GITHUB_ENV vs job-level env
+
+# THROWAWAY. Delete in the commit that uses its answer.
+#
+# docs/cicd-plan.md gap D needs rollback.yml to resolve a tag to a full sha.
+# TARGET_SHA is a JOB-LEVEL `env:` consumed by three later steps, so the obvious
+# fix is to resolve it and write the result to $GITHUB_ENV. Whether that actually
+# overrides a job-level `env:` of the same name for subsequent steps is the one
+# thing the fix turns on, and it is not readable from the file.
+#
+# Nothing in this repository does it, so there is no run history to read. This
+# produces the answer. `UNSET_NAME` is the control: the same write to a name the
+# job does not define, which must work — if it does not, the harness is wrong
+# rather than the behaviour surprising.
+
+on:
+  push:
+    branches: [worktree-rollback-ref]
+
+permissions:
+  contents: read
+
+jobs:
+  precedence:
+    runs-on: ubuntu-latest
+    env:
+      TARGET: from-job-env
+    steps:
+      - name: Write both names to GITHUB_ENV
+        run: |
+          echo "TARGET=from-github-env" >> "$GITHUB_ENV"
+          echo "UNSET_NAME=from-github-env" >> "$GITHUB_ENV"
+
+      - name: Read them back in a later step
+        run: |
+          echo "TARGET      = ${TARGET}"
+          echo "UNSET_NAME  = ${UNSET_NAME}"
+          if [ "$TARGET" = "from-github-env" ]; then
+            echo "VERDICT: GITHUB_ENV OVERRIDES job-level env"
+          elif [ "$TARGET" = "from-job-env" ]; then
+            echo "VERDICT: job-level env WINS; GITHUB_ENV is shadowed"
+          else
+            echo "VERDICT: unexpected value '${TARGET}'"
+          fi
+          [ "$UNSET_NAME" = "from-github-env" ] || echo "CONTROL FAILED: the harness is wrong"
+
+      - name: And in a step that re-declares it at step level
+        env:
+          TARGET: from-step-env
+        run: |
+          echo "step-level env gives ${TARGET}"
