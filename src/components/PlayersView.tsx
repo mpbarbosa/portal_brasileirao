@@ -106,13 +106,13 @@ function SquadPanel({
             Hence the inner `<span>` for the flex row: `display: flex` on a
             `summary` removes the marker in Chrome, which is the trap that makes
             people reach for a hand-drawn chevron in the first place. */}
-        {/* `text-ink` rather than inheriting it, because every other
+        {/* `text-on-surface` rather than inheriting it, because every other
             `STATE_LAYER` call site names its colour and one that does not is
             the odd one out the next person has to reason about. It is the
             convention, not a fix: measured across a real theme toggle, the
             inherited value re-resolved correctly on its own. */}
         <summary
-          className={`cursor-pointer rounded-small px-3 py-3 text-ink marker:text-ink-muted ${STATE_LAYER}`}
+          className={`cursor-pointer rounded-small px-3 py-3 text-on-surface marker:text-ink-muted ${STATE_LAYER}`}
         >
           {/* A heading, not a styled span: it puts the club into the document
               outline between the page's h2 and each line's h4, so the elencos
@@ -133,7 +133,7 @@ function SquadPanel({
           </h3>
         </summary>
 
-        <div className="border-t border-line px-3 py-3">
+        <div className="border-t border-outline-variant px-3 py-3">
           {sections.length === 0 ? (
             <p className="text-body-small text-ink-muted">
               O provedor não lista o elenco deste clube.

@@ -3,7 +3,7 @@
 /**
  * Semantic colour tokens.
  *
- * Components name what a colour *means* — `border-line`, `text-ink-muted` —
+ * Components name what a colour *means* — `border-outline-variant`, `text-ink-muted` —
  * rather than which shade it happens to be. That indirection is what makes two
  * themes possible without touching a component: only the values below change.
  *
@@ -255,19 +255,12 @@
   --color-plate-line: #d8dee7;
   --color-plate-ink: #0f172a;
 
-  /* The names components use today, mapped onto the roles above. */
-  --color-line: #43474e;
-  --color-line-strong: #8d9199;
-  --color-ink: #e1e2e9;
-  --color-ink-soft: #c3c6cf;
+  /* Extensions: what MD3 has no role for. None may duplicate one. */
   --color-ink-muted: #a8abb4;
   --color-ink-faint: #8d9199;
   --color-ink-ghost: #73777f;
-  --color-ink-inverted: #2e3035;
   --color-positive: #51be8f;
-  --color-positive-ink: #6fdba9;
   --color-negative: #ff5448;
-  --color-negative-ink: #ffb3aa;
   --color-warning: #ee9800;
   --color-warning-ink: #ffcb8d;
 }
@@ -310,19 +303,12 @@
   --color-plate-line: #d8dee7;
   --color-plate-ink: #0f172a;
 
-  /* The names components use today, mapped onto the roles above. */
-  --color-line: #43474e;
-  --color-line-strong: #8d9199;
-  --color-ink: #e1e2e9;
-  --color-ink-soft: #c3c6cf;
+  /* Extensions: what MD3 has no role for. None may duplicate one. */
   --color-ink-muted: #a8abb4;
   --color-ink-faint: #8d9199;
   --color-ink-ghost: #73777f;
-  --color-ink-inverted: #2e3035;
   --color-positive: #51be8f;
-  --color-positive-ink: #6fdba9;
   --color-negative: #ff5448;
-  --color-negative-ink: #ffb3aa;
   --color-warning: #ee9800;
   --color-warning-ink: #ffcb8d;
 
@@ -367,19 +353,12 @@
   --color-plate-line: #d8dee7;
   --color-plate-ink: #0f172a;
 
-  /* The names components use today, mapped onto the roles above. */
-  --color-line: #c3c6cf;
-  --color-line-strong: #73777f;
-  --color-ink: #191c20;
-  --color-ink-soft: #43474e;
+  /* Extensions: what MD3 has no role for. None may duplicate one. */
   --color-ink-muted: #5b5e66;
   --color-ink-faint: #676b73;
   --color-ink-ghost: #80848c;
-  --color-ink-inverted: #eff0f7;
   --color-positive: #31a375;
-  --color-positive-ink: #006d49;
   --color-negative: #de3730;
-  --color-negative-ink: #ba1a1a;
   --color-warning: #ee9800;
   --color-warning-ink: #875200;
 
@@ -388,7 +367,7 @@
 /* MD3-TOKENS:END */
 
 body {
-  @apply bg-surface text-ink antialiased;
+  @apply bg-surface text-on-surface antialiased;
 }
 
 /**

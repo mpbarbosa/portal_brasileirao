@@ -66,7 +66,7 @@ function NavigationBar({
          the one content scrolls under — does get its separation. The border
          stays: it is what this bar has always used at rest, and removing it is
          a restyle rather than an elevation. */
-      className="fixed inset-x-0 bottom-0 z-20 border-t border-line bg-surface/95 shadow-level-2 backdrop-blur sm:hidden"
+      className="fixed inset-x-0 bottom-0 z-20 border-t border-outline-variant bg-surface/95 shadow-level-2 backdrop-blur sm:hidden"
     >
       <ul className="mx-auto flex max-w-3xl items-stretch justify-around">
         {NAV_ITEMS.map((item) => {
@@ -86,7 +86,7 @@ function NavigationBar({
                    MD3 does not specify it, while it does specify the 64x32dp
                    indicator. Measured at 320, 360 and 375dp. */
                 className={`flex flex-col items-center gap-1 pb-2 pt-3 ${
-                  active ? `text-ink ${FOCUS_RING}` : `text-ink-muted ${STATE_LAYER}`
+                  active ? `text-on-surface ${FOCUS_RING}` : `text-ink-muted ${STATE_LAYER}`
                 }`}
               >
                 {/* The indicator is sized by MD3 rather than by the glyph, so
@@ -152,8 +152,8 @@ export function NavBar({
       // focusable, so it takes the ring on its own. Folding the ring into the
       // state layer once left this one entry with the browser's 1px default.
       id === current
-        ? `bg-ink text-ink-inverted ${FOCUS_RING}`
-        : `text-ink-soft ${STATE_LAYER}`,
+        ? `bg-on-surface text-inverse-on-surface ${FOCUS_RING}`
+        : `text-on-surface-variant ${STATE_LAYER}`,
     ].join(" ");
 
   return (
@@ -171,7 +171,7 @@ export function NavBar({
           than an elevation, so it is not this phase's to make. */}
       <header
         data-scrolled={scrolled ? "true" : "false"}
-        className={`sticky top-0 z-20 border-b border-line bg-surface/90 backdrop-blur transition ${
+        className={`sticky top-0 z-20 border-b border-outline-variant bg-surface/90 backdrop-blur transition ${
           scrolled ? "shadow-level-2" : "shadow-level-0"
         }`}
       >

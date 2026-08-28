@@ -41,7 +41,7 @@ export function AccountButton({ state }: { state: AccountState }) {
       href={signedIn ? "/conta" : "/entrar"}
       title={label}
       data-account={signedIn ? "signed-in" : "signed-out"}
-      className={`inline-flex items-center gap-1.5 rounded-full px-3 py-2 text-body-medium text-ink-soft ${STATE_LAYER} ${FOCUS_RING}`}
+      className={`inline-flex items-center gap-1.5 rounded-full px-3 py-2 text-body-medium text-on-surface-variant ${STATE_LAYER} ${FOCUS_RING}`}
     >
       <AccountGlyph className="h-5 w-5" />
       <span className="sr-only sm:not-sr-only">{label}</span>
@@ -200,7 +200,7 @@ export function AccountView({
 
       <Surface filled className="mt-4 px-4 py-3" data-account-card>
         <dl className="space-y-2">
-          <div className="flex items-baseline justify-between gap-4 border-b border-line pb-2">
+          <div className="flex items-baseline justify-between gap-4 border-b border-outline-variant pb-2">
             <dt className="text-body-small text-ink-muted">Nome</dt>
             <dd className="truncate text-body-medium">{account.displayName}</dd>
           </div>
@@ -228,7 +228,7 @@ export function AccountView({
         </Button>
       </div>
 
-      <div className="mt-8 border-t border-line pt-4">
+      <div className="mt-8 border-t border-outline-variant pt-4">
         <h3 className="text-body-medium font-semibold">Apagar a conta</h3>
         <p className="mt-1 max-w-prose text-body-small text-ink-muted">
           A conta e todas as sessões são apagadas na hora. Não há como desfazer,
@@ -237,7 +237,7 @@ export function AccountView({
         <Button
           onClick={() => dialogRef.current?.showModal()}
           data-delete-account
-          className="mt-3 border-negative/40 text-negative-ink"
+          className="mt-3 border-negative/40 text-error"
         >
           Apagar a minha conta
         </Button>
@@ -247,7 +247,7 @@ export function AccountView({
         ref={dialogRef}
         // Tailwind's preflight resets margin to 0, which kills the user agent's
         // `dialog { margin: auto }` — so centring is explicit here.
-        className="m-auto max-w-sm rounded-medium border border-line bg-surface-container-low p-5 text-ink shadow-level-3 backdrop:bg-scrim/60"
+        className="m-auto max-w-sm rounded-medium border border-outline-variant bg-surface-container-low p-5 text-on-surface shadow-level-3 backdrop:bg-scrim/60"
         onCancel={() => dialogRef.current?.close()}
       >
         <h3 className="text-title-medium font-bold">Apagar a conta?</h3>
@@ -263,7 +263,7 @@ export function AccountView({
             size="sm"
             disabled={busy}
             data-confirm-delete
-            className="border-negative/40 text-negative-ink"
+            className="border-negative/40 text-error"
             onClick={() => {
               setBusy(true);
               dialogRef.current?.close();

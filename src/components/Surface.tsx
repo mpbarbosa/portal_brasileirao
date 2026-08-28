@@ -37,7 +37,7 @@ export function Surface({
   ...rest
 }: SurfaceProps) {
   const Tag = as ?? "div";
-  const classes = ["rounded-small border border-line", filled ? "bg-surface-container-low" : "", className]
+  const classes = ["rounded-small border border-outline-variant", filled ? "bg-surface-container-low" : "", className]
     .filter(Boolean)
     .join(" ");
 

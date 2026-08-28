@@ -139,7 +139,10 @@ test.describe("Tema", () => {
 
       // Custom properties are not in any transition's property list, so this
       // reads the newly active palette immediately.
-      const expected = await tokenColour(page, "--color-ink-soft");
+      // `--color-on-surface-variant`, which the toggle wears. It was
+      // `--color-ink-soft` until M6 retired the alias; the value is the same
+      // colour, and the name is now the role it always was.
+      const expected = await tokenColour(page, "--color-on-surface-variant");
       expect(expected, "the two themes must not share this token").not.toBe(before);
 
       await expect

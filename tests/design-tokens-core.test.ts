@@ -17,7 +17,7 @@ test("a palette shade is caught on any colour property", () => {
 
 test("the app's own tokens are not palette shades", () => {
   assert.deepEqual(fire('<p className="text-ink-muted bg-surface-container-low" />'), []);
-  assert.deepEqual(fire('<p className="text-positive-ink border-line-strong" />'), []);
+  assert.deepEqual(fire('<p className="text-ink-muted border-outline" />'), []);
 });
 
 test("Tailwind's radii are caught and MD3's are not", () => {

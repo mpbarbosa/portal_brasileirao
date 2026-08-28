@@ -45,7 +45,7 @@ export type ControlVariant = "outlined" | "tonal";
  * The tonal links sit in open prose, where nothing is there to misalign with.
  */
 const VARIANT: Record<ControlVariant, string> = {
-  outlined: "rounded-small border border-line-strong text-ink-soft",
+  outlined: "rounded-small border border-outline text-on-surface-variant",
   tonal: "rounded-full bg-secondary-container text-on-secondary-container",
 };
 

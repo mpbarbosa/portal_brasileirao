@@ -63,7 +63,7 @@ export const STATE_LAYER = [
  */
 export const LINK_UNDERLINE = [
   "underline decoration-ink-ghost underline-offset-2",
-  "transition hover:decoration-ink-soft",
+  "transition hover:decoration-on-surface-variant",
   FOCUS_RING,
 ].join(" ");
 
@@ -76,6 +76,6 @@ export const LINK_UNDERLINE = [
  * drift apart.
  */
 export const BACK_LINK = [
-  "text-body-medium text-ink-muted transition hover:text-ink-soft",
+  "text-body-medium text-ink-muted transition hover:text-on-surface-variant",
   FOCUS_RING,
 ].join(" ");
