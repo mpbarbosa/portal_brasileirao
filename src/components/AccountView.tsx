@@ -1,9 +1,15 @@
 import { useRef, useState } from "react";
 
-import { firstName } from "@/account-core";
+import { firstName, initials } from "@/account-core";
 import { Button } from "@/src/components/Button";
 import { GLYPH } from "@/src/components/ClubLinks";
-import { BACK_LINK, FOCUS_RING, LINK_UNDERLINE, STATE_LAYER } from "@/src/components/interaction";
+import {
+  BACK_LINK,
+  FOCUS_RING,
+  LINK_UNDERLINE,
+  STATE_LAYER,
+  STATE_LAYER_ON_PRIMARY_CONTAINER,
+} from "@/src/components/interaction";
 import { Surface } from "@/src/components/Surface";
 import { controlClasses } from "@/src/components/Button";
 import type { AccountState } from "@/src/useAccount";
@@ -29,22 +35,95 @@ export function AccountGlyph({ className }: { className?: string }) {
  * Renders **nothing at all** while the answer is in flight, and nothing when
  * accounts are switched off on this host. A control that appears 200ms after
  * paint and then changes its own label is worse than one that arrives once.
+ *
+ * **The two states are different kinds of thing, so they are drawn as
+ * different kinds of control.** Signed out, this is the only *action* on the
+ * bar and the one thing a reader might not know is on offer — so it is a
+ * filled tonal button, MD3's emphasis step below the filled one, carrying its
+ * verb at every width. Signed in there is nothing to invite: the control's job
+ * is to say *whose* page this is and to lead to the account, so it becomes an
+ * avatar with a name beside it. They differ in fill, in shape, in colour role
+ * and in wording at once, which is what makes the state readable at a glance
+ * rather than by reading a label.
+ *
+ * Both were a bare `text-on-surface-variant` link before, distinguished only by the words
+ * "Entrar" and "Minha conta" — the same weight as a caption, and on a bar whose
+ * current-section chip is filled, quieter than the navigation beside it.
+ *
+ * **`h-10` is stated on both, and on the theme toggle beside them.** Left to
+ * padding the three controls in the trailing group measured 36, 40 and 38 —
+ * three heights in one row of a bar 56 tall, which reads as a wobble rather
+ * than as a difference. 40dp is MD3's size for a top-app-bar control; the
+ * toggle only missed it because its 1px outline is part of its box and nothing
+ * had ever compared the two.
+ *
+ * The avatar is initials, never a photograph: `publicAccount` carries a display
+ * name and nothing else, because the name is all the sign-in asks Google for
+ * and `/privacidade` says so.
  */
 export function AccountButton({ state }: { state: AccountState }) {
   if (state.status === "loading" || state.status === "disabled") return null;
 
-  const signedIn = state.status === "signed-in";
-  const label = signedIn ? "Minha conta" : "Entrar";
+  if (state.status === "signed-in") {
+    const name = firstName(state.account.displayName);
+    const mark = initials(state.account.displayName);
+
+    return (
+      <a
+        href="/conta"
+        data-account="signed-in"
+        /* No `title`: it never appears on touch, and it competes with the
+           accessible name for voice control — the same reason the destinations
+           in `NavBar` carry none. */
+        className={`inline-flex h-10 items-center gap-2 rounded-full p-1 text-label-large font-medium text-on-surface sm:pr-3 ${STATE_LAYER}`}
+      >
+        {/* The accessible name says what the control *does* and then who it
+            belongs to; the visible name is contained in it, which is what WCAG
+            2.5.3 asks for and what keeps "clique em Ana" working. Everything
+            visible is therefore `aria-hidden` — otherwise the disc's letters
+            are read out as a word before the name. */}
+        <span className="sr-only">Minha conta, {name}</span>
+        <span
+          aria-hidden="true"
+          data-account-avatar
+          className="flex h-8 w-8 items-center justify-center rounded-full bg-secondary-container text-label-large font-semibold text-on-secondary-container"
+        >
+          {/* A name of nothing but punctuation survives `normaliseDisplayName`,
+              which refuses to fail a sign-in over a rendering concern. The
+              glyph is what an empty disc would otherwise be. */}
+          {mark || <AccountGlyph className="h-5 w-5" />}
+        </span>
+        {/* Hidden on a phone, where the disc alone is the pattern every app
+            uses and the bar has a theme toggle beside it.
+
+            Capped because a first name is short but not *bounded*: the provider
+            sends whatever it has, and `normaliseDisplayName` only stops it at
+            60 characters — a single word that long renders ~490px, and at 640px
+            it pushed the document into a horizontal scroll. Measured with such
+            a name rather than reasoned about; 80px is what 640px can afford,
+            where the five inline tabs already wrap "Ao vivo" onto two lines.
+
+            `truncate` works here on what reads like an inline span because the
+            anchor is `inline-flex` and **a flex container blockifies its
+            children** — so `max-width` and `overflow` apply, which on a genuine
+            inline box they would not. Worth stating: the obvious fix when this
+            looks broken is to reach for `inline-block`, and it changes
+            nothing. */}
+        <span aria-hidden="true" className="hidden max-w-20 truncate sm:inline md:max-w-28">
+          {name}
+        </span>
+      </a>
+    );
+  }
 
   return (
     <a
-      href={signedIn ? "/conta" : "/entrar"}
-      title={label}
-      data-account={signedIn ? "signed-in" : "signed-out"}
-      className={`inline-flex items-center gap-1.5 rounded-full px-3 py-2 text-body-medium text-on-surface-variant ${STATE_LAYER} ${FOCUS_RING}`}
+      href="/entrar"
+      data-account="signed-out"
+      className={`inline-flex h-10 items-center gap-1.5 rounded-full bg-primary-container px-4 text-label-large font-semibold text-on-primary-container ${STATE_LAYER_ON_PRIMARY_CONTAINER}`}
     >
       <AccountGlyph className="h-5 w-5" />
-      <span className="sr-only sm:not-sr-only">{label}</span>
+      Entrar
     </a>
   );
 }

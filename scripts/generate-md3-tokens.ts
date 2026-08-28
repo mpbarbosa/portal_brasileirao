@@ -285,9 +285,20 @@ const pairingsFor = (mode: string, tokens: Tokens): Pairing[] => {
     live: true,
   });
 
-  // MD3's own promise: every `on-` role is readable on its pair. No component
-  // names these yet — the roles ship in M1 and the call sites arrive in M2 — but
-  // the guarantee is the reason to adopt the system, so it is checked from now.
+  // MD3's own promise: every `on-` role is readable on its pair. Checked for
+  // all four roles whether or not anything paints them, for the reason
+  // `backgroundsFor` gives — a latent pairing below AA is a trap that springs
+  // the first time somebody reaches for it.
+  //
+  // Two of the container pairs are no longer latent, and the note here said
+  // otherwise for longer than it was true. `Button`'s `tonal` variant has
+  // painted `on-secondary-container` on `secondary-container` since M4, and the
+  // account control paints both — `primary-container` filled when signed out,
+  // a `secondary-container` avatar when signed in. `live` is what tells a
+  // future phase which of its headroom is protecting something a reader can
+  // actually see, so it has to keep up with the call sites.
+  const containerHasCallSite = new Set(["primary", "secondary"]);
+
   for (const role of ["primary", "secondary", "tertiary", "error"]) {
     pairings.push({
       label: `${mode}: on-${role} on ${role}`,
@@ -301,7 +312,7 @@ const pairingsFor = (mode: string, tokens: Tokens): Pairing[] => {
       fg: tokens[`on-${role}-container`],
       bg: tokens[`${role}-container`],
       floor: 4.5,
-      live: false,
+      live: containerHasCallSite.has(role),
     });
   }
   pairings.push({
