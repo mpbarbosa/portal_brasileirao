@@ -88,3 +88,42 @@ export const firstName = (displayName: string): string =>
 
 /** A new account id. Opaque, and derived from nothing about the person. */
 export const newAccountId = (random: () => string): string => `acc_${random()}`;
+
+/**
+ * One or two letters standing in for a face.
+ *
+ * The account control is an avatar when somebody is signed in, and this app has
+ * no photograph to put in it — `publicAccount` carries a display name and
+ * nothing else, deliberately, because the name is all the sign-in asks Google
+ * for. So the disc holds initials.
+ *
+ * First and last word rather than the first two, which is how a person writes
+ * their own initials: "Marcelo Pereira Barbosa" is MB, not MP. A single word
+ * gives one letter rather than a doubled one — "T" for the `Torcedor`
+ * fallback, never "TT".
+ *
+ * Each word contributes its first *letter or digit* rather than its first
+ * character, so a name written "(Ana)" or "- Ana" marks as A rather than as a
+ * bracket; a word holding no letter at all contributes nothing. A name that is
+ * entirely symbols therefore returns empty — `normaliseDisplayName` permits one,
+ * because refusing it would fail a sign-in over a rendering concern — and the
+ * caller falls back to the glyph rather than drawing an empty disc.
+ *
+ * Matched with the `u` flag and read through the code points, never `[0]` on
+ * the string: a name outside the Basic Multilingual Plane would otherwise give
+ * half a surrogate pair, which renders as a replacement character.
+ *
+ * Uppercased in pt-BR, which matters for the accented initials this division's
+ * readers actually have: "Ângelo" must give "Â" and not fold to "A".
+ */
+export const initials = (displayName: string): string => {
+  const marks = displayName
+    .split(/\s+/)
+    .map((word) => word.match(/[\p{L}\p{N}]/u)?.[0])
+    .filter((mark): mark is string => mark !== undefined);
+
+  if (marks.length === 0) return "";
+
+  const chosen = marks.length === 1 ? [marks[0]!] : [marks[0]!, marks[marks.length - 1]!];
+  return chosen.map((mark) => mark.toLocaleUpperCase("pt-BR")).join("");
+};

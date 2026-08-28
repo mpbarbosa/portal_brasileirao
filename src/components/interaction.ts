@@ -79,3 +79,25 @@ export const BACK_LINK = [
   "text-body-medium text-ink-muted transition hover:text-on-surface-variant",
   FOCUS_RING,
 ].join(" ");
+
+/**
+ * The veil for a control filled with `primary-container`, and the day the note
+ * above anticipated.
+ *
+ * `STATE_LAYER` veils with `on-surface`, which is right for every control that
+ * sits *on* a surface and wrong for one that supplies its own fill: a dark veil
+ * over a filled container muddies the fill instead of lightening it, and on the
+ * light theme the two are close enough that hover stops reading at all. MD3's
+ * rule is that the veil is the container's own "on" colour, so a filled control
+ * takes the pair it was filled from.
+ *
+ * A second constant rather than a parameterised one, for the extraction reason
+ * at the top of this file: `hover:bg-${role}/8` generates no CSS whatsoever.
+ */
+export const STATE_LAYER_ON_PRIMARY_CONTAINER = [
+  "transition",
+  "hover:bg-on-primary-container/8",
+  "focus-visible:bg-on-primary-container/10",
+  "active:bg-on-primary-container/10",
+  FOCUS_RING,
+].join(" ");

@@ -186,30 +186,117 @@ test.describe("Contas", () => {
     // horizontal scroll to reveal it, invisible to every test until one
     // measured boxes. Adding a second trailing control is that same failure one
     // breakpoint up, so it is measured rather than eyeballed.
+    //
+    // **Signed out is the wider state and the one this now guards.** The
+    // control gained a fill and carries its verb at every width, where it used
+    // to be a bare glyph with an `sm:`-gated label — so it is widest exactly
+    // where the five inline tabs appear, at 640px. Measuring only the signed-in
+    // state would have missed that entirely.
+    await page.goto("/");
+    await expect(accountControl(page)).toHaveAttribute("data-account", "signed-out");
+    await assertHeaderFits(page);
+
     await devLogin(page, "Elisa");
+    await page.goto("/");
+    await expect(accountControl(page)).toHaveAttribute("data-account", "signed-in");
+    await assertHeaderFits(page);
+  });
+
+  test("the two states are told apart by more than their wording", async ({ page }) => {
+    // The point of the change: signed out is an action and signed in is an
+    // identity, so they differ in fill and in shape as well as in label. A
+    // reader should not have to read a word to know which one they are looking
+    // at — which is what asserting the *colour* rather than the text checks.
+    await page.goto("/");
+
+    const signedOut = accountControl(page);
+    await expect(signedOut).toHaveAttribute("data-account", "signed-out");
+    await expect(signedOut).toHaveText(/Entrar/);
+    // Filled: a tonal button, not the bare text link it used to be.
+    const outFill = await signedOut.evaluate((el) => getComputedStyle(el).backgroundColor);
+    expect(outFill, "the signed-out control should carry a fill").not.toBe("rgba(0, 0, 0, 0)");
+    // Nothing standing in for a face when there is no account to have one.
+    await expect(page.locator("[data-account-avatar]")).toHaveCount(0);
+
+    await devLogin(page, "Ana Torcedora");
+    await page.goto("/");
+
+    const signedIn = accountControl(page);
+    await expect(signedIn).toHaveAttribute("data-account", "signed-in");
+    // The identity, not the verb. "Minha conta" survives only as the accessible
+    // name, which is what tells a screen reader what the control *does*.
+    await expect(signedIn).not.toHaveText(/Entrar/);
+    await expect(signedIn).toHaveAccessibleName(/Minha conta, Ana/);
+
+    // The avatar is the filled thing now, and the control around it is not —
+    // the inverse of the signed-out shape rather than a recolouring of it.
+    const avatar = page.locator("[data-account-avatar]");
+    await expect(avatar).toHaveText("AT");
+    const inFill = await signedIn.evaluate((el) => getComputedStyle(el).backgroundColor);
+    expect(inFill, "the signed-in control itself should not be filled").toBe("rgba(0, 0, 0, 0)");
+    const avatarFill = await avatar.evaluate((el) => getComputedStyle(el).backgroundColor);
+    expect(avatarFill, "the avatar should carry the fill").not.toBe("rgba(0, 0, 0, 0)");
+    expect(avatarFill, "the two states should not share a colour").not.toBe(outFill);
+  });
+
+  test("a name longer than the bar is cut, not allowed to push the page", async ({ page }) => {
+    // `normaliseDisplayName` stops a display name at 60 characters, which for a
+    // single word renders about 490px — wider than the header's whole content
+    // box. Uncapped it put the document into a horizontal scroll at 640px, the
+    // width where the five inline tabs are already wrapping "Ao vivo". No human
+    // is called this; the provider is what sends it, so the guard is measured
+    // rather than assumed.
+    await devLogin(page, "W" + "o".repeat(58) + "x");
 
     for (const width of [640, 768, 1024]) {
       await page.setViewportSize({ width, height: 800 });
       await page.goto("/");
+      await expect(accountControl(page)).toHaveAttribute("data-account", "signed-in");
 
-      const header = page.locator("header").first();
-      const box = await header.boundingBox();
-      expect(box).toBeTruthy();
+      const name = page.locator("[data-account] span:last-child");
+      const cut = await name.evaluate((el) => ({
+        shown: el.getBoundingClientRect().width,
+        full: el.scrollWidth,
+      }));
+      expect(cut.full, "the test name should be far wider than any cap").toBeGreaterThan(400);
+      expect(cut.shown, `the name is not cut at ${width}px`).toBeLessThan(cut.full);
 
-      const control = accountControl(page);
-      const controlBox = await control.boundingBox();
-      expect(controlBox, `account control should be laid out at ${width}px`).toBeTruthy();
-
-      expect(
-        controlBox!.x + controlBox!.width,
-        `the account control overflows the header at ${width}px`,
-      ).toBeLessThanOrEqual(box!.x + box!.width + 1);
-
-      // And the document itself must not scroll sideways to accommodate it.
       const overflow = await page.evaluate(
         () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
       );
-      expect(overflow, `page overflows horizontally at ${width}px`).toBeLessThanOrEqual(0);
+      expect(overflow, `a long name pushes the page sideways at ${width}px`).toBeLessThanOrEqual(0);
     }
   });
 });
+
+/**
+ * The header, its trailing controls and the page all stay inside their boxes.
+ *
+ * Extracted because it now runs against both account states: the widths that
+ * matter are the ones where the five inline tabs share the bar with whatever
+ * the account control happens to be.
+ */
+async function assertHeaderFits(page: Page) {
+  for (const width of [640, 768, 1024]) {
+    await page.setViewportSize({ width, height: 800 });
+
+    const header = page.locator("header").first();
+    const box = await header.boundingBox();
+    expect(box).toBeTruthy();
+
+    const control = accountControl(page);
+    const controlBox = await control.boundingBox();
+    expect(controlBox, `account control should be laid out at ${width}px`).toBeTruthy();
+
+    expect(
+      controlBox!.x + controlBox!.width,
+      `the account control overflows the header at ${width}px`,
+    ).toBeLessThanOrEqual(box!.x + box!.width + 1);
+
+    // And the document itself must not scroll sideways to accommodate it.
+    const overflow = await page.evaluate(
+      () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+    );
+    expect(overflow, `page overflows horizontally at ${width}px`).toBeLessThanOrEqual(0);
+  }
+}

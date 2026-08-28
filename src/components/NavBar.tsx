@@ -215,6 +215,10 @@ export function NavBar({
               onClick={onToggleTheme}
               aria-label={themeToggleLabel(theme)}
               title={themeToggleLabel(theme)}
+              /* Levels this with the account control beside it — see the note
+                 on `AccountButton`. Its own padding puts it at 38, because the
+                 outline is part of its box. */
+              className="h-10"
             >
               <span aria-hidden="true">{theme === "light" ? "☽" : "☀"}</span>
             </Button>
