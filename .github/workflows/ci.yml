@@ -694,3 +694,53 @@ jobs:
 
           curl -sf --max-time 10 "${SITE_URL}/api/standings" | jq -e '.source' > /dev/null
           echo "Live at ${SITE_URL}"
+
+  tag:
+    name: Tag the release
+    # `needs: deploy` is the whole invariant: a deploy tag exists if and only if
+    # a release reached production and answered from it. A pull_request run
+    # skips `deploy`, so this skips with it — no `if:` of its own is needed, and
+    # a second copy of that condition is how the two come to disagree.
+    needs: deploy
+    runs-on: ubuntu-latest
+    # A bookkeeping failure must not report the release as failed. This is
+    # Defect 4's shape exactly — an advisory job reddening a run whose deploy
+    # succeeded — and #142 established what this flag actually does: the run
+    # concludes `success` while the job and its check run still conclude
+    # `failure`, so an untagged release keeps a red row where a person looks.
+    # Visible, and not at the release's expense.
+    continue-on-error: true
+    permissions:
+      # The only job here that can write to the repository, and it holds no AWS
+      # credentials — which is why it is a separate job rather than four lines
+      # at the end of `deploy`. That job carries the OIDC token and the release
+      # payload; giving it a writable repository token as well would widen the
+      # blast radius of the one job that already has the most reach.
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Record that this commit reached production
+        run: |
+          set -euo pipefail
+
+          # UTC, seconds resolution. `concurrency: deploy-production` serialises
+          # installs and one takes ~30s, so two tags cannot collide; a re-deploy
+          # of the same commit — which the reconciler can dispatch — deliberately
+          # gets a second tag, because two installs happened and the record
+          # should say so.
+          tag="deploy-$(date -u +%Y%m%d-%H%M%S)-${GITHUB_SHA:0:7}"
+
+          git tag "$tag" "$GITHUB_SHA"
+          git push origin "refs/tags/${tag}"
+
+          echo "::notice::Tagged ${tag}"
+          {
+            echo "Tagged \`${tag}\`"
+            echo ""
+            echo "Roll back to it with the **full** sha, which \`rollback.yml\` requires:"
+            echo ""
+            echo '```'
+            echo "git rev-parse ${tag}   # ${GITHUB_SHA}"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
