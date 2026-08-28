@@ -1274,6 +1274,13 @@ incrementally — and the reason each phase can ship on its own.
 
 ## What is left
 
+**The standard is not finished; this migration is.**
+`docs/md3-completion-plan.md` continues the numbering as M6–M9: the alias
+vocabulary M2 deferred (57 `ink` call sites then, 186 across the whole alias set
+now), the elevation half M2 has in its own title and did not build, an
+enforcement gate for the conventions M2–M4 introduced and nothing checks, and the
+components MD3 specifies that this app draws by hand. It re-opens none of M0–M5.
+
 Nothing in this migration. Everything still outstanding is written up where it
 belongs and is deliberately **not** restated here — this is an index of the
 sections, not a copy of them:
