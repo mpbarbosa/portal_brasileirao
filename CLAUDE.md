@@ -439,6 +439,51 @@ appearance is MD3's and the semantics stay navigation — no `role="tab"`, becau
 change the address and a tab role promises a `tabpanel` and arrow-key selection that do
 not exist here.
 
+**They sit on a row of their own beneath the app bar's, and the reason is arithmetic
+rather than taste.** Sharing one row with the brand and the trailing controls was
+over-subscribed, not merely tight: signed in at 640dp that row had to hold 345dp of tab
+labels, a 128dp wordmark, a 108dp account control and a 40dp toggle inside 608dp of
+content. The brand was the only elastic member, so it absorbed the whole shortfall and
+rendered **27dp wide** — the app's own name reading "P…". At 1280 the same sum left it
+115dp against 128dp needed, so `lg:px-3` on five tabs was enough to cut it on a full
+desktop too. Both states shipped, and every spec was green throughout, because
+`navigation.spec.ts` asserted the wordmark was **visible** and a truncated element is
+visible. That spec now measures `scrollWidth` against `clientWidth` at seven widths in
+the signed-in state, and it was confirmed red against the old markup before being
+believed.
+
+No padding, breakpoint or type step fixes a row whose contents do not fit. MD3 does not
+put a five-destination tab row inside a top app bar either — **tabs are a component
+placed beneath one** — so the second row is the spec's own arrangement as well as the
+one the numbers allow. The cost is **32dp of sticky chrome above `sm`** (73 → 105);
+below `sm` the bottom navigation bar is unchanged, the tab row does not render, and the
+header stays 73. The tabs are still inside `<header>`, so every spec selecting
+`header nav[aria-label="Seções"] a` is untouched — only their line moved.
+
+Two details there are load-bearing and each looks like a tidy-up. The tabs are
+**content-sized and left-aligned**, never `flex-1`: the indicator is an `after` inset
+from the tab's own padding, so an equal-width tab would draw a 131dp rule under
+"Jogos", where MD3's primary-tab indicator hugs its label. And the nav carries
+**`-ml-3`** to cancel the first tab's own `px-3`, so the first *label* starts on the
+same left edge as the wordmark above it — both are the leading edge of this bar, and 12dp
+of disagreement reads as a mistake rather than as spacing.
+
+**The wordmark is a link home.** It was two `<p>` elements, so the one control every
+site on the web puts in that corner did nothing here and a reader on a club page had to
+find "Classificação" among the destinations to get back. It takes `STATE_LAYER` with
+`-mx-2 px-2`, the negative margin buying the veil room to sit in without moving the text
+off the content column's left edge.
+
+**The theme toggle draws SVGs, not `☀` and `☽`.** A font decides a character's size and
+weight, and those two are decided by different parts of it: measured in the shipped
+bundle, the crescent drew about a third the height of the 24px icons beside it, so one
+control had two optical sizes depending on which theme was on — in the one row of this
+app that had been levelled to the pixel by #173 and M9. `☀` is also emoji-presentation on
+several platforms, which would put a colour glyph in a monochrome bar. `SunIcon` and
+`MoonIcon` live in `SectionIcons.tsx` despite not being sections, because that file holds
+the one `base` attribute bag this app's glyphs share and a glyph defined beside its call
+site drifts from it — the same drift `GLYPH` was extracted to stop.
+
 The `NAV_ITEMS` entry carries its own `Icon`, which is *why* `NavBar` never changes — an
 icon looked up by id inside `NavBar` would break that promise the first time anyone added
 a section.
@@ -1514,6 +1559,17 @@ enforces rather than early and carved-out.
   the document outline and because an end-to-end spec selects `main article`. This is the
   rule that drifted once already — that card was hand-rolled with a *different* radius
   than every other card until M2 folded it back in.
+  `as="a"` is a real case and the reason `href` is declared on `SurfaceProps`:
+  `ComponentPropsWithoutRef<"div">` knows nothing of it, so without that one optional
+  string a whole-panel link does not type-check and the next author hand-rolls the chrome
+  beside it — which is the drift this component exists to stop. The **Meu time** strip is
+  that shape: it offers exactly one thing, the club's page, and it used to say so with an
+  underline under a 72px word inside a 736px band, so 545px of the largest element on the
+  home page was inert and the crest — the thing a reader reaches for first — was outside
+  the target entirely. The whole row is the link now, with a trailing chevron so the empty
+  side reads as the rest of it, and `min-h-12` because this is a standalone control on its
+  own line rather than a link inside content: the same distinction `BACK_LINK` draws and
+  the exclusion `tabs-and-targets.spec.ts` names.
 - **The Classificação freezes `#` and Clube.** Both are `sticky`, so the numbers scroll
   out from under the club name on a narrow screen rather than taking the name with them.
   Three things had to move together, and each is invisible until someone scrolls:

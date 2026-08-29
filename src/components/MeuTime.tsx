@@ -2,7 +2,7 @@ import { followLabel, type FollowState } from "@/preferences-core";
 import { Button } from "@/src/components/Button";
 import { ClubCrest } from "@/src/components/ClubCrest";
 import { GLYPH } from "@/src/components/ClubLinks";
-import { LINK_UNDERLINE } from "@/src/components/interaction";
+import { STATE_LAYER } from "@/src/components/interaction";
 import { Surface } from "@/src/components/Surface";
 import { clubKey } from "@/club-core";
 import { formatRoute } from "@/route-core";
@@ -113,32 +113,70 @@ export function MeuTimeStrip({
 
   const { club } = state;
 
-  return (
-    <Surface filled className="mb-4 flex items-center gap-2 px-3 py-2" data-meu-time={club.code}>
+  /**
+   * One row, and — where the strip can navigate — **one link that is the whole
+   * row** rather than a link on the name inside it.
+   *
+   * The strip has exactly one thing to offer: the club's page. It said so with
+   * an underline under a 72px word, in a band 736px wide holding 190px of
+   * content, so 545px of it was inert and the target was the smallest part of
+   * the largest element on the page. Crest included, since a crest beside a
+   * club's name is the thing a reader reaches for first and it was not part of
+   * the target at all.
+   *
+   * `min-h-12` is the touch-target floor, and it applies here where it does not
+   * apply to the twenty club names in the table below: this is a standalone
+   * control on its own line, not a link inside content — the same distinction
+   * `BACK_LINK` draws, and the exclusion `tabs-and-targets.spec.ts` names.
+   */
+  const contents = (
+    <>
       <StarGlyph filled className="h-4 w-4 shrink-0 text-primary" />
-      <span className="text-label-large text-ink-muted">Meu time</span>
-      <ClubCrest club={club} size={20} />
-      {onSelectClub ? (
-        <a
-          href={formatRoute({ section: "clube", key: clubKey(club) })}
-          onClick={(event) => {
-            // Let modified clicks open a new tab, as any link should.
-            if (
-              event.metaKey || event.ctrlKey || event.shiftKey ||
-              event.altKey || event.button !== 0
-            ) {
-              return;
-            }
-            event.preventDefault();
-            onSelectClub(clubKey(club));
-          }}
-          className={`truncate rounded-x-small font-medium text-on-surface ${LINK_UNDERLINE}`}
-        >
-          {club.shortName}
-        </a>
-      ) : (
-        <span className="truncate font-medium text-on-surface">{club.shortName}</span>
+      <span className="shrink-0 text-label-large text-ink-muted">Meu time</span>
+      <ClubCrest club={club} size={24} />
+      <span className="truncate font-medium text-on-surface">{club.shortName}</span>
+      {/* The chevron is what makes the empty right-hand side read as *the rest
+          of a link* rather than as a band that ran out of things to say. It
+          also does the job the underline used to do, now that the underline
+          would be sitting under one word of a row-wide target. */}
+      {onSelectClub && (
+        <svg {...GLYPH} className="ml-auto h-5 w-5 shrink-0 text-ink-muted">
+          <path d="m9.5 5.5 6.5 6.5-6.5 6.5" />
+        </svg>
       )}
+    </>
+  );
+
+  const shared = "mb-4 flex min-h-12 items-center gap-2 px-3 py-2";
+
+  if (!onSelectClub) {
+    return (
+      <Surface filled className={shared} data-meu-time={club.code}>
+        {contents}
+      </Surface>
+    );
+  }
+
+  return (
+    <Surface
+      as="a"
+      filled
+      href={formatRoute({ section: "clube", key: clubKey(club) })}
+      onClick={(event: React.MouseEvent) => {
+        // Let modified clicks open a new tab, as any link should.
+        if (
+          event.metaKey || event.ctrlKey || event.shiftKey ||
+          event.altKey || event.button !== 0
+        ) {
+          return;
+        }
+        event.preventDefault();
+        onSelectClub(clubKey(club));
+      }}
+      className={`${shared} ${STATE_LAYER}`}
+      data-meu-time={club.code}
+    >
+      {contents}
     </Surface>
   );
 }

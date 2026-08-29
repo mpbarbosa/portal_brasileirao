@@ -11,16 +11,79 @@ const goToSection = async (page: Page, label: string) => {
   await page.getByRole("link", { name: new RegExp(`^${label}`) }).click();
 };
 
+/**
+ * Sign in as a named person — the widest the trailing group ever gets, and the
+ * state the brand's width has to survive. A copy of `contas.spec.ts`'s helper
+ * rather than an import: the two specs are about different things, and this one
+ * needs only that the row is full.
+ */
+const devLogin = async (page: Page, name: string) => {
+  const response = await page.request.post("/api/auth/dev-login", {
+    data: { subject: `sub-${name}`, name },
+  });
+  expect(response.ok()).toBeTruthy();
+};
+
 test.describe("Navegação", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/");
   });
 
-  test("shows the brand at every width", async ({ page }) => {
-    await expect(page.getByText("Portal Brasileirão", { exact: true })).toBeVisible();
+  test("shows the brand at every width, whole and never cut", async ({ page }) => {
+    // **The old form of this spec passed while the brand read "P…".**
+    //
+    // It asserted the wordmark was *visible*, and a `truncate`d element is
+    // visible — a one-character element is visible. Signed in, the header's
+    // brand block measured 27px against 128px of name at 640, and 115px at
+    // 1280; the subtitle was cut at every width the inline tabs were shown.
+    // Nothing in the suite could see it, because "visible" is the one property
+    // an ellipsis does not take away.
+    //
+    // So the assertion is `scrollWidth === clientWidth` on the wordmark itself,
+    // at the widths the header changes shape across, and in the state that made
+    // it worst — signed in, where the trailing group is at its widest.
+    await devLogin(page, "Marcelo");
+
+    for (const width of [320, 375, 639, 640, 768, 1024, 1280]) {
+      await page.setViewportSize({ width, height: 800 });
+      await page.goto("/");
+
+      const mark = page.getByText("Portal Brasileirão", { exact: true });
+      await expect(mark).toBeVisible();
+      const fit = await mark.evaluate((el) => ({
+        shown: el.clientWidth,
+        full: el.scrollWidth,
+      }));
+      expect(fit.full, `the wordmark should measure something at ${width}px`).toBeGreaterThan(0);
+      expect(fit.shown, `the wordmark is cut at ${width}px`).toBeGreaterThanOrEqual(fit.full);
+    }
+
+    // The subtitle is a phone-only line: below `sm` this row holds nothing but
+    // the brand and two 40dp controls, and above it the tab row underneath says
+    // what the app is for. The full name survives in the `h1` asserted below.
+    await page.setViewportSize({ width: 375, height: 800 });
+    await page.goto("/");
     await expect(
       page.getByText("Campeonato Brasileiro Série A", { exact: true }).first(),
     ).toBeVisible();
+
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await page.goto("/");
+    await expect(
+      page.getByText("Campeonato Brasileiro Série A", { exact: true }).first(),
+    ).toBeHidden();
+  });
+
+  test("the wordmark is the way home", async ({ page }) => {
+    // The one control every site puts in this corner, and this app had two
+    // `<p>` elements there — so a reader on a club page had to find
+    // "Classificação" among the destinations to get back.
+    await page.goto("/clube/palmeiras");
+    await expect(page.locator("[data-brand]")).toHaveAttribute("href", "/");
+
+    await page.locator("[data-brand]").click();
+    await expect(page).toHaveURL(/\/$/);
+    await expect(page.locator("table tbody tr")).toHaveCount(20);
   });
 
   test("keeps an h1 naming the app for assistive tech", async ({ page }) => {
