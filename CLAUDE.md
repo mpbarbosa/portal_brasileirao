@@ -1175,11 +1175,17 @@ grep -inE '<topic>' "$L"        # and the topic itself, over the whole file
 
 **Read the ledger with a search, never with a line range**, and the reason is
 structural rather than a matter of picking a bigger number. **The file has two
-insertion conventions and neither is written down.** Some sessions prepend at the
-first `## `, some append at the end; measured on 2026-08-29, one session's six
-entries sat at 85, 287 and 405 because it had been prepending all evening, while
-others were at 2936 and 3018 because they appended. Nobody ever agreed either
-way.
+insertion conventions.** Some sessions prepend, some append at the end; measured
+on 2026-08-29, one session's six entries sat at 85, 287 and 405 because it had
+been prepending all evening, while others were at 2936 and 3018 because they
+appended. Nobody had ever agreed either way. The ledger's **own header** now
+prescribes one — prepend, immediately below the header, anchored on its
+`HOW TO ADD AN ENTRY` heading rather than on "the first `## `", which is the bug
+that had pushed the title block and the addressing instructions down to line 46.
+But entries written the other way are deliberately **not** retro-moved: sessions
+cite line numbers to each other and the file is written concurrently, so a bulk
+reshuffle is a lost update waiting to happen. Both conventions therefore remain
+present in the file, and will.
 
 So **no positional read can be correct, because there is no agreed end.**
 Widening `sed -n '1,80p'` to `1,200p`, or adding a `tail`, would each still be
