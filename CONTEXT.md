@@ -954,11 +954,20 @@ Material Design 3's five corner radii — `rounded-x-small` (4dp) through
 `rounded-x-large` (28dp) — defined in `src/index.css` and used in place of
 Tailwind's own `rounded-*`. Spelled out in full rather than abbreviated because
 the two scales share the names `sm`/`md`/`lg` and disagree about what they mean:
-Tailwind's `rounded-lg` is 8px where MD3's large is 16dp. The app currently uses
-only the first three, which is why adopting the scale changed nothing visually.
+Tailwind's `rounded-lg` is 8px where MD3's large is 16dp.
+**A step is chosen by what the thing is, never by how deeply it is nested** —
+marks and inline targets x-small, panels and banners small, a modal `<dialog>`
+x-large, an MD3 pill control `full`; `medium` holds only the player card's
+photograph and `large` is used nowhere. The list lives beside the scale in
+`src/index.css`, because a rule written away from the values it governs is one
+nobody meets while choosing.
+This sentence used to read *"the app currently uses only the first three"*,
+which stopped being true when the player card took `x-large` in M4 — an example
+of the thing the entry is now about, in the entry itself.
 _Avoid_: "border radius" in prose (the token is the unit of meaning, not the CSS
 property), "arredondamento" (accurate but nobody says it), reusing Tailwind's
-`sm`/`md`/`lg` names for MD3 sizes.
+`sm`/`md`/`lg` names for MD3 sizes, "one step down per level of nesting" (the
+assumption the written rule exists to contradict).
 
 **Camada de estado**:
 The veil a control paints over itself when hovered, focused or pressed: MD3's

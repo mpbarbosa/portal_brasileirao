@@ -145,6 +145,36 @@
  * The three sizes the app had before M2 mapped onto the first three exactly,
  * which is why adopting the scale changed nothing visually: `rounded` was 4px,
  * `rounded-lg` 8px and `rounded-xl` 12px.
+ *
+ * **Which step a thing takes is decided by what it is, never by how deeply it
+ * is nested.** That is worth stating in the negative, because the obvious rule
+ * — outer panel, nested container one step down — is what a reader assumes when
+ * nothing is written, and it is not what this app does. A mark inside a card
+ * *is* a step below the card, but that falls out of the assignment below rather
+ * than being a rule of its own, and following it as a rule gives the wrong
+ * answer the first time something is nested two deep.
+ *
+ *   x-small  4px   marks and inline targets — StatusChip, BroadcasterMark,
+ *                  the forma pills, and the radius a text link shows only as
+ *                  its focus ring
+ *   small    8px   panels and banners — `Surface`, the note and error strips,
+ *                  a `<summary>`, a nav destination
+ *   medium  12px   an image inside a card (the player card's photograph); no
+ *                  container takes it
+ *   large   16px   **unused.** Not an oversight to fill: it is emitted because
+ *                  the scale has five steps, and nothing here has asked for it
+ *   x-large 28px   a modal `<dialog>`
+ *   full           a control that MD3 draws as a pill — `Button`'s tonal
+ *                  variant, the account controls, the nav indicator
+ *
+ * **Nothing can check this and nothing ever will.** `design-tokens-core.test.ts`
+ * fails a bare Tailwind radius, which keeps the vocabulary; no gate can know
+ * which *step* a given element should have taken. That is precisely why it is
+ * written down, and why the one thing that went wrong went wrong quietly:
+ * M4 set the dialog step at x-large on 2026-08-25, and the Contas confirmation
+ * dialog was written two days later at `medium` — same element, same
+ * elevation, same container colour, a different corner. It shipped, and every
+ * gate stayed green. Read this list before adding a `rounded-*` anywhere.
  */
 @theme {
   --radius-x-small: 4px;
