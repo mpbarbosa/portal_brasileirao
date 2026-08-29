@@ -4,6 +4,8 @@ import { test } from "node:test";
 import {
   LINE_ORDER,
   comparePlayers,
+  filterSquads,
+  foldForSearch,
   lineOf,
   playerPositionLabel,
   sortSquads,
@@ -164,4 +166,59 @@ test("a club with no listed squad survives sorting rather than being dropped", (
 test("the total counts players, not clubs", () => {
   assert.equal(totalPlayers(SQUADS), 3);
   assert.equal(totalPlayers([]), 0);
+});
+
+const squadOf = (code: string, ...names: string[]): Squad => ({
+  club: club(code, code),
+  players: names.map((name, index) => player(`${code}-${index}`, name)),
+});
+
+test("the search fold removes accents, case and punctuation but keeps spaces", () => {
+  assert.equal(foldForSearch("  Ângelo   Gabriel "), "angelo gabriel");
+  assert.equal(foldForSearch("Ariel Sant'Anna"), "ariel santanna");
+  // The seed really does carry a macron where the name has a tilde. Both fold
+  // to the same letter, so the row is reachable by the spelling a reader types.
+  assert.equal(foldForSearch("Joāo Paulo"), foldForSearch("João Paulo"));
+  assert.equal(foldForSearch("   "), "");
+});
+
+test("a match cannot straddle two words", () => {
+  // Removing spaces as well as punctuation would make this answer to "osan",
+  // which is a match a reader cannot account for.
+  assert.equal(foldForSearch("Carlos Antonio").includes("osan"), false);
+});
+
+test("the apostrophe case is why the fold is not slugify", () => {
+  // slugify would give "ariel-sant-anna", which does not contain "santanna".
+  const squads = [squadOf("AAA", "Ariel Sant'Anna", "Bruno Silva")];
+  for (const query of ["santanna", "sant'anna", "sant", "anna"]) {
+    assert.equal(filterSquads(squads, query)[0]?.players.length, 1, query);
+  }
+});
+
+test("filtering keeps only matching players and drops emptied clubs", () => {
+  const squads = [
+    squadOf("AAA", "João Pedro", "Bruno Silva"),
+    squadOf("BBB", "Carlos Antonio"),
+  ];
+
+  const hit = filterSquads(squads, "joao");
+  assert.equal(hit.length, 1);
+  assert.equal(hit[0].club.code, "AAA");
+  assert.deepEqual(hit[0].players.map((p) => p.name), ["João Pedro"]);
+
+  assert.deepEqual(filterSquads(squads, "zzz"), []);
+});
+
+test("a blank query returns the input by identity, not a copy", () => {
+  // The filter costs nothing when nobody is using it, which is almost always.
+  const squads = [squadOf("AAA", "João Pedro")];
+  assert.equal(filterSquads(squads, ""), squads);
+  assert.equal(filterSquads(squads, "   "), squads);
+});
+
+test("filtering does not mutate the squads it was given", () => {
+  const squads = [squadOf("AAA", "João Pedro", "Bruno Silva")];
+  filterSquads(squads, "joao");
+  assert.equal(squads[0].players.length, 2);
 });

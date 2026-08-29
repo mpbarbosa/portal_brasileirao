@@ -1,9 +1,18 @@
+import { useMemo, useState } from "react";
+
 import { ageOn } from "@/player-core";
 import { ClubCrest } from "@/src/components/ClubCrest";
 import { LINK_UNDERLINE, STATE_LAYER } from "@/src/components/interaction";
 import { Surface } from "@/src/components/Surface";
 import { clubKey, ofClub } from "@/club-core";
-import { playerPositionLabel, squadSections, totalPlayers } from "@/squad-core";
+import { controlClasses } from "@/src/components/Button";
+import {
+  filterSquads,
+  foldForSearch,
+  playerPositionLabel,
+  squadSections,
+  totalPlayers,
+} from "@/squad-core";
 import type { Club, Player, Squad } from "@/src/types";
 
 interface PlayersViewProps {
@@ -81,11 +90,14 @@ function SquadPlayer({
 function SquadPanel({
   squad,
   now,
+  open,
   onSelectPlayer,
   onSelectClub,
 }: {
   squad: Squad;
   now: Date;
+  /** Forced open while a filter is running — see `PlayersView`. */
+  open?: boolean;
   onSelectPlayer?: (player: Player) => void;
   onSelectClub?: (key: string) => void;
 }) {
@@ -94,7 +106,7 @@ function SquadPanel({
 
   return (
     <Surface as="li" filled data-squad={key}>
-      <details>
+      <details open={open}>
         {/* The disclosure mark is the browser's own `::marker`, not a glyph of
             ours. Two Tailwind spellings of a rotating chevron —
             `group-open:rotate-90` and an arbitrary `[details[open]_&]` variant —
@@ -187,6 +199,14 @@ function SquadPanel({
  * clubs, so it costs the same as one of them.
  */
 export function PlayersView({ squads, loading, onSelectPlayer, onSelectClub }: PlayersViewProps) {
+  const [query, setQuery] = useState("");
+
+  /** Whether a filter is actually running. A query of only spaces is not one. */
+  const filtering = foldForSearch(query) !== "";
+  const shown = useMemo(() => filterSquads(squads, query), [squads, query]);
+
+  // Hooks run before these, not after: the early returns below are conditional
+  // and hooks may not be.
   if (loading && squads.length === 0) {
     return <p className="text-body-medium text-ink-muted">Carregando os elencos…</p>;
   }
@@ -202,17 +222,66 @@ export function PlayersView({ squads, loading, onSelectPlayer, onSelectClub }: P
   return (
     <>
       <h2 className="mb-1 text-body-medium font-medium text-ink-muted">Jogadores</h2>
-      <p className="mb-3 text-body-small text-ink-faint">
-        {plural(totalPlayers(squads), "jogador", "jogadores")} em{" "}
-        {plural(squads.length, "clube", "clubes")}. Escolha um clube para ver o elenco.
+
+      {/* The one page in the app where a reader plausibly knows the name and
+          cannot find the row: 948 players behind twenty closed panels. Pure
+          client state over a payload already in memory — no route, no request,
+          so the address stays shareable as the page rather than as a search. */}
+      <label className="sr-only" htmlFor="busca-jogador">
+        Buscar jogador pelo nome
+      </label>
+      <input
+        id="busca-jogador"
+        type="search"
+        value={query}
+        onChange={(event) => setQuery(event.target.value)}
+        placeholder="Buscar jogador"
+        // `search` rather than `text` for the clear affordance the platform
+        // draws itself, the same reasoning that keeps the round picker a native
+        // `<select>`: the control is the browser's and costs nothing.
+        className={controlClasses("md", "mb-3 w-full")}
+      />
+
+      {/* `role="status"` because this line is the only feedback a filter gives:
+          without it a screen-reader user types and hears nothing, since the
+          list below changes silently. */}
+      <p role="status" className="mb-3 text-body-small text-ink-faint">
+        {filtering ? (
+          shown.length === 0 ? (
+            <>Nenhum jogador encontrado para “{query.trim()}”.</>
+          ) : (
+            <>
+              {plural(totalPlayers(shown), "jogador", "jogadores")} em{" "}
+              {plural(shown.length, "clube", "clubes")}.
+            </>
+          )
+        ) : (
+          <>
+            {plural(totalPlayers(squads), "jogador", "jogadores")} em{" "}
+            {plural(squads.length, "clube", "clubes")}. Escolha um clube para ver o elenco.
+          </>
+        )}
       </p>
 
       <ul className="grid gap-2">
-        {squads.map((squad) => (
+        {shown.map((squad) => (
           <SquadPanel
-            key={squad.club.code}
+            // The key carries the query, so **each query gets fresh panels.**
+            // Without it: a reader filters, closes one panel, then edits the
+            // query — React still holds `open={true}` from the previous render,
+            // sees no change, and never touches the DOM, so that club stays
+            // shut while now matching something else. The close was about the
+            // *previous* query's results; carrying it forward is the bug.
+            // Measured before choosing it, since this remounts on every
+            // keystroke: see the comment on `filtering` above.
+            key={`${squad.club.code}:${filtering ? query : ""}`}
             squad={squad}
             now={now}
+            // Forced open while filtering, or the filter hides its own hits
+            // inside collapsed panels and the page reads as "no results" while
+            // showing club rows. Left uncontrolled otherwise, which is what
+            // lets a reader open two clubs at once to compare them.
+            open={filtering || undefined}
             onSelectPlayer={onSelectPlayer}
             onSelectClub={onSelectClub}
           />

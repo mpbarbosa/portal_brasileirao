@@ -824,6 +824,25 @@ bar for), a club picker that shows one squad at a time (it makes comparing two
 mean losing the first), asserting a squad size anywhere in the tests — it moves
 with every transfer window.
 
+**Buscar jogador**:
+The name filter above the **Jogadores** panels — `filterSquads` in
+`squad-core.ts` over the payload already in memory, so it costs no request and
+does not touch the address: the page stays shareable as the page rather than as
+somebody's search. It is the one place in the app where a reader plausibly knows
+the name and cannot find the row, which is what 948 players behind twenty closed
+panels does.
+A match **opens its club**, or the filter hides its own hits inside collapsed
+panels and reads as "nothing found" while showing club rows. Clubs left with
+nobody are dropped rather than rendered empty.
+Matching folds accents, case and punctuation and keeps spaces (`foldForSearch`).
+**Not `slugify`** — that turns punctuation into a hyphen, which is right for an
+address and wrong here: the division carries `Ariel Sant'Anna`, and `santanna`
+does not occur in `ariel-sant-anna`. Keeping spaces is what stops a match
+straddling two words, so `Carlos Antonio` does not answer to `osan`.
+_Avoid_: "filtro" as the visible label (a reader searches, the code filters),
+putting the query in the URL, matching on club name too (the twenty-row index
+above already is that), a second normaliser — `foldForSearch` is the one.
+
 **Linha**:
 The part of the field a player belongs to, and the heading a squad is split
 under: **Goleiros**, **Defensores**, **Meio-campistas**, **Atacantes**, and
