@@ -47,7 +47,12 @@ export function AccountGlyph({ className }: { className?: string }) {
  * and in wording at once, which is what makes the state readable at a glance
  * rather than by reading a label.
  *
- * Both were a bare `text-on-surface-variant` link before, distinguished only by the words
+ * Both were a bare muted-ink link before — `text-ink-soft` as that alias was
+ * spelled at the time, `text-on-surface-variant` since M6 retired it. M6's
+ * rename rewrote this sentence too, which made it assert the old code used a
+ * name that did not exist yet; a mechanical rename cannot tell a class being
+ * *used* from one being *quoted as history*. They were set apart only by the
+ * words
  * "Entrar" and "Minha conta" — the same weight as a caption, and on a bar whose
  * current-section chip is filled, quieter than the navigation beside it.
  *
