@@ -1340,6 +1340,45 @@ touches a shared artefact — `docs/screenshots`, CLAUDE.md, a docs sweep — sa
 to the other sessions as well as to the file, because a file write reaches nobody
 inside the window that matters.
 
+**And create the worktree and branch BEFORE you write the claim, not after.**
+The ledger closes the window between claiming and publishing a PR. It cannot
+close the window between **reading** the file and **writing** to it — which is
+however long you spend composing the entry, and a careful entry takes minutes.
+That inverts the obvious advice: a fuller, more thoughtful claim is a *wider*
+collision window, so "write a better entry" makes this worse rather than better.
+
+`git worktree add .claude/worktrees/<name> -b worktree-<name>` is one command
+and it is the **only atomic check in this step**. Git refuses a duplicate branch
+name; a markdown file cannot refuse anything. It costs nothing to run first, and
+it converts an unenforceable convention into a guard the tooling holds.
+
+Measured 2026-08-29: two sessions claimed the same screenshot refresh **85
+seconds apart**, both having run every command above correctly. The first
+grepped the ledger at 14:58:27Z and found no holder — true when taken — and the
+second wrote at 14:59:23Z having read before the first write landed. What
+actually caught it was `fatal: a branch named 'worktree-shots-218' already
+exists`, about forty seconds before either could have learned it from the file.
+The branch namespace collided before the ledger did.
+
+**The guard is atomic on the branch *name*, not on the *task*, and it must be
+read with that limit or it looks like it closes the class.** It worked there
+only because the naming convention made two independent sessions derive
+`worktree-shots-218` from the same PR number. Two sessions naming one job
+differently — `shots-218` against `screenshot-refresh` — are two branches to git
+and one task to a person, and git will happily create both. That is exactly the
+#181/#184/#188 shape, where three sessions fixed one touch-target bug under
+three names and nothing refused anything. So: a real guard, on the case where
+the convention converges, and the remaining exposure is the case where it does
+not. Naming your branch the obvious thing is therefore part of the guard rather
+than a matter of taste.
+
+**When two claims do collide, the tie-break is who is provisioned, not who was
+first.** Priority by timestamp hands the work to the session with neither
+worktree nor branch, which is the wrong way round. In the case above the earlier
+claimant stood down explicitly — and saying so outright rather than going quiet
+is what let it resolve in one round, because a silent withdrawal is
+indistinguishable from a session that simply stopped reporting.
+
 **A follow-up named in a merged PR or a plan document is a magnet.** Both of the
 collisions above were exactly that: #174 handed the account control on in
 `docs/md3-completion-plan.md` under M9, and the screenshot refresh was owed in
