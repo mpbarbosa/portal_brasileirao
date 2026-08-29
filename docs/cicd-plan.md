@@ -299,6 +299,41 @@ than a third method to reconcile.
 answered: whether debt is still cleared as fast now that a red gate no longer
 reddens the run. Git only, no network, nothing from the football-data budget.
 
+**The first post-change episode has now closed, and it is longer than every
+episode before it.** Measured 2026-08-29 00:22Z, `main` at `37bb199`:
+
+| | before `339a037` | after |
+|---|---|---|
+| episodes | 16 | **1** |
+| median | 0.76h | 11.76h |
+| p90 | 2.99h | 11.76h |
+| max | **10.94h** | **11.76h** |
+| over 24h | 0 | 0 |
+
+One episode, so there is no distribution to compare — but it exceeds the *maximum*
+of the sixteen that preceded it, not merely their p90. On the face of it that is
+the floor failing.
+
+**It is recorded here rather than acted on, because the obvious confounder is not
+excluded and cannot be by this measurement.** The sixteen pre-change episodes were
+measured across roughly 36 hours of near-continuous merging; this one spans a
+night. *Nobody was working* and *the red no longer prompts anyone* produce an
+identical number, and nothing in the replay separates them. A single episode
+straddling the quietest window of the week is the weakest possible evidence for a
+behavioural claim, and the temptation to read it as a verdict is exactly what the
+two corrections above were about.
+
+So: **do not cite this as evidence the change was wrong.** What it does establish
+is that the question is live and the answer is not obviously "the floor held" —
+which is more than was known when `continue-on-error` was merged. Re-run the tool
+rather than quoting this table; by the second or third closed episode the
+overnight confounder will have washed out, and if the median stays anywhere near
+11h that is a real finding worth acting on.
+
+Two things to check before believing a future run of it: that the episodes it
+counts are not all overnight, and that `over 24h` is still zero — the floor's
+strongest claim was never the median but that debt has never once survived a day.
+
 ### 5. There is no way back
 
 `07_install_release.sh` does `rsync -a --delete "$STAGING/dist/" "$DEPLOY_DIR/dist/"`.
