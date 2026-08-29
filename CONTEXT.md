@@ -1027,8 +1027,9 @@ answered nothing, so the commit is what the rodapé shows.
 The one club a reader follows, chosen from the **Clube** page and remembered on
 that device. Held as `Preferences.club` in `preferences-core.ts` — the club's
 `code`, which is the upstream numeric id, never the **tla** and never the
-**slug**. It renders in exactly two places: a strip above the **Classificação**
-naming the club, and a star on that club's row in the table.
+**slug**. It renders in exactly three places: a strip above the **Classificação**
+naming the club, the **Próximo jogo do meu time** line inside that strip, and a
+star on that club's row in the table.
 It is **one** club, not a list: choosing another is a change of allegiance, so
 `toggleFollow` replaces rather than appends. And it is per-device, deliberately
 — no account, no server, nothing that can be lost by anyone but its owner. See
@@ -1048,6 +1049,34 @@ star for a reason — it says *mine*, not *starred*), "time do coração" (warm,
 what a broadcaster says, but this is a setting rather than a declaration),
 "seguir" as a noun, "clube preferido", and "Seguir o Chapecoense" — which is
 what shipped first.
+
+**Próximo jogo do meu time**:
+The one fixture put in front of a reader who has chosen a **Meu time** — the
+second line of that strip, above the **Classificação**. It names the two sides,
+says whether the club plays **em casa** or **fora de casa**, prints the kickoff
+in the reader's own zone and carries the **Contagem regressiva**; it links to
+the **Página da partida**. While the club is playing it says **Bola rolando**
+and shows the score instead of counting down to something already under way.
+Decided by `clubFocus` in `next-match-core.ts`, which prefers a match in
+progress over one that is merely sooner, keeps a late kickoff for the same
+`LATE_GRACE_MS` the **Ao vivo** board does, and never offers a postponed or
+cancelled fixture as the next one — a reader cannot plan around either. Neither
+is *hidden*: both keep their place in the round and on the board, and this line
+simply does not point at them.
+Three rules the copy turns on. It is **an absence, not a zero**: a club with
+nothing left to play, an unresolved **Meu time** and a payload that has not
+landed all render the strip with no fixture line, because none of them is
+evidence the season is over. It is shown to **anyone who has chosen a club**,
+signed in or not — a **Conta** carries the choice between aparelhos and buys no
+extra line here, and making a device-local thing account-only is the soft wall
+`docs/accounts.md` §8 pushes back on. And **imminence changes the tone, never
+the wording**: within a day, or under way, the rail goes `primary`; further out
+it is `outline-variant`. The sentence is the same either way, so there is only
+one form of it to keep true.
+_Avoid_: "alerta" and "notificação" (nothing is pushed and nothing arrives with
+the tab closed — see `docs/accounts.md` Phase 3 for what would), "lembrete"
+(implies the app will tell you later), "seu próximo jogo" (the reader is not
+playing), and a match minute, for the reason **Bola rolando** already gives.
 
 **Preferências**:
 What the app remembers about a reader on this device, as one object with one key
