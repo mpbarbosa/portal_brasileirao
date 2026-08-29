@@ -1235,6 +1235,7 @@ gh pr list --state all --limit 10
 L=/home/mpb/Documents/GitHub/portal_brasileirao/.claude/worktrees/COORDINATION.md
 grep -n '^## ' "$L" | grep -viE 'merged|removed|torn down|closed|resolved|stood down'
 grep -n -i '<topic>' "$L" | grep -i 'claim\|worktree-\|PR #'
+git checkout -b worktree-<topic>   # reserve the name BEFORE writing the claim
 ```
 
 **The second grep is narrowed, and that is not tidiness — it is what stops the
@@ -1340,8 +1341,61 @@ touches a shared artefact — `docs/screenshots`, CLAUDE.md, a docs sweep — sa
 to the other sessions as well as to the file, because a file write reaches nobody
 inside the window that matters.
 
+**Create the branch before you write the claim, not after.** `git checkout -b` is
+the only **atomic** check in Step 0: two sessions cannot both hold
+`worktree-shots-218`, and the loser is told so immediately, by the tool, rather
+than eventually and by a person. Every other line up there is a **read**, and a
+read reserves nothing.
+
+**The ledger closes the window between claiming and publishing a PR. It cannot
+close the window between reading it and writing to it.** That second window is
+however long you spend composing your entry, and it is invisible from both sides:
+both sessions grep, both find the work unheld, and both are right when they look.
+Measured on 2026-08-29, on the screenshot refresh #218 owed:
+
+    14:58:27Z  session A greps the ledger -> no holder. True when taken.
+    ~14:59:1x  session A writes its claim (heading stamped, loosely, "14:58Z").
+    14:59:23Z  session B writes its claim.
+
+Two claims on one refresh, both sessions having run every line of Step 0
+correctly and neither having done anything wrong. What actually caught it was
+`fatal: a branch named 'worktree-shots-218' already exists`, about forty seconds
+after A's grep came back clean.
+
+Note the two writes were **seconds** apart while the two headings' stamps differ
+by more than a minute — A's was rounded rather than read off `date -u`. So do not
+cite a delta between two claims as though it measured the race: the recorded
+stamps are what each session *wrote down*, and only one of these two was an
+instrument reading. That B had read the ledger before A's write landed is the
+only reconstruction consistent with both entries, and it is an inference; the
+collision itself is established.
+
+**The perverse incentive is the half worth internalising, because the obvious
+lesson makes it worse.** A fuller, more careful claim takes longer to write, and
+every second of that is exposure — so "write a better claim" *widens* your own
+window. Reserving the name first is what makes the care free.
+
+**The limit has to travel with the guard, or it reads as closing the class.** It
+is atomic on the branch **name**, not on the **task**. It worked above only
+because the convention derives the name from the PR number, so two independent
+sessions both reached for `shots-218`. Two sessions naming the same work
+differently — `shots-218` against `screenshot-refresh` — still collide in
+silence, and that is precisely the #181/#184/#188 shape, where three sessions
+fixed one touch-target bug under three names inside twenty-three minutes. So it
+is a real guard against one instance of the class and no guard at all against the
+class: it does not replace saying out loud what you are starting.
+
+**And when two claims do collide, who yields is not seniority.** The one that
+settled the case above was **whoever is provisioned beats whoever was first** —
+A's claim carried the earlier heading stamp, B held the worktree and the branch,
+so A stood down and B shot. Priority by timestamp would have had the *less* set-up session
+do the work while the more set-up one threw its scaffolding away. But the earlier
+claim is the earlier claimant's to **concede explicitly** rather than the later
+one's to assume; saying so in as many words is what resolved this in a single
+round instead of leaving both sessions waiting on the other.
+
 **A follow-up named in a merged PR or a plan document is a magnet.** Both of the
-collisions above were exactly that: #174 handed the account control on in
+collisions in that list were exactly that: #174 handed the account control on in
 `docs/md3-completion-plan.md` under M9, and the screenshot refresh was owed in
 prose by two merged PRs. Several sessions read the same document and reach the
 same "this is the obvious next thing" — so a task that looks conveniently unowned
