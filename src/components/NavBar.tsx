@@ -267,9 +267,13 @@ export function NavBar({
               onClick={onToggleTheme}
               aria-label={themeToggleLabel(theme)}
               title={themeToggleLabel(theme)}
-              /* Levels this with the account control beside it — see the note
-                 on `AccountButton`. Its own padding puts it at 38, because the
-                 outline is part of its box. */
+              /* Asks for the 40dp container the account control beside it
+                 keeps — but `controlClasses` carries M9's `min-h-12`, and a
+                 minimum beats a height, so this renders 48 and the `h-10` is
+                 inert. Left in place deliberately: removing it would read as a
+                 preference for 48, and the preference is the floor. Raising the
+                 container back to 40 means giving the toggle its own drawn
+                 target, the way `TOUCH_TARGET` does next door. */
               className="h-10"
             >
               <span aria-hidden="true">{theme === "light" ? "☽" : "☀"}</span>

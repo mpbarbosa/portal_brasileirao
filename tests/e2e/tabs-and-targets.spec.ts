@@ -14,8 +14,15 @@ import { expect, test, type Page } from "@playwright/test";
  * inferred, and what is *not* in it is written down in `docs/md3-completion-plan.md`
  * under M9 rather than left to look like an oversight.
  *
- * The account control is absent for a different reason: PR #173 is rewriting
- * it, and it measured 36x44. Its floor is that PR's to apply.
+ * The account control is absent from `CONTROLS` for a different reason again,
+ * and it is covered rather than skipped: it is the one control whose *container*
+ * is deliberately smaller than its target. MD3 puts a top-app-bar control at
+ * 40dp and every touch target at 48dp, and `min-h-12` can only satisfy both
+ * where nothing named a height. So it draws its target with a pseudo-element
+ * and the assertions below read that instead of the border box — which
+ * `boxOf` cannot do, since `getBoundingClientRect` returns the 40dp box and
+ * would report a pass at 40 or a failure at 48 depending only on which one you
+ * asked for.
  */
 
 const CONTROLS: { page: string; label: string; selector: string }[] = [
@@ -53,6 +60,101 @@ test.describe("Alvos de toque", () => {
     const box = await boxOf(page, "header button[aria-label^='Ativar tema']");
     expect(box.h).toBeGreaterThanOrEqual(48);
     expect(box.w).toBeGreaterThanOrEqual(48);
+  });
+
+  for (const { label, signedIn } of [
+    { label: "signed out", signedIn: false },
+    { label: "signed in", signedIn: true },
+  ]) {
+    test(`the account control (${label}) clears the floor without growing its container`, async ({
+      page,
+    }) => {
+      await page.setViewportSize({ width: 375, height: 812 });
+      await page.goto("/");
+      if (signedIn) {
+        const response = await page.request.post("/api/auth/dev-login", {
+          data: { subject: "sub-target", name: "Ana Torcedora" },
+        });
+        expect(response.ok()).toBeTruthy();
+        await page.goto("/");
+      }
+      await page.locator("main").waitFor();
+
+      const control = page.locator("[data-account]");
+      await expect(control).toHaveAttribute(
+        "data-account",
+        signedIn ? "signed-in" : "signed-out",
+      );
+
+      // Read both from one measurement, unrounded. `boxOf` rounds, and the
+      // control is 96.58px wide against a `w-full` target of the same 96.58 —
+      // rounding the one and not the other reported the target as narrower than
+      // the control it exactly covers.
+      const measured = await control.evaluate((el) => {
+        const box = el.getBoundingClientRect();
+        const after = getComputedStyle(el, "::after");
+        return {
+          box: { h: box.height, w: box.width },
+          target: { h: parseFloat(after.height), w: parseFloat(after.width) },
+        };
+      });
+
+      // The container stays at MD3's 40dp for a top-app-bar control...
+      expect(measured.box.h, `the container is ${measured.box.h}px tall`).toBe(40);
+
+      // ...while the target it actually offers a thumb clears 48dp both ways.
+      const { target } = measured;
+      expect(target.h, `the touch target is ${target.h}px tall`).toBeGreaterThanOrEqual(48);
+      expect(target.w, `the touch target is ${target.w}px wide`).toBeGreaterThanOrEqual(48);
+      // `getComputedStyle` serialises a length to four decimal places, so a
+      // `w-full` target reads 96.5781 against a control that measures
+      // 96.578125 — a formatting artifact of the two APIs, not a gap a thumb
+      // could find. The epsilon is that difference and nothing more.
+      expect(
+        target.w,
+        "the target should cover the whole control, not a stripe down its middle",
+      ).toBeGreaterThanOrEqual(measured.box.w - 0.001);
+    });
+  }
+
+  test("the account control's target does not reach into the theme toggle", async ({ page }) => {
+    // The failure this technique has: a target drawn wider than its control
+    // grows into whatever sits beside it, and swallows that control's clicks
+    // while looking untouched. Here it grows 4dp each side into a `gap-1`.
+    await page.setViewportSize({ width: 375, height: 812 });
+    await page.goto("/");
+    await page.locator("main").waitFor();
+
+    const reach = await page.locator("[data-account]").evaluate((el) => {
+      const box = el.getBoundingClientRect();
+      const after = getComputedStyle(el, "::after");
+      const width = parseFloat(after.width);
+      // Centred on the control, so it overhangs by half the difference.
+      return {
+        width,
+        left: box.left - (width - box.width) / 2,
+        right: box.right + (width - box.width) / 2,
+      };
+    });
+
+    // Stated as a precondition rather than assumed: with no target drawn,
+    // `parseFloat` yields NaN and every comparison below fails as NaN, which
+    // reads as an overlap rather than as an absence.
+    expect(reach.width, "no touch target is drawn at all").toBeGreaterThanOrEqual(48);
+    const toggle = await page
+      .locator("header button[aria-label^='Ativar tema']")
+      .evaluate((el) => el.getBoundingClientRect().left);
+
+    expect(reach.right, "the account target overlaps the theme toggle").toBeLessThanOrEqual(toggle);
+
+    // And the toggle still answers a click at its own centre.
+    const before = await page.evaluate(() =>
+      document.documentElement.getAttribute("data-theme"),
+    );
+    await page.locator("header button[aria-label^='Ativar tema']").click();
+    await expect
+      .poll(() => page.evaluate(() => document.documentElement.getAttribute("data-theme")))
+      .not.toBe(before);
   });
 
   test("every bottom navigation destination clears it", async ({ page }) => {

@@ -107,3 +107,32 @@ export const STATE_LAYER_ON_PRIMARY_CONTAINER = [
   "active:bg-on-primary-container/10",
   FOCUS_RING,
 ].join(" ");
+
+/**
+ * A 48dp touch target on a control whose *visible* container is smaller.
+ *
+ * MD3 asks for two different things at once, and `controlClasses` can only
+ * satisfy them because its controls have no size of their own: the touch target
+ * is 48dp, and a top-app-bar control's container is 40dp. `min-h-12 min-w-12`
+ * reconciles them by growing the control, which is right where nothing
+ * specified a height and wrong where something did — it would silently overrule
+ * the 40dp the spec actually names.
+ *
+ * So the target is drawn instead of grown: a transparent `::after`, centred on
+ * the control and at least 48dp each way, which is part of the anchor and so
+ * takes its clicks. The visible pill keeps its `h-10`.
+ *
+ * `w-full` under a `min-w-12` floor so a wide control's target covers all of it
+ * rather than a 48dp stripe down its middle.
+ *
+ * **It extends past the control's own box, so it can reach a neighbour.** Here
+ * it grows 4dp each side into a `gap-1`, which brings it flush against the
+ * theme toggle's 48dp box without overlapping it — measured, and asserted in
+ * `tabs-and-targets.spec.ts`, because a hit area silently swallowing the
+ * control beside it is the failure this technique has.
+ */
+export const TOUCH_TARGET = [
+  "relative",
+  "after:absolute after:left-1/2 after:top-1/2 after:-translate-x-1/2 after:-translate-y-1/2",
+  "after:h-12 after:w-full after:min-w-12 after:content-['']",
+].join(" ");

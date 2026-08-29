@@ -9,6 +9,7 @@ import {
   LINK_UNDERLINE,
   STATE_LAYER,
   STATE_LAYER_ON_PRIMARY_CONTAINER,
+  TOUCH_TARGET,
 } from "@/src/components/interaction";
 import { Surface } from "@/src/components/Surface";
 import { controlClasses } from "@/src/components/Button";
@@ -46,16 +47,25 @@ export function AccountGlyph({ className }: { className?: string }) {
  * and in wording at once, which is what makes the state readable at a glance
  * rather than by reading a label.
  *
- * Both were a bare `text-on-surface-variant` link before, distinguished only by the words
+ * Both were a bare muted-ink link before — `text-ink-soft` as that alias was
+ * spelled at the time, `text-on-surface-variant` since M6 retired it — set apart
+ * only by the words
  * "Entrar" and "Minha conta" — the same weight as a caption, and on a bar whose
  * current-section chip is filled, quieter than the navigation beside it.
  *
- * **`h-10` is stated on both, and on the theme toggle beside them.** Left to
- * padding the three controls in the trailing group measured 36, 40 and 38 —
+ * **`h-10` is stated on both, and the target is drawn rather than grown.** Left
+ * to padding the three controls in the trailing group measured 36, 40 and 38 —
  * three heights in one row of a bar 56 tall, which reads as a wobble rather
- * than as a difference. 40dp is MD3's size for a top-app-bar control; the
- * toggle only missed it because its 1px outline is part of its box and nothing
- * had ever compared the two.
+ * than as a difference. 40dp is MD3's size for a top-app-bar container.
+ *
+ * M9 then put a 48dp touch-target floor on `controlClasses`, and `min-height`
+ * beats `height`: the theme toggle renders 48 whatever `h-10` asks for, so the
+ * group this levelled came apart again at 40 / 40 / 48, and the sentence that
+ * used to be here — that all three were `h-10` — stopped being true without
+ * anything going red. These two take the floor through `TOUCH_TARGET` instead,
+ * which reaches 48dp without giving up the 40dp container. The trailing group's
+ * *targets* are all 48; its *containers* are 48, 40 and 40, and that difference
+ * is the one MD3 actually draws.
  *
  * The avatar is initials, never a photograph: `publicAccount` carries a display
  * name and nothing else, because the name is all the sign-in asks Google for
@@ -75,7 +85,7 @@ export function AccountButton({ state }: { state: AccountState }) {
         /* No `title`: it never appears on touch, and it competes with the
            accessible name for voice control — the same reason the destinations
            in `NavBar` carry none. */
-        className={`inline-flex h-10 items-center gap-2 rounded-full p-1 text-label-large font-medium text-on-surface sm:pr-3 ${STATE_LAYER}`}
+        className={`inline-flex h-10 items-center gap-2 rounded-full p-1 text-label-large font-medium text-on-surface sm:pr-3 ${STATE_LAYER} ${TOUCH_TARGET}`}
       >
         {/* The accessible name says what the control *does* and then who it
             belongs to; the visible name is contained in it, which is what WCAG
@@ -120,7 +130,7 @@ export function AccountButton({ state }: { state: AccountState }) {
     <a
       href="/entrar"
       data-account="signed-out"
-      className={`inline-flex h-10 items-center gap-1.5 rounded-full bg-primary-container px-4 text-label-large font-semibold text-on-primary-container ${STATE_LAYER_ON_PRIMARY_CONTAINER}`}
+      className={`inline-flex h-10 items-center gap-1.5 rounded-full bg-primary-container px-4 text-label-large font-semibold text-on-primary-container ${STATE_LAYER_ON_PRIMARY_CONTAINER} ${TOUCH_TARGET}`}
     >
       <AccountGlyph className="h-5 w-5" />
       Entrar
