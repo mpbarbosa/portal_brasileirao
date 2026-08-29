@@ -1471,6 +1471,42 @@ claimant stood down explicitly — and saying so outright rather than going quie
 is what let it resolve in one round, because a silent withdrawal is
 indistinguishable from a session that simply stopped reporting.
 
+**The general form, which is worth more than the branch-first rule it came from:
+the checks that fire are the ones that can refuse.** `git checkout -b` refuses a
+duplicate branch. The messaging layer refuses an unknown address — a peer
+misaddressed as `portal-brasileirao-224710` bounced instantly with *"No agent
+named ... is reachable"*. Against those, **adjacency and quotation refuse
+nothing**: a ledger entry's *position* cannot decline to name an author, and a
+peer's label repeated back cannot decline to be wrong. On 2026-08-29 one session
+made three routing errors in an afternoon and **only the one that could refuse
+announced itself** — the other two were an authorship inferred from where an
+entry sat in a concurrently-prepended file (its text named the author four lines
+below) and an identity taken from a peer. So prefer the check that can fail
+loudly, and when reaching for a signal ask first what it would do if you were
+wrong. If the answer is *nothing*, it is not a check.
+
+**A first-hand reading is not exempt, because an instrument can be aimed at the
+wrong subject** — and nothing in its output says where it was pointed. The usual
+aim here is the shared root instead of your worktree, and the root's local `main`
+lags: measured `941e81d` against an `origin/main` of `d40a3a0` minutes later, so
+a command run there answers truthfully about a **different tree**. Two cases the
+same day, from that cause, **failing in opposite directions**: `git check-ignore`
+run in the root reported `src/data/clubs.ts` unignored, making a merged fix look
+broken; `git rev-parse --show-toplevel` run the same way answered
+`portal_brasileirao`, reporting a session's own slug as a mismatch. One a false alarm, one a false negative,
+both first-hand, current and self-obtained. **That symmetry is the finding**: it
+rules out *check hardest when the news is alarming* as sufficient, since the
+reassuring-shaped one was equally wrong. Pass the path explicitly (`git -C "$W"`).
+
+**Where no check can refuse, put a known-negative in the same output.** It is the
+only defence here that does not require already knowing the answer — include
+something whose answer you *do* know, and **incoherence then indicts the
+instrument rather than the subject**. `clubs.ts` coming back unignored is
+impossible under any spelling of the rule; `portal_brasileirao` is not a session
+slug under any provisioning. Both misaims were caught that way, and the same tell
+already appears above under grepping a curled payload: a new string **and** the
+old one it replaced both missing is a broken instrument, not a broken deploy.
+
 **A follow-up named in a merged PR or a plan document is a magnet.** Both of the
 collisions above were exactly that: #174 handed the account control on in
 `docs/md3-completion-plan.md` under M9, and the screenshot refresh was owed in
@@ -1783,6 +1819,46 @@ the receiver see the shelf life without re-deriving it. **The sender pays that
 cost, because only the sender knows the anchor.** It is the same discipline
 `/api/health` applies to a running build: report the commit you were built from,
 not merely that you are up.
+
+**And an anchor has to carry its provenance, because the rule above is defeated
+by one hop.** An anchored claim tells the receiver *when* a reading was taken; it
+does not tell them **whether it was ever read off an instrument**. So the anchor
+survives relaying while the thing that made it worth anything does not, and the
+second hop republishes a guess in the voice of a measurement. Four instances on
+2026-08-29, one afternoon, three sessions:
+
+1. A session wrote `~15:0x` beside a clock it never ran; `date -u` said 14:47:30Z.
+2. A second stamped a ledger heading `14:58Z` — **rounded**, not read.
+3. A third subtracted that heading from a measured `14:59:23Z`, published
+   **"65 seconds apart"**, and carried it into a **merged** PR body.
+4. The same delta was then relayed onward into a draft of this very section.
+
+**A stamp still looks like a claim somebody made. A delta between two stamps
+reads as arithmetic, and arithmetic reads as derived** — which is why nobody
+re-checks it, and why the corruption accelerates at the second hop rather than
+decaying. In that chain the two claims' *writes* were **seconds** apart; only the
+rounded heading made them 65. The number described nothing.
+
+**Repetition among relayers is not independent corroboration, and it is worse
+than a single relay because volume reads as consensus.** If the first relayer is
+wrong the rest inherit it, so the count measures **circulation, not accuracy**.
+The test is therefore **falsifiability, never volume**: mark a claim by whether
+you hold something that could return *no*. A session cannot see its own short
+name — `ListAgents` omits the caller — so a label appearing dozens of times in
+the ledger, every occurrence written by somebody else, is not corroborated at all.
+One that agrees with your own `git rev-parse` is, at one occurrence.
+
+Two consequences worth having. **A merged PR body cannot be amended**, so a
+relayed number that reaches one is repaired only by appending a correction where
+nobody re-reads. And **do not cite an occurrence count in a file the citing
+conversation is writing to** — that count was measured at 35, 37 and 38 within
+twenty minutes, rising because it was being discussed. A metric that grows with
+attention to itself is worse than a constant.
+
+The repair is one clause, and only the sender can write it: say *where the number
+came from*, not merely when. "Measured, `date -u`" and "relayed from a peer's
+heading, not re-derived" are different claims, and the second is still worth
+sending — it is the unmarked form that is not.
 
 ## Key conventions
 
