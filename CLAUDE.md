@@ -1135,8 +1135,43 @@ exists because skipping it cost real work rather than because it sounds prudent.
 ```sh
 git worktree list && git branch -a --list '*<topic>*'
 gh pr list --state all --limit 10
-sed -n '1,80p' /home/mpb/Documents/GitHub/portal_brasileirao/.claude/worktrees/COORDINATION.md
+L=/home/mpb/Documents/GitHub/portal_brasileirao/.claude/worktrees/COORDINATION.md
+grep -n '^## ' "$L" | grep -viE 'merged|removed|torn down|closed|resolved|stood down'
+grep -inE '<topic>' "$L"        # and the topic itself, over the whole file
 ```
+
+**Read the ledger with a search, never with a line range**, and the reason is
+structural rather than a matter of picking a bigger number. **The file has two
+insertion conventions and neither is written down.** Some sessions prepend at the
+first `## `, some append at the end; measured on 2026-08-29, one session's six
+entries sat at 85, 287 and 405 because it had been prepending all evening, while
+others were at 2936 and 3018 because they appended. Nobody ever agreed either
+way.
+
+So **no positional read can be correct, because there is no agreed end.**
+Widening `sed -n '1,80p'` to `1,200p`, or adding a `tail`, would each still be
+wrong for whichever convention it is not pointed at — and a search is the only
+form that cannot rot the next time somebody picks the other one. When this line
+was first written as `sed -n '1,80p'`, live claims sat at 1, 68 and 510 *and* at
+2936 and 3018; `crest-fallback — CLAIMED, no PR yet` was the last of those, an
+unpublished session, exactly the case this line exists to surface and invisible
+to the command then prescribed. The claim that would have prevented the #192/#193
+collision was at 693.
+
+**Do not cite a line number here as though it were an address.** Every number in
+this paragraph is a reading, not a location: `crest-fallback` was at 2980 when
+this was drafted and 3018 an hour later, having moved because other sessions
+wrote above it. That is the same discipline the anchored-claim rule asks for
+below, applied to a file rather than to a ref.
+
+**And do not pipe that search into `head` or `tail`.** This is the failure that
+actually happened, and it is worse than not looking, because it feels like
+looking. Before starting the refresh that became #193, the session searched this
+file for the literal string `shots-targets` — and piped the result through
+`| tail -40`. The search produced **677 lines**; tail showed 638-677; the hit was
+at output line ~90. The answer was retrieved and discarded, and a truncated view
+is indistinguishable from an empty one. Same family as the `A..B` versus `A...B`
+traps below: the right command, run in a way that cannot answer.
 
 **The third line is the one that gets skipped, and it is the only one that can
 show you a session that has not published yet.** The first two answer *who has
@@ -1157,6 +1192,15 @@ test on the prepared worktree, checked `/proc` cwds, and asked a peer directly �
 and still collided, because the peer it asked was not the owner and the owner had
 not published yet. **The protocol as written cannot close this**, which is why
 reading the ledger is now in it rather than only in the teardown skills.
+
+**Those checks were all for a different question, which is why passing them all
+still cost the work.** `--is-ancestor`, the reflog test, `/proc` cwds and asking a
+peer answer *may I destroy this?* — and they answered it correctly: leave the
+worktree standing. *Is somebody already doing this?* is a separate question, it
+has the opposite failure mode, and until this line it had no procedure at all. A
+session can run every documented check, get every answer right, and duplicate a
+day of work, because none of the checks was ever pointed at what it was about to
+do.
 
 The ledger is **readable by absolute path from inside any worktree** — verified,
 2892 lines — even though `.claude/worktrees/` is gitignored and so does not exist
