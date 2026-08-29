@@ -1056,10 +1056,37 @@ rodapé too — under it, the last line would sit beneath the bar and be invisib
 until someone scrolled to the end of a twenty-club table. It is a sibling of
 `<main>`, not a child, because a drill-down replaces what is inside `main` and
 the rodapé must survive it.
+It carries three bands, in this order: what the site is, the **Sites do autor**,
+and the **Saúde do serviço**.
 _Avoid_: "footer" in user-facing copy (upstream's word, not the reader's),
 putting navigation in it (the destinations are `NAV_ITEMS` and the bar is
-already full — see the bound in CLAUDE.md), treating it as the place to park
-anything with nowhere else to go.
+already full — see the bound in CLAUDE.md; the **Sites do autor** are outbound
+links and not a second set of destinations, which is why they carry no `<nav>`),
+treating it as the place to park anything with nowhere else to go.
+
+**Sites do autor**:
+The two places this app's author writes, as the middle band of the **Rodapé**:
+`mpbarbosa.com`, the personal and professional site, and **Agora na Copa 26**,
+the Copa do Mundo FIFA 2026 companion built the same way this app is.
+They **leave the site** rather than moving around it, which is the whole reason
+they are not navigation and the reason the rodapé's rule against navigation is
+not being bent: a `<ul>` of outbound anchors, no `<nav>`, no landmark, and the
+sections stay `NAV_ITEMS`.
+Each reads as the thing a reader would recognise — the same rule that prints
+**Wikipédia** rather than an article's full legal title. For a personal site
+that is genuinely the domain, which is what that site calls itself in its own
+`<title>`; for the sibling app it is the app's name. The two look inconsistent
+and are one rule applied twice.
+Rendered by `AuthorLinks`, through `OutboundLink`, which owns the whole anchor
+for the reason `ClubLinks` does — `target`, `rel` and the screen-reader suffix
+are what a copied link loses, and a copy missing `rel="noopener"` looks
+identical on the page. They carry MD3's 48dp floor because they are standalone
+controls on their own line, the distinction that keeps that floor off the
+twenty club names in the **Classificação**.
+_Avoid_: "links úteis" or "parceiros" (neither is what these are — one is the
+author's own page and the other is his other app), printing the author's name
+on the page (the destination introduces him; this app does not), adding a third
+site here without opening it first, calling this band navigation.
 
 **Saúde do serviço**:
 What `/api/health` reports about the process that answered — its state, the

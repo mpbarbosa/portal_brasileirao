@@ -35,6 +35,59 @@ const instantLabel = (iso: string): string | null => {
   });
 };
 
+/**
+ * A link off this site, with the parts that drift when an anchor is copied
+ * written down once.
+ *
+ * The same reasoning `ClubLinks` records, applied to the rodapé rather than to
+ * a club: `target`, `rel` and the screen-reader suffix are what a second copy
+ * loses, and a copy missing `rel="noopener"` is a real defect that looks
+ * identical on the page. There were three outbound anchors here the moment the
+ * author's links landed, which is the point at which a hand-written one is a
+ * question of when rather than whether.
+ *
+ * It stays local rather than joining `ClubLinks`: that module is a club's
+ * links, and each of its two exports knows its own address builder and its own
+ * mark. This knows neither — it is the bare anchor, and the only thing the two
+ * files would share is the attribute bag.
+ *
+ * `subject` is what the suffix says the destination is, and it is optional for
+ * exactly one reason: inside the readout the `<dt>` beside the link already
+ * says it, so `Fonte: football-data.org — o provedor de dados` would announce
+ * the same fact twice. Everywhere else a bare domain is a bare word to a
+ * screen reader and the subject is what rescues it.
+ *
+ * `extra` is the caller's own layout only, as it is in `ClubLinks` — the
+ * rodapé's own row of links carries the touch-target floor, and the readout's
+ * link must not, or a 48dp anchor inside a `<dd>` would push the whole band of
+ * facts apart.
+ */
+function OutboundLink({
+  href,
+  label,
+  subject,
+  extra = "",
+}: {
+  href: string;
+  label: string;
+  subject?: string;
+  extra?: string;
+}) {
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className={`${LINK_UNDERLINE} ${extra}`}
+    >
+      {label}
+      <span className="sr-only">
+        {subject === undefined ? " (abre em nova aba)" : ` — ${subject} (abre em nova aba)`}
+      </span>
+    </a>
+  );
+}
+
 /** One `termo: valor` pair of the readout. `id` is the e2e hook. */
 interface Item {
   id: string;
@@ -97,14 +150,7 @@ function HealthReadout({ health, readAt }: HealthReading) {
       // live. See `providerLabel`.
       value:
         health.provider === "football-data" ? (
-          <a
-            href="https://www.football-data.org/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className={LINK_UNDERLINE}
-          >
-            {provider}
-          </a>
+          <OutboundLink href="https://www.football-data.org/" label={provider} />
         ) : (
           provider
         ),
@@ -154,6 +200,56 @@ function HealthReadout({ health, readAt }: HealthReading) {
   );
 }
 
+/**
+ * Where else this author writes, as two links and nothing more.
+ *
+ * **Not navigation**, which the rodapé is explicitly not the place for — these
+ * leave the site rather than moving around it, so they are a list of outbound
+ * links and carry no `<nav>` and no landmark. The destinations remain
+ * `NAV_ITEMS` and that bar remains full.
+ *
+ * Each reads as the thing a reader would recognise, which is the rule
+ * `WikipediaLink` states and the reason it prints "Wikipédia" rather than
+ * "Sociedade Esportiva Palmeiras". For a personal site the recognisable thing
+ * genuinely is the domain — it is what that site calls itself in its own
+ * `<title>` — and for the sibling app it is the app's name, so the two look
+ * inconsistent and are the same rule twice.
+ *
+ * A `<ul>` rather than a run of anchors in a `<p>`: a screen reader then
+ * announces "lista de 2 itens" and a reader knows how many there are before
+ * hearing the first, which is the whole difference between a list and a
+ * sentence that happens to contain links.
+ *
+ * `min-h-12` is MD3's touch-target floor and it belongs here for the reason
+ * `BACK_LINK` carries it — these are standalone controls on their own line,
+ * not links inside a sentence. That is the same distinction that keeps the
+ * floor off the twenty club names in the Classificação. The floor is on the
+ * box rather than on a pseudo-element, so nothing overhangs into the
+ * neighbour's area and two adjacent links cannot steal each other's presses.
+ */
+function AuthorLinks() {
+  return (
+    <ul className="mt-1 flex flex-wrap gap-x-4 text-body-small text-ink-muted">
+      <li>
+        <OutboundLink
+          href="https://www.mpbarbosa.com"
+          label="mpbarbosa.com"
+          subject="site pessoal e profissional do autor"
+          extra="inline-flex min-h-12 items-center"
+        />
+      </li>
+      <li>
+        <OutboundLink
+          href="https://copa2026.mpbarbosa.com"
+          label="Agora na Copa 26"
+          subject="o companheiro da Copa do Mundo FIFA 2026, do mesmo autor"
+          extra="inline-flex min-h-12 items-center"
+        />
+      </li>
+    </ul>
+  );
+}
+
 interface FooterProps {
   /** Undefined until `/api/health` settles — see `App`. */
   reading?: HealthReading;
@@ -181,6 +277,8 @@ export function Footer({ reading }: FooterProps) {
         Projeto independente para acompanhar o Campeonato Brasileiro Série A. Sem vínculo
         com a CBF ou com os clubes.
       </p>
+
+      <AuthorLinks />
 
       {reading && <HealthReadout {...reading} />}
     </footer>
