@@ -644,8 +644,36 @@ paragraph of prose.
    asserts one radius equals the other, reading the value rather than pinning
    it, so the spec survives the step moving. Confirmed against the shipped
    drift: `Expected "12px", Received "28px"`.
-8. **A name filter on Jogadores.** Twenty clubs do not need one; 948 players behind
-   twenty `<details>` do.
+8. ~~**A name filter on Jogadores.**~~ **Shipped**, and with it the whole "Now"
+   list. `filterSquads` and `foldForSearch` in `squad-core.ts`, a `type="search"`
+   box above the panels, no route change and no request.
+
+   **The fold is not `slugify`, and one real name decides it.** The obvious
+   reuse is the normaliser `venue-core.ts` shares with `club-core.ts` — but
+   `slugify` turns punctuation into a **hyphen**, which is right for an address
+   and wrong for substring matching: the division carries `Ariel Sant'Anna`, and
+   `santanna` does not occur in `ariel-sant-anna`. Measured across all 948
+   names, punctuation appears in exactly one, so the rule is written for a real
+   case rather than a hypothetical. Punctuation is **dropped** rather than
+   spaced — run both ways against that name, dropping wins four queries to
+   three — and **spaces survive**, so a match cannot straddle two words and
+   `Carlos Antonio` does not answer to `osan`. Accent folding also absorbs an
+   upstream defect for free: the seed carries `Joāo Paulo` with a macron where
+   the name has a tilde.
+
+   **The `<details>` key carries the query, and that is not a tidy-up.** React
+   holds the `open` prop across renders, so a reader who filters, closes one
+   panel, then edits the query leaves that club shut while it now matches
+   something else — React sees no change and never touches the DOM. Measured:
+   11 of 12 open, and 12 of 12 once the key carries the query. It remounts on
+   every keystroke, which was measured before being chosen — **20ms per
+   keystroke over 948 players**.
+
+   **One spec skipped itself at first, which is how a spec stops running.** The
+   closed-panel case needed two matching clubs and asked `test.skip` for them;
+   it reported "1 skipped", which nobody reads. It now shortens a real player's
+   name until two clubs match. Both behaviours were then confirmed by mutation —
+   key without the query, and `open` never forced — one property at a time.
 
 **Next — one decision each, stated in the proposal.**
 

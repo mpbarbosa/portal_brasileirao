@@ -66,6 +66,106 @@ test.describe("Jogadores", () => {
     await expect(panels.nth(1).locator("section h4").first()).toBeVisible();
   });
 
+  /** The filter box, by its accessible name rather than by a class. */
+  const search = (page: Page) => page.getByRole("searchbox", { name: /buscar jogador/i });
+
+  /** A real player's name, read off the page rather than hard-coded — the seed
+   *  is regenerated and any name written into a spec ages with it. */
+  const aPlayerName = async (page: Page): Promise<string> => {
+    const panel = firstPanel(page);
+    await panel.locator("summary").click();
+    const name = (await panel.locator("section ul li button, section ul li span").first().innerText()).trim();
+    await panel.locator("summary").click();
+    return name;
+  };
+
+  test("filtering narrows to the matching players and opens their clubs", async ({ page }) => {
+    const name = await aPlayerName(page);
+    const first = name.split(" ")[0];
+
+    await search(page).fill(first);
+
+    const panels = page.locator("[data-squad]");
+    const open = page.locator("[data-squad] details[open]");
+    // Every panel shown is open: a filter that hid its own hits inside
+    // collapsed sections would read as "no results" while showing club rows.
+    await expect(panels).not.toHaveCount(0);
+    expect(await open.count()).toBe(await panels.count());
+
+    // And every player left on the page matches.
+    for (const shown of await page.locator("[data-squad] section ul li").allInnerTexts()) {
+      expect(shown.toLowerCase()).toContain(first.toLowerCase());
+    }
+  });
+
+  test("the filter ignores case and accents", async ({ page }) => {
+    // Derived from the page, not asserted against a name: strip the accents
+    // from a real player's name and the row must still be reachable.
+    await firstPanel(page).locator("summary").click();
+    const accented = (await page
+      .locator("[data-squad] section ul li")
+      .filter({ hasText: /[À-ÿ]/ })
+      .first()
+      .innerText())
+      .split("\n")[0]
+      .trim();
+    await firstPanel(page).locator("summary").click();
+
+    const folded = accented.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase();
+    expect(folded).not.toBe(accented);
+
+    await search(page).fill(folded);
+    await expect(page.locator("[data-squad] section ul li").filter({ hasText: accented })).not.toHaveCount(0);
+  });
+
+  test("a query that matches nobody says so, rather than showing empty clubs", async ({ page }) => {
+    await search(page).fill("zzzzqqq");
+
+    await expect(page.locator("[data-squad]")).toHaveCount(0);
+    await expect(page.locator("p[role=status]")).toContainText("Nenhum jogador encontrado");
+  });
+
+  test("clearing the filter restores every club, closed", async ({ page }) => {
+    const before = await page.locator("[data-squad]").count();
+
+    await search(page).fill("zzzzqqq");
+    await expect(page.locator("[data-squad]")).toHaveCount(0);
+
+    await search(page).fill("");
+    await expect(page.locator("[data-squad]")).toHaveCount(before);
+    // Closed again, or clearing the box would leave a wall of a thousand names.
+    await expect(page.locator("[data-squad] details[open]")).toHaveCount(0);
+  });
+
+  test("a panel closed under one query does not stay closed under the next", async ({ page }) => {
+    // React holds the `open` prop across renders, so without a key carrying the
+    // query this club stays shut while now matching something else — the close
+    // was about the previous query's results.
+    const panels = page.locator("[data-squad]");
+    const open = page.locator("[data-squad] details[open]");
+
+    // A query matching at least two clubs, found by shortening a real player's
+    // name until it does. Skipping instead — which this spec did at first — is
+    // how a spec silently stops running: it reported "1 skipped" and nobody
+    // reads that line, so the one behaviour a key exists for went unchecked.
+    let query = (await aPlayerName(page)).split(" ")[0];
+    while (query.length > 1) {
+      await search(page).fill(query);
+      if ((await panels.count()) >= 2) break;
+      query = query.slice(0, -1);
+    }
+    const shown = await panels.count();
+    expect(shown).toBeGreaterThanOrEqual(2);
+
+    await page.locator("[data-squad] details summary").first().click();
+    expect(await open.count()).toBe(shown - 1);
+
+    // Editing the query must re-open it: the close was about the previous
+    // query's results, and this club may now match something else.
+    await search(page).fill(query.slice(0, -1));
+    expect(await open.count()).toBe(await panels.count());
+  });
+
   test("choosing a player opens the card, with the club already filled in", async ({ page }) => {
     const panel = firstPanel(page);
     const club = (await panel.locator("summary").innerText()).split("\n")[0].trim();

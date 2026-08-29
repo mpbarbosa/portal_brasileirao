@@ -150,3 +150,64 @@ export const sortSquads = (squads: Squad[]): Squad[] =>
 /** Total players across every squad, for the page's summary line. */
 export const totalPlayers = (squads: Squad[]): number =>
   squads.reduce((sum, squad) => sum + squad.players.length, 0);
+
+/**
+ * A name folded for searching: accents removed, case dropped, punctuation
+ * removed, whitespace collapsed.
+ *
+ * **Not `slugify`, and that is a decision rather than an oversight.** The
+ * obvious reuse is the normaliser `venue-core.ts` shares with `club-core.ts` —
+ * one normaliser is exactly how two spellings of a thing stay agreed. But
+ * `slugify` replaces punctuation with a **hyphen**, which is right for an
+ * address and wrong for a substring search: the division carries
+ * **`Ariel Sant'Anna`**, and a reader who types `santanna` gets `santanna`
+ * against `ariel-sant-anna`, which does not contain it. Measured across all 948
+ * listed names, punctuation appears in exactly one of them, so this is a rule
+ * written for a single real case rather than a hypothetical.
+ *
+ * **Punctuation is dropped rather than turned into a space**, which is the same
+ * choice one step finer. Dropping catches `sant`, `anna`, `santanna` and
+ * `sant'anna`; spacing catches `sant anna` instead of `santanna`. Both were run
+ * against the real name — dropping wins four queries to three, and the query it
+ * loses is one a reader types only by inserting a space they never saw.
+ *
+ * **Spaces survive, so a match cannot straddle two words.** Removing them as
+ * well would make `Carlos Antonio` answer to `osan`, which is a match a reader
+ * cannot account for.
+ *
+ * Accent folding also absorbs an upstream defect for free: the seed carries
+ * **`Joāo Paulo`** with a macron where the name has a tilde, and both fold to
+ * `joao`, so the row is reachable by the spelling a reader would actually type.
+ */
+export const foldForSearch = (value: string): string =>
+  value
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9 ]+/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+
+/**
+ * Squads holding only the players whose name matches `query`, dropping clubs
+ * left with nobody.
+ *
+ * A blank query returns the input **unchanged and by identity**, so the
+ * unfiltered page renders exactly the array it was given rather than a copy —
+ * the filter costs nothing when nobody is using it, which is almost always.
+ *
+ * Clubs with no match are dropped rather than rendered empty. Twenty club rows
+ * announcing "0 jogadores" is a page that looks broken; a caller that wants to
+ * say "nothing found" can see an empty array and say it once.
+ */
+export const filterSquads = (squads: Squad[], query: string): Squad[] => {
+  const needle = foldForSearch(query);
+  if (!needle) return squads;
+
+  return squads
+    .map((squad) => ({
+      ...squad,
+      players: squad.players.filter((player) => foldForSearch(player.name).includes(needle)),
+    }))
+    .filter((squad) => squad.players.length > 0);
+};
