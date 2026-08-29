@@ -1,6 +1,6 @@
 import type { ButtonHTMLAttributes, Ref } from "react";
 
-import { STATE_LAYER } from "./interaction";
+import { STATE_LAYER, TOUCH_TARGET } from "./interaction";
 
 /**
  * Sizes actually in use, rather than a speculative scale.
@@ -9,12 +9,32 @@ import { STATE_LAYER } from "./interaction";
  * inside something else, like a dialog's dismiss; `xs` is for a control sitting
  * flush against another, like the round stepper beside its picker.
  */
-export type ControlSize = "xs" | "sm" | "md";
+export type ControlSize = "xs" | "sm" | "md" | "bar";
 
 const PADDING: Record<ControlSize, string> = {
   xs: "px-2 py-1.5",
   sm: "px-2.5 py-1",
   md: "px-3 py-2",
+  bar: "px-2",
+};
+
+/**
+ * The visible box, which is not the touch target — see `TOUCH_TARGET`.
+ *
+ * `bar` is MD3's **40dp** top-app-bar control and the only size that states a
+ * height: the trailing group was measured at 36, 40 and 38 and levelled at 40
+ * deliberately, and a floor of 48 on the box is what undid that. Every other
+ * size takes the 48 minimum, because nothing argued for a smaller body control
+ * and a stepper at 34x32 was simply too small to hit.
+ */
+const BOX: Record<ControlSize, string> = {
+  xs: "min-h-12 min-w-12",
+  sm: "min-h-12 min-w-12",
+  md: "min-h-12 min-w-12",
+  // `min-w-10` as well as `h-10`: MD3's top-app-bar control is a 40dp *square*
+  // for an icon, and `px-2` around a single glyph left the toggle 31 wide —
+  // level with its neighbour and visibly narrow beside it.
+  bar: "h-10 min-w-10",
 };
 
 /**
@@ -67,20 +87,21 @@ export const controlClasses = (
 ): string =>
   [
     "text-body-medium",
-    // MD3's minimum touch target is 48dp, and every control here was under it:
-    // the round stepper measured 34x32, its picker 32x61, the highlights links
-    // 36 and 40 tall. Measured at 375dp rather than reasoned about, in the
-    // manner the nav bar's width arithmetic already is.
+    // MD3's 48dp touch target, on a pseudo-element rather than on the box, so a
+    // size can choose a smaller *visible* control without giving up the target.
+    // Every control here was under 48 before M9 measured them at 375dp: the
+    // round stepper 34x32, its picker 32x61, the highlights links 36 and 40,
+    // the theme toggle 38x39.
     //
-    // A minimum rather than a height, so a control that is legitimately taller
-    // — a two-line label, a larger glyph — is not clamped down to the floor.
-    // `min-w` is a no-op on every text control and does the work on the icon
-    // ones, which is why one pair of utilities covers both.
+    // `relative` is what the pseudo positions against, so it belongs here and
+    // not at the call sites.
     //
     // Buttons and selects centre their own content against a taller box; the
     // three anchors that use this already carry `inline-flex items-center`, and
     // a new one must too — `min-height` does nothing to an inline box.
-    "min-h-12 min-w-12",
+    "relative",
+    TOUCH_TARGET,
+    BOX[size],
     VARIANT[variant],
     // Hover, focus and pressed all come from one place — see `interaction.ts`.
     // Before M2 this was a bare `hover:bg-raised` with no focus state at all.

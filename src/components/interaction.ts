@@ -49,6 +49,41 @@ export const STATE_LAYER = [
 ].join(" ");
 
 /**
+ * MD3's 48dp touch target, without changing what the control looks like.
+ *
+ * The two are different rules and the header is where that stops being pedantry.
+ * MD3 gives a top-app-bar control a **40dp container** and a **48dp touch
+ * target**: the box you see and the area a thumb can find are not the same
+ * thing. M9 put the floor on the box — `min-h-12` in `controlClasses` — which
+ * made every target 48 and, because **`min-height` beats `height` whatever the
+ * order**, silently overrode the `h-10` that had just levelled the trailing
+ * group. The toggle rendered 48 beside a 40 account control: two PRs each
+ * right, and an 8px wobble on production between them.
+ *
+ * Measured there, at `844cb15`: toggle 48x48, account control 40x97.
+ *
+ * So the target moves off the box and onto a pseudo-element. It is centred and
+ * at least 48 in both axes, and `w-full` lets a control wider than that keep
+ * its own width rather than being given a target narrower than itself.
+ *
+ * Generated content participates in hit testing and its events target the
+ * element that owns it, so this really is a bigger target and not a decoration.
+ * The owner needs `relative`, which `controlClasses` and both account controls
+ * set.
+ *
+ * Note what this does *not* fix: a control whose visible box is small is still
+ * a small thing to look at. That is a design choice per control — 40dp in the
+ * bar because MD3 says so and someone measured it, 48dp for the body controls
+ * because nothing argued for less.
+ */
+export const TOUCH_TARGET = [
+  "before:absolute before:left-1/2 before:top-1/2",
+  "before:h-12 before:min-w-12 before:w-full",
+  "before:-translate-x-1/2 before:-translate-y-1/2",
+  "before:content-['']",
+].join(" ");
+
+/**
  * A text link inside running copy or a table cell.
  *
  * Underlined at rest and brightened on hover, which is the pattern five of the
