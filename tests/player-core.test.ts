@@ -12,11 +12,16 @@ import {
   playerPhotoPage,
   playerPhotoUrl,
   playerSearchUrls,
+  playerName,
   playerSofascore,
   playerWikipedia,
   positionLabel,
   sofascoreUrl,
+  withPlayerName,
+  withPlayerNames,
+  withScorerNames,
 } from "@/player-core";
+import { PLAYER_NAME_OVERRIDES } from "@/src/data/player-name-overrides";
 import { SEED_SQUADS } from "@/src/data/squads";
 import type { Player } from "@/src/types";
 
@@ -345,4 +350,105 @@ test("every nationality in the snapshot is mapped", () => {
     [],
     `add these to NATIONALITY_LABELS in player-core.ts: ${missing.join(", ")}`,
   );
+});
+
+test("a recorded override replaces the provider's name", () => {
+  assert.equal(playerName("249314", "Felipexxx", { "249314": "Felipe Longo" }), "Felipe Longo");
+});
+
+test("an unrecorded id keeps the provider's name verbatim", () => {
+  // Coverage is a handful of entries against ~950 players, so absence is the
+  // normal answer and must not blank the row.
+  assert.equal(playerName("1", "Hugo Souza", { "249314": "Felipe Longo" }), "Hugo Souza");
+  assert.equal(playerName("1", "Hugo Souza", {}), "Hugo Souza");
+});
+
+test("a blank override is absence, not a nameless player", () => {
+  assert.equal(playerName("1", "Kauê", { "1": "" }), "Kauê");
+  assert.equal(playerName("1", "Kauê", { "1": "   " }), "Kauê");
+});
+
+test("an unchanged player is returned as the same object", () => {
+  // /api/squads runs this over every elenco in the division; rebuilding 948
+  // objects to correct one of them is churn with nothing to show for it.
+  const player: Player = { id: "1", name: "Hugo Souza" };
+  assert.equal(withPlayerName(player, { "249314": "Felipe Longo" }), player);
+});
+
+test("overriding an elenco leaves everyone else alone", () => {
+  const squads = [
+    {
+      club: { code: "1779", name: "SC Corinthians Paulista", shortName: "Corinthians" },
+      players: [
+        { id: "249314", name: "Felipexxx", position: "Goalkeeper" },
+        { id: "1", name: "Hugo Souza", position: "Goalkeeper" },
+      ],
+    },
+  ];
+
+  const renamed = withPlayerNames(squads, { "249314": "Felipe Longo" });
+
+  assert.deepEqual(
+    renamed[0].players.map((player) => player.name),
+    ["Felipe Longo", "Hugo Souza"],
+  );
+  // The position rides along untouched, and the input is not mutated.
+  assert.equal(renamed[0].players[0].position, "Goalkeeper");
+  assert.equal(squads[0].players[0].name, "Felipexxx");
+});
+
+test("the artilharia takes the same overrides, keyed by the scorer's player id", () => {
+  const club = { code: "1779", name: "SC Corinthians Paulista", shortName: "Corinthians" };
+  const row = {
+    position: 1,
+    playerId: "249314",
+    playerName: "Felipexxx",
+    club,
+    goals: 1,
+    assists: null,
+    penalties: null,
+    playedMatches: null,
+  };
+
+  assert.equal(withScorerNames([row], { "249314": "Felipe Longo" })[0].playerName, "Felipe Longo");
+  // Upstream reporting no id makes `playerId` the name itself, which matches no
+  // override rather than matching the wrong one.
+  assert.equal(
+    withScorerNames([{ ...row, playerId: "Felipexxx" }], { "249314": "Felipe Longo" })[0].playerName,
+    "Felipexxx",
+  );
+});
+
+test("every override names somebody still in the snapshot, and still disagrees with it", () => {
+  // The two ways a correction goes stale, both silent and both with a one-line
+  // fix — delete the entry. An id that has left the division renames nobody; an
+  // id whose recorded name already matches is upstream having fixed their data,
+  // which arrives here as the next `sync-seed-data` and nothing else would say
+  // so. Note this only reddens on a deliberate regeneration of the seed, never
+  // on somebody's unrelated commit.
+  const recorded = new Map(
+    SEED_SQUADS.flatMap((squad) => squad.players.map((player) => [player.id, player.name])),
+  );
+
+  const problems = Object.entries(PLAYER_NAME_OVERRIDES)
+    .map(([id, name]) => {
+      const seeded = recorded.get(id);
+      if (seeded === undefined) return `${id} (${name}) is no longer in squads.ts`;
+      if (seeded === name) return `${id} already reads "${name}" in squads.ts`;
+      return null;
+    })
+    .filter((problem): problem is string => problem !== null);
+
+  assert.deepEqual(problems, [], `spent entries in player-name-overrides.ts: ${problems.join("; ")}`);
+});
+
+test("no override is blank, which would render as a nameless player", () => {
+  // `playerName` treats a blank as absence, so this cannot reach the page — but
+  // a blank entry is somebody's unfinished edit, and it belongs in the file it
+  // was written into rather than surviving as a no-op.
+  const blank = Object.entries(PLAYER_NAME_OVERRIDES)
+    .filter(([, name]) => !name.trim())
+    .map(([id]) => id);
+
+  assert.deepEqual(blank, []);
 });

@@ -948,6 +948,41 @@ included, whatever the User-Agent — so a checker would have nothing to read.
 Eight ids were opened in a real browser instead. Do not add one from a search
 result without opening it.
 
+`src/data/player-name-overrides.ts` is the one curated player file that
+corrects the provider rather than adding to it: a display name for a player
+football-data reports under a **broken** one. Keyed by player id like its
+neighbours, and applied by `withPlayerNames`/`withScorerNames` in `server.ts`
+on the way out of `/api/squads`, `/api/scorers` and `/api/players/:id` — inside
+**both** branches of each cache fill, so the live and offline answers cannot
+come to differ on a name. The suite runs the seed branch and production runs the
+other, which is exactly the split that would hide this.
+
+Two things about it are decisions rather than mechanics:
+
+- **It is not a place to prefer one spelling to another.** An entry says the
+  recorded value is *not a name at all* — Corinthians' fourth goalkeeper arrives
+  as `"Felipexxx"`, with `firstName` empty and `lastName` "Felipe", which is a
+  placeholder somebody typed into a database and left. Anything short of that is
+  our taste against the provider's, and the provider's is what every other
+  football site shows the same reader. Verify against the person endpoint and an
+  independent source before adding one: `/v4/persons/249314` still served the
+  broken string on 2026-08-29 with a `lastUpdated` of 2026-03-19, and
+  pt.wikipedia's "Felipe Longo" gives 5 March 2005, the date `squads.ts` already
+  carries for that id. That birth-date join is the same evidence
+  `check-player-wikipedia` rests on, and for the same reason — a name match
+  cannot tell two players apart.
+- **`squads.ts` cannot carry the correction**, which is the whole reason the file
+  exists. It is generated, so `sync-seed-data` overwrites a hand-edit on its next
+  run and says nothing. Overriding at serve time survives the regeneration.
+
+There is no checker, because the thing to detect is an override going **spent**
+rather than a link rotting, and that is local: `tests/player-core.test.ts` fails
+when an entry names an id no longer in `squads.ts`, or one whose recorded name
+already matches — the shape upstream fixing their data takes when it reaches
+here. Both branches were confirmed red before being believed. Note it can only
+redden on a deliberate `sync-seed-data`, never on somebody's unrelated commit,
+which is what keeps it a unit test rather than a monthly workflow.
+
 `src/data/stadiums.ts` holds each ground's official name, capacity and year of
 inauguration, hand-maintained for the same reason as the hymns — **no provider carries
 any of it**, and CBF's feed stops at a name, a city and a state. Keyed by stadium slug,

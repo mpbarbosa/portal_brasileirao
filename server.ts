@@ -93,6 +93,7 @@ import {
   shouldRenew,
 } from "@/session-core";
 import { jsonLdScript, structuredData } from "@/structured-data-core";
+import { withPlayerName, withPlayerNames, withScorerNames } from "@/player-core";
 import { sortSquads } from "@/squad-core";
 import { computeStandings } from "@/standings-core";
 import { CLUBS as SEED_CLUBS } from "@/src/data/clubs";
@@ -103,6 +104,7 @@ import { BROADCASTS } from "@/src/data/broadcasts";
 import { HIGHLIGHTS } from "@/src/data/highlights";
 import { VENUES } from "@/src/data/venues";
 import { SEED_MATCHES, SNAPSHOT_DATE } from "@/src/data/matches";
+import { PLAYER_NAME_OVERRIDES } from "@/src/data/player-name-overrides";
 import { SEED_SCORERS } from "@/src/data/scorers";
 import { SEED_SQUADS } from "@/src/data/squads";
 import type {
@@ -1029,12 +1031,24 @@ app.get("/api/clubs", async (_req, res) => {
   res.json(envelope(matches.data.clubs, matches.source, Date.parse(matches.updatedAt)));
 });
 
+/**
+ * The artilharia.
+ *
+ * `withScorerNames` is applied inside **both** branches rather than once around
+ * the pair, so the corrected name is what the cache holds and the live and
+ * offline answers cannot come to differ: the suite runs the seed branch and
+ * production runs the other, which is exactly the split that hides a bug here.
+ */
 const loadScorers = (): Promise<ApiEnvelope<Scorer[]>> =>
   loadCached<Scorer[]>(
     "scorers",
     SCORERS_CACHE_TTL_MS,
-    async () => mapScorers(await fetchFromProvider<ScorersResponse>(scorersUrl())),
-    () => SEED_SCORERS,
+    async () =>
+      withScorerNames(
+        mapScorers(await fetchFromProvider<ScorersResponse>(scorersUrl())),
+        PLAYER_NAME_OVERRIDES,
+      ),
+    () => withScorerNames(SEED_SCORERS, PLAYER_NAME_OVERRIDES),
   );
 
 app.get("/api/scorers", async (_req, res) => {
@@ -1060,9 +1074,12 @@ const loadSquads = (): Promise<ApiEnvelope<Squad[]>> =>
         squads.map((squad) => squad.club),
         CLUBS,
       );
-      return sortSquads(squads.map((squad, index) => ({ ...squad, club: enriched[index] })));
+      return withPlayerNames(
+        sortSquads(squads.map((squad, index) => ({ ...squad, club: enriched[index] }))),
+        PLAYER_NAME_OVERRIDES,
+      );
     },
-    () => sortSquads(SEED_SQUADS),
+    () => withPlayerNames(sortSquads(SEED_SQUADS), PLAYER_NAME_OVERRIDES),
   );
 
 app.get("/api/squads", async (_req, res) => {
@@ -1120,7 +1137,15 @@ app.get("/api/players/:id", async (req, res) => {
   const payload = await loadCached<Player | null>(
     `player:${id}`,
     PLAYER_CACHE_TTL_MS,
-    async () => mapPerson(await fetchFromProvider<PersonResponse>(personUrl(id))),
+    async () => {
+      const person = mapPerson(await fetchFromProvider<PersonResponse>(personUrl(id)));
+      // Nothing renders this name today — `mergePlayer` deliberately keeps the
+      // card's existing one, so the correction already arrived with the squad
+      // row or the scorer. Applied anyway because that is one line here against
+      // a route that would otherwise serve a name the other two have fixed, and
+      // because it is not this endpoint's job to know what the card merges.
+      return person && withPlayerName(person, PLAYER_NAME_OVERRIDES);
+    },
     () => null,
   );
 
