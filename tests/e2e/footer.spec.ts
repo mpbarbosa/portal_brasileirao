@@ -107,7 +107,10 @@ test.describe("Rodapé", () => {
       "2026-08-25T14:32:00.000Z",
     );
 
-    const source = item(page, "fonte").getByRole("link", { name: "football-data.org" });
+    // A regex, not the bare string: `getByRole` matches the *accessible* name,
+    // and every outbound anchor here carries a screen-reader "(abre em nova
+    // aba)". An exact match would assert the notice away.
+    const source = item(page, "fonte").getByRole("link", { name: /football-data\.org/ });
     await expect(source).toHaveAttribute("href", "https://www.football-data.org/");
     // A copied link that loses `rel="noopener"` is a real defect that looks
     // identical on the page — see ClubLinks.
@@ -137,5 +140,58 @@ test.describe("Rodapé", () => {
 
     await expect(footer(page).locator('[data-health="unavailable"]')).toBeVisible();
     await expect(page.locator("main table tbody tr")).toHaveCount(20);
+  });
+
+  test("the rodapé carries the author's other sites, and says where they go", async ({ page }) => {
+    await page.goto("/");
+
+    // Named by what a reader recognises: a personal site by its domain (which
+    // is what that site calls itself) and the sibling app by its name.
+    const personal = footer(page).getByRole("link", { name: /mpbarbosa\.com/ });
+    await expect(personal).toHaveAttribute("href", "https://www.mpbarbosa.com");
+
+    const sibling = footer(page).getByRole("link", { name: /Agora na Copa 26/ });
+    await expect(sibling).toHaveAttribute("href", "https://copa2026.mpbarbosa.com");
+
+    for (const link of [personal, sibling]) {
+      await expect(link).toBeVisible();
+      // The three parts that drift when an anchor is copied — see OutboundLink.
+      await expect(link).toHaveAttribute("target", "_blank");
+      await expect(link).toHaveAttribute("rel", /noopener/);
+      // A bare domain is a bare word to a screen reader; the suffix is what
+      // says where it goes and that it leaves the page.
+      await expect(link).toHaveAccessibleName(/abre em nova aba/);
+    }
+  });
+
+  test("they are outbound links, not a second set of destinations", async ({ page }) => {
+    await page.goto("/");
+
+    // The rodapé is explicitly not where navigation goes, and the bar is full
+    // at five — see the bound in CLAUDE.md. Nothing here is a landmark.
+    await expect(footer(page).locator("nav")).toHaveCount(0);
+
+    // A list, so a screen reader says how many there are before the first.
+    const items = footer(page).locator("ul > li");
+    await expect(items).toHaveCount(2);
+  });
+
+  test("each author link meets the 48dp touch target", async ({ page }) => {
+    await page.goto("/");
+
+    // These are standalone controls on their own line, which is the same
+    // distinction that keeps the floor off the twenty club names in the
+    // Classificação. The floor is on the box, so neither overhangs into the
+    // other — measure the gap as well as the heights.
+    const boxes = [];
+    for (const name of [/mpbarbosa\.com/, /Agora na Copa 26/]) {
+      const box = await footer(page).getByRole("link", { name }).boundingBox();
+      expect(box).not.toBeNull();
+      expect(box!.height).toBeGreaterThanOrEqual(48);
+      boxes.push(box!);
+    }
+
+    const [first, second] = boxes;
+    expect(second.x).toBeGreaterThanOrEqual(first.x + first.width);
   });
 });
