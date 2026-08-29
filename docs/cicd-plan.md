@@ -270,6 +270,35 @@ method, the maximum is identical, and the debt is still cleared the same day. Th
 floor is softer than it was stated to be; it is not a different verdict. Anchor
 any future re-measurement on `CAPTURED` rather than on commit order.
 
+**There is now a script, and it stopped guessing.** `npm run measure-refresh-latency`
+(`scripts/measure-refresh-latency.ts`, with the arithmetic in
+`refresh-latency-core.ts`) **replays `scripts/check-screenshots.sh` itself** across
+`main`'s first-parent history in a throwaway worktree and measures the runs of red.
+It forms no opinion about when debt begins or ends, because that is what the gate
+already decides and the gate is the thing that goes red.
+
+That matters more than tidiness: both hand-rolled measurements were pairing rules,
+and **each was wrong in the same direction**. Four things the gate does that neither
+of them did come free from replaying it — it compares appearance sources by
+**content** rather than asking which commits touched a path, it walks every commit
+rather than the first-parent line, it honours `Screenshots-unaffected:` trailers,
+and it validates the `CAPTURED` anchor before trusting it. The replayed script is
+the one that existed at each commit, so the verdict is the one the gate actually
+gave; commits predating the script report as unmeasurable rather than as green.
+
+**It confirms the corrected figures**, which is the useful part — 16 closed
+episodes, median **0.76h**, p90 **2.99**, max **10.94**, none over a day, against
+the 18 / 0.78 / 2.99 / 10.94 recorded above. The two extra episodes the anchored
+pairing counted were commits the gate excuses; the shape of the distribution is
+unchanged. So the correction above stands, and this is the tool to re-run rather
+than a third method to reconcile.
+
+    npm run measure-refresh-latency -- --split 339a037
+
+`--split` partitions at a commit, which is how the open question is meant to be
+answered: whether debt is still cleared as fast now that a red gate no longer
+reddens the run. Git only, no network, nothing from the football-data budget.
+
 ### 5. There is no way back
 
 `07_install_release.sh` does `rsync -a --delete "$STAGING/dist/" "$DEPLOY_DIR/dist/"`.
