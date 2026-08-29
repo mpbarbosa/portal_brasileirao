@@ -371,13 +371,16 @@ read carefully and looked right.
   printed count, which is the one number a person reads to see the artefact is not empty.
   `10`'s copy was merely *lucky*: `read` takes the first line, which is the count only
   because the warning is deferred past it. Ordering is not a guarantee to rest a restore on.
-  This is the bug that only appears on the **pinned** major: Node 26 has `node:sqlite`
-  stable and silent, so a local green run said nothing about the host — and the host runs
-  **22.23.2**, read off `/api/health`, so this was live there rather than latent in CI. It
-  surfaced the day CI began running the rehearsal on `.nvmrc`'s Node.
+  This is the bug that only appears on the **pinned** major: Node 26 emits no such warning
+  at all, so a local green run said nothing about the host — and the host runs **22.23.2**,
+  read off `/api/health`, so this was live there rather than latent in CI. Say *silent*
+  rather than *stable*: silence is what was measured and all the argument needs, where a
+  stability index is a claim nobody here checked. It surfaced the day CI began running the
+  rehearsal on `.nvmrc`'s Node.
   **The catch was itself verified, by reverting only the flag** — the same discipline the
-  flip-back harness's three deliberate mutations record. Reverted: 22 ok / 1 not ok on Node
-  22, failing exactly on `did not count rows`; with the fix, 23 / 0. The *unfixed* script is
+  flip-back harness's three deliberate mutations record, which live in `docs/cicd-plan.md`
+  and `docs/roadmap.md` rather than in this file. Reverted: 22 ok / 1 not ok on Node 22,
+  failing exactly on `did not count rows`; with the fix, 23 / 0. The *unfixed* script is
   23 / 0 on Node 26, which is the leg that proves the harness is reading the runtime rather
   than merely passing. Re-run it the way CI does before trusting a local pass:
 
