@@ -376,7 +376,10 @@ read carefully and looked right.
   **22.23.2**, read off `/api/health`, so this was live there rather than latent in CI. It
   surfaced the day CI began running the rehearsal on `.nvmrc`'s Node.
   **The catch was itself verified, by reverting only the flag** — the same discipline the
-  flip-back harness's three deliberate mutations record. Reverted: 22 ok / 1 not ok on Node
+  flip-back harness's three deliberate mutations record (they are written down in
+  `docs/cicd-plan.md`, under the flip-back rehearsal: a `flip_back` that returns success
+  without restoring, a `07` that never retains, and a flip-back firing on a healthy
+  release, going red at 10, 12 and 5 assertions). Reverted: 22 ok / 1 not ok on Node
   22, failing exactly on `did not count rows`; with the fix, 23 / 0. The *unfixed* script is
   23 / 0 on Node 26, which is the leg that proves the harness is reading the runtime rather
   than merely passing. Re-run it the way CI does before trusting a local pass:
