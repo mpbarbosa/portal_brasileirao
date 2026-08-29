@@ -11,6 +11,7 @@ import {
   type FormResult,
 } from "@/club-core";
 import { lastRecordedRound } from "@/rank-history-core";
+import { pointsPercentageLabel } from "@/standings-core";
 import { ClubCrest } from "@/src/components/ClubCrest";
 import { GLYPH, InstagramLink, WikipediaLink } from "@/src/components/ClubLinks";
 import { BACK_LINK, LINK_UNDERLINE } from "@/src/components/interaction";
@@ -284,11 +285,17 @@ export function ClubView({
       </header>
 
       {row && (
-        <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
+        <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-5">
           {stat("Posição", `${row.position}º`)}
           {stat("Pontos", String(row.points))}
           {stat("Jogos", String(row.played))}
           {stat("Saldo", row.goalDifference > 0 ? `+${row.goalDifference}` : String(row.goalDifference))}
+          {/* Last of the five, reading left to right as the sentence a reader
+              would say: it is where the club sits, what it took, out of how
+              many, and how much of what was available that is. The em dash is
+              the same absence the table's % column renders — a club yet to play
+              has no aproveitamento, where 0% is a club that has taken nothing. */}
+          {stat("Aproveitamento", pointsPercentageLabel(row) ?? "—")}
         </div>
       )}
 

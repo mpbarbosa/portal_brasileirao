@@ -472,6 +472,51 @@ appearance is MD3's and the semantics stay navigation — no `role="tab"`, becau
 change the address and a tab role promises a `tabpanel` and arrow-key selection that do
 not exist here.
 
+**They sit on a row of their own beneath the app bar's, and the reason is arithmetic
+rather than taste.** Sharing one row with the brand and the trailing controls was
+over-subscribed, not merely tight: signed in at 640dp that row had to hold 345dp of tab
+labels, a 128dp wordmark, a 108dp account control and a 40dp toggle inside 608dp of
+content. The brand was the only elastic member, so it absorbed the whole shortfall and
+rendered **27dp wide** — the app's own name reading "P…". At 1280 the same sum left it
+115dp against 128dp needed, so `lg:px-3` on five tabs was enough to cut it on a full
+desktop too. Both states shipped, and every spec was green throughout, because
+`navigation.spec.ts` asserted the wordmark was **visible** and a truncated element is
+visible. That spec now measures `scrollWidth` against `clientWidth` at seven widths in
+the signed-in state, and it was confirmed red against the old markup before being
+believed.
+
+No padding, breakpoint or type step fixes a row whose contents do not fit. MD3 does not
+put a five-destination tab row inside a top app bar either — **tabs are a component
+placed beneath one** — so the second row is the spec's own arrangement as well as the
+one the numbers allow. The cost is **32dp of sticky chrome above `sm`** (73 → 105);
+below `sm` the bottom navigation bar is unchanged, the tab row does not render, and the
+header stays 73. The tabs are still inside `<header>`, so every spec selecting
+`header nav[aria-label="Seções"] a` is untouched — only their line moved.
+
+Two details there are load-bearing and each looks like a tidy-up. The tabs are
+**content-sized and left-aligned**, never `flex-1`: the indicator is an `after` inset
+from the tab's own padding, so an equal-width tab would draw a 131dp rule under
+"Jogos", where MD3's primary-tab indicator hugs its label. And the nav carries
+**`-ml-3`** to cancel the first tab's own `px-3`, so the first *label* starts on the
+same left edge as the wordmark above it — both are the leading edge of this bar, and 12dp
+of disagreement reads as a mistake rather than as spacing.
+
+**The wordmark is a link home.** It was two `<p>` elements, so the one control every
+site on the web puts in that corner did nothing here and a reader on a club page had to
+find "Classificação" among the destinations to get back. It takes `STATE_LAYER` with
+`-mx-2 px-2`, the negative margin buying the veil room to sit in without moving the text
+off the content column's left edge.
+
+**The theme toggle draws SVGs, not `☀` and `☽`.** A font decides a character's size and
+weight, and those two are decided by different parts of it: measured in the shipped
+bundle, the crescent drew about a third the height of the 24px icons beside it, so one
+control had two optical sizes depending on which theme was on — in the one row of this
+app that had been levelled to the pixel by #173 and M9. `☀` is also emoji-presentation on
+several platforms, which would put a colour glyph in a monochrome bar. `SunIcon` and
+`MoonIcon` live in `SectionIcons.tsx` despite not being sections, because that file holds
+the one `base` attribute bag this app's glyphs share and a glyph defined beside its call
+site drifts from it — the same drift `GLYPH` was extracted to stop.
+
 The `NAV_ITEMS` entry carries its own `Icon`, which is *why* `NavBar` never changes — an
 icon looked up by id inside `NavBar` would break that promise the first time anyone added
 a section.
@@ -556,10 +601,17 @@ gates it: where it is false, the server's tags stand.
 
 Two traps, both found by their own tests rather than by reading:
 
-- **`app.get("*")` matches through a wildcard *parameter*, and Express percent-decodes
+- **The catch-all matches through a wildcard *parameter*, and Express percent-decodes
   parameters while matching.** So `/clube/%` throws `URIError` inside the router and
   Express answers its own 400 error page before any handler runs. The guard registered by
   `registerSpaFallback` decodes first and hands the request to the normal renderer.
+  **Express 5 did not change this** — `decodeParam` in path-to-regexp v8 throws the same
+  way — so do not read the guard as Express 4 residue and delete it. What *did* change is
+  the spelling: a bare `"*"` is rejected at **registration** time by path-to-regexp v8
+  (`Missing parameter name at index 1`), which means the server does not boot at all
+  rather than misbehaving at request time. It is now `app.get("/{*splat}", serve)`,
+  checked against express 5.2.1 to match `/`, any depth of deep link and HEAD, while
+  still 404-ing a POST and leaving `/api/*` untouched.
 - **`vite.transformIndexHtml` decodes the URL it is given**, to resolve which HTML file is
   being asked for. Passing an undecodable `originalUrl` turns that 400 into a 500 from our
   own handler, which is why the dev branch passes `/` when the request URL will not decode.
@@ -1069,8 +1121,13 @@ paragraph nothing committed named it:**
     /home/mpb/Documents/GitHub/portal_brasileirao/.claude/worktrees/COORDINATION.md
 
 `.gitignore` excludes `.claude/worktrees/`, so the ledger exists only in the root
-checkout and is invisible from every worktree — which is the only place sessions
-work. Before this commit `git grep COORDINATION origin/main` returned nothing at
+checkout and does not appear in any worktree's own tree — and a worktree is the
+only place sessions work. **It is readable, though: `cat` that absolute path from
+inside any worktree and it opens.** The distinction matters because the two are
+fixed by opposite changes, and getting it backwards sends you to re-address a
+file that is already reachable. What is unreachable is the *discovery* — nothing
+in a worktree lists it, so a session that has not been told the path will not
+find one. Before this commit `git grep COORDINATION origin/main` returned nothing at
 all, so no session had a reachable way to learn the file existed; that is the
 mechanical reason recording gets skipped, and it is not a discipline problem.
 Four committed files name it now — this one, `docs/development-environment-memory.md`
@@ -1111,7 +1168,48 @@ exists because skipping it cost real work rather than because it sounds prudent.
 ```sh
 git worktree list && git branch -a --list '*<topic>*'
 gh pr list --state all --limit 10
+sed -n '1,80p' /home/mpb/Documents/GitHub/portal_brasileirao/.claude/worktrees/COORDINATION.md
 ```
+
+**The third line is the one that gets skipped, and it is the only one that can
+show you a session that has not published yet.** The first two answer *who has
+published*; the ledger answers *who has said they are starting*. That difference
+is the whole window a collision lives in — as long as the work takes.
+
+Measured on 2026-08-29, two tasks, five pull requests, three of them closed as
+duplicates:
+
+- **Three sessions independently separated a control's touch target from its
+  box.** #181 (00:08, merged 00:20), #184 (00:20) and #188 (00:31). Same
+  diagnosis, same technique, same evening.
+- **Two sessions re-shot the same eighteen captures.** #192 (00:55, merged
+  00:59) and #193 (00:56). 16 of the 18 images came back byte-identical.
+
+Every session ran the two commands above. One also ran the reflog born-vs-tip
+test on the prepared worktree, checked `/proc` cwds, and asked a peer directly —
+and still collided, because the peer it asked was not the owner and the owner had
+not published yet. **The protocol as written cannot close this**, which is why
+reading the ledger is now in it rather than only in the teardown skills.
+
+The ledger is **readable by absolute path from inside any worktree** — verified,
+2892 lines — even though `.claude/worktrees/` is gitignored and so does not exist
+in the worktree's own tree. Four committed files name it. What was missing was
+never its address; it was that no loop anyone runs opened it.
+
+So the other half is yours: **write your claim there before you start**, not when
+you finish. A claim written at the end is a record; written at the start it is the
+only thing that makes the window visible to anybody else. And where the work
+touches a shared artefact — `docs/screenshots`, CLAUDE.md, a docs sweep — say so
+to the other sessions as well as to the file, because a file write reaches nobody
+inside the window that matters.
+
+**A follow-up named in a merged PR or a plan document is a magnet.** Both of the
+collisions above were exactly that: #174 handed the account control on in
+`docs/md3-completion-plan.md` under M9, and the screenshot refresh was owed in
+prose by two merged PRs. Several sessions read the same document and reach the
+same "this is the obvious next thing" — so a task that looks conveniently unowned
+is the case to check hardest, not the case to start fastest. **A prose hand-off
+is not an assignment**, however directly it is worded.
 
 Someone may already be doing it. A worktree that is clean, stale and untouched
 for an hour is **not** evidence of abandonment — that is also exactly what one
@@ -1266,6 +1364,34 @@ trivially — which is the common case and why this often just works. But
 stays on the remote until somebody removes it; once someone does (the button on
 the merged PR, or `git push origin --delete`) and you `fetch --prune`, the
 upstream is gone.
+
+**In practice somebody always does, and `git push origin --delete` then reports
+your teardown as a failure.** Five for five on 2026-08-29: by the time a session
+reached that command the remote branch was already gone, because whoever merges
+presses the button. Git says
+
+    error: unable to delete 'worktree-<name>': remote ref does not exist
+    error: failed to push some refs to 'github.com:mpbarbosa/portal_brasileirao.git'
+
+and exits **1**. Nothing is wrong — the branch is gone, which is what you asked
+for — but the wording is *failed to push*, and in the usual
+`remove && branch -d && push --delete` chain it aborts whatever you put after it
+and reads as a teardown that did not finish.
+
+Note the setting above is what makes this surprising rather than obvious: because
+`delete_branch_on_merge` is false you expect the branch to survive the merge, so
+the error looks like a real failure rather than a race you already won. **Check
+the state, never the exit code**, and run it after `fetch --prune` so a stale
+remote-tracking ref does not answer for the remote:
+
+```sh
+git fetch origin --prune
+git branch -a --list '*<name>*'    # empty = local and remote both gone
+```
+
+Same shape as the `-d` message above and as the `2>&1`-in-a-command-substitution
+trap under the backup scripts: **the exit status is answering a different
+question than the one you are asking.**
 
 **That trivial success is also why `-d` protects nothing while a PR is open**,
 and this half is worth more than the half above it: the paragraph you just read
@@ -1512,6 +1638,17 @@ enforces rather than early and carved-out.
   the document outline and because an end-to-end spec selects `main article`. This is the
   rule that drifted once already — that card was hand-rolled with a *different* radius
   than every other card until M2 folded it back in.
+  `as="a"` is a real case and the reason `href` is declared on `SurfaceProps`:
+  `ComponentPropsWithoutRef<"div">` knows nothing of it, so without that one optional
+  string a whole-panel link does not type-check and the next author hand-rolls the chrome
+  beside it — which is the drift this component exists to stop. The **Meu time** strip is
+  that shape: it offers exactly one thing, the club's page, and it used to say so with an
+  underline under a 72px word inside a 736px band, so 545px of the largest element on the
+  home page was inert and the crest — the thing a reader reaches for first — was outside
+  the target entirely. The whole row is the link now, with a trailing chevron so the empty
+  side reads as the rest of it, and `min-h-12` because this is a standalone control on its
+  own line rather than a link inside content: the same distinction `BACK_LINK` draws and
+  the exclusion `tabs-and-targets.spec.ts` names.
 - **The Classificação freezes `#` and Clube.** Both are `sticky`, so the numbers scroll
   out from under the club name on a narrow screen rather than taking the name with them.
   Three things had to move together, and each is invisible until someone scrolls:

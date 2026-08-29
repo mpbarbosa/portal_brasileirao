@@ -4,7 +4,7 @@ import { followLabel, type FollowState } from "@/preferences-core";
 import { Button } from "@/src/components/Button";
 import { ClubCrest } from "@/src/components/ClubCrest";
 import { GLYPH } from "@/src/components/ClubLinks";
-import { FOCUS_RING, LINK_UNDERLINE, STATE_LAYER } from "@/src/components/interaction";
+import { FOCUS_RING, STATE_LAYER } from "@/src/components/interaction";
 import { Surface } from "@/src/components/Surface";
 import { clubKey } from "@/club-core";
 import { countdownLabel } from "@/live-core";
@@ -83,9 +83,10 @@ export function FollowButton({
  * A modified click is the browser's, not ours.
  *
  * Middle-click and cmd/ctrl-click open a new tab, and swallowing them is how an
- * `<a href>` comes to behave worse than the plain link it replaced. Written out
- * at each call site in this repo rather than shared, which is the existing
- * convention — see `MatchList` and the club link below.
+ * `<a href>` comes to behave worse than the plain link it replaced. Shared
+ * within this file because the strip now carries two links — the club row and
+ * the fixture line — and a second hand-written copy of the four modifier keys
+ * is how one of them comes to swallow shift-click.
  */
 const isPlainClick = (event: React.MouseEvent): boolean =>
   !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey && event.button === 0;
@@ -201,7 +202,7 @@ function ProximoJogo({
     <div
       data-proximo-jogo={match.id}
       data-imminent={urgent ? "yes" : "no"}
-      className={`mt-2 border-l-2 pl-3 ${rail}`}
+      className={`mx-3 mb-2 border-l-2 pl-3 ${rail}`}
     >
       {onSelectMatch ? (
         <a
@@ -309,33 +310,97 @@ export function MeuTimeStrip({
 
   const { club } = state;
 
-  return (
-    <Surface filled className="mb-4 px-3 py-2" data-meu-time={club.code}>
-      <div className="flex items-center gap-2">
-        <StarGlyph filled className="h-4 w-4 shrink-0 text-primary" />
-        <span className="text-label-large text-ink-muted">Meu time</span>
-        <ClubCrest club={club} size={20} />
-        {onSelectClub ? (
-          <a
-            href={formatRoute({ section: "clube", key: clubKey(club) })}
-            onClick={(event) => {
-              // Let modified clicks open a new tab, as any link should.
-              if (!isPlainClick(event)) return;
-              event.preventDefault();
-              onSelectClub(clubKey(club));
-            }}
-            className={`truncate rounded-x-small font-medium text-on-surface ${LINK_UNDERLINE}`}
-          >
-            {club.shortName}
-          </a>
-        ) : (
-          <span className="truncate font-medium text-on-surface">{club.shortName}</span>
-        )}
-      </div>
+  /**
+   * One row, and — where the strip can navigate — **one link that is the whole
+   * row** rather than a link on the name inside it.
+   *
+   * The strip has exactly one thing to offer above the fixture line: the club's
+   * page. It said so with an underline under a 72px word, in a band 736px wide
+   * holding 190px of content, so 545px of it was inert and the target was the
+   * smallest part of the largest element on the page. Crest included, since a
+   * crest beside a club's name is the thing a reader reaches for first and it
+   * was not part of the target at all.
+   *
+   * `min-h-12` is the touch-target floor, and it applies here where it does not
+   * apply to the twenty club names in the table below: this is a standalone
+   * control on its own line, not a link inside content — the same distinction
+   * `BACK_LINK` draws, and the exclusion `tabs-and-targets.spec.ts` names.
+   */
+  const contents = (
+    <>
+      <StarGlyph filled className="h-4 w-4 shrink-0 text-primary" />
+      <span className="shrink-0 text-label-large text-ink-muted">Meu time</span>
+      <ClubCrest club={club} size={24} />
+      <span className="truncate font-medium text-on-surface">{club.shortName}</span>
+      {/* The chevron is what makes the empty right-hand side read as *the rest
+          of a link* rather than as a band that ran out of things to say. It
+          also does the job the underline used to do, now that the underline
+          would be sitting under one word of a row-wide target. */}
+      {onSelectClub && (
+        <svg {...GLYPH} className="ml-auto h-5 w-5 shrink-0 text-ink-muted">
+          <path d="m9.5 5.5 6.5 6.5-6.5 6.5" />
+        </svg>
+      )}
+    </>
+  );
 
-      {/* The alert half. It renders only once the fixtures have landed and the
-          club has one still to play — the strip above stands on its own until
-          then, rather than reserving a row for a line that may never come. */}
+  const row = "flex min-h-12 items-center gap-2 px-3 py-2";
+
+  const clubHref = formatRoute({ section: "clube", key: clubKey(club) });
+  const openClub = (event: React.MouseEvent) => {
+    // Let modified clicks open a new tab, as any link should.
+    if (!isPlainClick(event)) return;
+    event.preventDefault();
+    onSelectClub?.(clubKey(club));
+  };
+
+  /**
+   * With no fixture to show, the panel **is** the link — exactly the shape the
+   * row-wide target arrived as, unchanged.
+   *
+   * The fixture line cannot live inside that anchor: it points at the match
+   * page, and an `<a>` inside an `<a>` is invalid markup that browsers repair
+   * by closing the outer one early — the second link would work and the first
+   * would silently stop covering the row. So when there is one, the panel goes
+   * back to being a container and the club row becomes a row-wide anchor inside
+   * it. The target stays the whole row either way, which is the property that
+   * mattered; only which element carries the chrome moves.
+   */
+  if (focus.kind === "none") {
+    if (!onSelectClub) {
+      return (
+        <Surface filled className={`mb-4 ${row}`} data-meu-time={club.code}>
+          {contents}
+        </Surface>
+      );
+    }
+
+    return (
+      <Surface
+        as="a"
+        filled
+        href={clubHref}
+        onClick={openClub}
+        className={`mb-4 ${row} ${STATE_LAYER}`}
+        data-meu-time={club.code}
+      >
+        {contents}
+      </Surface>
+    );
+  }
+
+  return (
+    <Surface filled className="mb-4" data-meu-time={club.code}>
+      {onSelectClub ? (
+        // `rounded-t-small` so the state layer's veil follows the panel's own
+        // corners instead of squaring them off at the top.
+        <a href={clubHref} onClick={openClub} className={`${row} rounded-t-small ${STATE_LAYER}`}>
+          {contents}
+        </a>
+      ) : (
+        <div className={row}>{contents}</div>
+      )}
+
       <ProximoJogo
         focus={focus}
         code={club.code}

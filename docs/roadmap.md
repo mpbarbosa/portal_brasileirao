@@ -529,9 +529,27 @@ paragraph of prose.
    boots frozen. Green e2e is therefore not evidence that it renders —
    `tests/football-data-core.test.ts` covers the mapper against a captured
    payload, per the rule in `CLAUDE.md`.
-2. **Aproveitamento (%).** `pontos / (jogos × 3)`. The metric a Brazilian reader
-   quotes by default, and the one that survives a postponed fixture honestly.
-   Needs a `CONTEXT.md` entry in the same commit.
+2. ~~**Aproveitamento (%).**~~ **Shipped.** `pointsPercentage` and
+   `pointsPercentageLabel` in `standings-core.ts`, the `%` column of the
+   classificação and the fifth tile of the club page, with the `CONTEXT.md`
+   entry in the same commit.
+
+   Three things the build settled that the proposal left open. It says "render
+   on the club page and in the classificação's **row detail**", and there is no
+   row detail — the classificação has never had one, so it became a column, last,
+   where a Brazilian table puts it and where the header entry **P, J, V, E, D,
+   SG** stopped one short. It is **derived, never a field on `StandingsRow`**:
+   `/api/standings` serves upstream's table when the provider is reachable and
+   the computed one otherwise, and a value read from `points` and `played` cannot
+   disagree with the two numbers beside it whichever arrived. And a club with no
+   game played gets an **em dash rather than `0%`** — 0% is a club that has
+   played and taken nothing, which is a claim about the club where the other is
+   an absence, the same rule the artilharia applies to an unreported tally.
+
+   The postponed-fixture argument is visible in the frozen snapshot rather than
+   only in the reasoning, which is worth knowing before anyone reads the column
+   as redundant: Atlético-MG sits **below** Coritiba on 33 points to 34 and
+   **above** it on aproveitamento, 48% to 47%, on one game fewer.
 3. **A legend for the G4/Z4 rail.** — **done.** `zoneClass` painted the rail and
    nothing on the page said what the colours meant. It was also hue-only, where
    the same data on the club page carries a letter *and* a colour. The key sits

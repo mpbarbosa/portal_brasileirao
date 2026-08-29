@@ -13,6 +13,18 @@ interface SurfaceProps extends Omit<ComponentPropsWithoutRef<"div">, "className"
    */
   filled?: boolean;
   className?: string;
+  /**
+   * Declared only so `as="a"` type-checks — `ComponentPropsWithoutRef<"div">`
+   * knows nothing of `href`, and everything else a caller passes already
+   * reaches the element through `...rest`.
+   *
+   * A whole panel that is one link is a real shape (the **Meu time** strip),
+   * and the alternative was hand-rolling this chrome beside it — which is the
+   * exact drift this component was extracted to stop. Widening the props by one
+   * optional string is cheaper than a polymorphic type, and the `as` prop is
+   * already untyped against the element in the same way.
+   */
+  href?: string;
 }
 
 /**

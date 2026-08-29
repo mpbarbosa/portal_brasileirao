@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 
 import { Button } from "@/src/components/Button";
+import { MoonIcon, SunIcon } from "@/src/components/SectionIcons";
 import { FOCUS_RING, STATE_LAYER } from "@/src/components/interaction";
 import { NAV_ITEMS, type SectionId } from "@/src/navigation";
 import { useScrolled } from "@/src/useScrolled";
@@ -119,11 +120,16 @@ function NavigationBar({
 /**
  * The brand and the section destinations.
  *
- * Two presentations of one model. Above the `sm` breakpoint the destinations sit
- * inline in the header, which is MD3's tab arrangement and what the app has
- * always done. Below it they move to a navigation bar pinned to the bottom of
- * the screen. Both render from `NAV_ITEMS`, so a section is reachable at every
- * width and neither list can drift from the other.
+ * Two presentations of one model. Above the `sm` breakpoint the destinations are
+ * a row of MD3 primary tabs **beneath** the app bar's own row; below it they
+ * move to a navigation bar pinned to the bottom of the screen. Both render from
+ * `NAV_ITEMS`, so a section is reachable at every width and neither list can
+ * drift from the other.
+ *
+ * The tabs shared the app bar's row until the arithmetic in the JSX below was
+ * measured rather than assumed. They are still inside `<header>` — every spec
+ * selects them as `header nav[aria-label="Seções"] a` — and only their line
+ * changed.
  *
  * Note there is no longer any open/closed state here. The hamburger, its panel,
  * the outside-click listener and the Escape handler all existed to manage a
@@ -191,17 +197,15 @@ export function NavBar({
       // — it is evidence the other is still there. Kept as the statement of
       // intent that survives someone changing the display mode.
       "relative inline-flex min-h-12 items-center whitespace-nowrap",
-      // `px-2` until `lg`, and this is the bottom bar's lesson one breakpoint
-      // up: MD3 specifies the indicator and not the padding, so the padding is
-      // what gives way when the row will not fit.
+      // `px-3` at every width, where this used to be `px-2` until `lg`.
       //
-      // It has to give here because `whitespace-nowrap` took away the layout's
-      // escape valve. Signed in at 640, the header used to fit only because
-      // "Ao vivo" was free to wrap onto two lines — so the nowrap turned a
-      // silent wrap into a 23px horizontal overflow, which the header-fits spec
-      // in `contas.spec.ts` caught. `px-2` on five tabs returns 40px, which is
-      // enough at every width the tabs are shown.
-      "rounded-small px-2 py-2 text-body-medium font-medium lg:px-3",
+      // The padding was the thing that gave way while the tabs shared a line
+      // with the brand and the trailing controls, and giving way was not enough
+      // — see the note on the row below for the arithmetic. On a row of their
+      // own the five tabs measure 481px against 608px at the narrowest width
+      // they are shown, so there is no longer a shortage to spend the padding
+      // on, and `px-3` is the same 12dp the label sat in at `lg` before.
+      "rounded-small px-3 py-2 text-body-medium font-medium",
       STATE_LAYER,
       id === current
         ? "text-primary after:absolute after:inset-x-2 after:bottom-0 after:h-[3px] after:rounded-t-full after:bg-primary"
@@ -227,40 +231,49 @@ export function NavBar({
           scrolled ? "shadow-level-2" : "shadow-level-0"
         }`}
       >
-        <div className="mx-auto flex max-w-3xl items-center justify-between gap-3 px-4 py-3">
-          <div className="min-w-0">
-            <p className="truncate text-title-medium font-bold">Portal Brasileirão</p>
-            <p className="truncate text-body-small text-ink-muted">
-              Campeonato Brasileiro Série A
-            </p>
-          </div>
+        <div className="mx-auto max-w-3xl px-4">
+        <div className="flex items-center justify-between gap-3 py-3 sm:py-2">
+          {/* The wordmark is a link home, which it was not — it was two `<p>`
+              elements, so the one control every site on the web puts in this
+              corner did nothing here. A reader on `/clube/palmeiras` had to
+              find "Classificação" among the destinations to get back.
 
-          {/* No `title` on the destinations — a tooltip never appears on touch,
-              and it competes with the visible label for the accessible name,
-              which breaks "click <label>" voice control. */}
-          <nav className="hidden gap-1 sm:flex" aria-label="Seções">
-            {NAV_ITEMS.map((item) => (
-              <a
-                key={item.id}
-                href={formatRoute(routeFor(item.id))}
-                onClick={(event) => select(event, item.id)}
-                aria-current={item.id === current ? "page" : undefined}
-                className={tabClass(item.id)}
-              >
-                {item.label}
-              </a>
-            ))}
-          </nav>
+              `-mx-2 px-2` rather than bare padding: the veil needs room to sit
+              in — `BACK_LINK` exists because a state layer with no padding hugs
+              the glyphs — while the text itself must stay on the same left edge
+              as the content column beneath it. The negative margin buys the one
+              without moving the other, and 8px still leaves the row inside the
+              container's own `px-4`. */}
+          <a
+            href="/"
+            onClick={(event) => select(event, "classificacao")}
+            data-brand
+            className={`-mx-2 min-w-0 shrink rounded-small px-2 py-1 ${STATE_LAYER}`}
+          >
+            {/* `whitespace-nowrap` and no `truncate`: the app's own name is the
+                one string on this bar that must never be cut, and it was —
+                measured signed in at `ad8853c`, it read "Portal Brasile…" at
+                1280 and "P…" at 640. See the row note below for why. */}
+            <span className="block whitespace-nowrap text-title-medium font-bold text-on-surface">
+              Portal Brasileirão
+            </span>
+            {/* Below `sm` only, where the destinations are in the bottom bar and
+                this row holds nothing but the brand and two 40dp controls — the
+                subtitle measures 174px there against acres of room. Above `sm`
+                the tab row underneath says what the app is for, and the full
+                name survives in `<title>` and in the page's own `h1`. It was
+                the first thing to truncate at every width. */}
+            <span className="block whitespace-nowrap text-body-small text-ink-muted sm:hidden">
+              Campeonato Brasileiro Série A
+            </span>
+          </a>
 
           {/* MD3 puts trailing actions at the end of the top app bar. The
               account control sits before the theme toggle because it is the one
               that changes what the page says; the toggle changes how it looks.
 
-              `shrink-0` on the pair: above `sm` the header already carries the
-              brand block and five inline tabs inside `max-w-3xl`, and adding a
-              second control eats slack that was measured for one. See the
-              header-width spec — the bottom bar's fifth entry was clipped with
-              no scroll to reveal it, and this is that failure one breakpoint up. */}
+              `shrink-0` on the pair: they are the two fixed-width things in a
+              row whose other member is elastic, and the brand is what gives. */}
           {/* `gap-2`, and the 2 is arithmetic rather than taste. Both controls
               here take a 48dp touch target from a 40dp box, so each overhangs
               4px; `gap-1` gave 4px of space to 8px of overhang and the two
@@ -283,9 +296,67 @@ export function NavBar({
                  lives on a pseudo-element, so the box is free to be 40. */
               size="bar"
             >
-              <span aria-hidden="true">{theme === "light" ? "☽" : "☀"}</span>
+              {/* Hand-drawn, in `currentColor`, like every other glyph here.
+                  They were `☽` and `☀` — text glyphs, whose size and weight
+                  belong to the font rather than to this app. Measured in the
+                  shipped bundle: the crescent drew about a third the height of
+                  the 24px icons beside it, so one control had two optical sizes
+                  depending on which theme was on, in the one row of this app
+                  that had been levelled to the pixel. */}
+              {theme === "light" ? (
+                <MoonIcon className="h-5 w-5" />
+              ) : (
+                <SunIcon className="h-5 w-5" />
+              )}
             </Button>
           </div>
+        </div>
+
+        {/* The destinations, on a row of their own above `sm`.
+            ---------------------------------------------------
+            They were inline with the brand and the trailing controls, and that
+            row was over-subscribed rather than merely tight. Signed in at 640
+            it had to hold 345px of tab labels, a 128px wordmark, a 108px
+            account control and a 40px toggle inside 608px of content — so the
+            brand was the flexible member and it collapsed to **27px**, reading
+            "P…". At 1280 the same arithmetic left it 115px against 128px
+            needed, so the app's own name was cut on a full desktop too.
+
+            No padding, breakpoint or type step fixes that: the numbers do not
+            fit, and every previous attempt spent the tabs' padding buying a few
+            pixels back. MD3 does not put a five-destination tab row inside a
+            top app bar either — **tabs are a component placed beneath one** —
+            so this is the spec's arrangement as well as the one the arithmetic
+            allows. The cost is 32px of sticky chrome above `sm`; below it the
+            bottom navigation bar is unchanged and this row does not render.
+
+            Left-aligned rather than stretched to fill: the indicator is an
+            `after` inset from the tab's own padding, so an equal-width tab
+            would draw a 131px rule under "Jogos". MD3's primary-tab indicator
+            hugs its label, which is what content-sized tabs give for free. */}
+        {/* `-ml-3` cancels the first tab's own `px-3`, so the first *label*
+            starts on the same left edge as the wordmark above it rather than
+            12px inside it — the two are both the leading edge of this bar, and
+            an eye reads them as one column or as a mistake. The tab's state
+            layer does extend those 12px further left, which is what a tab's
+            container is supposed to do; 4px of the container's `px-4` is left
+            over, so nothing overflows. */}
+        <nav className="-ml-3 hidden gap-1 sm:flex" aria-label="Seções">
+          {/* No `title` on the destinations — a tooltip never appears on touch,
+              and it competes with the visible label for the accessible name,
+              which breaks "click <label>" voice control. */}
+          {NAV_ITEMS.map((item) => (
+            <a
+              key={item.id}
+              href={formatRoute(routeFor(item.id))}
+              onClick={(event) => select(event, item.id)}
+              aria-current={item.id === current ? "page" : undefined}
+              className={tabClass(item.id)}
+            >
+              {item.label}
+            </a>
+          ))}
+        </nav>
         </div>
       </header>
 
