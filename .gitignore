@@ -158,3 +158,16 @@ playwright/.cache/
 # Screenshots of a local build. Only the live site writes to docs/screenshots,
 # so a dev-server capture cannot overwrite a committed README image.
 docs/screenshots/local/
+
+# The accounts database and its WAL sidecars. `ACCOUNTS_DB` defaults to
+# ./data/accounts.db, and running a dev server with ACCOUNTS_DEV_LOGIN=true
+# creates it — so without this an accounts database (email, name, Google
+# subject) is one `git add -A` away from being committed into history.
+# `openStore` makes this directory itself, and no script can regenerate what
+# is in it, so the whole of it is runtime state.
+#
+# The leading slash is load-bearing: a bare `data/` has no internal slash and
+# so matches at any depth, which would silently swallow `src/data/` — the
+# curated-data layer. Tracked files there are unaffected, but the next file
+# added under it would be unstageable with nothing going red.
+/data/
