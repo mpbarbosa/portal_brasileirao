@@ -109,6 +109,88 @@ test.describe("Classificação", () => {
     await expect(sparklines).toHaveCount(20);
   });
 
+  const plotToggle = (page: Page) =>
+    page.getByRole("button", { name: /ver a campanha em (barras|linha)/i });
+
+  const campaignCells = (page: Page) => page.locator("table tbody tr td:nth-child(4)");
+
+  test("the campanha column starts as a line and the toggle turns it into bars", async ({
+    page,
+  }) => {
+    // The kinds are told apart by the element each draws, not by a class: a
+    // polyline and a set of rects is the whole difference, and asserting on
+    // markup that has to exist for the mark to render at all cannot pass
+    // against an unchanged page.
+    await expect(campaignCells(page).first().locator("polyline")).toHaveCount(1);
+    await expect(campaignCells(page).first().locator("rect")).toHaveCount(0);
+
+    await plotToggle(page).click();
+
+    await expect(campaignCells(page).first().locator("polyline")).toHaveCount(0);
+    // One column per round played, so a count rather than a value — the frozen
+    // snapshot ages and the round advances with it.
+    expect(await campaignCells(page).first().locator("rect").count()).toBeGreaterThan(0);
+  });
+
+  test("every row changes together, since the column is one choice", async ({ page }) => {
+    await plotToggle(page).click();
+
+    const withBars = campaignCells(page).locator("rect").first();
+    await expect(withBars).toBeVisible();
+
+    for (let index = 0; index < 20; index += 1) {
+      await expect(campaignCells(page).nth(index).locator("polyline")).toHaveCount(0);
+    }
+  });
+
+  test("the choice survives a reload", async ({ page }) => {
+    // It is held in localStorage, like the theme. A control that forgets on
+    // every visit is a control the reader has to press every visit.
+    await plotToggle(page).click();
+    await page.reload();
+    await expect(page.locator("table tbody tr")).toHaveCount(20);
+
+    await expect(campaignCells(page).first().locator("rect").first()).toBeVisible();
+    await expect(campaignCells(page).first().locator("polyline")).toHaveCount(0);
+  });
+
+  test("the toggle names the mark it switches to", async ({ page }) => {
+    // The page shows which mark is on; the button has to say what pressing it
+    // gets you, and has to change its mind once pressed.
+    await expect(plotToggle(page)).toHaveAccessibleName(/em barras/i);
+    await plotToggle(page).click();
+    await expect(plotToggle(page)).toHaveAccessibleName(/em linha/i);
+  });
+
+  test("bars are stated in words too, exactly as the line is", async ({ page }) => {
+    // The accessible name describes the campanha, not the drawing, so choosing
+    // a different mark must not change what a screen reader is told.
+    const svg = campaignCells(page).first().locator("svg");
+    const asLine = await svg.getAttribute("aria-label");
+
+    await plotToggle(page).click();
+
+    expect(await svg.getAttribute("aria-label")).toBe(asLine);
+    expect(asLine).toMatch(/^Campanha: \d+º na \d+ª rodada/);
+  });
+
+  test("the toggle does not scroll away with the table", async ({ page }) => {
+    // It sits outside the Surface that scrolls horizontally, for the reason the
+    // zone key does: on a narrow screen the Campanha column is one of the
+    // columns that scrolls, so a control inside that container would leave the
+    // reader looking at the mark with its own control off-screen.
+    await page.setViewportSize(NARROW);
+
+    const before = (await plotToggle(page).boundingBox())!;
+    await page.locator("table").evaluate((table) => {
+      const scroller = table.parentElement!;
+      scroller.scrollLeft = scroller.scrollWidth;
+    });
+    const after = (await plotToggle(page).boundingBox())!;
+
+    expect(Math.abs(after.x - before.x)).toBeLessThan(1);
+  });
+
   test("the campanha is stated in words as well as drawn", async ({ page }) => {
     // The drawing is unreadable to a screen reader and may not render at all
     // under forced colours, so the same fact has to exist as text.

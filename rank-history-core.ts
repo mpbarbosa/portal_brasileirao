@@ -166,3 +166,69 @@ export const describeCampaign = (entries: RankAtRound[]): string => {
     ? `${summary}. Melhor: ${at(best)}`
     : summary;
 };
+
+export interface SparklineBar {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  round: number;
+  position: number;
+}
+
+/**
+ * Project a campanha onto the box as columns rather than as a line.
+ *
+ * Two things differ from `sparklinePoints`, and both are forced by what a bar
+ * is rather than chosen for variety.
+ *
+ * **The x axis is a band, not a set of points.** A line joins positions taken
+ * *at* the end of each round, so round 1 sits on the left edge and the last
+ * round on the right; a bar occupies the whole round, so round *r* takes the
+ * band `[r-1, r)` of `lastRound` and the final bar's right edge lands on the
+ * right edge of the box. The two kinds therefore do not put round 5 at the same
+ * x, which is correct: they are answering "where was the club at this instant"
+ * and "how did the club stand through this round".
+ *
+ * **The y axis is a length from a baseline, not a coordinate.** A bar's meaning
+ * is its length, so it needs a zero, and the zero here is the bottom of the
+ * division — a club is drawn tall when it is high. That is why the denominator
+ * is `clubCount` and not `clubCount - 1` as it is for the line: with the line's
+ * span the last-placed club maps exactly onto the baseline and draws a bar of
+ * height zero, which renders as an empty round and reads as missing data rather
+ * than as 20th place. Last place is `1/clubCount` of the height — a sliver, and
+ * a sliver is the honest picture of it.
+ *
+ * `clubCount` is floored at 1 for the same degenerate-domain reason
+ * `sparklinePoints` floors its spans.
+ */
+export const sparklineBars = (
+  entries: RankAtRound[],
+  box: SparklineBox,
+): SparklineBar[] => {
+  const innerWidth = box.width - box.padding * 2;
+  const innerHeight = box.height - box.padding * 2;
+  const rounds = Math.max(1, box.lastRound);
+  const clubCount = Math.max(1, box.clubCount);
+  const band = innerWidth / rounds;
+
+  // A gap of a fifth of the band, so the columns read as separate marks — but
+  // never below a device pixel wide overall: at 72px across a 38-round season a
+  // band is 1.8px, and a proportional gap alone would leave a bar too thin to
+  // paint. The bar is centred in its band, so the gap is split either side.
+  const width = Math.max(0.75, band * 0.8);
+
+  return entries.map((entry) => {
+    const value = clubCount + 1 - entry.position;
+    const height = round2((value / clubCount) * innerHeight);
+
+    return {
+      x: round2(box.padding + (entry.round - 1) * band + (band - width) / 2),
+      y: round2(box.padding + innerHeight - height),
+      width: round2(width),
+      height,
+      round: entry.round,
+      position: entry.position,
+    };
+  });
+};

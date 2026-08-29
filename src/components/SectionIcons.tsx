@@ -134,3 +134,32 @@ export function MoonIcon({ className }: IconProps) {
     </svg>
   );
 }
+
+/**
+ * The line kind of the **Campanha** mark, for the column's plot-kind toggle.
+ *
+ * Here rather than beside the toggle for the reason `SunIcon` is: this file
+ * holds the one `base` attribute bag the app's glyphs share, and a glyph defined
+ * at its call site drifts from it. Neither of these is a section either.
+ *
+ * It draws a rising trace because that is what the mark it names looks like,
+ * not a generic chart frame with axes — the toggle offers a choice between two
+ * pictures, so each glyph has to be a small copy of its own picture.
+ */
+export function LinePlotIcon({ className }: IconProps) {
+  return (
+    <svg {...base} className={className}>
+      <path d="M3 17l5-5 4 3 6-8" />
+      <circle cx="18" cy="7" r="1.6" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+
+/** The bars kind; the other half of the pair, see `LinePlotIcon`. */
+export function BarsPlotIcon({ className }: IconProps) {
+  return (
+    <svg {...base} className={className}>
+      <path d="M5 19v-5M10 19v-9M15 19v-4M20 19v-13" />
+    </svg>
+  );
+}

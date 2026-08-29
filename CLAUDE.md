@@ -139,6 +139,38 @@ what makes the logic testable without mocking HTTP.
   implementation of them is how a history comes to disagree with the table it describes.
   38 rounds × 20 clubs is a few thousand operations. It stops at the last round with a
   result — "no position yet" is an absence, not a zero.
+  **The reader chooses the mark: `sparklinePoints` draws the linha, `sparklineBars`
+  the barras, and one button above the Classificação flips between them.** The two
+  do not share an axis convention and must not be made to. A line joins the position
+  taken *at* the end of a round, so the x span is `lastRound - 1` and the first and
+  last points sit on the box's edges; a bar covers the round as a band of
+  `lastRound`, and — this is the load-bearing half — its meaning is its **length**,
+  so it needs a zero. The zero is the foot of the division, which is why the y
+  denominator is `clubCount` and not the line's `clubCount - 1`: with the line's
+  span, last place maps exactly onto the baseline and draws a bar of height **zero**,
+  which reads as a missing round rather than as 20th. A sliver is the honest picture
+  of last place; nothing is a rendering fault.
+  The choice is `campaign-plot-core.ts` — `theme-core.ts`'s shape to the letter, and
+  in `localStorage` for `theme-core`'s reason rather than in `preferences-core.ts`:
+  ask which side *owns* a key before asking how to reconcile it, and a plot kind is
+  owned by the screen being read. No second side can hold a value, so there is
+  nothing to merge and no clock to buy. It also needs **no inline script in
+  `index.html`**, unlike the theme: the theme decides the colour of every pixel and
+  repainting it is a flash, while this decides one 72px mark in a table whose rows
+  have not landed at that point.
+  **The toggle sits above the table and outside the scrolling `Surface`**, for the
+  reason the zone key sits below and outside it — that Surface is the horizontal
+  scroll container, and the Campanha column is one of the columns that scrolls, so a
+  control placed within it leaves a narrow-screen reader looking at the mark with its
+  own control off-screen. It is deliberately **not** in the column header, which is
+  where it looks like it belongs: `CAMPAIGN_COLUMN` is `w-0` so the column measures
+  its 72px mark, and a control in that `<th>` would become the column's widest
+  content and take the table's surplus straight back — the regression the "no wider
+  than the mark it holds" spec exists for.
+  The **Clube** and **Partida** pages keep the linha whatever the table is set to.
+  There the campanha is a section with room to read a trajectory, not a cell being
+  scanned down a column, and a choice made in one section silently restyling two
+  other pages is a surprise rather than a preference.
 
 - `venue-core.ts` — the **Página do estádio**. `buildStadiums` groups fixtures into
   grounds, because **a stadium is not an entity in any payload**: football-data has no
