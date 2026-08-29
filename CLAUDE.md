@@ -1817,6 +1817,45 @@ The reason is required, and is printed on every run, green or red — a claim no
 the thing this replaced. Nothing verifies it. **"It looks the same to me" is a refresh, not
 a trailer**; reach for it only when the edit cannot reach a paint at all.
 
+**It has to be a real git trailer, and a malformed one is dropped in silence.**
+This is the failure mode to know, because it is invisible from both ends: the check
+collects trailers with `%(trailers:key=Screenshots-unaffected,...)`, and git parses
+trailers **only in the commit message's last paragraph**. A trailer git does not parse
+is never collected, and since the run only prints trailers it *has* collected, nothing
+anywhere says the claim was ignored. The gate simply reports the commit as
+unaccounted, which reads as "nobody wrote one".
+
+Two shapes break it independently, and M6's `c842640` had both — its trailer never
+once reached the check, and #172's refresh went red on the next run because of it:
+
+```
+Screenshots-unaffected: a reason that wraps onto
+a second line with no indent.                    <- DROPPED: unindented continuation
+
+Screenshots-unaffected: a reason, then a blank line.
+
+Co-Authored-By: …                                <- DROPPED: not the last paragraph
+```
+
+Both forms below parse, verified in a throwaway repo rather than reasoned out — a
+continuation indented by any whitespace folds, and the trailer may sit *beside*
+`Co-Authored-By:` so long as no blank line separates them:
+
+```
+Screenshots-unaffected: a reason that wraps onto
+  a second line, indented.
+Co-Authored-By: …
+```
+
+Check it rather than trusting the shape, in the commit you are about to push:
+
+```sh
+git log -1 --format='%(trailers:key=Screenshots-unaffected,valueonly,unfold)'
+```
+
+Empty output means the claim does not exist as far as the gate is concerned. The
+retroactive `<sha>:` form is the fix once the commit is on main and cannot be amended.
+
 **A capture waits for the page to stop moving, and that is not a nicety.**
 Playwright's `click` moves the pointer to the element and leaves it there, so the
 Jogadores shot — the one capture that clicks anything — sat on the club summary
