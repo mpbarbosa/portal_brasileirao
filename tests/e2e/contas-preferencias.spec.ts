@@ -48,7 +48,9 @@ const devLogin = (page: Page, subject: string) =>
 const me = (page: Page) =>
   page.evaluate(async () => {
     const response = await fetch("/api/account/me", { credentials: "same-origin" });
-    return (await response.json()) as { preferences: { club: string | null } } | null;
+    return (await response.json()) as {
+      preferences: { club: string | null; landing: string | null };
+    } | null;
   });
 
 const putPreferences = (page: Page, club: string | null) =>
@@ -196,7 +198,7 @@ test.describe("Privacidade", () => {
     expect(robots).not.toContain("Disallow: /privacidade");
   });
 
-  test("says the three things it stores, and that guests store nothing", async ({ page }) => {
+  test("says what it stores, and that guests store nothing", async ({ page }) => {
     await page.goto("/privacidade");
     const main = page.locator("main");
 
@@ -216,5 +218,128 @@ test.describe("Privacidade", () => {
   test("the account pages link to it", async ({ page }) => {
     await page.goto("/entrar");
     await expect(page.locator('a[href="/privacidade"]')).toBeVisible();
+  });
+});
+
+/**
+ * **Página inicial** — the second preference key, and the first that exists
+ * only in an account.
+ *
+ * What is worth driving a browser for here is not the mapping, which
+ * `preferences-core.test.ts` covers exhaustively without one. It is the two
+ * things only a real page can show: that the redirect actually happens on a
+ * fresh document load, and that it stays out of the way of everything else a
+ * reader might have asked for.
+ */
+test.describe("Página inicial", () => {
+  const picker = (page: Page) => page.locator("#seletor-pagina-inicial");
+
+  /** Choose, and wait for the fire-and-forget upload to land. The control
+   *  changing says the *page* holds it, not the account — the same distinction
+   *  that cost an hour in the Meu time specs above. */
+  const choose = async (page: Page, landing: string) => {
+    await page.goto("/conta");
+    await picker(page).selectOption(landing);
+    await expect
+      .poll(() => me(page).then((it) => it?.preferences.landing ?? null))
+      .toBe(landing === "classificacao" ? null : landing);
+  };
+
+  test("the Portal opens where the reader asked it to", async ({ page }) => {
+    await devLogin(page, "sub-landing");
+    await choose(page, "ao-vivo");
+
+    // A fresh document load of the home address, which is the only moment this
+    // is allowed to fire.
+    await page.goto("/");
+    await expect(page).toHaveURL(/\/ao-vivo$/);
+  });
+
+  test("it replaces the entry rather than stacking one, so Back is not a trap", async ({
+    page,
+  }) => {
+    // With a pushed entry, Back would return to "/" and be redirected forward
+    // again — a button that visibly does nothing.
+    await devLogin(page, "sub-landing-back");
+    await choose(page, "artilharia");
+
+    await page.goto("/jogadores");
+    await page.goto("/");
+    await expect(page).toHaveURL(/\/artilharia$/);
+
+    await page.goBack();
+    await expect(page).toHaveURL(/\/jogadores$/);
+  });
+
+  test("a deep link wins over the preference", async ({ page }) => {
+    // Someone who followed a link asked for that page. A landing choice is not
+    // a licence to overrule them.
+    await devLogin(page, "sub-landing-deep");
+    await choose(page, "ao-vivo");
+
+    await page.goto("/artilharia");
+    await page.waitForTimeout(500);
+    await expect(page).toHaveURL(/\/artilharia$/);
+  });
+
+  test("the Classificação tab still reaches the Classificação", async ({ page }) => {
+    // The failure this rules out is total: a redirect that fired on every visit
+    // to "/" would make the home tab unreachable for exactly the readers who
+    // set the preference.
+    await devLogin(page, "sub-landing-tab");
+    await choose(page, "jogadores");
+
+    await page.goto("/");
+    await expect(page).toHaveURL(/\/jogadores$/);
+
+    // `:visible` because both navigation bars carry the same label and the same
+    // links — the tab row above `sm`, the bottom bar below it — and only one of
+    // them is on screen in either project.
+    await page.locator('nav[aria-label="Seções"] a[href="/"]:visible').first().click();
+    await expect(page).toHaveURL(/\/$/);
+    await page.waitForTimeout(500);
+    await expect(page).toHaveURL(/\/$/);
+  });
+
+  test("Meu time lands on the followed club's page", async ({ page }) => {
+    await devLogin(page, "sub-landing-club");
+    await page.goto("/clube/palmeiras");
+    await followControl(page).click();
+    await expect.poll(() => me(page).then((it) => it?.preferences.club)).toBeTruthy();
+
+    await choose(page, "meu-time");
+    await page.goto("/");
+    await expect(page).toHaveURL(/\/clube\/palmeiras$/);
+  });
+
+  test("choosing the Classificação stores nothing at all", async ({ page }) => {
+    // "Chose the default" and "has never chosen" are one state, exactly as
+    // "follows nobody" and "never picked a club" are one state a key over.
+    await devLogin(page, "sub-landing-default");
+    await choose(page, "jogos");
+    await choose(page, "classificacao");
+
+    await page.goto("/");
+    await page.waitForTimeout(500);
+    await expect(page).toHaveURL(/\/$/);
+  });
+
+  test("a guest is not offered a setting they could not keep", async ({ page }) => {
+    // The control lives in the account and nowhere else, so a signed-out reader
+    // must not meet a switch that would forget itself on the next load.
+    await page.goto("/conta");
+    await expect(page.locator("[data-landing-card]")).toHaveCount(0);
+  });
+
+  test("signing out gives the home address back", async ({ page }) => {
+    await devLogin(page, "sub-landing-out");
+    await choose(page, "ao-vivo");
+
+    await page.goto("/conta");
+    await page.locator("[data-sign-out='this']").click();
+
+    await page.goto("/");
+    await page.waitForTimeout(500);
+    await expect(page).toHaveURL(/\/$/);
   });
 });

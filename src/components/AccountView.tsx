@@ -13,6 +13,11 @@ import {
 } from "@/src/components/interaction";
 import { Surface } from "@/src/components/Surface";
 import { controlClasses } from "@/src/components/Button";
+import {
+  LANDING_OPTIONS,
+  type FollowState,
+  type LandingId,
+} from "@/preferences-core";
 import type { AccountState } from "@/src/useAccount";
 
 /** A person, outlined. The one glyph an account needs. */
@@ -221,6 +226,93 @@ export function SignInView({
 }
 
 /**
+ * **Página inicial** — the section the app opens on.
+ *
+ * A native `<select>`, for the reason the round picker is one: the platform
+ * control brings the mobile picker, the keyboard model and the accessibility
+ * tree for nothing, where MD3's menu would buy an appearance and owe focus
+ * management, typeahead and dismissal for ever. `controlClasses` already makes
+ * it look like the buttons beside it.
+ *
+ * **It renders only for a signed-in reader**, and that is the setting's whole
+ * shape rather than a permission check bolted on: this preference lives in the
+ * account and nowhere else, so a guest has no place to keep one. See
+ * `Preferences.landing`.
+ *
+ * The default is offered as an ordinary option rather than as an empty first
+ * entry — "Classificação" is a real answer to "onde o Portal abre", and a blank
+ * row above it would read as a fault. Choosing it stores **nothing**, so "chose
+ * the default" and "has never chosen" stay one state, exactly as "follows
+ * nobody" and "never picked a club" are one state a key over.
+ */
+function LandingChoice({
+  landing,
+  follow,
+  onChoose,
+}: {
+  landing: LandingId | null;
+  /** Only to tell a reader that `meu-time` has nothing to resolve to yet. */
+  follow: FollowState;
+  onChoose: (landing: LandingId | null) => void;
+}) {
+  const current = landing ?? "classificacao";
+  const chosen = LANDING_OPTIONS.find((option) => option.id === current);
+  // Chosen "Meu time" and following nobody. Not an error — the app falls back
+  // to the table, which is what the option's own description says — but a
+  // reader who set this and then unfollowed their club would otherwise have no
+  // way to tell why nothing changed.
+  const danglingClub = current === "meu-time" && follow.kind !== "following";
+
+  return (
+    <Surface filled className="mt-4 px-4 py-3" data-landing-card>
+      <h3 className="text-body-medium font-semibold">Página inicial</h3>
+      <p className="mt-1 max-w-prose text-body-small text-ink-muted">
+        Onde o Portal abre quando você chega. Vale em todos os aparelhos em que
+        você entrar.
+      </p>
+
+      <div className="mt-3 flex flex-wrap items-center gap-2">
+        <label htmlFor="seletor-pagina-inicial" className="text-body-medium text-ink-muted">
+          Abrir em
+        </label>
+        <select
+          id="seletor-pagina-inicial"
+          data-landing={current}
+          /* No text-colour override: two utilities of equal specificity are
+             resolved by stylesheet order rather than class order, so one here
+             would be a coin flip. */
+          className={controlClasses("sm", "bg-surface-container-low")}
+          value={current}
+          onChange={(event) => {
+            const value = event.target.value as LandingId;
+            onChoose(value === "classificacao" ? null : value);
+          }}
+        >
+          {LANDING_OPTIONS.map((option) => (
+            <option key={option.id} value={option.id}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {chosen && (
+        <p className="mt-2 max-w-prose text-body-small text-ink-faint" data-landing-hint>
+          {chosen.description}
+        </p>
+      )}
+
+      {danglingClub && (
+        <p role="status" className="mt-2 max-w-prose text-body-small text-warning-ink">
+          Você ainda não segue nenhum time, então o Portal continua abrindo na
+          Classificação. Escolha um time na página do clube.
+        </p>
+      )}
+    </Surface>
+  );
+}
+
+/**
  * `/conta` — what is held about a reader, and the two things they can do to it.
  *
  * The delete confirmation is a native `<dialog>` opened with `showModal()`, the
@@ -230,11 +322,20 @@ export function SignInView({
  */
 export function AccountView({
   state,
+  landing,
+  follow,
+  onChooseLanding,
   onSignOut,
   onDelete,
   onBack,
 }: {
   state: AccountState;
+  /** Where the app opens for this reader, or `null` for the default. Held by
+   *  `usePreferences` rather than read off `state.account.preferences`, so the
+   *  control reflects a change before the fire-and-forget upload lands. */
+  landing: LandingId | null;
+  follow: FollowState;
+  onChooseLanding: (landing: LandingId | null) => void;
   onSignOut: (everywhere?: boolean) => void;
   onDelete: () => void;
   onBack: () => void;
@@ -295,14 +396,16 @@ export function AccountView({
           </div>
         </dl>
         <p className="mt-3 text-body-small text-ink-faint">
-          É tudo o que guardamos sobre você, além do seu time e de um registro
-          por aparelho conectado. Veja{" "}
+          É tudo o que guardamos sobre você, além do seu time, da sua página
+          inicial e de um registro por aparelho conectado. Veja{" "}
           <a href="/privacidade" className={LINK_UNDERLINE}>
             Privacidade
           </a>
           .
         </p>
       </Surface>
+
+      <LandingChoice landing={landing} follow={follow} onChoose={onChooseLanding} />
 
       <div className="mt-4 flex flex-wrap gap-2">
         <Button onClick={() => onSignOut(false)} data-sign-out="this">

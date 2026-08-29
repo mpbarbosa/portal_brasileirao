@@ -1074,9 +1074,12 @@ that device. Held as `Preferences.club` in `preferences-core.ts` — the club's
 naming the club, the **Próximo jogo do meu time** line inside that strip, and a
 star on that club's row in the table.
 It is **one** club, not a list: choosing another is a change of allegiance, so
-`toggleFollow` replaces rather than appends. And it is per-device, deliberately
-— no account, no server, nothing that can be lost by anyone but its owner. See
-`docs/accounts.md`, whose Phase 0 this is.
+`toggleFollow` replaces rather than appends. And it is **device-first**: it
+needs no account, no server and nothing that can be lost by anyone but its
+owner — that is Phase 0 of `docs/accounts.md` and it is still exactly true for
+a guest. With a **Conta** it also syncs, under `planSync`'s one-sentence rule:
+the account is the source of truth, and a device seeds an account that has none
+yet. Contrast **Página inicial**, which has no device copy at all.
 Two rules the copy and the code both turn on. A reader who has chosen nobody is
 shown **nothing at all** about it: no strip, no prompt, no invitation on the
 home page, because a permanent nag is the soft end of the same thing a sign-in
@@ -1122,11 +1125,18 @@ the tab closed — see `docs/accounts.md` Phase 3 for what would), "lembrete"
 playing), and a match minute, for the reason **Bola rolando** already gives.
 
 **Preferências**:
-What the app remembers about a reader on this device, as one object with one key
-per decision — today **Meu time** alone. Parsed by `parsePreferences`, which
+What the app remembers about a reader, as one object with one key per decision —
+today **Meu time** and **Página inicial**. Parsed by `parsePreferences`, which
 tolerates anything at all in storage, and bound to `localStorage` by
 `usePreferences` under `portal-brasileirao:preferences`, beside the theme's own
 key.
+**The two keys do not have the same home, and that is the thing to know about
+this word.** Meu time is device-first and syncs with an account; Página inicial
+exists *only* in an account, and `serialiseDevicePreferences` is what keeps it
+out of the browser's storage. They travel as one object because the endpoint
+replaces the whole set, and they are told apart at exactly two places — that
+serialiser and `planSync`. So a merge rule is owed only where both sides can
+hold a value: ask which side **owns** a key before asking how to reconcile it.
 The **Tema** is deliberately *not* one of them, though it is stored the same
 way: it belongs to the device and the light in the room rather than to the
 person, which is why `useTheme` keeps its own key and why syncing it to an
@@ -1134,8 +1144,35 @@ account later would be a conflict-resolution problem bought for nothing.
 A failed write is silent. Telling somebody in private mode that their choice
 will not be remembered is a message about their browser dressed as a message
 about the app, delivered at the moment they did something that otherwise worked.
-_Avoid_: "configurações" (suggests a settings page, which there is not),
-"ajustes", "perfil" (that is a person, and there are no accounts).
+_Avoid_: "configurações" (there is no settings *page* — **Página inicial** is a
+single control inside **Conta**, and naming the concept "configurações" promises
+a screen this app does not have), "ajustes", "perfil" (that is a person, and an
+account is not one).
+
+**Página inicial**:
+The section the Portal opens on for a signed-in reader — the **Classificação**
+by default, or **Ao vivo**, **Jogos**, **Artilharia**, **Jogadores**, or the
+page of their **Meu time**. Held as `Preferences.landing`, chosen from a single
+`<select>` in **Conta**, and **stored only in the account**: it is the one
+preference a guest is not offered, because its whole purpose is to follow a
+person between aparelhos and a device-local copy would be the one that
+disagreed.
+It is a **redirect**, not a different page under `/`: the app replaces the
+address on the first load of the home address, so the canonical tag, the link
+preview and the JSON-LD keep describing what is actually on screen — and a
+crawler, which has no session, still sees the table at `/` permanently.
+Three rules the code turns on, each of which is a way it could be a trap. A
+**deep link wins**: somebody who followed a link asked for that page. The
+**Classificação tab still works**: the redirect fires once per document, on the
+home address, so it cannot make the home page unreachable. And **Meu time falls
+back to the table** when the club cannot be named right now, rather than
+guessing an address out of a stored code — `followState`'s rule, one layer out.
+Choosing the Classificação stores nothing, so "chose the default" and "never
+chose" stay one state, exactly as they do for **Meu time**.
+_Avoid_: "home" and "homepage" (English, and the site has one home *address*
+regardless of what a reader lands on), "tela inicial" (that is a phone's), "página
+padrão" (says default rather than *whose*), and "abrir em" as the name of the
+concept — that is the control's label, not the thing.
 
 **Conta**:
 A reader's account, held only so that what they choose can follow them between
