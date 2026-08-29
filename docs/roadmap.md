@@ -228,12 +228,16 @@ provider than it needed to build:
   no visitor has. Capture from the live site, or from a local build whose `.env`
   matches the host's. Contas, unlike árbitro, *is* a scheduling problem: it
   resolves the day credentials reach the host.
-- **Two of the sixteen captures can never come back byte-identical, and that is
-  a property of the tooling rather than of any change.** `scripts/screenshot.ts`
-  sets `fullPage = !mobile && route === "/"`, so `classificacao-dark.png` and
-  `classificacao-light.png` are the only full-page shots — and a full-page `/`
-  includes the rodapé, which prints `Versão <sha>`. Those two therefore change
-  on **every** deploy whatever the code did. The consequence worth carrying:
+- **Four of the eighteen captures can never come back byte-identical, and that
+  is a property of the tooling rather than of any change.** Two vary per
+  *deploy*: `scripts/screenshot.ts` sets `fullPage = !mobile && route === "/"`,
+  so `classificacao-dark.png` and `classificacao-light.png` are the only
+  full-page shots — and a full-page `/` includes the rodapé, which prints
+  `Versão <sha>`. Two more vary per *minute*: `ao-vivo-{dark,light}.png` carry
+  `countdownLabel`'s "Começa em 20h37" against a live fixture list. Those four
+  therefore change on **every** refresh whatever the code did — and the Ao vivo
+  pair changes between two refreshes of the *same* deploy, which is how it was
+  found. See CLAUDE.md under **CI** for the measurement. The consequence worth carrying:
   *"the refresh showed no pixel change"* is not an observable state for them, so
   the capture set cannot distinguish "nothing changed" from "something changed"
   on the page most likely to be looked at. `CAPTURED`'s mechanical answer — that
