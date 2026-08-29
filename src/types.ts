@@ -385,6 +385,27 @@ export interface PlayerOverride {
    * language; they are unverified, and unverified stays untouched.
    */
   nationality?: string;
+  /**
+   * Where the recorded position puts the player on the **wrong line** — the
+   * groupings `lineOf` reads, not a difference of shading within one. A
+   * volante reported as `Defence` renders among the Defensores, which is a
+   * claim about what he does rather than a nuance of it.
+   *
+   * **The bar is two sources agreeing, because a position is arguable where a
+   * placeholder name is not.** An entry needs the club's own squad section
+   * *and* an article's stated role to say the same thing, joined on exact date
+   * of birth. Where they disagree, or where the article hedges, the provider's
+   * value stands: Jesse Lingard's article says "meio-campista ou atacante"
+   * against a club listing of atacantes, so he is left alone. This file
+   * corrects what is wrong, never what is debatable — and that sentence is the
+   * whole of what keeps it from becoming a matter of taste.
+   *
+   * In the **provider's** vocabulary (`Defensive Midfield`, `Left Winger`), so
+   * `lineOf` places it and `positionLabel` captions it exactly as an uncorrected
+   * value. Prefer the specific role where a source states one: `positionLabel`
+   * then earns a caption the broad word would not have.
+   */
+  position?: string;
 }
 
 /**

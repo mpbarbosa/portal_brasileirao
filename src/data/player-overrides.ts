@@ -54,4 +54,52 @@ export const PLAYER_OVERRIDES: Record<string, PlayerOverride> = {
   // `nationalityLabel` still does the translating, so there is one table rather
   // than two ways for a country to reach the page.
   "1609": { nationality: "Brazil" },
+
+  // ---------------------------------------------------------------------
+  // Positions. Six Corinthians players upstream files on the wrong LINE —
+  // not a shade within one — each confirmed twice over: the club's own
+  // elenco page puts them in a different section, and their article states
+  // a role, and the article is joined to the player on the exact date of
+  // birth `squads.ts` carries. Read 2026-08-29.
+  //
+  // Corinthians only, deliberately: that is the club whose squad was
+  // validated, and the other nineteen will have their own. Partial coverage
+  // is the norm for a curated file here, and the method above is the whole
+  // of what a later pass needs.
+  //
+  // NOT here: Jesse Lingard (3325). Upstream says Midfield, the club says
+  // atacantes, and his article says "meio-campista ou atacante" — the
+  // sources do not agree, so the provider's value stands. He is the reason
+  // the bar is stated as two sources rather than one.
+  // ---------------------------------------------------------------------
+
+  // Upstream: "Defence". Club: meias. Article: "atua como volante"
+  // (b. 1996-12-31). The worst of the six on the page — a defensive
+  // midfielder listed among the Defensores, which is a claim about what he
+  // does rather than a nuance of it.
+  "103611": { position: "Defensive Midfield" },
+
+  // Upstream: "Defence". Club: meias. "André Luiz Santos Dias" — "atua como
+  // volante" (b. 2006-06-20). Note the club writes him as plain "André".
+  "285271": { position: "Defensive Midfield" },
+
+  // Upstream: "Midfield". Club: atacantes. "Kayke Ferrari" — "atua como
+  // ponta-esquerda" (b. 2004-04-28).
+  "211607": { position: "Left Winger" },
+
+  // Upstream: "Midfield". Club: atacantes. "Gui Negão" — "atua como
+  // centroavante" (b. 2007-02-06). The club calls him Gui Negão and we show
+  // "Guilherme"; that stays, because an ambiguous real name is still a name.
+  "259933": { position: "Centre-Forward" },
+
+  // Upstream: "Midfield". Club: atacantes. Article: "atua como atacante"
+  // (b. 1993-03-09). Broad rather than specific on purpose: the source says
+  // attacker and names no role, and inventing one would be the taste this
+  // file exists to keep out.
+  "3703": { position: "Offence" },
+
+  // Upstream: "Offence" — the only one wrong in the other direction. Club:
+  // meias. "Diego da Cruz Lopes" — "atua como meio-campista"
+  // (b. 2007-09-16). Broad, for the same reason as Labyad.
+  "275104": { position: "Midfield" },
 };

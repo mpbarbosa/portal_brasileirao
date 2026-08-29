@@ -1019,12 +1019,28 @@ reader adding an entry will look:
   `Bulgaria`; he is Brazilian, born in Atibaia, and the cause looks like a
   country-of-club leak — he played for Ludogorets and pt.wikipedia files him
   under *Brasileiros expatriados na Bulgária*.
-- **Not positions**, though upstream gets six of Corinthians' 33 first-team
-  players wrong against the club's own sections — a volante filed under
-  Defensores, two attackers under Meio-campistas. A position is genuinely
-  arguable where a placeholder name is not, six entries is where a curated table
-  starts drifting against the provider every transfer window, and the club's own
-  page is not a stable machine-readable source. Recorded rather than fixed.
+- **`position` — only where the recorded value puts the player on the wrong
+  LINE**, not a shade within one. Upstream files Raniele, a volante, among the
+  **Defensores**; that is a claim about what he does rather than a nuance of it.
+  In the provider's vocabulary (`Defensive Midfield`, `Left Winger`), so `lineOf`
+  places it and `positionLabel` captions it with no special case anywhere —
+  prefer the *specific* role where a source states one, since the broad word
+  earns no caption under a heading that has already said it.
+
+  **This field has a two-source bar, and it is the only one that needs it**,
+  because a position is genuinely arguable where a placeholder name is not. An
+  entry needs the club's own squad section **and** an article's stated role to
+  agree that we are wrong. Jesse Lingard is the proof the bar bites: upstream
+  says Midfield, the club says atacantes, and his article says "meio-campista ou
+  atacante" — the sources disagree, so the provider's value stands. Without that
+  rule this field is taste, and taste is what the `name` rule above exists to
+  keep out.
+
+  This was argued against before it was built — six entries is where a curated
+  table starts drifting against the provider every transfer window, and a club's
+  own page is not a stable machine-readable source. Both objections stand; the
+  bar is what they bought. Coverage is **Corinthians only**, which is the club
+  whose squad was validated, and partial like every curated file here.
 
 Verify against the person endpoint **and** an independent source before adding
 one, joined on **exact date of birth** — the evidence `check-player-wikipedia`
@@ -1043,6 +1059,13 @@ sweep found `Felipexxx` to be the only placeholder-shaped name in the division.
 **`squads.ts` cannot carry any of this**, which is the whole reason the file
 exists: it is generated, so `sync-seed-data` overwrites a hand-edit on its next
 run and says nothing. Overriding at serve time survives the regeneration.
+
+**A wrong `position` fails in a way the other two fields cannot**, and it looks
+like a fix: a value `LINES` does not know sends the player to **Outros**, which
+is further from the truth than the wrong line the entry was written to undo. The
+value type-checks, the page renders, and the player is simply somewhere nobody
+looks. `tests/squad-core.test.ts` asserts every corrected position places into a
+real line and that `playerPositionLabel` never hands the English word back.
 
 There is no checker, because what goes stale here is the **override** rather than
 a third-party link, and that is local. `tests/player-core.test.ts` fails when an
