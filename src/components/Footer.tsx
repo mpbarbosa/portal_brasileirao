@@ -208,12 +208,20 @@ function HealthReadout({ health, readAt }: HealthReading) {
  * links and carry no `<nav>` and no landmark. The destinations remain
  * `NAV_ITEMS` and that bar remains full.
  *
- * Each reads as the thing a reader would recognise, which is the rule
- * `WikipediaLink` states and the reason it prints "Wikipédia" rather than
- * "Sociedade Esportiva Palmeiras". For a personal site the recognisable thing
- * genuinely is the domain — it is what that site calls itself in its own
- * `<title>` — and for the sibling app it is the app's name, so the two look
- * inconsistent and are the same rule twice.
+ * **Both print their bare domain, and that is the author's decision rather
+ * than a default — do not "restore" either to a friendlier name.** The first
+ * draft printed the sibling app as "Agora na Copa 26", reasoning from
+ * `WikipediaLink`'s rule that a link reads as the thing a reader recognises.
+ * That rule is sound where the name is the *only* handle a reader has, which
+ * is why the Wikipédia link still prints "Wikipédia". It is the wrong rule
+ * here: these two links exist to say *this is the same author's other
+ * address*, and the shared `mpbarbosa.com` stem is what carries that. A name
+ * on one and a domain on the other hides the very relationship the band is
+ * for, and reads as two unrelated links that happen to sit together.
+ *
+ * The cost is that a bare domain names no subject, so `subject` stops being a
+ * nicety and becomes the only thing telling a screen-reader user where the
+ * link goes. Do not drop it to match the visible text.
  *
  * A `<ul>` rather than a run of anchors in a `<p>`: a screen reader then
  * announces "lista de 2 itens" and a reader knows how many there are before
@@ -241,7 +249,7 @@ function AuthorLinks() {
       <li>
         <OutboundLink
           href="https://copa2026.mpbarbosa.com"
-          label="Agora na Copa 26"
+          label="copa2026.mpbarbosa.com"
           subject="o companheiro da Copa do Mundo FIFA 2026, do mesmo autor"
           extra="inline-flex min-h-12 items-center"
         />

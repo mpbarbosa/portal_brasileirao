@@ -1122,17 +1122,27 @@ treating it as the place to park anything with nowhere else to go.
 
 **Sites do autor**:
 The two places this app's author writes, as the middle band of the **Rodapé**:
-`mpbarbosa.com`, the personal and professional site, and **Agora na Copa 26**,
-the Copa do Mundo FIFA 2026 companion built the same way this app is.
+`mpbarbosa.com`, the personal and professional site, and
+`copa2026.mpbarbosa.com`, the Copa do Mundo FIFA 2026 companion built the same
+way this app is.
 They **leave the site** rather than moving around it, which is the whole reason
 they are not navigation and the reason the rodapé's rule against navigation is
 not being bent: a `<ul>` of outbound anchors, no `<nav>`, no landmark, and the
 sections stay `NAV_ITEMS`.
-Each reads as the thing a reader would recognise — the same rule that prints
-**Wikipédia** rather than an article's full legal title. For a personal site
-that is genuinely the domain, which is what that site calls itself in its own
-`<title>`; for the sibling app it is the app's name. The two look inconsistent
-and are one rule applied twice.
+**Both print their bare domain, and that is a decision — do not "restore"
+either to a friendlier name.** The first draft printed the sibling as **Agora
+na Copa 26**, reasoning from the rule that a link reads as the thing a reader
+recognises (the rule that prints **Wikipédia** rather than an article's full
+legal title). That rule holds where the name is the only handle a reader has,
+and it is the wrong rule here: this band exists to say *these are the same
+author's other addresses*, and the shared `mpbarbosa.com` stem is what carries
+that. A name on one and a domain on the other hides the relationship the band
+is for, and reads as two unrelated links that happen to sit together.
+Two consequences worth knowing. A bare domain names no subject, so the
+screen-reader `subject` is no longer a nicety — it is the only thing saying
+where the link goes, and must not be trimmed to match the visible text. And
+one label is now a **substring** of the other, so every test locator is
+anchored with `^`; an unanchored `mpbarbosa.com` matches both.
 Rendered by `AuthorLinks`, through `OutboundLink`, which owns the whole anchor
 for the reason `ClubLinks` does — `target`, `rel` and the screen-reader suffix
 are what a copied link loses, and a copy missing `rel="noopener"` looks
@@ -1141,8 +1151,9 @@ controls on their own line, the distinction that keeps that floor off the
 twenty club names in the **Classificação**.
 _Avoid_: "links úteis" or "parceiros" (neither is what these are — one is the
 author's own page and the other is his other app), printing the author's name
-on the page (the destination introduces him; this app does not), adding a third
-site here without opening it first, calling this band navigation.
+on the page (the destination introduces them; this app does not), naming either
+site rather than printing its domain, adding a third site here without opening
+it first, calling this band navigation.
 
 **Saúde do serviço**:
 What `/api/health` reports about the process that answered — its state, the

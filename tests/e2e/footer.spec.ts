@@ -145,12 +145,20 @@ test.describe("Rodapé", () => {
   test("the rodapé carries the author's other sites, and says where they go", async ({ page }) => {
     await page.goto("/");
 
-    // Named by what a reader recognises: a personal site by its domain (which
-    // is what that site calls itself) and the sibling app by its name.
-    const personal = footer(page).getByRole("link", { name: /mpbarbosa\.com/ });
+    // Both print their bare domain, deliberately: the shared `mpbarbosa.com`
+    // stem is what says these are one author's two addresses. A friendlier
+    // name on one of them hides that, which is the whole point of the band.
+    //
+    // **Every locator here is anchored with `^`, and it has to be.** Since
+    // both labels became domains, one is a *substring* of the other —
+    // `/mpbarbosa\.com/` matches the copa2026 link too, so an unanchored
+    // locator is either a strict-mode violation or, worse, silently the wrong
+    // element. The accessible name starts with the visible label, so `^`
+    // separates them. Do not relax these to bare substrings.
+    const personal = footer(page).getByRole("link", { name: /^mpbarbosa\.com/ });
     await expect(personal).toHaveAttribute("href", "https://www.mpbarbosa.com");
 
-    const sibling = footer(page).getByRole("link", { name: /Agora na Copa 26/ });
+    const sibling = footer(page).getByRole("link", { name: /^copa2026\.mpbarbosa\.com/ });
     await expect(sibling).toHaveAttribute("href", "https://copa2026.mpbarbosa.com");
 
     for (const link of [personal, sibling]) {
@@ -184,7 +192,7 @@ test.describe("Rodapé", () => {
     // Classificação. The floor is on the box, so neither overhangs into the
     // other — measure the gap as well as the heights.
     const boxes = [];
-    for (const name of [/mpbarbosa\.com/, /Agora na Copa 26/]) {
+    for (const name of [/^mpbarbosa\.com/, /^copa2026\.mpbarbosa\.com/]) {
       const box = await footer(page).getByRole("link", { name }).boundingBox();
       expect(box).not.toBeNull();
       expect(box!.height).toBeGreaterThanOrEqual(48);
