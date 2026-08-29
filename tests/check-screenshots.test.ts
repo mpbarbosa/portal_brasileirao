@@ -36,7 +36,7 @@ class Sandbox {
     this.git("config", "user.email", "test@example.invalid");
     this.git("config", "user.name", "Test");
 
-    for (const sub of ["src/components", "docs/screenshots", "scripts"]) {
+    for (const sub of ["src/components", "src/data", "docs/screenshots", "scripts"]) {
       mkdirSync(path.join(this.dir, sub), { recursive: true });
     }
     for (const file of [SCRIPT, "scripts/appearance-paths.txt"]) {
@@ -48,6 +48,7 @@ class Sandbox {
     this.write("src/App.tsx", "app\n");
     this.write("index.html", "html\n");
     this.write("src/components/Table.tsx", "table\n");
+    this.write("src/data/venues.ts", "venues\n");
     this.commit("Seed the tree");
   }
 
@@ -140,13 +141,51 @@ test("an appearance change after the last capture is reported, and named", () =>
   });
 });
 
-test("data changes are not appearance changes", () => {
+test("a curated data change is an appearance change", () => {
+  // `src/data` joined the watched paths because the four before it could not see
+  // the case that motivated them. Curated data is *merged into what production
+  // serves* — broadcaster marks onto four captured pages, a stadium's name and
+  // photograph onto the estádio page — so an edit there moves a captured pixel
+  // with nothing on `src/components`, `src/index.css`, `src/App.tsx` or
+  // `index.html` having changed.
   withSandbox((repo) => {
     repo.shoot();
-    repo.write("src/data/matches.ts", "export const MATCHES = [];\n");
-    repo.commit("Sync the seed fixtures");
+    repo.write("src/data/broadcasts.ts", "export const BROADCASTS = { \"1\": [\"ge\"] };\n");
+    repo.commit("Sync the broadcast channels");
 
-    assert.equal(repo.run().ok, true);
+    assert.equal(repo.run().ok, false);
+  });
+});
+
+test("a seed sync is listed too, and the trailer is what clears it", () => {
+  // This test used to assert the opposite — that `src/data` was not watched at
+  // all — and the reasoning it encoded is still true for *this* file: captures
+  // are taken from production, which serves live provider data, so the seed
+  // snapshot cannot move one however far it drifts. What changed is that the
+  // list cannot separate `matches.ts` from `broadcasts.ts`, and the direction to
+  // fail in was the one that reports too much rather than the one that reports
+  // nothing.
+  //
+  // So the cost is real and is paid here rather than discovered: a
+  // `sync-seed-data` run now owes a trailer. That is the mechanism working — a
+  // claim a person writes and the run prints — not a workaround for it.
+  withSandbox((repo) => {
+    repo.shoot();
+    repo.write("src/data/matches.ts", "export const SEED_MATCHES = [];\n");
+    repo.commit("Sync the seed fixtures");
+    assert.equal(repo.run().ok, false);
+
+    repo.write("src/data/clubs.ts", "export const CLUBS = [];\n");
+    repo.commit(
+      "Sync the seed clubs\n\n" +
+        "Screenshots-unaffected: the seed snapshot is the offline fallback and\n" +
+        "  every capture is taken from production, which serves live provider\n" +
+        "  data, so no rendered pixel can come from this file.",
+    );
+
+    const { out } = repo.run();
+    assert.match(out, /Declared not to move a pixel/);
+    assert.match(out, /no rendered pixel can come from this file/);
   });
 });
 
