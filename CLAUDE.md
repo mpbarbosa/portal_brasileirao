@@ -1402,10 +1402,19 @@ session can run every documented check, get every answer right, and duplicate a
 day of work, because none of the checks was ever pointed at what it was about to
 do.
 
-The ledger is **readable by absolute path from inside any worktree** — verified,
-2892 lines — even though `.claude/worktrees/` is gitignored and so does not exist
+The ledger is **readable by absolute path from inside any worktree** — verified by
+opening it — even though `.claude/worktrees/` is gitignored and so does not exist
 in the worktree's own tree. Four committed files name it. What was missing was
 never its address; it was that no loop anyone runs opened it.
+
+That sentence used to carry a line count, and the count is gone rather than
+updated. It supported nothing — the claim is that the path *opens* — and it was
+wrong within a day of being written: 2892 when recorded, 4994 the next time
+anybody looked — and 657 of those lines arrived in the twenty-five minutes
+between two readings on one evening, 4337 at 19:52:53Z against 4994 at
+20:17:35Z. A length nobody recomputes is the shape this file
+warns about under **check the prompt that sent you**, so the fix that cannot rot
+again is to delete the number rather than re-measure it.
 
 So the other half is yours: **write your claim there before you start**, not when
 you finish. A claim written at the end is a record; written at the start it is the
