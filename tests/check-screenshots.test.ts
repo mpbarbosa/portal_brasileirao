@@ -285,8 +285,111 @@ test("a merge that only catches a branch up is not an appearance change", () => 
     assert.doesNotMatch(out, /appearance changed since/);
     // Named on the green run rather than silently dropped: a reader comparing
     // this against `git log` should not have to wonder where it went.
-    assert.match(out, /changing nothing on main/);
+    assert.match(out, /introduced nothing of its own/);
     assert.match(out, /Merge pull request #39 from docs-only/);
+  });
+});
+
+test("a trailer survives the merge commit that lands it", () => {
+  // THE DEFECT THIS SUITE DID NOT HAVE A CASE FOR, and it sat one test below
+  // the catch-up merge for months. `git log -- <paths>` lists the merge that
+  // lands a pull request as well as the commit inside it, and a merge made from
+  // the GitHub button carries a message with nowhere to put a trailer. So the
+  // gate credited the claim, printed its reason, and reported the identical edit
+  // as unaccounted under the merge sha. #205, #202 and #217 all hit it, which
+  // made a trailer defer a re-shoot rather than remove one.
+  //
+  // MAIN HAS TO MOVE ON AN APPEARANCE PATH WHILE THE BRANCH IS OUT. Without
+  // that the merge is TREESAME to its topic parent on these paths and git's own
+  // history simplification never lists it, so there is nothing for the gate to
+  // get wrong — the first fixture written for this passed against the unfixed
+  // script. That is the same trap the catch-up case below records about forking
+  // before the merge, one topology further on: a fixture simpler than this
+  // repository can be too simple to contain the bug.
+  withSandbox((repo) => {
+    const base = repo.git("rev-parse", "HEAD");
+    repo.shoot("Refresh the screenshots", base);
+
+    repo.git("checkout", "-q", "-b", "topic");
+    repo.touch("src/components/Table.tsx");
+    repo.commit("Move a constant\n\nScreenshots-unaffected: a constant moved module; no pixel can move.");
+
+    repo.git("checkout", "-q", "main");
+    // A sibling change on main, on a different file so the merge does not
+    // conflict — this is what makes the merge differ from *both* parents.
+    repo.touch("src/index.css");
+    repo.commit("Somebody else's rule\n\nScreenshots-unaffected: never in effect during a paint.");
+    repo.git("merge", "-q", "--no-ff", "topic", "-m", "Merge pull request #217 from topic");
+
+    const { ok, out } = repo.run();
+
+    assert.equal(ok, true);
+    assert.doesNotMatch(out, /appearance changed since/);
+    // Named on the green run, like the catch-up merge, rather than vanishing.
+    assert.match(out, /introduced nothing of its own/);
+    assert.match(out, /Merge pull request #217 from topic/);
+  });
+});
+
+test("an untrailered change is still refused when a merge lands it", () => {
+  // The other side of the case above: skipping the merge must not skip the debt
+  // inside it. The topic commit is enumerated in its own right and answers for
+  // itself, so the verdict is unchanged and it is the commit that gets named —
+  // not the merge, which a reader cannot act on.
+  withSandbox((repo) => {
+    const base = repo.git("rev-parse", "HEAD");
+    repo.shoot("Refresh the screenshots", base);
+
+    repo.git("checkout", "-q", "-b", "topic");
+    repo.touch("src/components/Table.tsx");
+    repo.commit("Restyle the table");
+
+    repo.git("checkout", "-q", "main");
+    repo.touch("src/index.css");
+    repo.commit("Somebody else's rule\n\nScreenshots-unaffected: never in effect during a paint.");
+    repo.git("merge", "-q", "--no-ff", "topic", "-m", "Merge pull request #218 from topic");
+
+    const { ok, out } = repo.run();
+
+    assert.equal(ok, false);
+    assert.match(out, /Restyle the table/);
+  });
+});
+
+test("an evil merge is still refused — its resolution is in neither parent", () => {
+  // Why the fix is a combined-diff test and not `--no-merges`, which is simpler
+  // and would pass every case above while blinding the gate here.
+  //
+  // A conflict resolved by hand into an appearance path produces a result that
+  // exists in neither parent, so no other commit can answer for it and the merge
+  // itself has to. `git show --cc` prints exactly that and nothing else, which
+  // is what makes it the right question to ask of a merge.
+  withSandbox((repo) => {
+    const base = repo.git("rev-parse", "HEAD");
+    repo.shoot("Refresh the screenshots", base);
+
+    repo.git("checkout", "-q", "-b", "left");
+    repo.write("src/components/Table.tsx", "left\n");
+    repo.commit("Left edit\n\nScreenshots-unaffected: declared, but see the merge.");
+
+    repo.git("checkout", "-q", "main");
+    repo.write("src/components/Table.tsx", "right\n");
+    repo.commit("Right edit\n\nScreenshots-unaffected: declared, but see the merge.");
+
+    try {
+      repo.git("merge", "--no-ff", "left", "-m", "Merge branch left");
+    } catch {
+      // Expected: the point of the case is that this conflicts.
+    }
+    // Resolved to a third value, present on neither side.
+    repo.write("src/components/Table.tsx", "resolved by hand\n");
+    repo.git("add", "src/components/Table.tsx");
+    repo.git("commit", "-q", "--no-edit");
+
+    const { ok, out } = repo.run();
+
+    assert.equal(ok, false);
+    assert.match(out, /Merge branch left/);
   });
 });
 
