@@ -7,18 +7,9 @@ import { LINK_UNDERLINE } from "@/src/components/interaction";
 import { lastRecordedRound } from "@/rank-history-core";
 import { RankSparkline } from "@/src/components/RankSparkline";
 import { formatRoute } from "@/route-core";
-import { pointsPercentageLabel } from "@/standings-core";
+import { ZONE_DEPTH, ZONE_DEPTH_WORD, pointsPercentageLabel } from "@/standings-core";
 import { Surface } from "@/src/components/Surface";
 import type { ClubCode, ClubRankHistory, RankAtRound, StandingsRow } from "@/src/types";
-
-/** Both zones are four places deep — the count the abbreviations themselves
- *  carry. Named because the key below states the same rule in words, and a
- *  rail that disagreed with its own key would be worse than an unexplained
- *  rail. `ZONE_DEPTH_WORD` is that number spelled out: the key is prose, and
- *  "as 4 primeiras" reads as a scoreline rather than as a sentence. Nothing
- *  can check the two against each other, so they sit together. */
-const ZONE_DEPTH = 4;
-const ZONE_DEPTH_WORD = "quatro";
 
 /** The two rail colours, shared between the cell and the key so a change to
  *  either colour cannot leave the other describing the old one. */

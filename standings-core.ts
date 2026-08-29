@@ -61,6 +61,24 @@ const pointsOf = (tally: Tally): number =>
  * yet. Clubs still level after goals scored are ordered by name so the table is
  * at least deterministic rather than dependent on input order.
  */
+/**
+ * How deep the two zones run — the count the abbreviations G4 and Z4 carry.
+ *
+ * It lives here rather than beside the rail that draws it because it is a rule
+ * of the competition, like the tie-breakers above, and it now has two readers:
+ * `StandingsTable` colours the rail with it and `season-sim-core` counts a
+ * simulated finish into a zone with it. Two copies of the number is how a
+ * projection comes to report a G4 the table does not draw.
+ *
+ * `ZONE_DEPTH_WORD` is the same number spelled out, and travels with it for the
+ * reason it always did: the legenda states the rule in prose, "as quatro
+ * primeiras posições", and nothing can check the word against the digit, so
+ * they sit together. Z4 is still counted in from the end of the table rather
+ * than fixed at 17-20, so a division that changes size stays correct.
+ */
+export const ZONE_DEPTH = 4;
+export const ZONE_DEPTH_WORD = "quatro";
+
 export const compareRows = (a: StandingsRow, b: StandingsRow): number =>
   b.points - a.points ||
   b.wins - a.wins ||
