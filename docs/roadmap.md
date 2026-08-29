@@ -592,8 +592,26 @@ paragraph of prose.
    Both e2e specs were run against a deliberately unmutated-then-mutated
    component — attribute removed, fallback branch removed — and both went red,
    so neither is passing vacuously.
-6. **`sr-only` names on the existing form pills.** `ClubView` names them with
-   `title` alone. `RankSparkline` is the pattern that gets this right.
+6. ~~**`sr-only` names on the existing form pills.**~~ **Shipped.** The letter is
+   `aria-hidden` and an `sr-only` span carries the word, so a pill announces
+   "Vitória" rather than "V" or "V Vitória" — the one place this differs from
+   `RankSparkline`, whose visible half is a drawing and so gets text *added*
+   rather than substituted. The list also names its own direction, because
+   "Últimos resultados" says which matches these are and never which end is now.
+   `FormPill` is a component so item 10 moves it rather than copying it; the
+   repo's rule is to extract at the second call site, and this keeps that one
+   cheap.
+
+   **The spec written for it passed against the bug it named, and the second
+   mutation is what caught that.** "Naming the pills does not resize them"
+   measured the pill's own width — but `h-7 w-7` fixes a pill at 28px whatever
+   it contains, so an un-hidden word spills out *visibly* while the measurement
+   stays 28×28. Under the mutation the pill still read 28×28 with `scrollWidth`
+   40 and the word's own box 43×16. It now asserts the word's box and the
+   pill's overflow, and goes red. The first mutation had hidden this by
+   removing the `aria-label` too, which broke the selector and failed all three
+   specs for one reason — **a mutation that breaks your locator tests the
+   locator, not the assertion.**
 7. **Write down the radius step-down rule.** The shape scale exists; the rule for
    which step at which nesting depth does not, which is what let the scoreboard's
    radius drift until M2 caught it. Documentation only — it is already true.

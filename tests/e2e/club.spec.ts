@@ -58,6 +58,71 @@ test.describe("Clube", () => {
     await expect(main.getByText(/^\d{1,3}%$/)).toBeVisible();
   });
 
+  test("each forma pill is named in words, not left as a letter", async ({ page }) => {
+    await openClubAt(page, 1);
+
+    // A pill carries a colour and a single letter, and a screen reader gets
+    // neither. `title` was the whole of its naming and is not reliably
+    // announced, so the list read as "V", "E", "D" — a spelling test rather
+    // than a form guide.
+    const pills = page.locator("main ul[aria-label] > li").filter({ hasText: /^[VED]/ });
+
+    await expect(pills).toHaveCount(5);
+    for (const pill of await pills.all()) {
+      // The word is the accessible name; the letter is hidden from it, so
+      // nothing announces "V Vitória" on every pill.
+      await expect(pill).toHaveAccessibleName(/^(Vitória|Empate|Derrota)$/);
+      await expect(pill).toHaveAttribute("title", /^(Vitória|Empate|Derrota)$/);
+      await expect(pill.locator("span[aria-hidden='true']")).toHaveText(/^[VED]$/);
+    }
+  });
+
+  test("the forma list says which end is the most recent", async ({ page }) => {
+    await openClubAt(page, 1);
+
+    // The heading says which matches these are, never which end is now — and
+    // which end is now is the whole of what a form guide is read for. A
+    // sighted reader infers it from the fixture list below; nothing carried
+    // it in text.
+    const list = page.locator("main ul[aria-label]").filter({ has: page.locator("li") }).first();
+
+    await expect(list).toHaveAttribute("aria-label", /do mais antigo para o mais recente/);
+  });
+
+  test("the pill's hidden word takes no space and does not overflow it", async ({ page }) => {
+    await openClubAt(page, 1);
+
+    // The word is a flex child of a 28px pill, so text that is not taken out
+    // of flow spills out of it visibly while the accessible name stays
+    // perfectly correct.
+    //
+    // **Measure the word's own box and the pill's overflow, never the pill's
+    // width.** `h-7 w-7` fixes the pill at 28px whatever it contains, so an
+    // assertion on `getBoundingClientRect().width` is satisfied by the bug —
+    // written that way first, run against a deliberately un-hidden word, and
+    // it passed. Under that mutation the pill still measured 28x28 while
+    // `scrollWidth` was 40 and the word's own box 43x16.
+    const geometry = await page
+      .locator("main ul[aria-label] > li")
+      .evaluateAll((els) =>
+        els.map((el) => {
+          const word = el.querySelector("span.sr-only");
+          const box = word?.getBoundingClientRect();
+          return {
+            overflow: el.scrollWidth - el.clientWidth,
+            word: box ? Math.max(box.width, box.height) : null,
+          };
+        }),
+      );
+
+    expect(geometry).toHaveLength(5);
+    for (const { overflow, word } of geometry) {
+      expect(overflow).toBe(0);
+      expect(word).not.toBeNull();
+      expect(word!).toBeLessThanOrEqual(2);
+    }
+  });
+
   test("the club page draws the club's campanha", async ({ page }) => {
     await openClubAt(page, 1);
 
@@ -94,7 +159,12 @@ test.describe("Clube", () => {
   test("the form guide uses at most five results", async ({ page }) => {
     await openClubAt(page, 1);
 
-    const chips = page.locator("main ul li").filter({ hasText: /^[VED]$/ });
+    // Addressed at the letter's own element, not at the pill's text. The pill
+    // now also holds an `sr-only` word, so its text content is "VVitória" and
+    // an anchored `^[VED]$` against the whole pill matches nothing — the same
+    // shape as the spec that broke when a club name became a link. Hidden text
+    // is still text.
+    const chips = page.locator("main ul li > span[aria-hidden='true']").filter({ hasText: /^[VED]$/ });
     const count = await chips.count();
 
     expect(count).toBeGreaterThan(0);
