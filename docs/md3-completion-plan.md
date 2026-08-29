@@ -123,9 +123,9 @@ down, and never from the emitted CSS.
 rename that lands on the wrong token produces a page that renders, passes `tsc`,
 passes every unit test and passes the whole e2e suite — the suite asserts
 behaviour and text, not colour. The gates that can see it are the contrast gate
-(only if a pairing changes) and the screenshot check (only for the sixteen
-committed captures, two of which now differ on every refresh because the rodapé
-prints the running sha). Plan for a **visual diff of both themes across the five
+(only if a pairing changes) and the screenshot check (only for the eighteen
+committed captures, four of which now differ on every refresh — two because the
+rodapé prints the running sha, two because Ao vivo prints a countdown). Plan for a **visual diff of both themes across the five
 sections before and after**, taken locally, as part of the phase rather than after
 it.
 

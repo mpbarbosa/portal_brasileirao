@@ -1820,16 +1820,33 @@ not something the check can verify.
 during a paint, a selector nothing matches, a comment: the edit is real and the render is
 identical. `docs/screenshots/CAPTURED` records which commit the images depict, so a refresh
 always leaves something to commit — that is the mechanical answer and it is the right one
-wherever it applies. But it still charges sixteen captures from a live-data production
-build to certify that nothing changed, and records no reason.
+wherever it applies. But it still charges **eighteen** captures from a live-data
+production build to certify that nothing changed, and records no reason.
 
-**Two of the sixteen can no longer come back byte-identical, and this paragraph used to
-say they could.** `fullPage` is `!mobile && route === "/"`, so the desktop Classificação
-pair photographs the whole page — including the **Rodapé**, whose Saúde do serviço prints
-`Versão`, `Compilado` and `No ar desde`. All three move on every deploy, so those two
-images differ on every refresh whatever the code did. `bb223e2` is where that started, and
-`0719e73 Re-shoot at bb7a2ec: sixteen captures, zero pixels moved` is an outcome that can
-no longer occur.
+**Count the directory rather than this paragraph.** It said sixteen for as long as there
+were sixteen, and `partida-554977-{light,dark}` made it eighteen without anything here
+noticing. A number in prose has no gate on it.
+
+**Four of the eighteen can no longer come back byte-identical, and this paragraph twice
+said fewer than the truth.** They vary for two unrelated reasons, on two different clocks:
+
+- **The desktop Classificação pair, per deploy.** `fullPage` is `!mobile && route === "/"`,
+  so it photographs the whole page — including the **Rodapé**, whose Saúde do serviço
+  prints `Versão`, `Compilado` and `No ar desde`. All three move on every deploy.
+  `bb223e2` is where that started, and `0719e73 Re-shoot at bb7a2ec: sixteen captures,
+  zero pixels moved` is an outcome that can no longer occur.
+- **The Ao vivo pair, per minute.** `countdownLabel` prints "Começa em 20h37" against a
+  live fixture list, so the label is different every time the page is drawn. This was
+  found by two sessions refreshing the set within a minute of each other: 16 of their 18
+  images were byte-identical and the two Ao vivo ones were not. The difference is three
+  bands 14px tall in a column 10px wide — the minute digits of the three nearest kickoffs,
+  and nothing else on the page. Fixtures more than a day out read "Começa em 1 dia" and do
+  not move, which is why the band is three rows and not six.
+
+Both are the same lesson at different speeds, and the Ao vivo one is the sharper: the
+Classificação pair moves only when something shipped, while Ao vivo moves while you are
+looking at it. **Two refreshes of one build are expected to disagree on those four
+images.** Disagreeing on any of the other fourteen is a real difference and worth reading.
 
 Nothing automated is affected — `check-screenshots.sh` compares appearance *sources*
 between CAPTURED's sha and HEAD and never compares image bytes. What is lost is a **human**
