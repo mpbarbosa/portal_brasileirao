@@ -1241,6 +1241,34 @@ stays on the remote until somebody removes it; once someone does (the button on
 the merged PR, or `git push origin --delete`) and you `fetch --prune`, the
 upstream is gone.
 
+**In practice somebody always does, and `git push origin --delete` then reports
+your teardown as a failure.** Five for five on 2026-08-29: by the time a session
+reached that command the remote branch was already gone, because whoever merges
+presses the button. Git says
+
+    error: unable to delete 'worktree-<name>': remote ref does not exist
+    error: failed to push some refs to 'github.com:mpbarbosa/portal_brasileirao.git'
+
+and exits **1**. Nothing is wrong — the branch is gone, which is what you asked
+for — but the wording is *failed to push*, and in the usual
+`remove && branch -d && push --delete` chain it aborts whatever you put after it
+and reads as a teardown that did not finish.
+
+Note the setting above is what makes this surprising rather than obvious: because
+`delete_branch_on_merge` is false you expect the branch to survive the merge, so
+the error looks like a real failure rather than a race you already won. **Check
+the state, never the exit code**, and run it after `fetch --prune` so a stale
+remote-tracking ref does not answer for the remote:
+
+```sh
+git fetch origin --prune
+git branch -a --list '*<name>*'    # empty = local and remote both gone
+```
+
+Same shape as the `-d` message above and as the `2>&1`-in-a-command-substitution
+trap under the backup scripts: **the exit status is answering a different
+question than the one you are asking.**
+
 **That trivial success is also why `-d` protects nothing while a PR is open**,
 and this half is worth more than the half above it: the paragraph you just read
 describes the *convenience*, and it is the same sentence. The comparison is
