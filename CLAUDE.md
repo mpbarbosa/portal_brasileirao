@@ -1352,13 +1352,23 @@ and it is the **only atomic check in this step**. Git refuses a duplicate branch
 name; a markdown file cannot refuse anything. It costs nothing to run first, and
 it converts an unenforceable convention into a guard the tooling holds.
 
-Measured 2026-08-29: two sessions claimed the same screenshot refresh **85
-seconds apart**, both having run every command above correctly. The first
-grepped the ledger at 14:58:27Z and found no holder — true when taken — and the
-second wrote at 14:59:23Z having read before the first write landed. What
-actually caught it was `fatal: a branch named 'worktree-shots-218' already
-exists`, about forty seconds before either could have learned it from the file.
-The branch namespace collided before the ledger did.
+On 2026-08-29 two sessions claimed the same screenshot refresh within the same
+minute, both having run every command above correctly. One grepped the ledger at
+14:58:27Z and found no holder — true when taken — and wrote its claim about
+forty-five seconds later; the other's claim is stamped 14:59:23Z. What caught it
+was `fatal: a branch named 'worktree-shots-218' already exists`, roughly forty
+seconds **after** the grep had returned clean and before either session could
+have learned it from the file. The branch namespace collided before the ledger
+did.
+
+**Do not cite the delta between two claims as though it timed the race**, which
+an earlier draft of this paragraph did. The two *writes* were seconds apart; the
+two *headings* differ by more than a minute, because one was rounded by hand and
+the other read off `date -u`. A recorded stamp is what a session wrote down, not
+when it acted, and only one of these was an instrument reading — so the
+difference measures the rounding, not the window. That the second session read
+before the first's write landed is an inference too; the collision is
+established, the ordering inside it is not.
 
 **The guard is atomic on the branch *name*, not on the *task*, and it must be
 read with that limit or it looks like it closes the class.** It worked there
@@ -1371,6 +1381,14 @@ three names and nothing refused anything. So: a real guard, on the case where
 the convention converges, and the remaining exposure is the case where it does
 not. Naming your branch the obvious thing is therefore part of the guard rather
 than a matter of taste.
+
+**The limit is not hypothetical, and the commit adding this rule is the
+demonstration.** It collided with a second session writing the same rule, under
+`worktree-branch-first-rule` against `worktree-step0-branch-first`. Same task,
+two names, both branches created without complaint, and neither ledger entry
+landed before the other session had read. **The guard did not fire on its own
+commit.** One of the two was closed as a duplicate after the fact, which is the
+cost this rule exists to avoid and did not.
 
 **When two claims do collide, the tie-break is who is provisioned, not who was
 first.** Priority by timestamp hands the work to the session with neither
