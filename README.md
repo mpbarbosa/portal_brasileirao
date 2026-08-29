@@ -56,9 +56,9 @@ guessing a number.*
 fixture carries the broadcasters showing it — ge, Globo, Premiere, SporTV, Cazé TV, YouTube
 and Prime Video, with anyone we have no mark for rendered as their own name.*
 
-![Página Jogadores no tema claro: o total de jogadores e de clubes do campeonato e o convite para escolher um clube; abaixo, um painel por clube com escudo, nome e o número de jogadores do elenco. O primeiro painel está aberto e mostra uma ligação para a página do clube e o elenco dividido em Goleiros, Defensores e Meio-campistas, cada jogador em duas colunas com o nome e a idade sob ele.](docs/screenshots/jogadores-light.png)
+![Página Jogadores no tema claro: um campo “Buscar jogador” no alto, o total de jogadores e de clubes do campeonato e o convite para escolher um clube; abaixo, um painel por clube com escudo, nome e o número de jogadores do elenco. O primeiro painel está aberto e mostra uma ligação para a página do clube e o elenco dividido em Goleiros, Defensores e Meio-campistas, cada jogador em duas colunas com o nome e a idade sob ele.](docs/screenshots/jogadores-light.png)
 
-![A mesma página Jogadores no tema escuro, com o mesmo painel aberto, as mesmas secções do elenco e os mesmos nomes e idades.](docs/screenshots/jogadores-dark.png)
+![A mesma página Jogadores no tema escuro, com o mesmo campo de busca, o mesmo painel aberto, as mesmas secções do elenco e os mesmos nomes e idades.](docs/screenshots/jogadores-dark.png)
 
 *Jogadores, light and dark — the elenco of all twenty clubs. The panels are native `<details>`,
 closed on arrival: the division fields close to a thousand players, and rendered flat the second
