@@ -196,6 +196,52 @@ listing is the wrong one to confirm against.
 session's process, and has. If you did not record the PID, attribute it first
 with `readlink /proc/<PID>/cwd`.
 
+**Scanning cwds to ask who is in a worktree: `readlink` appends `" (deleted)"`,
+and the obvious pattern swallows it.** The reverse scan — sweeping every pid to
+find out whether a directory is occupied — is the one used before a destructive
+step, and written the natural way it cannot answer:
+
+```sh
+case "$t" in *<name>*) echo "live worktree" ;; esac   # matches BOTH states
+```
+
+A process whose worktree was removed underneath it keeps running with a cwd that
+no longer resolves, and `" (deleted)"` is the only trace — so a trailing-`*` glob
+reports "live session in a live worktree" and "live session, worktree already
+gone" identically. Those are different answers with opposite consequences: leave
+it standing, versus there is nothing to leave. Give the marker its own arm:
+
+```sh
+for p in /proc/[0-9]*; do
+  t=$(readlink "$p/cwd" 2>/dev/null) || continue
+  case "$t" in
+    *"(deleted)")  case "$t" in *<name>*) echo "${p##*/}: live process, worktree GONE -> $t";; esac ;;
+    *<name>*)      echo "${p##*/}: live process, live worktree -> $t" ;;
+  esac
+done
+```
+
+and corroborate with `ls -d` and `git worktree list`. Three sources agreeing is
+what separates the two states; any one alone misleads.
+
+Both arms were exercised rather than reasoned about — a `sleep` was started in a
+throwaway directory, the directory removed underneath it, and the scan re-run:
+before removal it reported the live form, after removal the `GONE` form, and the
+naive glob above called the same dead process "live worktree". A guard that has
+only ever been watched passing is not a guard yet.
+
+**And print the value you matched on, not a summary of it.** This was diagnosed
+by the session it bit, and the diagnosis is worth more than the glob: their first
+scan printed `cwd=$t` and carried the marker, the second printed only `cmd=` for
+brevity — so `readlink` had returned the evidence and the *formatting* discarded
+it before anyone could read it. They then reasoned from what was left and told a
+peer not to sweep a worktree that had already been torn down.
+
+That is the same failure as piping a ledger search through `| tail -40`: the
+answer was retrieved and thrown away by presentation rather than by the command,
+which is why re-reading the command shows nothing wrong. Both happened on
+2026-08-29, hours apart, to different sessions using different tools.
+
 **Servers and panes held through a tool are invisible to `ss`.** A browser pane
 opened with `preview_start` is a client, not a listener, so no port scan will
 find it, and the dev server behind it is released by **`preview_stop <serverId>`**
