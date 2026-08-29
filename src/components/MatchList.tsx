@@ -4,7 +4,7 @@ import { CLUBS_BY_CODE } from "@/src/data/clubs";
 import { LINK_UNDERLINE } from "@/src/components/interaction";
 import { StatusChip } from "@/src/components/StatusChip";
 import { Surface } from "@/src/components/Surface";
-import type { Club, Match } from "@/src/types";
+import type { Club, ClubCode, Match } from "@/src/types";
 
 const kickoffLabel = (kickoff: string): string => {
   const parsed = new Date(kickoff);
@@ -17,6 +17,22 @@ const kickoffLabel = (kickoff: string): string => {
     hour: "2-digit",
     minute: "2-digit",
   });
+};
+
+/**
+ * Resolve a club code to the name a fixture row should print.
+ *
+ * A `Match` carries codes, never clubs, so every surface that renders a fixture
+ * needs this — and it is exported rather than written twice because the
+ * fallback chain *is* the logic: the payload's own club list first (which is
+ * the only one that names a club the seed snapshot has never heard of), the
+ * committed snapshot second, and the bare code last so a row still reads as
+ * something rather than as a blank. A second copy that stopped at the snapshot
+ * would silently print `1783` for a promoted club.
+ */
+export const clubNamer = (clubs?: Club[]): ((code: ClubCode) => string) => {
+  const byCode = new Map(clubs?.map((club) => [club.code, club]));
+  return (code) => byCode.get(code)?.shortName ?? CLUBS_BY_CODE.get(code)?.shortName ?? code;
 };
 
 const score = (match: Match): string =>
@@ -53,9 +69,7 @@ export function MatchList({
     return <p className="text-body-medium text-ink-muted">{emptyLabel}</p>;
   }
 
-  const byCode = new Map(clubs?.map((club) => [club.code, club]));
-  const clubName = (code: string) =>
-    byCode.get(code)?.shortName ?? CLUBS_BY_CODE.get(code)?.shortName ?? code;
+  const clubName = clubNamer(clubs);
 
   return (
     <ul className="space-y-2">

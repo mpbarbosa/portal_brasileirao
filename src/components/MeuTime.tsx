@@ -1,12 +1,28 @@
+import { useMemo } from "react";
+
 import { followLabel, type FollowState } from "@/preferences-core";
 import { Button } from "@/src/components/Button";
 import { ClubCrest } from "@/src/components/ClubCrest";
 import { GLYPH } from "@/src/components/ClubLinks";
-import { STATE_LAYER } from "@/src/components/interaction";
+import { FOCUS_RING, STATE_LAYER } from "@/src/components/interaction";
 import { Surface } from "@/src/components/Surface";
 import { clubKey } from "@/club-core";
+import { countdownLabel } from "@/live-core";
+import { clubFocus, type ClubFocus, isHome, isImminent, opponentOf } from "@/next-match-core";
+import { clubNamer } from "@/src/components/MatchList";
 import { formatRoute } from "@/route-core";
-import type { Club } from "@/src/types";
+import { useNow } from "@/src/useNow";
+import type { Club, ClubCode, Match } from "@/src/types";
+
+/**
+ * How often the contagem regressiva is redrawn.
+ *
+ * The same 30 seconds the **Ao vivo** board ticks at, and the same reason:
+ * `countdownLabel` has minute granularity, so a faster clock would redraw an
+ * identical string. Deliberately *not* the sibling repo's one-second tick,
+ * which exists there because its badge counts down in seconds.
+ */
+const TICK_MS = 30_000;
 
 /**
  * The mark for **Meu time**, filled when the club is followed and outlined when
@@ -64,6 +80,154 @@ export function FollowButton({
 }
 
 /**
+ * A modified click is the browser's, not ours.
+ *
+ * Middle-click and cmd/ctrl-click open a new tab, and swallowing them is how an
+ * `<a href>` comes to behave worse than the plain link it replaced. Shared
+ * within this file because the strip now carries two links — the club row and
+ * the fixture line — and a second hand-written copy of the four modifier keys
+ * is how one of them comes to swallow shift-click.
+ */
+const isPlainClick = (event: React.MouseEvent): boolean =>
+  !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey && event.button === 0;
+
+/** The kickoff in the reader's own zone, as the fixture lists write it. */
+const kickoffLabel = (kickoff: string): string => {
+  const parsed = new Date(kickoff);
+  if (Number.isNaN(parsed.getTime())) return "Horário a definir";
+
+  return parsed.toLocaleString("pt-BR", {
+    weekday: "short",
+    day: "2-digit",
+    month: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+};
+
+/** The scoreline while it is still moving, or the separator before it exists. */
+const score = (match: Match): string =>
+  match.homeGoals === null || match.awayGoals === null
+    ? "×"
+    : `${match.homeGoals} × ${match.awayGoals}`;
+
+/**
+ * The **Próximo jogo do meu time** line inside the strip.
+ *
+ * Written from the followed club's side rather than as a neutral fixture row —
+ * "contra o Vitória, fora de casa" is what somebody who follows a club wants,
+ * where the Ao vivo board's job is to be even-handed about both sides. That is
+ * the whole reason this is not a `MatchList` of one.
+ *
+ * Three things here are deliberate and each is a trap avoided:
+ *
+ * - **No `aria-live` on the contagem regressiva.** The clock ticks every 30
+ *   seconds, so a polite live region would interrupt a screen-reader user twice
+ *   a minute with a number they did not ask for and cannot act on. The sibling
+ *   repo's badge does exactly that at a one-second tick. The label is read on
+ *   demand like any other text.
+ * - **The countdown comes from `live-core`**, not from a second formatter. The
+ *   strip and the Ao vivo board say the same words about the same fixture, and
+ *   a reader crossing between them meets one vocabulary.
+ * - **Imminence changes the tone, never the wording.** A match tonight and a
+ *   match in three weeks are the same sentence; only the rail brightens. Copy
+ *   that shouted when a fixture was close would be a second thing to keep true.
+ */
+function ProximoJogo({
+  focus,
+  code,
+  now,
+  clubName,
+  onSelectMatch,
+}: {
+  focus: ClubFocus;
+  code: ClubCode;
+  now: number;
+  clubName: (code: ClubCode) => string;
+  onSelectMatch?: (id: string) => void;
+}) {
+  if (focus.kind === "none") return null;
+
+  const { match } = focus;
+  const playing = focus.kind === "playing";
+  const urgent = isImminent(focus, now);
+
+  const heading = playing ? "Bola rolando" : "Próximo jogo";
+  const opponent = clubName(opponentOf(match, code));
+  const where = isHome(match, code) ? "em casa" : "fora de casa";
+
+  /**
+   * What a screen reader hears as the link's name, in one sentence.
+   *
+   * The visible line is three fragments laid out for the eye — heading, sides,
+   * date — and read in sequence they do not make a sentence. This does, and it
+   * names the club's own side so the link is not simply "Atlético-MG × Vitória"
+   * with no clue why it is on this page.
+   */
+  const spoken = playing
+    ? `Bola rolando: ${clubName(match.homeCode)} ${score(match)} ${clubName(match.awayCode)}, ${where}.`
+    : `Próximo jogo: contra o ${opponent}, ${where}, ${kickoffLabel(match.kickoff)}. ${countdownLabel(match.kickoff, now)}.`;
+
+  const body = (
+    <>
+      {/* The one place the two states differ in colour: `primary` is what
+          `StatusChip` already uses for a live match, so a reader meets the same
+          signal here as on the fixture lists. */}
+      <span
+        className={`text-label-medium font-medium ${playing ? "text-primary" : "text-ink-muted"}`}
+      >
+        {heading}
+      </span>
+      <span className="block truncate font-medium text-on-surface">
+        {clubName(match.homeCode)}{" "}
+        <span className="font-semibold tabular-nums text-on-surface-variant">{score(match)}</span>{" "}
+        {clubName(match.awayCode)}
+      </span>
+      <span className="block truncate text-body-small text-ink-faint">
+        {playing ? where : `${kickoffLabel(match.kickoff)} · ${where}`}
+      </span>
+      {!playing && (
+        <span className="block truncate text-body-small text-ink-muted">
+          {countdownLabel(match.kickoff, now)}
+        </span>
+      )}
+    </>
+  );
+
+  // The rail is the whole of the alert: `primary` while the fixture is near or
+  // under way, `outline-variant` once it is merely on the calendar.
+  const rail = urgent ? "border-primary" : "border-outline-variant";
+
+  return (
+    <div
+      data-proximo-jogo={match.id}
+      data-imminent={urgent ? "yes" : "no"}
+      className={`mx-3 mb-2 border-l-2 pl-3 ${rail}`}
+    >
+      {onSelectMatch ? (
+        <a
+          href={formatRoute({ section: "partida", id: match.id })}
+          onClick={(event) => {
+            if (!isPlainClick(event)) return;
+            event.preventDefault();
+            onSelectMatch(match.id);
+          }}
+          aria-label={spoken}
+          className={`-mx-1 block rounded-x-small px-1 py-0.5 ${STATE_LAYER}`}
+        >
+          <span aria-hidden="true">{body}</span>
+        </a>
+      ) : (
+        <p className={FOCUS_RING}>
+          <span aria-hidden="true">{body}</span>
+          <span className="sr-only">{spoken}</span>
+        </p>
+      )}
+    </div>
+  );
+}
+
+/**
  * The **Meu time** strip above the Classificação.
  *
  * Renders **nothing at all** when the reader follows nobody, and that is the
@@ -81,10 +245,24 @@ export function FollowButton({
  */
 export function MeuTimeStrip({
   state,
+  matches,
+  clubs,
   loading = false,
   onSelectClub,
+  onSelectMatch,
 }: {
   state: FollowState;
+  /**
+   * The season's fixtures, for the **Próximo jogo** line.
+   *
+   * Optional, so the strip still stands where the caller has none to hand —
+   * during the first load, or on a page that never fetched them. A missing next
+   * match is an absence, exactly as a missing coach is on the club page: the
+   * line is left out, and nothing claims the season is over.
+   */
+  matches?: Match[];
+  /** The clubs that payload named, for resolving the opponent's own name. */
+  clubs?: Club[];
   /**
    * Whether the club list is still in flight.
    *
@@ -97,7 +275,26 @@ export function MeuTimeStrip({
   loading?: boolean;
   /** Omit and the club is named without being a link — the strip still stands. */
   onSelectClub?: (key: string) => void;
+  /** Omit and the fixture is named without being a link, on the same terms. */
+  onSelectMatch?: (id: string) => void;
 }) {
+  /**
+   * The clock lives here rather than in `App`, which is the same placement
+   * `LiveView` uses and for a sharper reason: a tick in `App` would re-render
+   * the whole Classificação — twenty rows and twenty sparklines — twice a
+   * minute to move four words. `useNow` already tears the timer down while the
+   * tab is hidden.
+   *
+   * Both hooks run before the early returns below, because they must: a
+   * reader who follows nobody renders `null` from here, and a hook that ran
+   * only on the other branch would change the hook order between renders.
+   */
+  const now = useNow(TICK_MS);
+  const focus = useMemo(
+    () => clubFocus(matches ?? [], state.kind === "following" ? state.club.code : null, now),
+    [matches, state, now],
+  );
+
   if (state.kind === "none") return null;
 
   if (state.kind === "unresolved") {
@@ -117,12 +314,12 @@ export function MeuTimeStrip({
    * One row, and — where the strip can navigate — **one link that is the whole
    * row** rather than a link on the name inside it.
    *
-   * The strip has exactly one thing to offer: the club's page. It said so with
-   * an underline under a 72px word, in a band 736px wide holding 190px of
-   * content, so 545px of it was inert and the target was the smallest part of
-   * the largest element on the page. Crest included, since a crest beside a
-   * club's name is the thing a reader reaches for first and it was not part of
-   * the target at all.
+   * The strip has exactly one thing to offer above the fixture line: the club's
+   * page. It said so with an underline under a 72px word, in a band 736px wide
+   * holding 190px of content, so 545px of it was inert and the target was the
+   * smallest part of the largest element on the page. Crest included, since a
+   * crest beside a club's name is the thing a reader reaches for first and it
+   * was not part of the target at all.
    *
    * `min-h-12` is the touch-target floor, and it applies here where it does not
    * apply to the twenty club names in the table below: this is a standalone
@@ -147,36 +344,70 @@ export function MeuTimeStrip({
     </>
   );
 
-  const shared = "mb-4 flex min-h-12 items-center gap-2 px-3 py-2";
+  const row = "flex min-h-12 items-center gap-2 px-3 py-2";
 
-  if (!onSelectClub) {
+  const clubHref = formatRoute({ section: "clube", key: clubKey(club) });
+  const openClub = (event: React.MouseEvent) => {
+    // Let modified clicks open a new tab, as any link should.
+    if (!isPlainClick(event)) return;
+    event.preventDefault();
+    onSelectClub?.(clubKey(club));
+  };
+
+  /**
+   * With no fixture to show, the panel **is** the link — exactly the shape the
+   * row-wide target arrived as, unchanged.
+   *
+   * The fixture line cannot live inside that anchor: it points at the match
+   * page, and an `<a>` inside an `<a>` is invalid markup that browsers repair
+   * by closing the outer one early — the second link would work and the first
+   * would silently stop covering the row. So when there is one, the panel goes
+   * back to being a container and the club row becomes a row-wide anchor inside
+   * it. The target stays the whole row either way, which is the property that
+   * mattered; only which element carries the chrome moves.
+   */
+  if (focus.kind === "none") {
+    if (!onSelectClub) {
+      return (
+        <Surface filled className={`mb-4 ${row}`} data-meu-time={club.code}>
+          {contents}
+        </Surface>
+      );
+    }
+
     return (
-      <Surface filled className={shared} data-meu-time={club.code}>
+      <Surface
+        as="a"
+        filled
+        href={clubHref}
+        onClick={openClub}
+        className={`mb-4 ${row} ${STATE_LAYER}`}
+        data-meu-time={club.code}
+      >
         {contents}
       </Surface>
     );
   }
 
   return (
-    <Surface
-      as="a"
-      filled
-      href={formatRoute({ section: "clube", key: clubKey(club) })}
-      onClick={(event: React.MouseEvent) => {
-        // Let modified clicks open a new tab, as any link should.
-        if (
-          event.metaKey || event.ctrlKey || event.shiftKey ||
-          event.altKey || event.button !== 0
-        ) {
-          return;
-        }
-        event.preventDefault();
-        onSelectClub(clubKey(club));
-      }}
-      className={`${shared} ${STATE_LAYER}`}
-      data-meu-time={club.code}
-    >
-      {contents}
+    <Surface filled className="mb-4" data-meu-time={club.code}>
+      {onSelectClub ? (
+        // `rounded-t-small` so the state layer's veil follows the panel's own
+        // corners instead of squaring them off at the top.
+        <a href={clubHref} onClick={openClub} className={`${row} rounded-t-small ${STATE_LAYER}`}>
+          {contents}
+        </a>
+      ) : (
+        <div className={row}>{contents}</div>
+      )}
+
+      <ProximoJogo
+        focus={focus}
+        code={club.code}
+        now={now}
+        clubName={clubNamer(clubs)}
+        onSelectMatch={onSelectMatch}
+      />
     </Surface>
   );
 }

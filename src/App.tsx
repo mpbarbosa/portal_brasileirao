@@ -346,8 +346,11 @@ export function App() {
             <>
               <MeuTimeStrip
                 state={follow}
+                matches={matches?.matches}
+                clubs={matches?.clubs}
                 loading={loading}
                 onSelectClub={(key) => navigate({ section: "clube", key })}
+                onSelectMatch={(id) => navigate({ section: "partida", id })}
               />
               <StandingsTable
                 rows={standings}

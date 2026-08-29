@@ -92,6 +92,39 @@ what makes the logic testable without mocking HTTP.
   polled rather than pushed and dropping it would hide a match during exactly the window
   the page exists for.
 
+- `next-match-core.ts` — the **Próximo jogo do meu time**: which single fixture to
+  put in front of a reader who follows a club. `clubFocus` prefers a match **in
+  progress** over one that is merely sooner, because a club can be on the pitch
+  while upstream still calls a later fixture SCHEDULED — "earliest kickoff" is
+  the wrong rule and reads as right. It takes `now` as a parameter like
+  `liveBoard`, reuses that module's `LATE_GRACE_MS` rather than picking its own
+  window (two answers to *when does a fixture stop being next* is how the home
+  page comes to name a match the Ao vivo board has already dropped), and reuses
+  `club-core.ts`'s `playsIn`/`clubMatches` rather than restating them.
+  **It is not `nextFixture` in `club-core.ts` and neither should be rewritten in
+  terms of the other.** That one has no clock, so it counts a postponed fixture
+  and a kickoff that passed an hour ago as still to come — right for a club's
+  season at a glance, wrong for a line telling a reader when to sit down.
+  The countdown is **not** reimplemented here: `countdownLabel` in `live-core.ts`
+  already writes it, so the strip and the board say the same words about the same
+  fixture. The sibling repo this was modelled on ships two functions named
+  `formatCountdown` in two modules, which is the drift `StatusChip` exists to
+  prevent. `isImminent` — a day, or already under way — is the whole of what
+  makes the strip an *alert*, and it is one predicate rather than a comparison
+  written into the component; it changes the rail's colour and never the wording,
+  so there is only one sentence to keep true.
+  Rendered by `MeuTimeStrip`, which owns its own `useNow` tick for the reason
+  `LiveView` does — a clock in `App` would re-render twenty rows and twenty
+  sparklines twice a minute to move four words. There is deliberately **no
+  `aria-live`** on the contagem regressiva: a polite region would interrupt a
+  screen-reader user every 30 seconds with a number they cannot act on.
+  **The LIVE branch is unreachable from the frozen snapshot** — `src/data/matches.ts`
+  holds no LIVE fixture and the suite boots with `DISABLE_FOOTBALL_DATA=true` — so
+  `tests/e2e/meu-time.spec.ts` serves one prepared payload with a fixture flipped.
+  Prepared once and fulfilled from memory, never `route.fetch()` per request: a
+  proxying handler came back as something other than the envelope under the
+  suite's seven workers, and passed in isolation.
+
 - `rank-history-core.ts` — every club's position after each round (the **campanha**),
   plus the sparkline geometry that draws it in the Classificação. The **client** computes
   this from the `/api/matches` payload it already holds — the whole season ships in one
@@ -2044,6 +2077,19 @@ Screenshots-unaffected: <sha>: <why>   # for a commit already on main
 The reason is required, and is printed on every run, green or red — a claim nobody reads is
 the thing this replaced. Nothing verifies it. **"It looks the same to me" is a refresh, not
 a trailer**; reach for it only when the edit cannot reach a paint at all.
+
+**It must sit in the message's *last* paragraph, beside `Co-Authored-By:`.** Git parses
+trailers out of the final paragraph only, so one separated from that block by a blank line
+is not a trailer at all — `git interpret-trailers --parse` prints only the co-author, the
+gate honours nothing, and the commit is listed as owing a capture. Nothing says so: the
+message reads correctly to a person, the wording is exactly what the gate documents, and
+the claim is silently dropped. It happened on `6a876d9`. Check with:
+
+```sh
+git log -1 --format=%B <sha> | git interpret-trailers --parse
+```
+
+Wrapping across lines is fine — the script unfolds it. It is the blank line that kills it.
 
 **It has to be a real git trailer, and a malformed one is dropped in silence.**
 This is the failure mode to know, because it is invisible from both ends: the check
