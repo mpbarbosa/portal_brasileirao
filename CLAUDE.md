@@ -1147,6 +1147,36 @@ git fetch origin && git rev-parse origin/main
 Never `git worktree add -b <branch> <sha-from-the-prompt>` — derive the base
 yourself, or you inherit the staleness into your branch point.
 
+**And the same shelf life applies to a *committed file* describing the working
+environment, which is where the two commands above stop reaching.** Reported by
+a second session the same day: distrusting its prompt, it turned to notes a
+prior pass had committed on that branch — and those notes asserted the same
+wrong worktree count the prompt had. So "distrust the prompt, check the in-repo
+notes instead" lands in the same wrong place *with more confidence*, because a
+checked-in file reads as authoritative in a way a prompt does not, and because
+you have already verified once and feel done.
+
+A checked-in file describing the environment — a worktree count, who holds what,
+which branch is current — is **a snapshot of when it was written, not a fact
+about now**. It has a PR state's shelf life and none of its cues. `git worktree
+list` and `git rev-parse origin/main` are still the answer; the discipline is to
+run them *again* rather than to pick a better document.
+
+That session's prompt carried four false claims, not three — the `/home/user/...`
+path, "the worktree exists with `npm ci` already run" when it had been torn down
+(so `git worktree list` showed nothing while `git branch -a` showed the surviving
+remote branch), "four other worktrees exist" when there was one, and the stale
+base above. The trio is at least a quartet, and the stale-base member is not
+specific to any one prompt.
+
+**The unifying shape, which is worth more than any of the cases: a claim that
+produces no work when it holds is never exercised, so nothing distinguishes
+"still true" from "quietly false".** That covers the carve-out above, an
+environment note nobody re-derives, and a committed number nobody recomputes.
+Where such a claim is load-bearing, give it a command that would fail — the way
+`tests/node-version.test.ts` makes the five Node declarations disagree loudly
+instead of drifting quietly.
+
 **And check the prompt's carve-outs hardest, because they are the assertions you
 are least likely to test.** The same prompt listed two stale documents and then
 excluded a third: *"`docs/data-sources.md:204` reads similarly but is about
