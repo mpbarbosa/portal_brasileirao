@@ -16,7 +16,7 @@ agent Claude Code.
 > `FOOTBALL_DATA_TOKEN` is set; without a token the app serves a frozen snapshot, so a
 > fresh clone runs with no signup.
 
-![Classificação do Campeonato Brasileiro Série A no tema claro: no alto, à direita, o botão Entrar, ao lado do que alterna entre o tema claro e o escuro. Abaixo, os 20 clubes com escudo, pontos, o gráfico da campanha, jogos, vitórias, empates, derrotas e saldo de gols. Os quatro primeiros trazem uma faixa verde (G4) e os quatro últimos uma faixa vermelha (Z4), e logo abaixo da tabela uma legenda diz o que cada faixa significa: G4 Libertadores, as quatro primeiras posições, e Z4 Rebaixamento, as quatro últimas. Ao pé da página, o rodapé diz que o projeto é independente e sem vínculo com a CBF ou com os clubes, e traz a saúde do serviço: estado, fonte dos dados, versão, quando foi compilado e desde quando está no ar.](docs/screenshots/classificacao-light.png)
+![Classificação do Campeonato Brasileiro Série A no tema claro: no alto, à direita, o botão Entrar, ao lado do que alterna entre o tema claro e o escuro. Numa linha própria sob ele, as secções Classificação, Ao vivo, Jogos, Artilharia e Jogadores, a atual sublinhada. Abaixo, os 20 clubes com escudo, pontos, o gráfico da campanha, jogos, vitórias, empates, derrotas, saldo de gols e o aproveitamento em percentagem. Os quatro primeiros trazem uma faixa verde (G4) e os quatro últimos uma faixa vermelha (Z4), e logo abaixo da tabela uma legenda diz o que cada faixa significa: G4 Libertadores, as quatro primeiras posições, e Z4 Rebaixamento, as quatro últimas. Ao pé da página, o rodapé diz que o projeto é independente e sem vínculo com a CBF ou com os clubes, e traz a saúde do serviço: estado, fonte dos dados, versão, quando foi compilado e desde quando está no ar.](docs/screenshots/classificacao-light.png)
 
 ![A mesma classificação no tema escuro, com as mesmas 20 posições, faixas do G4 e do Z4, a mesma legenda das duas zonas sob a tabela, gráficos da campanha e o mesmo rodapé com a saúde do serviço.](docs/screenshots/classificacao-dark.png)
 
@@ -44,7 +44,7 @@ refetches on its own. There is deliberately no match minute: the provider report
 and a score and never an elapsed clock, so the page says **bola rolando** rather than
 guessing a number.*
 
-![Página do clube Palmeiras no tema claro: escudo, o técnico Abel Ferreira, o endereço da sede, site oficial, perfil no Instagram, hino do clube e artigo na Wikipédia; à direita, o botão Seguir, que marca o clube como o time do leitor; os números da temporada (1º lugar, 51 pontos, 24 jogos, saldo +24), o gráfico da campanha da 1ª à 24ª rodada, os últimos cinco resultados, o próximo jogo e os artilheiros do clube.](docs/screenshots/clube-palmeiras-light.png)
+![Página do clube Palmeiras no tema claro: escudo, o técnico Abel Ferreira, o endereço da sede, site oficial, perfil no Instagram, hino do clube e artigo na Wikipédia; à direita, o botão Seguir, que marca o clube como o time do leitor; os números da temporada (1º lugar, 51 pontos, 24 jogos, saldo +24 e 71% de aproveitamento), o gráfico da campanha da 1ª à 24ª rodada, os últimos cinco resultados, o próximo jogo e os artilheiros do clube.](docs/screenshots/clube-palmeiras-light.png)
 
 ![A mesma página do clube Palmeiras no tema escuro: os mesmos escudo, técnico, endereço da sede, quatro links, o mesmo botão Seguir, números da temporada, gráfico da campanha e jogos, com as marcas das emissoras mantendo o fundo claro para continuarem legíveis.](docs/screenshots/clube-palmeiras-dark.png)
 
@@ -68,9 +68,9 @@ from the provider at two levels of detail in the same list — a broad line for 
 specific role for a few — so they are folded onto the line they belong to, and a player's own
 position is printed under the name only when it says something the heading did not.*
 
-![Página da partida Palmeiras 4 x 1 Vasco da Gama no tema claro: placar com escudos e, sob o nome de cada clube, uma ligação para o seu artigo na Wikipédia; a data; o estádio, com o nome "Nubank Parque" ligado à página do próprio estádio e a cidade e o estado em texto simples ao lado; as emissoras que transmitiram; as campanhas dos dois clubes empilhadas — o líder reto no alto e o adversário caindo — e os links dos melhores momentos por emissora.](docs/screenshots/partida-554977-light.png)
+![Página da partida Palmeiras 4 x 1 Vasco da Gama no tema claro: placar com escudos e, sob o nome de cada clube, uma ligação para o seu artigo na Wikipédia; a data; o estádio, com o nome "Nubank Parque" ligado à página do próprio estádio e a cidade e o estado em texto simples ao lado; as emissoras que transmitiram; e as campanhas dos dois clubes empilhadas — o líder reto no alto e o adversário caindo.](docs/screenshots/partida-554977-light.png)
 
-![A mesma página da partida no tema escuro, com o mesmo placar, as mesmas ligações para a Wikipédia sob cada clube, o mesmo estádio ligado à sua página, emissoras, campanhas dos dois clubes e melhores momentos, e as marcas das emissoras mantendo o fundo claro.](docs/screenshots/partida-554977-dark.png)
+![A mesma página da partida no tema escuro, com o mesmo placar, as mesmas ligações para a Wikipédia sob cada clube, o mesmo estádio ligado à sua página, as mesmas emissoras e as mesmas campanhas dos dois clubes, com as marcas das emissoras mantendo o fundo claro.](docs/screenshots/partida-554977-dark.png)
 
 *A match page, light and dark. Both clubs' campanhas are stacked rather than overlaid, so
 they share one scale and their rounds line up — the app has no series palette, and inventing
@@ -78,9 +78,9 @@ a hue pair would be the only place colour carried meaning no token defines. **Me
 momentos** links each broadcaster's own package; where none is curated it falls back to a
 YouTube search and says so.*
 
-![Página da partida Botafogo 1 x 1 Fluminense no tema claro: a 22ª rodada à esquerda e a etiqueta Encerrado à direita; o placar com os escudos dos dois clubes e, sob o nome de cada um, uma ligação para o seu artigo na Wikipédia; a data e a hora do jogo; e a linha do árbitro, que nomeia Bruno Arleu de Araujo. Abaixo, as campanhas dos dois clubes empilhadas — o Botafogo caindo do 1º ao 11º lugar e o Fluminense quase reto entre o 5º e o 4º — e os melhores momentos na ge, na CazéTV e no UOL Esporte.](docs/screenshots/partida-554951-light.png)
+![Página da partida Botafogo 1 x 1 Fluminense no tema claro: a 22ª rodada à esquerda e a etiqueta Encerrado à direita; o placar com os escudos dos dois clubes e, sob o nome de cada um, uma ligação para o seu artigo na Wikipédia; a data e a hora do jogo; e a linha do árbitro, que nomeia Bruno Arleu de Araujo. Abaixo, as campanhas dos dois clubes empilhadas — o Botafogo caindo do 1º ao 11º lugar e o Fluminense quase reto entre o 5º e o 4º.](docs/screenshots/partida-554951-light.png)
 
-![A mesma página da partida no tema escuro, com o mesmo placar e escudos, as mesmas ligações para a Wikipédia sob cada clube, a mesma linha do árbitro, as mesmas campanhas dos dois clubes e os mesmos melhores momentos, com as marcas das emissoras mantendo o fundo claro.](docs/screenshots/partida-554951-dark.png)
+![A mesma página da partida no tema escuro, com o mesmo placar e escudos, as mesmas ligações para a Wikipédia sob cada clube, a mesma linha do árbitro e as mesmas campanhas dos dois clubes.](docs/screenshots/partida-554951-dark.png)
 
 *A second match page, and the only capture that shows the **Árbitro** line. It is here rather
 than in place of the one above because no single fixture can carry both: upstream names an
