@@ -2034,6 +2034,19 @@ The reason is required, and is printed on every run, green or red — a claim no
 the thing this replaced. Nothing verifies it. **"It looks the same to me" is a refresh, not
 a trailer**; reach for it only when the edit cannot reach a paint at all.
 
+**It must sit in the message's *last* paragraph, beside `Co-Authored-By:`.** Git parses
+trailers out of the final paragraph only, so one separated from that block by a blank line
+is not a trailer at all — `git interpret-trailers --parse` prints only the co-author, the
+gate honours nothing, and the commit is listed as owing a capture. Nothing says so: the
+message reads correctly to a person, the wording is exactly what the gate documents, and
+the claim is silently dropped. It happened on `6a876d9`. Check with:
+
+```sh
+git log -1 --format=%B <sha> | git interpret-trailers --parse
+```
+
+Wrapping across lines is fine — the script unfolds it. It is the blank line that kills it.
+
 **It has to be a real git trailer, and a malformed one is dropped in silence.**
 This is the failure mode to know, because it is invisible from both ends: the check
 collects trailers with `%(trailers:key=Screenshots-unaffected,...)`, and git parses
