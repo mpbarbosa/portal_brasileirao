@@ -9,6 +9,7 @@ import {
   LINK_UNDERLINE,
   STATE_LAYER,
   STATE_LAYER_ON_PRIMARY_CONTAINER,
+  TOUCH_TARGET,
 } from "@/src/components/interaction";
 import { Surface } from "@/src/components/Surface";
 import { controlClasses } from "@/src/components/Button";
@@ -57,6 +58,17 @@ export function AccountGlyph({ className }: { className?: string }) {
  * toggle only missed it because its 1px outline is part of its box and nothing
  * had ever compared the two.
  *
+ * **The 40dp box and the 48dp touch target are two different measurements, and
+ * both controls carry both.** `TOUCH_TARGET` hangs the floor off the box rather
+ * than growing it, which is what lets the group stay level at MD3's stated size
+ * while still being reachable by a thumb. Signed in below `sm` this control is
+ * the disc alone and measured **40x40** — the smallest target in the app, on
+ * the one control a signed-in reader taps to reach their own account.
+ *
+ * Growing the box instead is the other way, and `controlClasses` takes it by
+ * default; it is wrong *here* because a 48dp control in a 56dp bar is not the
+ * size the spec names. See `TouchTargetMode`.
+ *
  * The avatar is initials, never a photograph: `publicAccount` carries a display
  * name and nothing else, because the name is all the sign-in asks Google for
  * and `/privacidade` says so.
@@ -75,7 +87,7 @@ export function AccountButton({ state }: { state: AccountState }) {
         /* No `title`: it never appears on touch, and it competes with the
            accessible name for voice control — the same reason the destinations
            in `NavBar` carry none. */
-        className={`inline-flex h-10 items-center gap-2 rounded-full p-1 text-label-large font-medium text-on-surface sm:pr-3 ${STATE_LAYER}`}
+        className={`inline-flex h-10 items-center gap-2 rounded-full p-1 text-label-large font-medium text-on-surface sm:pr-3 ${STATE_LAYER} ${TOUCH_TARGET}`}
       >
         {/* The accessible name says what the control *does* and then who it
             belongs to; the visible name is contained in it, which is what WCAG
@@ -120,7 +132,7 @@ export function AccountButton({ state }: { state: AccountState }) {
     <a
       href="/entrar"
       data-account="signed-out"
-      className={`inline-flex h-10 items-center gap-1.5 rounded-full bg-primary-container px-4 text-label-large font-semibold text-on-primary-container ${STATE_LAYER_ON_PRIMARY_CONTAINER}`}
+      className={`inline-flex h-10 items-center gap-1.5 rounded-full bg-primary-container px-4 text-label-large font-semibold text-on-primary-container ${STATE_LAYER_ON_PRIMARY_CONTAINER} ${TOUCH_TARGET}`}
     >
       <AccountGlyph className="h-5 w-5" />
       Entrar

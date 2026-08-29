@@ -14,8 +14,20 @@ import { expect, test, type Page } from "@playwright/test";
  * inferred, and what is *not* in it is written down in `docs/md3-completion-plan.md`
  * under M9 rather than left to look like an oversight.
  *
- * The account control is absent for a different reason: PR #173 is rewriting
- * it, and it measured 36x44. Its floor is that PR's to apply.
+ * **The trailing group reaches the floor the other way, and that is why the
+ * assertions below it are about the *target* and not the box.** MD3 gives a
+ * top-app-bar control a 40dp container and a 48dp touch target — two different
+ * measurements — because a bar 56dp tall cannot hold a 48dp box with any
+ * breathing room. Growing the box is the right answer everywhere else in this
+ * file and the wrong one here.
+ *
+ * It is written down because it was got wrong once, in the gap between two
+ * merges twenty-five seconds apart. #173 set `h-10` on all three trailing
+ * controls to level them at 40dp; #174 put `min-h-12` in `Button`'s base,
+ * which silently beat that `h-10` on the one of the three that is a `Button`.
+ * The result rendered 48 beside 40 and passed everything — including this
+ * file, whose theme-toggle case asserted a box of 48 and so asserted the
+ * defect. A box assertion cannot see this. Hit-testing can.
  */
 
 const CONTROLS: { page: string; label: string; selector: string }[] = [
@@ -44,15 +56,114 @@ test.describe("Alvos de toque", () => {
     });
   }
 
-  test("the theme toggle clears it too", async ({ page }) => {
+  /**
+   * Which named points of a 48dp box centred on the control do *not* hit it.
+   *
+   * `elementFromPoint` resolves a pseudo-element to the element that owns it,
+   * so this measures the target a thumb actually lands on rather than the paint
+   * — and it catches the neighbour stealing a sliver, which is a failure no
+   * measurement of either control alone can see.
+   */
+  const targetMisses = (page: Page, selector: string) =>
+    page.evaluate((sel) => {
+      const el = document.querySelector(sel);
+      if (!el) throw new Error(`no element for ${sel}`);
+      const r = el.getBoundingClientRect();
+      const cx = r.x + r.width / 2;
+      const cy = r.y + r.height / 2;
+      // Half a pixel inside the edge, so this asks about the target rather than
+      // about the rounding at its boundary.
+      const hw = Math.max(r.width, 48) / 2 - 0.5;
+      const hh = Math.max(r.height, 48) / 2 - 0.5;
+      const points: [string, number, number][] = [
+        ["topo", cx, cy - hh],
+        ["base", cx, cy + hh],
+        ["esquerda", cx - hw, cy],
+        ["direita", cx + hw, cy],
+        ["topo-esquerda", cx - hw, cy - hh],
+        ["base-direita", cx + hw, cy + hh],
+      ];
+      return points
+        .filter(([, x, y]) => {
+          const at = document.elementFromPoint(x, y);
+          return !(at && (at === el || el.contains(at)));
+        })
+        .map(([name]) => name);
+    }, selector);
+
+  const TOGGLE = "header button[aria-label^='Ativar tema']";
+  const ACCOUNT = "[data-account]";
+
+  /** Sign in the way `contas.spec.ts` does — this suite runs with dev login on. */
+  const devLogin = async (page: Page, name: string) => {
+    const response = await page.request.post("/api/auth/dev-login", {
+      data: { subject: `sub-${name}`, name },
+    });
+    expect(response.ok()).toBeTruthy();
+  };
+
+  test("the theme toggle carries a 48dp target on a 40dp box", async ({ page }) => {
     // The one icon-only control in the header, and the one the plan named by
     // arithmetic: `py-2` around a 20px line box plus a 1px outline each side is
-    // 38px. Measured at 38x39 before the floor landed.
+    // 38px. Measured at 38x39 before any floor landed, and 39x40 now — the box
+    // is MD3's 40dp container and is *supposed* to be under 48.
     await page.setViewportSize({ width: 375, height: 812 });
     await page.goto("/");
-    const box = await boxOf(page, "header button[aria-label^='Ativar tema']");
-    expect(box.h).toBeGreaterThanOrEqual(48);
-    expect(box.w).toBeGreaterThanOrEqual(48);
+    await page.locator("main").waitFor();
+
+    const box = await boxOf(page, TOGGLE);
+    expect(box.h, `the toggle is ${box.h}px tall, not MD3's 40dp container`).toBe(40);
+    expect(await targetMisses(page, TOGGLE)).toEqual([]);
+  });
+
+  for (const state of ["signed-out", "signed-in"] as const) {
+    test(`the account control carries one too, ${state}`, async ({ page }) => {
+      // Signed in below `sm` this collapses to the 32dp disc inside a 40dp box
+      // — 40x40, the smallest target in the app, and the one control a
+      // signed-in reader taps to reach their own account. It was 36x44 before
+      // #173 and 40x40 after, which improved the height and shrank the width;
+      // neither ever reached the floor, because the floor was on the box.
+      await page.setViewportSize({ width: 375, height: 812 });
+      await page.goto("/");
+      await page.locator("main").waitFor();
+
+      if (state === "signed-in") {
+        await devLogin(page, "Alvo");
+        await page.reload();
+        await page.locator("main").waitFor();
+      }
+      await expect(page.locator(ACCOUNT)).toHaveAttribute("data-account", state);
+
+      const box = await boxOf(page, ACCOUNT);
+      expect(box.h, `the account control is ${box.h}px tall`).toBe(40);
+      expect(await targetMisses(page, ACCOUNT)).toEqual([]);
+    });
+  }
+
+  test("the trailing group is level, and its two targets do not overlap", async ({ page }) => {
+    // The failure this exists for is not either control being wrong on its own
+    // — it is one of them being 48 while the other is 40, which is what a base
+    // class silently overriding a call site produced. And the gap: both targets
+    // overflow towards each other, so `gap-2` left them sharing a third of a
+    // pixel and the account control's own right edge hit-tested to the toggle.
+    await page.setViewportSize({ width: 375, height: 812 });
+    await page.goto("/");
+    await page.locator("main").waitFor();
+    await devLogin(page, "Nivel");
+    await page.reload();
+    await page.locator("main").waitFor();
+    await expect(page.locator(ACCOUNT)).toHaveAttribute("data-account", "signed-in");
+
+    const account = await boxOf(page, ACCOUNT);
+    const toggle = await boxOf(page, TOGGLE);
+    expect(
+      Math.abs(account.h - toggle.h),
+      `the group renders ${account.h} beside ${toggle.h}`,
+    ).toBeLessThanOrEqual(1);
+
+    // Each still owns its own target with the other one beside it.
+    expect(await targetMisses(page, ACCOUNT)).toEqual([]);
+    expect(await targetMisses(page, TOGGLE)).toEqual([]);
   });
 
   test("every bottom navigation destination clears it", async ({ page }) => {

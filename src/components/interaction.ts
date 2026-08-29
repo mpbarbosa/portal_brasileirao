@@ -49,6 +49,41 @@ export const STATE_LAYER = [
 ].join(" ");
 
 /**
+ * MD3's 48dp touch target on a control whose *box* is deliberately smaller.
+ *
+ * The two sizes are different things and MD3 says so: a top-app-bar icon
+ * button is a 40dp container carrying a 48dp target, because a bar 56dp tall
+ * cannot hold a 48dp control with any breathing room and a thumb does not care
+ * where the paint stops. `controlClasses`' `min-h-12` is the other way of
+ * reaching the same floor — it grows the box — and that is right everywhere
+ * the box is free to grow.
+ *
+ * Both were live at once for about twenty minutes, which is why this exists.
+ * #173 measured the trailing group at 36/40/38 and set `h-10` on all three to
+ * level them at MD3's 40dp; #174 landed twenty-five seconds later and put
+ * `min-h-12` in `Button`'s base, which silently beat the `h-10` on the one of
+ * the three that is a `Button`. The toggle rendered 48 and the account control
+ * 40 — measured, not read off the class lists — so the levelling #173 was
+ * written to achieve was undone by a side effect rather than by a decision.
+ *
+ * The pseudo-element is centred on the box and takes the larger of the box and
+ * 48dp on each axis, so it never *shrinks* a control that is already big
+ * enough. It paints nothing; it exists to be hit.
+ *
+ * Two things to know before using it elsewhere. It spends the `after:` slot,
+ * which the desktop tab indicator in `NavBar` already uses for its underline —
+ * those cannot both be on one element. And it overflows the box by up to 4dp
+ * per side, so **adjacent controls need a gap of at least 8dp** or their
+ * targets overlap and the later one in the DOM quietly wins the sliver.
+ */
+export const TOUCH_TARGET = [
+  "relative",
+  "after:absolute after:left-1/2 after:top-1/2 after:-translate-x-1/2 after:-translate-y-1/2",
+  "after:h-full after:min-h-12 after:w-full after:min-w-12",
+  "after:content-['']",
+].join(" ");
+
+/**
  * A text link inside running copy or a table cell.
  *
  * Underlined at rest and brightened on hover, which is the pattern five of the

@@ -1,6 +1,6 @@
 import type { ButtonHTMLAttributes, Ref } from "react";
 
-import { STATE_LAYER } from "./interaction";
+import { STATE_LAYER, TOUCH_TARGET } from "./interaction";
 
 /**
  * Sizes actually in use, rather than a speculative scale.
@@ -50,6 +50,33 @@ const VARIANT: Record<ControlVariant, string> = {
 };
 
 /**
+ * Which of MD3's two ways of reaching the 48dp touch target a control takes.
+ *
+ * `grow` puts the floor on the box, so the control itself becomes 48dp. That
+ * is right for every control with room to grow, and it is what M9 gave the
+ * round stepper, its picker and the highlights links.
+ *
+ * `overflow` keeps the box at whatever size it was drawn and hangs the target
+ * off it — see `TOUCH_TARGET`. It exists for the top app bar, where the bar is
+ * 56dp and MD3's own size for a trailing icon button is 40dp: growing the box
+ * there does not level the group, it just makes one member of it taller than
+ * the size the spec names.
+ *
+ * Defaulting to `grow` is what keeps this an exemption a call site has to ask
+ * for rather than a floor that quietly stopped applying.
+ */
+export type TouchTargetMode = "grow" | "overflow";
+
+const TARGET: Record<TouchTargetMode, string> = {
+  // A minimum rather than a height, so a control that is legitimately taller —
+  // a two-line label, a larger glyph — is not clamped down to the floor.
+  // `min-w` is a no-op on every text control and does the work on the icon
+  // ones, which is why one pair of utilities covers both.
+  grow: "min-h-12 min-w-12",
+  overflow: TOUCH_TARGET,
+};
+
+/**
  * The app's control chrome.
  *
  * Exported separately from `Button` because not every control is a `<button>`:
@@ -64,6 +91,7 @@ export const controlClasses = (
   size: ControlSize = "md",
   extra = "",
   variant: ControlVariant = "outlined",
+  target: TouchTargetMode = "grow",
 ): string =>
   [
     "text-body-medium",
@@ -72,15 +100,17 @@ export const controlClasses = (
     // 36 and 40 tall. Measured at 375dp rather than reasoned about, in the
     // manner the nav bar's width arithmetic already is.
     //
-    // A minimum rather than a height, so a control that is legitimately taller
-    // — a two-line label, a larger glyph — is not clamped down to the floor.
-    // `min-w` is a no-op on every text control and does the work on the icon
-    // ones, which is why one pair of utilities covers both.
+    // Which of the two ways a control reaches it is `TARGET` above — and it is
+    // a parameter rather than something a call site can override through
+    // `extra`, because it cannot: `min-h-12` here and an `h-10` passed in have
+    // equal specificity, so *stylesheet* order decides which wins and the
+    // caller's intent has nothing to do with it. That is not hypothetical; it
+    // is what happened to the theme toggle between #173 and #174.
     //
     // Buttons and selects centre their own content against a taller box; the
     // three anchors that use this already carry `inline-flex items-center`, and
     // a new one must too — `min-height` does nothing to an inline box.
-    "min-h-12 min-w-12",
+    TARGET[target],
     VARIANT[variant],
     // Hover, focus and pressed all come from one place — see `interaction.ts`.
     // Before M2 this was a bare `hover:bg-raised` with no focus state at all.
@@ -95,6 +125,7 @@ export const controlClasses = (
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   size?: ControlSize;
   variant?: ControlVariant;
+  target?: TouchTargetMode;
   /** React 19 passes refs as ordinary props, so no forwardRef wrapper. */
   ref?: Ref<HTMLButtonElement>;
 }
@@ -108,6 +139,7 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 export function Button({
   size = "md",
   variant = "outlined",
+  target = "grow",
   className = "",
   type,
   ...props
@@ -115,7 +147,7 @@ export function Button({
   return (
     <button
       type={type ?? "button"}
-      className={controlClasses(size, className, variant)}
+      className={controlClasses(size, className, variant, target)}
       {...props}
     />
   );

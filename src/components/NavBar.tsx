@@ -261,7 +261,20 @@ export function NavBar({
               second control eats slack that was measured for one. See the
               header-width spec — the bottom bar's fifth entry was clipped with
               no scroll to reveal it, and this is that failure one breakpoint up. */}
-          <div className="flex shrink-0 items-center gap-1">
+          {/* `gap-3` and not `gap-1`: both controls carry `TOUCH_TARGET`, whose
+              pseudo-element overflows the box to reach 48dp, and two of them
+              side by side overflow *towards each other*. Measured rather than
+              reasoned: signed in at 375 the account control collapses to its
+              40dp disc (4dp of overflow a side) and the toggle renders 39.3dp
+              wide (4.35dp a side), so the targets need 8.35dp between them and
+              `gap-2` left them overlapping by a third of a pixel — enough that
+              the account control's own right edge hit-tested to the toggle,
+              because the later element in the DOM wins the sliver. 12dp clears
+              it with room for the toggle's outline to change.
+
+              Wider than `sm` the account control is 92-100dp and only the
+              vertical overflow is in play, so this costs nothing there. */}
+          <div className="flex shrink-0 items-center gap-3">
             {accountControl}
             <Button
               onClick={onToggleTheme}
@@ -269,7 +282,13 @@ export function NavBar({
               title={themeToggleLabel(theme)}
               /* Levels this with the account control beside it — see the note
                  on `AccountButton`. Its own padding puts it at 38, because the
-                 outline is part of its box. */
+                 outline is part of its box.
+
+                 `target="overflow"` is what lets that `h-10` mean anything:
+                 #174's `min-h-12` landed twenty-five seconds after #173 set
+                 this and beat it, rendering 48 beside the account control's 40.
+                 The floor is still here, on the pseudo-element not on the box. */
+              target="overflow"
               className="h-10"
             >
               <span aria-hidden="true">{theme === "light" ? "☽" : "☀"}</span>

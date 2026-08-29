@@ -346,18 +346,43 @@ spec written to the criterion as stated would fail on all of them until somebody
 deleted it. So the spec **names** the set it measures, and the exclusions are
 recorded here rather than left looking like an oversight.
 
-Raised to 48dp: the round stepper (was 34×32), its picker (32×61), the theme
-toggle (38×39), `BACK_LINK` (20 tall), the tonal highlights links (36 and 40),
-and the tabs themselves. The floor lives in `controlClasses`, so it arrives at
-every control from one place.
+Raised to 48dp: the round stepper (was 34×32), its picker (32×61), `BACK_LINK`
+(20 tall), the tonal highlights links (36 and 40), and the tabs themselves. The
+floor lives in `controlClasses`, so it arrives at every control from one place.
 
-**Handed on, not done: the account control**, measured 36×44. PR #173 was
-rewriting it while this phase ran and had already set the trailing group to
-`h-10` — MD3's *visual* container size for a top-app-bar control, which is not
-the same as its 48dp *target*. The two reconcile either by going to 48 or by
-expanding the target with a pseudo-element; that is a decision for whoever lands
-#173, and doing it here would have overwritten a measured choice with an
-unmeasured one.
+**The trailing group of the top app bar reaches it the other way**, and that is
+the resolution of what M9 handed on. MD3 gives a top-app-bar control a 40dp
+*container* and a 48dp *target* — two measurements, not one — because a bar 56dp
+tall cannot hold a 48dp box with any breathing room. `controlClasses` now takes
+a `TouchTargetMode`: `grow` puts the floor on the box and is the default and
+everything above; `overflow` keeps the box and hangs the target off it, via
+`TOUCH_TARGET` in `interaction.ts`. Both trailing controls take `overflow`, so
+the group is level at 40dp and both are reachable at 48dp.
+
+**The hand-off did not happen, and the reason is worth more than the fix.** M9
+held the account control for #173 on the grounds that deciding it here would
+overwrite a measured choice with an unmeasured one — which was right. But #173
+merged **twenty-five seconds before** M9's own PR, so no one was ever downstream
+to take the decision, and the two changes composed instead: #173's `h-10` on all
+three trailing controls, and M9's `min-h-12` in `Button`'s base, which silently
+beat that `h-10` on the one of the three that *is* a `Button`. The toggle
+rendered 48 and the account control 40 — the levelling #173 was written to
+achieve, undone by a side effect rather than by a decision, on a branch where
+every check was green.
+
+Two things made it invisible. Equal-specificity utilities are resolved by
+**stylesheet** order, so the call site's `h-10` never had a say — which is why
+the mode is a parameter now and not something `extra` can express. And this
+file's own spec asserted the toggle's *box* was ≥48, so it asserted the defect:
+a box assertion cannot distinguish a control that reached the floor from one
+that was pushed past its specified size. The spec hit-tests a 48dp box with
+`elementFromPoint` instead, which also catches the failure neither control shows
+on its own — the neighbour stealing a sliver of the target, which `gap-2` did by
+a third of a pixel once both sides overflowed toward each other.
+
+Measured, signed in at 375dp: the account control was 36×44 before #173, 40×40
+after it, and is 40×40 with a 48×48 target now. It is the one control a
+signed-in reader taps to reach their own account.
 
 **One thing the mutation testing found, worth more than the fix.** The wrap
 guard was first written as "every tab is 48px tall" — and it stayed green with
@@ -369,8 +394,8 @@ way; and with **both** `inline-flex` and the nowrap removed, "Ao vivo" wraps at
 deleting one is not evidence it was unnecessary.
 
 **With M9 the four phases are done.** What the standard still asks of this app is
-in the section below, which is the same list it always was, and one item that is
-new: the account control's touch target, held for #173.
+in the section below, which is the same list it always was. The one item that was
+new — the account control's touch target, held for #173 — is closed above.
 
 ## What stays deliberately unadopted
 
