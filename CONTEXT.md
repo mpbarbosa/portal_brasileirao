@@ -575,6 +575,29 @@ this for every row, so a scoring change must update `POINTS_FOR_WIN` in
 _Avoid_: "PTS"/"GP"/"GD" (English abbreviations), reordering the columns — this is
 the order every Brazilian table uses.
 
+**Aproveitamento**:
+The share of the points a club could have taken that it actually took,
+`pontos / (jogos × 3)`, printed as a whole percentage — the metric a Brazilian
+reader quotes by default, and the one ge and CBF both carry where the header list
+above stops. `pointsPercentage` and `pointsPercentageLabel` in `standings-core.ts`;
+the `%` column of the **Classificação**, last as every Brazilian table puts it, and
+the fifth tile of the **Clube** page.
+It is **derived from `points` and `played`, never stored on `StandingsRow`**, so it
+cannot disagree with the two numbers beside it whichever table `/api/standings`
+served — upstream's own or the computed one.
+It is the column that reads a **postponed fixture** honestly, which is the whole
+reason to carry it: a club a game short is understated by P and stated correctly
+here, the same argument **Campanha** makes by carrying `played`.
+A club with no game played has **no** aproveitamento and renders an em dash. `0%`
+is a club that has played and taken nothing; the two are different claims, and only
+one of them is about the club — the same rule the **Artilharia** applies to an
+unreported tally.
+_Avoid_: "eficiência" and "taxa de vitórias" (both mean something else — the second
+counts only wins, where a draw is a third of a result here), "%" as the term in
+prose (it is the column header, not the word), a decimal place (ge prints whole
+numbers in a table, and the column costs width to widen), coercing the no-games
+case to zero anywhere between the function and the cell.
+
 **Fonte dos dados**:
 The `source` field of `ApiEnvelope`, and the reason the app can be honest about
 what it is showing. Exactly three values: `football-data` (live upstream),

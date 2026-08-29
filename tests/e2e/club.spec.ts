@@ -47,11 +47,15 @@ test.describe("Clube", () => {
     // Scoped to main: "Jogos" is also a nav entry, so an unscoped lookup
     // matches the menu as well as the stat tile.
     const main = page.locator("main");
-    for (const label of ["Posição", "Pontos", "Jogos", "Saldo"]) {
+    for (const label of ["Posição", "Pontos", "Jogos", "Saldo", "Aproveitamento"]) {
       await expect(main.getByText(label, { exact: true })).toBeVisible();
     }
     // Leader of the table.
     await expect(main.getByText("1º", { exact: true })).toBeVisible();
+    // Shape, not value: the snapshot ages and the leader's aproveitamento with
+    // it. An em dash here would mean a club with no game played, which the
+    // frozen season does not contain.
+    await expect(main.getByText(/^\d{1,3}%$/)).toBeVisible();
   });
 
   test("the club page draws the club's campanha", async ({ page }) => {

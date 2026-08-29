@@ -102,3 +102,44 @@ export const computeStandings = (clubs: Club[], matches: Match[]): StandingsRow[
     .sort(compareRows)
     .map((row, index) => ({ ...row, position: index + 1 }));
 };
+
+/**
+ * **Aproveitamento** — the share of the points a club could have taken that it
+ * actually took, `pontos / (jogos × 3)`, as a percentage.
+ *
+ * The metric a Brazilian reader quotes by default: ge and CBF both print it,
+ * and "70% de aproveitamento" is an ordinary sentence about a club. It is also
+ * the one column that survives a **postponed fixture** honestly — a club a game
+ * short reads as worse than it is in P and correctly here, which is the same
+ * argument `RankAtRound` already makes by carrying `played`.
+ *
+ * It is derived rather than stored on `StandingsRow` on purpose: `/api/standings`
+ * serves upstream's own table when the provider is reachable and the computed
+ * one otherwise, and a derived value cannot disagree with the two numbers it is
+ * read from whichever of those arrived.
+ *
+ * **A club with no game played has no aproveitamento, and that is an absence
+ * rather than a zero** — 0% is what a club that has played and taken nothing
+ * reads as, and the two are different claims. Null, for the reason the
+ * artilharia renders an unreported tally as an em dash and `computeRankHistory`
+ * stops at the last round with a result.
+ */
+export const pointsPercentage = (row: Pick<StandingsRow, "points" | "played">): number | null =>
+  row.played === 0 ? null : (row.points * 100) / (row.played * POINTS_FOR_WIN);
+
+/**
+ * The aproveitamento as it reaches the page: a whole number and a `%`, or null
+ * where there is nothing to report.
+ *
+ * Whole rather than one decimal because that is how ge prints it in a table,
+ * and because the figure is a summary — a tenth of a percentage point is
+ * precision the reader does not act on, in a column that costs table width to
+ * widen. The rounding cannot manufacture a 100%: 38 rounds put the closest
+ * non-perfect campaign at 98.2%.
+ */
+export const pointsPercentageLabel = (
+  row: Pick<StandingsRow, "points" | "played">,
+): string | null => {
+  const share = pointsPercentage(row);
+  return share === null ? null : `${Math.round(share)}%`;
+};
