@@ -78,9 +78,9 @@ a hue pair would be the only place colour carried meaning no token defines. **Me
 momentos** links each broadcaster's own package; where none is curated it falls back to a
 YouTube search and says so.*
 
-![Página da partida Botafogo 1 x 1 Fluminense no tema claro: a 22ª rodada à esquerda e a etiqueta Encerrado à direita; o placar com os escudos dos dois clubes e, sob o nome de cada um, uma ligação para o seu artigo na Wikipédia; a data e a hora do jogo; e a linha do árbitro, que nomeia Bruno Arleu de Araujo. Abaixo, as campanhas dos dois clubes empilhadas — o Botafogo caindo do 1º ao 11º lugar e o Fluminense quase reto entre o 5º e o 4º.](docs/screenshots/partida-554951-light.png)
+![Página da partida Botafogo 1 x 1 Fluminense no tema claro: a 22ª rodada à esquerda e a etiqueta Encerrado à direita; o placar com os escudos dos dois clubes e, sob o nome de cada um, uma ligação para o seu artigo na Wikipédia; a data e a hora do jogo; e a linha do árbitro, que nomeia Bruno Arleu de Araujo. Abaixo, as campanhas dos dois clubes empilhadas — o Botafogo caindo do 1º ao 11º lugar e o Fluminense quase reto entre o 5º e o 4º — e os melhores momentos na ge, na CazéTV e no UOL Esporte.](docs/screenshots/partida-554951-light.png)
 
-![A mesma página da partida no tema escuro, com o mesmo placar e escudos, as mesmas ligações para a Wikipédia sob cada clube, a mesma linha do árbitro e as mesmas campanhas dos dois clubes.](docs/screenshots/partida-554951-dark.png)
+![A mesma página da partida no tema escuro, com o mesmo placar e escudos, as mesmas ligações para a Wikipédia sob cada clube, a mesma linha do árbitro, as mesmas campanhas dos dois clubes e os mesmos melhores momentos.](docs/screenshots/partida-554951-dark.png)
 
 *A second match page, and the only capture that shows the **Árbitro** line. It is here rather
 than in place of the one above because no single fixture can carry both: upstream names an
