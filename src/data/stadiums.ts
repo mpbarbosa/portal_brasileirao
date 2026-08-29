@@ -59,6 +59,7 @@ export const STADIUMS: Record<string, StadiumFacts> = {
     capacity: 19351,
     opened: 1980,
     wikipedia: "Arena Condá",
+    coordinates: [-27.1041, -52.607],
     photo: {
       file: "Arena Condá.jpg",
       alt:
@@ -74,6 +75,7 @@ export const STADIUMS: Record<string, StadiumFacts> = {
     capacity: 42372,
     opened: 1913,
     wikipedia: "Estádio Mário Celso Petraglia",
+    coordinates: [-25.448333, -49.276944],
     photo: {
       file: "Arenadabaixada2.jpg",
       alt:
@@ -88,6 +90,7 @@ export const STADIUMS: Record<string, StadiumFacts> = {
     capacity: 60540,
     opened: 2012,
     wikipedia: "Arena do Grêmio",
+    coordinates: [-29.973444, -51.194403],
     photo: {
       file: "Arena do Grêmio - 26out2024.jpg",
       alt:
@@ -103,6 +106,7 @@ export const STADIUMS: Record<string, StadiumFacts> = {
     capacity: 48661,
     opened: 2013,
     wikipedia: "Arena Fonte Nova",
+    coordinates: [-12.978819, -38.504253],
     photo: {
       file: "Arena Fonte Nova view from lake (zoom).jpg",
       alt:
@@ -121,6 +125,7 @@ export const STADIUMS: Record<string, StadiumFacts> = {
     capacity: 44892,
     opened: 2023,
     wikipedia: "Arena MRV",
+    coordinates: [-19.930556, -44.016111],
     photo: {
       file: "ARENA MRV.jpg",
       alt:
@@ -136,6 +141,7 @@ export const STADIUMS: Record<string, StadiumFacts> = {
     capacity: 50842,
     opened: 1969,
     wikipedia: "Estádio Beira-Rio",
+    coordinates: [-30.065614, -51.236086],
     photo: {
       file: "Beira-Rio-Stadium-Porto-Alegre-Brazil.jpg",
       alt:
@@ -152,6 +158,7 @@ export const STADIUMS: Record<string, StadiumFacts> = {
     // The article's infobox states no inauguration year — only that the ground
     // was remodelled in 2025. Absent rather than guessed.
     wikipedia: "Estádio Municipal Cícero de Souza Marques",
+    coordinates: [-22.950935, -46.530224],
     photo: {
       file: "Estádio Cícero de Souza Marques (3).jpg",
       alt:
@@ -167,6 +174,7 @@ export const STADIUMS: Record<string, StadiumFacts> = {
     capacity: 40502,
     opened: 1932,
     wikipedia: "Estádio Major Antônio Couto Pereira",
+    coordinates: [-25.421111, -49.2595],
     photo: {
       file: "Estádio Major Antônio Couto Pereira (17819160010).jpg",
       alt:
@@ -182,6 +190,7 @@ export const STADIUMS: Record<string, StadiumFacts> = {
     capacity: 15000,
     opened: 1925,
     wikipedia: "Estádio Municipal José Maria de Campos Maia",
+    coordinates: [-20.822392, -49.506422],
     photo: {
       file: "Patinhas esteve aqui - Estadio Mirassol 2 - panoramio.jpg",
       alt:
@@ -197,6 +206,7 @@ export const STADIUMS: Record<string, StadiumFacts> = {
     capacity: 53645,
     opened: 1978,
     wikipedia: "Mangueirão",
+    coordinates: [-1.381111, -48.444],
     photo: {
       file: "Mangueirão 2025.jpg",
       alt:
@@ -211,6 +221,7 @@ export const STADIUMS: Record<string, StadiumFacts> = {
     capacity: 30793,
     opened: 1986,
     wikipedia: "Estádio Manoel Barradas",
+    coordinates: [-12.917926, -38.428117],
     photo: {
       file: "Estádio Barradão - Esporte Clube Vitória 8.jpg",
       alt:
@@ -226,6 +237,7 @@ export const STADIUMS: Record<string, StadiumFacts> = {
     capacity: 78838,
     opened: 1950,
     wikipedia: "Estádio Jornalista Mário Filho",
+    coordinates: [-22.912222, -43.230278],
     photo: {
       file: "Aerea2 maracana.jpg",
       alt:
@@ -241,6 +253,7 @@ export const STADIUMS: Record<string, StadiumFacts> = {
     capacity: 61927,
     opened: 1965,
     wikipedia: "Estádio Governador Magalhães Pinto",
+    coordinates: [-19.865833, -43.970833],
     photo: {
       file: "Mineirao, January 2020.jpg",
       alt:
@@ -256,6 +269,7 @@ export const STADIUMS: Record<string, StadiumFacts> = {
     capacity: 66795,
     opened: 1960,
     wikipedia: "Estádio do Morumbi",
+    coordinates: [-23.600125, -46.720156],
     photo: {
       file: "Estádio do Morumbi.jpg",
       alt:
@@ -270,6 +284,7 @@ export const STADIUMS: Record<string, StadiumFacts> = {
     capacity: 49082,
     opened: 2014,
     wikipedia: "Neo Química Arena",
+    coordinates: [-23.545556, -46.474],
     photo: {
       file: "ARENA CORINTHIANS.jpg",
       alt:
@@ -285,6 +300,7 @@ export const STADIUMS: Record<string, StadiumFacts> = {
     capacity: 46831,
     opened: 2007,
     wikipedia: "Estádio Olímpico Nilton Santos",
+    coordinates: [-22.893172, -43.292269],
     photo: {
       // Commons describes this one as a journalist posing outside the
       // ground. The frame is the pitch and the Botafogo mosaic, with nobody
@@ -303,6 +319,7 @@ export const STADIUMS: Record<string, StadiumFacts> = {
     name: "Nubank Parque",
     capacity: 43723,
     wikipedia: "Nubank Parque",
+    coordinates: [-23.527556, -46.678417],
     photo: {
       file: "Imagens da Cidade de São Paulo e Zoológico da Capital Paulista. (47480340301).jpg",
       alt:
@@ -318,6 +335,7 @@ export const STADIUMS: Record<string, StadiumFacts> = {
     capacity: 21880,
     opened: 1927,
     wikipedia: "Estádio Vasco da Gama",
+    coordinates: [-22.890917, -43.228253],
     photo: {
       file: "Estádio de São Januário.jpg",
       alt:
@@ -333,6 +351,7 @@ export const STADIUMS: Record<string, StadiumFacts> = {
     capacity: 17923,
     opened: 1916,
     wikipedia: "Estádio Urbano Caldeira",
+    coordinates: [-23.951111, -46.338889],
     photo: {
       file: "Vila Belmiro pre-match Santos vs Grêmio 2021.jpg",
       alt:

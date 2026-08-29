@@ -17,6 +17,8 @@
  * time someone adds a section.
  */
 
+import type { WeatherKind } from "@/src/types";
+
 interface IconProps {
   /** Tailwind classes for size and colour; the paths inherit `currentColor`. */
   className?: string;
@@ -160,6 +162,39 @@ export function BarsPlotIcon({ className }: IconProps) {
   return (
     <svg {...base} className={className}>
       <path d="M5 19v-5M10 19v-9M15 19v-4M20 19v-13" />
+    </svg>
+  );
+}
+
+/**
+ * The six skies `weather-core.ts` names, drawn rather than spelled.
+ *
+ * They live here despite not being sections, for the reason `SunIcon` and
+ * `MoonIcon` do: this file holds the one `base` attribute bag the app's glyphs
+ * share, and a mark defined beside its call site drifts from it. And they are
+ * drawn at all rather than written as `☀`/`☁`/`☂` because those are
+ * Extended_Pictographic — the same trap the theme toggle records, where a font
+ * decides the size and several platforms decide the colour.
+ *
+ * `clear` is the one that changes after dark, because it is the only sky whose
+ * picture is the light source itself. Everything else looks the same at night.
+ */
+export function WeatherIcon({
+  kind,
+  day = true,
+  className,
+}: IconProps & { kind: WeatherKind; day?: boolean }) {
+  if (kind === "clear") {
+    return day ? <SunIcon className={className} /> : <MoonIcon className={className} />;
+  }
+  return (
+    <svg {...base} className={className}>
+      {/* Every remaining sky is a cloud plus what falls out of it. */}
+      <path d="M7 16h9a3.5 3.5 0 0 0 .3-7 5 5 0 0 0-9.5-1A3.5 3.5 0 0 0 7 16Z" />
+      {kind === "rain" && <path d="M9 19l-1 2M13 19l-1 2M17 19l-1 2" />}
+      {kind === "storm" && <path d="M13 18l-3 4h4l-3 4" />}
+      {kind === "snow" && <path d="M9 20h.01M13 20h.01M17 20h.01M11 22h.01M15 22h.01" />}
+      {kind === "fog" && <path d="M5 19h14M7 22h10" />}
     </svg>
   );
 }
