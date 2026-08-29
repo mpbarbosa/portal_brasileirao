@@ -58,7 +58,12 @@ import {
   publicAccount,
   type Account,
 } from "@/account-core";
-import { NO_PREFERENCES, parsePreferences, serialisePreferences } from "@/preferences-core";
+import {
+  hasPreferences,
+  NO_PREFERENCES,
+  parsePreferences,
+  serialisePreferences,
+} from "@/preferences-core";
 import { openStore } from "@/account-store";
 import {
   authorizeUrl,
@@ -914,9 +919,16 @@ app.post("/api/auth/logout", (req, res) => {
 /**
  * Replace the reader's preference set.
  *
- * A whole-object PUT rather than a patch per key: there is one key, the client
- * always holds the complete set, and a partial update is a merge rule that
- * would have to agree with `planSync` — a second place for the two to disagree.
+ * A whole-object PUT rather than a patch per key. That was cheap to say while
+ * there was one key and is the load-bearing choice now that there are two: the
+ * client always holds the complete set, so a patch would be a merge rule living
+ * here that has to agree with `planSync` living there — a second place for the
+ * two to disagree, over a body that saves a dozen bytes.
+ *
+ * What it costs is that a client sending a *partial* body silently clears
+ * whatever it left out. That is the rule, not a bug — replace means replace —
+ * and it is why `usePreferences` uploads `preferences` rather than the key it
+ * just changed.
  */
 app.put("/api/account/preferences", express.json({ limit: "4kb" }), (req, res) => {
   if (!requireAccounts(res)) return;
@@ -938,7 +950,10 @@ app.put("/api/account/preferences", express.json({ limit: "4kb" }), (req, res) =
   accountStore!.writePreference(
     account.id,
     "preferences",
-    preferences.club ? serialisePreferences(preferences) : null,
+    // `hasPreferences` rather than a check on one field: the row is deleted
+    // only when there is nothing left to remember, so clearing a club does not
+    // take a landing choice with it.
+    hasPreferences(preferences) ? serialisePreferences(preferences) : null,
     Date.now(),
   );
 

@@ -303,17 +303,46 @@ Traps, each of which cost something to find:
 Phase 2 adds the **preferences** table and `/privacidade`. Two things about it are
 decisions rather than mechanics:
 
-- **`planSync` is not last-write-wins**, which §4 sketched. There is one key, so
-  timestamps would resolve exactly one case — signed out on device A, changed there, then
-  signed in on device B — and would cost a stamp beside every value, a storage-shape
-  migration for everyone who already has a preference, and a rule nobody can predict from
-  outside because the deciding value is invisible. The rule instead is one sentence: **the
-  account is the source of truth, and a device seeds an account that has none yet.** That
-  keeps the case the plan actually cared about (a sign-in never discards the choice just
-  made) and gives up the A-then-B case. Revisit at the second key.
+- **`planSync` is not last-write-wins**, which §4 sketched. Timestamps would resolve
+  exactly one case — signed out on device A, changed there, then signed in on device B —
+  and would cost a stamp beside every value, a storage-shape migration for everyone who
+  already has a preference, and a rule nobody can predict from outside because the
+  deciding value is invisible. The rule instead is one sentence: **the account is the
+  source of truth, and a device seeds an account that has none yet.** That keeps the case
+  the plan actually cared about (a sign-in never discards the choice just made) and gives
+  up the A-then-B case. This paragraph said "revisit at the second key"; the second key
+  has arrived and the answer held, for a reason worth more than either key: **a merge
+  rule is owed only where both sides can hold a value.** `landing` is account-only — no
+  `localStorage` copy exists, by construction — so there is nothing to reconcile and no
+  clock to buy. Ask which side *owns* a key before asking how to reconcile it.
 - **The upload is fire-and-forget**, so the page is usable before it lands. That is right
   for a reader and a trap for a test: a spec that follows a club and immediately asks the
   API what the account holds is racing it. Poll, or assert through the browser.
+
+**The second key is `landing` — the Página inicial**, the section a signed-in reader opens
+on. Three things about it are decisions rather than mechanics, and the third cost a red
+suite to find:
+
+- **It is account-only, and `serialiseDevicePreferences` is the whole of that rule.** The
+  device serialiser writes the club and drops the landing; the wire serialiser writes both,
+  because `PUT /api/account/preferences` **replaces the whole set** and a partial upload
+  would clear a landing choice every time somebody followed a club. Two serialisers rather
+  than a boolean argument: a flag at a call site is easy to pass wrong and impossible to
+  see.
+- **It redirects rather than rendering another section under `/`.** Serving different
+  content at one address would leave the canonical tag, the `og:` metadata and the JSON-LD
+  describing the Classificação while the reader looks at the artilharia — and those are
+  injected server-side, where there is no session to consult. Moving the address keeps all
+  three true. Crawlers have no session, so `/` stays the table for them permanently. The
+  redirect is `replace`, never push, or Back returns to `/` and is sent forward again.
+- **`usePreferences` publishes `syncedAccountId`, and a caller that infers it instead is
+  wrong in a way nothing reports.** Effects run in declaration order within one commit, so
+  when the account lands, an effect declared *after* `usePreferences` in the same component
+  sees `accountState` already saying "signed-in" while `preferences` still holds the
+  pre-account values. `App`'s redirect ran exactly once, on that render, found no landing,
+  latched its ref and never moved the page — with `tsc`, the unit suite and every existing
+  spec green. Only an end-to-end assertion on the URL could see it. Gate on the published
+  id, not on `accountState.status`.
 
 And one testing trap that is a property of the cookie rather than of the code: **`page.request` cannot carry a session.** It is a Node-side fetch with no notion of a
 potentially trustworthy origin, so it will not send a `Secure` `__Host-` cookie over

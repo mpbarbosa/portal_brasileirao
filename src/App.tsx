@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import {
   fetchCoaches,
@@ -29,7 +29,7 @@ import { findMatch } from "@/match-core";
 import { computeRankHistory } from "@/rank-history-core";
 import { buildStadiums } from "@/venue-core";
 import { STADIUMS } from "@/src/data/stadiums";
-import { followState } from "@/preferences-core";
+import { followState, landingRoute } from "@/preferences-core";
 import { parseRoute } from "@/route-core";
 import { usePageMeta } from "@/src/usePageMeta";
 import { useAccount } from "@/src/useAccount";
@@ -42,9 +42,11 @@ export function App() {
   const { route, navigate } = useRoute();
   const { theme, toggle: toggleTheme } = useTheme();
   const { state: accountState, signOut, deleteAccount } = useAccount();
-  // Meu time is device-local until an account is known, and reconciles with it
-  // once one is — see `planSync`. Signed out, this is exactly Phase 0.
-  const { preferences, toggleClub } = usePreferences({
+  // Two keys with two homes. Meu time is device-local until an account is known
+  // and reconciles with it once one is — see `planSync`; signed out, that is
+  // exactly Phase 0. The Página inicial lives only in the account, arrives with
+  // one and leaves with it.
+  const { preferences, syncedAccountId, toggleClub, chooseLanding } = usePreferences({
     id: accountState.status === "signed-in" ? accountState.account.id : null,
     preferences: accountState.status === "signed-in" ? accountState.account.preferences : null,
   });
@@ -274,6 +276,69 @@ export function App() {
   }, [route.section, coaches]);
 
   /**
+   * Open where a signed-in reader asked to be opened.
+   *
+   * **A redirect rather than rendering another section at `/`**, which is the
+   * decision to understand before changing this. Serving different content
+   * under one address would make `/` a page whose canonical tag, `og:` metadata
+   * and JSON-LD describe the Classificação while the reader is looking at the
+   * artilharia — and `page-meta-core.ts` is injected server-side, where there is
+   * no session and no way to know. Moving the address instead keeps every one
+   * of those true for whatever is actually on screen. Crawlers are unaffected:
+   * they have no session, so `/` is the table for them, permanently.
+   *
+   * Once per document, and only from the address the app opens on. A reader who
+   * followed a deep link asked for that page, and a landing preference is not a
+   * licence to overrule them; a reader who later clicks Classificação is asking
+   * for the table, and a redirect there would make the tab unreachable — which
+   * is why the ref is set on the first settle rather than watched for.
+   *
+   * `replace`, never push: with a history entry, Back would return to `/` and
+   * be redirected forward again, which reads as a broken button.
+   *
+   * The cost is a visible step — the table paints, then the app moves — because
+   * the answer depends on `/api/account/me`, and holding the first paint for it
+   * would slow the page down for every signed-out reader to spare a redirect
+   * for the few with a preference. `meu-time` waits for the club list too: it
+   * resolves to a club's own address, and `landingRoute` will not guess one.
+   */
+  const landed = useRef(false);
+
+  useEffect(() => {
+    if (landed.current) return;
+
+    // Anything but the home address is a page the reader asked for by name.
+    if (route.section !== "classificacao") {
+      landed.current = true;
+      return;
+    }
+
+    // Still asking who this is. A signed-out or accountless reader settles to
+    // one of the other three states and falls out below.
+    if (accountState.status === "loading") return;
+    if (accountState.status !== "signed-in") {
+      landed.current = true;
+      return;
+    }
+
+    // Signed in, but `preferences` may still be this render's pre-account copy:
+    // both effects run against the same commit, and this one is declared after
+    // the hook that absorbs the account. Reading `landing` here before that
+    // lands is how this shipped broken the first time — it decided there was
+    // nothing to do, latched, and the page never moved.
+    if (syncedAccountId !== accountState.account.id) return;
+
+    // `unresolved` here is "the club list has not arrived", not "no such club"
+    // — `followState`'s rule. Waiting is right while the first load is in
+    // flight and wrong once it has settled and still cannot name the club.
+    if (preferences.landing === "meu-time" && follow.kind === "unresolved" && loading) return;
+
+    landed.current = true;
+    const destination = landingRoute(preferences.landing, follow);
+    if (destination) navigate(destination, { replace: true });
+  }, [route.section, accountState, syncedAccountId, preferences.landing, follow, loading, navigate]);
+
+  /**
    * The **Ao vivo** page refetches; every other view is a snapshot of what
    * arrived once, which is right for a table and wrong for a scoreboard.
    *
@@ -440,6 +505,9 @@ export function App() {
           {route.section === "conta" && (
             <AccountView
               state={accountState}
+              landing={preferences.landing}
+              follow={follow}
+              onChooseLanding={chooseLanding}
               onSignOut={(everywhere) => {
                 void signOut(everywhere).then(() => navigate({ section: "classificacao" }));
               }}

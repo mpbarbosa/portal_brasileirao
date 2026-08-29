@@ -42,11 +42,12 @@ export function PrivacyView({ onBack }: { onBack: () => void }) {
       </Surface>
 
       <h3 className="mt-6 text-body-large font-semibold">O que guardamos com conta</h3>
-      <p className="mt-1 text-body-medium text-ink-muted">Três coisas, e só:</p>
+      <p className="mt-1 text-body-medium text-ink-muted">Quatro coisas, e só:</p>
       <ul className="mt-2 space-y-1 text-body-medium text-ink-muted">
         <li>• O seu nome, como o Google o informa.</li>
         <li>• Um identificador do Google, para reconhecer você na próxima vez.</li>
         <li>• O time que você segue.</li>
+        <li>• A página em que o Portal abre para você.</li>
       </ul>
       <p className="mt-2 text-body-medium text-ink-muted">
         Guardamos também um registro de cada aparelho conectado, para que
@@ -85,8 +86,9 @@ export function PrivacyView({ onBack }: { onBack: () => void }) {
         <a href="/conta" className={LINK_UNDERLINE}>
           Minha conta
         </a>{" "}
-        há um botão que apaga a conta na hora — a conta, as sessões e o time que
-        você segue, tudo de uma vez, sem pedido e sem espera. O que você vê nessa
+        há um botão que apaga a conta na hora — a conta, as sessões, o time que
+        você segue e a sua página inicial, tudo de uma vez, sem pedido e sem
+        espera. O que você vê nessa
         página é tudo o que temos, então ela também serve como o seu acesso aos
         dados.
       </p>
