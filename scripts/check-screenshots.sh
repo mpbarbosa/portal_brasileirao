@@ -223,13 +223,41 @@ honoured=()
 topology=()
 
 while IFS= read -r sha; do
-    # A merge is listed here when it differs from *a* parent, which includes the
-    # merge that only catches a branch up. It introduced no appearance change on
-    # the first-parent line, and the first-parent line is what main is. A
-    # non-merge cannot reach this branch: git would not have listed it unless it
-    # changed one of these paths against its only parent.
-    if parent="$(git rev-parse --verify --quiet "$sha^1")" \
-        && git diff --quiet "$parent" "$sha" -- "${SURFACE[@]}"; then
+    # A MERGE THAT INTRODUCED NOTHING OF ITS OWN.
+    #
+    # A commit reaches this loop only by differing from a parent on an
+    # appearance path, and there are two topologies that do that while adding
+    # nothing. The catch-up merge is identical to its first parent, because main
+    # did not move under the branch. The ordinary pull-request merge differs
+    # from BOTH parents whenever main did move on an appearance path while the
+    # branch was out — from the first by the branch's edits, from the second by
+    # main's — and every one of those hunks came from one side or the other,
+    # written by commits enumerated here in their own right.
+    #
+    # `git show --cc` prints only what differs from EVERY parent, so an empty
+    # combined diff is git's own statement covering both cases at once: this
+    # merge contributed no appearance change that some other commit is not
+    # already answering for.
+    #
+    # MISSING THE SECOND CASE IS WHAT STOPPED A TRAILER SURVIVING ITS OWN MERGE.
+    # A merge made from the GitHub button carries a message with nowhere to put
+    # one, so the gate credited a `Screenshots-unaffected:` claim, printed its
+    # reason, and then reported the identical edit as unaccounted under the merge
+    # sha. #205, #202 and #217 all hit it, and the effect was that a trailer
+    # deferred a re-shoot rather than removing it.
+    #
+    # THE FIX IS NOT `--no-merges`, which is simpler and blinds the gate to the
+    # one merge that can genuinely move a pixel: an *evil* merge, where a
+    # conflict was resolved by hand into an appearance path, producing a result
+    # in neither parent. That is exactly what `--cc` does print, so such a merge
+    # stays enumerated and still owes a trailer or a capture. There is a case for
+    # it in scripts/rehearse-screenshot-gate.sh, and skipping merges wholesale
+    # fails it.
+    #
+    # A non-merge cannot reach the test: git would not have listed it unless it
+    # changed one of these paths against its only parent, and `^2` fails.
+    if git rev-parse --verify --quiet "$sha^2" >/dev/null \
+        && [ -z "$(git show --cc --format='' "$sha" -- "${SURFACE[@]}")" ]; then
         topology+=("$sha")
         continue
     fi
@@ -279,7 +307,7 @@ if [ ${#unexplained[@]} -eq 0 ]; then
     echo "Screenshots are current."
     echo "  $anchor_note: $(git log -1 --format='%h %s' "$anchor")"
     if [ ${#topology[@]} -gt 0 ]; then
-        echo "  appearance paths moved only by a catch-up merge, changing nothing on main:"
+        echo "  appearance paths moved only inside a merge that introduced nothing of its own:"
         for sha in "${topology[@]}"; do
             echo "    $(git log -1 --format='%h %s' "$sha")"
         done

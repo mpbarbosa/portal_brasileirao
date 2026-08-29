@@ -2152,14 +2152,18 @@ Rules that follow from that:
 in two parallel jobs:
 
 - **check** — `tsc --noEmit`, unit tests, build, then boots `dist/server.cjs` and
-  smoke-tests it, then shellchecks the deploy scripts and **runs both
-  rehearsals** against them. The boot step is the one that catches a runtime
+  smoke-tests it, then shellchecks the deploy scripts and **runs the four
+  rehearsals**. The boot step is the one that catches a runtime
   dependency stranded in `devDependencies`; the rehearsals are the only thing
-  that catches a host script which no longer does what it says. They gate the
-  deploy because `shell_scripts/` is packaged into the payload by this same job,
-  a few steps later — so the bytes that ship have been exercised, not just read.
+  that catches a script which no longer does what it says. The two host-script
+  ones gate the deploy because `shell_scripts/` is packaged into the payload by
+  this same job, a few steps later — so the bytes that ship have been exercised,
+  not just read.
   They run on `.nvmrc`'s Node rather than a developer's, which is the whole
   point: the first bug this placement found was invisible on a newer major.
+  **Count the `run:` lines rather than this sentence** — it said "both" through
+  the third and the fourth, which is the failure the eighteen-captures paragraph
+  below records about a number written in prose.
 - **e2e** — Playwright, with the browser cached on the exact `@playwright/test`
   version. A version bump needs a matching browser build, so the cache key must
   include it or the run fails with "Executable doesn't exist".
@@ -2226,6 +2230,30 @@ Screenshots-unaffected: <sha>: <why>   # for a commit already on main
 The reason is required, and is printed on every run, green or red — a claim nobody reads is
 the thing this replaced. Nothing verifies it. **"It looks the same to me" is a refresh, not
 a trailer**; reach for it only when the edit cannot reach a paint at all.
+
+**A trailer used to be unable to survive its own merge, which halved what this
+paragraph promised.** The gate enumerated merge commits alongside the topic commits they
+land, and a merge made from the GitHub button has nowhere to carry a trailer — so it
+credited the claim, printed the reason, then flagged the identical edit again under the
+merge sha. #205, #202 and #217 all hit it, and the effect was that a trailer *deferred* a
+re-shoot rather than removing it. Fixed: a merge whose **combined** diff over the
+appearance paths is empty introduced nothing of its own and is skipped, `git show --cc`
+being git's own statement of that. An **evil merge** — a conflict resolved by hand into an
+appearance path — is exactly what `--cc` does print, so it stays enumerated and still owes
+a trailer or a capture. That is why the fix is not `--no-merges`, which is simpler and
+blinds the gate to the one merge that can genuinely change a pixel.
+
+**The defect lived in a script everybody had read, through three pull requests**, which is
+the argument for `scripts/rehearse-screenshot-gate.sh` rather than a fourth careful
+reading. It builds nine throwaway repositories — a plain change, a trailer on a direct
+commit, the same trailer landed by a merge, an untrailered change landed by a merge, an
+evil merge, a catch-up merge, an empty trailer, the retroactive `<sha>:` form — and asserts
+the gate's exit status on each. It is hermetic (git and bash, no network) and `check` runs
+it. **Its own first draft passed against the unfixed gate**, because the fixture merged a
+branch into a main that had not moved: git's history simplification then never lists the
+merge at all, so there was nothing for the gate to get wrong. The defect needs a merge
+differing from *both* parents, which is what a shared checkout produces daily and a lone
+branch never does.
 
 **It must sit in the message's *last* paragraph, beside `Co-Authored-By:`.** Git parses
 trailers out of the final paragraph only, so one separated from that block by a blank line
@@ -2477,10 +2505,10 @@ that carries it and the host runs it immediately.
 
 That is deliberately the opposite of `check-hymns`, and the distinction is the
 one worth carrying: `check-hymns` stays manual because it depends on a third
-party, so a red build would mean somebody else's server had a bad minute. Both
-rehearsals are hermetic — bash, python3, rsync, curl, node, gzip, no network, no
-AWS, no token — so a red build here always means *this commit* broke something.
-Hermetic is the test, not "is it a rehearsal a person reads".
+party, so a red build would mean somebody else's server had a bad minute. Every
+rehearsal is hermetic — bash, python3, rsync, curl, node, gzip, git, no network,
+no AWS, no token — so a red build here always means *this commit* broke
+something. Hermetic is the test, not "is it a rehearsal a person reads".
 
 One trap it caught, worth keeping: **`rsync -a`'s quick-check compares size and
 mtime, not bytes.** Two fixture releases differing only in a sha, written in the

@@ -163,6 +163,20 @@ jobs:
       - name: Rehearse the broadcast sync's pull request (sync-broadcasts.yml)
         run: ./scripts/rehearse-broadcast-sync-pr.sh
 
+      # The fourth covers CI's own tooling rather than anything that ships, and
+      # it sits in `check` rather than beside the advisory `screenshots` job on
+      # purpose: **the gate's verdict is advisory, its correctness is not.** A
+      # gate that answers the wrong question is a defect in this commit, which
+      # is what `check` is for; a red screenshots job is a note to a person,
+      # which is what `continue-on-error` is for. Keeping them in one job would
+      # make a broken tool indistinguishable from an owed re-shoot.
+      #
+      # It exists because check-screenshots.sh had no behavioural coverage at
+      # all — shellcheck proves it parses — and the merge-sha defect survived
+      # three pull requests inside a script everybody had read.
+      - name: Rehearse the screenshots gate (scripts/check-screenshots.sh)
+        run: ./scripts/rehearse-screenshot-gate.sh
+
       # Everything above has passed, so THIS dist/ is the one that type-checked,
       # passed the unit suite, booted as a bundle and served three endpoints.
       # Packaging it here — rather than rebuilding in `deploy` — is what makes
