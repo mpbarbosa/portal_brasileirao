@@ -1,7 +1,13 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { compareRows, computeStandings, countsTowardStandings } from "@/standings-core";
+import {
+  compareRows,
+  computeStandings,
+  countsTowardStandings,
+  pointsPercentage,
+  pointsPercentageLabel,
+} from "@/standings-core";
 import type { Club, Match, StandingsRow } from "@/src/types";
 
 const club = (code: string, shortName = code): Club => ({
@@ -105,4 +111,36 @@ test("orders fully-level clubs by name so the table is deterministic", () => {
     table.map((row) => row.club.shortName),
     ["Abelha", "Zebra"],
   );
+});
+
+test("aproveitamento is the share of points taken of those available", () => {
+  // Nine of a possible nine.
+  assert.equal(pointsPercentage({ points: 9, played: 3 }), 100);
+  // Three wins and three draws out of six: 12 of 18.
+  assert.equal(Math.round(pointsPercentage({ points: 12, played: 6 })!), 67);
+  assert.equal(pointsPercentage({ points: 0, played: 5 }), 0);
+});
+
+test("a club that has played nothing has no aproveitamento, not zero", () => {
+  assert.equal(pointsPercentage({ points: 0, played: 0 }), null);
+  assert.equal(pointsPercentageLabel({ points: 0, played: 0 }), null);
+  // The distinction the null exists for: taken nothing from five is 0%.
+  assert.equal(pointsPercentageLabel({ points: 0, played: 5 }), "0%");
+});
+
+test("aproveitamento reads a club with a game in hand honestly", () => {
+  // Same three wins, one club a postponed fixture short. The points column
+  // calls them equal; this one does not.
+  const played = { points: 9, played: 4 };
+  const short = { points: 9, played: 3 };
+  assert.equal(played.points, short.points);
+  assert.ok(pointsPercentage(short)! > pointsPercentage(played)!);
+});
+
+test("the aproveitamento label is a whole percentage", () => {
+  assert.equal(pointsPercentageLabel({ points: 12, played: 6 }), "67%");
+  assert.equal(pointsPercentageLabel({ points: 9, played: 3 }), "100%");
+  // The tightest non-perfect campaign a 38-round season allows still rounds
+  // short of 100, so the rounding cannot claim a club dropped nothing.
+  assert.equal(pointsPercentageLabel({ points: 112, played: 38 }), "98%");
 });

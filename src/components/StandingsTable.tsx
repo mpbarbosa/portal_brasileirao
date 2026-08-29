@@ -7,6 +7,7 @@ import { LINK_UNDERLINE } from "@/src/components/interaction";
 import { lastRecordedRound } from "@/rank-history-core";
 import { RankSparkline } from "@/src/components/RankSparkline";
 import { formatRoute } from "@/route-core";
+import { pointsPercentageLabel } from "@/standings-core";
 import { Surface } from "@/src/components/Surface";
 import type { ClubCode, ClubRankHistory, RankAtRound, StandingsRow } from "@/src/types";
 
@@ -170,10 +171,17 @@ export function StandingsTable({
       <Surface className="overflow-x-auto">
         {/* `border-separate` rather than the default collapse: in the collapsed
             model a cell's borders belong to the table, so they scroll out from
-            under a sticky cell and the zone rail vanishes mid-scroll. */}
+            under a sticky cell and the zone rail vanishes mid-scroll.
+
+            Both `min-w` values grew by 3rem when the % column arrived, which is
+            less than the column measures (66px at 360dp): the balance comes off
+            the tallies, which take 50px for a two-digit number and have it to
+            spare. The frozen pair is unaffected either way — `w-0` pins Clube to
+            its content, so the proportion the narrow-screen spec measures does
+            not move with this number. */}
         <table
           className={`w-full border-separate border-spacing-0 text-body-medium ${
-            showCampaign ? "min-w-[40rem]" : "min-w-[34rem]"
+            showCampaign ? "min-w-[43rem]" : "min-w-[37rem]"
           }`}
         >
           <caption className="sr-only">Classificação do Campeonato Brasileiro Série A</caption>
@@ -191,6 +199,9 @@ export function StandingsTable({
               <th scope="col" className="px-2 py-2 text-right">E</th>
               <th scope="col" className="px-2 py-2 text-right">D</th>
               <th scope="col" className="px-2 py-2 text-right">SG</th>
+              {/* Last, where every Brazilian table puts it — the column the
+                  header list P J V E D SG stops one short of. */}
+              <th scope="col" className="px-2 py-2 text-right">%</th>
             </tr>
           </thead>
           <tbody>
@@ -258,6 +269,12 @@ export function StandingsTable({
                 <td className={`${ROW_LINE} px-2 py-2 text-right tabular-nums text-ink-muted`}>{row.losses}</td>
                 <td className={`${ROW_LINE} px-2 py-2 text-right tabular-nums text-ink-muted`}>
                   {row.goalDifference > 0 ? `+${row.goalDifference}` : row.goalDifference}
+                </td>
+                {/* An em dash rather than `0%` before a club has played: taking
+                    nothing from five matches is 0% and having played none is an
+                    absence, and only one of those is a claim about the club. */}
+                <td className={`${ROW_LINE} px-2 py-2 text-right tabular-nums text-ink-muted`}>
+                  {pointsPercentageLabel(row) ?? "—"}
                 </td>
               </tr>
             ))}

@@ -31,7 +31,7 @@ test.describe("Classificação", () => {
     const headers = await page.locator("table thead th").allInnerTexts();
 
     expect(headers.map((header) => header.trim())).toEqual([
-      "#", "CLUBE", "P", "CAMPANHA", "J", "V", "E", "D", "SG",
+      "#", "CLUBE", "P", "CAMPANHA", "J", "V", "E", "D", "SG", "%",
     ]);
   });
 
@@ -67,7 +67,7 @@ test.describe("Classificação", () => {
 
     for (const row of rows) {
       const cells = await row.locator("td").allInnerTexts();
-      // 0 #, 1 Clube, 2 P, 3 Campanha, 4 J, 5 V, 6 E, 7 D, 8 SG.
+      // 0 #, 1 Clube, 2 P, 3 Campanha, 4 J, 5 V, 6 E, 7 D, 8 SG, 9 %.
       const [, , points, , , wins, draws] = cells.map((cell) => cell.trim());
 
       expect(Number(points)).toBe(Number(wins) * 3 + Number(draws));
@@ -75,10 +75,29 @@ test.describe("Classificação", () => {
   });
 
   test("goal difference is signed", async ({ page }) => {
-    const values = await page.locator("table tbody tr td:last-child").allInnerTexts();
+    // Addressed by index rather than :last-child — aproveitamento sits after
+    // SG, and :last-child would sample a percentage and match nothing.
+    const values = await page.locator("table tbody tr td:nth-child(9)").allInnerTexts();
 
     for (const value of values) {
       expect(value.trim()).toMatch(/^[+-]?\d+$/);
+    }
+  });
+
+  test("aproveitamento is the points taken as a whole percentage", async ({ page }) => {
+    const rows = await page.locator("table tbody tr").all();
+
+    expect(rows.length).toBe(20);
+    for (const row of rows) {
+      const cells = await row.locator("td").allInnerTexts();
+      const [, , points, , played, , , , , share] = cells.map((cell) => cell.trim());
+
+      // Derived rather than asserted against a value: the snapshot ages, so
+      // the only stable claim is that the column agrees with the two numbers
+      // beside it. Zero played would read as an em dash, and the frozen season
+      // has none — which the played assertion is here to notice.
+      expect(Number(played)).toBeGreaterThan(0);
+      expect(share).toBe(`${Math.round((Number(points) * 100) / (Number(played) * 3))}%`);
     }
   });
 
