@@ -618,6 +618,28 @@ prose (it is the column header, not the word), a decimal place (ge prints whole
 numbers in a table, and the column costs width to widen), coercing the no-games
 case to zero anywhere between the function and the cell.
 
+**Projeção**:
+Each club's odds of finishing champion, inside the **G4** and inside the **Z4**,
+estimated by simulating every fixture still to be played — `projectSeason` in
+`season-sim-core.ts`, a seeded Monte Carlo over a Dixon–Coles bivariate Poisson
+fitted to the current table. It is never a forecast and the copy must not read as
+one: it is **simulado**, a model with its parameters read out of the same snapshot
+the **Classificação** is built from, and `docs/brasileirao-pro-proposal.md` names
+that framing as the condition on the feature existing at all.
+Each iteration re-runs `computeStandings`, so a simulated table is ranked by the
+CBF tie-breakers rather than by a second implementation of them — the argument
+**Campanha** already makes, and a sharper one here, because the third and fourth
+tie-breakers are goal difference and goals scored and the model therefore has to
+produce a **placar**, not a result.
+The headline numbers are derived from `positionOdds`, the club's probability of
+each finishing position, for the reason **Aproveitamento** is derived from points
+and played: two counts of one thing can disagree and one cannot.
+_Avoid_: "previsão" and "prognóstico" (both claim knowledge of the result;
+"projeção" and "simulado" are what this is), presenting a percentage without the
+simulado framing, a título column that moves on refresh with no match played
+(the RNG is seeded precisely so it cannot), hard-coding a zone depth beside the
+one in `standings-core.ts`.
+
 **Fonte dos dados**:
 The `source` field of `ApiEnvelope`, and the reason the app can be honest about
 what it is showing. Exactly three values: `football-data` (live upstream),
