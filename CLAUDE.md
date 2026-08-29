@@ -2241,7 +2241,7 @@ Rules that follow from that:
 in two parallel jobs:
 
 - **check** — `tsc --noEmit`, unit tests, build, then boots `dist/server.cjs` and
-  smoke-tests it, then shellchecks the deploy scripts and **runs the four
+  smoke-tests it, then shellchecks the deploy scripts and **runs the three
   rehearsals**. The boot step is the one that catches a runtime
   dependency stranded in `devDependencies`; the rehearsals are the only thing
   that catches a script which no longer does what it says. The two host-script
@@ -2250,8 +2250,8 @@ in two parallel jobs:
   not just read.
   They run on `.nvmrc`'s Node rather than a developer's, which is the whole
   point: the first bug this placement found was invisible on a newer major.
-  **Count the `run:` lines rather than this sentence** — it said "both" through
-  the third and the fourth, which is the failure the eighteen-captures paragraph
+  **Count the `run:` lines rather than this sentence** — it said "both" for as
+  long as there were three, which is the failure the eighteen-captures paragraph
   below records about a number written in prose.
 - **e2e** — Playwright, with the browser cached on the exact `@playwright/test`
   version. A version bump needs a matching browser build, so the cache key must
@@ -2358,17 +2358,27 @@ appearance path — is exactly what `--cc` does print, so it stays enumerated an
 a trailer or a capture. That is why the fix is not `--no-merges`, which is simpler and
 blinds the gate to the one merge that can genuinely change a pixel.
 
-**The defect lived in a script everybody had read, through three pull requests**, which is
-the argument for `scripts/rehearse-screenshot-gate.sh` rather than a fourth careful
-reading. It builds nine throwaway repositories — a plain change, a trailer on a direct
-commit, the same trailer landed by a merge, an untrailered change landed by a merge, an
-evil merge, a catch-up merge, an empty trailer, the retroactive `<sha>:` form — and asserts
-the gate's exit status on each. It is hermetic (git and bash, no network) and `check` runs
-it. **Its own first draft passed against the unfixed gate**, because the fixture merged a
-branch into a main that had not moved: git's history simplification then never lists the
-merge at all, so there was nothing for the gate to get wrong. The defect needs a merge
-differing from *both* parents, which is what a shared checkout produces daily and a lone
-branch never does.
+**The gate was already covered, and the coverage had a gap exactly where the defect
+was** — which is a more useful fact than "it had no tests", and it is what a first pass
+at this got wrong by not looking. `tests/check-screenshots.test.ts` builds real git
+histories in temp directories and runs the real script; it had a case for the *catch-up*
+merge and none for the merge that lands a pull request, one test apart. The defect lived
+in the gap between two adjacent cases, through three pull requests, in a script everybody
+had read.
+
+Three cases now close it, and each earns its place against a specific wrong fix: a trailer
+surviving its merge, an untrailered change still refused when a merge lands it, and an
+**evil merge** still refused. Mutating the fix to `--no-merges` passes the first two and
+fails the third, which is the whole argument for the combined-diff test.
+
+**The first fixture written for the merge case passed against the unfixed gate**, because
+it merged a branch into a main that had not moved: the merge is then TREESAME to its topic
+parent on the appearance paths, git's history simplification never lists it, and there is
+nothing for the gate to get wrong. The defect needs a merge differing from *both* parents,
+which is what a shared checkout produces daily and a lone branch never does — the same
+trap the catch-up case already records about forking before the merge, one topology
+further on. **A fixture simpler than this repository can be too simple to contain the
+bug.**
 
 **It must sit in the message's *last* paragraph, beside `Co-Authored-By:`.** Git parses
 trailers out of the final paragraph only, so one separated from that block by a blank line

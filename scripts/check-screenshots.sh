@@ -251,8 +251,8 @@ while IFS= read -r sha; do
     # conflict was resolved by hand into an appearance path, producing a result
     # in neither parent. That is exactly what `--cc` does print, so such a merge
     # stays enumerated and still owes a trailer or a capture. There is a case for
-    # it in scripts/rehearse-screenshot-gate.sh, and skipping merges wholesale
-    # fails it.
+    # it in tests/check-screenshots.test.ts, and skipping merges wholesale fails
+    # it — verified by mutating this test to do so.
     #
     # A non-merge cannot reach the test: git would not have listed it unless it
     # changed one of these paths against its only parent, and `^2` fails.
