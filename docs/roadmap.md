@@ -311,41 +311,59 @@ thing tracking it. Before 2027-04-30.
 
 ## The deploy pipeline — what is still open
 
-The phased plan and its reasoning live in `docs/cicd-plan.md`; D0 through D5a
-are done and each was verified against production rather than against CI. What
-follows is only what is **still open**, split by whether it needs a decision or
-needs work — because the two get confused, and a question waiting on an answer
-looks exactly like a task nobody has picked up.
+The phased plan and its reasoning live in `docs/cicd-plan.md`. **Every phase and
+every gap in it has now shipped** — D0 through D7 — and each was verified against
+production rather than against CI. What follows is only what is **still open**,
+split by whether it needs a decision or needs work, because the two get confused
+and a question waiting on an answer looks exactly like a task nobody has picked
+up.
+
+Two of the three remaining items are not changes to this repository at all: one
+is a GitHub setting and one is a dispatch. That is worth saying at the top,
+because a reader looking for work here will otherwise keep finding decisions.
 
 ### Questions, not work
 
-- **What does the release bucket actually retain?** Nothing in this repository
-  defines a lifecycle policy on `s3://…/releases/`, and no session working from
-  a checkout can read one. This is the precondition for `rollback.yml` being
-  worth anything: a 30-day expiry would make an artifact-reinstall rollback fail
-  precisely when a long-lived regression is found, and would push the design
-  toward keeping the previous release **on the host** instead. Dispatching
-  `rollback.yml` with an **empty sha** lists what is there and changes nothing;
-  the first attempt could not distinguish "empty" from "not permitted", which
-  PR #110 fixes. Run it once while nothing is on fire.
-- **Does the deploy role hold `s3:ListBucket`?** Probably not — the release path
-  has never needed it, so the listing above is the first thing to ask. Small IAM
-  decision, and a rollback works without it: naming a sha explicitly has the
-  host fetch the object with permissions the daily release already exercises.
+- **What does the release bucket actually retain? Still unknown, and now
+  *blocked* rather than merely unasked.** Nothing in this repository defines a
+  lifecycle policy on `s3://…/releases/`, and no session working from a checkout
+  can read one. It is the precondition for `rollback.yml` being worth anything: a
+  30-day expiry would make an artifact-reinstall rollback fail precisely when a
+  long-lived regression is found, and would push the design toward keeping the
+  previous release **on the host** instead. Dispatching `rollback.yml` with an
+  empty sha is how you look — but see the next item for why that currently
+  answers nothing.
+- **Does the deploy role hold `s3:ListBucket`? No — answered by dispatching it,
+  2026-08-27.** The list-only mode returned `AccessDenied` naming that exact
+  action, which is a definite answer rather than the "probably not" this entry
+  carried. So the bucket question above cannot be answered without a small IAM
+  change. A rollback still works without it — naming a sha has the host fetch the
+  object with permissions the daily release already exercises — and since gap D
+  the **deploy tags are a release inventory readable from git**, needing no AWS
+  permission at all. What the tags cannot tell you is whether an object still
+  exists behind them, which is precisely the question `s3:ListBucket` would
+  settle. Note that observation predates a later IAM edit for the Deployments
+  trust policy, so re-dispatch rather than trusting this line.
 - **`allow_non_descendant` has no door.** The ancestry guard's override is
   reachable only if `main` is moved backwards, because `deploy` is gated on
   `refs/heads/main` and `workflow_dispatch` cannot name a bare sha. `rollback.yml`
   does its own SSM install and never enters `ci.yml`, so D5 did not give it one
   after all. Either build a door or remove it deliberately — leaving it is how
   a later reader diagnoses it as dead code and deletes the escape hatch instead.
-- **#90 (`@vitejs/plugin-react` 5 → 6) cannot merge and will not fix itself.**
-  It needs `vite@^8` against this repo's `^6`, so it fails at `npm ci` before any
-  code runs. `dependabot.yml` now groups the two so their majors travel together,
-  but grouping does not retroactively repair an open pull request. Close it
-  deliberately, or do the Vite 6 → 8 upgrade, which is real work rather than a
-  merge.
+- ~~**#90 (`@vitejs/plugin-react` 5 → 6) cannot merge and will not fix
+  itself.**~~ **Closed** unmerged on 2026-08-27, superseded by the regrouped
+  Dependabot pull requests raised the same hour. The reasoning is kept because
+  the underlying work is not done: it needed `vite@^8` against this repo's `^6`,
+  and `dependabot.yml` grouping the two only helps pull requests raised *after*
+  it. **The Vite 6 → 8 upgrade is still outstanding**, and #97 and #100 are two
+  open attempts at it — real work rather than a merge.
 
 ### Work, sequenced in `docs/cicd-plan.md`
+
+**Nothing here is outstanding.** Every item below has landed — most struck
+through, the D5b entry simply saying so in its first line. They are kept, with
+their reasoning, because the reasoning is what a later reader needs, and because
+a list that deletes what it finished cannot be told apart from one nobody wrote.
 
 - **D5b landed while this section was being written, and what is left of it is
   recorded above under the deploy-script note rather than here.**
@@ -429,10 +447,16 @@ looks exactly like a task nobody has picked up.
 
 ### Smaller, recorded so they are not rediscovered
 
-- **Deployments are invisible to GitHub.** No `environment:` on the `deploy`
-  job, so there is no Deployments tab, no per-environment history and nowhere to
-  hang a protection rule later. Two lines, and it is what you want when
-  reconstructing an incident.
+- ~~**Deployments are invisible to GitHub.**~~ **Done, on the second attempt,
+  and the first attempt is the part to remember.** `deploy` declares
+  `environment: production`, so there is a Deployments tab and a per-environment
+  history. Shipped in #151, it broke **every release for ten commits**: attaching
+  a job to an environment rewrites the OIDC subject claim from
+  `…:ref:refs/heads/main` to `…:environment:production`, and the trust policy
+  pinned the first form with `StringEquals`. Reverted in #156, relanded in #159
+  once the policy accepted **both** — both, because `rollback.yml` and
+  `flip-back-drill.yml` carry no environment and keep sending the ref form.
+  "Two lines" was true and beside the point.
 - ~~**`sync-broadcasts` pushes straight to `main`.**~~ **Done** — it commits to
   `automation/sync-broadcasts` and opens a pull request, building on an open one
   rather than replacing it. One correction worth carrying: *"the PR would be
@@ -441,16 +465,38 @@ looks exactly like a task nobody has picked up.
   than passing ones — which means branch protection (the next item) would make
   it unmergeable until somebody grants that branch an exemption or a different
   token. `docs/cicd-plan.md` gap E has the detail.
-- **`main` is protected by convention only.** The rule that no session merges to
-  `main` has held, but nothing enforces it. Requiring `check` and `e2e` as status
-  checks interacts with the item above, so do that one first.
-- **The curated-data checkers never run on their own** — `check-hymns`,
-  `check-stadium-photos`, `check-player-wikipedia`, `check-player-photos`. That
-  is deliberate and must stay so: CI has no network dependency on a third party,
-  and a link rotting on someone else's server is not a reason for a red build on
-  a commit that did not touch it. A **scheduled monthly workflow that opens an
-  issue** honours that exactly — it is not CI on a commit and cannot redden
-  anything. Worth doing last, and only in that shape.
+- **`main` is protected by convention only — verified, designed, and waiting on a
+  GitHub setting.** The API reports `main` as `protected: false`: no rule set, no
+  required check, no required review. **But the motivation does not survive
+  contact.** Required status checks stop a red merge; they do not stop a session
+  merging a *green* pull request. Only required approvals would, and with one
+  human maintainer that setting blocks every merge including theirs, because
+  GitHub does not let an author approve their own. So "no session merges to
+  `main`" stays a social rule whatever is configured; what this buys is narrower
+  and still real — nothing pushed directly, nothing red merged.
+
+  Two traps, each of which costs a day. The required checks must be spelled as
+  the job's **name** (`Type-check, unit tests, build`, `End-to-end (Playwright)`),
+  never its id — a name matching no check leaves every pull request *waiting*
+  rather than reporting a misconfiguration. And `sync-broadcasts`' weekly pull
+  request arrives with **no checks at all**, so it would be permanently
+  unmergeable without an exemption for `automation/sync-broadcasts` or a
+  credential that is not `GITHUB_TOKEN`. Decide that before switching the rule
+  set on. `docs/cicd-plan.md` gap F has the full settings and the four deliberate
+  choices behind them.
+- ~~**The curated-data checkers never run on their own.**~~ **Done, in exactly
+  that shape.** `.github/workflows/curated-data.yml` runs the four monthly and
+  reports into an **issue** — opening one, commenting while the failure persists,
+  closing it when everything resolves. The job is always green, because CI has no
+  network dependency on a third party and a link rotting on someone else's server
+  is not a reason for a red build on a commit that did not touch it.
+
+  **Do not "tidy" its `set -uo pipefail` into `set -euo pipefail`.** Today that
+  changes nothing — a command in an `if` condition is exempt from `set -e` — but a
+  bare `npm run check-…` added outside an `if` exits 0 as written and **1** under
+  `set -euo`, which turns the rule above into a red build. **Still unobserved: a
+  real run.** The cron is monthly, so the only way to see it work sooner is a
+  dispatch, and that spends third-party rate limit and may open a genuine issue.
 
 ## From the Brasileirão Pro import
 
