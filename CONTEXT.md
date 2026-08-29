@@ -664,7 +664,15 @@ The last five *finished* results from one club's point of view, oldest first:
 `V` vitória, `E` empate, `D` derrota. Only finished matches count, so a postponed
 fixture mid-run does not punch a hole in the guide, and a live match never
 appears — consistent with **Conta para a classificação**.
-_Avoid_: "W/D/L" (English initials), counting a live scoreline as a result.
+Each pill carries the **word** as well as the letter: `title` for a mouse, and an
+`sr-only` span with the letter `aria-hidden`, so the announcement is "Vitória"
+rather than "V" or "V Vitória". `title` alone was the whole of its naming and is
+neither reliably announced nor reachable by touch — the same fix `RankSparkline`
+already applies to the campanha. **Oldest first is named on the list**, not left
+to the heading: "Últimos resultados" says which matches these are and never which
+end is now, and which end is now is what the guide is read for.
+_Avoid_: "W/D/L" (English initials), counting a live scoreline as a result,
+`title` as a control's only name, announcing the letter and the word together.
 
 **Rota**:
 The URL is the source of truth for which section is showing: `/` classificação,
