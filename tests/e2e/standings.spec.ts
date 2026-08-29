@@ -20,11 +20,41 @@ test.describe("Classificação", () => {
   });
 
   test("numbers positions 1 through 20 in order", async ({ page }) => {
-    const positions = await page.locator("table tbody tr td:first-child").allInnerTexts();
+    // The *visible* number. The leader's cell also carries an `sr-only` "—
+    // líder", so the cell's own text is "1 — líder" and an equality against
+    // "1" matches nothing — hidden text is still text, the same shape as the
+    // forma pills and the club name that became a link. Reading the rendered
+    // text off the DOM rather than trimming a known suffix, so this keeps
+    // working if the wording changes.
+    const positions = await page
+      .locator("table tbody tr td:first-child")
+      .evaluateAll((cells) =>
+        cells.map((cell) => {
+          const clone = cell.cloneNode(true) as HTMLElement;
+          clone.querySelectorAll(".sr-only").forEach((hidden) => hidden.remove());
+          return clone.textContent!.trim();
+        }),
+      );
 
-    expect(positions.map((value) => value.trim())).toEqual(
-      Array.from({ length: 20 }, (_, index) => String(index + 1)),
-    );
+    expect(positions).toEqual(Array.from({ length: 20 }, (_, index) => String(index + 1)));
+  });
+
+  test("the leader is marked, and marked in text as well as in colour", async ({ page }) => {
+    const cells = page.locator("table tbody tr td:first-child");
+
+    // A disc, and only on the leader — the row above the G4's other three,
+    // which carry the same rail and the same ink as each other.
+    const discs = cells.locator("span.rounded-full");
+    await expect(discs).toHaveCount(1);
+    await expect(cells.first().locator("span.rounded-full")).toHaveText(/^1/);
+
+    // Hue is not a channel: the rail three columns away already taught this
+    // table that. The word is what reaches a screen reader, and the disc's
+    // fill is what reaches a grayscale capture.
+    await expect(cells.first()).toContainText("líder");
+    const fill = await discs.evaluate((el) => getComputedStyle(el).backgroundColor);
+    const page_bg = await page.locator("body").evaluate((el) => getComputedStyle(el).backgroundColor);
+    expect(fill).not.toBe(page_bg);
   });
 
   test("shows the Série A column headers", async ({ page }) => {

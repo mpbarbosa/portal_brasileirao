@@ -677,9 +677,39 @@ paragraph of prose.
 
 **Next — one decision each, stated in the proposal.**
 
-9. **Distinguish the leader.** Position 1 currently reads as identical to 2nd–4th.
-   Do **not** also tier 5–6 or 7–12: those boundaries move with the cup winners,
-   and a hard-coded `position <= 6` becomes false in a season nobody re-reads.
+9. ~~**Distinguish the leader.**~~ **Shipped**, and it spends `tertiary` — the
+   role the note below this list says to pick up here rather than give an item
+   of its own. The leader's position number sits in a filled disc with " —
+   líder" as `sr-only`; nothing else is tiered, for the reason the item gives.
+
+   **`tertiary-container` is the obvious fill and it is invisible.** MD3 uses
+   the `-container` role for a filled badge, and against `surface` it measures
+   **1.23:1 on light** and 2.00 on dark — a disc carrying hue and nothing else,
+   which is the single-channel encoding the G4/Z4 legend exists to correct one
+   column away. The solid role is 6.11 and 10.96, past the 3:1 non-text floor,
+   so the *shape* survives grayscale and colour-blindness. Confirmed by looking
+   at a grayscale render, not only by the numbers.
+
+   **The gate could not previously ask that question, and now can.** Every
+   pairing it held was text on a background, so a fill was only ever checked as
+   somebody's *background*, never as a foreground of its own — a mark whose ink
+   is perfectly legible can still be invisible, because what makes a mark a mark
+   is its edge against the page. `markPairings` adds fill-on-page at the 3:1
+   floor for all four roles; 70 pairings became 86. Verified by pointing it at
+   the container and watching it refuse: `1.23:1 (needs 3)`.
+
+   **The existing suite caught every consequence of getting the size wrong**,
+   which is worth recording as a vote of confidence in those specs. A 24px disc
+   pushed the frozen `#` column from 48px to 50 and the leader's row from 37px
+   to 41, and four specs went red at once: the positions list, both frozen-column
+   invariants, and *no club name wraps to a second line*. A 20px disc restores
+   all four. Nothing was re-baselined.
+
+   One spec did have to move: `numbers positions 1 through 20 in order` compared
+   the cell's whole text, which is now `1 — líder`. **Hidden text is still
+   text** — the third instance, after the forma pills and the club name that
+   became a link. It strips `.sr-only` before comparing rather than trimming a
+   known suffix, so the wording can change without it.
 10. **Forma in the classificação.** `recentForm` and the pills already exist — this
     is only the column, and the column is a **table-width** problem. It is a
     fixed-width mark, so it needs `w-0` for the reason `CAMPAIGN_COLUMN` does.

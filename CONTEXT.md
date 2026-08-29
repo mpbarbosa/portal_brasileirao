@@ -609,6 +609,24 @@ _Avoid_: hard-coding `position > 16`; "top four"/"bottom four" in pt-BR copy;
 "17º ao 20º" in the key; a key that names only the colours ("verde",
 "vermelho") — that is the single-channel encoding again, one line further down.
 
+**Líder**:
+The club in 1st, marked in the **Classificação** by its position number sitting
+in a filled `tertiary` disc, with " — líder" beside it as `sr-only`. It is the
+only position that gets a mark: the leader's is the most-looked-at row on the
+page and read exactly like 2nd to 4th, which carry the same **G4** rail.
+**Nothing tiers 5–6 or 7–12.** Those are pré-Libertadores and Sul-Americana, and
+their boundaries move with who wins the Copa do Brasil — a hard-coded
+`position <= 6` is a claim that quietly becomes false in a season nobody
+re-reads, the same class of error as an invented stadium capacity.
+The fill is the solid role and **not `tertiary-container`**, which measures
+1.23:1 against the page on light: the disc would carry hue and nothing else, so
+it would say nothing in grayscale or to a colour-blind reader. The solid role is
+6.11 there and 10.96 on dark.
+_Avoid_: "primeiro colocado" as the mark's wording (the disc already shows the
+1), a trophy glyph (the app draws no such mark and it says nothing in text),
+tiering any position but the first until the qualification rules are data rather
+than a magic number.
+
 **P, J, V, E, D, SG**:
 The `Classificação` column headers: pontos, jogos, vitórias, empates, derrotas,
 saldo de gols. Points are always `vitórias × 3 + empates` — an e2e test asserts

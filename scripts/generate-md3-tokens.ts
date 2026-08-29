@@ -298,6 +298,8 @@ const pairingsFor = (mode: string, tokens: Tokens): Pairing[] => {
   // future phase which of its headroom is protecting something a reader can
   // actually see, so it has to keep up with the call sites.
   const containerHasCallSite = new Set(["primary", "secondary"]);
+  /** Roles painted as a *solid* fill: the classificação's leader disc. */
+  const roleHasCallSite = new Set(["tertiary"]);
 
   for (const role of ["primary", "secondary", "tertiary", "error"]) {
     pairings.push({
@@ -305,7 +307,7 @@ const pairingsFor = (mode: string, tokens: Tokens): Pairing[] => {
       fg: tokens[`on-${role}`],
       bg: tokens[role],
       floor: 4.5,
-      live: false,
+      live: roleHasCallSite.has(role),
     });
     pairings.push({
       label: `${mode}: on-${role}-container on ${role}-container`,
@@ -322,6 +324,38 @@ const pairingsFor = (mode: string, tokens: Tokens): Pairing[] => {
     floor: 4.5,
     live: false,
   });
+
+  /**
+   * A filled mark against the page it sits on — the fill, not its ink.
+   *
+   * **This is a question the gate could not previously ask**, and the omission
+   * is structural rather than an oversight: every other pairing here is text on
+   * a background, so a *fill* was only ever checked as somebody's background,
+   * never as a foreground of its own. A mark whose ink is perfectly legible can
+   * still be invisible, because what makes the mark a mark is its edge against
+   * the page.
+   *
+   * It caught a real choice on the way in. MD3's usual fill for a badge is the
+   * `-container` role, and `tertiary-container` on `surface` measures **1.23:1
+   * on light** — a disc carrying hue and nothing else, so it says nothing in
+   * grayscale or to a colour-blind reader, which is exactly the single-channel
+   * failure the G4/Z4 legend exists to correct one column away. The solid role
+   * is 6.11 there and the leader disc uses that instead.
+   *
+   * The 3:1 floor is MD3's for non-text, the same one `ink-ghost` is held to:
+   * this is a shape to be seen, not a glyph to be read.
+   */
+  for (const role of ["tertiary", "primary", "secondary", "error"]) {
+    for (const surfaceName of ["surface", "surface-container-low"] as const) {
+      pairings.push({
+        label: `${mode}: ${role} fill on ${surfaceName} (non-text)`,
+        fg: tokens[role],
+        bg: tokens[surfaceName],
+        floor: 3,
+        live: role === "tertiary" && surfaceName === "surface",
+      });
+    }
+  }
 
   return pairings;
 };

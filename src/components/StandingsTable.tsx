@@ -61,6 +61,41 @@ const ZONE_KEY = [
   },
 ];
 
+/**
+ * The leader's position number, in a filled disc.
+ *
+ * Position 1 is the single most-looked-at row on the page and read exactly like
+ * 2nd, 3rd and 4th — all four carry the same G4 rail and the same ink. This is
+ * the whole of the emphasis: **the leader and nobody else.** The prototype this
+ * came from also tiers 5–6 and 7–12, and those two are a hazard rather than a
+ * feature — the pré-Libertadores and Sul-Americana boundaries move with who
+ * wins the Copa do Brasil, so a hard-coded `position <= 6` is a claim that
+ * quietly becomes false in a season nobody re-reads. Same class as an invented
+ * stadium capacity: a plausible number is indistinguishable from a correct one.
+ *
+ * **`tertiary`, not `tertiary-container`, and that was measured rather than
+ * picked.** The container is MD3's usual choice for a filled badge, and here it
+ * is invisible: `tertiary-container` against `surface` is **1.23:1 on light**
+ * and 2.00 on dark, so the disc would carry hue and nothing else. `tertiary` is
+ * 6.11 and 10.96 — past the 3:1 non-text floor in both themes, so the *shape*
+ * survives grayscale and colour-blindness, which is the whole point of not
+ * leaning on hue. The ink on it clears AA either way (6.42 light, 7.75 dark).
+ *
+ * That pairing is a filled mark against the page it sits on, which the contrast
+ * gate had never measured — it checks text on backgrounds. It does now; see
+ * `markPairings` in `scripts/generate-md3-tokens.ts`.
+ *
+ * The word rides along as `sr-only`, because a disc says nothing to a screen
+ * reader and the rail three lines up already taught this table that hue is not
+ * a channel. `Meu time: ` in the next column is the same pattern.
+ */
+const LeaderPosition = ({ position }: { position: number }) => (
+  <span className="inline-flex size-5 items-center justify-center rounded-full bg-tertiary font-semibold text-on-tertiary">
+    {position}
+    <span className="sr-only"> — líder</span>
+  </span>
+);
+
 /** The row separator. It lives on every cell because the table is
  *  `border-separate` (see below), and that model does not paint borders set on
  *  a `<tr>` at all. */
@@ -257,7 +292,7 @@ export function StandingsTable({
                 <td
                   className={`${ROW_LINE} ${STICKY_POSITION} ${zoneClass(row.position, rows.length)} bg-surface px-3 py-2 tabular-nums text-ink-muted`}
                 >
-                  {row.position}
+                  {row.position === 1 ? <LeaderPosition position={row.position} /> : row.position}
                 </td>
                 <td className={`${ROW_LINE} ${STICKY_CLUB} ${CLUB_PADDING} bg-surface py-2 font-medium`}>
                   <span className="mr-2 inline-flex align-middle">
