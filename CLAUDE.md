@@ -523,10 +523,17 @@ gates it: where it is false, the server's tags stand.
 
 Two traps, both found by their own tests rather than by reading:
 
-- **`app.get("*")` matches through a wildcard *parameter*, and Express percent-decodes
+- **The catch-all matches through a wildcard *parameter*, and Express percent-decodes
   parameters while matching.** So `/clube/%` throws `URIError` inside the router and
   Express answers its own 400 error page before any handler runs. The guard registered by
   `registerSpaFallback` decodes first and hands the request to the normal renderer.
+  **Express 5 did not change this** — `decodeParam` in path-to-regexp v8 throws the same
+  way — so do not read the guard as Express 4 residue and delete it. What *did* change is
+  the spelling: a bare `"*"` is rejected at **registration** time by path-to-regexp v8
+  (`Missing parameter name at index 1`), which means the server does not boot at all
+  rather than misbehaving at request time. It is now `app.get("/{*splat}", serve)`,
+  checked against express 5.2.1 to match `/`, any depth of deep link and HEAD, while
+  still 404-ing a POST and leaving `/api/*` untouched.
 - **`vite.transformIndexHtml` decodes the URL it is given**, to resolve which HTML file is
   being asked for. Passing an undecodable `originalUrl` turns that 400 into a 500 from our
   own handler, which is why the dev branch passes `/` when the request URL will not decode.

@@ -466,10 +466,12 @@ const decodable = (value: string): boolean => {
 /**
  * Register the SPA fallback, and the guard that has to come before it.
  *
- * `app.get("*")` matches through a wildcard **parameter**, and Express
+ * `app.get("/{*splat}")` matches through a wildcard **parameter**, and Express
  * percent-decodes parameters while matching — so `/clube/%` throws `URIError`
  * inside the router and Express answers its own 400 error page before any
- * handler runs. A crawler will send one of those eventually. The guard decodes
+ * handler runs. Express 5 did not change that: `decodeParam` in
+ * path-to-regexp v8 still throws, verified by removing this guard and watching
+ * `/clube/%` answer 400 from Express rather than 404 from the app. A crawler will send one of those eventually. The guard decodes
  * first and, when it cannot, hands the request to the same renderer as any
  * other address that names nothing: the app, and a 404.
  */
@@ -980,7 +982,12 @@ const registerSpaFallback = (shellFor: (req: express.Request) => Promise<string>
     return decodable(req.path) ? next() : serve(req, res, next);
   });
 
-  app.get("*", serve);
+  // Express 5 (path-to-regexp v8) rejects a bare `"*"` at REGISTRATION time —
+  // `Missing parameter name at index 1` — so the server would not boot at all.
+  // `/{*splat}` is the same catch-all: verified against express 5.2.1 to match
+  // `/`, any depth of deep link, and HEAD, while still 404-ing a POST and
+  // leaving the `/api/*` routes registered above it untouched.
+  app.get("/{*splat}", serve);
 };
 
 app.get("/api/health", (_req, res) => {
