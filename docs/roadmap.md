@@ -612,9 +612,38 @@ paragraph of prose.
    removing the `aria-label` too, which broke the selector and failed all three
    specs for one reason — **a mutation that breaks your locator tests the
    locator, not the assertion.**
-7. **Write down the radius step-down rule.** The shape scale exists; the rule for
-   which step at which nesting depth does not, which is what let the scoreboard's
-   radius drift until M2 caught it. Documentation only — it is already true.
+7. ~~**Write down the radius step-down rule.**~~ **Shipped, and it was not
+   documentation only.** The rule is written beside the scale in
+   `src/index.css`, restated in `CLAUDE.md` and `CONTEXT.md`.
+
+   **Two things the survey settled, and the item was wrong about both.**
+
+   *"It is already true"* was false. All 30 `rounded-*` call sites under `src/`
+   were read, and one contradicted the rule: the Contas confirmation dialog was
+   `rounded-medium` against the player card's `rounded-x-large` — same element,
+   same `shadow-level-3`, same container colour, a different corner. The dates
+   are the whole story: **M4 set the dialog step at x-large on 2026-08-25 and
+   the Contas dialog was written at `medium` two days later.** So this is not an
+   old inconsistency the scale inherited; it is the drift this very item names,
+   recurring *after* the scale was adopted and *because* nothing was written
+   down. It is corrected here, which is the one pixel this item moves.
+
+   *"Step-down by nesting depth"* is not the rule either, and writing it as
+   stated would have documented something false. **A step is chosen by what the
+   thing is** — marks and inline targets x-small, panels and banners small, a
+   modal `<dialog>` x-large, an MD3 pill control `full`. A mark inside a card
+   does sit a step below the card, but that falls out of the assignment rather
+   than being a rule, and as a rule it gives the wrong answer the first time
+   something nests two deep. `medium` holds only the player card's photograph;
+   **`large` is used nowhere**, which is a fact about the app rather than a gap
+   to fill.
+
+   **The half a test can hold is not "which step" but "do they agree".** No gate
+   can know the right step — `design-tokens-core.test.ts` keeps the vocabulary
+   and stops there — so `tests/e2e/contas.spec.ts` opens both dialogs and
+   asserts one radius equals the other, reading the value rather than pinning
+   it, so the spec survives the step moving. Confirmed against the shipped
+   drift: `Expected "12px", Received "28px"`.
 8. **A name filter on Jogadores.** Twenty clubs do not need one; 948 players behind
    twenty `<details>` do.
 

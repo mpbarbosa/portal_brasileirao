@@ -435,7 +435,13 @@ export function AccountView({
         ref={dialogRef}
         // Tailwind's preflight resets margin to 0, which kills the user agent's
         // `dialog { margin: auto }` — so centring is explicit here.
-        className="m-auto max-w-sm rounded-medium border border-outline-variant bg-surface-container-low p-5 text-on-surface shadow-level-3 backdrop:bg-scrim/60"
+        // `rounded-x-large` is the dialog step, set in M4 and stated beside the
+        // shape scale in `src/index.css`. This was written at `rounded-medium`
+        // two days after that decision and shipped a second dialog shape — same
+        // element, same `shadow-level-3`, same container colour, different
+        // corner. Nothing could have caught it: the token gate keeps the
+        // vocabulary and cannot know which step belongs here.
+        className="m-auto max-w-sm rounded-x-large border border-outline-variant bg-surface-container-low p-5 text-on-surface shadow-level-3 backdrop:bg-scrim/60"
         onCancel={() => dialogRef.current?.close()}
       >
         <h3 className="text-title-medium font-bold">Apagar a conta?</h3>

@@ -24,6 +24,37 @@ const devLogin = async (page: Page, name: string) => {
 };
 
 test.describe("Contas", () => {
+  test("both dialogs take the same corner", async ({ page }) => {
+    // The one half of the shape rule a test can hold. No gate can know which
+    // *step* a dialog should take — `design-tokens-core.test.ts` keeps the
+    // vocabulary and stops there — but two dialogs disagreeing is checkable,
+    // and disagreeing is exactly what happened: M4 set the step at x-large on
+    // 2026-08-25 and the Contas confirmation was written two days later at
+    // `medium`. Same element, same elevation, same container colour, a
+    // different corner, and every check green.
+    //
+    // The value is read rather than asserted, so this does not have to be
+    // edited if the step ever moves — it fails only when the two part company.
+    await page.goto("/jogadores");
+    await page.locator("[data-squad] summary").first().click();
+    await page.locator("[data-squad] section h4").first().waitFor();
+    await page.locator("[data-squad] section button").first().click();
+    const playerCard = page.locator("dialog[open]");
+    await playerCard.waitFor();
+    const cardRadius = await playerCard.evaluate((el) => getComputedStyle(el).borderTopLeftRadius);
+
+    await devLogin(page, "shape");
+    await page.goto("/conta");
+    await page.getByRole("button", { name: "Apagar a minha conta" }).click();
+    const confirm = page.locator("dialog[open]");
+    await confirm.waitFor();
+    const confirmRadius = await confirm.evaluate((el) => getComputedStyle(el).borderTopLeftRadius);
+
+    expect(cardRadius).toBe(confirmRadius);
+    // And it is a step off the scale rather than an arbitrary pixel value.
+    expect(["4px", "8px", "12px", "16px", "28px"]).toContain(cardRadius);
+  });
+
   test("a reader who never signs in reaches everything, and is never stopped", async ({ page }) => {
     // The guest invariant from the top of docs/accounts.md, asserted with
     // accounts **enabled** — which is not the same spec as "with accounts

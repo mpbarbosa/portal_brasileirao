@@ -1731,6 +1731,20 @@ enforces rather than early and carved-out.
   Tailwind's scale and MD3's share names but not sizes (`rounded-lg` is 8px in Tailwind,
   MD3's large is 16dp), which is exactly how one panel ends up a step off from the one
   beside it.
+  **Which step a thing takes is decided by what it *is*, never by how deeply it is
+  nested**, and the assignment list lives beside the scale in `src/index.css` rather
+  than here — marks and inline targets x-small, panels and banners small, a modal
+  `<dialog>` x-large, an MD3 pill control `full`. `large` is emitted and used
+  nowhere, which is a fact rather than a gap to fill. Stating the negative matters:
+  "outer panel, nested container one step down" is what a reader assumes when nothing
+  is written, and it is not what this app does.
+  **This is the one convention on this list that no gate can hold.** The token test
+  fails a bare Tailwind radius, so the *vocabulary* is enforced; nothing can know
+  which *step* an element should have taken. That is not hypothetical — M4 set the
+  dialog step at x-large on 2026-08-25 and the Contas confirmation dialog was written
+  two days later at `medium`, a second dialog shape on the same element with the same
+  elevation and the same container colour. It shipped green and was found by reading,
+  not by a check.
 - **Raised panels use `Surface`.** It owns the rounded-border chrome that was
   hand-repeated in five components. Padding and layout stay with the caller, since those
   genuinely differ. `filled` adds the card background; table containers stay unfilled
