@@ -1574,12 +1574,27 @@ enforces rather than early and carved-out.
   not stop the page scrolling. Two traps if you touch it: Escape arrives as `cancel`,
   not `keydown`; and Tailwind's preflight resets `margin: 0`, which kills the user
   agent's `dialog { margin: auto }`, so horizontal centring must be set explicitly.
-- **A control is at least 48dp, and an inline link is not a control.** MD3's
-  touch-target floor lives in `controlClasses`, so every button, the round
-  picker, the theme toggle and the tonal links get it from one place; the top
-  app bar's tabs and `BACK_LINK` carry it themselves. Measured at 375dp before
-  and after, because the plan's arithmetic under-counted: the stepper was 34×32,
-  its picker 32×61, the toggle 38×39, the back link 20 tall.
+- **A control's touch target is 48dp; its visible box is a separate decision.**
+  `TOUCH_TARGET` in `interaction.ts` is MD3's 48dp target on a **pseudo-element**,
+  composed by `controlClasses` and by both account controls; `BOX` in `Button.tsx`
+  is what you see. Measured at 375dp, because the plan's arithmetic
+  under-counted: the stepper was 34×32, its picker 32×61, the toggle 38×39, the
+  back link 20 tall.
+  **The two rules are not the same rule, and conflating them shipped a bug.** M9
+  put the floor on the *box* as `min-h-12`, which made every target 48 and — because
+  **a `min-height` beats a `height` whatever the class order** — silently
+  overrode the `h-10` that #173 had just used to level the top app bar's trailing
+  group. Production at `844cb15` had a 48×48 toggle beside a 40×97 account
+  control: two changes each right on their own, 8px apart. The `bar` size is
+  MD3's 40dp top-app-bar container; every other size keeps the 48dp box, because
+  nothing argued for a smaller body control.
+  Note this is *not* the neighbouring "do not pass a utility through `extra` that
+  the base already sets" rule, which is about equal specificity resolved by
+  stylesheet order. A minimum beats a height regardless of order, so reordering
+  classes cannot fix it.
+  `tests/e2e/touch-targets.spec.ts` asserts the container, the target, and — the
+  only one a stylesheet cannot fake — **a press 4px outside the box that still
+  reaches the control**.
   **The floor deliberately does not reach the inline links**, and that is the
   part to understand before "fixing" it. Twenty club names at 16px in the
   Classificação, ten fixture links at 24px on Jogos and roughly 950 player-name

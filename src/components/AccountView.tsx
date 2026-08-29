@@ -9,6 +9,7 @@ import {
   LINK_UNDERLINE,
   STATE_LAYER,
   STATE_LAYER_ON_PRIMARY_CONTAINER,
+  TOUCH_TARGET,
 } from "@/src/components/interaction";
 import { Surface } from "@/src/components/Surface";
 import { controlClasses } from "@/src/components/Button";
@@ -75,7 +76,7 @@ export function AccountButton({ state }: { state: AccountState }) {
         /* No `title`: it never appears on touch, and it competes with the
            accessible name for voice control — the same reason the destinations
            in `NavBar` carry none. */
-        className={`inline-flex h-10 items-center gap-2 rounded-full p-1 text-label-large font-medium text-on-surface sm:pr-3 ${STATE_LAYER}`}
+        className={`relative inline-flex h-10 items-center gap-2 rounded-full p-1 text-label-large font-medium text-on-surface sm:pr-3 ${TOUCH_TARGET} ${STATE_LAYER}`}
       >
         {/* The accessible name says what the control *does* and then who it
             belongs to; the visible name is contained in it, which is what WCAG
@@ -120,7 +121,7 @@ export function AccountButton({ state }: { state: AccountState }) {
     <a
       href="/entrar"
       data-account="signed-out"
-      className={`inline-flex h-10 items-center gap-1.5 rounded-full bg-primary-container px-4 text-label-large font-semibold text-on-primary-container ${STATE_LAYER_ON_PRIMARY_CONTAINER}`}
+      className={`relative inline-flex h-10 items-center gap-1.5 rounded-full bg-primary-container px-4 text-label-large font-semibold text-on-primary-container ${TOUCH_TARGET} ${STATE_LAYER_ON_PRIMARY_CONTAINER}`}
     >
       <AccountGlyph className="h-5 w-5" />
       Entrar

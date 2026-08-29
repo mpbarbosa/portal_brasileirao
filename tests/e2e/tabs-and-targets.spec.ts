@@ -44,16 +44,12 @@ test.describe("Alvos de toque", () => {
     });
   }
 
-  test("the theme toggle clears it too", async ({ page }) => {
-    // The one icon-only control in the header, and the one the plan named by
-    // arithmetic: `py-2` around a 20px line box plus a 1px outline each side is
-    // 38px. Measured at 38x39 before the floor landed.
-    await page.setViewportSize({ width: 375, height: 812 });
-    await page.goto("/");
-    const box = await boxOf(page, "header button[aria-label^='Ativar tema']");
-    expect(box.h).toBeGreaterThanOrEqual(48);
-    expect(box.w).toBeGreaterThanOrEqual(48);
-  });
+  // The theme toggle moved to `touch-targets.spec.ts`. It asserted a 48dp
+  // **box**, which was the model M9 shipped and the wrong one: a top-app-bar
+  // control is a 40dp container with a 48dp target, and putting the floor on the
+  // box overrode the `h-10` that levelled the trailing group. That file asserts
+  // the container, the target and — the only one a stylesheet cannot fake — a
+  // press outside the box that still reaches the control.
 
   test("every bottom navigation destination clears it", async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 812 });

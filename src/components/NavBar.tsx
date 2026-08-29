@@ -267,10 +267,13 @@ export function NavBar({
               onClick={onToggleTheme}
               aria-label={themeToggleLabel(theme)}
               title={themeToggleLabel(theme)}
-              /* Levels this with the account control beside it — see the note
-                 on `AccountButton`. Its own padding puts it at 38, because the
-                 outline is part of its box. */
-              className="h-10"
+              /* `size="bar"` is MD3's 40dp top-app-bar control, which is what
+                 levels this with the account control beside it — see the note on
+                 `AccountButton`. It was `className="h-10"`, which could not win:
+                 `controlClasses` set `min-h-12` for the touch target, and a
+                 minimum beats a height whatever the class order. The target now
+                 lives on a pseudo-element, so the box is free to be 40. */
+              size="bar"
             >
               <span aria-hidden="true">{theme === "light" ? "☽" : "☀"}</span>
             </Button>

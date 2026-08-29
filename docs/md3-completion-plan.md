@@ -351,13 +351,21 @@ toggle (38×39), `BACK_LINK` (20 tall), the tonal highlights links (36 and 40),
 and the tabs themselves. The floor lives in `controlClasses`, so it arrives at
 every control from one place.
 
-**Handed on, not done: the account control**, measured 36×44. PR #173 was
-rewriting it while this phase ran and had already set the trailing group to
-`h-10` — MD3's *visual* container size for a top-app-bar control, which is not
-the same as its 48dp *target*. The two reconcile either by going to 48 or by
-expanding the target with a pseudo-element; that is a decision for whoever lands
-#173, and doing it here would have overwritten a measured choice with an
-unmeasured one.
+**Handed on, then resolved — and the handoff turned out to be the bug.** The
+account control measured 36×44, and #173 was rewriting it while this phase ran,
+levelling the trailing group at `h-10` — MD3's *visual* container size, which is
+not its 48dp *target*. Both merged, and on production at `844cb15` the toggle
+measured **48×48 beside a 40×97 account control**: M9's floor sat on the box as
+`min-h-12`, and a minimum beats a height whatever the class order, so #173's 40
+never applied to the one control that went through `controlClasses`.
+
+The fix is the reconciliation MD3 already specifies rather than either side
+winning: `TOUCH_TARGET` puts the 48dp target on a **pseudo-element**, a `bar`
+size gives the 40dp container, and the account controls take the same target.
+The group is level at 40 with 48dp targets on both, and the body controls keep
+the 48dp box M9 gave them. A spec presses 4px above the toggle — outside the box,
+inside the target — and asserts the theme still flips, which is the only
+assertion here a stylesheet cannot satisfy on its own.
 
 **One thing the mutation testing found, worth more than the fix.** The wrap
 guard was first written as "every tab is 48px tall" — and it stayed green with
