@@ -1043,8 +1043,13 @@ paragraph nothing committed named it:**
     /home/mpb/Documents/GitHub/portal_brasileirao/.claude/worktrees/COORDINATION.md
 
 `.gitignore` excludes `.claude/worktrees/`, so the ledger exists only in the root
-checkout and is invisible from every worktree — which is the only place sessions
-work. Before this commit `git grep COORDINATION origin/main` returned nothing at
+checkout and does not appear in any worktree's own tree — and a worktree is the
+only place sessions work. **It is readable, though: `cat` that absolute path from
+inside any worktree and it opens.** The distinction matters because the two are
+fixed by opposite changes, and getting it backwards sends you to re-address a
+file that is already reachable. What is unreachable is the *discovery* — nothing
+in a worktree lists it, so a session that has not been told the path will not
+find one. Before this commit `git grep COORDINATION origin/main` returned nothing at
 all, so no session had a reachable way to learn the file existed; that is the
 mechanical reason recording gets skipped, and it is not a discipline problem.
 Four committed files name it now — this one, `docs/development-environment-memory.md`
@@ -1085,7 +1090,48 @@ exists because skipping it cost real work rather than because it sounds prudent.
 ```sh
 git worktree list && git branch -a --list '*<topic>*'
 gh pr list --state all --limit 10
+sed -n '1,80p' /home/mpb/Documents/GitHub/portal_brasileirao/.claude/worktrees/COORDINATION.md
 ```
+
+**The third line is the one that gets skipped, and it is the only one that can
+show you a session that has not published yet.** The first two answer *who has
+published*; the ledger answers *who has said they are starting*. That difference
+is the whole window a collision lives in — as long as the work takes.
+
+Measured on 2026-08-29, two tasks, five pull requests, three of them closed as
+duplicates:
+
+- **Three sessions independently separated a control's touch target from its
+  box.** #181 (00:08, merged 00:20), #184 (00:20) and #188 (00:31). Same
+  diagnosis, same technique, same evening.
+- **Two sessions re-shot the same eighteen captures.** #192 (00:55, merged
+  00:59) and #193 (00:56). 16 of the 18 images came back byte-identical.
+
+Every session ran the two commands above. One also ran the reflog born-vs-tip
+test on the prepared worktree, checked `/proc` cwds, and asked a peer directly —
+and still collided, because the peer it asked was not the owner and the owner had
+not published yet. **The protocol as written cannot close this**, which is why
+reading the ledger is now in it rather than only in the teardown skills.
+
+The ledger is **readable by absolute path from inside any worktree** — verified,
+2892 lines — even though `.claude/worktrees/` is gitignored and so does not exist
+in the worktree's own tree. Four committed files name it. What was missing was
+never its address; it was that no loop anyone runs opened it.
+
+So the other half is yours: **write your claim there before you start**, not when
+you finish. A claim written at the end is a record; written at the start it is the
+only thing that makes the window visible to anybody else. And where the work
+touches a shared artefact — `docs/screenshots`, CLAUDE.md, a docs sweep — say so
+to the other sessions as well as to the file, because a file write reaches nobody
+inside the window that matters.
+
+**A follow-up named in a merged PR or a plan document is a magnet.** Both of the
+collisions above were exactly that: #174 handed the account control on in
+`docs/md3-completion-plan.md` under M9, and the screenshot refresh was owed in
+prose by two merged PRs. Several sessions read the same document and reach the
+same "this is the obvious next thing" — so a task that looks conveniently unowned
+is the case to check hardest, not the case to start fastest. **A prose hand-off
+is not an assignment**, however directly it is worded.
 
 Someone may already be doing it. A worktree that is clean, stale and untouched
 for an hour is **not** evidence of abandonment — that is also exactly what one
