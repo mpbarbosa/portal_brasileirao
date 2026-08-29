@@ -350,6 +350,44 @@ export interface Player {
 }
 
 /**
+ * A correction to what the provider reports about one player, in
+ * `src/data/player-overrides.ts`. Every field is optional and an absent one
+ * means "upstream is right about this"; nothing here fills a gap, because an
+ * absent value on `Player` is already rendered as an absence rather than a
+ * blank.
+ *
+ * **The per-field rules are different, and they are the whole of the file's
+ * discipline.** They live here rather than in the data file because this is
+ * where a reader looks to find out what a field means.
+ */
+export interface PlayerOverride {
+  /**
+   * Where the recorded value is **not a name at all** — a placeholder, a
+   * duplicated surname, a test string somebody typed into a database. Not a
+   * place to prefer one spelling to another: the provider's nicknames and
+   * single names are what every other football site shows the same reader, and
+   * an ambiguous real name (three Guilhermes in one squad) stays as it is.
+   */
+  name?: string;
+  /**
+   * Where the recorded nationality is **factually wrong**, checked against a
+   * source that states it — Wikidata `P27`, or the article's own infobox — and
+   * joined to the player on exact date of birth, since a name match cannot tell
+   * two people apart.
+   *
+   * In the **provider's** vocabulary ("Brazil"), never the pt-BR label:
+   * `nationalityLabel` still translates, so a country reaches the page one way
+   * rather than two. That also keeps the "every nationality in the snapshot is
+   * mapped" test meaningful for corrected values.
+   *
+   * Absence of an article is not evidence of an error. Two base players in this
+   * division carry surprising nationalities and have no article in any
+   * language; they are unverified, and unverified stays untouched.
+   */
+  nationality?: string;
+}
+
+/**
  * A row of the top-scorer table (artilharia).
  *
  * `assists` and `penalties` are nullable because the upstream reports them
