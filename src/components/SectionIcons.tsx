@@ -93,3 +93,44 @@ export function PlayersIcon({ className }: IconProps) {
     </svg>
   );
 }
+
+/*
+ * The two below are not sections, and they live here anyway.
+ *
+ * `base` is the reason: it is the one place this app's stroke weight, cap and
+ * join are written down, and a glyph defined beside its call site drifts from
+ * it — which is exactly the drift `GLYPH` in `ClubLinks.tsx` was extracted to
+ * stop. So the rule this file follows is "hand-drawn 24px glyphs share one
+ * attribute bag", and `NAV_ITEMS` reaching only for the five above is a fact
+ * about that list rather than about this module.
+ */
+
+/**
+ * The theme toggle, showing the theme it switches **to**.
+ *
+ * They replace `☀` and `☽`, which were text glyphs, and the failure was not
+ * theoretical: a font decides a character's size and weight, and these two are
+ * decided by different parts of the font. Measured in the shipped bundle at
+ * 900dp, the sun drew as a thin asterisk and the crescent as a hairline barely
+ * a third the height of the 24px icons beside it — two states of one control
+ * rendering at two optical sizes, in a bar whose whole trailing group had just
+ * been levelled to the pixel. A `☀` is also emoji-presentation on several
+ * platforms, which would put a colour glyph in a monochrome bar.
+ */
+export function SunIcon({ className }: IconProps) {
+  return (
+    <svg {...base} className={className}>
+      <circle cx="12" cy="12" r="4.2" />
+      <path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M18.7 5.3l-1.4 1.4M6.7 17.3l-1.4 1.4" />
+    </svg>
+  );
+}
+
+/** The other half of the pair; see `SunIcon`. */
+export function MoonIcon({ className }: IconProps) {
+  return (
+    <svg {...base} className={className}>
+      <path d="M20.5 14.6A8.6 8.6 0 0 1 9.4 3.5a8.6 8.6 0 1 0 11.1 11.1" />
+    </svg>
+  );
+}
