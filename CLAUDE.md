@@ -2137,6 +2137,35 @@ then `main` sits ahead of production with nothing red to say so. `6325fa5`,
 `e065a8d` and `8fa12e5` are empty commits that exist only to have emitted a push
 event, which is the symptom this removes.
 
+**The diagnostic that follows from this, because the obvious check answers wrong:
+there is no successful run for your merge commit, and that is not evidence it did
+not ship.** A cancelled run leaves the sha with no green run and
+`/api/health` never reports it, while the content goes out perfectly inside the
+*next* release. Observed on 2026-08-29: `54e4105` (#185) has one push run,
+`completed/cancelled`, and no successful run at any point — and it shipped inside
+`a469cf0`, which production was serving. From the run list alone,
+**cancelled-and-carried is indistinguishable from cancelled-and-dropped**, and
+only one of those needs anybody to do anything.
+
+Ask ancestry against what is live, not whether your own sha has a green tick:
+
+```sh
+live=$(curl -sf "$APP_URL/api/health" | sed -n 's/.*"sha":"\([^"]*\)".*/\1/p')
+git fetch origin && git merge-base --is-ancestor <your-merge-sha> "$live" \
+  && echo "shipped, carried by a later release"
+```
+
+The same reading runs backwards, and it is the more common confusion: `/api/health`
+reporting a sha that is *not* yours does not mean your change is missing. It means
+a later release carried it. The sha names the build, not the changes in it.
+
+One trap while checking, and it is the `git log` ordering trap in another costume:
+**a merge commit's timestamp is not its merge order** as you remember it, so do not
+reason from "that one looks older". Run the ancestry test in both directions if the
+answer surprises you — it costs one command and it caught a wrong assumption here,
+where `a469cf0` (00:37:14Z) was assumed to predate `54e4105` (00:35:40Z) and does
+not.
+
 It **decides**; `ci.yml` deploys. A reconciled release is dispatched as an
 ordinary run, so it passes the same `check`, `e2e`, ancestry guard and
 live-commit assertion — a second copy of the deploy logic is how the scheduled
