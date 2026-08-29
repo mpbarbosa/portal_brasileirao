@@ -90,16 +90,42 @@ Ignore paths you did not create. Ignore this skill's own file: `.claude/skills/`
 is tracked, so installing a skill leaves an untracked file that check 1 will
 report on its first run forever.
 
-**2. Commits that exist on one disk only.** The plain form has a false negative
-in exactly the dangerous case — a branch with **no upstream** makes
-`@{upstream}..HEAD` error, and a swallowed error looks identical to "nothing
-unpushed":
+**2. Commits that exist on one disk only.** This check has two false negatives
+and both fail toward "safe", so run it exactly as written.
+
+**It must run per branch you own, not on `HEAD`.** Your HEAD is usually `main`,
+which has an upstream and is never the branch at risk. Checking HEAD reports
+nothing while a feature branch is the thing that exists once.
+
+**And `@{upstream}` is not evidence the remote copy survives.** It resolves
+against your *local* `refs/remotes/origin/<branch>`, which persists until you
+prune. If anyone deleted the branch on the server — a merge, a cleanup, another
+session tidying — every local check still says backed up:
+
+    someone else deletes it on origin; you have not pruned
+      rev-parse --abbrev-ref feature@{upstream}  -> origin/feature   resolves
+      git log feature@{upstream}..feature        -> 0 ahead — reads SAFE
+      git ls-remote --heads origin feature       -> 0 refs — it is gone
+
+Only asking the server settles it. This is not hypothetical: it happened to a
+branch this session was deliberately keeping, twice.
+
+`ls-remote` needs no `fetch` first — it queries the server, and the stale local
+ref does not affect it. Verified: with `refs/remotes/origin/feature` still
+present, `ls-remote` already reported 0.
+
 ```sh
-up=$(git rev-parse --abbrev-ref --symbolic-full-name @{upstream} 2>/dev/null)
-if [ -n "$up" ]; then git log --oneline "$up"..HEAD
-else echo "NO UPSTREAM — everything below exists only here:"
-     git log --oneline origin/main..HEAD; fi
+for b in <the branches you created>; do
+  if [ -z "$(git ls-remote --heads origin "$b")" ]; then
+    echo "NO REMOTE COPY — $b exists only here:"
+    git log --oneline origin/main.."$b"
+  fi
+done
 ```
+
+`git ls-remote` asks the server. A configured upstream, a resolving
+`@{upstream}`, and a remote-tracking ref are all local state and none of them
+proves a copy exists anywhere else.
 
 **3. Open PRs.** `gh pr list --state open --json number,title,headRefName`
 Yours are awaiting the user, not unfinished — see the weights below.
