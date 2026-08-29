@@ -3,7 +3,7 @@
  * functions over their inputs (tests/player-core.test.ts).
  */
 import { instagramHandle, wikipediaUrl } from "@/club-core";
-import type { Player, PlayerPhoto } from "@/src/types";
+import type { Player, PlayerPhoto, Scorer, Squad } from "@/src/types";
 
 /**
  * football-data reports positions in English, at two levels of detail: broad
@@ -141,6 +141,62 @@ export const mergePlayer = (base: Player, extra: Player | null): Player => {
     club: extra.club ?? base.club,
   };
 };
+
+/**
+ * The name to show for a player: the provider's, except where an override says
+ * the provider's is not a name.
+ *
+ * The table is passed in rather than imported, keeping this module free of I/O
+ * like `playerInstagram` and `playerWikipedia` below it, and letting the tests
+ * state the mapping they assert about instead of depending on whoever needs
+ * correcting this season.
+ *
+ * An unknown id is **absence**, not an error: coverage is a handful of entries
+ * against ~950 players and always will be. A blank override is absence too — an
+ * empty string would render as a nameless row, which is worse than whatever
+ * string it was written to replace.
+ */
+export const playerName = (
+  id: string,
+  provided: string,
+  overrides: Record<string, string>,
+): string => overrides[id]?.trim() || provided;
+
+/**
+ * One player under the overrides, returning the **same object** when there is
+ * nothing to change. That is not a micro-optimisation: this runs over every
+ * squad in the division on the way out of `/api/squads`, and returning fresh
+ * objects for 948 players to correct one of them is churn a reader of a heap
+ * profile would have to explain.
+ */
+export const withPlayerName = (player: Player, overrides: Record<string, string>): Player => {
+  const name = playerName(player.id, player.name, overrides);
+  return name === player.name ? player : { ...player, name };
+};
+
+/** Every elenco under the overrides. Order and grouping are left alone. */
+export const withPlayerNames = (squads: Squad[], overrides: Record<string, string>): Squad[] =>
+  squads.map((squad) => ({
+    ...squad,
+    players: squad.players.map((player) => withPlayerName(player, overrides)),
+  }));
+
+/**
+ * The artilharia under the overrides.
+ *
+ * A scorer carries the name on its own field rather than as a `Player`, so this
+ * cannot reuse `withPlayerName`. It is worth applying even though no overridden
+ * player is a scorer today: the card a reader opens from this table is built
+ * from the row — `playerId` and `playerName` and nothing else — so a name left
+ * uncorrected here would reappear in the card and in the search links it
+ * offers. Note `playerId` falls back to the *name* when upstream reports no id,
+ * which simply matches no override rather than matching the wrong one.
+ */
+export const withScorerNames = (scorers: Scorer[], overrides: Record<string, string>): Scorer[] =>
+  scorers.map((scorer) => {
+    const name = playerName(scorer.playerId, scorer.playerName, overrides);
+    return name === scorer.playerName ? scorer : { ...scorer, playerName: name };
+  });
 
 /**
  * The player's Instagram handle, or null when nothing usable is recorded.
