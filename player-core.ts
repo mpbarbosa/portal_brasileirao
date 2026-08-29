@@ -178,6 +178,16 @@ export const playerNationality = (
 ): string | undefined => overrides[id]?.nationality?.trim() || provided;
 
 /**
+ * The same, for a position — again in the provider's vocabulary, so `lineOf`
+ * groups it and `positionLabel` captions it with no special case anywhere.
+ */
+export const playerPosition = (
+  id: string,
+  provided: string | undefined,
+  overrides: Record<string, PlayerOverride>,
+): string | undefined => overrides[id]?.position?.trim() || provided;
+
+/**
  * One player under the overrides, returning the **same object** when there is
  * nothing to change. That is not a micro-optimisation: this runs over every
  * squad in the division on the way out of `/api/squads`, and returning fresh
@@ -190,8 +200,20 @@ export const withPlayerOverrides = (
 ): Player => {
   const name = playerName(player.id, player.name, overrides);
   const nationality = playerNationality(player.id, player.nationality, overrides);
-  if (name === player.name && nationality === player.nationality) return player;
-  return { ...player, name, ...(nationality === undefined ? {} : { nationality }) };
+  const position = playerPosition(player.id, player.position, overrides);
+  if (name === player.name && nationality === player.nationality && position === player.position) {
+    return player;
+  }
+  return {
+    ...player,
+    name,
+    // Absent stays absent rather than becoming an explicit `undefined`: the
+    // card omits a line it has no value for, and a key holding undefined
+    // survives JSON.stringify as no key at all in one direction and as noise
+    // in the other.
+    ...(nationality === undefined ? {} : { nationality }),
+    ...(position === undefined ? {} : { position }),
+  };
 };
 
 /** Every elenco under the overrides. Order and grouping are left alone. */

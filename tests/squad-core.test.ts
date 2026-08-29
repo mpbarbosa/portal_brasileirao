@@ -12,6 +12,7 @@ import {
   squadSections,
   totalPlayers,
 } from "@/squad-core";
+import { PLAYER_OVERRIDES } from "@/src/data/player-overrides";
 import type { Club, Player, Squad } from "@/src/types";
 
 const club = (code: string, shortName: string): Club => ({
@@ -221,4 +222,30 @@ test("filtering does not mutate the squads it was given", () => {
   const squads = [squadOf("AAA", "João Pedro", "Bruno Silva")];
   filterSquads(squads, "joao");
   assert.equal(squads[0].players.length, 2);
+});
+
+test("every corrected position places the player on a real line", () => {
+  // The failure this exists to stop is silent and looks like a fix: a position
+  // `LINES` does not know sends the player to **Outros**, which is further from
+  // the truth than the wrong line the correction was written to undo. Nothing
+  // else would report it — the value type-checks, the page renders, and the
+  // player is simply somewhere nobody looks.
+  const stray = Object.entries(PLAYER_OVERRIDES)
+    .map(([id, override]) => [id, override.position] as const)
+    .filter(([, position]) => position !== undefined && lineOf(position) === "outros")
+    .map(([id, position]) => `${id}: ${position}`);
+
+  assert.deepEqual(stray, []);
+});
+
+test("a corrected position earns its caption or is covered by the heading", () => {
+  // `playerPositionLabel` returns null for a broad position, because the
+  // section heading has already said it. Either answer is right; the English
+  // word is not, and an unmapped value renders exactly that.
+  for (const [id, override] of Object.entries(PLAYER_OVERRIDES)) {
+    const position = override.position;
+    if (position === undefined) continue;
+    const caption = playerPositionLabel({ id, name: "x", position });
+    assert.notEqual(caption, position, `${id}: "${position}" reached the page untranslated`);
+  }
 });

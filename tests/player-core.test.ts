@@ -14,6 +14,7 @@ import {
   playerSearchUrls,
   playerName,
   playerNationality,
+  playerPosition,
   playerSofascore,
   playerWikipedia,
   positionLabel,
@@ -465,7 +466,7 @@ test("every override corrects a player still in the snapshot, and still disagree
   const problems = Object.entries(PLAYER_OVERRIDES).flatMap(([id, override]) => {
     const seeded = recorded.get(id);
     if (!seeded) return [`${id} is no longer in squads.ts`];
-    return (["name", "nationality"] as const).flatMap((field) => {
+    return (["name", "nationality", "position"] as const).flatMap((field) => {
       const value = override[field];
       if (value === undefined) return [];
       if (!value.trim()) return [`${id}.${field} is blank`];
@@ -476,6 +477,36 @@ test("every override corrects a player still in the snapshot, and still disagree
   });
 
   assert.deepEqual(problems, [], `spent entries in player-overrides.ts: ${problems.join("; ")}`);
+});
+
+test("a corrected position is the provider's word, not the pt-BR label", () => {
+  // Storing "Volante" here would bypass positionLabel and lineOf both, which
+  // is how a corrected player lands in Outros with a caption nothing else
+  // writes.
+  const o = { "103611": { position: "Defensive Midfield" } };
+  assert.equal(playerPosition("103611", "Defence", o), "Defensive Midfield");
+  assert.equal(positionLabel(playerPosition("103611", "Defence", o)), "Volante");
+});
+
+test("correcting a position leaves the name and nationality to the provider", () => {
+  const o = { "103611": { position: "Defensive Midfield" } };
+  const player: Player = {
+    id: "103611",
+    name: "Raniele",
+    nationality: "Brazil",
+    position: "Defence",
+  };
+  assert.deepEqual(withPlayerOverrides(player, o), {
+    id: "103611",
+    name: "Raniele",
+    nationality: "Brazil",
+    position: "Defensive Midfield",
+  });
+});
+
+test("a player nobody corrects keeps all three fields and the same object", () => {
+  const player: Player = { id: "1", name: "Hugo Souza", nationality: "Brazil", position: "Goalkeeper" };
+  assert.equal(withPlayerOverrides(player, { "103611": { position: "Midfield" } }), player);
 });
 
 test("every corrected nationality is one the label table knows", () => {
