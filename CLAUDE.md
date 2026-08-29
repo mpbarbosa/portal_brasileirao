@@ -158,19 +158,35 @@ what makes the logic testable without mocking HTTP.
   `index.html`**, unlike the theme: the theme decides the colour of every pixel and
   repainting it is a flash, while this decides one 72px mark in a table whose rows
   have not landed at that point.
-  **The toggle sits above the table and outside the scrolling `Surface`**, for the
-  reason the zone key sits below and outside it — that Surface is the horizontal
-  scroll container, and the Campanha column is one of the columns that scrolls, so a
-  control placed within it leaves a narrow-screen reader looking at the mark with its
-  own control off-screen. It is deliberately **not** in the column header, which is
-  where it looks like it belongs: `CAMPAIGN_COLUMN` is `w-0` so the column measures
-  its 72px mark, and a control in that `<th>` would become the column's widest
-  content and take the table's surplus straight back — the regression the "no wider
-  than the mark it holds" spec exists for.
-  The **Clube** and **Partida** pages keep the linha whatever the table is set to.
-  There the campanha is a section with room to read a trajectory, not a cell being
-  scanned down a column, and a choice made in one section silently restyling two
-  other pages is a surprise rather than a preference.
+  **`App` owns the choice and all three campanha sections receive it**, which is
+  `useTheme`'s arrangement — and **no test defends it**, which is the part to know
+  before "simplifying" it back. Calling `useCampaignPlotKind` in the Classificação,
+  `ClubView` and `MatchPage` independently was built and run: **all 184 specs across
+  the three suites pass**, including the two that navigate between sections and
+  assert the mark carried over. They pass because a route change unmounts the other
+  two, so the copies never coexist long enough to disagree — a property of the
+  router, not a decision anybody made, and one that ends the first time two campanha
+  sections render at once. The arrangement is held by this paragraph and by nothing
+  else, which is the same shape as the shape-scale step: the vocabulary is enforced
+  and the choice is not.
+  **The toggle renders in three places and carries no margin or alignment of its
+  own**, because the three place it differently: right-aligned above the table,
+  and sharing the `Campanha` heading's row on the two pages. Layout belonging to a
+  control is layout that has to be cancelled at two of the three — the rule
+  `Surface` already follows.
+  In the Classificação it sits **above the table and outside the scrolling
+  `Surface`**, for the reason the zone key sits below and outside it — that Surface
+  is the horizontal scroll container, and Campanha is one of the columns that
+  scrolls, so a control placed within it leaves a narrow-screen reader looking at
+  the mark with its own control off-screen. It is deliberately **not** in the column
+  header, which is where it looks like it belongs: `CAMPAIGN_COLUMN` is `w-0` so the
+  column measures its 72px mark, and a control in that `<th>` would become the
+  column's widest content and take the table's surplus straight back — the
+  regression the "no wider than the mark it holds" spec exists for.
+  The **Partida** page gets **one** control for the section rather than one per
+  club: the two campanhas there are read against each other, and a page that could
+  draw one as a line and the other as bars would be comparing two pictures rather
+  than two clubs.
 
 - `venue-core.ts` — the **Página do estádio**. `buildStadiums` groups fixtures into
   grounds, because **a stadium is not an entity in any payload**: football-data has no

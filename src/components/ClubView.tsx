@@ -17,6 +17,8 @@ import { GLYPH, InstagramLink, WikipediaLink } from "@/src/components/ClubLinks"
 import { BACK_LINK, LINK_UNDERLINE } from "@/src/components/interaction";
 import { MatchList } from "@/src/components/MatchList";
 import { FollowButton } from "@/src/components/MeuTime";
+import type { CampaignPlotKind } from "@/campaign-plot-core";
+import { CampaignPlotToggle } from "@/src/components/CampaignPlotToggle";
 import { RankSparkline } from "@/src/components/RankSparkline";
 import { Surface } from "@/src/components/Surface";
 import type {
@@ -43,6 +45,14 @@ interface ClubViewProps {
   onSelectMatch?: (id: string) => void;
   /** Every club's campanha. Omit and the section is left out entirely. */
   rankHistory?: ClubRankHistory[];
+  /**
+   * Which mark the campanha is drawn as, and the way to flip it — one choice
+   * shared with the Classificação and the Partida page, owned by `App`. Omit
+   * and the section draws the line with no control, which is what it did
+   * before the choice existed.
+   */
+  plotKind?: CampaignPlotKind;
+  onTogglePlotKind?: () => void;
   /**
    * Head coaches by club code, from `/api/coaches`. Omit — as every caller does
    * until that request lands — and the club's own frozen value stands in, which
@@ -185,6 +195,8 @@ export function ClubView({
   onBack,
   onSelectMatch,
   rankHistory,
+  plotKind = "line",
+  onTogglePlotKind,
   coaches,
   followedCode,
   onToggleFollow,
@@ -338,14 +350,26 @@ export function ClubView({
       {campaign.length > 0 && lastRound > 0 && (
         <section className="mt-6">
           {/* Sits directly under the Posição tile, which it explains: the tile
-              says where the club is, this says how it got there. */}
-          <h3 className="mb-2 text-body-medium font-medium text-ink-muted">Campanha</h3>
+              says where the club is, this says how it got there.
+
+              The control shares the heading's row rather than sitting above the
+              section: it changes this drawing and nothing else on the page, and
+              a full-width row of its own would read as a page-level setting.
+              `flex-wrap` because the label is a sentence — at 375dp it takes
+              the second line rather than squeezing the heading. */}
+          <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+            <h3 className="text-body-medium font-medium text-ink-muted">Campanha</h3>
+            {onTogglePlotKind && (
+              <CampaignPlotToggle kind={plotKind} onToggle={onTogglePlotKind} />
+            )}
+          </div>
           <Surface filled className="px-3 py-3">
             <RankSparkline
               entries={campaign}
               clubCount={clubCount}
               lastRound={lastRound}
               size="page"
+              kind={plotKind}
             />
             {/* The drawing carries no axis, so the ends are named in text —
                 which is also the only version a screen reader gets. */}
