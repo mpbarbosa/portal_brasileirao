@@ -23,6 +23,15 @@
  * over the season — see `simulateSeason` for how the working array avoids
  * rebuilding 380 objects per iteration.
  *
+ * **Two entry points, one model.** `projectSeason` samples the whole remaining
+ * season; `predictMatchOutcome` sums a single fixture in closed form, with no
+ * RNG. Both read the same `buildScoreGrid`, so a prognosis on a match page and
+ * the projection in the Classificação cannot come to disagree about who is
+ * likely to win — which is the failure a second module would eventually
+ * produce, and the reason the sibling repo's split (its narrator in
+ * `predict-core.ts`, its model in `qualification-sim-core.ts`) puts the *model*
+ * on this side of the line.
+ *
  * The framing throughout is **simulado**. Nothing here is a forecast, and no
  * caller should present it as one.
  */
@@ -245,30 +254,44 @@ const dixonColesTau = (
 };
 
 /**
- * One fixture's full scoreline distribution, as a cumulative table over the
- * grid 0-0 … 8-8.
+ * One fixture's full scoreline grid: each side's expected goals, and the
+ * normalised probability of every scoreline from 0-0 to 8-8.
  *
- * It is deliberately built as a *grid* rather than as three win/draw/loss
- * numbers, because goal difference and goals scored are the third and fourth
- * CBF tie-breakers: a projection that sampled only the result would rank its
- * simulated tables by a rule the real one does not use. Keeping the grid is
- * also what would let a single-fixture prognosis — win/draw/loss and a modal
- * scoreline, summed straight off these cells with no RNG — be added here rather
- * than as a second model beside it. That is not built; this comment is where it
- * goes when it is.
+ * It is a *grid* rather than three win/draw/loss numbers because goal
+ * difference and goals scored are the third and fourth CBF tie-breakers: a
+ * projection that sampled only the result would rank its simulated tables by a
+ * rule the real one does not use.
+ *
+ * **Both consumers read these same cells**, which is the whole reason the grid
+ * is a named thing. `buildScoreDistribution` lays them end to end into a
+ * cumulative table for the RNG; `predictMatchOutcome` sums them directly, with
+ * no RNG at all. A prognosis on a match page and the projection in the
+ * Classificação are therefore the same model by construction rather than by
+ * agreement — and `the closed form agrees with the sampler` in the test file is
+ * what would notice if that ever stopped being true.
  */
-interface ScoreDistribution {
-  cumulative: number[];
+interface ScoreGrid {
+  /** The Poisson parameters the cells were built from — λ for the home side,
+   *  μ for the away. Internal: they are *not* the distribution's mean once the
+   *  grid is truncated and Dixon–Coles-corrected, so nothing outside this
+   *  module should report them as expected goals. See `MatchOutcome`. */
+  lambda: number;
+  mu: number;
+  /** Parallel arrays over the 81 cells; `prob` sums to 1. */
   homeGoals: number[];
   awayGoals: number[];
+  prob: number[];
 }
 
-const buildScoreDistribution = (
+const buildScoreGrid = (
   model: StrengthModel,
   homeCode: ClubCode,
   awayCode: ClubCode,
   rho: number,
-): ScoreDistribution => {
+): ScoreGrid => {
+  // A club the table does not have takes league-average strength rather than
+  // throwing, which is `computeStandings`' rule for the same situation: one
+  // unrecognised code should degrade a number, not blank a page.
   const home = model.clubs.get(homeCode) ?? NEUTRAL;
   const away = model.clubs.get(awayCode) ?? NEUTRAL;
   // λ = baseline · attack(self) · defence(opponent) · mando. Mirrored for away.
@@ -287,29 +310,48 @@ const buildScoreDistribution = (
   const pmfAway = poissonPmf(mu, MAX_GOALS_PER_SIDE);
 
   const size = (MAX_GOALS_PER_SIDE + 1) ** 2;
-  const weights = new Array<number>(size);
   const homeGoals = new Array<number>(size);
   const awayGoals = new Array<number>(size);
+  const prob = new Array<number>(size);
   let total = 0;
   let i = 0;
   for (let x = 0; x <= MAX_GOALS_PER_SIDE; x += 1) {
     for (let y = 0; y <= MAX_GOALS_PER_SIDE; y += 1) {
       const weight = pmfHome[x] * pmfAway[y] * Math.max(0, dixonColesTau(x, y, lambda, mu, rho));
-      weights[i] = weight;
       homeGoals[i] = x;
       awayGoals[i] = y;
+      prob[i] = weight;
       total += weight;
       i += 1;
     }
   }
+  for (let k = 0; k < size; k += 1) prob[k] /= total;
 
-  const cumulative = new Array<number>(size);
+  return { lambda, mu, homeGoals, awayGoals, prob };
+};
+
+/** The grid laid end to end as a cumulative table, so one RNG draw picks a
+ *  scoreline. Built once per matchup and reused across every iteration. */
+interface ScoreDistribution {
+  cumulative: number[];
+  homeGoals: number[];
+  awayGoals: number[];
+}
+
+const buildScoreDistribution = (
+  model: StrengthModel,
+  homeCode: ClubCode,
+  awayCode: ClubCode,
+  rho: number,
+): ScoreDistribution => {
+  const { homeGoals, awayGoals, prob } = buildScoreGrid(model, homeCode, awayCode, rho);
+  const cumulative = new Array<number>(prob.length);
   let running = 0;
-  for (let k = 0; k < size; k += 1) {
-    running += weights[k] / total;
+  for (let k = 0; k < prob.length; k += 1) {
+    running += prob[k];
     cumulative[k] = running;
   }
-  cumulative[size - 1] = 1; // absorb float drift, so no draw can fall off the end
+  cumulative[prob.length - 1] = 1; // absorb float drift, so no draw falls off the end
   return { cumulative, homeGoals, awayGoals };
 };
 
@@ -359,6 +401,125 @@ export const createPoissonSampler = (
       else lo = mid + 1;
     }
     return { homeGoals: homeGoals[lo], awayGoals: awayGoals[lo] };
+  };
+};
+
+// --- One fixture, closed form ----------------------------------------------------
+// The same grid, summed instead of sampled. No RNG: this is exact, so the same
+// snapshot gives the same prognosis to the last digit, and it costs one grid
+// rather than ten thousand seasons.
+
+export interface MatchOutcome {
+  /** The three results, summing to 1. */
+  homeWin: number;
+  draw: number;
+  awayWin: number;
+  /**
+   * Expected goals for each side, carried out because "espera-se 1,7 × 0,8"
+   * says something a probability triple does not.
+   *
+   * **This is the mean of the grid, not λ**, and the difference is not
+   * pedantry. λ and μ are the *parameters* the Poisson was built from; the grid
+   * then truncates at eight goals a side, applies the Dixon–Coles τ and
+   * renormalises, so the distribution the reader is actually being shown has a
+   * different mean — and where the clamp bites, λ is not a mean of anything at
+   * all. Measured on the frozen snapshot the gap is 0.0014, which is why
+   * reporting λ looks correct; measured on a lopsided fixture it is 0.08, and
+   * on a side pinned at `MIN_EXPECTED_GOALS` the reported number is the clamp
+   * rather than the expectation. The sibling repo this model came from reports
+   * λ. Summing the cells costs one pass over 81 numbers and cannot disagree
+   * with the probabilities and the modal scoreline beside it, which come from
+   * those same cells.
+   */
+  expectedHomeGoals: number;
+  expectedAwayGoals: number;
+  /**
+   * The single most likely scoreline, **with its own probability**, which is
+   * the field to render beside it rather than drop.
+   *
+   * It is routinely under 12%: a football match has a long tail of scorelines
+   * and the modal one is only the tallest of many short bars. Printing "placar
+   * mais provável 1-1" with that number withheld reads as a prediction, and the
+   * number is the whole of what makes it a *modal* value instead. Same rule the
+   * artilharia follows for an unreported tally and `live-core.ts` for the match
+   * minute: show the reader what the data actually supports.
+   */
+  mostLikelyScore: {
+    homeGoals: number;
+    awayGoals: number;
+    probability: number;
+  };
+}
+
+/**
+ * The **Projeção** narrowed to a single fixture: win, draw and loss
+ * probabilities, each side's expected goals, and the modal scoreline.
+ *
+ * Named for the season term rather than given one of its own, because it is
+ * the same model at a different scope — and because `CONTEXT.md` rules out the
+ * two words that would otherwise be reached for here. "Prognóstico" and
+ * "previsão" both claim knowledge of the result; the sibling repo ships this
+ * as a "Prognóstico simulado" and that qualifier is doing all the work.
+ *
+ * Deterministic and exact — it sums `buildScoreGrid`'s 81 cells rather than
+ * sampling them, so there is no seed and no iteration count, and two calls on
+ * one snapshot cannot differ. It is the *same grid* `projectSeason` samples, so
+ * a match page and the Classificação cannot come to describe different models;
+ * that is the entire reason this lives here rather than in a module of its own.
+ *
+ * Takes clubs and matches like `projectSeason`, and builds the strength model
+ * per call. That is O(clubs + matches) and negligible beside the grid, and it
+ * keeps the two entry points impossible to feed inconsistently — a caller
+ * cannot hand this a model fitted to one payload while the table beside it was
+ * fitted to another.
+ *
+ * **This is the model, not the sentence.** Turning an outcome into pt-BR prose
+ * is a separate job for a separate module (the sibling repo keeps its narrator
+ * in `predict-core.ts` for that reason), and the copy has to carry the
+ * *simulado* framing that `CONTEXT.md`'s **Projeção** entry makes a condition of
+ * showing any of this to a reader.
+ */
+export const predictMatchOutcome = (
+  clubs: Club[],
+  matches: Match[],
+  homeCode: ClubCode,
+  awayCode: ClubCode,
+  options: ModelOptions = {},
+): MatchOutcome => {
+  const model = buildStrengthModel(
+    computeStandings(clubs, matches),
+    matches,
+    options.priorWeight ?? DEFAULT_PRIOR_WEIGHT,
+  );
+  const grid = buildScoreGrid(model, homeCode, awayCode, options.rho ?? DEFAULT_RHO);
+
+  let homeWin = 0;
+  let draw = 0;
+  let awayWin = 0;
+  let expectedHomeGoals = 0;
+  let expectedAwayGoals = 0;
+  let modal = 0;
+  for (let i = 0; i < grid.prob.length; i += 1) {
+    const share = grid.prob[i];
+    if (grid.homeGoals[i] > grid.awayGoals[i]) homeWin += share;
+    else if (grid.homeGoals[i] < grid.awayGoals[i]) awayWin += share;
+    else draw += share;
+    expectedHomeGoals += share * grid.homeGoals[i];
+    expectedAwayGoals += share * grid.awayGoals[i];
+    if (share > grid.prob[modal]) modal = i;
+  }
+
+  return {
+    homeWin,
+    draw,
+    awayWin,
+    expectedHomeGoals,
+    expectedAwayGoals,
+    mostLikelyScore: {
+      homeGoals: grid.homeGoals[modal],
+      awayGoals: grid.awayGoals[modal],
+      probability: grid.prob[modal],
+    },
   };
 };
 
