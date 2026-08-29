@@ -340,6 +340,17 @@ echo
 # built from `ls` cannot name an image that does not exist.
 echo "  Refresh $SHOT_DIR, then commit them."
 echo
+# A GATE'S OUTPUT SAYS WORK IS OWED. IT CANNOT SAY THE WORK IS UNOWNED.
+# Several sessions share this checkout, and a re-shoot is the most duplicated
+# job in it — the ledger records two sessions capturing the same eighteen images
+# 49 seconds apart, and a session that had just read the ledger still missed a
+# capture PR opened while it was composing its own claim. The ledger cannot show
+# a PR raised a minute ago; `gh pr list` can.
+echo "  First check nobody is already doing it — several sessions share this"
+echo "  checkout and a re-shoot is the most duplicated job in it:"
+echo
+echo "    gh pr list --state open   # look for a capture PR touching $SHOT_DIR"
+echo
 echo "  Re-read the alt text in README.md for every image you retake. It"
 echo "  describes what the picture shows, so a recaptured image can leave it"
 echo "  describing a page that no longer exists — and nothing here checks the"
@@ -354,10 +365,40 @@ echo "  from whatever it captured and writes into $SHOT_DIR only if that"
 echo "  build carries the same appearance as HEAD and is serving real provider"
 echo "  data. Anything else lands in $SHOT_DIR/local, which is gitignored."
 echo
-echo "  So capture from either:"
+# WHICH ROUTE TO RECOMMEND, AND WHY PRODUCTION IS NAMED FIRST.
+#
+# This block used to call the local build "the normal case". It is not, on a
+# workstation whose .env lacks GOOGLE_CLIENT_ID/GOOGLE_CLIENT_SECRET — and the
+# one in this repository's usual home does. Contas is absent by configuration
+# there (see CLAUDE.md, "Contas": unset credentials mean the feature does not
+# render at all), so no account control is drawn, while production answers
+# /api/account/me 200 and draws one. Every capture then loses a control from the
+# app bar, in all eighteen frames, and the README alt text describes it.
+#
+# NOTHING CATCHES THAT, WHICH IS THE POINT. scripts/screenshot.ts compares
+# appearance *sources* against HEAD and checks the build serves real provider
+# data; a feature switched off by configuration is neither, so the set lands in
+# $SHOT_DIR rather than being refused into local, and this gate then goes GREEN
+# on images that misdescribe production in every frame. A check that passes for
+# a reason unrelated to what it certifies is worse than no check.
+#
+# Measured 2026-08-29: GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET empty on the
+# workstation, /api/account/me answering 200 on production the same day. Stated
+# as a measurement with its date rather than as a standing fact, because a
+# workstation .env is exactly the kind of thing that changes without telling
+# anyone — re-measure before believing it, do not re-derive it from scratch.
+# It has been independently rediscovered at least twice, and once cost a whole
+# captured set that had to be discarded.
+echo "  So capture from either, PREFERRING THE FIRST:"
+echo "    - $SITE, once it already carries the change."
+echo "      The reliable route: the host has credentials this workstation"
+echo "      does not, so it renders controls a local build silently omits."
 echo "    - a local production build of HEAD (npm run build && npm start) — the"
-echo "      normal case, and the only one available while a change is unreleased"
-echo "    - $SITE, but only once it already carries the change"
+echo "      only route while a change is unreleased, and a lossy one. If your"
+echo "      .env has no GOOGLE_CLIENT_ID, Contas does not render and every"
+echo "      capture loses the account control. Nothing here can detect that."
+echo "      Open an image and check the app bar against README.md before"
+echo "      committing, or wait and shoot production once the change ships."
 echo
 echo "  The committed set, each needing its light and dark pair:"
 for shot in "$SHOT_DIR"/*.png; do
