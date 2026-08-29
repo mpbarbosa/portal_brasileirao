@@ -7,6 +7,7 @@ import {
   createPoissonSampler,
   createRng,
   isRemainingFixture,
+  predictMatchOutcome,
   projectSeason,
   remainingFixtures,
 } from "@/season-sim-core";
@@ -354,4 +355,170 @@ test("the model is pluggable — a sampler that always draws 0-0 leaves the tabl
 
 test("the default seed is stable, so a served projection does not move on refresh", () => {
   assert.equal(DEFAULT_SEED, 20_260_829);
+});
+
+// --- One fixture, closed form -----------------------------------------------------
+
+/** A division with a season's worth of results behind it, so the strengths are
+ *  something other than the prior: the first club beats everyone, the last loses
+ *  to everyone, and the middle draws. */
+const FORMED: Match[] = singleRoundRobin(TEN).map((fixture) => {
+  const rank = (code: string) => Number(code.slice(1));
+  const home = rank(fixture.homeCode);
+  const away = rank(fixture.awayCode);
+  return {
+    ...fixture,
+    status: "FINISHED" as const,
+    homeGoals: home < away ? 2 : 1,
+    awayGoals: home < away ? 0 : 1,
+  };
+});
+
+test("the three results sum to one", () => {
+  const outcome = predictMatchOutcome(TEN, FORMED, "C2", "C7");
+  const sum = outcome.homeWin + outcome.draw + outcome.awayWin;
+  assert.ok(Math.abs(sum - 1) < 1e-9, `summed to ${sum}`);
+});
+
+test("it is exact, so two calls on one snapshot cannot differ", () => {
+  assert.deepEqual(
+    predictMatchOutcome(TEN, FORMED, "C2", "C7"),
+    predictMatchOutcome(TEN, FORMED, "C2", "C7"),
+  );
+});
+
+test("a stronger side is likelier to win, and the stronger it is the likelier", () => {
+  const nearEven = predictMatchOutcome(TEN, FORMED, "C4", "C5");
+  const lopsided = predictMatchOutcome(TEN, FORMED, "C0", "C9");
+  assert.ok(lopsided.homeWin > nearEven.homeWin);
+  assert.ok(lopsided.homeWin > lopsided.awayWin);
+  assert.ok(lopsided.expectedHomeGoals > lopsided.expectedAwayGoals);
+});
+
+test("with nothing played, the two sides are exactly level — no mando is invented", () => {
+  const outcome = predictMatchOutcome(TEN, singleRoundRobin(TEN), "C0", "C9");
+  assert.ok(Math.abs(outcome.homeWin - outcome.awayWin) < 1e-12);
+  // Not `assert.equal`: both are sums over the same 81 cells but accumulated in
+  // different orders — home goals vary down the outer loop, away goals across
+  // the inner — so they land 5e-16 apart. The symmetry is exact in the model
+  // and inexact in the float, which is a property of the summation and not of
+  // the mando.
+  assert.ok(Math.abs(outcome.expectedHomeGoals - outcome.expectedAwayGoals) < 1e-12);
+});
+
+test("the mando shows up as an edge to the home side between equals", () => {
+  // Every home side has won 2-0 all season, so the model has a large mando and
+  // no reason to separate the clubs on anything else.
+  const allHomeWins = singleRoundRobin(TEN).map((fixture) => ({
+    ...fixture,
+    status: "FINISHED" as const,
+    homeGoals: 2,
+    awayGoals: 0,
+  }));
+  const outcome = predictMatchOutcome(TEN, allHomeWins, "C3", "C4");
+  assert.ok(outcome.homeWin > outcome.awayWin, `${outcome.homeWin} vs ${outcome.awayWin}`);
+  assert.ok(outcome.expectedHomeGoals > outcome.expectedAwayGoals);
+});
+
+test("the modal scoreline carries its own probability, and it is the largest one", () => {
+  const outcome = predictMatchOutcome(TEN, FORMED, "C2", "C7");
+  const { homeGoals, awayGoals, probability } = outcome.mostLikelyScore;
+  assert.ok(Number.isInteger(homeGoals) && homeGoals >= 0 && homeGoals <= 8);
+  assert.ok(Number.isInteger(awayGoals) && awayGoals >= 0 && awayGoals <= 8);
+  assert.ok(probability > 0 && probability < 1);
+  // It is the tallest bar of a long tail, not a prediction: nothing about a
+  // football match makes one scoreline likely, and the copy has to be able to
+  // say so.
+  assert.ok(probability < 0.35, `modal scoreline at ${probability} is implausibly certain`);
+  // And it really is the tallest. Asserting only the three lines above is what
+  // this test did first, and a deliberate mutation that stopped searching for
+  // the maximum — leaving the modal cell pinned at 0-0 — passed all of them:
+  // 0-0 is an integer pair in range with a small positive probability. The
+  // grid is private, so the maximum is established against the sampler drawing
+  // from the same cells.
+  const sampler = createPoissonSampler(computeStandings(TEN, FORMED), FORMED);
+  const fixture = match({
+    homeCode: "C2",
+    awayCode: "C7",
+    status: "SCHEDULED",
+    homeGoals: null,
+    awayGoals: null,
+  });
+  const rng = createRng(77);
+  const seen = new Map<string, number>();
+  const draws = 40_000;
+  for (let i = 0; i < draws; i += 1) {
+    const score = sampler(fixture, rng);
+    const key = `${score.homeGoals}-${score.awayGoals}`;
+    seen.set(key, (seen.get(key) ?? 0) + 1);
+  }
+  let empirical = "";
+  let best = -1;
+  for (const [key, count] of seen) {
+    if (count > best) {
+      best = count;
+      empirical = key;
+    }
+  }
+  assert.equal(`${homeGoals}-${awayGoals}`, empirical);
+  assert.ok(
+    Math.abs(best / draws - probability) < 0.01,
+    `modal ${empirical} drawn ${best / draws} against a stated ${probability}`,
+  );
+});
+
+test("a club the table does not have degrades to league average rather than throwing", () => {
+  const outcome = predictMatchOutcome(TEN, FORMED, "C0", "NOPE");
+  const sum = outcome.homeWin + outcome.draw + outcome.awayWin;
+  assert.ok(Math.abs(sum - 1) < 1e-9);
+  assert.ok(outcome.expectedAwayGoals > 0);
+});
+
+test("the closed form agrees with the sampler — one model, two ways of reading it", () => {
+  // The whole reason `buildScoreGrid` is a named thing: `projectSeason` samples
+  // these cells and `predictMatchOutcome` sums them, so the two must land on the
+  // same numbers. If they ever stop doing so, one of them has grown its own
+  // model and this is what says so.
+  //
+  // It has already earned its place. The first version of `predictMatchOutcome`
+  // reported λ and μ as the expected goals — the parameters the Poisson was
+  // built from — and this went red on the goals assertions while every
+  // probability assertion passed. The grid truncates at eight and applies the
+  // Dixon–Coles τ before renormalising, so its mean is not λ; on this fixture
+  // the gap is 0.08 and on the away side λ is the clamp rather than an
+  // expectation at all. Nothing else here could have seen it: the value was
+  // plausible, self-consistent and wrong.
+  const closed = predictMatchOutcome(TEN, FORMED, "C2", "C7");
+  const sampler = createPoissonSampler(computeStandings(TEN, FORMED), FORMED);
+  const fixture = match({
+    homeCode: "C2",
+    awayCode: "C7",
+    status: "SCHEDULED",
+    homeGoals: null,
+    awayGoals: null,
+  });
+
+  const draws = 40_000;
+  const rng = createRng(2026);
+  let homeWin = 0;
+  let draw = 0;
+  let awayWin = 0;
+  let homeGoals = 0;
+  let awayGoals = 0;
+  for (let i = 0; i < draws; i += 1) {
+    const score = sampler(fixture, rng);
+    homeGoals += score.homeGoals;
+    awayGoals += score.awayGoals;
+    if (score.homeGoals > score.awayGoals) homeWin += 1;
+    else if (score.homeGoals < score.awayGoals) awayWin += 1;
+    else draw += 1;
+  }
+
+  // 40,000 draws puts the standard error near 0.0025, so 0.01 is four sigma and
+  // a real divergence between the two paths cannot hide under it.
+  assert.ok(Math.abs(homeWin / draws - closed.homeWin) < 0.01, `home ${homeWin / draws} vs ${closed.homeWin}`);
+  assert.ok(Math.abs(draw / draws - closed.draw) < 0.01, `draw ${draw / draws} vs ${closed.draw}`);
+  assert.ok(Math.abs(awayWin / draws - closed.awayWin) < 0.01, `away ${awayWin / draws} vs ${closed.awayWin}`);
+  assert.ok(Math.abs(homeGoals / draws - closed.expectedHomeGoals) < 0.05);
+  assert.ok(Math.abs(awayGoals / draws - closed.expectedAwayGoals) < 0.05);
 });

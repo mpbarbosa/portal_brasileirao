@@ -626,6 +626,21 @@ fitted to the current table. It is never a forecast and the copy must not read a
 one: it is **simulado**, a model with its parameters read out of the same snapshot
 the **Classificação** is built from, and `docs/brasileirao-pro-proposal.md` names
 that framing as the condition on the feature existing at all.
+**One model, two scopes.** `projectSeason` samples the whole remaining season;
+`predictMatchOutcome` narrows to a single fixture and sums the same scoreline
+grid in closed form, with no RNG at all — win, draw and loss, each side's
+expected goals, and the modal placar with its own probability beside it. Both
+read `buildScoreGrid`, so a match page and the **Classificação** cannot come to
+describe different models. The single-fixture form keeps the season's name for
+that reason, and because the words a reader would otherwise expect there are the
+two ruled out below.
+The modal placar is **shown with its probability or not at all**: it is routinely
+under 12%, so printing "1-1" alone reads as a prediction where the number is the
+whole of what makes it a mode.
+Expected goals are the **mean of that grid, not the Poisson λ** it was built
+from — the grid truncates and applies the Dixon–Coles correction before
+renormalising, so λ is not the mean of what the reader is shown, and where the
+clamp binds it is not a mean at all.
 Each iteration re-runs `computeStandings`, so a simulated table is ranked by the
 CBF tie-breakers rather than by a second implementation of them — the argument
 **Campanha** already makes, and a sharper one here, because the third and fourth
