@@ -7,6 +7,7 @@ import {
   lastRecordedRound,
   lastRoundWithResult,
   positionAfterRound,
+  sparklineBars,
   sparklinePoints,
   sparklinePolyline,
 } from "@/rank-history-core";
@@ -234,3 +235,92 @@ test("nothing played yet gives a zero domain rather than a negative one", () => 
   assert.equal(lastRecordedRound([]), 0);
   assert.equal(lastRecordedRound([{ clubCode: "AAA", shortName: "AAA", entries: [] }]), 0);
 });
+
+test("a bar's length is measured from the foot of the division, not the box", () => {
+  // The whole meaning of a bar is its length, so it needs a zero — and the zero
+  // that means something here is last place. First place fills the box; last
+  // place is a sliver rather than nothing, which is why the denominator is
+  // `clubCount` and not the line's `clubCount - 1`.
+  const [first, last] = sparklineBars([entry(1, 1), entry(24, 20)], BOX);
+  const inner = BOX.height - BOX.padding * 2;
+
+  assert.equal(first.height, inner);
+  assert.equal(first.y, BOX.padding);
+
+  assert.equal(last.height, round2(inner / BOX.clubCount));
+  assert.ok(last.height > 0, "last place must still draw something");
+  assert.equal(round2(last.y + last.height), BOX.height - BOX.padding);
+});
+
+test("a middle position sits between the two, ordered the way the table is", () => {
+  const [top, middle, bottom] = sparklineBars(
+    [entry(1, 3), entry(2, 10), entry(3, 18)],
+    BOX,
+  );
+
+  assert.ok(top.height > middle.height);
+  assert.ok(middle.height > bottom.height);
+});
+
+test("a round occupies a band, and the last band ends at the right edge", () => {
+  // A line joins positions taken *at* the end of each round; a bar covers the
+  // whole round. So the two kinds legitimately put round 5 at different x.
+  const bars = sparklineBars([entry(1, 1), entry(24, 1)], BOX);
+  const inner = BOX.width - BOX.padding * 2;
+  const band = inner / BOX.lastRound;
+
+  assert.ok(bars[0].x >= BOX.padding);
+  assert.ok(
+    bars[1].x + bars[1].width <= BOX.width - BOX.padding + 0.01,
+    "the final bar must not overflow the box it is padded inside",
+  );
+  assert.ok(bars[1].x + bars[1].width > BOX.width - BOX.padding - band);
+});
+
+test("bars never overlap their neighbours", () => {
+  // At 72px across a 38-round season a band is 1.8px wide. A fixed minimum
+  // width would be wider than the band and paint the columns into a solid
+  // block, so the gap is proportional.
+  const box = { ...BOX, lastRound: 38 };
+  const bars = sparklineBars(
+    Array.from({ length: 38 }, (_, i) => entry(i + 1, 5)),
+    box,
+  );
+
+  for (let i = 1; i < bars.length; i += 1) {
+    assert.ok(
+      bars[i].x >= bars[i - 1].x + bars[i - 1].width,
+      `bar ${i + 1} overlaps its neighbour`,
+    );
+  }
+});
+
+test("a degenerate domain draws something rather than NaN", () => {
+  // An SVG with a malformed geometry simply draws nothing, so a division by
+  // zero here is an invisible failure — the same reason `sparklinePoints`
+  // floors its spans.
+  const [only] = sparklineBars([entry(1, 1)], {
+    ...BOX,
+    clubCount: 1,
+    lastRound: 1,
+  });
+
+  assert.ok(Number.isFinite(only.x));
+  assert.ok(Number.isFinite(only.y));
+  assert.ok(only.width > 0);
+  assert.ok(only.height > 0);
+});
+
+test("bars and the line agree about which round is last", () => {
+  // Both marks give the current round full-strength ink, and each finds it as
+  // the last element of its own list. They must not disagree about which that
+  // is.
+  const entries = [entry(1, 4), entry(2, 6), entry(3, 2)];
+  const points = sparklinePoints(entries, BOX);
+  const bars = sparklineBars(entries, BOX);
+
+  assert.equal(bars.length, points.length);
+  assert.equal(bars[bars.length - 1].round, points[points.length - 1].round);
+});
+
+const round2 = (value: number): number => Math.round(value * 100) / 100;

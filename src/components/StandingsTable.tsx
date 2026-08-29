@@ -1,14 +1,18 @@
 import { useMemo } from "react";
 
+import { plotKindToggleLabel, type CampaignPlotKind } from "@/campaign-plot-core";
 import { clubKey } from "@/club-core";
+import { Button } from "@/src/components/Button";
 import { ClubCrest } from "@/src/components/ClubCrest";
 import { StarGlyph } from "@/src/components/MeuTime";
 import { LINK_UNDERLINE } from "@/src/components/interaction";
 import { lastRecordedRound } from "@/rank-history-core";
 import { RankSparkline } from "@/src/components/RankSparkline";
+import { BarsPlotIcon, LinePlotIcon } from "@/src/components/SectionIcons";
 import { formatRoute } from "@/route-core";
 import { ZONE_DEPTH, ZONE_DEPTH_WORD, pointsPercentageLabel } from "@/standings-core";
 import { Surface } from "@/src/components/Surface";
+import { useCampaignPlotKind } from "@/src/useCampaignPlotKind";
 import type { ClubCode, ClubRankHistory, RankAtRound, StandingsRow } from "@/src/types";
 
 /** The two rail colours, shared between the cell and the key so a change to
@@ -118,6 +122,49 @@ const CLUB_PADDING = "px-2 sm:px-3";
  *  shape in both, and a width that followed the viewport would not. */
 const CAMPAIGN_COLUMN = "w-0 px-3";
 
+/**
+ * The control that chooses the Campanha column's mark.
+ *
+ * **Above the table and outside the `Surface`, for the reason the zone key is
+ * below and outside it**: that Surface is the horizontal scroll container, so a
+ * control placed within it slides off to the left the moment a narrow screen
+ * scrolls the tallies into view — and the Campanha column is one of the columns
+ * that scrolls, so the reader would be looking at the mark with the control that
+ * changes it off-screen. Above rather than below because it is a choice about
+ * what you are about to read.
+ *
+ * **Not in the column header**, which is where it looks like it belongs.
+ * `CAMPAIGN_COLUMN` is `w-0` so the column measures its 72px mark and no more;
+ * a control in that `<th>` would become the column's widest content and take
+ * the table's surplus back — the exact regression the "no wider than the mark it
+ * holds" spec was written for.
+ *
+ * One button rather than a pair, and its label names the mark you would get
+ * rather than the one you have — `themeToggleLabel`'s contract, and the page
+ * itself is what shows the current state.
+ */
+function CampaignPlotToggle({
+  kind,
+  onToggle,
+}: {
+  kind: CampaignPlotKind;
+  onToggle: () => void;
+}) {
+  const label = plotKindToggleLabel(kind);
+  // The glyph shows the destination, like the label — the sun/moon pairing in
+  // the app bar reads the same way.
+  const Icon = kind === "line" ? BarsPlotIcon : LinePlotIcon;
+
+  return (
+    <div className="mb-2 flex justify-end">
+      <Button size="sm" onClick={onToggle} className="inline-flex items-center gap-2">
+        <Icon className="h-4 w-4" />
+        {label}
+      </Button>
+    </div>
+  );
+}
+
 interface StandingsTableProps {
   rows: StandingsRow[];
   /** Receives the club's URL key (slug, or code as a fallback). Omit to render
@@ -157,8 +204,17 @@ export function StandingsTable({
   // read as twenty broken cells rather than as data still in flight.
   const showCampaign = lastRound > 0;
 
+  // The choice lives here rather than in `App` because the column it changes
+  // lives here, and nothing else on the page reads it. The club and match pages
+  // keep the line deliberately: there the campanha is a section with room to
+  // read a trajectory across, not a 72px cell in a scanned column, and a choice
+  // made in one section quietly restyling two other pages is a surprise.
+  const { kind: plotKind, toggle: togglePlotKind } = useCampaignPlotKind();
+
   return (
     <>
+      {showCampaign && <CampaignPlotToggle kind={plotKind} onToggle={togglePlotKind} />}
+
       <Surface className="overflow-x-auto">
         {/* `border-separate` rather than the default collapse: in the collapsed
             model a cell's borders belong to the table, so they scroll out from
@@ -251,6 +307,7 @@ export function StandingsTable({
                       entries={campaigns.get(row.club.code) ?? []}
                       clubCount={rows.length}
                       lastRound={lastRound}
+                      kind={plotKind}
                     />
                   </td>
                 )}
