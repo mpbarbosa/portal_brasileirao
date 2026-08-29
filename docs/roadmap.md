@@ -558,11 +558,40 @@ paragraph of prose.
    confirms the key rather than being the only place the zones are stated. A
    **row** still announces no zone of its own to a screen reader — the rail is a
    CSS border, and a border has no text. That half is item 14.
-4. **`referrerPolicy="no-referrer"` on crests.** They are the one asset class still
-   hotlinked (principle 4 below), so every row tells the provider's CDN which page
-   the reader is on.
-5. **A crest fallback.** `ClubCrest` has no error path; twenty broken images is the
-   current failure mode. Note `tla` is optional and `code` may be `FD-<id>`.
+4. ~~**`referrerPolicy="no-referrer"` on crests.**~~ **Shipped**, with item 5 —
+   the proposal's D5 says to do them together and they are the same twenty
+   lines of `ClubCrest`. Measured rather than assumed: 20 crest requests per
+   render of the classificação, **0** now carrying a `Referer`, and the crests
+   still load. The attribute *and* the header are both asserted, because a
+   policy the browser declined to honour would leave the attribute looking
+   right.
+5. ~~**A crest fallback.**~~ **Shipped.** `crestMonogram` in `club-core.ts`,
+   rendered as the club's `tla` in a quiet disc occupying the box the crest
+   would have taken.
+
+   Three things worth carrying. **`code` cannot be the second fallback** — a
+   club whose provider reports no `tla` gets a synthetic `FD-<id>`, and "FD-"
+   beside a club's name abbreviates nothing, so it is the short name's
+   **initial**, one letter, not initials word by word: "Vasco da Gama" needs a
+   stopword list to reach `VG` and every such rule is a way to print something
+   wrong beside a name that is already right. **The `no crest` and `crest
+   failed` paths were unified** rather than left as two answers to one
+   question — a club the provider gives no crest for previously rendered
+   nothing, and now gets the same disc. And the failed **`src`** is recorded,
+   not a boolean: a latching flag would keep drawing letters for a club whose
+   crest starts loading again, or for a different club reconciled into the same
+   row.
+
+   **`ink-muted` on `surface-container` is chosen because the gate measures
+   it.** `backgroundsFor` in `scripts/generate-md3-tokens.ts` stops at
+   `surface-container`; `-high` and `-highest` are emitted, sit further from the
+   ink, and are checked against nothing — so the obvious quieter disc would have
+   put letters a reader must read on an unmeasured pairing. Worth knowing before
+   the next component reaches for a container step.
+
+   Both e2e specs were run against a deliberately unmutated-then-mutated
+   component — attribute removed, fallback branch removed — and both went red,
+   so neither is passing vacuously.
 6. **`sr-only` names on the existing form pills.** `ClubView` names them with
    `title` alone. `RankSparkline` is the pattern that gets this right.
 7. **Write down the radius step-down rule.** The shape scale exists; the rule for

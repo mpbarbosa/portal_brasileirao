@@ -363,9 +363,29 @@ Comes from the data provider's CDN (`crests.football-data.org`) as a transparent
 PNG of two to four kilobytes, which is why it sits correctly on the dark
 background. Purely decorative — the club's name is always beside it, so the
 image is `alt=""` and `aria-hidden`, and announcing it would say the club twice.
+It is the **one asset class this app still hotlinks** — stadium and player
+photographs are vendored to our own origin — so it carries
+`referrerPolicy="no-referrer"`: without it every row tells the provider's CDN
+which page of this site the reader is on, twenty times per render.
 _Avoid_: CBF's `conteudo.cbf.com.br/clubes/<id>/escudo.jpg` (ten times larger, a
 JPEG so no transparency, and needs CBF club ids the app does not hold), giving
-the crest descriptive alt text.
+the crest descriptive alt text, sending a `Referer` with the request.
+
+**Monograma do clube**:
+What an **Escudo** falls back to — the club's `tla` in a quiet disc, the same
+box the crest would have taken, when the image does not arrive. Built by
+`crestMonogram` in `club-core.ts`; `tla` first and the short name's initial when
+the provider reports none, never `code`, which for such a club is a synthetic
+`FD-<id>`.
+It carries **no information**: the club's name is beside it either way, which is
+also why the crest is `alt=""`. Its whole job is to keep the slot from looking
+broken, so it takes no club colour and no treatment a crest does not have — and
+it is `aria-hidden` for the same reason the crest is.
+_Avoid_: "placeholder" and "avatar" (this is the club's abbreviation, not a stand-in
+person), colouring it by club (rejected in `docs/brasileirao-pro-proposal.md`),
+deriving initials word by word — "Vasco da Gama" needs a stopword list to reach
+`VG` and every such rule is a way to print something wrong beside a name that is
+already right.
 
 **tla**:
 The three-letter abbreviation upstream reports for a club (`FLA`, `PAL`, `CAP`).

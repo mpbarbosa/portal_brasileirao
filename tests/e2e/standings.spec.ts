@@ -161,6 +161,61 @@ test.describe("Classificação", () => {
     );
   });
 
+  test("no crest request carries a Referer to the provider's CDN", async ({ page }) => {
+    // Crests are the one asset class this app still hotlinks — the stadium and
+    // player photographs are vendored to our own origin precisely so a reader's
+    // browsing does not reach a third party. Without this, every row tells the
+    // CDN which page of this site is being read, twenty times per render.
+    //
+    // The attribute is asserted *and* the header is read off the wire: a policy
+    // the browser does not honour would leave the attribute looking right.
+    const referers: (string | undefined)[] = [];
+    page.on("request", (request) => {
+      if (/crests\.football-data\.org/.test(request.url())) {
+        referers.push(request.headers()["referer"]);
+      }
+    });
+
+    await page.reload();
+    await expect(page.locator("table tbody tr td:nth-child(2) img")).toHaveCount(20);
+    await expect(page.locator("table tbody tr td:nth-child(2) img").first()).toHaveAttribute(
+      "referrerpolicy",
+      "no-referrer",
+    );
+
+    expect(referers.length).toBeGreaterThan(0);
+    expect(referers.filter(Boolean)).toEqual([]);
+  });
+
+  test("a CDN that stops answering leaves letters, not twenty broken images", async ({ page }) => {
+    // `route.abort` is a faithful stub *here*, which is not true of every use of
+    // `page.route` in this suite — see the note in CLAUDE.md about a stub that
+    // could not reproduce an incomplete-request-accounting bug. The mechanism
+    // under test is the image element's own `error` event, and it fires
+    // identically for an aborted request, a 404 and a 503. The 503 shape is the
+    // realistic one, so it is the one driven below.
+    await page.route(/crests\.football-data\.org/, (route) =>
+      route.fulfill({ status: 503, body: "" }),
+    );
+    await page.reload();
+
+    const cells = page.locator("table tbody tr td:nth-child(2)");
+    await expect(cells).toHaveCount(20);
+    // Every crest is replaced, not merely the first: the failure this covers is
+    // a CDN outage, which takes all twenty at once.
+    await expect(page.locator("table tbody tr td:nth-child(2) img")).toHaveCount(0);
+
+    const marks = cells.locator("span[aria-hidden='true']").filter({ hasText: /^[A-Z]{1,3}$/ });
+    await expect(marks).toHaveCount(20);
+    await expect(marks.first()).toHaveText(/^[A-Z]{1,3}$/);
+
+    // It occupies the crest's box rather than collapsing the row — the reason
+    // the fallback exists at all is that the slot should not look broken.
+    const box = await marks.first().boundingBox();
+    expect(box?.width).toBeCloseTo(18, 0);
+    expect(box?.height).toBeCloseTo(18, 0);
+  });
+
   /**
    * Scroll the table container fully right and report how far it moved.
    * The container is the table's parent — `Surface` supplies the
