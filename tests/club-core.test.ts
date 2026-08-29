@@ -11,6 +11,7 @@ import {
   clubMatches,
   coachOf,
   coachesOf,
+  crestMonogram,
   findClub,
   hasClubArticle,
   lastFixture,
@@ -188,6 +189,27 @@ const club = (code: string, shortName: string, slug?: string) => ({
   name: `${shortName} FC`,
   shortName,
   ...(slug ? { slug } : {}),
+});
+
+test("crestMonogram prefers the tla", () => {
+  assert.equal(crestMonogram({ ...club("1783", "Flamengo"), tla: "FLA" }), "FLA");
+  // Not an identity — Corinthians and Coritiba both report COR upstream, which
+  // is fine for a mark and is why this is not keyed on.
+  assert.equal(crestMonogram({ ...club("1779", "Coritiba"), tla: "cor" }), "COR");
+});
+
+test("crestMonogram falls back to the short name's initial, never the code", () => {
+  // A club whose provider reports no tla gets a synthetic FD-<id>, and "FD-"
+  // beside a club's name abbreviates nothing.
+  assert.equal(crestMonogram(club("FD-1783", "Flamengo")), "F");
+  assert.equal(crestMonogram({ ...club("FD-1783", "Flamengo"), tla: "   " }), "F");
+  // Accents are kept: this is a letter to look at, not a URL segment.
+  assert.equal(crestMonogram(club("FD-1", "Ática")), "Á");
+});
+
+test("crestMonogram returns empty rather than a box with nothing in it", () => {
+  assert.equal(crestMonogram(club("FD-1", "")), "");
+  assert.equal(crestMonogram(club("FD-1", "   ")), "");
 });
 
 test("clubKey prefers the slug and falls back to the code", () => {

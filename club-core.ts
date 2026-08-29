@@ -27,6 +27,38 @@ export const slugify = (name: string): string =>
 export const clubKey = (club: Club): string => club.slug || club.code;
 
 /**
+ * The letters a crest falls back to when the image does not arrive.
+ *
+ * `tla` first, which is what it is carried on `Club` for — display, never
+ * identity (Corinthians and Coritiba both report `COR`, so it may not be
+ * unique, and a monogram does not need it to be).
+ *
+ * **It is optional upstream**, so the fallback needs its own fallback, and
+ * `code` cannot be it: a club whose provider reports no `tla` gets a synthetic
+ * `FD-<id>`, and "FD-" beside a club's name is a rendering artefact rather than
+ * an abbreviation of anything. The initial of the short name is derived from
+ * what the reader can already see, which is the property that matters here —
+ * the mark sits beside the club's name in text, so it carries no information
+ * the reader lacks and its whole job is to hold the slot without looking
+ * broken.
+ *
+ * One letter rather than initials-of-each-word on purpose: "Vasco da Gama"
+ * wants a stopword list to reach `VG`, "Athletico-PR" wants a hyphen rule, and
+ * every such rule is a way to print something wrong beside a name that is
+ * already right. Accents are kept — this is a letter to look at, not a URL
+ * segment, so `slugify`'s stripping would be a loss here.
+ *
+ * Returns "" when a club has neither, which the caller must treat as "no
+ * monogram" — the same contract `slugify` states, and the case that renders
+ * nothing at all rather than an empty box.
+ */
+export const crestMonogram = (club: Club): string => {
+  const tla = club.tla?.trim();
+  if (tla) return tla.toUpperCase();
+  return (club.shortName.trim()[0] ?? "").toUpperCase();
+};
+
+/**
  * Resolve a club from a URL segment, accepting either a slug or a raw code.
  * Codes are still honoured because links to `/clube/1783` were published before
  * slugs existed, and a shared link should not rot.
