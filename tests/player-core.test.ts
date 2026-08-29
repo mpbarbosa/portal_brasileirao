@@ -13,15 +13,16 @@ import {
   playerPhotoUrl,
   playerSearchUrls,
   playerName,
+  playerNationality,
   playerSofascore,
   playerWikipedia,
   positionLabel,
   sofascoreUrl,
-  withPlayerName,
-  withPlayerNames,
+  withPlayerOverrides,
   withScorerNames,
+  withSquadOverrides,
 } from "@/player-core";
-import { PLAYER_NAME_OVERRIDES } from "@/src/data/player-name-overrides";
+import { PLAYER_OVERRIDES } from "@/src/data/player-overrides";
 import { SEED_SQUADS } from "@/src/data/squads";
 import type { Player } from "@/src/types";
 
@@ -353,26 +354,53 @@ test("every nationality in the snapshot is mapped", () => {
 });
 
 test("a recorded override replaces the provider's name", () => {
-  assert.equal(playerName("249314", "Felipexxx", { "249314": "Felipe Longo" }), "Felipe Longo");
+  assert.equal(
+    playerName("249314", "Felipexxx", { "249314": { name: "Felipe Longo" } }),
+    "Felipe Longo",
+  );
 });
 
 test("an unrecorded id keeps the provider's name verbatim", () => {
   // Coverage is a handful of entries against ~950 players, so absence is the
   // normal answer and must not blank the row.
-  assert.equal(playerName("1", "Hugo Souza", { "249314": "Felipe Longo" }), "Hugo Souza");
+  const o = { "249314": { name: "Felipe Longo" } };
+  assert.equal(playerName("1", "Hugo Souza", o), "Hugo Souza");
   assert.equal(playerName("1", "Hugo Souza", {}), "Hugo Souza");
 });
 
 test("a blank override is absence, not a nameless player", () => {
-  assert.equal(playerName("1", "Kauê", { "1": "" }), "Kauê");
-  assert.equal(playerName("1", "Kauê", { "1": "   " }), "Kauê");
+  assert.equal(playerName("1", "Kauê", { "1": { name: "" } }), "Kauê");
+  assert.equal(playerName("1", "Kauê", { "1": { name: "   " } }), "Kauê");
+});
+
+test("an override corrects one field and leaves the other to the provider", () => {
+  // The whole point of optional fields: a name entry must not blank a
+  // nationality, and a nationality entry must not blank a name.
+  const o = { "1609": { nationality: "Brazil" }, "249314": { name: "Felipe Longo" } };
+  assert.equal(playerName("1609", "Alex Santana", o), "Alex Santana");
+  assert.equal(playerNationality("1609", "Bulgaria", o), "Brazil");
+  assert.equal(playerNationality("249314", "Brazil", o), "Brazil");
+});
+
+test("a nationality nobody reported and nobody corrects stays absent", () => {
+  // Absence has to survive the round trip: the card omits the line rather than
+  // printing a dash, and an override corrects a wrong value, never fills a gap.
+  assert.equal(playerNationality("1", undefined, {}), undefined);
+  assert.equal(playerNationality("1", undefined, { "1": { name: "X" } }), undefined);
+});
+
+test("the override is in the provider's vocabulary, so the label still translates", () => {
+  // Storing "Brasil" here would put a second translation path beside
+  // NATIONALITY_LABELS, which is how one page comes to name a country
+  // differently from another.
+  assert.equal(nationalityLabel(playerNationality("1609", "Bulgaria", PLAYER_OVERRIDES)), "Brasil");
 });
 
 test("an unchanged player is returned as the same object", () => {
   // /api/squads runs this over every elenco in the division; rebuilding 948
-  // objects to correct one of them is churn with nothing to show for it.
-  const player: Player = { id: "1", name: "Hugo Souza" };
-  assert.equal(withPlayerName(player, { "249314": "Felipe Longo" }), player);
+  // objects to correct two of them is churn with nothing to show for it.
+  const player: Player = { id: "1", name: "Hugo Souza", nationality: "Brazil" };
+  assert.equal(withPlayerOverrides(player, { "249314": { name: "Felipe Longo" } }), player);
 });
 
 test("overriding an elenco leaves everyone else alone", () => {
@@ -380,24 +408,29 @@ test("overriding an elenco leaves everyone else alone", () => {
     {
       club: { code: "1779", name: "SC Corinthians Paulista", shortName: "Corinthians" },
       players: [
-        { id: "249314", name: "Felipexxx", position: "Goalkeeper" },
-        { id: "1", name: "Hugo Souza", position: "Goalkeeper" },
+        { id: "249314", name: "Felipexxx", position: "Goalkeeper", nationality: "Brazil" },
+        { id: "1609", name: "Alex Santana", position: "Midfield", nationality: "Bulgaria" },
+        { id: "1", name: "Hugo Souza", position: "Goalkeeper", nationality: "Brazil" },
       ],
     },
   ];
 
-  const renamed = withPlayerNames(squads, { "249314": "Felipe Longo" });
+  const fixed = withSquadOverrides(squads, {
+    "249314": { name: "Felipe Longo" },
+    "1609": { nationality: "Brazil" },
+  });
 
   assert.deepEqual(
-    renamed[0].players.map((player) => player.name),
-    ["Felipe Longo", "Hugo Souza"],
+    fixed[0].players.map((player) => `${player.name}/${player.nationality}`),
+    ["Felipe Longo/Brazil", "Alex Santana/Brazil", "Hugo Souza/Brazil"],
   );
-  // The position rides along untouched, and the input is not mutated.
-  assert.equal(renamed[0].players[0].position, "Goalkeeper");
+  // Everything else rides along untouched, and the input is not mutated.
+  assert.equal(fixed[0].players[0].position, "Goalkeeper");
   assert.equal(squads[0].players[0].name, "Felipexxx");
+  assert.equal(squads[0].players[1].nationality, "Bulgaria");
 });
 
-test("the artilharia takes the same overrides, keyed by the scorer's player id", () => {
+test("the artilharia takes the name, which is the only field it carries", () => {
   const club = { code: "1779", name: "SC Corinthians Paulista", shortName: "Corinthians" };
   const row = {
     position: 1,
@@ -409,46 +442,51 @@ test("the artilharia takes the same overrides, keyed by the scorer's player id",
     penalties: null,
     playedMatches: null,
   };
+  const o = { "249314": { name: "Felipe Longo" } };
 
-  assert.equal(withScorerNames([row], { "249314": "Felipe Longo" })[0].playerName, "Felipe Longo");
+  assert.equal(withScorerNames([row], o)[0].playerName, "Felipe Longo");
   // Upstream reporting no id makes `playerId` the name itself, which matches no
   // override rather than matching the wrong one.
-  assert.equal(
-    withScorerNames([{ ...row, playerId: "Felipexxx" }], { "249314": "Felipe Longo" })[0].playerName,
-    "Felipexxx",
-  );
+  assert.equal(withScorerNames([{ ...row, playerId: "Felipexxx" }], o)[0].playerName, "Felipexxx");
 });
 
-test("every override names somebody still in the snapshot, and still disagrees with it", () => {
+test("every override corrects a player still in the snapshot, and still disagrees with it", () => {
   // The two ways a correction goes stale, both silent and both with a one-line
-  // fix — delete the entry. An id that has left the division renames nobody; an
-  // id whose recorded name already matches is upstream having fixed their data,
-  // which arrives here as the next `sync-seed-data` and nothing else would say
-  // so. Note this only reddens on a deliberate regeneration of the seed, never
-  // on somebody's unrelated commit.
+  // fix — delete the entry. An id that has left the division corrects nobody; a
+  // field whose recorded value already matches is upstream having fixed their
+  // data, which arrives here as the next `sync-seed-data` and nothing else would
+  // say so. This is also what stops an entry *filling* an absent field rather
+  // than correcting a wrong one. Note it can only redden on a deliberate
+  // regeneration of the seed, never on somebody's unrelated commit.
   const recorded = new Map(
-    SEED_SQUADS.flatMap((squad) => squad.players.map((player) => [player.id, player.name])),
+    SEED_SQUADS.flatMap((squad) => squad.players.map((player) => [player.id, player])),
   );
 
-  const problems = Object.entries(PLAYER_NAME_OVERRIDES)
-    .map(([id, name]) => {
-      const seeded = recorded.get(id);
-      if (seeded === undefined) return `${id} (${name}) is no longer in squads.ts`;
-      if (seeded === name) return `${id} already reads "${name}" in squads.ts`;
-      return null;
-    })
-    .filter((problem): problem is string => problem !== null);
+  const problems = Object.entries(PLAYER_OVERRIDES).flatMap(([id, override]) => {
+    const seeded = recorded.get(id);
+    if (!seeded) return [`${id} is no longer in squads.ts`];
+    return (["name", "nationality"] as const).flatMap((field) => {
+      const value = override[field];
+      if (value === undefined) return [];
+      if (!value.trim()) return [`${id}.${field} is blank`];
+      if (seeded[field] === undefined) return [`${id}.${field} fills an absence rather than correcting`];
+      if (seeded[field] === value) return [`${id}.${field} already reads "${value}" in squads.ts`];
+      return [];
+    });
+  });
 
-  assert.deepEqual(problems, [], `spent entries in player-name-overrides.ts: ${problems.join("; ")}`);
+  assert.deepEqual(problems, [], `spent entries in player-overrides.ts: ${problems.join("; ")}`);
 });
 
-test("no override is blank, which would render as a nameless player", () => {
-  // `playerName` treats a blank as absence, so this cannot reach the page — but
-  // a blank entry is somebody's unfinished edit, and it belongs in the file it
-  // was written into rather than surviving as a no-op.
-  const blank = Object.entries(PLAYER_NAME_OVERRIDES)
-    .filter(([, name]) => !name.trim())
-    .map(([id]) => id);
+test("every corrected nationality is one the label table knows", () => {
+  // A correction that lands outside NATIONALITY_LABELS would render the English
+  // word on the card — the failure the sibling coverage test exists to stop,
+  // arriving through the one file that bypasses the provider.
+  const mapped = new Set(mappedNationalities());
+  const unmapped = Object.entries(PLAYER_OVERRIDES)
+    .map(([id, o]) => [id, o.nationality] as const)
+    .filter(([, n]) => n !== undefined && !mapped.has(n))
+    .map(([id, n]) => `${id}: ${n}`);
 
-  assert.deepEqual(blank, []);
+  assert.deepEqual(unmapped, []);
 });

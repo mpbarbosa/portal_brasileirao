@@ -948,40 +948,82 @@ included, whatever the User-Agent — so a checker would have nothing to read.
 Eight ids were opened in a real browser instead. Do not add one from a search
 result without opening it.
 
-`src/data/player-name-overrides.ts` is the one curated player file that
-corrects the provider rather than adding to it: a display name for a player
-football-data reports under a **broken** one. Keyed by player id like its
-neighbours, and applied by `withPlayerNames`/`withScorerNames` in `server.ts`
-on the way out of `/api/squads`, `/api/scorers` and `/api/players/:id` — inside
-**both** branches of each cache fill, so the live and offline answers cannot
-come to differ on a name. The suite runs the seed branch and production runs the
-other, which is exactly the split that would hide this.
+`src/data/player-overrides.ts` is the one curated player file that **corrects**
+the provider rather than adding to it. Keyed by player id like its neighbours,
+with an optional correction per field, and applied by
+`withSquadOverrides`/`withScorerNames`/`withPlayerOverrides` in `server.ts` on
+the way out of `/api/squads`, `/api/scorers` and `/api/players/:id` — inside
+**both** branches of each cache fill, so the live and offline answers cannot come
+to differ. The suite runs the seed branch and production runs the other, which is
+exactly the split that would hide this.
 
-Two things about it are decisions rather than mechanics:
+**All three routes, and `/api/players/:id` is the one that looks optional and is
+not.** `mergePlayer` keeps the card's existing *name*, so a correction there is
+belt-and-braces — but it prefers `extra.nationality`, so without the same
+correction on the person route the card **visibly undoes** it: measured by
+reverting that one line, the card read "Brasil" on open and flipped to
+"Bulgária" a second later when the enrichment landed. A field-by-field merge
+means "which routes need this" is a per-field question, and the answer is
+already written down in `mergePlayer`.
 
-- **It is not a place to prefer one spelling to another.** An entry says the
-  recorded value is *not a name at all* — Corinthians' fourth goalkeeper arrives
-  as `"Felipexxx"`, with `firstName` empty and `lastName` "Felipe", which is a
-  placeholder somebody typed into a database and left. Anything short of that is
-  our taste against the provider's, and the provider's is what every other
-  football site shows the same reader. Verify against the person endpoint and an
-  independent source before adding one: `/v4/persons/249314` still served the
-  broken string on 2026-08-29 with a `lastUpdated` of 2026-03-19, and
-  pt.wikipedia's "Felipe Longo" gives 5 March 2005, the date `squads.ts` already
-  carries for that id. That birth-date join is the same evidence
-  `check-player-wikipedia` rests on, and for the same reason — a name match
-  cannot tell two players apart.
-- **`squads.ts` cannot carry the correction**, which is the whole reason the file
-  exists. It is generated, so `sync-seed-data` overwrites a hand-edit on its next
-  run and says nothing. Overriding at serve time survives the regeneration.
+**One file with optional fields, not one file per field.** It held only names for
+the hour between #213 and #214; a parallel `player-nationality-overrides.ts`
+would have been two near-identical doc comments stating two versions of one rule,
+and a third file the first time somebody wanted a position. The per-field rules
+genuinely differ, so they live on `PlayerOverride` in `src/types.ts` where a
+reader adding an entry will look:
 
-There is no checker, because the thing to detect is an override going **spent**
-rather than a link rotting, and that is local: `tests/player-core.test.ts` fails
-when an entry names an id no longer in `squads.ts`, or one whose recorded name
-already matches — the shape upstream fixing their data takes when it reaches
-here. Both branches were confirmed red before being believed. Note it can only
-redden on a deliberate `sync-seed-data`, never on somebody's unrelated commit,
-which is what keeps it a unit test rather than a monthly workflow.
+- **`name` — only where the recorded value is not a name at all.** Corinthians'
+  fourth goalkeeper arrives as `"Felipexxx"`, `firstName` empty and `lastName`
+  "Felipe": a placeholder somebody typed into a database and left. Not a place to
+  prefer one spelling to another — the provider's nicknames and single names are
+  what every other football site shows the same reader, and an ambiguous real
+  name stays. `259933` renders as "Guilherme" where the club says "Gui Negão" and
+  there are three Guilhermes in that squad; it is still a name, so it is still
+  "Guilherme".
+- **`nationality` — only where it is factually wrong**, in the **provider's**
+  vocabulary ("Brazil") so `nationalityLabel` still does the translating and a
+  country reaches the page one way rather than two. `1609` is served as
+  `Bulgaria`; he is Brazilian, born in Atibaia, and the cause looks like a
+  country-of-club leak — he played for Ludogorets and pt.wikipedia files him
+  under *Brasileiros expatriados na Bulgária*.
+- **Not positions**, though upstream gets six of Corinthians' 33 first-team
+  players wrong against the club's own sections — a volante filed under
+  Defensores, two attackers under Meio-campistas. A position is genuinely
+  arguable where a placeholder name is not, six entries is where a curated table
+  starts drifting against the provider every transfer window, and the club's own
+  page is not a stable machine-readable source. Recorded rather than fixed.
+
+Verify against the person endpoint **and** an independent source before adding
+one, joined on **exact date of birth** — the evidence `check-player-wikipedia`
+rests on, and for the same reason: a name match cannot tell two people apart.
+That matters more here than it sounds. Wikidata offers a second Corinthians
+player born 2005-03-05, so the birth-date join alone was ambiguous for Felipe
+Longo; what settles him is that upstream says goalkeeper with `lastName`
+"Felipe" and the club lists exactly one goalkeeper at 40.
+
+**Absence of a source is not evidence of an error, and this is where the file
+stops.** A sweep of all 948 players found 29 nationalities, of which `Bulgaria`
+is the only wrong one — but `Mexico` and `Ukraine` each name one base player with
+no article in any language, so they are *unverified* and left alone. The same
+sweep found `Felipexxx` to be the only placeholder-shaped name in the division.
+
+**`squads.ts` cannot carry any of this**, which is the whole reason the file
+exists: it is generated, so `sync-seed-data` overwrites a hand-edit on its next
+run and says nothing. Overriding at serve time survives the regeneration.
+
+There is no checker, because what goes stale here is the **override** rather than
+a third-party link, and that is local. `tests/player-core.test.ts` fails when an
+entry names an id no longer in `squads.ts`, when a field's recorded value already
+matches (upstream having fixed their data, which arrives as a regenerated seed
+and in no other way), when an entry *fills* an absent field rather than
+correcting a wrong one, and when a corrected nationality is one
+`NATIONALITY_LABELS` does not know — which would put the English word on the card
+through the one path that bypasses the provider. Each was confirmed red before
+being believed, except the fills-an-absence branch, which cannot be reached today
+because every player in the seed carries both fields. Note none of them can
+redden on somebody's unrelated commit, only on a deliberate `sync-seed-data`,
+which is what keeps this a unit test rather than a monthly workflow.
 
 `src/data/stadiums.ts` holds each ground's official name, capacity and year of
 inauguration, hand-maintained for the same reason as the hymns — **no provider carries
