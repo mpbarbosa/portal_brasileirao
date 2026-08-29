@@ -710,9 +710,38 @@ paragraph of prose.
    text** — the third instance, after the forma pills and the club name that
    became a link. It strips `.sr-only` before comparing rather than trimming a
    known suffix, so the wording can change without it.
-10. **Forma in the classificação.** `recentForm` and the pills already exist — this
-    is only the column, and the column is a **table-width** problem. It is a
-    fixed-width mark, so it needs `w-0` for the reason `CAMPAIGN_COLUMN` does.
+10. ~~**Forma in the classificação.**~~ **Shipped — but not as a column, because
+    there is no width for one.** The mark column now shows either the campanha
+    or the forma, chosen by a button above the table.
+
+    **The measurement is what decided it.** At desktop the table is 734px inside
+    a 734px container — no surplus at all. An eleventh column of five 28px pills
+    (the club page's size) overflowed by **22px**; at 20px it fitted but took
+    **154px** out of the tallies, and on a phone the horizontal scroll would
+    have grown from 362px to ~520px. Sharing the existing column costs nothing:
+    zero overflow in both modes, and the phone scroll is unchanged.
+
+    **The proposal's answer was `hidden md:table-cell`, "following the campanha
+    column's own precedent" — and no such precedent exists.** `showCampaign` is
+    `lastRound > 0`, a *data* condition; no column in this table hides by
+    viewport. It would also have been aimed at the wrong end: it is desktop that
+    has no room, not mobile, and hiding on a phone means the data is
+    unreachable where scrolling means it is not.
+
+    **It is a second preference, not a third `CampaignPlotKind`.** #235 made the
+    plot kind global — one mark across the Classificação, the Clube page and the
+    Partida page — so folding "forma" in would put pill strips on the club page
+    directly above its own **Últimos resultados**: the same five results twice.
+    Two questions, two lifetimes, two keys; when the column shows the campanha
+    the plot kind still decides its mark, so the choices compose. A spec asserts
+    the club page still draws a campanha while the table shows the forma.
+
+    `FormPill` moved out of `ClubView` at its second call site, which is what it
+    was shaped for in item 6 — the Classificação relocated a function rather
+    than reconstructing a pill and inheriting the `title`-only naming item 6
+    fixed. Its `row` size (16px against the page's 28px) is `RankSparkline`'s
+    own row/page precedent: the same mark at two sizes is fine, a width that
+    *follows the viewport* is not.
 11. **Casa / Fora split.** Compute all three views locally. Taking the splits from
     upstream's HOME/AWAY groups reintroduces the IN_PLAY difference and puts a
     contradiction on one screen.

@@ -431,6 +431,7 @@ export function App() {
                 followedCode={preferences.club ?? undefined}
                 plotKind={plotKind}
                 onTogglePlotKind={togglePlotKind}
+                matches={matches?.matches}
               />
             </>
           )}

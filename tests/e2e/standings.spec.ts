@@ -39,6 +39,64 @@ test.describe("Classificação", () => {
     expect(positions).toEqual(Array.from({ length: 20 }, (_, index) => String(index + 1)));
   });
 
+  test("the mark column can show the forma instead of the campanha", async ({ page }) => {
+    // textContent, not the rendered casing: the thead is uppercased in CSS, so
+    // `toHaveText` sees "Campanha" where `innerText` would say "CAMPANHA".
+    const header = page.locator("table thead th").nth(3);
+    await expect(header).toHaveText("Campanha");
+    await expect(page.locator("table tbody tr td:nth-child(4) svg")).toHaveCount(20);
+
+    await page.getByRole("button", { name: "Ver a forma" }).click();
+
+    await expect(header).toHaveText("Forma");
+    // The campanha is gone from the column, not merely covered.
+    await expect(page.locator("table tbody tr td:nth-child(4) svg")).toHaveCount(0);
+    const strips = page.locator("table tbody tr td:nth-child(4) ul");
+    await expect(strips).toHaveCount(20);
+    // Five results at most, and each named in words — the pills are the club
+    // page's, at the row size.
+    const pills = strips.first().locator("li");
+    expect(await pills.count()).toBeGreaterThan(0);
+    expect(await pills.count()).toBeLessThanOrEqual(5);
+    await expect(pills.first()).toHaveAccessibleName(/^(Vitória|Empate|Derrota)$/);
+  });
+
+  test("the plot toggle is hidden while the forma is showing, since it governs nothing", async ({ page }) => {
+    await expect(page.getByRole("button", { name: /linha|barras/i })).toBeVisible();
+
+    await page.getByRole("button", { name: "Ver a forma" }).click();
+
+    await expect(page.getByRole("button", { name: /linha|barras/i })).toHaveCount(0);
+    // And the way back is still offered.
+    await expect(page.getByRole("button", { name: "Ver a campanha" })).toBeVisible();
+  });
+
+  test("the column choice survives a reload", async ({ page }) => {
+    await page.getByRole("button", { name: "Ver a forma" }).click();
+    await expect(page.locator("table thead th").nth(3)).toHaveText("Forma");
+
+    await page.reload();
+
+    await expect(page.locator("table thead th").nth(3)).toHaveText("Forma");
+  });
+
+  test("choosing the forma does not change the campanha on the club page", async ({ page }) => {
+    // The whole reason this is a second preference rather than a third member
+    // of `CampaignPlotKind`. That kind is global — #235 made the campanha one
+    // mark across the Classificação, the Clube page and the Partida page — so
+    // folding "forma" into it would put pill strips on the club page directly
+    // above its own Últimos resultados: the same five results twice.
+    await page.getByRole("button", { name: "Ver a forma" }).click();
+    await expect(page.locator("table thead th").nth(3)).toHaveText("Forma");
+
+    await page.locator("table tbody tr td:nth-child(2) a").first().click();
+
+    // The club page still draws a campanha, and still exactly one.
+    const campaign = page.locator("main section svg[role='img']");
+    await expect(campaign).toHaveCount(1);
+    await expect(campaign).toHaveAttribute("aria-label", /^Campanha: /);
+  });
+
   test("the leader is marked, and marked in text as well as in colour", async ({ page }) => {
     const cells = page.locator("table tbody tr td:first-child");
 

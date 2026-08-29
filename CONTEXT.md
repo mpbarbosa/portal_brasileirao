@@ -738,6 +738,24 @@ _Avoid_: adding it to `NAV_ITEMS`, fetching per-club data (everything it needs i
 already on the page), "time" for the entity — see **Clube** above. Its address is
 `/clube/<slug>`, so it is shareable and Back returns to the table.
 
+**Marca da classificação**:
+Which mark the Classificação's one narrow column shows — the **Campanha** or the
+**Forma**. `standings-mark-core.ts`, held in `localStorage` by
+`useStandingsMark`, chosen with a button above the table.
+**One column rather than two, and that was measured.** At desktop the table is
+734px inside a 734px container: an eleventh column of five 28px pills overflowed
+it by 22px, and one of 20px pills took 154px out of the tallies. Sharing costs
+nothing, and the two marks answer different questions about the same club — a
+campanha is a *position* trajectory and so is relative to nineteen other clubs,
+where the forma is what the club itself did.
+**Distinct from the plot kind, which is global.** `CampaignPlotKind` says how a
+campanha is *drawn* and governs the Clube and Partida pages too; this says what
+*this column holds*, and nothing outside the table has such a column. Folding
+"forma" into that union would put pill strips on the Clube page directly above
+its own **Últimos resultados** — the same five results twice, eight lines apart.
+_Avoid_: a third member of `CampaignPlotKind`; a shared storage key; showing
+both marks at once (the width is the whole reason there is a choice).
+
 **Forma**:
 The last five *finished* results from one club's point of view, oldest first:
 `V` vitória, `E` empate, `D` derrota. Only finished matches count, so a postponed
