@@ -1121,11 +1121,61 @@ Treat a named worktree or branch the same way: **create it if it is not there**
 rather than assuming you are in it, and never assume it is still yours later —
 see the two worktree rules above.
 
+**The trio is not the whole set: a prompt's claims about *other work* go stale
+fastest of all.** On 2026-08-28 a prompt opened a docs task with two setup
+lines, both wrong, and neither in a way that errors:
+
+- **"PR #149 is already open against `roadmap.md`, so it needs coordinating
+  there rather than a blind edit."** #149 had merged the previous afternoon
+  (`2026-08-27T16:22:36Z`, `1ae9010`). Acting on it means either stalling on a
+  merged PR or coordinating with nobody.
+- **A base of `4a01114`, given as `main`.** `origin/main` was `17521d6` —
+  thirteen commits and five merged PRs further on. That is the *root checkout's*
+  stale local `main`, which is exactly the reading **Compare against
+  `origin/main`** warns about, arriving through a prompt instead of a diff.
+
+Both were probably true when written. That is the point: a PR state and a branch
+tip have a shelf life measured in minutes here, so they are stale by the time a
+session reads them even when nobody was careless. Two commands, the same shape as
+the trio above:
+
+```sh
+gh pr view <n> --json state,mergedAt
+git fetch origin && git rev-parse origin/main
+```
+
+Never `git worktree add -b <branch> <sha-from-the-prompt>` — derive the base
+yourself, or you inherit the staleness into your branch point.
+
+**And check the prompt's carve-outs hardest, because they are the assertions you
+are least likely to test.** The same prompt listed two stale documents and then
+excluded a third: *"`docs/data-sources.md:204` reads similarly but is about
+`check-stadium-photos` and is still true — leave it."* Grepping the workflows
+before honouring that exclusion showed `.github/workflows/curated-data.yml` had
+landed **that same morning** (`cd4e831`), running all four curated-data checkers
+monthly — so the sentence was stale in three places rather than none, and one of
+them sat directly above a paragraph the very same commit had added. **The commit
+that makes a claim stale is frequently adjacent to it.** A carve-out is the one
+class of claim that produces no work when it holds, which is precisely why it
+gets waved through; grep the whole repository for the sentence rather than only
+the lines you were pointed at.
+
 None of this reaches whoever writes those prompts. A session authoring a
 handoff uses the real path, so a prompt naming a directory that exists nowhere
 in this checkout came from an external template or dispatcher that no session
 here can edit. **Verifying is mitigation, not a fix — say so upward when a
 prompt turns out to be wrong**, or the next session is handed the same trio.
+
+**"Upward" means the user, and this was checked rather than assumed.** Asked on
+2026-08-28 to tell the dispatcher directly, a session looked for an address and
+found none: `ListAgents` returns sibling sessions only — all ten named
+`portal-brasileirao-*`, none of them the thing that dispatches — and `.claude/`
+holds `launch.json`, `skills/` and `worktrees/` with no dispatcher config to
+edit. So there is nothing to reply to, and a session that goes hunting will
+spend the time and reach the same conclusion. **This paragraph is the channel**:
+it is committed, so it travels into every worktree and is read by the next
+dispatched session, which is the only audience a fix here can actually reach.
+Tell the user, add the case above, and move on.
 
 **1. Commit explicit paths, and stage only what changed.**
 
