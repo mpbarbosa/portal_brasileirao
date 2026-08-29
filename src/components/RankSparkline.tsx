@@ -46,8 +46,9 @@ interface RankSparklineProps {
 
 /**
  * A club's campanha: its position after every round, drawn as a line or as a
- * column of bars — the reader's choice, offered by the Classificação above the
- * table (`CampaignPlotToggle`).
+ * column of bars — the reader's choice (`CampaignPlotToggle`), and one choice
+ * for the whole app rather than one per page. `App` owns it; all three callers
+ * receive it.
  *
  * One component and not two, because the two marks share everything that
  * matters: the same entries, the same shared domains, the same accessible name,

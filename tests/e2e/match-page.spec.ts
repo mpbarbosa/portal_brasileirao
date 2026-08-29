@@ -60,6 +60,36 @@ test.describe("Página da partida", () => {
     await expect(sparklines.last()).toHaveAttribute("aria-label", /^Campanha: /);
   });
 
+  test("one control switches both campanhas together", async ({ page }) => {
+    // One control for the section, not one per club. The two are read against
+    // each other, so a page that could draw one as a line and the other as bars
+    // would be comparing two pictures rather than two clubs — which is the same
+    // reason they share a scale, one test below.
+    await openFirstMatch(page, PLAYED_ROUND);
+
+    const toggle = page.getByRole("button", { name: /ver a campanha em barras/i });
+    await expect(toggle).toHaveCount(1);
+    await toggle.click();
+
+    const sparklines = page.locator("main section svg[role='img']");
+    await expect(sparklines).toHaveCount(2);
+    await expect(sparklines.locator("polyline")).toHaveCount(0);
+    expect(await sparklines.first().locator("rect").count()).toBeGreaterThan(0);
+    expect(await sparklines.last().locator("rect").count()).toBeGreaterThan(0);
+  });
+
+  test("the match page follows the mark chosen elsewhere", async ({ page }) => {
+    await page.goto("/");
+    await expect(page.locator("table tbody tr")).toHaveCount(20);
+    await page.getByRole("button", { name: /ver a campanha em barras/i }).click();
+
+    await openFirstMatch(page, PLAYED_ROUND);
+
+    const sparklines = page.locator("main section svg[role='img']");
+    await expect(sparklines.locator("polyline")).toHaveCount(0);
+    expect(await sparklines.first().locator("rect").count()).toBeGreaterThan(0);
+  });
+
   test("both campanhas are drawn on one scale", async ({ page }) => {
     // The whole reason they are stacked rather than overlaid: rounds line up
     // vertically, so "who was above whom in round 12" is read by looking

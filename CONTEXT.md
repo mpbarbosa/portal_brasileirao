@@ -51,12 +51,15 @@ _Avoid_: "histórico" (reads as past seasons, not this one), "ranking" (not the
 Brazilian football word, same as under **Classificação**), "evolução" on its own
 (it also reads as a club improving, which a falling campanha is not).
 
-In the **Classificação** the reader chooses which mark the column draws — **Linha**
-or **Barras** — from one button above the table, labelled with the mark it switches
-to ("Ver a campanha em barras"). The choice is `campaign-plot-core.ts`'s
-`CampaignPlotKind`, held in `localStorage` beside the theme and never on the account:
-it is a property of the screen being read rather than of the person reading, so no
-side but the device can hold a value and there is nothing to reconcile.
+The reader chooses which mark it is drawn as — **Linha** or **Barras** — from a
+button labelled with the mark it switches to ("Ver a campanha em barras"): above the
+table in the **Classificação**, and beside the Campanha heading on the **Clube** and
+**Partida** pages. It is **one choice for all three**, not one per page, so a reader
+who picks barras in the table finds barras when they open a club. The choice is
+`campaign-plot-core.ts`'s `CampaignPlotKind`, held in `localStorage` beside the theme
+and never on the account: it is a property of the screen being read rather than of
+the person reading, so no side but the device can hold a value and there is nothing
+to reconcile.
 Both marks are the same component (`RankSparkline`) on the same shared domains, but
 they do not share an axis convention, and that is not a bug to fix. A **linha** joins
 the position taken *at* the end of each round, so round 1 is on the left edge and the
@@ -64,10 +67,9 @@ last round on the right. A **barra** covers the whole round as a band, and its
 meaning is its *length*, so it needs a zero — which here is the foot of the division:
 a club is drawn tall when it is high, last place is a sliver rather than an empty
 column, and only that makes a bar readable without an axis.
-The **Clube** and **Partida** pages keep the linha whatever the table is set to. There
-the campanha is a section with room to read a trajectory across, not a 72px cell being
-scanned down a column; and a choice made in one section silently restyling two other
-pages is a surprise rather than a preference.
+The **Partida** page carries one control for the section rather than one per club:
+the two campanhas there are read against each other, and drawing one as a linha and
+the other as barras would compare two pictures rather than two clubs.
 _Avoid_: "gráfico" for the mark itself (it is a sparkline inside a table row, and the
 word promises axes and a legend that are deliberately absent), "colunas" for the bars
 kind (the table already has columns and one of them is this one), "tipo de gráfico" in

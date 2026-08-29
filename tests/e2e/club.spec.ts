@@ -156,6 +156,51 @@ test.describe("Clube", () => {
     expect(endLabel.startsWith(position)).toBe(true);
   });
 
+  test("the club page follows the mark chosen in the Classificação", async ({ page }) => {
+    // The point of the whole choice: it is one preference for the app, not one
+    // per page. Chosen in the table, then found on a page the reader navigated
+    // to without touching a control.
+    await page
+      .getByRole("button", { name: /ver a campanha em barras/i })
+      .click();
+    await openClubAt(page, 1);
+
+    const sparkline = page.locator("main section svg[role='img']");
+    await expect(sparkline.locator("polyline")).toHaveCount(0);
+    expect(await sparkline.locator("rect").count()).toBeGreaterThan(0);
+  });
+
+  test("the club page carries the control, not only the consequence", async ({ page }) => {
+    // A preference the reader can see the effect of but cannot change from here
+    // would send them back to the table to undo their own choice.
+    await openClubAt(page, 1);
+
+    const toggle = page.getByRole("button", { name: /ver a campanha em barras/i });
+    await expect(toggle).toBeVisible();
+
+    await toggle.click();
+    const sparkline = page.locator("main section svg[role='img']");
+    expect(await sparkline.locator("rect").count()).toBeGreaterThan(0);
+    await expect(
+      page.getByRole("button", { name: /ver a campanha em linha/i }),
+    ).toBeVisible();
+  });
+
+  test("a choice made on the club page is what the table then draws", async ({ page }) => {
+    // The other direction, which is the one a single shared hook would get
+    // wrong: three independent copies of the preference agree only while a
+    // route change unmounts two of them.
+    await openClubAt(page, 1);
+    await page.getByRole("button", { name: /ver a campanha em barras/i }).click();
+
+    await page.getByRole("button", { name: /voltar/i }).first().click();
+    await expect(page.locator("table tbody tr")).toHaveCount(20);
+
+    const cell = page.locator("table tbody tr td:nth-child(4)").first();
+    await expect(cell.locator("polyline")).toHaveCount(0);
+    expect(await cell.locator("rect").count()).toBeGreaterThan(0);
+  });
+
   test("the form guide uses at most five results", async ({ page }) => {
     await openClubAt(page, 1);
 

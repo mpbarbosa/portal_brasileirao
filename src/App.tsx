@@ -34,6 +34,7 @@ import { parseRoute } from "@/route-core";
 import { usePageMeta } from "@/src/usePageMeta";
 import { useAccount } from "@/src/useAccount";
 import { usePreferences } from "@/src/usePreferences";
+import { useCampaignPlotKind } from "@/src/useCampaignPlotKind";
 import { useTheme } from "@/src/useTheme";
 import { useRoute } from "@/src/useRoute";
 import type { ClubCode, Player, Scorer, Squad, StandingsRow } from "@/src/types";
@@ -41,6 +42,12 @@ import type { ClubCode, Player, Scorer, Squad, StandingsRow } from "@/src/types"
 export function App() {
   const { route, navigate } = useRoute();
   const { theme, toggle: toggleTheme } = useTheme();
+  // Owned here for `useTheme`'s reason: three sections draw a campanha — the
+  // Classificação, the Clube page and the Partida page — and one preference
+  // called independently in each would be three copies of it. They would agree
+  // today only because a route change unmounts the others, which is a property
+  // of the router and not a decision anybody made.
+  const { kind: plotKind, toggle: togglePlotKind } = useCampaignPlotKind();
   const { state: accountState, signOut, deleteAccount } = useAccount();
   // Two keys with two homes. Meu time is device-local until an account is known
   // and reconciles with it once one is — see `planSync`; signed out, that is
@@ -422,6 +429,8 @@ export function App() {
                 onSelectClub={(key) => navigate({ section: "clube", key })}
                 rankHistory={rankHistory}
                 followedCode={preferences.club ?? undefined}
+                plotKind={plotKind}
+                onTogglePlotKind={togglePlotKind}
               />
             </>
           )}
@@ -463,6 +472,8 @@ export function App() {
               onSelectMatch={(id) => navigate({ section: "partida", id })}
               followedCode={preferences.club ?? undefined}
               onToggleFollow={toggleClub}
+              plotKind={plotKind}
+              onTogglePlotKind={togglePlotKind}
             />
           )}
 
@@ -474,6 +485,8 @@ export function App() {
               rankHistory={rankHistory}
               onBack={() => navigate({ section: "jogos", round: null })}
               onNavigate={(path) => navigate(parseRoute(path))}
+              plotKind={plotKind}
+              onTogglePlotKind={togglePlotKind}
             />
           )}
 

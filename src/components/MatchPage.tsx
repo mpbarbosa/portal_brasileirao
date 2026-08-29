@@ -14,6 +14,8 @@ import { WikipediaLink } from "@/src/components/ClubLinks";
 import { clubKey } from "@/club-core";
 import { BACK_LINK, LINK_UNDERLINE } from "@/src/components/interaction";
 import { lastRecordedRound } from "@/rank-history-core";
+import type { CampaignPlotKind } from "@/campaign-plot-core";
+import { CampaignPlotToggle } from "@/src/components/CampaignPlotToggle";
 import { RankSparkline } from "@/src/components/RankSparkline";
 import { formatRoute } from "@/route-core";
 import { StatusChip } from "@/src/components/StatusChip";
@@ -30,6 +32,13 @@ interface MatchPageProps {
   onNavigate: (path: string) => void;
   /** Every club's campanha. Omit and the section is left out entirely. */
   rankHistory?: ClubRankHistory[];
+  /**
+   * Which mark both campanhas are drawn as, and the way to flip it — one choice
+   * shared with the Classificação and the Clube page, owned by `App`. Omit and
+   * the section draws lines with no control.
+   */
+  plotKind?: CampaignPlotKind;
+  onTogglePlotKind?: () => void;
 }
 
 const kickoffLabel = (kickoff: string): string => {
@@ -64,12 +73,14 @@ function Campaign({
   entries,
   clubCount,
   lastRound,
+  kind,
 }: {
   club: Club | null;
   code: string;
   entries: RankAtRound[];
   clubCount: number;
   lastRound: number;
+  kind: CampaignPlotKind;
 }) {
   const first = entries[0];
   const last = entries[entries.length - 1];
@@ -82,6 +93,7 @@ function Campaign({
         clubCount={clubCount}
         lastRound={lastRound}
         size="page"
+        kind={kind}
       />
       <p className="mt-1 flex justify-between text-body-small tabular-nums text-ink-faint">
         <span>{first.position}º · 1ª rodada</span>
@@ -145,6 +157,8 @@ export function MatchPage({
   onBack,
   onNavigate,
   rankHistory,
+  plotKind = "line",
+  onTogglePlotKind,
 }: MatchPageProps) {
   if (!match) {
     return (
@@ -265,7 +279,16 @@ export function MatchPage({
 
       {showCampaigns && (
         <section className="mt-6">
-          <h3 className="mb-2 text-body-medium font-medium text-ink-muted">Campanha</h3>
+          {/* One control for the section, not one per club: the two campanhas
+              are read against each other, and a page that could draw one as a
+              line and the other as bars would be comparing two pictures rather
+              than two clubs. */}
+          <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+            <h3 className="text-body-medium font-medium text-ink-muted">Campanha</h3>
+            {onTogglePlotKind && (
+              <CampaignPlotToggle kind={plotKind} onToggle={onTogglePlotKind} />
+            )}
+          </div>
           {/* Stacked, not side by side: the rounds line up vertically, so "who
               was above whom in round 12" is read by looking straight down. */}
           <Surface filled className="space-y-4 px-3 py-3">
@@ -275,6 +298,7 @@ export function MatchPage({
               entries={homeCampaign}
               clubCount={rankHistory?.length ?? 0}
               lastRound={lastRound}
+              kind={plotKind}
             />
             <Campaign
               club={away}
@@ -282,6 +306,7 @@ export function MatchPage({
               entries={awayCampaign}
               clubCount={rankHistory?.length ?? 0}
               lastRound={lastRound}
+              kind={plotKind}
             />
           </Surface>
         </section>
