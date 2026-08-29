@@ -1,4 +1,5 @@
 src/components
+src/data
 src/index.css
 src/App.tsx
 index.html

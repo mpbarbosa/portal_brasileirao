@@ -2186,6 +2186,32 @@ always leaves something to commit — that is the mechanical answer and it is th
 wherever it applies. But it still charges **eighteen** captures from a live-data
 production build to certify that nothing changed, and records no reason.
 
+**`src/data` is a watched path, and it is the one on the list that reports too
+much.** The other four are markup and CSS; this one is data that gets *merged
+into what production serves* — broadcaster marks onto four captured pages, a
+stadium's name and photograph onto the estádio page, a curated player name onto
+Jogadores. So an edit there moves a captured pixel with nothing in
+`src/components`, `src/index.css`, `src/App.tsx` or `index.html` having changed,
+and before it was added the gate could not see that at all. It was found by
+asking whether #221 owed a refresh: it edits `src/data/player-overrides.ts`, the
+gate said nothing, and only reading the data *diff* established that the one new
+entry is a nationality — which renders on the player card, and no capture opens
+one.
+
+**The cost, which is real and was accepted rather than missed: the seed snapshot
+cannot move a capture and is watched anyway.** `matches.ts`, `clubs.ts`,
+`squads.ts`, `rank-history.ts` and `scorers.ts` are the offline fallback, and
+every capture is taken from **production**, which serves live provider data — so
+a `sync-seed-data` run reddens the gate for something structurally incapable of
+changing an image. A `Screenshots-unaffected:` trailer is the answer, and that is
+the mechanism working rather than a workaround for it. A path list cannot
+separate `matches.ts` from `broadcasts.ts`, and between a gate that reports too
+much and one that reports nothing, this is the direction to fail in.
+`tests/check-screenshots.test.ts` holds both halves — one test that a curated
+edit is caught, one that a seed sync is listed and cleared by a trailer. The
+second replaced a test asserting the opposite, whose reasoning was correct about
+the seed and wrong about the file it generalised from.
+
 **Count the directory rather than this paragraph.** It said sixteen for as long as there
 were sixteen, and `partida-554977-{light,dark}` made it eighteen without anything here
 noticing. A number in prose has no gate on it.
