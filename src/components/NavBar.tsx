@@ -261,7 +261,15 @@ export function NavBar({
               second control eats slack that was measured for one. See the
               header-width spec — the bottom bar's fifth entry was clipped with
               no scroll to reveal it, and this is that failure one breakpoint up. */}
-          <div className="flex shrink-0 items-center gap-1">
+          {/* `gap-2`, and the 2 is arithmetic rather than taste. Both controls
+              here take a 48dp touch target from a 40dp box, so each overhangs
+              4px; `gap-1` gave 4px of space to 8px of overhang and the two
+              targets overlapped exactly that much. The toggle won all of it, so
+              a press on the avatar's right edge changed the theme instead of
+              opening the account, and the account control's effective target
+              was 44px wide — under the floor the whole exercise was about.
+              Measured on `37bb199`; asserted in `touch-targets.spec.ts`. */}
+          <div className="flex shrink-0 items-center gap-2">
             {accountControl}
             <Button
               onClick={onToggleTheme}
