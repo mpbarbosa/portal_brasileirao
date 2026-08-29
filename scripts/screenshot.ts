@@ -256,8 +256,46 @@ const slug =
  */
 const fullPage = !mobile && route === "/";
 
-/** Roughly how tall a cropped shot may be, before it is trimmed to a boundary. */
-const MAX_HEIGHT = 1040;
+/**
+ * Roughly how tall a cropped shot may be, before it is trimmed to a boundary.
+ *
+ * **1080 rather than 1040, and the 40px is one page's missing section.** #199
+ * added 32dp of sticky header to every route, which pushed `partida-554951`'s
+ * **Melhores momentos** past the old line: the crop fell back to the previous
+ * boundary, that image shrank 141px while every other cropped capture grew by
+ * exactly 48, and the committed set stopped illustrating that feature anywhere.
+ * A capture that gets *shorter* is content leaving the frame, and nothing checks
+ * for it — the gate compares appearance sources and never what a picture shows.
+ *
+ * **And a capture that gets *longer* is content arriving, which owes the alt
+ * text the same re-read.** That half is here because raising this number is what
+ * proved it: #204 had removed the melhores-momentos clause from both 554951
+ * captions when the section left the frame, so restoring the section made those
+ * captions wrong in the other direction. Only one direction had been written
+ * down, and it was the one that had not bitten anybody. A height that moves at
+ * all — either way — is a caption to open the picture and re-read.
+ *
+ * **The value is measured, not rounded up to something comfortable.** That
+ * section runs 965..1065 at this viewport, so anything below 1065 does not fix
+ * it; and raising it too far silently pulls *other* pages past their next
+ * boundary, which is a change to what the README documents rather than a
+ * restoration. Crop heights per route at candidate values:
+ *
+ *                1040  1080  1090  1105
+ *     ao-vivo     970   970   970  1108
+ *     jogadores  1036  1036  1084  1084
+ *     554951      963  1089  1089  1089
+ *     554977     1023  1023  1023  1125
+ *
+ * The safe band is [1065, 1089] — at 1090 Jogadores joins, at 1105 two more.
+ * 1080 sits inside it with room either way and moves exactly one pair.
+ *
+ * Keep this equal to the cropped viewport height below. They are separate
+ * concerns — one bounds the crop, the other decides what is rendered — but a
+ * crop taller than the viewport clips content that was never scrolled into
+ * view, and the crests and broadcaster marks are lazy.
+ */
+const MAX_HEIGHT = 1080;
 
 mkdirSync(outDir, { recursive: true });
 
@@ -377,7 +415,7 @@ const context = await browser.newContext({
   // The layout is capped at max-w-3xl, so a very wide shot is mostly empty
   // background. This is wide enough to show the full table without padding it
   // out with dead space.
-  viewport: mobile ? { width: 375, height: 812 } : { width: 960, height: fullPage ? 900 : 1040 },
+  viewport: mobile ? { width: 375, height: 812 } : { width: 960, height: fullPage ? 900 : MAX_HEIGHT },
   ...(mobile ? { isMobile: true, hasTouch: true } : {}),
   // 2x would make a full-page shot of a 20-row table needlessly heavy for a
   // README; 1.5 still looks sharp on a high-density display. A phone shot is a
