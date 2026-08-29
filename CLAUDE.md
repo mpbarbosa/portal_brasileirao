@@ -2161,10 +2161,25 @@ a later release carried it. The sha names the build, not the changes in it.
 
 One trap while checking, and it is the `git log` ordering trap in another costume:
 **a merge commit's timestamp is not its merge order** as you remember it, so do not
-reason from "that one looks older". Run the ancestry test in both directions if the
-answer surprises you — it costs one command and it caught a wrong assumption here,
-where `a469cf0` (00:37:14Z) was assumed to predate `54e4105` (00:35:40Z) and does
-not.
+reason from "that one looks older". It caught a wrong assumption here, where
+`a469cf0` (00:37:14Z) was assumed to predate `54e4105` (00:35:40Z) and does not.
+
+**Run the ancestry test in both directions always — not "if the answer surprises
+you".** That conditional was the first spelling of this paragraph and it is wrong,
+for a reason worth more than the case that produced it: **a one-directional check
+is structurally incapable of contradicting you.** `is-ancestor A B` returning true
+is the answer you expected *and* the answer you get when your ordering is backwards
+and you asked the wrong pair — from one side the two are identical, so surprise
+never arrives to trigger the second command. The near-miss above was not caught by
+being careful; it was caught by running the direction that could **falsify** the
+belief. Ask `is-ancestor B A` too and require it to come back false.
+
+That is the same shape as the carve-out rule under *check the prompt that sent
+you*, and as a committed number nobody recomputes: **a check that produces no work
+when it holds is never exercised.** The general form, since it now has three
+instances in this file — a test whose only reachable outcome is agreement is not a
+test. Where the answer matters, spend the second command on the branch that could
+prove you wrong.
 
 It **decides**; `ci.yml` deploys. A reconciled release is dispatched as an
 ordinary run, so it passes the same `check`, `e2e`, ancestry guard and
