@@ -1199,8 +1199,31 @@ git worktree list && git branch -a --list '*<topic>*'
 gh pr list --state all --limit 10
 L=/home/mpb/Documents/GitHub/portal_brasileirao/.claude/worktrees/COORDINATION.md
 grep -n '^## ' "$L" | grep -viE 'merged|removed|torn down|closed|resolved|stood down'
-grep -inE '<topic>' "$L"        # and the topic itself, over the whole file
+grep -n -i '<topic>' "$L" | grep -i 'claim\|worktree-\|PR #'
 ```
+
+**The second grep is narrowed, and that is not tidiness — it is what stops the
+rule above it being defeated.** Telling you never to pipe the search into `head`
+or `tail` is half a fix if the prescribed search hands back a wall. Measured on
+2026-08-29, an hour apart: a bare `grep -i` for `shots` returned **99** lines and
+then **114**; `header` **25** and then **33**. Narrowed, the same two searches
+gave 21 and 24, then 3 and 3. Both were live topics that evening.
+
+Those counts are **readings and not constants** — they grew while this paragraph
+was being written, which is the same discipline the anchored-claim rule below
+asks for, and the reason no number here is worth citing without its date.
+
+**The pull toward truncation does not wait for the output to be long, which is
+the part worth internalising.** The session that raised this reached for `| head`
+on a **six**-line result and then said so unprompted — it was the *anticipation*
+of noise, not the noise. So a search that *could* be noisy is one you will
+truncate eventually, on the run where it happens to matter.
+
+**The narrowing is a first pass, not the whole answer.** It keeps only lines
+carrying `claim`, `worktree-` or `PR #`, so an entry whose heading uses none of
+those words is invisible to it. That is what the unfinished-entries grep above it
+is for; run both, and treat a narrowed search that returns nothing as a reason to
+widen rather than as an all-clear.
 
 **Read the ledger with a search, never with a line range**, and the reason is
 structural rather than a matter of picking a bigger number. **The file has two
