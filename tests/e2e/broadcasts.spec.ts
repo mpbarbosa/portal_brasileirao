@@ -1,3 +1,5 @@
+import { BROADCASTS } from "@/src/data/broadcasts";
+import { SEED_MATCHES } from "@/src/data/matches";
 import { expect, test, type Page } from "@/tests/e2e/clock";
 
 /**
@@ -5,11 +7,47 @@ import { expect, test, type Page } from "@/tests/e2e/clock";
  * to be curated: `src/data/broadcasts.ts` grows every time the sync script runs,
  * so any test counting curated fixtures would break on the next sync.
  *
- * Two rounds are relied on, both stable because the data is committed:
- * round 25 is fully curated, round 1 is in the past and never was.
+ * **The rounds are derived, not named, and that is the second half of the same
+ * rule.** They used to be literals — round 25 curated, round 1 "in the past and
+ * never curated" — and the sync that swept the settled season curated round 1
+ * along with everything else, so `an uncurated round shows no broadcast lines`
+ * failed on data rather than on behaviour. Committed is not the same as stable:
+ * the file is committed *and* regenerated. Naming a round is the same mistake as
+ * counting fixtures, one level up, so the round is now read from the same data
+ * the server will answer with.
+ *
+ * The suite boots with `DISABLE_FOOTBALL_DATA=true`, so `/api/matches` is
+ * exactly `SEED_MATCHES` with `BROADCASTS` attached — these imports are the server's
+ * own inputs, not a second guess at them.
  */
-const CURATED_ROUND = "25";
-const UNCURATED_ROUND = "1";
+const curatedPerRound = new Map<number, { total: number; curated: number }>();
+for (const match of SEED_MATCHES) {
+  const row = curatedPerRound.get(match.round) ?? { total: 0, curated: 0 };
+  row.total += 1;
+  if (BROADCASTS[match.id]?.length) row.curated += 1;
+  curatedPerRound.set(match.round, row);
+}
+const rounds = [...curatedPerRound.entries()].sort(([a], [b]) => a - b);
+
+const fullyCurated = rounds.find(([, r]) => r.curated === r.total && r.total > 0);
+const fullyUncurated = rounds.find(([, r]) => r.curated === 0 && r.total > 0);
+
+// Loud rather than skipped. A season with no uncurated round left is a real
+// state — CBF publishes two to three weeks out, so it arrives at season end —
+// and the answer then is a prepared payload, as `meu-time.spec.ts` uses for the
+// LIVE branch the snapshot cannot reach. It is not a reason to quietly drop the
+// assertion, which is what a `test.skip` here would do.
+if (!fullyCurated || !fullyUncurated) {
+  throw new Error(
+    "broadcasts.spec.ts needs one fully curated round and one with no curated " +
+      "fixture at all, and src/data/broadcasts.ts no longer offers both " +
+      `(curated: ${fullyCurated?.[0] ?? "none"}, uncurated: ${fullyUncurated?.[0] ?? "none"}). ` +
+      "Serve a prepared /api/matches payload for the missing side.",
+  );
+}
+
+const CURATED_ROUND = String(fullyCurated[0]);
+const UNCURATED_ROUND = String(fullyUncurated[0]);
 
 const goToRound = async (page: Page, round: string) => {
   await page.goto(`/jogos/${round}`);
