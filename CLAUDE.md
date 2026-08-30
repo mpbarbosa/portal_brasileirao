@@ -923,14 +923,14 @@ all twenty resolve directly, and each intro names the club.
 `src/data/player-wikipedia.ts` holds each player's article on the **Portuguese**
 Wikipedia, keyed by player id and storing the **title alone**, exactly as
 `club-wikipedia.ts` does. `wikipediaUrl` builds the address. The title is not
-derivable from anything the app holds — **88 of the 187 recorded titles differ
+derivable from anything the app holds — **166 of the 376 recorded titles differ
 from the listed name**, most of them disambiguated ("Dudu (futebolista, 1992)",
 "Luiz Gustavo (futebolista, 1987)"), because the popular name is shared.
 
 **This one has a checker, and its Instagram sibling deliberately does not:**
 
 ```sh
-npm run check-player-wikipedia   # 187 articles, one API call per 20
+npm run check-player-wikipedia   # 376 articles, one API call per 20
 ```
 
 That asymmetry is a property of the two hosts, not of how carefully each file
@@ -945,10 +945,25 @@ disambiguation page, and **its own intro states the same birth date as
 Wikidata `ptwiki` sitelink joined on date of birth, and three of 160 still drew
 the wrong person — the article offered for "Willian Oliveira" opens "6 de junho
 de 1989" against a squad list saying 1993-05-16, because it is about Willian
-Farias. A title match cannot see that; only reading the article can. One trap
-when editing the checker: pt-BR writes the first of the month as an ordinal, so
-`1º` and `1.º` are accepted beside `1`, and without that Bruno Fuchs reads as a
-mismatch on every run.
+Farias. A title match cannot see that; only reading the article can.
+
+**Two traps when editing the checker, and both are false *negatives* — the
+direction a gate must never fail in.** pt-BR writes the first of the month as
+an ordinal, so `1º` and `1.º` are accepted beside `1`, and without that Bruno
+Fuchs reads as a mismatch on every run. And the comparison is **case-folded**,
+because some articles capitalise the month: Alexander Barboza's opens "16 de
+Março de 1995", which a case-sensitive `includes` refuses against a correct
+date. Both fixes widen how a date may be *written* and neither widens what
+counts as a match — folding case cannot make two different dates equal — which
+is the line to stay on the right side of if a third spelling turns up.
+
+**Exact name plus exact date of birth is not a unique key in this division**,
+which the division-wide sweep found the only way it can be found. `179144`
+(Mirassol) and `13421` (Vitória) are both "Carlos Eduardo", both born
+1996-10-10, and are two different people; the join offered one article to both
+and **every per-entry check passed for both**, because each was asked in
+isolation. Only a question about the *set* — has any article been claimed
+twice? — can see it. Ask that before trusting a bulk pass's per-row green.
 
 `src/data/player-photos.ts` holds a photograph for a player, keyed by player id,
 from **Wikimedia Commons** — the bytes vendored into `public/players/` by
