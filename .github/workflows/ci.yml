@@ -564,8 +564,6 @@ jobs:
         # deliberate and is the whole difference between a guard and a lock:
         # during an outage the ability to deploy is worth more than the ordering
         # this protects, and a site that is down cannot tell you what it is running.
-        env:
-          # `github.event.inputs`, not `inputs`: the latter is only populated for
         run: |
           set -euo pipefail
           incoming="$GITHUB_SHA"
