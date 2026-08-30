@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 
 import type { CampaignPlotKind } from "@/campaign-plot-core";
 import { clubKey, recentForm, type FormResult } from "@/club-core";
@@ -12,6 +12,8 @@ import { lastRecordedRound } from "@/rank-history-core";
 import { RankSparkline } from "@/src/components/RankSparkline";
 import { formatRoute } from "@/route-core";
 import { ZONES, type ZoneId, pointsPercentageLabel, zoneAt } from "@/standings-core";
+import { computeStandings, type StandingsSide } from "@/standings-core";
+import { StandingsSideControl } from "@/src/components/StandingsSideControl";
 import { markColumnLabel, markToggleLabel } from "@/standings-mark-core";
 import { Surface } from "@/src/components/Surface";
 import { useStandingsMark } from "@/src/useStandingsMark";
@@ -284,6 +286,36 @@ export function StandingsTable({
 }: StandingsTableProps) {
   const { kind: markKind, toggle: toggleMark } = useStandingsMark();
 
+  /**
+   * Which fixtures the table counts.
+   *
+   * **Component state, not `localStorage`**, unlike the theme and the mark
+   * kind. Those are how a reader likes the page drawn and are true of them
+   * across visits; this is a question asked of one table and then done with —
+   * "how do they do away from home" — and a reader arriving at the
+   * Classificação expects the Classificação, not the last slice they cut. It
+   * also has no honest default other than the competition's own table.
+   */
+  const [side, setSide] = useState<StandingsSide>("all");
+  const splitting = side !== "all";
+
+  /**
+   * The split, computed here from the fixtures rather than taken from upstream.
+   *
+   * `/api/standings` serves the provider's own table when one is reachable, and
+   * that table **counts `IN_PLAY` matches where this app does not**. So the
+   * three views are computed from one fixture list rather than mixing sources:
+   * a Casa view crediting a half-time lead beside a Completa view that does not
+   * is a contradiction a reader can produce by pressing a button.
+   *
+   * `rows` still stands when no fixture list has arrived, which is what the
+   * table did before the split existed — the control is simply absent then.
+   */
+  const shown = useMemo(() => {
+    if (side === "all" || !matches || matches.length === 0) return rows;
+    return computeStandings(rows.map((row) => row.club), matches, side);
+  }, [rows, matches, side]);
+
   /** One pass over the fixtures for all twenty clubs, not one per row. */
   const forma = useMemo(() => {
     if (!matches || matches.length === 0) return new Map<ClubCode, FormResult[]>();
@@ -300,7 +332,18 @@ export function StandingsTable({
 
   // Nothing to draw before the fixtures land. Rendering the column empty would
   // read as twenty broken cells rather than as data still in flight.
-  const showCampaign = lastRound > 0;
+  /**
+   * The mark column, and why a split hides it.
+   *
+   * Both marks it can hold are **whole-season** facts — the campanha is a
+   * position trajectory through the real table, and the forma is the last five
+   * results wherever they were played. Beside home-only tallies neither is
+   * wrong exactly, and both are about a different table from the one the row
+   * is in, which is the shape of contradiction this split was built to avoid
+   * rather than a new one to introduce. The leader disc goes for the same
+   * reason: position 1 of the Casa table is the best host, not the líder.
+   */
+  const showCampaign = lastRound > 0 && !splitting;
 
   return (
     <>
@@ -317,8 +360,17 @@ export function StandingsTable({
           widest content and take the table's surplus straight back — the exact
           regression the "no wider than the mark it holds" spec was written
           for. */}
-      {showCampaign && (
-        <div className="mb-2 flex justify-end gap-2">
+      {/* The split sits left, the mark controls right: one asks which fixtures
+          the table counts and the others how a row is drawn, and putting them
+          in one cluster reads as four settings for one thing. It is absent
+          without a fixture list, because there is then nothing to split. */}
+      <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+        {matches && matches.length > 0 ? (
+          <StandingsSideControl side={side} onSelect={setSide} />
+        ) : (
+          <span />
+        )}
+        <div className="flex gap-2">
           {/* Two controls, each doing one thing, and the second hidden while it
               governs nothing. What the column *shows* is this table's business;
               how a campanha is *drawn* is global — #235 made the plot kind one
@@ -328,16 +380,16 @@ export function StandingsTable({
               is the same five results twice. So the two choices compose: pick
               the campanha and the plot toggle decides its mark; pick the forma
               and there is no campanha on this page for it to govern. */}
-          {matches && matches.length > 0 && (
+          {showCampaign && matches && matches.length > 0 && (
             <Button size="sm" onClick={toggleMark}>
               {markToggleLabel(markKind)}
             </Button>
           )}
-          {markKind === "campanha" && onTogglePlotKind && (
+          {showCampaign && markKind === "campanha" && onTogglePlotKind && (
             <CampaignPlotToggle kind={plotKind} onToggle={onTogglePlotKind} />
           )}
         </div>
-      )}
+      </div>
 
       <Surface className="overflow-x-auto">
         {/* `border-separate` rather than the default collapse: in the collapsed
@@ -378,12 +430,16 @@ export function StandingsTable({
             </tr>
           </thead>
           <tbody>
-            {rows.map((row) => (
+            {shown.map((row) => (
               <tr key={row.club.code}>
                 <td
-                  className={`${ROW_LINE} ${STICKY_POSITION} ${zoneClass(row.position, rows.length)} bg-surface px-3 py-2 tabular-nums text-ink-muted`}
+                  className={`${ROW_LINE} ${STICKY_POSITION} ${zoneClass(row.position, shown.length)} bg-surface px-3 py-2 tabular-nums text-ink-muted`}
                 >
-                  {row.position === 1 ? <LeaderPosition position={row.position} /> : row.position}
+                  {row.position === 1 && !splitting ? (
+                    <LeaderPosition position={row.position} />
+                  ) : (
+                    row.position
+                  )}
                 </td>
                 <td className={`${ROW_LINE} ${STICKY_CLUB} ${CLUB_PADDING} bg-surface py-2 font-medium`}>
                   <span className="mr-2 inline-flex align-middle">
@@ -434,7 +490,7 @@ export function StandingsTable({
                     ) : (
                       <RankSparkline
                         entries={campaigns.get(row.club.code) ?? []}
-                        clubCount={rows.length}
+                        clubCount={shown.length}
                         lastRound={lastRound}
                         kind={plotKind}
                       />
@@ -470,7 +526,7 @@ export function StandingsTable({
 
           Nothing to explain before the rows land: with no rows there is no
           rail, and a key to marks that are not on the page reads as a fault. */}
-      {rows.length > 0 && (
+      {shown.length > 0 && (
         <ul
           aria-label="Legenda das zonas da classificação"
           className="mt-2 flex flex-wrap gap-x-4 gap-y-1 px-1 text-body-small text-ink-muted"

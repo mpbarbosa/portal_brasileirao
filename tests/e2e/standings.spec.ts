@@ -39,6 +39,71 @@ test.describe("Classificação", () => {
     expect(positions).toEqual(Array.from({ length: 20 }, (_, index) => String(index + 1)));
   });
 
+  const side = (page: Page, name: string) => page.getByRole("radio", { name });
+
+  test("Casa and Fora re-rank the table against a subset of the fixtures", async ({ page }) => {
+    const clubs = async () =>
+      (await page.locator("table tbody tr td:nth-child(2)").allInnerTexts())
+        .map((cell) => cell.split("\n")[0].trim());
+
+    const completa = await clubs();
+    expect(completa).toHaveLength(20);
+
+    await side(page, "Casa").click();
+    const casa = await clubs();
+    await side(page, "Fora").click();
+    const fora = await clubs();
+
+    // Every club is in every view — a split narrows which fixtures count, not
+    // which clubs exist.
+    expect([...casa].sort()).toEqual([...completa].sort());
+    expect([...fora].sort()).toEqual([...completa].sort());
+    // And the orders genuinely differ, or the control is doing nothing.
+    expect(casa).not.toEqual(completa);
+    expect(fora).not.toEqual(completa);
+    expect(fora).not.toEqual(casa);
+  });
+
+  test("a split hides the whole-season marks rather than showing them beside partial tallies", async ({ page }) => {
+    // The campanha is a trajectory through the *real* table and the forma is
+    // the last five wherever they were played; either beside home-only tallies
+    // describes a different table from the row it sits in.
+    await expect(page.locator("table thead th").nth(3)).toHaveText("Campanha");
+
+    await side(page, "Casa").click();
+
+    const headers = (await page.locator("table thead th").allInnerTexts()).map((h) => h.trim());
+    expect(headers).not.toContain("CAMPANHA");
+    // The leader disc goes with it: position 1 of the Casa table is the best
+    // host, not the líder.
+    await expect(page.locator("table tbody tr td:first-child span.rounded-full")).toHaveCount(0);
+
+    await side(page, "Completa").click();
+    await expect(page.locator("table thead th").nth(3)).toHaveText("Campanha");
+    await expect(page.locator("table tbody tr td:first-child span.rounded-full")).toHaveCount(1);
+  });
+
+  test("the control says which slice is showing, as state rather than as styling", async ({ page }) => {
+    await expect(side(page, "Completa")).toHaveAttribute("aria-checked", "true");
+    await expect(side(page, "Casa")).toHaveAttribute("aria-checked", "false");
+
+    await side(page, "Casa").click();
+
+    await expect(side(page, "Casa")).toHaveAttribute("aria-checked", "true");
+    await expect(side(page, "Completa")).toHaveAttribute("aria-checked", "false");
+  });
+
+  test("the split resets to the full table on arrival, unlike the mark choice", async ({ page }) => {
+    // Deliberately not persisted: this is a question asked of one table and
+    // then done with, where the mark kind is how a reader likes the page drawn.
+    await side(page, "Fora").click();
+    await expect(side(page, "Fora")).toHaveAttribute("aria-checked", "true");
+
+    await page.reload();
+
+    await expect(side(page, "Completa")).toHaveAttribute("aria-checked", "true");
+  });
+
   test("the mark column can show the forma instead of the campanha", async ({ page }) => {
     // textContent, not the rendered casing: the thead is uppercased in CSS, so
     // `toHaveText` sees "Campanha" where `innerText` would say "CAMPANHA".

@@ -189,10 +189,36 @@ export const compareRows = (a: StandingsRow, b: StandingsRow): number =>
   a.club.shortName.localeCompare(b.club.shortName, "pt-BR");
 
 /**
- * Build the full table. Every club appears, including those with no finished
- * match yet — an empty round should render 20 zeroed rows, not an empty table.
+ * Which side of a fixture a club is credited for.
+ *
+ * `all` is the table as the competition keeps it. `home` and `away` are the
+ * same arithmetic over a subset: a club's home table counts only the matches it
+ * hosted, and its away table only those it visited.
  */
-export const computeStandings = (clubs: Club[], matches: Match[]): StandingsRow[] => {
+export type StandingsSide = "all" | "home" | "away";
+
+/**
+ * Build the table. Every club appears, including those with no finished match
+ * yet — an empty round should render 20 zeroed rows, not an empty table.
+ *
+ * **`side` splits by which fixtures count, never by where the tallies come
+ * from**, and that is the decision the split forces rather than a detail of it.
+ * football-data's `/standings` ships `HOME` and `AWAY` groups beside `TOTAL`,
+ * and taking them would be one line — but **upstream counts `IN_PLAY` matches
+ * and this app does not**, so a Casa view crediting a half-time lead beside a
+ * Completa view that does not is a contradiction a reader can see by pressing a
+ * button. The three views are one computation over one fixture list, so they
+ * cannot disagree with each other whatever the provider is doing.
+ *
+ * Note this is *not* a change to `countsTowardStandings`: a live match still
+ * counts toward none of the three. CLAUDE.md's "do not fix this by counting
+ * live matches" is intact.
+ */
+export const computeStandings = (
+  clubs: Club[],
+  matches: Match[],
+  side: StandingsSide = "all",
+): StandingsRow[] => {
   const tallies = new Map<ClubCode, Tally>(clubs.map((club) => [club.code, emptyTally()]));
 
   for (const match of matches) {
@@ -204,8 +230,8 @@ export const computeStandings = (clubs: Club[], matches: Match[]): StandingsRow[
     // throwing: one bad row upstream should not blank the whole table.
     if (!home || !away) continue;
 
-    applyResult(home, match.homeGoals, match.awayGoals);
-    applyResult(away, match.awayGoals, match.homeGoals);
+    if (side !== "away") applyResult(home, match.homeGoals, match.awayGoals);
+    if (side !== "home") applyResult(away, match.awayGoals, match.homeGoals);
   }
 
   return clubs

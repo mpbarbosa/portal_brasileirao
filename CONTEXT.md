@@ -786,6 +786,28 @@ _Avoid_: adding it to `NAV_ITEMS`, fetching per-club data (everything it needs i
 already on the page), "time" for the entity — see **Clube** above. Its address is
 `/clube/<slug>`, so it is shareable and Back returns to the table.
 
+**Completa / Casa / Fora**:
+The three slices of the **Classificação**, chosen by a segmented control above
+the table. `computeStandings(clubs, matches, side)` — one computation, three
+subsets: `casa` counts only the matches a club hosted, `fora` only those it
+visited, and the two add up to `completa` club by club.
+**All three are computed from the fixture list**, never taken from upstream's
+`HOME`/`AWAY` groups. That would be one line and it is wrong for the reason
+`/api/standings` is read as `TOTAL` only: **upstream counts `IN_PLAY` matches
+and this app does not**, so a Casa view crediting a half-time lead beside a
+Completa view that does not is a contradiction a reader produces by pressing a
+button.
+A split **hides the mark column and the leader disc**. Both marks are
+whole-season facts — a campanha is a trajectory through the real table, a forma
+is the last five wherever they were played — and position 1 of the Casa table is
+the best host, not the **Líder**.
+The choice is **not persisted**, unlike **Marca da classificação** and the
+theme: it is a question asked of one table and then done with, and a reader
+arriving at the Classificação expects the Classificação.
+_Avoid_: "mandante/visitante" as the control's labels (correct, and longer than
+the segments allow — the `title` carries them), taking the splits from the
+provider, persisting the choice, tiering the zones off a split's positions.
+
 **Marca da classificação**:
 Which mark the Classificação's one narrow column shows — the **Campanha** or the
 **Forma**. `standings-mark-core.ts`, held in `localStorage` by
