@@ -150,7 +150,11 @@ echo "    ${STAGING}"
 # Remove it however this script ends, including on a failed install: a staging
 # copy left behind is a whole release worth of bytes in /tmp, and it is the
 # release that just failed.
-# shellcheck disable=SC2329  # invoked by the trap below, not by name.
+# shellcheck disable=SC2317,SC2329  # invoked by the trap below, not by name.
+# Both codes, because they are the same finding under two shellcheck lines:
+# 0.11+ says SC2329 (function never invoked), 0.9-0.10 say SC2317 (command
+# unreachable) against the body. CI runs whatever ubuntu-latest ships, so
+# naming only the newer one is green locally and red there.
 cleanup_staging() {
     # shellcheck disable=SC2029  # expanding on the client is the point: printf %q
     # quotes the path here so the remote shell receives one safe literal.
