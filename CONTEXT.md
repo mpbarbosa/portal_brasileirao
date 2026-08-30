@@ -587,6 +587,23 @@ that is still to come.
 _Avoid_: "final", "over" (both read as "the score is final", which is untrue of a
 cancelled match).
 
+**Súmula**:
+CBF's own match report, published as a PDF at `conteudo.cbf.com.br/sumulas/…`
+and parsed by `sumula-core.ts`. It is the **only** source that says when a goal
+was scored: CBF's match API sends `tempo_jogo: "2"` on every goal and a
+`minutos` with no half attached, while the súmula prints a **1T/2T** column
+beside the time and renders stoppage as `+N`. It also states its own half-time
+and final scorelines in prose, which is what lets a parse be checked against the
+document that produced it.
+The word stays **súmula** in code and in comments — it is what CBF calls the
+document and what a Brazilian reader would search for. Nothing user-facing says
+it yet; if anything ever does, it is *a súmula*, never "the match report".
+_Avoid_: "match report" or "boletim" (neither is CBF's word); treating the
+súmula and the match API as interchangeable sources — they carry different
+fields and only one of them has a clock; **"minuto do gol" as a value read from
+the API**, which is the thing that does not exist and the reason this document
+is read at all.
+
 **Conta para a classificação**:
 `countsTowardStandings` — a match enters the table only when it is `FINISHED`
 **and** carries both scores. A `LIVE` match with a partial score does not: the
