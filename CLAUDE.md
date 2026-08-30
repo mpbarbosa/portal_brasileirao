@@ -1292,6 +1292,47 @@ reason to leave it standing, not a weaker one. It fails unsafe only once the
 reflog has expired — 90 days by default, against branches that live for hours —
 so an **empty** reflog is `UNKNOWN` and never "merged".
 
+**There is a second way it misreports, and unlike the expired reflog it has no
+`UNKNOWN` branch to fall into: a branch that was created and later moved
+forward.** `git checkout -b` at one commit followed by a fast-forward to a newer
+`main` leaves born ≠ tip while the branch has never held a commit of its own —
+so **neither** line of the snippet prints, and silence reads as "the check ran
+and had nothing to warn about". Measured on `worktree-gate-capture-advice`
+(2026-08-29): born `c12dd0f`, tip `fb6320b`, both of them merge commits on
+`main`, and `git rev-list --count origin/main..<branch>` = 0. Nothing about the
+branch had changed between the two readings except which commit it pointed at.
+Reproduced from scratch in a throwaway repo rather than reasoned out — create a
+branch, commit nothing on it, let somebody else's work land on `main`, then
+`git merge --ff-only main`. The reflog then reads `branch: Created from HEAD`
+followed by `merge main: Fast-forward`, and no commit anywhere in it.
+
+**The first fixture written for that was wrong in the way this file already warns
+fixtures go wrong**, and it is worth a sentence because it looked right: it
+committed on the branch before merging and fast-forwarding, which reproduces a
+*merged* branch — the case the paragraph above already covers — and the snippet
+is equally silent there, so the demonstration appeared to succeed. A fixture that
+exercises the neighbouring case passes for the wrong reason.
+
+Read the direction it fails in carefully, because it is not the one the
+paragraph above describes. It reports a branch holding nothing as one holding
+work — conservative at the *destructive* step, and simply **wrong** as an answer
+to the question the test is offered for. Tonight it said "started" about a
+branch nobody had started, which is the same false signal as inferring a peer
+from timing: it invents an occupant. Ownership guessed from a re-pointed branch
+is guessed all the same.
+
+The count is what settles it, and it is one command rather than three:
+
+```sh
+test "$(git rev-list --count origin/main..<branch>)" = 0 &&
+  echo "no commit of its own — unstarted or merged; the reflog says which"
+```
+
+Run it **with** the reflog test, not instead of it: the count cannot tell an
+unstarted branch from a merged one, and the reflog cannot tell an unstarted
+branch from a re-pointed one. Neither is sufficient alone, which is why both are
+written here.
+
 **The record that would have settled it is `COORDINATION.md`, and until this
 paragraph nothing committed named it:**
 
