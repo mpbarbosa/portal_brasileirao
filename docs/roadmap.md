@@ -742,9 +742,35 @@ paragraph of prose.
     fixed. Its `row` size (16px against the page's 28px) is `RankSparkline`'s
     own row/page precedent: the same mark at two sizes is fine, a width that
     *follows the viewport* is not.
-11. **Casa / Fora split.** Compute all three views locally. Taking the splits from
-    upstream's HOME/AWAY groups reintroduces the IN_PLAY difference and puts a
-    contradiction on one screen.
+11. ~~**Casa / Fora split.**~~ **Shipped.** `computeStandings` takes a
+    `StandingsSide`, a segmented control sits above the table, and all three
+    views come from the one fixture list — never from upstream's `HOME`/`AWAY`
+    groups, for the documented reason: the provider counts `IN_PLAY` and this
+    app does not, so mixing sources puts a contradiction one button-press away.
+    A unit test asserts casa + fora = completa club by club and field by field,
+    which is what makes the three one answer rather than three.
+
+    **Two things the split breaks that the item does not mention, both visible
+    the moment it rendered.** A split has no *líder* — position 1 of the Casa
+    table is the best host — so the leader disc is suppressed. And both marks
+    the column can hold are **whole-season** facts, a campanha being a
+    trajectory through the real table and a forma the last five wherever they
+    were played; beside home-only tallies each describes a different table from
+    the row it sits in, which is the same contradiction one layer down. The mark
+    column and its controls are hidden in a split.
+
+    **The control is a segmented button, the app's first**, written as its own
+    component rather than folded into `Button`: that component's variants are a
+    single control's shape, where a segment needs a shared outline, collapsed
+    inner borders and end caps that only mean anything as a group. It is a
+    `radiogroup` — the choices are mutually exclusive and exactly one is always
+    on, which is a radio's contract and not a button's, and it brings arrow-key
+    selection for nothing.
+
+    **The choice is deliberately not persisted**, unlike the theme and the mark
+    kind. Those are how a reader likes the page drawn; this is a question asked
+    of one table and then done with, and a reader arriving at the Classificação
+    expects the Classificação.
 12. **Derived league statistics.** Melhores ataques, melhores defesas, total and
     average goals. Under the Classificação — **not** a sixth `NAV_ITEMS` entry; the
     bar is full and nothing in the tooling will tell you so.

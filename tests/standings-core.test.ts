@@ -198,3 +198,88 @@ test("every band the table can paint has a line in the legenda", () => {
     assert.doesNotMatch(zone.where, /\d/, `${zone.term} spells a position as a digit`);
   }
 });
+
+test("the home table counts only matches a club hosted", () => {
+  const matches = [
+    match({ homeCode: "AAA", awayCode: "BBB", homeGoals: 3, awayGoals: 0 }),
+    match({ homeCode: "BBB", awayCode: "AAA", homeGoals: 2, awayGoals: 1 }),
+  ];
+
+  const home = computeStandings(CLUBS, matches, "home");
+  const aaa = home.find((row) => row.club.code === "AAA")!;
+  const bbb = home.find((row) => row.club.code === "BBB")!;
+
+  // AAA hosted once and won it; its away defeat is not in this table at all.
+  assert.deepEqual(
+    [aaa.played, aaa.wins, aaa.losses, aaa.points, aaa.goalsFor, aaa.goalsAgainst],
+    [1, 1, 0, 3, 3, 0],
+  );
+  assert.deepEqual([bbb.played, bbb.wins, bbb.points], [1, 1, 3]);
+});
+
+test("the away table counts only matches a club visited", () => {
+  const matches = [
+    match({ homeCode: "AAA", awayCode: "BBB", homeGoals: 3, awayGoals: 0 }),
+    match({ homeCode: "BBB", awayCode: "AAA", homeGoals: 2, awayGoals: 1 }),
+  ];
+
+  const away = computeStandings(CLUBS, matches, "away");
+  const aaa = away.find((row) => row.club.code === "AAA")!;
+
+  assert.deepEqual(
+    [aaa.played, aaa.wins, aaa.losses, aaa.points, aaa.goalsFor, aaa.goalsAgainst],
+    [1, 0, 1, 0, 1, 2],
+  );
+});
+
+test("the two splits add up to the full table, club by club", () => {
+  // The property that makes the three views one answer rather than three: every
+  // fixture credits exactly one side in each split, so home + away = all.
+  const matches = [
+    match({ homeCode: "AAA", awayCode: "BBB", homeGoals: 3, awayGoals: 0 }),
+    match({ homeCode: "BBB", awayCode: "AAA", homeGoals: 2, awayGoals: 1 }),
+    match({ homeCode: "CCC", awayCode: "AAA", homeGoals: 1, awayGoals: 1 }),
+    match({ homeCode: "BBB", awayCode: "CCC", homeGoals: 0, awayGoals: 0 }),
+  ];
+
+  const by = (rows: StandingsRow[], code: string) => rows.find((r) => r.club.code === code)!;
+  const all = computeStandings(CLUBS, matches);
+  const home = computeStandings(CLUBS, matches, "home");
+  const away = computeStandings(CLUBS, matches, "away");
+
+  for (const code of ["AAA", "BBB", "CCC"]) {
+    for (const key of ["played", "wins", "draws", "losses", "goalsFor", "goalsAgainst", "points"] as const) {
+      assert.equal(
+        by(home, code)[key] + by(away, code)[key],
+        by(all, code)[key],
+        `${code}.${key}`,
+      );
+    }
+  }
+});
+
+test("a split still refuses a live match, and every club still appears", () => {
+  // The split changes which fixtures count, never what counts as played.
+  const matches = [
+    match({ homeCode: "AAA", awayCode: "BBB", status: "LIVE", homeGoals: 1, awayGoals: 0 }),
+  ];
+
+  for (const side of ["all", "home", "away"] as const) {
+    const rows = computeStandings(CLUBS, matches, side);
+    assert.equal(rows.length, CLUBS.length, side);
+    assert.equal(rows.every((row) => row.played === 0), true, side);
+  }
+});
+
+test("a split is still ordered by the CBF tie-breakers", () => {
+  const matches = [
+    match({ homeCode: "AAA", awayCode: "BBB", homeGoals: 1, awayGoals: 0 }),
+    match({ homeCode: "CCC", awayCode: "AAA", homeGoals: 5, awayGoals: 0 }),
+  ];
+
+  const home = computeStandings(CLUBS, matches, "home");
+
+  // CCC and AAA both won at home; CCC's goal difference is larger.
+  assert.deepEqual(home.map((row) => row.club.code).slice(0, 2), ["CCC", "AAA"]);
+  assert.deepEqual(home.map((row) => row.position), [1, 2, 3]);
+});
