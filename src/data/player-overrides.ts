@@ -102,4 +102,43 @@ export const PLAYER_OVERRIDES: Record<string, PlayerOverride> = {
   // meias. "Diego da Cruz Lopes" — "atua como meio-campista"
   // (b. 2007-09-16). Broad, for the same reason as Labyad.
   "275104": { position: "Midfield" },
+
+  // ---------------------------------------------------------------------
+  // Dates of birth. Two, from the same division-wide sweep that added the
+  // ptwiki articles — and found the error running **both ways**, which is
+  // why neither side is presumed right here. Read 2026-08-30.
+  //
+  // The evidence cannot be the usual join: every other entry in this file
+  // is trusted because it was matched to the player on exact date of
+  // birth, and that is unavailable when the date is the thing in dispute.
+  // So each of these rests on the article being established as this player
+  // by its **club and role** — matching the row — and on **several
+  // independent sources agreeing against the provider**: Wikidata's P569,
+  // plus the article in English, Spanish and Italian.
+  //
+  // NOT here, and this is the half that keeps the bar honest: three players
+  // whose pt.wikipedia article disagrees with us and is itself the outlier.
+  // Matheus Martins (169234), Lucas Ramon (13647) and Lucas Arcanjo
+  // (169696) are served correctly by the provider, and are absent from
+  // `player-wikipedia.ts` for that reason — see the note there. A
+  // disagreeing article is not evidence; a disagreeing article contradicted
+  // by every other source is evidence of the *article* being wrong.
+  // ---------------------------------------------------------------------
+
+  // Upstream serves 1999-10-22; he was born 1998-10-22, a year earlier.
+  // Wikidata Q61940543 carries **both** dates, one reference each, so it
+  // does not settle it alone — the three articles do, and they are
+  // unanimous: pt "22 de outubro de 1998", en "22 October 1998", es "22 de
+  // octubre de 1998", it "22 ottobre 1998". The es article is the one to
+  // weigh most for an Argentine, and it names Wilde, Buenos Aires and Remo,
+  // which is this row's club. The card read 26 where he is 27.
+  "113224": { dateOfBirth: "1998-10-22" },
+
+  // Upstream serves 1991-10-15; he was born 1993-10-15, two years later.
+  // Same shape as Picco: Wikidata Q28151216 holds both dates with one
+  // reference each, and pt, en, es and it all say 1993. The es article
+  // names Zona Bananera and a Colombian volante, which is this row. The
+  // biggest visible error of the five chased — the card read 34 where he
+  // is 32.
+  "3738": { dateOfBirth: "1993-10-15" },
 };

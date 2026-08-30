@@ -512,6 +512,31 @@ export interface PlayerOverride {
    * then earns a caption the broad word would not have.
    */
   position?: string;
+  /**
+   * Where the recorded **date of birth** is factually wrong.
+   *
+   * ISO `YYYY-MM-DD`, the provider's own spelling, so `ageOn` and
+   * `birthDateLabel` read it exactly as they read an uncorrected one. It is
+   * doubly visible: the card prints both **Idade** and **Nascimento** from this
+   * field, so a wrong value is wrong twice.
+   *
+   * **This is the one field whose evidence cannot be the usual join, and that
+   * is the thing to understand before adding an entry.** Every other correction
+   * here is trusted because it was joined to the player on exact date of birth
+   * — which is unavailable precisely when the date is what is wrong. So the
+   * bar is different in kind rather than merely higher: **the article must be
+   * established as this player by something other than the date** (the club and
+   * role it names, matching the row), and **several independent sources must
+   * agree against the provider**. Wikidata's `P569`, and the article in more
+   * than one language, are what settled the two entries here; a single
+   * disagreeing article is not evidence, because pt.wikipedia was itself the
+   * outlier three times in the same sweep.
+   *
+   * Both directions were found in one pass, so neither side is presumed right:
+   * the provider is wrong for the two players recorded here, and pt.wikipedia
+   * is wrong for three others who are therefore *not* recorded anywhere.
+   */
+  dateOfBirth?: string;
 }
 
 /**

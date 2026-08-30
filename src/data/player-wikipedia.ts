@@ -14,7 +14,7 @@
  * the full one ("Danilo Luiz da Silva"), or at a disambiguated one where the
  * popular name is shared.
  *
- * Coverage is **partial**, like every curated file here — 376 of the 948
+ * Coverage is **partial**, like every curated file here — 378 of the 948
  * listed players, every club represented. A player absent here renders no
  * link.
  *
@@ -83,6 +83,36 @@
  * pass that adds entries in bulk should check for a duplicated article before
  * trusting a per-entry green, because that failure is invisible one row at a
  * time.
+ *
+ * ## Three players absent because the *article* is wrong
+ *
+ * Chasing the sweep's five date disagreements settled every one, and the answer
+ * ran **both ways** — which is why this is written down rather than left as
+ * three plausible-looking gaps for somebody to re-chase.
+ *
+ * Two were the provider's error and are corrected in `player-overrides.ts`:
+ * **Leonel Picco** (1998, not 1999) and **Víctor Cantillo** (1993, not 1991).
+ * Both are recorded above, and they pass here only because this checker applies
+ * those overrides.
+ *
+ * The other three are pt.wikipedia's error, and they stay out:
+ *
+ * - **Matheus Martins** (`169234`, Botafogo) — the article opens "13 de julho
+ *   de 2003"; Wikidata `P569`, en, es and it all say **16 July**, which is what
+ *   `squads.ts` carries.
+ * - **Lucas Ramon** (`13647`, São Paulo) — the article says "3 de julho de
+ *   1994" against our 7 March, the same two numbers transposed. Wikidata holds
+ *   1994-03-07 with two references; en and it agree with us.
+ * - **Lucas Arcanjo** (`169696`, Vitória) — the article says 5 August against
+ *   our 8 August. Wikidata and en agree with us; it.wikipedia repeats the pt
+ *   date, which is what a translation does rather than a second opinion.
+ *
+ * Each is certainly the right person — the article names the club and the role
+ * — so the temptation is to record the title and tolerate one red line.
+ * **Do not.** The birth-date test is the only thing between this file and a
+ * plausible article about somebody else, and an entry that has to be excused is
+ * a hole in it. The fix is on Wikipedia; until somebody makes it, these three
+ * have no link.
  *
  * ## A second source: the club's own article
  *
@@ -218,10 +248,12 @@ export const PLAYER_WIKIPEDIA: Record<string, string> = {
   "113521": "Jáderson Flores dos Reis", // Jáderson
   "119621": "João Lucas (futebolista)", // João Lucas
   "168986": "José Welison", // Jose Welison
+  "113224": "Leonel Picco",
   "1441": "Marllon Borges", // Marllon
   "19262": "Mayk",
   "1582": "Patrick (futebolista)", // Patrick
   "139932": "Patrick de Paula",
+  "3738": "Víctor Cantillo",
   "168807": "Vitor Bueno",
   "1465": "Yago Pikachu",
 

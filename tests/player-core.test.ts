@@ -466,7 +466,7 @@ test("every override corrects a player still in the snapshot, and still disagree
   const problems = Object.entries(PLAYER_OVERRIDES).flatMap(([id, override]) => {
     const seeded = recorded.get(id);
     if (!seeded) return [`${id} is no longer in squads.ts`];
-    return (["name", "nationality", "position"] as const).flatMap((field) => {
+    return (["name", "nationality", "position", "dateOfBirth"] as const).flatMap((field) => {
       const value = override[field];
       if (value === undefined) return [];
       if (!value.trim()) return [`${id}.${field} is blank`];

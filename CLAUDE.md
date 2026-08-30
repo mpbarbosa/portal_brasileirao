@@ -982,14 +982,14 @@ all twenty resolve directly, and each intro names the club.
 `src/data/player-wikipedia.ts` holds each player's article on the **Portuguese**
 Wikipedia, keyed by player id and storing the **title alone**, exactly as
 `club-wikipedia.ts` does. `wikipediaUrl` builds the address. The title is not
-derivable from anything the app holds — **166 of the 376 recorded titles differ
+derivable from anything the app holds — **166 of the 378 recorded titles differ
 from the listed name**, most of them disambiguated ("Dudu (futebolista, 1992)",
 "Luiz Gustavo (futebolista, 1987)"), because the popular name is shared.
 
 **This one has a checker, and its Instagram sibling deliberately does not:**
 
 ```sh
-npm run check-player-wikipedia   # 376 articles, one API call per 20
+npm run check-player-wikipedia   # 378 articles, one API call per 20
 ```
 
 That asymmetry is a property of the two hosts, not of how carefully each file
@@ -1174,6 +1174,34 @@ reader adding an entry will look:
   own page is not a stable machine-readable source. Both objections stand; the
   bar is what they bought. Coverage is **Corinthians only**, which is the club
   whose squad was validated, and partial like every curated file here.
+
+- **`dateOfBirth` — only where it is factually wrong, and it is the one field
+  the join below cannot vouch for.** ISO `YYYY-MM-DD`, the provider's spelling,
+  so `ageOn` and `birthDateLabel` read it exactly as they read an uncorrected
+  value. It is visible twice — the card prints **Idade** and **Nascimento** from
+  this one field — which is how it was noticed: Víctor Cantillo read 34 where he
+  is 32.
+
+  **Every other rule here says "joined on exact date of birth", and that is
+  unavailable precisely when the date is what is wrong.** So the bar differs in
+  kind rather than degree: the article must be established as this player by
+  something *other* than the date — the club and role it names, matching the row
+  — and several **independent** sources must agree against the provider.
+  Wikidata `P569` plus the article in more than one language is what settled the
+  two entries here.
+
+  **A single disagreeing article is not evidence, and the sweep proves it by
+  going both ways.** Of five date disagreements found across the division, two
+  were the provider's error (Leonel Picco `113224`, Víctor Cantillo `3738`, both
+  corrected here) and **three were pt.wikipedia's** — Matheus Martins, Lucas
+  Ramon and Lucas Arcanjo are served correctly and their articles are the
+  outlier against Wikidata, en and es. Those three are therefore absent from
+  `player-wikipedia.ts` and stay absent; `src/data/player-wikipedia.ts` records
+  why, so nobody re-chases them.
+
+  Note `check-player-wikipedia` now reads the **overridden** squad. Without that
+  it would refuse Picco's and Cantillo's articles for stating the right date,
+  which is a gate rejecting an entry because it is correct.
 
 Verify against the person endpoint **and** an independent source before adding
 one, joined on **exact date of birth** — the evidence `check-player-wikipedia`
