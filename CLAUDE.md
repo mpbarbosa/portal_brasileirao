@@ -757,7 +757,20 @@ once and a crawler would drop them over an incident lasting minutes.
 **The sitemap is load-bearing, not a nicety.** The round picker is a `<select>`, not a set
 of links, so every round but the current one — and with it nearly every fixture page — has
 no inbound link anywhere on the site. `/sitemap.xml` is the only way a crawler reaches
-them. 442 URLs at full season, against a 50,000 limit, so no sitemap index is needed. A
+them. **463 URLs at full season — count the file rather than this sentence.** It read 442
+for months, and 442 was *correct when written*: the gap is exactly the 19 estádio pages,
+`/jogadores` and `/privacidade`, each of which added itself to the sitemap without touching
+this line. Nothing here went red, because a number in prose has no gate on it — Search
+Console is what noticed, reporting 463 páginas encontradas against a paragraph still
+claiming 442. **Adding a section changes this count**, which is the half of the four-file
+rule above that no compiler can hold.
+
+```sh
+curl -sf https://brasileirao.mpbarbosa.com/sitemap.xml | grep -c '<loc>'
+# 463 = 380 partida + 39 jogos + 20 clube + 19 estadio + 5 standalone
+```
+
+Either figure is far under the 50,000 limit, so no sitemap index is needed. A
 finished match takes its kickoff as `lastmod`, because that is when the page stopped
 changing; claiming today's date for a fixture played in April trains a crawler to stop
 believing the field.
