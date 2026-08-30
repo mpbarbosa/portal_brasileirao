@@ -32,9 +32,9 @@ desktop shots above look no different. Five is Material Design 3's ceiling for t
 the bar is now at it: the labels fit at 375dp because the items carry no horizontal padding, and
 below 360dp the active indicator narrows rather than let the last destination fall off the edge.*
 
-![Página Ao vivo no tema claro: a secção Agora traz o cartão de uma partida em andamento — Athletico-PR 2 × 2 Fluminense, com escudos, a rodada, a etiqueta "Bola rolando" ao lado de um ponto verde, uma ligação Ver a partida e as marcas das emissoras — e sob ele a nota de que os placares são atualizados automaticamente enquanto a página estiver aberta. Abaixo, A seguir lista os próximos jogos, cada um com data, horário, uma contagem regressiva até o apito inicial e as marcas das emissoras que o transmitem.](docs/screenshots/ao-vivo-light.png)
+![Página Ao vivo no tema claro, numa tarde de domingo com cinco jogos ao mesmo tempo: a secção Agora traz cinco cartões da 25ª rodada — Corinthians 0 × 1 Santos, Flamengo 3 × 0 Botafogo, Grêmio 3 × 1 Chapecoense, Mirassol 1 × 1 Palmeiras e Bahia 3 × 1 Internacional — cada um com escudos, a rodada, a etiqueta "Bola rolando" ao lado de um ponto verde, uma ligação Ver a partida e as marcas das emissoras, e ao pé a nota de que os placares são atualizados automaticamente enquanto a página estiver aberta. Com tantas partidas simultâneas, a secção A seguir fica abaixo do que cabe no enquadramento.](docs/screenshots/ao-vivo-light.png)
 
-![A mesma página Ao vivo no tema escuro, com o mesmo cartão da partida em andamento, as mesmas secções, contagens regressivas e marcas das emissoras sobre fundo claro.](docs/screenshots/ao-vivo-dark.png)
+![A mesma página Ao vivo no tema escuro, com os mesmos cinco cartões de partidas em andamento, as mesmas etiquetas "Bola rolando" e as mesmas marcas das emissoras sobre fundo claro.](docs/screenshots/ao-vivo-dark.png)
 
 *Ao vivo, light and dark — what is being played now, what is next, and what just finished.
 Matches in progress get a card each rather than a row, so simultaneous kickoffs are all
@@ -45,7 +45,7 @@ refetches on its own. There is deliberately no match minute: the provider report
 and a score and never an elapsed clock, so the page says **bola rolando** rather than
 guessing a number.*
 
-![Página do clube Palmeiras no tema claro: escudo, o técnico Abel Ferreira, o endereço da sede, site oficial, perfil no Instagram, hino do clube e artigo na Wikipédia; à direita, o botão Seguir, que marca o clube como o time do leitor; os números da temporada (1º lugar, 51 pontos, 24 jogos, saldo +24 e 71% de aproveitamento); ao lado do título Campanha, um botão oferece vê-la em barras em vez da linha, e abaixo o gráfico da campanha da 1ª à 24ª rodada, os últimos cinco resultados, o próximo jogo e os artilheiros do clube.](docs/screenshots/clube-palmeiras-light.png)
+![Página do clube Palmeiras no tema claro: escudo, o técnico Abel Ferreira, o endereço da sede, site oficial, perfil no Instagram, hino do clube e artigo na Wikipédia; à direita, o botão Seguir, que marca o clube como o time do leitor; os números da temporada (1º lugar, 52 pontos, 25 jogos, saldo +24 e 69% de aproveitamento); ao lado do título Campanha, um botão oferece vê-la em barras em vez da linha, e abaixo o gráfico da campanha do 11º lugar na 1ª rodada ao 1º na 25ª, os últimos cinco resultados, o próximo jogo — Mirassol 1 × 1 Palmeiras, ainda marcado como Ao vivo — e os artilheiros do clube.](docs/screenshots/clube-palmeiras-light.png)
 
 ![A mesma página do clube Palmeiras no tema escuro: os mesmos escudo, técnico, endereço da sede, quatro links, o mesmo botão Seguir, números da temporada, o mesmo botão que troca a campanha para barras, gráfico da campanha e jogos, com as marcas das emissoras mantendo o fundo claro para continuarem legíveis.](docs/screenshots/clube-palmeiras-dark.png)
 
@@ -85,9 +85,9 @@ a hue pair would be the only place colour carried meaning no token defines. **Me
 momentos** links each broadcaster's own package; where none is curated it falls back to a
 YouTube search and says so.*
 
-![Página da partida Botafogo 1 x 1 Fluminense no tema claro: a 22ª rodada à esquerda e a etiqueta Encerrado à direita; o placar com os escudos dos dois clubes e, sob o nome de cada um, uma ligação para o seu artigo na Wikipédia; sob uma linha divisória, quem marcou de cada lado — Alex Telles, de falta, pelo Botafogo, e Ignacio pelo Fluminense; a data e a hora do jogo; e a linha do árbitro, que nomeia Bruno Arleu de Araujo. Abaixo, as campanhas dos dois clubes empilhadas — o Botafogo caindo do 1º ao 11º lugar e o Fluminense quase reto entre o 5º e o 4º — sob um único botão que troca as duas para barras de uma vez.](docs/screenshots/partida-554951-light.png)
+![Página da partida Botafogo 1 x 1 Fluminense no tema claro: a 22ª rodada à esquerda e a etiqueta Encerrado à direita; o placar com os escudos dos dois clubes e, sob o nome de cada um, uma ligação para o seu artigo na Wikipédia; sob uma linha divisória, quem marcou de cada lado — Alex Telles, de falta, pelo Botafogo, e Ignacio pelo Fluminense; a data e a hora do jogo; o estádio, com o nome "Nilton Santos" ligado à página do próprio estádio e a cidade e o estado ao lado; a linha do árbitro, que nomeia Bruno Arleu de Araujo; e as emissoras que transmitiram. As campanhas dos dois clubes ficam abaixo do que cabe no enquadramento.](docs/screenshots/partida-554951-light.png)
 
-![A mesma página da partida no tema escuro, com o mesmo placar e escudos, as mesmas ligações para a Wikipédia sob cada clube, os mesmos marcadores dos dois lados, a mesma linha do árbitro e as mesmas campanhas dos dois clubes com o mesmo botão que as troca para barras.](docs/screenshots/partida-554951-dark.png)
+![A mesma página da partida no tema escuro, com o mesmo placar e escudos, as mesmas ligações para a Wikipédia sob cada clube, os mesmos marcadores dos dois lados, a mesma linha do árbitro, o mesmo estádio ligado à sua página e as mesmas emissoras, com as marcas mantendo o fundo claro.](docs/screenshots/partida-554951-dark.png)
 
 *A second match page, and the only capture that shows the **Árbitro** line. It is here rather
 than in place of the one above because no single fixture can carry both: upstream names an
@@ -102,9 +102,9 @@ the marks under each fixture say which broadcaster showed it. The marks keep a l
 in both themes on purpose — Globo's circle and the Premiere wordmark are dark artwork on a
 transparent ground, and they vanish against a dark page without it.*
 
-![Página do estádio Maracanã no tema claro: o nome popular em destaque, "Rio de Janeiro – RJ" abaixo, o nome oficial "Estádio Jornalista Mário Filho" e uma ligação para o artigo na Wikipédia; uma fotografia aérea do estádio ao entardecer, iluminado, com a cidade e os morros do Rio ao fundo, e logo abaixo a linha de crédito com o nome do fotógrafo e a licença; dois números lado a lado — capacidade de 78.838 e inaugurado em 1950; os mandantes Fluminense e Flamengo, cada um com escudo e ligação para a sua página; e o clima no estádio, com um ícone de sol, 26 °C, “Céu limpo”, a sensação, a umidade e o vento ao lado, e sob o cartão a hora da leitura e a fonte, o Open-Meteo.](docs/screenshots/estadio-maracana-light.png)
+![Página do estádio Maracanã no tema claro: o nome popular em destaque, "Rio de Janeiro – RJ" abaixo, o nome oficial "Estádio Jornalista Mário Filho" e uma ligação para o artigo na Wikipédia; uma fotografia aérea do estádio ao entardecer, iluminado, com a cidade e os morros do Rio ao fundo, e logo abaixo a linha de crédito com o nome do fotógrafo e a licença; dois números lado a lado — capacidade de 78.838 e inaugurado em 1950; os mandantes Fluminense, Flamengo e Vasco da Gama, cada um com escudo e ligação para a sua página; e o clima no estádio, com um ícone de nuvem, 22 °C, “Nublado”, a sensação, a umidade e o vento ao lado, e sob o cartão a hora da leitura e a fonte, o Open-Meteo.](docs/screenshots/estadio-maracana-light.png)
 
-![A mesma página do estádio no tema escuro, com a mesma fotografia aérea e a mesma linha de crédito, o mesmo nome popular e oficial, a mesma capacidade e ano de inauguração, os mesmos dois mandantes e o mesmo cartão do clima com a hora da leitura.](docs/screenshots/estadio-maracana-dark.png)
+![A mesma página do estádio no tema escuro, com a mesma fotografia aérea e a mesma linha de crédito, o mesmo nome popular e oficial, a mesma capacidade e ano de inauguração, os mesmos três mandantes e o mesmo cartão do clima com a hora da leitura.](docs/screenshots/estadio-maracana-dark.png)
 
 *A stadium page, light and dark, reached from a match's **Estádio** line — it has no nav
 entry, because a ground is somewhere you arrive at from a fixture rather than a section
