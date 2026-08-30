@@ -19,6 +19,15 @@ lastUpdated, homeTeam, awayTeam, score, odds, referees
 
 No channel, TV, stream or broadcaster field. Verified against a live payload.
 
+**And no match clock**, which that field list is also the evidence for: there is
+no elapsed minute and no period. `lastUpdated` is when the record changed, not a
+position in the match, and `status` collapses half-time into `PAUSED` — which the
+adapter maps to `LIVE`. This is the assumption `live-core.ts` refuses to compute a
+match minute on, and it holds. See **API Futebol** below, which carries a phase
+and still no clock. **No other entry in this file has been asked the question** —
+Sportmonks in particular is a full commercial feed and was surveyed for
+broadcasters alone, so its silence here is an absence of evidence.
+
 Other limits worth remembering: no player photos anywhere (see **Player
 photographs** below for where they do exist, and why they are still not used);
 squad entries carry only `name`, `position`, `nationality`, `dateOfBirth`; Série
@@ -85,6 +94,60 @@ or `plantel`, across all 17 paths:
   date of birth and no nationality**. That one is a regression rather than a gap:
   every curated player file here was built by joining on exact date of birth, and
   none of that evidence exists on this side.
+
+#### The match clock: a phase, yes; an elapsed minute, no
+
+Asked separately because `live-core.ts` opens by refusing to compute a match
+minute, on the grounds that the provider reports a status and a score and never
+an elapsed clock. Its own wording for what a page should say instead is *bola
+rolando*; what the chip actually renders is `Ao vivo`. Whether any other feed
+carries a clock had never been asked here — before this paragraph the whole of
+this file said nothing about them.
+
+**The two live endpoints carry neither a clock nor a phase.** `/ao-vivo` and
+`/times/{id}/partidas/ao-vivo` return fifteen fields, listed in full so the count
+is checkable rather than asserted:
+
+```
+partida_id, campeonato, placar, placar_mandante, placar_visitante,
+time_mandante, time_visitante, disputa_penalti, status, slug,
+data_realizacao, hora_realizacao, data_realizacao_iso, estadio, _link
+```
+
+Their description promises *placar em tempo real*: it is the **score** that is
+real-time, not a position in the match. So the endpoint whose whole purpose is
+live football is exactly the one with nothing to say about where the match is.
+
+**`/partidas/{id}` carries `periodo`, and that is a phase rather than a minute.**
+The only top-level value in their samples is `"fim-de-jogo"`; event-level
+`periodo_slug` shows `primeiro-tempo`, `segundo-tempo` and `intervalo`. The
+schema is a bare `{"type": "string"}` with no enum and no description, so the
+vocabulary is undocumented — and every sample is of a **finished** match, which
+means what this field says *during* one is not established by anything read here.
+
+**`minuto` exists only on events**, never on the match: on gols, cartões and
+substituições, as `"MM:SS"` measured within the period. It runs past 45 —
+`"51:52"` in the 2º tempo — so it counts stoppage rather than capping, and it is
+nullable, a card shown at `intervalo` having none. These are retrospective stamps
+on things that happened, not a running clock.
+
+**What that would and would not buy.** `live-core.ts`'s objection is specifically
+that minutes-since-kickoff stops being the true minute at half-time and drifts
+from there, and `periodo` is precisely the field that separates *intervalo* from
+*bola rolando* — so it fixes the half of the problem the module names, and the
+board could stop being silent about half-time. It still cannot produce `73'`,
+because nothing here counts. Note football-data already distinguishes this and
+the adapter throws it away: upstream `PAUSED` means half-time and
+`football-data-core.ts` maps it to `LIVE`, which is right for a status vocabulary
+the app renders as one chip and is not a reason to go looking elsewhere first.
+
+**Read from the OpenAPI spec and `ai.md`, not from a live payload**, which is
+below the standard the top of this file sets. There is no key here to do better
+with: unauthenticated `/ao-vivo` answers **401** `Autenticação necessária`, and
+the `test_` key is per-account through `/me`, which the plans section below
+records as 401 on an unfunded account. Settling `periodo`'s real vocabulary needs
+a funded key **and** a match in progress, since the documented samples cannot
+show what a live one says.
 
 #### The join is the risk, and the free tier structurally cannot test it
 
