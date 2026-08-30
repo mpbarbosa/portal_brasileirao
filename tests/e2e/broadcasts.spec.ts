@@ -1,4 +1,4 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Page } from "@/tests/e2e/clock";
 
 /**
  * These assert the *shape* of the broadcast line, not how many fixtures happen

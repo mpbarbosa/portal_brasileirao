@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "@/tests/e2e/clock";
 
 /** The envelope contract every data endpoint must honour. */
 const expectEnvelope = (body: Record<string, unknown>) => {

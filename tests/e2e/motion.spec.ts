@@ -1,4 +1,4 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Page } from "@/tests/e2e/clock";
 
 /**
  * Motion, and the readers who have asked for less of it.

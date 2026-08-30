@@ -1,4 +1,4 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Page } from "@/tests/e2e/clock";
 
 /**
  * A round whose fixtures carry venues in the frozen snapshot. Venues are
