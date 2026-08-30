@@ -163,7 +163,13 @@ for (let start = 0; start < entries.length; start += 20) {
       if (!intro) problems.push("article has no intro to check the birth date against");
 
       const dob = known?.player.dateOfBirth;
-      if (intro && dob && !writtenDates(dob).some((written) => intro.includes(written))) {
+      // Case-folded, because some articles capitalise the month — Alexander
+      // Barboza's opens "16 de Março de 1995". Same class of false negative as
+      // the `1º` ordinal above, and the same fix: widen how the date may be
+      // *written*, never what counts as a match. Folding case cannot make two
+      // different dates equal, so the check loses nothing.
+      const haystack = intro?.toLowerCase();
+      if (haystack && dob && !writtenDates(dob).some((written) => haystack.includes(written.toLowerCase()))) {
         problems.push(`intro does not state ${writtenDates(dob)[0]} — this may be another player of the name`);
       }
       if (intro && known && !dob) {
