@@ -167,6 +167,17 @@ jobs:
       - name: Rehearse the broadcast sync's pull request (sync-broadcasts.yml)
         run: ./scripts/rehearse-broadcast-sync-pr.sh
 
+      # The second workflow rehearsal, and it exists because of what the first
+      # one's reasoning did not cover. reconcile.yml is scheduled too, so no
+      # pull request exercises it either — but its failure mode is subtler than
+      # "does the wrong thing": on 2026-08-30 it did exactly the right thing,
+      # said so in its own log, and exited 0, so an eighteen-hour production
+      # stall showed as an unbroken row of green ticks. What this asserts is
+      # therefore the EXIT CODE against the branch taken, which no amount of
+      # reading the file catches.
+      - name: Rehearse the reconciler's decisions (reconcile.yml)
+        run: ./scripts/rehearse-reconcile.sh
+
 
       # Everything above has passed, so THIS dist/ is the one that type-checked,
       # passed the unit suite, booted as a bundle and served three endpoints.
