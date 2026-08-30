@@ -43,6 +43,54 @@ const openFirstMatch = async (page: Page, round: string) => {
 };
 
 test.describe("Página da partida", () => {
+  test("the scoreline sits in a tray, not on the card's own background", async ({ page }) => {
+    await page.goto("/partida/554977");
+    const tray = page.locator("[data-placar]");
+    await tray.waitFor();
+
+    // "Inset" is a *difference* from the card, not a particular colour — so the
+    // two are compared rather than either being pinned. That survives a palette
+    // regeneration, which pinning a hex would not.
+    const { trayBg, cardBg, radius } = await tray.evaluate((el) => ({
+      trayBg: getComputedStyle(el).backgroundColor,
+      cardBg: getComputedStyle(el.closest("article")!).backgroundColor,
+      radius: getComputedStyle(el).borderRadius,
+    }));
+
+    expect(trayBg).not.toBe(cardBg);
+    expect(trayBg).not.toBe("rgba(0, 0, 0, 0)");
+    // On the shape scale, not a bare Tailwind radius.
+    expect(["4px", "8px", "12px", "16px", "28px"]).toContain(radius);
+  });
+
+  test("the tray sets the score apart in both themes, in opposite directions", async ({ page }) => {
+    // Tonal elevation: a *lower* surface is darker on dark and brighter on
+    // light. Asserting the direction is what catches somebody swapping in a
+    // token that happens to differ on one theme and match on the other.
+    const luminance = async (theme: "light" | "dark") => {
+      await page.addInitScript(
+        (t) => localStorage.setItem("portal-brasileirao:theme", t as string),
+        theme,
+      );
+      await page.goto("/partida/554977");
+      await page.locator("[data-placar]").waitFor();
+      return page.locator("[data-placar]").evaluate((el) => {
+        const sum = (colour: string) =>
+          colour.match(/\d+/g)!.slice(0, 3).reduce((total, part) => total + Number(part), 0);
+        return {
+          tray: sum(getComputedStyle(el).backgroundColor),
+          card: sum(getComputedStyle(el.closest("article")!).backgroundColor),
+        };
+      });
+    };
+
+    const light = await luminance("light");
+    expect(light.tray).toBeGreaterThan(light.card);
+
+    const dark = await luminance("dark");
+    expect(dark.tray).toBeLessThan(dark.card);
+  });
+
   test("a fixture in the round list links to its own page", async ({ page }) => {
     await page.goto(`/jogos/${UPCOMING_ROUND}`);
 

@@ -795,8 +795,34 @@ paragraph of prose.
 
     Specs address the figures by `data-figure` rather than regexing rendered
     prose — a spec that breaks on a decimal comma is a spec that gets deleted.
-13. **Inset the scoreline.** Needs `surface-dim` emitted from `sync-md3-tokens` and
-    a contrast-gate pairing, so it is a generator change rather than a class swap.
+13. ~~**Inset the scoreline.**~~ **Shipped — but not on `surface-dim`, which
+    this palette cannot carry.** The item names the token; the gate refused it.
+
+    `surface-dim` was emitted at MD3's own tones (dark 6, light 87) and
+    `npm run test:tokens` failed at once: on light, `ink-faint` measured
+    **3.83:1** against a 4.5 floor and `ink-ghost` **2.69:1** against 3. That is
+    not a near miss to tune away. Tone by tone from 87 to 93, the faintest ink
+    reached only **4.49** at the lightest candidate — still short — by which
+    point the tray had faded to **1.08** against the card. **No tone exists that
+    this palette's inks can sit on and that still reads as a tray.** The cause is
+    structural: every ink is swept against every background, and `ink-faint` on
+    `surface-container` already clears by 0.09, so nothing dimmer fits beneath it.
+
+    **Elevation is the way through, and it is MD3's own model rather than a
+    workaround.** The tray is *lower* than the card, and a lower surface is
+    darker on dark and brighter on light — so `surface-container-lowest` gives a
+    genuinely inset well on dark (tone 4 against the card's 10) and a bright
+    recess on light (100 against 96), which is the light-theme convention
+    anyway. Every ink is **better** on it than on the card in both themes (3.75
+    vs 3.39 light, 4.30 vs 3.81 dark), so unlike `surface-dim` it cannot
+    introduce a failure — and it is added to the gate's background list, which
+    now has four.
+
+    **The specs assert the difference, not the colour**: the tray's background
+    is compared against the card's rather than pinned, so a palette
+    regeneration cannot break them, and a second spec asserts the direction
+    reverses between themes — which is what catches a token that happens to
+    differ on one theme and match on the other.
 14. **Say the zone on the row, not only in the key.** The other half of item 3, and
     the half a legend cannot reach: the key names the zones and the rule, and then
     twenty rows say nothing about which of them are in one, because the rail is a

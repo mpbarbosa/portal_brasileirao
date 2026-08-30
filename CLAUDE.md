@@ -2254,6 +2254,16 @@ enforces rather than early and carved-out.
   appears inside filled surfaces. Which is the point: it is a trap that springs the first
   time someone puts faint text on a badge, a hover state or a dialog, and nothing would
   have flagged it. Enforcing the floor beats recording a number that was true when written.
+  **A surface dimmer than `surface-container` is not available, and the gate is
+  why.** MD3's `surface-dim` was emitted at its own tones for the match page's
+  scoreline tray and the palette became unemittable: on light, `ink-faint`
+  measured 3.83:1 against a 4.5 floor and `ink-ghost` 2.69:1 against 3. Tried
+  tone by tone to 93, the faintest ink still reached only 4.49 while the tray
+  faded to 1.08 against the card — **no tone this palette can carry also reads
+  as a tray**. `ink-faint` on `surface-container` clears by 0.09, so there is no
+  headroom beneath it. Use **elevation** instead: `surface-container-lowest` is
+  *lower* than a card, which means darker on dark and brighter on light, and
+  every ink is better on it than on the card in both themes.
   `scrim` is deliberately dark in both themes: a near-white veil over a light page does not
   read as "the content behind is inactive". `plate` is its mirror — light in both themes,
   because the broadcaster marks it backs are dark artwork on a transparent ground and
