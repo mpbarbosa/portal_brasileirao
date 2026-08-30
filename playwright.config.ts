@@ -73,6 +73,16 @@ export default defineConfig({
       // them would make every run a coin flip. The kill switch also keeps the
       // suite from spending the 10 req/min free-tier budget.
       DISABLE_FOOTBALL_DATA: "true",
+      // The **second** upstream, off for the same reason and not covered by the
+      // flag above. Open-Meteo is free and key-less, so nothing stops a suite
+      // reaching it — which is exactly the danger: the sky over the Maracanã
+      // changes, so a spec asserting on a temperature or a description would be
+      // a coin flip that passes all afternoon and fails at dusk. With this set
+      // the endpoint answers `fallback` with null data and the card is absent,
+      // which is the production shape whenever the weather is unreachable.
+      // A spec that needs the card serves its own payload — see
+      // tests/e2e/weather.spec.ts.
+      DISABLE_WEATHER: "true",
       // A local identity, so sign-in is exercised without a Google client and
       // without network. `server.ts` refuses to start with this set when
       // NODE_ENV is production, so the suite cannot enable it anywhere real.

@@ -222,6 +222,49 @@ what makes the logic testable without mocking HTTP.
   for anyone in the division. Athletico-PR really does list two Dudus, which is
   what the tie-break is for.
 
+- `weather-core.ts` — the **clima no estádio**: what the sky is doing at a
+  ground, from **Open-Meteo**. It is this app's **second upstream**, and every
+  decision below follows from that rather than from the weather.
+  It needs **no key and no signup**, which is why it can ship at all — a fresh
+  clone runs it with no configuration, the same property that lets the app run
+  without `FOOTBALL_DATA_TOKEN`. It spends nothing from football-data's 10
+  requests a minute, and it gets **its own kill switch** (`DISABLE_WEATHER`)
+  rather than riding on `DISABLE_FOOTBALL_DATA`: the two fail independently, and
+  one flag covering both would take the table off the page to silence a weather
+  card. `ApiEnvelope`'s `source` gains `open-meteo` for the same reason — a
+  reader told the scores are stale because the weather timed out is being
+  misinformed.
+  **It reports what is happening now and never a forecast**, which is a decision
+  rather than a limit: Open-Meteo will return hourly values sixteen days out, and
+  a kickoff that far away has a forecast worth about as much as a guess. Printing
+  one beside a fixture is the failure `live-core.ts` refuses for the match
+  minute — a precise-looking number the data does not support. The card prints
+  the instant it was read instead, so it says how old it is rather than implying
+  it is live.
+  **`describeWeather` returns a `WeatherKind`, not a character**, and that is the
+  second time this codebase has reached that answer. The first draft used
+  `☀`/`☁`/`☂` and a test asserting no glyph is `Extended_Pictographic` went red
+  on the first one: U+2600 is emoji-presentation on several platforms, so a mark
+  meant to sit in `currentColor` beside 24px icons would have rendered as a
+  colour picture at whatever size the font chose. That is exactly what `SunIcon`
+  and `MoonIcon` exist for, so `WeatherIcon` lives in `SectionIcons.tsx` and this
+  module names the sky. Six kinds, fewer than WMO describes, because a mark has
+  to be legible at 20px and "garoa" and "chuva forte" are the same picture — the
+  **word** carries the precision.
+  `parseWeather` narrows field by field like `parseHealth`, with **temperature
+  the one required field**: a weather card with no temperature is not a weather
+  card, and without it the endpoint answers null and the page omits the section.
+  Zero is a real temperature, a real humidity and a real wind speed, so nothing
+  here tests truthiness — the same trap `countsTowardStandings` records for a
+  0-0 scoreline.
+  Served by **`/api/stadium-weather/:slug`**, and the slug is load-bearing: the
+  server resolves the coordinate from `STADIUMS`, so the deploy is not an open
+  weather proxy for any point on earth. The sibling repo this was modelled on
+  takes `?lat&lng`, which is simpler and turns a deploy into somebody else's
+  free geolocation service on our bandwidth. Cached 15 minutes per ground, with
+  **no circuit breaker**: one upstream's outage must not open the other's, and
+  the cache already caps what a hard-down Open-Meteo costs.
+
 - `health-core.ts` — the **Saúde do serviço** the **Rodapé** carries. It is the
   only core module whose input is *this app's own* API rather than a provider's,
   and it exists for the reason an adapter usually does: `/api/health` is the one
@@ -825,9 +868,9 @@ commit that did not touch it. A monthly workflow does run it — see the next
 paragraph, which is the whole of the difference between *scheduled* and *in
 CI*.
 
-**A monthly workflow now runs all four, and it still is not CI.**
-`.github/workflows/curated-data.yml` runs `check-hymns`,
-`check-stadium-photos`, `check-player-wikipedia` and `check-player-photos` on the
+**A monthly workflow now runs every one of them, and it still is not CI.**
+`.github/workflows/curated-data.yml` runs the curated-data checkers — count the
+`for c in` line rather than a number here — on the
 first of the month and reports into an **issue** — opening one, commenting while
 the failure persists, and closing it when everything resolves again. The job is
 **always green**, which is the whole design: a rotted third-party link is data
@@ -1153,6 +1196,28 @@ It talks to Commons only, so it costs nothing from the football-data budget, and
 `check-hymns` it prints the whole table — it narrows what a person has to look at, it
 does not replace looking. No build runs it, and the monthly `curated-data.yml` does,
 both for the reason given there.
+
+Each ground's **coordinate** lives in `src/data/stadiums.ts` as
+`[latitude, longitude]`, from Wikidata's `P625` joined on the `wikipedia` title
+that file already stores — so the whole file still rests on one source. It is a
+tuple rather than `{ lat, lng }` because the order is the universal one and two
+named fields invite a call site that swaps them silently.
+
+```sh
+npm run check-stadium-coordinates   # 19 grounds, against Wikidata and the CBF city
+```
+
+**A plausible coordinate is indistinguishable from a correct one**, which is the
+rule that file already states about capacity and is sharper here: a wrong number
+does not look wrong, it silently reports the weather somewhere else. So the
+checker asks two things, and the second is the load-bearing one — the pair still
+matches `P625` within 500 m, **and** it is within 40 km of the city `venues.ts`
+records, resolved through Open-Meteo's own geocoder. Only the second can catch a
+coordinate for the *wrong stadium*, which agrees with Wikidata perfectly. The
+radius is generous on purpose: Itaquera puts the Neo Química Arena 16.5 km from
+São Paulo's centre and that is correct. Verified by mutation rather than by
+reading — nudging one ground 2 km fails the Wikidata check, swapping two grounds'
+pairs fails both.
 
 `src/data/rank-history.ts` is generated by `npm run sync-rank-history`, which fetches
 nothing — it derives the campanha from the seed fixtures already on disk. It is therefore
@@ -1706,7 +1771,7 @@ are least likely to test.** The same prompt listed two stale documents and then
 excluded a third: *"`docs/data-sources.md:204` reads similarly but is about
 `check-stadium-photos` and is still true — leave it."* Grepping the workflows
 before honouring that exclusion showed `.github/workflows/curated-data.yml` had
-landed **that same morning** (`cd4e831`), running all four curated-data checkers
+landed **that same morning** (`cd4e831`), running the curated-data checkers
 monthly — so the sentence was stale in three places rather than none, and one of
 them sat directly above a paragraph the very same commit had added. **The commit
 that makes a claim stale is frequently adjacent to it.** A carve-out is the one

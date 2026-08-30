@@ -8,6 +8,7 @@ import type {
   Scorer,
   Squad,
   StandingsRow,
+  WeatherSnapshot,
 } from "@/src/types";
 
 export interface MatchesPayload {
@@ -73,3 +74,15 @@ export const fetchHealth = async (): Promise<HealthReading> => {
 
   return { health: parseHealth(await response.json()), readAt };
 };
+
+/**
+ * Current conditions at one ground.
+ *
+ * Keyed by slug, never by coordinate: the server resolves the point, so the
+ * deploy is not an open weather proxy for anywhere on earth. `data` is null
+ * whenever there is nothing honest to show — no coordinate, the feature
+ * switched off, or Open-Meteo unreachable — and the caller renders nothing
+ * rather than a placeholder.
+ */
+export const fetchStadiumWeather = (slug: string) =>
+  getJson<WeatherSnapshot | null>(`/api/stadium-weather/${encodeURIComponent(slug)}`);

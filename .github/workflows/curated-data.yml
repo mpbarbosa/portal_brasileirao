@@ -1,6 +1,6 @@
 name: Curated data still resolves
 
-# The four curated-data checkers, once a month, reporting into an ISSUE and
+# The curated-data checkers, once a month, reporting into an ISSUE and
 # never into a build.
 #
 # WHY IT IS NOT PART OF CI, AND MUST NOT BECOME PART OF CI. CLAUDE.md is
@@ -76,7 +76,7 @@ jobs:
           failed=""
           : > report.md
 
-          for c in check-hymns check-stadium-photos check-player-wikipedia check-player-photos; do
+          for c in check-hymns check-stadium-photos check-stadium-coordinates check-player-wikipedia check-player-photos; do
             echo "::group::${c}"
             if npm run --silent "$c" > "out-${c}.txt" 2>&1; then
               status="ok"

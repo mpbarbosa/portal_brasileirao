@@ -38,11 +38,12 @@ import {
 } from "@/football-data-core";
 import { withBroadcasters, withVenues } from "@/broadcast-core";
 import { withHighlights } from "@/match-core";
-import { coachesOf, withClubDetails, withHymns, withInstagram, withWikipedia } from "@/club-core";
+import { coachesOf, slugify, withClubDetails, withHymns, withInstagram, withWikipedia } from "@/club-core";
 import { compareForFeed, currentRound, matchesForRound, roundsOf } from "@/matches-core";
 import { injectMeta, pageMeta, type MetaContext } from "@/page-meta-core";
 import { parseRoute, type Route } from "@/route-core";
 import { buildStadiums } from "@/venue-core";
+import { buildWeatherUrl, parseWeather } from "@/weather-core";
 import { STADIUMS } from "@/src/data/stadiums";
 import {
   canonicalUrl,
@@ -117,6 +118,7 @@ import type {
   Squad,
   Stadium,
   StandingsRow,
+  WeatherSnapshot,
 } from "@/src/types";
 
 /**
@@ -148,7 +150,22 @@ const TRUST_PROXY = process.env.TRUST_PROXY === "true";
 const FOOTBALL_DATA_TOKEN = (process.env.FOOTBALL_DATA_TOKEN ?? "").trim();
 /** Kill switch: force the fallback path without removing the token. */
 const PROVIDER_DISABLED = process.env.DISABLE_FOOTBALL_DATA === "true";
+/**
+ * The **clima**'s own kill switch, separate from the provider's on purpose. The
+ * two upstreams fail independently — Open-Meteo having a bad afternoon says
+ * nothing about the scores — so one flag covering both would take the table off
+ * the page to silence a weather card. It is also what the end-to-end suite sets,
+ * for the reason it sets `DISABLE_FOOTBALL_DATA`: a spec that reached a live
+ * forecast would assert against a sky that changes.
+ */
+const WEATHER_DISABLED = process.env.DISABLE_WEATHER === "true";
 const FETCH_TIMEOUT_MS = Number(process.env.FOOTBALL_DATA_TIMEOUT_MS ?? 6000);
+/** Conditions do not move faster than this, and a match page is read by many
+ *  people at once — so twenty readers cost one upstream request. */
+const WEATHER_CACHE_TTL_MS = 15 * 60 * 1000;
+/** Shorter than the provider's: the weather is a nicety on a page that has
+ *  already rendered, and a slow third party must not hold a request open. */
+const WEATHER_TIMEOUT_MS = Number(process.env.WEATHER_TIMEOUT_MS ?? 4000);
 
 const providerEnabled = (): boolean => Boolean(FOOTBALL_DATA_TOKEN) && !PROVIDER_DISABLED;
 
@@ -156,6 +173,7 @@ const providerEnabled = (): boolean => Boolean(FOOTBALL_DATA_TOKEN) && !PROVIDER
 const snapshotLabel = SNAPSHOT_DATE.split("-").reverse().join("/");
 
 const NOTE_LIVE = "Dados do football-data.org (Campeonato Brasileiro Série A).";
+const NOTE_WEATHER = "Condições atuais no estádio, do Open-Meteo.";
 const NOTE_PLACEHOLDER =
   `Dados congelados de ${snapshotLabel} — defina FOOTBALL_DATA_TOKEN para dados ao vivo.`;
 const NOTE_FALLBACK =
@@ -183,9 +201,11 @@ const envelope = <T>(
   note:
     source === "football-data"
       ? NOTE_LIVE
-      : source === "placeholder"
-        ? NOTE_PLACEHOLDER
-        : NOTE_FALLBACK,
+      : source === "open-meteo"
+        ? NOTE_WEATHER
+        : source === "placeholder"
+          ? NOTE_PLACEHOLDER
+          : NOTE_FALLBACK,
   updatedAt: new Date(updatedAt).toISOString(),
   data,
 });
@@ -1151,6 +1171,68 @@ app.get("/api/players/:id", async (req, res) => {
 
   res.set("Cache-Control", "public, max-age=3600");
   res.json(payload);
+});
+
+/**
+ * **Clima no estádio.**
+ *
+ * Keyed by stadium **slug**, and the coordinate is resolved here from
+ * `STADIUMS` rather than accepted from the caller. The sibling app this was
+ * modelled on takes `?lat&lng`, which is simpler and turns the deploy into an
+ * open weather proxy for any point on earth — a cost somebody else pays, on our
+ * bandwidth. A slug can only ever name one of nineteen grounds.
+ *
+ * The **envelope is the app's**, but the cache is not `loadCached`: that one is
+ * wired to football-data's breaker and its `source`, and reusing it would put a
+ * weather timeout on the provider's failure count. Fifteen minutes because
+ * conditions do not move faster than that and a match page is read by many
+ * people at once — twenty readers cost one upstream request.
+ *
+ * A ground with no coordinate, or a payload that will not parse, answers `null`
+ * data rather than an error: the page then omits the card, which is what an
+ * absent stadium fact already does for `opened`.
+ */
+app.get("/api/stadium-weather/:slug", async (req, res) => {
+  const slug = slugify(req.params.slug);
+  const facts = STADIUMS[slug];
+  if (!facts) {
+    res.status(404).json({ error: "Estádio não encontrado." });
+    return;
+  }
+
+  const now = Date.now();
+  const point = facts.coordinates;
+  if (!point || WEATHER_DISABLED) {
+    res.json(envelope<WeatherSnapshot | null>(null, "fallback", now));
+    return;
+  }
+
+  const key = `weather:${slug}`;
+  const hit = cache.read<WeatherSnapshot | null>(key, now);
+  if (hit) {
+    res.set("Cache-Control", "public, max-age=300");
+    res.json(envelope(hit.value, "open-meteo", hit.storedAt));
+    return;
+  }
+
+  try {
+    const response = await fetch(buildWeatherUrl(point), {
+      signal: AbortSignal.timeout(WEATHER_TIMEOUT_MS),
+    });
+    if (!response.ok) throw new Error(`Open-Meteo respondeu ${response.status}`);
+    const snapshot = parseWeather(await response.json(), new Date(now).toISOString());
+    // (key, value, ttlMs, now) — not (…, now, ttlMs). Swapping the last two
+    // still expires the entry at the right instant, because `expiresAt` is
+    // their sum, so the only symptom is `storedAt` and it read
+    // `1970-01-01T00:15:00Z` in `updatedAt` on every cache hit.
+    cache.write(key, snapshot, WEATHER_CACHE_TTL_MS, now);
+    res.set("Cache-Control", "public, max-age=300");
+    res.json(envelope(snapshot, "open-meteo", now));
+  } catch {
+    // No breaker: one upstream's outage must not open the other's, and a
+    // fifteen-minute cache already caps what a hard-down Open-Meteo costs.
+    res.json(envelope<WeatherSnapshot | null>(null, "fallback", now));
+  }
 });
 
 app.get("/api/standings", async (_req, res) => {

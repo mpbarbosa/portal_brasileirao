@@ -3,6 +3,7 @@ import { formatRoute } from "@/route-core";
 import { ClubCrest } from "@/src/components/ClubCrest";
 import { BACK_LINK, LINK_UNDERLINE } from "@/src/components/interaction";
 import { MatchList } from "@/src/components/MatchList";
+import { StadiumWeather } from "@/src/components/StadiumWeather";
 import { Surface } from "@/src/components/Surface";
 import {
   capacityLabel,
@@ -257,6 +258,8 @@ export function StadiumView({
           </ul>
         </section>
       )}
+
+      <StadiumWeather slug={stadium.slug} />
 
       <section className="mt-6">
         <h3 className="mb-2 text-body-medium font-medium text-ink-muted">

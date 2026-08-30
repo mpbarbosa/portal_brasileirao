@@ -175,6 +175,37 @@ export interface PlayerPhoto {
   licenseUrl: string;
 }
 
+/**
+ * Current conditions at a ground, from Open-Meteo. Everything but the
+ * temperature and the description is optional, because the payload is somebody
+ * else's and `parseWeather` narrows it field by field rather than trusting a
+ * shape.
+ */
+export type WeatherKind = "clear" | "cloudy" | "rain" | "storm" | "snow" | "fog";
+
+export interface WeatherSnapshot {
+  /** Degrees Celsius. The one field without which there is no card. */
+  temperature: number;
+  /** Sensação térmica, where reported. */
+  feelsLike?: number;
+  /** Relative humidity, percent. */
+  humidity?: number;
+  /** Wind speed in km/h. */
+  windSpeed?: number;
+  /** pt-BR description of the sky, e.g. "Pancadas de chuva". */
+  label: string;
+  /** Which of the six skies to draw. A category rather than a character: the
+   *  app draws its marks as SVG in `currentColor`, and `☀` is
+   *  emoji-presentation on several platforms. */
+  kind: WeatherKind;
+  /** Daylight at the ground when the reading was taken. Changes the mark for a
+   *  clear sky and nothing else — the word is true either way. */
+  day: boolean;
+  /** ISO-8601 instant the reading was taken, so the page can say how old it is
+   *  rather than implying it is live. */
+  readAt: string;
+}
+
 export interface StadiumFacts {
   /**
    * The name to display: the popular one a reader would say out loud, properly
@@ -195,6 +226,21 @@ export interface StadiumFacts {
    * `wikipediaUrl`, which is shared rather than reimplemented.
    */
   wikipedia?: string;
+  /**
+   * Where the ground is, as `[latitude, longitude]` in decimal degrees.
+   *
+   * From Wikidata's `P625`, joined on the `wikipedia` title above — the same
+   * article the capacity and inauguration were read out of, so the whole file
+   * still rests on one source. A tuple rather than `{ lat, lng }` because the
+   * order is the universal one and two named fields invite a call site that
+   * swaps them silently.
+   *
+   * It exists for the **clima no estádio**: Open-Meteo answers for a point, and
+   * no provider this app reaches carries a venue coordinate at any tier. Absent
+   * where none was verified, in which case the page simply says nothing about
+   * the weather — the same rule `opened` follows.
+   */
+  coordinates?: readonly [number, number];
   /** A photograph of the ground. Absent where none was found under a licence
    *  that allows republishing. */
   photo?: StadiumPhoto;
@@ -452,13 +498,17 @@ export interface Squad {
 export interface ApiEnvelope<T> {
   /**
    * - `football-data` — live upstream data.
+   * - `open-meteo` — live weather. A **second upstream**, named separately
+   *   because it fails independently: the weather being unreachable says
+   *   nothing about the scores, and one banner covering both would claim
+   *   otherwise.
    * - `placeholder` — seed fixtures, because no provider token is configured.
    * - `fallback` — seed fixtures, because the upstream failed or is disabled.
    *
    * The last two are deliberately distinct: one is "not set up", the other is
    * "set up and currently broken", and only the second is worth alerting on.
    */
-  source: "football-data" | "placeholder" | "fallback";
+  source: "football-data" | "open-meteo" | "placeholder" | "fallback";
   note: string;
   updatedAt: string;
   data: T;

@@ -697,6 +697,30 @@ simulado framing, a título column that moves on refresh with no match played
 (the RNG is seeded precisely so it cannot), hard-coding a zone depth beside the
 one in `standings-core.ts`.
 
+**Clima no estádio**:
+What the sky is doing at a ground, right now — temperature, a pt-BR description
+of the sky, and where reported the sensação térmica, umidade and vento. A
+section of the **Estádio** page, built by `weather-core.ts` from Open-Meteo and
+served by `/api/stadium-weather/:slug`.
+It is **current conditions and never a forecast**, and the copy must not imply
+one: the card prints the instant it was read ("Leitura das 18:17") precisely so
+it says how old it is rather than claiming to be live. A kickoff days away has a
+forecast worth about as much as a guess, and printing one would be the failure
+**Ao vivo** already refuses for the match minute.
+**Absent is a real answer.** No coordinate, the feature switched off, the
+upstream unreachable or a payload that will not parse all end in the section not
+rendering — never a spinner, a dash or an apology on a page that has otherwise
+worked. The same rule the **Estádio** page already applies to a ground with no
+year of inauguration.
+The mark is one of six drawn skies, not a character: `☀` and `☁` are
+Extended_Pictographic, so a font would pick their size and several platforms
+their colour.
+_Avoid_: "previsão" and "tempo" (the first claims a forecast, the second is the
+word for *time* as often as for weather in pt-BR), "clima" alone for a single
+reading in prose (clima is the pattern, this is the condition — the section
+heading names the place, which is what disambiguates it), a temperature with a
+decimal place, showing the card while the reading is unavailable.
+
 **Fonte dos dados**:
 The `source` field of `ApiEnvelope`, and the reason the app can be honest about
 what it is showing. Exactly three values: `football-data` (live upstream),
