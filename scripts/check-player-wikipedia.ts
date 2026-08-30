@@ -49,6 +49,8 @@
  *   1  at least one does not — the line says which and why.
  */
 import { wikipediaUrl } from "@/club-core";
+import { withPlayerOverrides } from "@/player-core";
+import { PLAYER_OVERRIDES } from "@/src/data/player-overrides";
 import { PLAYER_WIKIPEDIA } from "@/src/data/player-wikipedia";
 import { SEED_SQUADS } from "@/src/data/squads";
 import type { Player } from "@/src/types";
@@ -81,10 +83,28 @@ interface Row {
   problems: string[];
 }
 
+/**
+ * The squads **as the app serves them**, not as the snapshot records them.
+ *
+ * This has to apply `PLAYER_OVERRIDES` or the check contradicts the product:
+ * two players in `player-overrides.ts` carry a corrected date of birth, and
+ * against the raw seed their articles state the *right* date and would be
+ * refused for it — the gate rejecting an entry precisely because it is
+ * correct. It matters for names too: 249314 is served as "Felipe Longo" and
+ * recorded as "Felipexxx", and the report should print what a reader sees.
+ *
+ * Note this deliberately does not weaken the check. An override is a claim
+ * that had to clear its own bar to be written, and the birth-date test still
+ * compares the article against a value from this repository rather than
+ * against the article itself.
+ */
 const players = new Map<string, { player: Player; club: string }>();
 for (const squad of SEED_SQUADS) {
   for (const player of squad.players) {
-    players.set(player.id, { player, club: squad.club.shortName });
+    players.set(player.id, {
+      player: withPlayerOverrides(player, PLAYER_OVERRIDES),
+      club: squad.club.shortName,
+    });
   }
 }
 

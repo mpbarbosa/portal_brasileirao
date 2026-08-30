@@ -188,6 +188,19 @@ export const playerPosition = (
 ): string | undefined => overrides[id]?.position?.trim() || provided;
 
 /**
+ * The player's date of birth under the overrides.
+ *
+ * Same shape as its three neighbours, and the same contract: an absent or blank
+ * correction leaves the provider's value alone. What differs is only what it
+ * takes to *write* one, which is stated on `PlayerOverride.dateOfBirth`.
+ */
+export const playerDateOfBirth = (
+  id: string,
+  provided: string | undefined,
+  overrides: Record<string, PlayerOverride>,
+): string | undefined => overrides[id]?.dateOfBirth?.trim() || provided;
+
+/**
  * One player under the overrides, returning the **same object** when there is
  * nothing to change. That is not a micro-optimisation: this runs over every
  * squad in the division on the way out of `/api/squads`, and returning fresh
@@ -201,7 +214,13 @@ export const withPlayerOverrides = (
   const name = playerName(player.id, player.name, overrides);
   const nationality = playerNationality(player.id, player.nationality, overrides);
   const position = playerPosition(player.id, player.position, overrides);
-  if (name === player.name && nationality === player.nationality && position === player.position) {
+  const dateOfBirth = playerDateOfBirth(player.id, player.dateOfBirth, overrides);
+  if (
+    name === player.name &&
+    nationality === player.nationality &&
+    position === player.position &&
+    dateOfBirth === player.dateOfBirth
+  ) {
     return player;
   }
   return {
@@ -213,6 +232,7 @@ export const withPlayerOverrides = (
     // in the other.
     ...(nationality === undefined ? {} : { nationality }),
     ...(position === undefined ? {} : { position }),
+    ...(dateOfBirth === undefined ? {} : { dateOfBirth }),
   };
 };
 
