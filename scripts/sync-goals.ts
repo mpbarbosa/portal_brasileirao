@@ -41,6 +41,7 @@ import os from "node:os";
 import path from "node:path";
 
 import { buildAgent, CBF_HOST, getJson, sleep } from "@/scripts/cbf-api";
+import { type CbfAtleta, lineupsFromAtletas, lineupsReconcile } from "@/escalacao-core";
 import { joinMatch, SERIE_A_CATEGORIA_ID, type CbfFixture } from "@/broadcast-core";
 import {
   goalsFromRegistros,
@@ -62,7 +63,7 @@ import {
   sumulaUrlFrom,
   type SumulaDocumento,
 } from "@/sumula-core";
-import type { Club, Goal, Match } from "@/src/types";
+import type { Club, Goal, Lineup, LineupPlayer, Match } from "@/src/types";
 
 const ROOT = process.cwd();
 
@@ -80,8 +81,15 @@ interface CbfListResponse {
 /** One match as `/api/cbf/jogos/{id}` reports it. Only the parts used here. */
 interface CbfMatchResponse {
   jogo?: {
-    mandante?: { id?: string; nome?: string; gols?: string | null };
-    visitante?: { id?: string; nome?: string; gols?: string | null };
+    /**
+     * `atletas` is 23 a side and is the escalação — the same lesson
+     * `documentos` records one field down: it has been in every response this
+     * script has ever read, and was simply not declared. Narrowing to what you
+     * need is right; re-read the payload before concluding a feature needs a
+     * second request.
+     */
+    mandante?: { id?: string; nome?: string; gols?: string | null; atletas?: CbfAtleta[] };
+    visitante?: { id?: string; nome?: string; gols?: string | null; atletas?: CbfAtleta[] };
     registros?: CbfRegistro[];
     /**
      * The three PDFs CBF publishes per match — súmula, boletim financeiro,
@@ -250,8 +258,35 @@ const readExisting = async (): Promise<Record<string, Goal[]>> => {
   }
 };
 
+const readExistingLineups = async (): Promise<Record<string, Lineup[]>> => {
+  try {
+    const existing = (await import("@/src/data/escalacoes")) as {
+      ESCALACOES?: Record<string, Lineup[]>;
+    };
+    return { ...(existing.ESCALACOES ?? {}) };
+  } catch {
+    return {};
+  }
+};
+
 const goals: Record<string, Goal[]> = replace ? {} : await readExisting();
 const before = Object.keys(goals).length;
+
+/**
+ * The escalações ride along on the request this script already makes.
+ *
+ * A `sync-escalacoes.ts` would have walked the same listing, resolved the same
+ * join and fetched the same `/api/cbf/jogos/{id}` a second time — a second copy
+ * of ~250 lines, and twice the traffic against a host that throttles at the
+ * **socket** with no 429 to tell you. The escalação is in the payload already on
+ * the wire, so it is read here. The cost is a command called `sync-goals` that
+ * also writes `escalacoes.ts`, which is stated in both files and in CLAUDE.md;
+ * the benefit is that the two files can never disagree about which matches are
+ * covered.
+ */
+const escalacoes: Record<string, Lineup[]> = replace ? {} : await readExistingLineups();
+const lineupsBefore = Object.keys(escalacoes).length;
+const noLineup: string[] = [];
 
 const unjoined: string[] = [];
 const unknownCodes = new Map<string, string>();
@@ -341,6 +376,41 @@ for (const jogo of serieA) {
       `${label} — CBF says ${cbfHome}x${cbfAway}, we have ${ours.homeGoals}x${ours.awayGoals}`,
     );
     continue;
+  }
+
+  /**
+   * The escalação, recorded here and not further down, because everything below
+   * this point is about goals and two of those branches `continue`.
+   *
+   * In particular a 0-0 skips out a few lines from now — and a goalless match
+   * has a perfectly good team sheet. Reading the lineup after the scoreline
+   * check above is also what makes it trustworthy: that check is the one that
+   * proves the join picked *this* fixture, so a lineup written before it could
+   * be another match's eleven.
+   *
+   * A match refused earlier for an unknown `resultado` gets no lineup either.
+   * Its team sheet is probably fine, but a partial record of a match this script
+   * has declared it does not understand is not worth the branch.
+   */
+  const sides = {
+    homeCbfId,
+    awayCbfId,
+    homeCode: ours.homeCode,
+    awayCode: ours.awayCode,
+  };
+  const lineups = lineupsFromAtletas(detail.mandante, detail.visitante, sides);
+  if (lineupsReconcile(lineups)) {
+    escalacoes[id] = lineups;
+  } else if (lineups.length > 0 || (detail.mandante?.atletas?.length ?? 0) > 0) {
+    noLineup.push(
+      `${label} — team sheet incomplete (` +
+        lineups
+          .map((l) => `${l.clubCode}: ${l.players.filter((p) => p.starter).length}/11`)
+          .join(", ") +
+        ")",
+    );
+  } else {
+    noLineup.push(`${label} — CBF published no team sheet`);
   }
 
   if (scored.length === 0) {
@@ -475,6 +545,76 @@ console.log(
   `\n==> Wrote src/data/goals.ts — ${ids.length} match(es) ` +
     `(${before} before, ${written} written this run, ${goalless} goalless)`,
 );
+
+// ---------------------------------------------------------------------------
+// The escalações, from the same payloads
+// ---------------------------------------------------------------------------
+
+const lineupIds = Object.keys(escalacoes).sort((a, b) => Number(a) - Number(b));
+
+const renderPlayer = (player: LineupPlayer): string =>
+  "{ " +
+  [
+    `name: ${JSON.stringify(player.name)}`,
+    `shirt: ${JSON.stringify(player.shirt)}`,
+    ...(player.keeper ? ["keeper: true"] : []),
+    ...(player.starter ? ["starter: true"] : []),
+  ].join(", ") +
+  " }";
+
+writeFileSync(
+  path.join(ROOT, "src/data/escalacoes.ts"),
+  `import type { Lineup } from "@/src/types";
+
+/**
+ * GENERATED by scripts/sync-goals.ts — the same run that writes goals.ts.
+ *
+ * **One script, because the escalação is in the payload the goals already
+ * arrive in.** A second sync would have walked the same listing, resolved the
+ * same join and re-fetched every match — doubling the traffic against a host
+ * that throttles at the socket with no 429 to warn you.
+ *
+ * Who started and who was on the bench, keyed by **our** match id. Every entry
+ * carries two complete sheets of eleven starters; \`lineupsReconcile\` refuses
+ * anything less, so an absent match means "not synced or not published", never
+ * "no lineup".
+ *
+ * Generated ${generatedOn}.
+ */
+export const ESCALACOES: Record<string, Lineup[]> = {
+${lineupIds
+  .map(
+    (id) =>
+      `  ${JSON.stringify(id)}: [\n` +
+      escalacoes[id]
+        .map(
+          (lineup) =>
+            `    {\n      clubCode: ${JSON.stringify(lineup.clubCode)},\n` +
+            `      players: [\n` +
+            lineup.players.map((player) => `        ${renderPlayer(player)},`).join("\n") +
+            `\n      ],\n    },`,
+        )
+        .join("\n") +
+      `\n  ],`,
+  )
+  .join("\n")}
+};
+`,
+);
+
+console.log(
+  `==> Wrote src/data/escalacoes.ts — ${lineupIds.length} match(es) ` +
+    `(${lineupsBefore} before, ${lineupIds.length - lineupsBefore} added this run)`,
+);
+
+if (noLineup.length) {
+  console.warn(`\n    ${noLineup.length} match(es) recorded WITHOUT a team sheet:`);
+  for (const line of noLineup) console.warn(`      ${line}`);
+  console.warn(
+    `    Not a failure — the goals for those matches are recorded and correct.\n` +
+      `    A re-run picks the sheet up once CBF publishes a complete one.`,
+  );
+}
 
 if (unreconciled.length || unknownCodes.size) {
   console.error(

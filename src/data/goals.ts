@@ -849,10 +849,10 @@ export const GOALS: Record<string, Goal[]> = {
     { clubCode: "1770", scorer: "Santiago" },
   ],
   "554971": [
-    { clubCode: "4286", scorer: "Gustavo Marques" },
+    { clubCode: "4286", scorer: "Gustavo Marques", minute: "90+4'" },
   ],
   "554972": [
-    { clubCode: "1772", scorer: "Bruno Pacheco" },
+    { clubCode: "1772", scorer: "Bruno Pacheco", minute: "26'" },
   ],
   "554973": [
     { clubCode: "4241", scorer: "Pedro Rocha" },
@@ -870,19 +870,19 @@ export const GOALS: Record<string, Goal[]> = {
     { clubCode: "1765", scorer: "Kevin Serna" },
   ],
   "554977": [
-    { clubCode: "1769", scorer: "Lopez" },
-    { clubCode: "1769", scorer: "Vitor Roque", kind: "penalty" },
-    { clubCode: "1769", scorer: "Mauricio" },
-    { clubCode: "1769", scorer: "Lopez" },
-    { clubCode: "1780", scorer: "Facundo" },
+    { clubCode: "1769", scorer: "Lopez", minute: "46'" },
+    { clubCode: "1769", scorer: "Vitor Roque", kind: "penalty", minute: "50'" },
+    { clubCode: "1769", scorer: "Mauricio", minute: "55'" },
+    { clubCode: "1769", scorer: "Lopez", minute: "89'" },
+    { clubCode: "1780", scorer: "Facundo", minute: "90+3'" },
   ],
   "554978": [
-    { clubCode: "4364", scorer: "Carlos" },
-    { clubCode: "6685", scorer: "Barreal" },
+    { clubCode: "4364", scorer: "Carlos", minute: "35'" },
+    { clubCode: "6685", scorer: "Barreal", minute: "67'" },
   ],
   "554979": [
-    { clubCode: "1777", scorer: "Alejo" },
-    { clubCode: "1777", scorer: "Jean Lucas" },
+    { clubCode: "1777", scorer: "Alejo", minute: "67'" },
+    { clubCode: "1777", scorer: "Jean Lucas", minute: "90+6'" },
   ],
   "554981": [
     { clubCode: "1766", scorer: "Thiago Borbas" },

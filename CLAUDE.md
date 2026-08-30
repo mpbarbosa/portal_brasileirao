@@ -261,6 +261,47 @@ what makes the logic testable without mocking HTTP.
   and a field nothing dereferences is upkeep for no reader's benefit — the rule
   `Club.coach` already states.
 
+- `escalacao-core.ts` — the **escalação**: who each club started, and who sat
+  on the bench. Same source and same rules as `goals-core.ts` — CBF's
+  `/api/cbf/jogos/{id}`, read on a workstation, never by the running app —
+  and **the same request**: `sync-goals.ts` writes `escalacoes.ts` beside
+  `goals.ts` rather than a second script walking the same listing and
+  re-fetching every match. That is not tidiness; CBF throttles at the socket
+  with no 429, so halving the traffic is the difference between a sync and a
+  ban.
+
+  **`squads.ts` is an elenco and this is not.** One is everyone under
+  contract, the other a claim about one match. `CONTEXT.md` keeps the two
+  words apart.
+
+  **Three traps in the payload, each measured.** `reserva` is the **string**
+  `"false"`, so `if (a.reserva)` is true for all 46 players and a naive filter
+  reports *nobody* as a starter — which is exactly what the first pass here
+  did, silently, on both sides. `apelido` carries the shirt number welded to
+  the front in a *different* format from `numero_camisa` beside it (`"01 -
+  Carlos"` against `"1"`), so rendering both prints it twice. And
+  `entrou_jogando` does **not** mean "came on": it is true for precisely the
+  players who started, the same fact under a name that reads as its opposite.
+  `tests/escalacao-core.test.ts` builds its fixtures with string booleans for
+  that reason — real ones would make every test pass against the bug.
+
+  `lineupsReconcile` is the gate the sync writes through, and it is weaker
+  than `goalsReconcile` by necessity: a lineup has no scoreline to agree with,
+  so the check is what the laws of the game guarantee — two sides, eleven
+  starters each, every player named and numbered. That is still enough to
+  refuse the string-boolean failure, which is the one that produces
+  plausible-looking data.
+
+  **No substitutions and no minutes, and that is a scope decision rather than
+  a data gap.** `alteracoes` resolves cleanly — 10 of 10 ids matched their own
+  side's roster on the fixture this was built against, a starter going off and
+  a reserve coming on every time. What it lacks is a clock: `tempo_jogo` is
+  `"25:00"` beside `tempo_subs` `"TN2"`, the same split vocabulary that made
+  goals ship without a minute until `sumula-core.ts` arrived. A substitution
+  is mostly *when*, so one without a minute is worse than none. The súmula
+  prints a Substituições table beside the Gols table that module already
+  parses; that is where the work starts.
+
 - `squad-core.ts` — the **Jogadores** page: every club's elenco, grouped into
   the lines a squad is read in. It exists because the provider reports a
   position at **two levels of detail in the same list** — mostly a broad line
@@ -939,6 +980,15 @@ escalações under *Explicitly not doing* on the grounds that no reachable tier
 carried them. That was right about football-data and wrong to generalise; see
 `docs/data-sources.md`. Goals shipped on the strength of it. Escalações remain
 unbuilt, and now need a UI argument rather than an availability one.
+
+`src/data/escalacoes.ts` holds each match's two team sheets, keyed by **our**
+match id and written by the **same** `npm run sync-goals` run that writes
+`goals.ts` — one request per match serves both. A command named for goals also
+writing escalações is stated in both files and here rather than renamed, because
+`sync-goals` is referenced across the docs and the surprise is cheaper than the
+churn; what it buys is that the two files cannot disagree about which matches
+they cover. Coverage grows a window at a time, like `broadcasts.ts`, and a
+missing match means "not synced", never "no lineup published".
 
 `src/data/club-hymns.ts` holds each club's hymn on YouTube, hand-maintained the
 same way and for the same reason — no provider carries one. It stores the video

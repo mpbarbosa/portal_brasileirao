@@ -379,10 +379,24 @@ CBF's Termos de uso, and reachable only past the broken TLS chain above. If it i
 ever used, use it from a **local sync script that writes `broadcasts.ts`**, the
 way `sync-seed-data.ts` works — never as a request-time dependency of production.
 
-### `www.cbf.com.br/api/cbf/jogos/{id_jogo}` — the match API, and the only source of goal events
+### `www.cbf.com.br/api/cbf/jogos/{id_jogo}` — the match API: goal events, and the escalações
 
 The endpoint behind CBF's own match page, and the **only reachable source of who
-scored a goal**. Same host as the broadcast API above, so the same broken
+scored a goal**. It is also the only reachable source of an **escalação**, and
+both are read by the same `sync-goals` run — one request per match, which matters
+against a host that throttles at the socket.
+
+**`atletas` and `alteracoes` are nested under `mandante` and `visitante`**, as
+the example below shows and as prose summarising this endpoint has been known to
+omit. A probe looking for them at the top level of `jogo` finds `undefined` and
+reads as "the data is gone".
+
+Three things about `atletas` that only appear when you parse it: 23 a side with
+exactly 11 whose `reserva` is `"false"`; **the booleans are strings**, so a
+truthiness check reports nobody as a starter; and `apelido` carries a zero-padded
+shirt number welded to the front (`"01 - Carlos"`) in a different format from the
+`numero_camisa` beside it. `escalacao-core.ts` handles all three and
+`CLAUDE.md` records why each is a trap rather than a quirk. Same host as the broadcast API above, so the same broken
 certificate chain and the same Termos de uso apply.
 
 ```

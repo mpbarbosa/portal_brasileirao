@@ -313,6 +313,31 @@ export type MatchStatus =
  * `registros` array carries goals and cards together — see
  * `docs/data-sources.md`.
  */
+/**
+ * One player on a team sheet for one match.
+ *
+ * `shirt` is a string because it is an identifier printed on a back, not a
+ * quantity: CBF sends `"1"`, and a club may field `"07"`. `escalacao-core.ts`
+ * sorts numerically anyway, so the display form survives without the sort
+ * putting 10 before 9.
+ *
+ * `keeper` and `starter` are present-or-absent rather than `false`, the rule
+ * `Goal.kind` follows: on a 23-man sheet twelve `starter: false` entries is the
+ * word "false" twelve times to say nothing.
+ */
+export interface LineupPlayer {
+  name: string;
+  shirt: string;
+  keeper?: true;
+  starter?: true;
+}
+
+/** One club's escalação for one match. */
+export interface Lineup {
+  clubCode: ClubCode;
+  players: LineupPlayer[];
+}
+
 export interface Goal {
   /**
    * The club the goal **counts for**, as one of our codes.
@@ -412,6 +437,16 @@ export interface Match {
    * scoreline to tell them apart rather than inferring from this.
    */
   goals?: Goal[];
+  /**
+   * The escalações, merged from `src/data/escalacoes.ts` — both sides or
+   * neither, because `lineupsReconcile` refuses a match that does not carry two
+   * complete team sheets.
+   *
+   * Absent means "not synced", exactly as it does for `goals` above, and for the
+   * same reason: a fixture nobody has run the sync for and a fixture CBF has not
+   * published a sheet for are the same absence here.
+   */
+  lineups?: Lineup[];
   /**
    * The officials, from the provider's `referees` array — the one field on this
    * interface that comes from **no local file at all**.

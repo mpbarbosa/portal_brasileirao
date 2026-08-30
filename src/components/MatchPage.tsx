@@ -6,6 +6,7 @@ import {
   refereeRoleLabel,
 } from "@/match-core";
 import { goalLabel, goalsBySide } from "@/goals-core";
+import { bySection, lineupFor } from "@/escalacao-core";
 import { stadiumSlug, venueName } from "@/venue-core";
 import { STADIUMS } from "@/src/data/stadiums";
 import { BroadcasterMark } from "@/src/components/BroadcasterMark";
@@ -13,7 +14,7 @@ import { controlClasses } from "@/src/components/Button";
 import { ClubCrest } from "@/src/components/ClubCrest";
 import { WikipediaLink } from "@/src/components/ClubLinks";
 import { clubKey } from "@/club-core";
-import { BACK_LINK, LINK_UNDERLINE } from "@/src/components/interaction";
+import { BACK_LINK, STATE_LAYER, LINK_UNDERLINE } from "@/src/components/interaction";
 import { lastRecordedRound } from "@/rank-history-core";
 import type { CampaignPlotKind } from "@/campaign-plot-core";
 import { CampaignPlotToggle } from "@/src/components/CampaignPlotToggle";
@@ -21,7 +22,7 @@ import { RankSparkline } from "@/src/components/RankSparkline";
 import { formatRoute } from "@/route-core";
 import { StatusChip } from "@/src/components/StatusChip";
 import { Surface } from "@/src/components/Surface";
-import type { Club, ClubRankHistory, Goal, Match, RankAtRound } from "@/src/types";
+import type { Club, ClubRankHistory, Goal, Lineup, Match, RankAtRound } from "@/src/types";
 
 interface MatchPageProps {
   match: Match | null;
@@ -156,6 +157,44 @@ function Side({ club, code, onNavigate }: { club: Club | null; code: string; onN
  * An empty side still renders its (empty) column, so the two stay aligned under
  * the two crests rather than one sliding across to fill the row.
  */
+/**
+ * One club's team sheet: the eleven, then the bench.
+ *
+ * Shirt numbers are `tabular-nums` and right-aligned in their own column so the
+ * names start on one edge — a lineup is scanned down the numbers, and a ragged
+ * left margin is what makes a list of 23 names hard to read.
+ */
+function LineupColumn({ lineup, name }: { lineup: Lineup; name: string }) {
+  const { starters, bench } = bySection(lineup);
+  const row = (player: { name: string; shirt: string; keeper?: true }) => (
+    <li key={`${player.shirt}-${player.name}`} className="flex gap-2">
+      <span className="w-6 shrink-0 text-right tabular-nums text-ink-faint">{player.shirt}</span>
+      <span className="truncate">
+        {player.name}
+        {/* The keeper is the one position a team sheet always marks, and it is
+            the only one CBF reports. Naming the rest would mean guessing. */}
+        {player.keeper && <span className="ml-1 text-ink-faint">(GOL)</span>}
+      </span>
+    </li>
+  );
+  return (
+    <div data-lineup={lineup.clubCode}>
+      <h4 className="mb-1 text-body-small font-semibold">{name}</h4>
+      <ul className="space-y-0.5 text-body-small text-on-surface-variant">
+        {starters.map(row)}
+      </ul>
+      {bench.length > 0 && (
+        <>
+          <p className="mt-2 mb-1 text-body-small text-ink-faint">Reservas</p>
+          <ul className="space-y-0.5 text-body-small text-on-surface-variant" data-bench>
+            {bench.map(row)}
+          </ul>
+        </>
+      )}
+    </div>
+  );
+}
+
 function GoalColumn({
   goals,
   club,
@@ -255,6 +294,10 @@ export function MatchPage({
   // round 25's fixtures were in exactly that state the day this landed. Without
   // this, the page draws a list of scorers underneath an empty "×".
   const hasScorers = played && scorers.home.length + scorers.away.length > 0;
+  // Both sides or neither: `lineupsReconcile` refuses to record half a fixture,
+  // so a page never shows one team sheet next to an empty column.
+  const homeLineup = lineupFor(match, match.homeCode);
+  const awayLineup = lineupFor(match, match.awayCode);
 
   return (
     <>
@@ -379,6 +422,35 @@ export function MatchPage({
           </div>
         )}
       </dl>
+
+      {homeLineup && awayLineup && (
+        <section className="mt-6">
+          {/* Closed by default, and the reason is the same one PlayersView
+              gives for its clubs: 46 names rendered open would push the
+              campanhas and the melhores momentos off the bottom of the page,
+              and those are what the rest of this view is about. Collapsed it
+              costs one row.
+
+              A native `<details>` rather than a button and a piece of state —
+              disclosure semantics, keyboard behaviour and `aria-expanded` for
+              free. The summary must NOT be `display: flex` or Chrome drops the
+              marker, which is what pushes people toward drawing a chevron by
+              hand; `PlayersView` records the whole trap. */}
+          <details>
+            <summary
+              className={`cursor-pointer rounded-small px-3 py-3 text-on-surface marker:text-ink-muted ${STATE_LAYER}`}
+            >
+              <h3 className="inline align-middle text-body-medium font-medium text-ink-muted">
+                Escalações
+              </h3>
+            </summary>
+            <div className="mt-3 grid gap-6 px-3 sm:grid-cols-2">
+              <LineupColumn lineup={homeLineup} name={home?.shortName ?? match.homeCode} />
+              <LineupColumn lineup={awayLineup} name={away?.shortName ?? match.awayCode} />
+            </div>
+          </details>
+        </section>
+      )}
 
       {showCampaigns && (
         <section className="mt-6">

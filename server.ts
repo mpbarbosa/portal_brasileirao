@@ -38,6 +38,7 @@ import {
 } from "@/football-data-core";
 import { withBroadcasters, withVenues } from "@/broadcast-core";
 import { withGoals } from "@/goals-core";
+import { withLineups } from "@/escalacao-core";
 import { withHighlights } from "@/match-core";
 import { coachesOf, slugify, withClubDetails, withHymns, withInstagram, withWikipedia } from "@/club-core";
 import { compareForFeed, currentRound, matchesForRound, roundsOf } from "@/matches-core";
@@ -104,6 +105,7 @@ import { CLUB_INSTAGRAM } from "@/src/data/club-instagram";
 import { CLUB_WIKIPEDIA } from "@/src/data/club-wikipedia";
 import { BROADCASTS } from "@/src/data/broadcasts";
 import { GOALS } from "@/src/data/goals";
+import { ESCALACOES } from "@/src/data/escalacoes";
 import { HIGHLIGHTS } from "@/src/data/highlights";
 import { VENUES } from "@/src/data/venues";
 import { SEED_MATCHES, SNAPSHOT_DATE } from "@/src/data/matches";
@@ -278,12 +280,15 @@ interface MatchesPayload {
 const seedMatchesPayload = (): MatchesPayload => ({
   rounds: roundsOf(SEED_MATCHES),
   currentRound: currentRound(SEED_MATCHES, Date.now()),
-  matches: withGoals(
-    withHighlights(
-      withVenues(withBroadcasters([...SEED_MATCHES].sort(compareForFeed), BROADCASTS), VENUES),
-      HIGHLIGHTS,
+  matches: withLineups(
+    withGoals(
+      withHighlights(
+        withVenues(withBroadcasters([...SEED_MATCHES].sort(compareForFeed), BROADCASTS), VENUES),
+        HIGHLIGHTS,
+      ),
+      GOALS,
     ),
-    GOALS,
+    ESCALACOES,
   ),
   clubs: CLUBS,
 });
@@ -336,12 +341,15 @@ const loadMatches = async (): Promise<ApiEnvelope<MatchesPayload>> => {
       // fixtures too — the provider supplies none of them. Applied in **both**
       // branches on purpose: the suite exercises the seed one and production
       // the other, which is exactly the split that would hide a difference.
-      matches: withGoals(
-        withHighlights(
-          withVenues(withBroadcasters([...matches].sort(compareForFeed), BROADCASTS), VENUES),
-          HIGHLIGHTS,
+      matches: withLineups(
+        withGoals(
+          withHighlights(
+            withVenues(withBroadcasters([...matches].sort(compareForFeed), BROADCASTS), VENUES),
+            HIGHLIGHTS,
+          ),
+          GOALS,
         ),
-        GOALS,
+        ESCALACOES,
       ),
       // Fixtures carry no website or handle; the committed club list does.
       clubs: withClubDetails(clubsFromMatches(raw), CLUBS),
