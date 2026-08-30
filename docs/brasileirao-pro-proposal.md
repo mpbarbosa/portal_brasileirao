@@ -348,6 +348,17 @@ Worth recording so nobody re-litigates them:
 
 ### 1. Lance a lance, escalações, estatísticas de partida
 
+> **Partly overturned — read this first.** The section below is correct about
+> football-data and wrong to generalise from it. CBF's `/api/cbf/jogos/{id_jogo}`
+> carries goal events, both starting elevens and substitutions, and this repo was
+> already syncing from that host for broadcasts and venues. **Goals have since
+> shipped** (`goals-core.ts`, `scripts/sync-goals.ts`, the scorers under the
+> Partida scoreline). **Escalações are available and not built** — if they stay
+> unbuilt it now needs a UI argument, not this one. Only *lance a lance* and
+> *estatísticas* keep their reasoning intact: nothing reachable carries
+> possession or shot counts. See `docs/data-sources.md`.
+
+
 The prototype's match modal has four tabs and **three of them cannot be built**. A
 football-data match object carries `area, competition, season, id, utcDate, status,
 matchday, stage, group, lastUpdated, homeTeam, awayTeam, score, odds, referees` — verified
@@ -362,6 +373,14 @@ surface.
 
 **Do not build these until a provider that carries them is adopted**, which is a cost
 decision (`docs/data-sources.md` — Sportmonks has it and is paid), not a UI one.
+
+**That condition was met without spending anything, and the sentence above is how
+it went unnoticed for so long.** "A provider that carries them" was read as "a
+better paid provider", when the one already adopted for broadcasts and venues had
+the data on an endpoint nobody had opened. The survey in `docs/data-sources.md`
+stopped at CBF's broadcast page because broadcasts were what it went looking for.
+Worth remembering the next time a section here concludes that nothing carries
+something: the finding is only ever as wide as the search behind it.
 
 ### 2. Relatórios VIP — title probability, Z4 risk, xG
 

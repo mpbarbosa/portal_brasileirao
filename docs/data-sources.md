@@ -127,6 +127,82 @@ CBF's Termos de uso, and reachable only past the broken TLS chain above. If it i
 ever used, use it from a **local sync script that writes `broadcasts.ts`**, the
 way `sync-seed-data.ts` works — never as a request-time dependency of production.
 
+### `www.cbf.com.br/api/cbf/jogos/{id_jogo}` — the match API, and the only source of goal events
+
+The endpoint behind CBF's own match page, and the **only reachable source of who
+scored a goal**. Same host as the broadcast API above, so the same broken
+certificate chain and the same Termos de uso apply.
+
+```
+/api/cbf/jogos/832123
+```
+
+```json
+{ "jogo": { "id_jogo": "832123", "rodada": "24", "local": "Nubank Parque  - Sao Paulo - SP",
+    "mandante": { "id": "20002", "nome": "Palmeiras", "gols": "4", "atletas": [ … ], "alteracoes": [ … ] },
+    "visitante": { "id": "60646", "nome": "Vasco da Gama Saf", "gols": "1", … },
+    "registros": [
+      { "tipo": "GOL", "resultado": "NR", "clube_id": "20002",
+        "atleta_nome": "Jose Manuel Alberto Lopez", "atleta_apelido": "Lopez",
+        "atleta_camisa": "42", "atleta_id": "773040", "tempo_jogo": "2", "minutos": "01:00" },
+      { "tipo": "PENALIDADE", "resultado": "AMARELO", "clube_id": "60646", … } ],
+    "arbitros": [ { "nome": "Braulio da Silva Machado", "funcao": "Arbitro", "uf": "SC" }, … ],
+    "documentos": [ { "url": "https://conteudo.cbf.com.br/sumulas/2026/142234se.pdf", "title": "Súmula" } ] } }
+```
+
+**This is the fact that overturns a decision recorded elsewhere in this repo.**
+`docs/roadmap.md` listed "lance a lance, escalações and match statistics" under
+*Explicitly not doing*, and `docs/brasileirao-pro-proposal.md` §1 gives the
+reason: a football-data match object carries no events, no lineups, "at any tier
+this app can reach". That is **correct about football-data** — re-verified while
+writing this, against a live BSA match *and* a live Premier League one, both free
+TIER_ONE, both answering 200 with no `goals` key at all — and it was generalised
+to every reachable source. CBF was surveyed for the broadcast page and not past
+it. `registros` carries goals and cards, `atletas` carries both starting elevens
+with `reserva`/`entrou_jogando`, and `alteracoes` carries substitutions.
+
+So the proposal's own condition — *"do not build these until a provider that
+carries them is adopted, which is a cost decision"* — turns out to be satisfiable
+without spending anything, because the provider was already adopted.
+
+What is used today is **goals only**, via `scripts/sync-goals.ts` into
+`src/data/goals.ts`. Lineups, substitutions and the súmula are recorded here as
+available, not as planned: the proposal's UI reasoning about them is untouched by
+this and still stands on its own.
+
+Three things to know before using it.
+
+**`id_jogo` is CBF's id**, unrelated to football-data's, exactly as for the
+broadcast API — so the same join on kickoff instant plus home club is required,
+and `joinMatch` in `broadcast-core.ts` already performs it.
+
+**The `resultado` vocabulary is measured, not documented, and it is incomplete.**
+`NR` (normal) and `PN` (pênalti) are the values observed; `AMARELO` appears on
+`PENALIDADE` rows, which are cards sharing the array. **No own goal has been seen
+yet**, so whatever code CBF files one under is unknown — and that is not a
+cosmetic gap, because an own goal counts for the club that did *not* score it. If
+CBF also files it under the scoring club's `clube_id`, reading it naively puts a
+goal on the wrong side of the scoreboard. `sync-goals.ts` therefore refuses any
+`resultado` it does not recognise, and reconciles every match's goals against
+both CBF's scoreline and ours before writing.
+
+**`tempo_jogo` and `minutos` are not safe to read as a match minute**, and the
+goals are deliberately shipped **without one**. The two fields use different
+vocabularies for different event types in the same array — every `GOL` in the
+captured payload carries `tempo_jogo: "2"` while the cards carry `"TN1"`/`"TN2"`
+— and `minutos` is `mm:ss` with no half attached. Guessing produces a page that
+says "10'" for a goal scored at 55 minutes, which is the failure `live-core.ts`
+was written to avoid, one surface larger. Establish what those fields mean before
+printing a minute.
+
+**It throttles, and it does so at the socket.** Fetching a few hundred match
+payloads back to back — roughly one every 250ms — got this host to stop
+completing TLS altogether: every subsequent connection failed with `ECONNRESET`
+*before* the handshake, and plain `curl` was refused the same way for some
+minutes afterwards. There is no 429 and no `Retry-After` to read, so a block is
+indistinguishable from the host being down. Pace a sync at about one request a
+second and expect a season to take minutes.
+
 ### `cms.cbf.com.br/api/paginas` — Strapi v4, news only
 
 A public Strapi v4 REST API, no auth, full query syntax (`fields`, `populate`,
