@@ -221,12 +221,68 @@ test("a goalless match reconciles with an empty list", () => {
 
 test("withGoals attaches only where there are goals", () => {
   const [attached, untouched] = withGoals(
-    [match(), match({ id: "554979", homeGoals: 0, awayGoals: 0 })],
+    [
+      match({ homeGoals: 1, awayGoals: 0 }),
+      match({ id: "554979", homeGoals: 0, awayGoals: 0 }),
+    ],
     { "554977": [{ clubCode: "1769", scorer: "Lopez" }] },
   );
 
   assert.equal(attached.goals?.length, 1);
   assert.equal(untouched.goals, undefined);
+});
+
+test("withGoals attaches a list that reconciles on both sides", () => {
+  const [only] = withGoals([match({ homeGoals: 1, awayGoals: 1 })], {
+    "554977": [
+      { clubCode: "1769", scorer: "Lopez" },
+      { clubCode: "1780", scorer: "Payet" },
+    ],
+  });
+
+  assert.equal(only.goals?.length, 2);
+});
+
+test("withGoals drops a list from a fixture that has no score yet", () => {
+  // The round-25 case this guard was written for: `goals.ts` had been synced
+  // past the frozen seed, so the fixture was still SCHEDULED with null scores
+  // while three scorers were recorded against it.
+  const [only] = withGoals(
+    [match({ status: "SCHEDULED", homeGoals: null, awayGoals: null })],
+    {
+      "554977": [
+        { clubCode: "1769", scorer: "Lopez" },
+        { clubCode: "1769", scorer: "Mauricio" },
+        { clubCode: "1780", scorer: "Payet" },
+      ],
+    },
+  );
+
+  assert.equal(only.goals, undefined);
+});
+
+test("withGoals drops a list the scoreline no longer accounts for", () => {
+  // What a status check cannot see: a FINISHED fixture whose score the provider
+  // has since corrected, leaving the curated list one short.
+  const [only] = withGoals([match({ homeGoals: 4, awayGoals: 1 })], {
+    "554977": [{ clubCode: "1769", scorer: "Lopez" }],
+  });
+
+  assert.equal(only.goals, undefined);
+});
+
+test("withGoals drops a list that totals correctly but splits wrong", () => {
+  // Two goals under a 1-1, both filed to the home club — the own-goal misfiling
+  // `goalsReconcile` exists to catch, arriving through the merge rather than
+  // through the sync.
+  const [only] = withGoals([match({ homeGoals: 1, awayGoals: 1 })], {
+    "554977": [
+      { clubCode: "1769", scorer: "Lopez" },
+      { clubCode: "1769", scorer: "Mauricio" },
+    ],
+  });
+
+  assert.equal(only.goals, undefined);
 });
 
 test("withGoals leaves an empty list off rather than attaching one", () => {

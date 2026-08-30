@@ -252,8 +252,14 @@ export function MatchPage({
   // synced against the live provider while `src/data/matches.ts` is a frozen
   // snapshot, so a fixture played after the snapshot was taken carries scorers
   // while the committed record still calls it SCHEDULED with no score. Two of
-  // round 25's fixtures were in exactly that state the day this landed. Without
-  // this, the page draws a list of scorers underneath an empty "×".
+  // round 25's fixtures were in exactly that state the day this landed.
+  //
+  // **`withGoals` now drops such a list at the edge**, on the stronger test of
+  // whether it reconciles with the scoreline at all — so for anything served by
+  // `/api/matches` this gate can no longer fire, since goals only survive that
+  // merge where both scores are present. It is kept because this is a pure
+  // component: a `Match` handed to it directly, by a test or by any future
+  // caller that does not go through the merge, has passed no such check.
   const hasScorers = played && scorers.home.length + scorers.away.length > 0;
 
   return (
