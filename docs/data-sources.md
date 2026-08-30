@@ -49,6 +49,79 @@ The only provider confirmed to carry broadcast data: a `tv-stations` endpoint, a
 `tvStations` include on any fixture, broadcaster logos, and a `countries` include
 for filtering to Brazil. Not adopted on cost grounds.
 
+### caRtola — player scouts only, no fixtures, and a week behind
+
+`github.com/henriquepgomide/caRtola`, MIT. Cartola FC — the fantasy game — 2014
+to 2026, as per-round CSVs. Checked 2026-08-30, at which point it was the only
+free Brazil-focused source found carrying a **2026** directory, which is what
+makes it look promising and is the reason it is written up rather than skipped.
+
+**It carries no fixtures at all.** The unit is a *player-round*: 18 `atletas.*`
+columns and 20 Cartola scout codes.
+
+```
+atletas.apelido, atletas.apelido_abreviado, atletas.atleta_id,
+atletas.clube.id.full.name, atletas.clube_id, atletas.craque,
+atletas.entrou_em_campo, atletas.foto, atletas.jogos_num, atletas.media_num,
+atletas.nome, atletas.pontos_num, atletas.posicao_id, atletas.preco_num,
+atletas.rodada_id, atletas.slug, atletas.status_id, atletas.variacao_num,
+A, CA, CV, DE, DP, DS, FC, FD, FF, FS, FT, G, GC, GS, I, PC, PP, PS, SG, V
+```
+
+No home/away, no fixture id, no kickoff, no scoreline, no status — so it cannot
+answer *what was the result* or *has this match finished*, which is the question
+that sent us here. Only `data/01_raw/` is populated; `02_intermediate` through
+`08_reporting` are each a bare `.gitkeep`.
+
+**It is also behind the live round, structurally rather than incidentally.**
+`data/01_raw/2026/` stopped at `rodada-24.csv` while round 25 was being played —
+`rodada-25.csv` was a **404**. Data commits run roughly weekly (2026-08-26,
+08-19, 08-11, 07-31, 07-28), so it is a post-hoc dataset. Even with the
+right fields it would belong on the workstation-sync side of the line, like
+CBF's Onde Assistir API — see **How broadcast data actually reaches the app**
+below, where the rule is that production only ever reads a committed file.
+
+**What it can do, and it is worth knowing.** `G` is **cumulative season goals**,
+not per-round, so differencing two consecutive snapshots yields a round's goals
+per club. Run over `rodada-24` minus `rodada-23` against `/api/matches?round=24`,
+all **10 of 10** fixtures agreed with football-data. That makes caRtola usable as
+an occasional **offline audit** of the provider's history — never as a source the
+app reads.
+
+#### The join is the trap, and it fails silently
+
+**Do not join football-data to caRtola on `tla`.** The first attempt produced a
+literal `COR 2-1 COR` row and a confident **5 of 10 "the sources disagree"**.
+Nothing errored; the number simply looked like a finding. That is the
+Corinthians/Coritiba collision `CLAUDE.md` already records under *Club identity
+is the upstream numeric id, never `tla`* — met here from the outside, against a
+second dataset. Re-joined on club name, the same comparison gave 10/10.
+
+The two vocabularies are genuinely different beyond that collision, so there is
+no shortcut: São Paulo is `PAU` upstream and `SAO` in caRtola, Grêmio `FBP` and
+`GRE`, Internacional `SCI` and `INT`, Clube do Remo `CRE` and `REM`. Build the
+map by hand, and treat an unmapped code as an error rather than as a zero — an
+absent key differences to `undefined`, which is what dressed the failure up as a
+disagreement instead of a crash.
+
+#### The two fields that look useful for the curated player files
+
+Both are **rejected**, and for different reasons:
+
+- **`atletas.foto`** is a Globo CDN address. The repository's MIT licence covers
+  its own code and data compilation, not third-party photographs it links to, so
+  this clears none of the `credit`/`license`/`licenseUrl` bar that makes the
+  Commons files in `player-photos.ts` usable — see **Copyright** under *Player
+  photographs* below for the standard, which this has not been assessed against
+  and does not obviously meet.
+- **`atletas.apelido`** is the popular name, and **`atletas.posicao_id`** a
+  position — the two fields `player-overrides.ts` curates. Neither qualifies as a
+  source for it. The `name` rule is deliberately narrow (correct only where the
+  recorded value is *not a name*), so a nickname here is not a licence to
+  rename; and `position` carries a two-source bar naming the club's own squad
+  section and an article's stated role, which a fantasy-game classification is
+  not.
+
 ## CBF's own systems
 
 Both are **publicly readable but internal**. Public-readable is not a licence to
