@@ -183,16 +183,49 @@ guarantee. Treated as reference, not as a dependency.
 
 ### Broken TLS chain — affects the two main CBF hosts
 
-`www.cbf.com.br` and `cms.cbf.com.br` both serve a valid Sectigo certificate but
-**omit the intermediate**, so a chain cannot be built:
+`www.cbf.com.br` and `cms.cbf.com.br` both serve a valid Sectigo certificate
+whose **issuing intermediate is not in the chain they present**, so a chain
+cannot be built and `curl` exits **60**:
 
 ```
-verify error:num=21:unable to verify the first certificate
+SSL certificate problem: unable to get local issuer certificate
 ```
 
-Browsers hide this by fetching the intermediate via AIA; `curl` fails outright.
-Any automated client against either host needs special TLS handling. This is
-their misconfiguration, not ours.
+**It is not an empty chain, and that is the part that misleads.** Measured on
+2026-08-30, `www.cbf.com.br` presents **four** certificates — so any check that
+merely counts them, or eyeballs `-showcerts` for content, reports the chain as
+healthy. Three of the four are an older, unrelated Sectigo path left over from a
+previous certificate, and the one that actually signed the leaf is absent:
+
+```
+[0] subject *.cbf.com.br
+    issuer  Sectigo Public Server Authentication CA OV R36   <- not sent
+[1] AAA Certificate Services                     (self-signed)
+[2] Sectigo RSA Organization Validation Secure Server CA
+[3] USERTrust RSA Certification Authority
+```
+
+Browsers hide this by fetching the issuer via AIA; `curl` does not. Any
+automated client against either host needs special TLS handling — in this repo
+that is `scripts/cbf-api.ts`, which reads the AIA `CA Issuers` URI off the leaf
+and completes the chain itself. This is their misconfiguration, not ours.
+
+**To reach either host from a shell**, complete the chain once and reuse the
+bundle. Verified end to end, `ssl_verify=0`, no `-k`:
+
+```sh
+curl -s http://crt.sectigo.com/SectigoPublicServerAuthenticationCAOVR36.crt \
+  | openssl x509 -inform DER -out /tmp/cbf-inter.pem
+cat /tmp/cbf-inter.pem /etc/ssl/certs/ca-certificates.crt > /tmp/cbf-bundle.pem
+curl --cacert /tmp/cbf-bundle.pem https://www.cbf.com.br/...
+```
+
+Do not reach for `-k` instead. It works, and it turns off the check on the one
+host in this document whose certificate is the only thing distinguishing it from
+an impostor — on a request whose response is then written into committed data.
+The intermediate URI is read off the leaf rather than hard-coded here, because
+it changes when CBF renews; `openssl x509 -noout -text` on the leaf prints the
+current one under `Authority Information Access`.
 
 **Two CBF hosts are exceptions and serve a complete chain**, which is worth
 knowing before writing off a whole domain: `conteudo.cbf.com.br` (the crests,
@@ -373,12 +406,14 @@ The payload is fetchable over the RSC protocol rather than by parsing 222 KB of
 HTML:
 
 ```sh
-curl -H 'RSC: 1' 'https://www.cbf.com.br/futebol-brasileiro/tabelas/campeonato-brasileiro/serie-a/2026'
+curl --cacert /tmp/cbf-bundle.pem -H 'RSC: 1' \
+  'https://www.cbf.com.br/futebol-brasileiro/tabelas/campeonato-brasileiro/serie-a/2026'
 ```
 
-`text/x-component`, 62 KB. The **broken TLS chain applies** — plain `curl` exits
-60 here, as it does for the other CBF hosts, so go through `scripts/cbf-api.ts`
-rather than reaching for `-k`. 2023, 2024 and 2025 all serve a table; 2027 is
+`text/x-component`, 62 KB, against 222 KB for the HTML. The `--cacert` is not
+optional and not decoration: this is one of the two hosts with the broken chain
+above, a bare `curl` exits 60, and `/tmp/cbf-bundle.pem` is what that section
+builds. From code, use `scripts/cbf-api.ts` instead. 2023, 2024 and 2025 all serve a table; 2027 is
 empty. `?rodada=` is ignored, exactly as on ge.
 
 **Its schema is richer than ge's**, and one field is the interesting one:
