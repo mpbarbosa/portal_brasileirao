@@ -300,6 +300,23 @@ export function StandingsTable({
   const splitting = side !== "all";
 
   /**
+   * Whether the qualification bands apply at all.
+   *
+   * **They do not to a split, and #248 shipped without noticing.** Casa and
+   * Fora re-rank the table against a subset of the fixtures, so position 4 of
+   * the Casa table is the fourth-best host and not a Libertadores place — yet
+   * the rail went on painting it green and the key went on saying "G4
+   * Libertadores — as quatro primeiras posições" beneath it. That commit
+   * suppressed the leader disc and the mark column for exactly this reason and
+   * missed the two marks that state the bands outright.
+   *
+   * Which is the rule worth keeping: **when a view narrows what counts, every
+   * derived mark on the row has to be re-asked whether it narrowed too** — and
+   * asking three of five is how the wrong two survive.
+   */
+  const zoned = !splitting;
+
+  /**
    * The split, computed here from the fixtures rather than taken from upstream.
    *
    * `/api/standings` serves the provider's own table when one is reachable, and
@@ -430,16 +447,40 @@ export function StandingsTable({
             </tr>
           </thead>
           <tbody>
-            {shown.map((row) => (
+            {shown.map((row) => {
+              // One lookup per row, shared by the rail and the words, so the
+              // two cannot come to disagree about which band a club is in.
+              const rowZone = zoned ? zoneAt(row.position, shown.length) : undefined;
+
+              return (
               <tr key={row.club.code}>
+                {/* The zone, in text, beside the number rather than replacing
+                      it. The rail is a `border-left` and a border carries no
+                      text, so until this the key named the bands and then
+                      fifteen rows said nothing about which of them they were
+                      in. `Meu time: ` in the next column is the same pattern;
+                      an `aria-label` on the cell would replace the number,
+                      which is the trap.
+
+                      It names the **zone** and never restates the rule: "as
+                      quatro primeiras posições" is the key's sentence, and
+                      hearing it on each of four consecutive rows is the
+                      verbosity that makes people switch tables off. The name
+                      is read off `ZONES` rather than a second list, because the
+                      bands move between seasons.
+
+                      Silence for 12th to 16th is correct rather than a gap —
+                      those rows are in no band, and `zoneAt` returning nothing
+                      is what says so. */}
                 <td
-                  className={`${ROW_LINE} ${STICKY_POSITION} ${zoneClass(row.position, shown.length)} bg-surface px-3 py-2 tabular-nums text-ink-muted`}
+                  className={`${ROW_LINE} ${STICKY_POSITION} ${zoned ? zoneClass(row.position, shown.length) : "border-l-2 border-l-transparent"} bg-surface px-3 py-2 tabular-nums text-ink-muted`}
                 >
                   {row.position === 1 && !splitting ? (
                     <LeaderPosition position={row.position} />
                   ) : (
                     row.position
                   )}
+                  {rowZone && <span className="sr-only">, {rowZone.competition}</span>}
                 </td>
                 <td className={`${ROW_LINE} ${STICKY_CLUB} ${CLUB_PADDING} bg-surface py-2 font-medium`}>
                   <span className="mr-2 inline-flex align-middle">
@@ -511,7 +552,8 @@ export function StandingsTable({
                   {pointsPercentageLabel(row) ?? "—"}
                 </td>
               </tr>
-            ))}
+              );
+            })}
           </tbody>
         </table>
       </Surface>
@@ -526,7 +568,7 @@ export function StandingsTable({
 
           Nothing to explain before the rows land: with no rows there is no
           rail, and a key to marks that are not on the page reads as a fault. */}
-      {shown.length > 0 && (
+      {shown.length > 0 && zoned && (
         <ul
           aria-label="Legenda das zonas da classificação"
           className="mt-2 flex flex-wrap gap-x-4 gap-y-1 px-1 text-body-small text-ink-muted"
