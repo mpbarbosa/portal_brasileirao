@@ -90,19 +90,40 @@ nobody re-runs. The check is two lines of Python over `matches.ts` and
   transition where the bar is most likely to still be settling. Capture the
   trace next time rather than re-running; `settle`'s existence is the precedent
   that MD3's 200ms transitions are real in tests.
-- **`scripts/deploy.sh` neither retains the previous release nor flips back to
-  it.** D5b gave that to the pipeline — `07_install_release.sh` keeps the
-  outgoing release in `$DEPLOY_DIR/previous/` and `06_redeploy.sh` restores it
-  when the health check fails — but `deploy.sh` carries its own inline remote
-  block and never calls either script, so the manual path still destroys the
-  running build before the new one is proven. Documented rather than fixed:
-  teaching it the same trick means a **third** copy of the restart-and-health
-  logic, and two is already one more than anyone reconciles. The honest fix is
-  to make `deploy.sh` hand off to `07` the way CI does, which is a bigger change
-  than it looks — see [`cicd-plan.md`](cicd-plan.md) D5. Note `CLAUDE.md`
-  already forbids running `deploy.sh` by hand, so this is a latent trap rather
-  than a live one: it springs the first time someone reaches for it during an
-  incident, which is exactly when the previous release matters most.
+- ~~**`scripts/deploy.sh` neither retains the previous release nor flips back to
+  it.**~~ **Done, in the shape this entry prescribed** — it hands off to
+  `07_install_release.sh` rather than learning the trick, so the change **deletes**
+  the third copy of the restart-and-health logic instead of adding a fourth.
+  `deploy.sh` now rsyncs the release into a fresh staging directory on the host
+  and runs `07` from that staging copy, which is exactly what CI does after
+  untarring from S3.
+
+  **Two claims were already asserting this had happened.** `CLAUDE.md` said the
+  two routes "converge and only the transport differs", and `07`'s own header
+  said the same. Both were memories of a design, not readings of the code, and
+  neither could be contradicted by anything — nothing in CI ran `deploy.sh` at
+  all. That is this file's own *a claim that produces no work when it holds is
+  never exercised*, one more time, in the two documents describing the path.
+
+  **`scripts/rehearse-deploy-sh.sh` is the first behavioural coverage that script
+  has ever had**, and it is what turns the sentence into something that can fail.
+  It stubs `ssh` to run the command locally — the way a real `ssh` runs it through
+  the login shell, which is why one stub serves both `ssh host 'mktemp -d'` and
+  the `ssh host rsync --server` rsync invokes — and asserts the state of the host
+  afterwards rather than the exit code alone. Confirmed **red against the previous
+  `deploy.sh`**: ten assertions across retention, flip-back and the exit code.
+
+  **Two of those ten were mine, and they had been green against the old script.**
+  "the staging directory was cleaned up" is satisfied by never having created
+  one, so it passed against a script that does not stage — a test green against
+  the absence of the thing it tests, found only by running the mutation. It now
+  asserts a staging directory was *named* first.
+
+  **The first-deploy case moved into `07` and gained exit 4.** `deploy.sh` used
+  to answer it inline and exit **0**, which contradicted its own documented
+  meaning of 0 ("deployed and health-checked") — a host with no service unit has
+  nothing serving. Only the script that installs the payload can know the payload
+  has landed, which is why the check belongs there rather than in a pre-flight.
 - **The summary's figures are hand-kept, and every one that could drift had.**
   On 2026-08-27 **Where the project is** claimed 14 `*-core.ts` modules against
   27, 15 components against 22, 256 unit tests against 558 and 316 end-to-end

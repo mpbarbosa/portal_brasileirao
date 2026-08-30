@@ -5,8 +5,9 @@
 # Purpose:      Restart the service against whatever payload is currently in
 #               the deploy directory, and verify it came back healthy. Run on
 #               the host when you have changed .env, or need to recover a
-#               service that failed — scripts/deploy.sh does this step remotely
-#               as part of a normal deploy.
+#               service that failed. Every deploy also ends here, reached through
+#               07_install_release.sh — from CI over SSM, and from
+#               scripts/deploy.sh over SSH.
 #
 #               When ROLLBACK_FROM names a retained release, a payload that
 #               fails to come up healthy is **flipped back** to that release

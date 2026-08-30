@@ -938,6 +938,21 @@ is also what makes the `npm ci` and the restart fail moments later; refusing
 while the running release is still intact beats destroying it and then
 discovering the same problem.
 
+**The workstation path did not get any of this, and that took a while to notice.**
+`07` and `06` gained retention and flip-back; `scripts/deploy.sh` carried its own
+inline heredoc and called neither, so `rsync -a --delete` still destroyed the
+running build before the new one was proven — on the one route a person takes
+during an incident. It now stages the release into a temporary directory on the
+host and runs `07` from it, which is the same handoff the SSM command makes after
+untarring, so the phase's exit criterion holds for both routes rather than one.
+
+Two things about how it was missed are worth more than the fix. The convergence
+was **asserted in two places** — `CLAUDE.md` and `07`'s own header — while being
+false, because both were written from the design rather than read off the code.
+And nothing exercised `deploy.sh`: CI shellchecked it, which proves it parses.
+`scripts/rehearse-deploy-sh.sh` now drives it against a local `ssh` stub, and was
+confirmed red against the previous version before being believed.
+
 **Flip-back is opt-in, and `07` is the only thing that opts in.** `06` reads
 `ROLLBACK_FROM`; a standalone run — the operator redeploying after an `.env`
 change, which is what `06` is documented for — leaves it unset and behaves

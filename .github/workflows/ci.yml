@@ -149,6 +149,15 @@ jobs:
       - name: Rehearse the accounts backup round trip (shell_scripts/09, 10)
         run: ./scripts/rehearse-accounts-backup.sh
 
+      # scripts/deploy.sh does NOT ship in the payload — it runs on a
+      # workstation — so this one does not gate the release the way the two
+      # above do. It is here because that script had no behavioural coverage at
+      # all: shellcheck proves it parses, and it spent months rsyncing --delete
+      # over the running build with nothing to say so. It is the path somebody
+      # reaches for during an incident, which is the worst moment to find out.
+      - name: Rehearse the workstation deploy (scripts/deploy.sh)
+        run: ./scripts/rehearse-deploy-sh.sh
+
       # The third one covers a *workflow*, not a host script, and needs no
       # network either — a real bare repository on disk and a stubbed `gh`. It
       # earns its place here for the reason the two above do, one step further:
