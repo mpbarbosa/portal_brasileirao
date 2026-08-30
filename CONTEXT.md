@@ -644,6 +644,14 @@ G5 share `positive`, G5 broken (`[border-left-style:dashed]`, never
 `tertiary` and Z4 `negative`. `warning` — the orange the reference table uses for
 the pré-Libertadores band — measures **2.19:1** against `surface` on light, a
 rail carrying hue and nothing else.
+Every banded row also **says its zone in text** — an `sr-only` span in the
+position cell, beside the number rather than replacing it, naming the band and
+never the rule. The rail is a `border-left` and a border carries no text, so
+without it the key named the bands and fifteen rows said nothing about which of
+them they were in. Rows 12 to 16 say nothing, because they are in no band.
+**The bands do not apply to a split** — in **Completa / Casa / Fora**, position 4
+of the Casa table is the fourth-best host and not a Libertadores place, so the
+words, the rail and the key are all absent there.
 _Avoid_: hard-coding `position > 16`; "top four"/"bottom four" in pt-BR copy;
 "17º ao 20º" in the key; "Sudamericana" (the sponsor's spelling — pt-BR press
 writes **Sul-Americana**); "qualificatórias" where **pré-Libertadores** is the

@@ -41,6 +41,72 @@ test.describe("Classificação", () => {
 
   const side = (page: Page, name: string) => page.getByRole("radio", { name });
 
+  test("every banded row says which zone it is in, and the rest say nothing", async ({ page }) => {
+    // `textContent`, not `innerText`. The zone rides in an absolutely
+    // positioned `sr-only` span, and `innerText` inserts a space at that
+    // boundary — "2 , Libertadores" — which is a rendering artefact and not
+    // what the DOM or a screen reader gets. The mirror of the `toHaveText`
+    // trap: that one reads textContent and misses the CSS uppercase.
+    const said = await page
+      .locator("table tbody tr td:first-child")
+      .evaluateAll((cells) => cells.map((cell) => cell.textContent!.trim()));
+
+    expect(said).toHaveLength(20);
+    // Read off the same bands the key uses rather than restated here.
+    expect(said[0]).toContain("Libertadores");
+    expect(said[4]).toContain("Pré-Libertadores");
+    expect(said[5]).toContain("Sul-Americana");
+    expect(said[19]).toContain("Rebaixamento");
+
+    // The number survives — an `aria-label` on the cell would have replaced it.
+    expect(said[4].startsWith("5")).toBe(true);
+
+    // Silence in the middle is the correct announcement, not a gap.
+    for (const row of said.slice(11, 16)) {
+      expect(row).toMatch(/^\d+$/);
+    }
+  });
+
+  test("the row names the zone and never restates the rule", async ({ page }) => {
+    // Hearing "as quatro primeiras posições" on each of four consecutive rows
+    // is the verbosity that makes people switch tables off. The key says the
+    // rule once; the row says which band.
+    const said = await page
+      .locator("table tbody tr td:first-child")
+      .evaluateAll((cells) => cells.map((cell) => cell.textContent!));
+
+    for (const row of said) {
+      expect(row).not.toContain("posições");
+      expect(row).not.toContain("primeiras");
+    }
+  });
+
+  test("a split claims no zones at all — no words, no rail, no key", async ({ page }) => {
+    // Casa and Fora re-rank against a subset, so position 4 of the Casa table
+    // is the fourth-best host and not a Libertadores place. #248 suppressed the
+    // leader disc and the mark column for this reason and left the two marks
+    // that state the bands outright.
+    await side(page, "Casa").click();
+
+    const said = await page
+      .locator("table tbody tr td:first-child")
+      .evaluateAll((cells) => cells.map((cell) => cell.textContent!));
+    expect(said.some((row) => /Libertadores|Americana|Rebaixamento/.test(row))).toBe(false);
+
+    await expect(page.locator('ul[aria-label="Legenda das zonas da classificação"]')).toHaveCount(0);
+
+    const railed = await page
+      .locator("table tbody tr td:first-child")
+      .evaluateAll((cells) =>
+        cells.filter((cell) => getComputedStyle(cell).borderLeftColor !== "rgba(0, 0, 0, 0)").length,
+      );
+    expect(railed).toBe(0);
+
+    // And all three come back with the full table.
+    await side(page, "Completa").click();
+    await expect(page.locator('ul[aria-label="Legenda das zonas da classificação"]')).toHaveCount(1);
+  });
+
   test("the season's numbers sit under the table, and are consistent with each other", async ({ page }) => {
     const panel = page.locator("[data-league-stats]");
     await expect(panel).toBeVisible();

@@ -823,26 +823,33 @@ paragraph of prose.
     regeneration cannot break them, and a second spec asserts the direction
     reverses between themes — which is what catches a token that happens to
     differ on one theme and match on the other.
-14. **Say the zone on the row, not only in the key.** The other half of item 3, and
-    the half a legend cannot reach: the key names the zones and the rule, and then
-    twenty rows say nothing about which of them are in one, because the rail is a
-    `border-left` and a border carries no text. Not in the proposal — it came out
-    of building the key, so the decision is stated here rather than there.
+14. ~~**Say the zone on the row, not only in the key.**~~ **Shipped.** An
+    `sr-only` span in the position cell, beside the number rather than replacing
+    it, naming the band off `ZONES` — `Libertadores`, `Pré-Libertadores`,
+    `Sul-Americana`, `Rebaixamento` — and saying nothing at all for 12th to
+    16th, where silence is the correct announcement. It names the zone and never
+    the rule: the key says "as quatro primeiras posições" once, and a row that
+    repeated it would say it four times running.
 
-    **The decision is the wording and where it sits**, not whether to do it. An
-    `sr-only` span in the position cell is the mechanism, and the precedent is
-    three lines away in the same column: `Meu time: ` is announced exactly that
-    way, beside the value rather than replacing it. An `aria-label` on the cell
-    would replace the number, which is the trap.
+    **It also uncovered a defect #248 shipped, which is the more useful half.**
+    Casa and Fora re-rank the table against a subset of the fixtures, so
+    position 4 of the Casa table is the fourth-best host and not a Libertadores
+    place — and the rail went on painting it green while the key went on saying
+    so beneath. #248 suppressed the leader disc and the mark column for exactly
+    this reason and missed the two marks that state the bands outright. Saying
+    the zone aloud would have announced the falsehood fifteen times per view,
+    which is how it surfaced.
 
-    Two things worth knowing before picking wording. It is **fifteen rows, not
-    twenty** — four bands since the 2026 allocation landed, and `zoneClass` still
-    paints 12th to 16th transparent, where silence is the correct announcement.
-    And the row should name the **zone** ("Libertadores", "Pré-Libertadores",
-    "Sul-Americana", "Rebaixamento"), never restate the rule: "as quatro primeiras
-    posições" is the key's sentence, and hearing it on each of four consecutive
-    rows is the verbosity that makes people switch tables off. Read the names off
-    `ZONES` rather than writing a second list — the bands move between seasons.
+    **The rule, restated because asking three of five is how the wrong two
+    survive: when a view narrows what counts, every derived mark on the row has
+    to be re-asked whether it narrowed too.**
+
+    One testing note. The zone rides in an absolutely positioned `sr-only` span,
+    and `innerText` inserts a space at that boundary — `"2 , Libertadores"` —
+    which is a rendering artefact rather than the markup. The DOM is
+    `2<span class="sr-only">, Libertadores</span>` and `textContent` reads
+    `"2, Libertadores"`. Assert on `textContent`; it is the mirror of the
+    `toHaveText` trap, which reads textContent and so misses a CSS `uppercase`.
 
 **Alongside**: `--color-tertiary` and `--color-tertiary-container` are emitted into
 all three theme blocks and referenced by **zero** components. The accent is already
