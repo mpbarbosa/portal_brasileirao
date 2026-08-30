@@ -33,8 +33,11 @@
  *      that *did* reconcile, because that data is verified correct; the exit
  *      code and the report are what say the run was incomplete.
  */
-import { writeFileSync } from "node:fs";
+import { execFileSync } from "node:child_process";
+import { mkdtempSync, writeFileSync } from "node:fs";
 import { readFileSync } from "node:fs";
+import https from "node:https";
+import os from "node:os";
 import path from "node:path";
 
 import { buildAgent, CBF_HOST, getJson, sleep } from "@/scripts/cbf-api";
@@ -52,6 +55,13 @@ import {
   matchesUrl,
   type MatchesResponse,
 } from "@/football-data-core";
+import {
+  parseSumulaGoals,
+  parseSumulaScores,
+  sumulaMinutes,
+  sumulaUrlFrom,
+  type SumulaDocumento,
+} from "@/sumula-core";
 import type { Club, Goal, Match } from "@/src/types";
 
 const ROOT = process.cwd();
@@ -73,8 +83,72 @@ interface CbfMatchResponse {
     mandante?: { id?: string; nome?: string; gols?: string | null };
     visitante?: { id?: string; nome?: string; gols?: string | null };
     registros?: CbfRegistro[];
+    /**
+     * The three PDFs CBF publishes per match — súmula, boletim financeiro,
+     * relatório de jogo.
+     *
+     * **Already in every response this script reads; it simply was not
+     * declared.** Narrowing an interface to what you need is right, and the
+     * cost shows up exactly here: the minute looked like it needed a second
+     * request and needs none. See `sumulaUrlFrom` for why the entry is chosen
+     * by URL suffix rather than by its title.
+     */
+    documentos?: SumulaDocumento[];
   };
 }
+
+// ---------------------------------------------------------------------------
+// The súmula, and the minute only it carries
+// ---------------------------------------------------------------------------
+
+/**
+ * Read a súmula and turn it into text.
+ *
+ * **`pdftotext -layout` is a hard dependency of this step and a soft one of the
+ * script**, which is the right way round. It is poppler, it is not in
+ * `package.json`, and a workstation without it must still be able to sync
+ * goals — so a missing binary costs the minutes and nothing else. The same
+ * bargain the whole minute feature strikes: absent, never wrong.
+ *
+ * `-layout` is not decoration. The Gols table is columns held apart by runs of
+ * spaces, and without it the scorer, the club and the period arrive
+ * concatenated in reading order with nothing to split on.
+ */
+const sumulaText = async (url: string, agent: https.Agent): Promise<string | null> => {
+  const bytes: Buffer | null = await new Promise((resolve) => {
+    https
+      .get(url, { agent }, (response) => {
+        if (response.statusCode !== 200) {
+          response.resume();
+          resolve(null);
+          return;
+        }
+        const chunks: Buffer[] = [];
+        response.on("data", (chunk) => chunks.push(chunk as Buffer));
+        response.on("end", () => resolve(Buffer.concat(chunks)));
+      })
+      .on("error", () => resolve(null));
+  });
+  if (!bytes) return null;
+
+  const dir = mkdtempSync(path.join(os.tmpdir(), "sumula-"));
+  const pdf = path.join(dir, "s.pdf");
+  writeFileSync(pdf, bytes);
+  try {
+    return execFileSync("pdftotext", ["-layout", pdf, "-"], { encoding: "utf8", maxBuffer: 8 << 20 });
+  } catch {
+    return null;
+  }
+};
+
+/**
+ * `conteudo.cbf.com.br` is a **different edge** from `www` — it kept answering
+ * throughout a 72-minute socket-level ban on `www` and `cms`. That is why the
+ * minute is reachable at all, and it is not a licence: two requests one evening
+ * is no evidence an edge tolerates a sweep, and it is the same organisation.
+ * Paced like `www`, at roughly one request a second.
+ */
+const SUMULA_PACE_MS = 900;
 
 // ---------------------------------------------------------------------------
 // Arguments
@@ -181,6 +255,8 @@ const before = Object.keys(goals).length;
 
 const unjoined: string[] = [];
 const unknownCodes = new Map<string, string>();
+/** Matches recorded without a minute, and why. Never a reason to refuse one. */
+const withoutMinutes: string[] = [];
 const unreconciled: string[] = [];
 let written = 0;
 let goalless = 0;
@@ -275,11 +351,44 @@ for (const jogo of serieA) {
     continue;
   }
 
-  goals[id] = scored;
+  /**
+   * The minute, from the one source that has it.
+   *
+   * Everything here fails **soft**: no `documentos`, no súmula published yet,
+   * a PDF that will not fetch, no `pdftotext` on this machine, or a parse that
+   * does not line up with the API's goal list — every one of those records the
+   * match exactly as it would have been recorded before, without minutes.
+   * A goal with no minute is the ordinary state; a goal with the *wrong*
+   * minute would be a plausible lie, which is why `sumulaMinutes` refuses
+   * rather than doing its best.
+   */
+  const sumulaUrl = sumulaUrlFrom(detail.documentos);
+  let minutes: string[] | null = null;
+  if (sumulaUrl) {
+    const text = await sumulaText(sumulaUrl, agent);
+    await sleep(SUMULA_PACE_MS);
+    if (text) {
+      minutes = sumulaMinutes(scored.length, parseSumulaGoals(text), parseSumulaScores(text));
+      if (!minutes) withoutMinutes.push(`${label} — súmula did not line up with the goal list`);
+    } else {
+      withoutMinutes.push(`${label} — súmula could not be read`);
+    }
+  } else {
+    withoutMinutes.push(`${label} — no súmula published yet`);
+  }
+
+  goals[id] = minutes
+    ? scored.map((goal, index) => ({ ...goal, minute: minutes[index] }))
+    : scored;
   written += 1;
   console.log(
     `    ${id}  ${jogo.mandante?.nome} x ${jogo.visitante?.nome}  ->  ` +
-      scored.map((goal) => goal.scorer + (goal.kind ? ` (${goal.kind})` : "")).join(", "),
+      goals[id]
+        .map(
+          (goal) =>
+            goal.scorer + (goal.kind ? ` (${goal.kind})` : "") + (goal.minute ? ` ${goal.minute}` : ""),
+        )
+        .join(", "),
   );
 }
 
@@ -295,6 +404,16 @@ if (unjoined.length) {
 if (unreconciled.length) {
   console.warn(`\n    ${unreconciled.length} match(es) were NOT recorded:`);
   for (const line of unreconciled) console.warn(`      ${line}`);
+}
+
+if (withoutMinutes.length) {
+  console.warn(`\n    ${withoutMinutes.length} match(es) recorded WITHOUT minutes:`);
+  for (const line of withoutMinutes) console.warn(`      ${line}`);
+  console.warn(
+    `    Not a failure — the goals are recorded and correct. A re-run picks the\n` +
+      `    minutes up once CBF publishes the súmula, and \`pdftotext\` (poppler)\n` +
+      `    must be on PATH for any of them to be read at all.`,
+  );
 }
 
 if (unknownCodes.size) {
@@ -317,6 +436,7 @@ const render = (goal: Goal): string =>
     `clubCode: ${JSON.stringify(goal.clubCode)}`,
     `scorer: ${JSON.stringify(goal.scorer)}`,
     ...(goal.kind ? [`kind: ${JSON.stringify(goal.kind)}`] : []),
+    ...(goal.minute ? [`minute: ${JSON.stringify(goal.minute)}`] : []),
   ].join(", ") +
   " }";
 

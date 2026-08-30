@@ -340,6 +340,26 @@ export interface Goal {
    * every row to distinguish nothing.
    */
   kind?: GoalKind;
+  /**
+   * When it was scored, ready to print: `"12'"`, `"48'"`, `"45+1'"`.
+   *
+   * **A rendered label rather than a period and a number, and that is a
+   * boundary decision rather than a shortcut.** The alternative is carrying
+   * `period`, `minute` and `added` and re-deriving the label at the point of
+   * render — which would put CBF's clock conventions, including that the second
+   * half restarts at `00:00` and that stoppage counts on from 45, into the app.
+   * They belong in `sumula-core.ts`, which is the adapter that measured them,
+   * and nowhere else. `scorer` is a normalised display string for the same
+   * reason.
+   *
+   * **Absent for most goals, and that is the honest state rather than a gap.**
+   * The minute comes from the súmula, which CBF publishes after the fact and
+   * separately from the match API — so a goal recorded before its súmula
+   * existed simply has no minute, and a re-sync fills it in. Nothing renders a
+   * placeholder: the same rule `Club.coach` follows for a club between
+   * managers.
+   */
+  minute?: string;
 }
 
 /**

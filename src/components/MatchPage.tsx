@@ -179,6 +179,15 @@ function GoalColumn({
         {goals.map((goal, index) => (
           <li key={`${goal.scorer}-${index}`} data-goal className="truncate">
             {goalLabel(goal)}
+            {/* The minute sits *after* the name and a space, in a fainter ink,
+                because the scorer is what a reader is looking for and the
+                minute is what they read next. `tabular-nums` so a column of
+                them lines up rather than shimmying by a pixel per digit.
+                Absent for a goal whose súmula was not read — no dash, no
+                placeholder, the rule the rest of this page follows. */}
+            {goal.minute && (
+              <span className="ml-1 tabular-nums text-ink-faint">{goal.minute}</span>
+            )}
           </li>
         ))}
       </ul>

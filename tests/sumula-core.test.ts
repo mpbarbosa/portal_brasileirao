@@ -7,6 +7,7 @@ import {
   parseSumulaScores,
   sumulaGoalsReconcile,
   sumulaMinuteLabel,
+  sumulaMinutes,
   sumulaUrlFrom,
 } from "@/sumula-core";
 
@@ -227,4 +228,39 @@ test("a match with no documents yields null rather than a derived address", () =
 
 test("an entry with no url is skipped rather than returned empty", () => {
   assert.equal(sumulaUrlFrom([{ title: "Súmula" }, ...DOCUMENTOS]), "https://conteudo.cbf.com.br/sumulas/2026/142234se.pdf");
+});
+
+// ---------------------------------------------------------------------------
+// Joining the súmula to the match API
+// ---------------------------------------------------------------------------
+
+test("three goals in the API get the súmula's three minutes, in order", () => {
+  const goals = parseSumulaGoals(CAPTURED);
+  const scores = parseSumulaScores(CRONOLOGIA);
+  assert.deepEqual(sumulaMinutes(3, goals, scores), ["12'", "45+1'", "48'"]);
+});
+
+test("a disagreement about how many goals there were attaches nothing", () => {
+  // The API says four, the súmula lists three. Something is wrong about which
+  // match one of them is describing, and the index join would then put the
+  // 48th minute on somebody else's goal — right-looking and wrong.
+  const goals = parseSumulaGoals(CAPTURED);
+  assert.equal(sumulaMinutes(4, goals, parseSumulaScores(CRONOLOGIA)), null);
+});
+
+test("a súmula that does not reconcile with itself attaches nothing", () => {
+  // A parse that swallowed a card has the right shape and the wrong contents.
+  // The count check alone would pass it, because the API count is whatever the
+  // API says — only the document's own scorelines can catch this.
+  const withCard = [
+    ...parseSumulaGoals(CAPTURED),
+    { period: "1T" as const, minute: 44, tipo: "NR", scorer: "Barboza", team: "Botafogo/RJ" },
+  ];
+  assert.equal(sumulaMinutes(4, withCard, parseSumulaScores(CRONOLOGIA)), null);
+});
+
+test("no súmula at all attaches nothing rather than throwing", () => {
+  // CBF publishes súmulas after the fact, so this is the ordinary state for a
+  // match played an hour ago — not an error.
+  assert.equal(sumulaMinutes(3, [], null), null);
 });

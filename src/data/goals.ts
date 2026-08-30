@@ -68,9 +68,9 @@ export const GOALS: Record<string, Goal[]> = {
     { clubCode: "1780", scorer: "Cuiabano" },
   ],
   "554790": [
-    { clubCode: "1783", scorer: "Samuel Lino" },
-    { clubCode: "1783", scorer: "Leo Pereira", kind: "freekick" },
-    { clubCode: "1783", scorer: "Pedro" },
+    { clubCode: "1783", scorer: "Samuel Lino", minute: "12'" },
+    { clubCode: "1783", scorer: "Leo Pereira", kind: "freekick", minute: "45+1'" },
+    { clubCode: "1783", scorer: "Pedro", minute: "48'" },
   ],
   "554791": [
     { clubCode: "4286", scorer: "Herrera" },
@@ -110,8 +110,8 @@ export const GOALS: Record<string, Goal[]> = {
     { clubCode: "6685", scorer: "Gabriel Barbosa" },
   ],
   "554799": [
-    { clubCode: "1782", scorer: "Renato Kayzer", kind: "freekick" },
-    { clubCode: "1782", scorer: "Erick" },
+    { clubCode: "1782", scorer: "Renato Kayzer", kind: "freekick", minute: "20'" },
+    { clubCode: "1782", scorer: "Erick", minute: "68'" },
   ],
   "554800": [
     { clubCode: "1768", scorer: "Mendoza" },
