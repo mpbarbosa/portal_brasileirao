@@ -7,6 +7,7 @@ import {
   parseSumulaScores,
   sumulaGoalsReconcile,
   sumulaMinuteLabel,
+  sumulaUrlFrom,
 } from "@/sumula-core";
 
 /**
@@ -166,4 +167,64 @@ test("a swallowed card fails the reconcile", () => {
 test("a document with no Cronologia reports null rather than a zero score", () => {
   // Absent is not 0 x 0 — the same rule pointsPercentage follows.
   assert.equal(parseSumulaScores("Nada houve de anormal."), null);
+});
+
+// ---------------------------------------------------------------------------
+// Finding the document
+// ---------------------------------------------------------------------------
+
+/**
+ * A match payload's `documentos`, captured verbatim from `id_jogo` 832123.
+ *
+ * Note the stem, `142234`, has nothing to do with that id — the resemblance to
+ * `num_jogo` is the trap `sumula-core.ts`'s header records. This array is why
+ * the address never has to be derived.
+ */
+const DOCUMENTOS = [
+  { url: "https://conteudo.cbf.com.br/sumulas/2026/142234se.pdf", title: "Súmula" },
+  { url: "https://conteudo.cbf.com.br/sumulas/2026/142234b.pdf", title: "Boletim Financeiro" },
+  { url: "https://conteudo.cbf.com.br/sumulas/2026/142234rdj.pdf", title: "Relatório de Jogo" },
+];
+
+test("the súmula is picked out of the three documents", () => {
+  assert.equal(sumulaUrlFrom(DOCUMENTOS), "https://conteudo.cbf.com.br/sumulas/2026/142234se.pdf");
+});
+
+test("the suffix decides it, not the title", () => {
+  // The title is a display string and the one of the three carrying an accent,
+  // so it is the field with an obvious way to drift. Rename it and the suffix
+  // still finds the document.
+  const renamed = DOCUMENTOS.map((documento) =>
+    documento.title === "Súmula" ? { ...documento, title: "Sumula da Partida" } : documento,
+  );
+  assert.equal(sumulaUrlFrom(renamed), "https://conteudo.cbf.com.br/sumulas/2026/142234se.pdf");
+});
+
+test("the title still answers when the suffix convention does not hold", () => {
+  // The suffix is a convention observed on a sample, not a guarantee. Asking
+  // the sturdier key first costs nothing and leaves the weaker one as a second
+  // chance rather than as the only one.
+  assert.equal(
+    sumulaUrlFrom([{ url: "https://conteudo.cbf.com.br/sumulas/2026/142234.pdf", title: "Súmula" }]),
+    "https://conteudo.cbf.com.br/sumulas/2026/142234.pdf",
+  );
+});
+
+test("the boletim is never mistaken for the súmula", () => {
+  // `…b.pdf` and `…rdj.pdf` share the stem, so a looser match on the stem alone
+  // would take whichever came first in the array.
+  const withoutSumula = DOCUMENTOS.filter((documento) => !documento.url.endsWith("se.pdf"));
+  assert.equal(sumulaUrlFrom(withoutSumula), null);
+});
+
+test("a match with no documents yields null rather than a derived address", () => {
+  // CBF publishes súmulas after the fact, so a fixture played an hour ago
+  // legitimately has none. Absent, not an error — the caller records the match
+  // without a minute rather than refusing it.
+  assert.equal(sumulaUrlFrom([]), null);
+  assert.equal(sumulaUrlFrom(undefined), null);
+});
+
+test("an entry with no url is skipped rather than returned empty", () => {
+  assert.equal(sumulaUrlFrom([{ title: "Súmula" }, ...DOCUMENTOS]), "https://conteudo.cbf.com.br/sumulas/2026/142234se.pdf");
 });
