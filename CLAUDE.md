@@ -3228,10 +3228,51 @@ path comes to differ from the pushed one.
 deploying matters more than ordering. The reconciler fails **safe** because it
 starts a release nobody asked for, unattended: an unreachable site, an unusable
 live sha, a commit it cannot resolve, a divergent history, or a CI run already in
-flight all mean it does nothing and says why. A site that is down is an incident,
-not a gap to close. Note the schedule is a safety net rather than a guarantee —
+flight all mean it does not dispatch. A site that is down is an incident, not a
+gap to close. Note the schedule is a safety net rather than a guarantee —
 GitHub delays scheduled runs under exactly the load that drops push events, and
 disables them after 60 days of repository inactivity.
+
+**Safe is not the same as silent, and conflating the two cost eighteen hours.**
+Every terminal branch used to `exit 0`, so the job reported `success` whether it
+had reconciled, held for a good reason, or found an incident it could not act on.
+On 2026-08-30 `ci.yml` was startup-failing from an orphaned `env:` key; the
+reconciler detected it correctly, wrote *"main already has a failure CI run — this
+needs a person, not another tick"*, and went green on every tick from 03:40Z.
+Production sat 4 commits behind for the whole of it, and the row of ticks is what
+made it invisible. The branches now split by **who has to do something**:
+
+- **Expected holds exit 0** — in sync, a run already in flight, the API query
+  failing, and a deliberate rollback holding the line. Nothing is wrong.
+- **Conditions needing a person exit 1** — main's own CI run failed or timed out,
+  the site is unreachable, the live sha is unusable or unknown here, or
+  production is not an ancestor of `main`. The schedule goes red and GitHub
+  raises its scheduled-failure notice.
+
+**A dispatch is not the only thing worth observing here, which is what the old
+shape got wrong.** A reconciler is read as "did it deploy?", and under that
+reading exiting 0 while refusing to deploy is correct. The question it actually
+answers is *is production where it should be* — and "no, and I cannot fix it"
+is the answer that needs a person, not the quietest one.
+
+`scripts/rehearse-reconcile.sh` is the only behavioural coverage this workflow
+has, and `check` runs it. It extracts the step from the shipped YAML, drives all
+eleven branches against a stubbed `gh` and a real HTTP server, and asserts the
+**exit code against the branch taken** as well as whether a deploy was
+dispatched. It was confirmed red against the pre-fix workflow first — 5 of 11,
+failing on exactly the six that now exit 1 — because a harness that has never
+failed is not evidence of anything.
+
+**One trap if you extend it: `actionlint` would not have caught the bug that
+started this, and `yaml.safe_load` would not either.** The orphaned `env:` is
+valid YAML (`env: null`), so a local parse passes; actionlint *does* reject it
+(`expecting a single ${{...}} expression or mapping value for "env" section`) but
+only when pointed at the broken file, and the natural command —
+`git show origin/main:.github/workflows/ci.yml` — silently fetches whatever main
+holds now, which after the fix is the good one. That produced a confident
+"actionlint does not catch it" before the subject was checked. Verify the subject
+contains the defect before believing the instrument, exactly as
+**check the prompt that sent you** says one directory up.
 
 **Rolling back is `.github/workflows/rollback.yml`, and it does not go through
 `ci.yml`.** It installs a release S3 already holds, over whatever is live, in

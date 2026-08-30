@@ -95,21 +95,49 @@ jobs:
           # an outage the ability to deploy is worth more than the ordering it
           # protects. This one STARTS a release nobody asked for, unattended —
           # so anything it cannot establish means it does nothing and says why.
+          #
+          # SAFE IS NOT THE SAME AS SILENT, and conflating the two cost eighteen
+          # hours. An EXPECTED HOLD exits 0: in sync, a run already in flight, a
+          # deliberate rollback. A condition that NEEDS A PERSON exits 1, so the
+          # schedule goes red and GitHub raises its scheduled-failure notice.
+          #
+          # Every terminal branch used to exit 0. On 2026-08-30 `ci.yml` was
+          # startup-failing from an orphaned `env:` key; this job detected that
+          # correctly, wrote "this needs a person, not another tick", and
+          # reported success on every tick from 03:40Z until somebody happened to
+          # read a run log. It was right about everything except how loudly to
+          # say it.
+          #
+          # `scripts/rehearse-reconcile.sh` drives all eleven branches and is the
+          # only behavioural coverage this workflow has — no pull request can
+          # exercise a schedule.
           if ! curl -sf --max-time 10 "${SITE_URL}/api/health" -o live.json; then
-            echo "::warning::${SITE_URL}/api/health is unreachable. Not dispatching — a site that is down is an incident, not a gap to close."
-            exit 0
+            echo "::error::${SITE_URL}/api/health is unreachable. Not dispatching — a site that is down is an incident, not a gap to close."
+            {
+              echo "### Not reconciled"
+              echo "\`${SITE_URL}/api/health\` is unreachable. That is an incident in its own right."
+            } >> "$GITHUB_STEP_SUMMARY"
+            exit 1
           fi
 
           live_short="$(jq -r '.sha // empty' live.json)"
           live_short="${live_short%-dirty}"
           if [ -z "$live_short" ] || [ "$live_short" = "unknown" ]; then
-            echo "::warning::Live site reports no usable commit. Not dispatching."
-            exit 0
+            echo "::error::Live site reports no usable commit. Not dispatching."
+            {
+              echo "### Not reconciled"
+              echo "The live site answered but reported no usable commit, so nothing can be compared against it."
+            } >> "$GITHUB_STEP_SUMMARY"
+            exit 1
           fi
 
           if ! live="$(git rev-parse --verify --quiet "${live_short}^{commit}")"; then
-            echo "::warning::Live commit ${live_short} is not in this repository. Not dispatching."
-            exit 0
+            echo "::error::Live commit ${live_short} is not in this repository. Not dispatching."
+            {
+              echo "### Not reconciled"
+              echo "Production reports \`${live_short}\`, which this checkout does not have."
+            } >> "$GITHUB_STEP_SUMMARY"
+            exit 1
           fi
 
           if [ "$live" = "$main_full" ]; then
@@ -119,13 +147,13 @@ jobs:
           fi
 
           if ! git merge-base --is-ancestor "$live" "$main_full"; then
-            echo "::warning::Production is ${live_short}, which is not an ancestor of main (${main_short}). Not dispatching — that needs a person, not a schedule."
+            echo "::error::Production is ${live_short}, which is not an ancestor of main (${main_short}). Not dispatching — that needs a person, not a schedule."
             {
               echo "### Not reconciled"
               echo "Production \`${live_short}\` is not an ancestor of main \`${main_short}\`."
               echo "History was rewritten, or the live build came from somewhere this checkout cannot see."
             } >> "$GITHUB_STEP_SUMMARY"
-            exit 0
+            exit 1
           fi
 
           # Has production been rolled back on purpose? Then it is BEHIND main
@@ -203,13 +231,13 @@ jobs:
 
           case "$last_attempt" in
             failure | timed_out)
-              echo "::warning::main (${main_short}) already has a ${last_attempt} CI run. Not re-dispatching — this needs a person, not another tick."
+              echo "::error::main (${main_short}) already has a ${last_attempt} CI run. Not re-dispatching — this needs a person, not another tick."
               {
                 echo "### Not reconciled"
                 echo "Production is \`${live_short}\`, behind main \`${main_short}\`, but main's own CI run **${last_attempt}**."
                 echo "Fix that run rather than waiting for this schedule."
               } >> "$GITHUB_STEP_SUMMARY"
-              exit 0 ;;
+              exit 1 ;;
           esac
 
           behind="$(git rev-list --count "${live}..${main_full}")"
