@@ -1398,6 +1398,55 @@ unstarted branch from a merged one, and the reflog cannot tell an unstarted
 branch from a re-pointed one. Neither is sufficient alone, which is why both are
 written here.
 
+**There is a fourth state, and the pair above still cannot name it: a branch
+whose commit was RESET AWAY.** `git reset --hard main` while standing on it —
+the ordinary way a session abandons an approach — leaves born ≠ tip *and* a real
+`commit:` in the reflog, so the snippet prints "never held a commit — not merged,
+unstarted" for neither line and the reflog reads as work. It is the mirror of the
+fast-forward case: that one invents an occupant where none existed, this one
+reports work that is **gone** in a way indistinguishable from work that
+**landed**. Measured on 2026-08-29 during a teardown that read `ahead=0` as "it
+merged"; the commit had been discarded minutes earlier.
+
+Build all four and the pattern is plain — and note **the count is 0 for every
+one**, so it separates nothing, while born-vs-tip separates only the first:
+
+    branch      count  born-vs-tip  reflog operations
+    unstarted     0    born==tip    branch                  nothing was ever here
+    merged        0    born!=tip    commit, branch          held work, and it landed
+    ffwd          0    born!=tip    merge main, branch      held nothing
+    resetaway     0    born!=tip    reset, commit, branch   held work, discarded
+
+**So read the reflog's OPERATIONS, not its endpoints.** That one rule covers all
+four, where born-vs-tip covers one and the count covers none:
+
+```sh
+git reflog show <branch> --format='%gs' | sed 's/:.*//'
+```
+
+`branch` alone is unstarted. A `commit` with nothing above it landed. A `merge`
+means the branch only followed `main`. A `reset` above a `commit` means somebody
+threw work away, and `--is-ancestor` will still say yes.
+
+**Read it on the topic branch you are about to delete, never on `main`.** A
+topic branch's reflog is three or four entries and the shape is legible at a
+glance; `main` here carries `commit`, `merge`, `rebase (finish)`, `pull
+--ff-only` *and* `reset` accumulated over months, so the same command answers
+"somebody threw work away" about a branch nobody has ever abandoned. The rule is
+scoped to the question it serves — *may I delete this branch, and did its work
+land* — and that question is never asked about `main`.
+
+**The endpoints of a re-pointed branch and a merged one are identical by
+construction**, which is why every endpoint-comparing test agrees with itself and
+is wrong. The operation log is the only record of how the ref got where it is.
+
+**Build the fixture with the branches created BEFORE `main` advances**, or it
+cannot contain the bug. The first attempt here created each one *after* the move,
+so there was nothing to fast-forward or reset across and all four returned
+`born==tip` — which reads as "both reported findings are false". That is the same
+trap the merge-case fixture above records, and it caught a second session inside
+a paragraph warning about it.
+
 **The record that would have settled it is `COORDINATION.md`, and until this
 paragraph nothing committed named it:**
 
