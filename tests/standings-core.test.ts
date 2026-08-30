@@ -2,11 +2,13 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import {
+  ZONES,
   compareRows,
   computeStandings,
   countsTowardStandings,
   pointsPercentage,
   pointsPercentageLabel,
+  zoneAt,
 } from "@/standings-core";
 import type { Club, Match, StandingsRow } from "@/src/types";
 
@@ -143,4 +145,56 @@ test("the aproveitamento label is a whole percentage", () => {
   // The tightest non-perfect campaign a 38-round season allows still rounds
   // short of 100, so the rounding cannot claim a club dropped nothing.
   assert.equal(pointsPercentageLabel({ points: 112, played: 38 }), "98%");
+});
+
+// ---------------------------------------------------------------- as zonas
+
+const SERIE_A = 20;
+const bandOf = (position: number) => zoneAt(position, SERIE_A)?.id;
+
+test("the bands cover the 2026 allocation and nothing else", () => {
+  // Eleven continental places, not twelve: one Libertadores berth is held by a
+  // cup champion outside the zone, so the pré-Libertadores band is a single
+  // position and Sul-Americana stops at 11th. Every boundary asserted from
+  // both sides, because an off-by-one at either end is a whole club.
+  assert.deepEqual([1, 2, 3, 4].map(bandOf), ["g4", "g4", "g4", "g4"]);
+  assert.equal(bandOf(5), "g5");
+  assert.deepEqual([6, 11].map(bandOf), ["g11", "g11"]);
+  assert.deepEqual([17, 18, 19, 20].map(bandOf), ["z4", "z4", "z4", "z4"]);
+});
+
+test("the middle of the table is in no band", () => {
+  // 12th to 16th qualify for nothing and go down from nothing. An unpainted
+  // row is the honest answer, and `zoneClass` draws it as transparent so the
+  // position cells still line up.
+  for (const position of [12, 13, 14, 15, 16]) {
+    assert.equal(bandOf(position), undefined, `${position}º should be unpainted`);
+  }
+});
+
+test("relegation is counted in from the end, so a smaller division still works", () => {
+  // Z4 is a depth rather than 17-20. In a division of 18 the last four are
+  // 15th to 18th, and 17th is not automatically down.
+  assert.equal(zoneAt(15, 18)?.id, "z4");
+  assert.equal(zoneAt(14, 18)?.id, undefined);
+  // And where the two ends overlap, going down wins — the only reason the
+  // lookup asks the bottom band first.
+  assert.equal(zoneAt(7, 10)?.id, "z4");
+});
+
+test("every band the table can paint has a line in the legenda", () => {
+  // The rail carries hue and a border style; the prose is the whole of what a
+  // grayscale capture or a colourblind reader gets. A band with no entry is a
+  // mark on the page nothing explains.
+  const painted = new Set(
+    Array.from({ length: SERIE_A }, (_, index) => bandOf(index + 1)).filter(Boolean),
+  );
+  assert.equal(painted.size, ZONES.length);
+  for (const zone of ZONES) {
+    assert.ok(painted.has(zone.id), `${zone.term} is declared but never painted`);
+    assert.ok(zone.where.length > 0, `${zone.term} has no positions in prose`);
+    // Words, never ordinals: Z4 is derived from the row count, so "17º ao 20º"
+    // would go quietly wrong if the division changed size.
+    assert.doesNotMatch(zone.where, /\d/, `${zone.term} spells a position as a digit`);
+  }
 });

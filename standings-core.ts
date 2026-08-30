@@ -62,13 +62,15 @@ const pointsOf = (tally: Tally): number =>
  * at least deterministic rather than dependent on input order.
  */
 /**
- * How deep the two zones run — the count the abbreviations G4 and Z4 carry.
+ * How deep the two bands counted from the ends of the table run — the count
+ * the abbreviations G4 and Z4 carry.
  *
  * It lives here rather than beside the rail that draws it because it is a rule
- * of the competition, like the tie-breakers above, and it now has two readers:
- * `StandingsTable` colours the rail with it and `season-sim-core` counts a
- * simulated finish into a zone with it. Two copies of the number is how a
- * projection comes to report a G4 the table does not draw.
+ * of the competition, like the tie-breakers above, and it now has three
+ * readers: `ZONES` below bounds two of its bands with it, `StandingsTable`
+ * colours the rail from those bands, and `season-sim-core` counts a simulated
+ * finish into a zone with it. Two copies of the number is how a projection
+ * comes to report a G4 the table does not draw.
  *
  * `ZONE_DEPTH_WORD` is the same number spelled out, and travels with it for the
  * reason it always did: the legenda states the rule in prose, "as quatro
@@ -78,6 +80,106 @@ const pointsOf = (tally: Tally): number =>
  */
 export const ZONE_DEPTH = 4;
 export const ZONE_DEPTH_WORD = "quatro";
+
+/** The bands the Classificação paints, top to bottom. */
+export type ZoneId = "g4" | "g5" | "g11" | "z4";
+
+/**
+ * Where a band sits. `top` counts down from 1st; `bottom` counts in from the
+ * last row, so it stays right if the division ever changes size.
+ */
+export type ZoneBand =
+  | { anchor: "top"; from: number; to: number }
+  | { anchor: "bottom"; depth: number };
+
+export interface Zone {
+  id: ZoneId;
+  /** What the legenda leads with — see `ZONES` for what a term names. */
+  term: string;
+  /** The prize, in the words the pt-BR press uses for it. */
+  competition: string;
+  /** The band in prose, which is the whole of what a colourblind reader gets. */
+  where: string;
+  band: ZoneBand;
+}
+
+/**
+ * The qualification and relegation bands, and the single place their numbers
+ * live: the rail, the legenda and every test read this literal.
+ *
+ * **These boundaries move between seasons, and containing that is the whole
+ * reason this is one declaration rather than four conditions.** Brazil's
+ * continental places are not a fixed 4/2/6. The Copa do Brasil and Libertadores
+ * champions hold berths of their own, so a champion finishing outside the zone
+ * slides every boundary below it up by one. What is encoded here is the 2026
+ * allocation — four direct Libertadores places, **one** pré-Libertadores and
+ * six Sul-Americana, so eleven continental places rather than the twelve a
+ * reader may remember. Nothing in this repository can check that against the
+ * CBF, and a wrong band is indistinguishable from a right one to anyone reading
+ * the page: the same class of error as an invented stadium capacity. Re-reading
+ * it each season is a person's job, and this literal is the one place that job
+ * has to touch.
+ *
+ * **A term names the cumulative zone; `where` names the band the rail paints.**
+ * That is the Brazilian idiom — G-4, G-6 and G-12 all count from the top — so
+ * `G11` says "everything down to 11th qualifies" while its rail covers only 6th
+ * to 11th. The `where` clause is what resolves that, which is the second job it
+ * already had: the rail is a border colour and a border style, and the style
+ * separates one band from one other — so to a red/green-colourblind reader or in
+ * a grayscale capture the prose is very nearly all of it.
+ *
+ * In words rather than ordinals, for the reason `ZONE_DEPTH_WORD` exists and
+ * because Z4 counts in from the end, where a hard-coded "17º ao 20º" would go
+ * quietly wrong the moment the division changed size.
+ */
+export const ZONES: readonly Zone[] = [
+  {
+    id: "g4",
+    term: "G4",
+    competition: "Libertadores",
+    where: `as ${ZONE_DEPTH_WORD} primeiras posições`,
+    band: { anchor: "top", from: 1, to: ZONE_DEPTH },
+  },
+  {
+    id: "g5",
+    term: "G5",
+    competition: "Pré-Libertadores",
+    where: "a quinta posição",
+    band: { anchor: "top", from: 5, to: 5 },
+  },
+  {
+    id: "g11",
+    term: "G11",
+    competition: "Sul-Americana",
+    where: "da sexta à décima primeira posição",
+    band: { anchor: "top", from: 6, to: 11 },
+  },
+  {
+    id: "z4",
+    term: "Z4",
+    competition: "Rebaixamento",
+    where: `as ${ZONE_DEPTH_WORD} últimas posições`,
+    band: { anchor: "bottom", depth: ZONE_DEPTH },
+  },
+];
+
+const covers = (band: ZoneBand, position: number, total: number): boolean =>
+  band.anchor === "top"
+    ? position >= band.from && position <= band.to
+    : position > total - band.depth;
+
+/**
+ * The band a position falls in, or `undefined` for the unpainted middle of the
+ * table — 12th to 16th in a division of twenty.
+ *
+ * Relegation is asked first, and only because the answer has to be defined at
+ * all: in a division small enough for the bands to overlap — ten clubs would
+ * put 7th in both `g11` and `z4` — going down is the more consequential fact,
+ * so it wins. At twenty nothing overlaps and the order cannot be observed.
+ */
+export const zoneAt = (position: number, total: number): Zone | undefined =>
+  ZONES.find((zone) => zone.band.anchor === "bottom" && covers(zone.band, position, total)) ??
+  ZONES.find((zone) => zone.band.anchor === "top" && covers(zone.band, position, total));
 
 export const compareRows = (a: StandingsRow, b: StandingsRow): number =>
   b.points - a.points ||

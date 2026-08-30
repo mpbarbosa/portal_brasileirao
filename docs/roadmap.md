@@ -762,12 +762,14 @@ paragraph of prose.
     way, beside the value rather than replacing it. An `aria-label` on the cell
     would replace the number, which is the trap.
 
-    Two things worth knowing before picking wording. It is **eight rows, not
-    twenty** — `zoneClass` paints the middle of the table transparent, and silence
-    is the correct announcement there. And the row should name the **zone**
-    ("Libertadores", "Rebaixamento"), never restate the rule: "as quatro primeiras
+    Two things worth knowing before picking wording. It is **fifteen rows, not
+    twenty** — four bands since the 2026 allocation landed, and `zoneClass` still
+    paints 12th to 16th transparent, where silence is the correct announcement.
+    And the row should name the **zone** ("Libertadores", "Pré-Libertadores",
+    "Sul-Americana", "Rebaixamento"), never restate the rule: "as quatro primeiras
     posições" is the key's sentence, and hearing it on each of four consecutive
-    rows is the verbosity that makes people switch tables off.
+    rows is the verbosity that makes people switch tables off. Read the names off
+    `ZONES` rather than writing a second list — the bands move between seasons.
 
 **Alongside**: `--color-tertiary` and `--color-tertiary-container` are emitted into
 all three theme blocks and referenced by **zero** components. The accent is already

@@ -435,7 +435,7 @@ test.describe("Classificação", () => {
   });
 
   test("the zone rail scrolls with the club, not away from it", async ({ page }) => {
-    // The G4/Z4 rail rides on the position cell rather than the row: a row
+    // The band rail rides on the position cell rather than the row: a row
     // scrolls, so a rail drawn on it would vanish under the frozen columns.
     await page.setViewportSize(NARROW);
     await scrollTableRight(page);
@@ -514,16 +514,60 @@ test.describe("Classificação", () => {
   const zoneKey = (page: Page) =>
     page.getByRole("list", { name: /legenda das zonas/i });
 
-  test("the zone rail has a key naming both zones", async ({ page }) => {
-    // The rail existed for months with nothing on the page saying what either
-    // colour meant; the only explanation was a comment in the source.
+  test("the zone rail has a key naming every band", async ({ page }) => {
+    // The rail existed for months with nothing on the page saying what any
+    // colour meant; the only explanation was a comment in the source. Four
+    // bands now, not two — a band added to `ZONES` without a line here is a
+    // mark on the page nothing accounts for.
     const key = zoneKey(page);
 
-    await expect(key.getByRole("listitem")).toHaveCount(2);
+    await expect(key.getByRole("listitem")).toHaveCount(4);
     await expect(key).toContainText("G4");
     await expect(key).toContainText("Libertadores");
+    await expect(key).toContainText("G5");
+    await expect(key).toContainText("Pré-Libertadores");
+    await expect(key).toContainText("G11");
+    await expect(key).toContainText("Sul-Americana");
     await expect(key).toContainText("Z4");
     await expect(key).toContainText("Rebaixamento");
+  });
+
+  test("each band draws a rail of its own, and the row line stays solid", async ({ page }) => {
+    // Measured in the page rather than read off a class list: the broken rail
+    // is an arbitrary property, and a Tailwind class that compiles is not a
+    // Tailwind class that applies. The last assertion is the one that catches
+    // `border-dashed` — the whole-element utility, which would dash ROW_LINE's
+    // 1px top border across every cell in the table rather than just the rail.
+    const railAt = (position: number) =>
+      page
+        .locator("table tbody tr")
+        .nth(position - 1)
+        .locator("td")
+        .first()
+        .evaluate((cell) => {
+          const style = getComputedStyle(cell);
+          return {
+            colour: style.borderLeftColor,
+            side: style.borderLeftStyle,
+            row: style.borderTopStyle,
+          };
+        });
+
+    const [g4, g5, g11, middle, z4] = await Promise.all(
+      [1, 5, 6, 13, 20].map((position) => railAt(position)),
+    );
+
+    // Three hues carry Libertadores, Sul-Americana and rebaixamento.
+    expect(new Set([g4.colour, g11.colour, z4.colour]).size).toBe(3);
+    // The pré-Libertadores band is the Libertadores hue, broken: the same
+    // competition, not yet in it, on a channel that survives grayscale.
+    expect(g5.colour).toBe(g4.colour);
+    expect(g4.side).toBe("solid");
+    expect(g5.side).toBe("dashed");
+    expect(g5.row).toBe("solid");
+    // 12th to 16th qualify for nothing, and keep the 2px of transparent rail
+    // that lines every position cell's text up with every other.
+    expect(middle.colour).toBe("rgba(0, 0, 0, 0)");
   });
 
   test("the key says which positions each zone covers, not just its colour", async ({ page }) => {
@@ -534,8 +578,10 @@ test.describe("Classificação", () => {
     // that is precisely the half that survives without colour.
     const items = await zoneKey(page).getByRole("listitem").allInnerTexts();
 
-    expect(items).toHaveLength(2);
+    expect(items).toHaveLength(4);
     expect(items.find((item) => item.includes("G4"))).toMatch(/primeiras/i);
+    expect(items.find((item) => item.includes("G5"))).toMatch(/quinta/i);
+    expect(items.find((item) => item.includes("G11"))).toMatch(/sexta.*décima primeira/i);
     expect(items.find((item) => item.includes("Z4"))).toMatch(/últimas/i);
 
     // Counted in from the ends rather than written as ordinals: Z4 is derived
