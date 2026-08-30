@@ -257,7 +257,35 @@ export function MatchPage({
         <div className="mt-4 flex items-center justify-between gap-3">
           <Side club={home} code={match.homeCode} onNavigate={onNavigate} />
 
-          <div className="shrink-0 text-center">
+          {/* The one number the whole page exists for, in a tray of its own.
+              It was distinguished by weight alone, on the same background as
+              everything else in the card.
+
+              **`surface-container-lowest`, not `surface-dim`** — and that was
+              measured rather than chosen. MD3's role for a step *below* a card
+              is `surface-dim`, which is what this item was written against; it
+              was emitted at MD3's own tones and the contrast gate refused the
+              palette, because on light every ink has to clear a surface darker
+              than `surface-container` and this one is already at its limit
+              there (`ink-faint` clears it by 0.09). Tried tone by tone: at 93,
+              the darkest that came close, the faintest ink still measured 4.49
+              against a 4.5 floor and the tray had faded to 1.08 against the
+              card. **There is no tone this palette can carry that also reads as
+              a tray.**
+
+              Elevation is the way through, and it is MD3's own model rather
+              than a workaround: the tray is *lower* than the card, and a lower
+              surface is darker on dark and brighter on light. So on dark it is
+              genuinely inset (tone 4 against the card's 10) and on light it
+              reads as a well (100 against 96) — which is the light-theme
+              convention anyway. Every ink is **better** on it than on the card
+              in both themes (3.75 vs 3.39 light, 4.30 vs 3.81 dark), so unlike
+              `surface-dim` it cannot introduce a failure.
+
+              `rounded-small` because it is a panel, not because it is nested —
+              the shape rule in `src/index.css` says a step is chosen by what a
+              thing is, and warns against reading depth into it. */}
+          <div className="shrink-0 rounded-small bg-surface-container-lowest px-4 py-2 text-center" data-placar>
             {played ? (
               <p className="text-headline-medium font-bold tabular-nums">
                 {match.homeGoals} <span className="text-ink-ghost">×</span> {match.awayGoals}

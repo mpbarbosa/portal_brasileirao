@@ -220,6 +220,16 @@ const backgroundsFor = (
     live: () => true,
   },
   {
+    // The match page's scoreline tray. It is *lower* than a card, which on dark
+    // means darker and on light means brighter — either way further from the
+    // ink than `surface-container-low`, so nothing here can fail that does not
+    // already fail on the card. Checked anyway: the point of this list is that
+    // a background nobody measured is where the next trap sits.
+    name: "surface-container-lowest (the scoreline tray)",
+    hex: tokens["surface-container-lowest"],
+    live: (fg) => fg === "on-surface",
+  },
+  {
     name: "surface-container",
     hex: tokens["surface-container"],
     // Every call site — the status badges in MatchList and MatchPage, and the
