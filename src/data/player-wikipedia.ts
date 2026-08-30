@@ -14,7 +14,7 @@
  * the full one ("Danilo Luiz da Silva"), or at a disambiguated one where the
  * popular name is shared.
  *
- * Coverage is **partial**, like every curated file here — 169 of ~950 listed
+ * Coverage is **partial**, like every curated file here — 187 of ~950 listed
  * players. A player absent here renders no link.
  *
  * ## How these were checked
@@ -137,14 +137,32 @@ export const PLAYER_WIKIPEDIA: Record<string, string> = {
 
   // Corinthians
   "1609": "Alex Santana (futebolista)", // Alex Santana
+  "56574": "Allan (futebolista)", // Allan
   "3789": "André Carrillo",
+  "285271": "André Luiz Santos Dias", // André Luiz
+  "16342": "André Ramalho",
+  "179054": "Breno Bidon", // Bidon
+  "169688": "Matheus Bidu", // Bidu
   "1577": "Charles Rigon Matos", // Charles
+  "275104": "Diego da Cruz Lopes", // Dieguinho
+  "46376": "Fabrizio Angileri",
+  "249314": "Felipe Longo",
   "33145": "Gabriel Paulista",
   "1301": "Gustavo Henrique",
+  "120089": "Hugo Ferreira", // Hugo
   "82991": "Hugo Souza",
   "3325": "Jesse Lingard",
+  "211608": "João Pedro de Sousa Rodrigues", // João Pedro
+  "192626": "Kaio César",
+  "211607": "Kayke Ferrari", // Kayke
+  "179167": "Matheus Donelli",
   "1614": "Matheus Pereira (futebolista, 1998)", // Matheus Pereira
+  "13710": "Matheuzinho (futebolista, 2000)", // Matheuzinho
   "8472": "Memphis Depay",
+  "137557": "Pedro Milans",
+  "40134": "Pedro Raul",
+  "103611": "Raniele",
+  "60058": "Rodrigo Garro",
   "15795": "Vitinho (futebolista)", // Vitinho
   "1325": "Yuri Alberto",
   "3703": "Zakaria Labyad",

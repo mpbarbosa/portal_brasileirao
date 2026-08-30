@@ -880,14 +880,14 @@ all twenty resolve directly, and each intro names the club.
 `src/data/player-wikipedia.ts` holds each player's article on the **Portuguese**
 Wikipedia, keyed by player id and storing the **title alone**, exactly as
 `club-wikipedia.ts` does. `wikipediaUrl` builds the address. The title is not
-derivable from anything the app holds — **79 of the 169 recorded titles differ
+derivable from anything the app holds — **88 of the 187 recorded titles differ
 from the listed name**, most of them disambiguated ("Dudu (futebolista, 1992)",
 "Luiz Gustavo (futebolista, 1987)"), because the popular name is shared.
 
 **This one has a checker, and its Instagram sibling deliberately does not:**
 
 ```sh
-npm run check-player-wikipedia   # 169 articles, one API call per 20
+npm run check-player-wikipedia   # 187 articles, one API call per 20
 ```
 
 That asymmetry is a property of the two hosts, not of how carefully each file
