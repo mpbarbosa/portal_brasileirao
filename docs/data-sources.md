@@ -122,6 +122,59 @@ Both are **rejected**, and for different reasons:
   section and an article's stated role, which a fantasy-game classification is
   not.
 
+### ge.globo.com / SDE — the classificação everyone reads, and why it fills neither curated file
+
+Traced 2026-08-30. `ge.globo.com/futebol/brasileirao-serie-a/` performs **no
+client-side request for its table**: of 250 subresources, `s.sde.globo.com` is a
+media CDN (crests, player photos) and the rest is auth, ads and analytics. The
+table is server-rendered into `<script id="scriptReact">` as
+`const classificacao = {…}`, beside `const listaJogos` and
+`const fase = {slug: "fase-unica-campeonato-brasileiro-2026"}`.
+
+The renderer's own source is reachable and unauthenticated. `contentResource.tUUID`
+in that same script is the **tabela id**:
+
+```sh
+curl 'https://api.globoesporte.globo.com/tabela/d1a37fa4-e948-43a6-ba53-ab24ab3a45b1/classificacao/'
+```
+
+200, ~18 KB, no token, `cache-control: max-age=60`. It carries the 20 rows, the
+current round's `lista_jogos`, `rodada: {atual, ultima}` and the
+`faixas_classificacao` colours. The whole season is
+`/tabela/{tUUID}/fase/{fase-slug}/rodada/{n}/jogos/`, n = 1..38. To find the
+`tUUID` for another competition, read `contentResource` out of its ge page.
+
+Two access facts worth knowing before building on it: there is **no
+`Access-Control-Allow-Origin`**, so it is server-side only; and **`?rodada=` is
+ignored** — tested at 20 and 24, both returned the current round.
+
+**Rejected for `venues.ts` and `broadcasts.ts`**, for three independent reasons:
+
+- **No broadcasters at all.** `transmissao` looks promising and is not: it is a
+  CTA state for ge's own UI — `ENCERRADA`, `LIVE`, `PRE_DIA`, `REAL_TIME` — plus
+  a link to ge's match page. All 380 fixtures of the season were pulled and
+  grepped for `premiere`, `sportv`, `cazé`, `youtube`, `amazon`, `record`,
+  `canal`, `emissora`: zero hits.
+- **No city or state.** `sede` is `{nome_popular}` and nothing more, where
+  `Venue` requires all three. Five per-match endpoint shapes were probed for a
+  richer venue object; all 500. Also only 259 of 380 fixtures carry a `sede` —
+  rounds 27–38 have none yet.
+- **A second stadium vocabulary through the same normaliser**, which is the one
+  that would have done real damage. `venue-core.ts` uses the slug of the stadium
+  string as stadium *identity*, and ge disagrees with CBF on 5 of 19 grounds:
+  `arena-fonte-nova`/`casa-de-apostas-arena-fonte-nova`,
+  `nilton-santos`/`nilton-santos-engenhao`, `morumbi`/`morumbis`,
+  `manoel-barradas`/`barradao`, `jose-maria-de-campos-maia`/`maiao`. Mixing the
+  two splits five estádio pages in two, silently, with nothing going red.
+
+The join itself was never the problem and is worth recording as cheap if this is
+ever revisited: `joinMatch` and `matchClub` in `broadcast-core.ts` already do it,
+and of ge's 20 club names 18 match on exact slug, `Vasco` by prefix, and `Remo`
+by the alias that is already there.
+
+**It counts in-progress matches**, like football-data and unlike
+`computeStandings` — see the CBF standings page below, where that was measured.
+
 ## CBF's own systems
 
 Both are **publicly readable but internal**. Public-readable is not a licence to
@@ -130,16 +183,49 @@ guarantee. Treated as reference, not as a dependency.
 
 ### Broken TLS chain — affects the two main CBF hosts
 
-`www.cbf.com.br` and `cms.cbf.com.br` both serve a valid Sectigo certificate but
-**omit the intermediate**, so a chain cannot be built:
+`www.cbf.com.br` and `cms.cbf.com.br` both serve a valid Sectigo certificate
+whose **issuing intermediate is not in the chain they present**, so a chain
+cannot be built and `curl` exits **60**:
 
 ```
-verify error:num=21:unable to verify the first certificate
+SSL certificate problem: unable to get local issuer certificate
 ```
 
-Browsers hide this by fetching the intermediate via AIA; `curl` fails outright.
-Any automated client against either host needs special TLS handling. This is
-their misconfiguration, not ours.
+**It is not an empty chain, and that is the part that misleads.** Measured on
+2026-08-30, `www.cbf.com.br` presents **four** certificates — so any check that
+merely counts them, or eyeballs `-showcerts` for content, reports the chain as
+healthy. Three of the four are an older, unrelated Sectigo path left over from a
+previous certificate, and the one that actually signed the leaf is absent:
+
+```
+[0] subject *.cbf.com.br
+    issuer  Sectigo Public Server Authentication CA OV R36   <- not sent
+[1] AAA Certificate Services                     (self-signed)
+[2] Sectigo RSA Organization Validation Secure Server CA
+[3] USERTrust RSA Certification Authority
+```
+
+Browsers hide this by fetching the issuer via AIA; `curl` does not. Any
+automated client against either host needs special TLS handling — in this repo
+that is `scripts/cbf-api.ts`, which reads the AIA `CA Issuers` URI off the leaf
+and completes the chain itself. This is their misconfiguration, not ours.
+
+**To reach either host from a shell**, complete the chain once and reuse the
+bundle. Verified end to end, `ssl_verify=0`, no `-k`:
+
+```sh
+curl -s http://crt.sectigo.com/SectigoPublicServerAuthenticationCAOVR36.crt \
+  | openssl x509 -inform DER -out /tmp/cbf-inter.pem
+cat /tmp/cbf-inter.pem /etc/ssl/certs/ca-certificates.crt > /tmp/cbf-bundle.pem
+curl --cacert /tmp/cbf-bundle.pem https://www.cbf.com.br/...
+```
+
+Do not reach for `-k` instead. It works, and it turns off the check on the one
+host in this document whose certificate is the only thing distinguishing it from
+an impostor — on a request whose response is then written into committed data.
+The intermediate URI is read off the leaf rather than hard-coded here, because
+it changes when CBF renews; `openssl x509 -noout -text` on the leaf prints the
+current one under `Authority Information Access`.
 
 **Two CBF hosts are exceptions and serve a complete chain**, which is worth
 knowing before writing off a whole domain: `conteudo.cbf.com.br` (the crests,
@@ -306,6 +392,58 @@ completing TLS altogether: every subsequent connection failed with `ECONNRESET`
 minutes afterwards. There is no 429 and no `Retry-After` to read, so a block is
 indistinguishable from the host being down. Pace a sync at about one request a
 second and expect a season to take minutes.
+
+### `www.cbf.com.br/futebol-brasileiro/tabelas/campeonato-brasileiro/serie-a/{year}` — the standings page
+
+Traced 2026-08-30. Next.js App Router, server-rendered: the table is inlined in
+the RSC flight payload (`self.__next_f.push`), and **no `/api/cbf/` endpoint
+serves it** — the namespace was probed with eight plausible names and every one
+returned the 404 shell. The fetch happens server-side, so the endpoint never
+reaches the client bundle; all 44 chunks were downloaded and searched for
+`/api/cbf/` with no hits.
+
+The payload is fetchable over the RSC protocol rather than by parsing 222 KB of
+HTML:
+
+```sh
+curl --cacert /tmp/cbf-bundle.pem -H 'RSC: 1' \
+  'https://www.cbf.com.br/futebol-brasileiro/tabelas/campeonato-brasileiro/serie-a/2026'
+```
+
+`text/x-component`, 62 KB, against 222 KB for the HTML. The `--cacert` is not
+optional and not decoration: this is one of the two hosts with the broken chain
+above, a bare `curl` exits 60, and `/tmp/cbf-bundle.pem` is what that section
+builds. From code, use `scripts/cbf-api.ts` instead. 2023, 2024 and 2025 all serve a table; 2027 is
+empty. `?rodada=` is ignored, exactly as on ge.
+
+**Its schema is richer than ge's**, and one field is the interesting one:
+
+```
+cod_time uf_time time escudo evolucao posicao pontos jogos vitorias empates
+derrotas gols_pro gols_contra gols_saldo cartoes_vermelho cartoes_amarelo
+aproveitamento rodada ultimos_jogos proximo_jogo
+```
+
+`cartoes_amarelo` and `cartoes_vermelho` are **the cards the CBF tie-break
+chain needs** and that `standings-core.ts` says the app does not carry — the
+reason `compareRows` stops after goals scored and falls back to club name. This
+is where that data exists, should anyone want to close it. Note `cod_time` is a
+**third club id space** (Palmeiras is `20002` here, `275` at ge, `1769` at
+football-data); do not key anything on it without a join.
+
+**And it excludes in-progress matches, which ge and football-data do not.**
+Measured rather than reasoned: on 2026-08-30 the two tables disagreed on exactly
+four clubs, each by +1 point and +1 game — Palmeiras 51/24 against 52/25, Grêmio
+25/23 against 26/24, Mirassol 24/23 against 25/24, Chapecoense 14/23 against
+15/24. ge's own fixture list at that instant showed `MIR 0x0 PAL` as
+`REAL_TIME` and `GRE 0x0 CHA` as `LIVE`: two live goalless draws, four clubs,
+one point each. The other sixteen rows agreed exactly.
+
+So **CBF's published table follows the same rule `computeStandings` does** —
+the league table moves on the final whistle. That is independent corroboration
+of a choice CLAUDE.md flags as a deliberate difference from football-data, and
+it is worth having written down before somebody reads the live/fallback gap as a
+bug and "fixes" it by counting live matches.
 
 ### `cms.cbf.com.br/api/paginas` — Strapi v4, news only
 

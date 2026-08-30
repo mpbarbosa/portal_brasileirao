@@ -321,6 +321,15 @@ export const broadcasterMarkUrl = (name: string): string | null => {
  * silently never match, which a test also covers.
  */
 export const WORDMARK_ONLY: Record<string, string> = {
+  SBT:
+    "the current network logo on Commons is CC0 (`Logotipo do SBT (2025).png`), " +
+    "and this sync requires the licence to read \"public domain\" — which " +
+    "`CC0` does not, whatever its deed says. The two files that do read that " +
+    "way are unusable rather than merely imperfect: the monochrome SVG is " +
+    "`fill=\"#fff\"`, which is invisible on `plate` (#ffffff in both themes), " +
+    "and its .jpg sibling has no transparency at all. Widening the licence " +
+    "test to admit CC0 is the change that would earn a mark here; do that " +
+    "deliberately, not as a side effect of adding a channel",
   RECORD:
     "no free national logo exists on Commons — see the note on MARKS above for " +
     "where that was searched, and why the CC0 1982 logo is not a fallback",
