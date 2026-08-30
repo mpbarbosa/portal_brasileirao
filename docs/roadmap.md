@@ -348,12 +348,38 @@ because a reader looking for work here will otherwise keep finding decisions.
   exists behind them, which is precisely the question `s3:ListBucket` would
   settle. Note that observation predates a later IAM edit for the Deployments
   trust policy, so re-dispatch rather than trusting this line.
-- **`allow_non_descendant` has no door.** The ancestry guard's override is
-  reachable only if `main` is moved backwards, because `deploy` is gated on
-  `refs/heads/main` and `workflow_dispatch` cannot name a bare sha. `rollback.yml`
-  does its own SSM install and never enters `ci.yml`, so D5 did not give it one
-  after all. Either build a door or remove it deliberately — leaving it is how
-  a later reader diagnoses it as dead code and deletes the escape hatch instead.
+- ~~**`allow_non_descendant` has no door.**~~ **Removed deliberately**, which is
+  the second of the two options this entry offered, and the shipped step now
+  points at `rollback.yml` instead.
+
+  **The guard and its override were reachable on disjoint events**, which is
+  sharper than "no door" and is what settled it. On a **push** — the only event
+  where the guard realistically fires, since a queue draining out of order
+  installs an older `main` commit over a newer one — `github.event` carries no
+  `inputs` key at all, so the override always evaluated to `false`. On a
+  **dispatch**, where the box can be ticked, `GITHUB_SHA` is the chosen ref's
+  *tip*; on `main` that is the newest commit, which is an ancestor of live only
+  if `main` has been rewound. So the override could only be set where the guard
+  would not fire.
+
+  Worse, the refusal told the operator to *"re-run from the Actions tab with
+  allow_non_descendant=true"* — and re-running a push run replays its payload,
+  inputs and all, so that instruction could not be followed.
+
+  **Neither door was worth building.** To recover from an out-of-order queue you
+  want the *newer* commit, and dispatching `ci.yml` on `main` installs exactly
+  that and passes the guard unaided. To go backwards deliberately you want
+  `rollback.yml`, which does its own SSM install and carries no guard on
+  purpose. A second way to install a chosen sha through `ci.yml` would be a
+  second copy of the deploy path, which is the thing the reconciler was
+  deliberately built not to become.
+
+  Verified by extracting the shipped step and driving all six branches against
+  real git history and a real HTTP server — ahead, equal, backwards, diverged,
+  site down, and a stale `ALLOW_NON_DESCENDANT=true` left in the environment,
+  which no longer opens the gate. The equality case matters and passes: a guard
+  refusing an ancestor also refuses to redeploy the current commit unless
+  equality is short-circuited, and it is.
 - ~~**#90 (`@vitejs/plugin-react` 5 → 6) cannot merge and will not fix
   itself.**~~ **Done, and this entry was two claims behind.** #90 was closed
   unmerged on 2026-08-27, superseded by the regrouped Dependabot pull requests.

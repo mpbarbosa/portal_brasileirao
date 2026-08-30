@@ -1089,6 +1089,21 @@ reaches `main` and deploys, because that run then becomes the newer of the two.
 Fifteen cases exercised against the shipped script — the five new ones plus all
 ten from D2, which had to keep passing.
 
+#### Resolved: `allow_non_descendant` is removed, not doored
+
+The two corrections below stand as written and are kept for the reasoning. What
+they could not see is that **the guard and the override were reachable on
+disjoint events**: a push carries no `inputs`, so the override was always
+`false` there — and a push is the only event where the guard realistically
+fires, because a queue draining out of order installs an older `main` commit
+over a newer one. A dispatch can set the flag but carries the chosen ref's
+*tip*, which is an ancestor of live only if `main` has been rewound.
+
+So the refusal's own advice — re-run with the input set — could not be followed,
+because re-running a push run replays its payload. The input and its branch are
+gone; the step points at `rollback.yml`, and at dispatching `ci.yml` on `main`
+for the out-of-order case, where the tip is a descendant and passes unaided.
+
 #### Correction: `allow_non_descendant` still has no door
 
 This plan said D5 was where `ci.yml`'s override would become reachable. Having

@@ -3123,8 +3123,20 @@ as narrow as possible — the orphaned object is keyed by sha and a rollback wil
 want it there anyway. And it fails **open** on an unreachable site, a health
 payload with no usable sha, or a commit this checkout does not have: during an
 outage the ability to deploy is worth more than the ordering this protects, and a
-site that is down cannot tell you what it is running. Override it for a deliberate
-rollback by dispatching the workflow with `allow_non_descendant=true`.
+site that is down cannot tell you what it is running.
+
+**There is no override, and there deliberately is not one.** The guard shipped
+with an `allow_non_descendant` input, and the two were reachable on **disjoint
+events**: a push carries no `github.event.inputs` at all, so the flag was always
+`false` there — and a push is the only event where the guard realistically
+fires, since a queue draining out of order installs an older `main` commit over
+a newer one. A dispatch could set the flag but carries the chosen ref's *tip*,
+an ancestor of live only if `main` has been rewound. The refusal even told the
+operator to re-run with the input set, which cannot be done: re-running a push
+run replays its payload. Both paths already have a better answer — dispatch
+`ci.yml` on `main` to recover from an out-of-order queue, since its tip is a
+descendant and passes unaided, and use **`rollback.yml`** to go backwards
+deliberately, which does its own SSM install and carries no guard on purpose.
 
 **`deploy` runs for any run *for* `main`, not only a push-triggered one.** The
 event gate it used to carry made `workflow_dispatch` useless in precisely the
