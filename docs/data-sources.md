@@ -176,15 +176,46 @@ Three things to know before using it.
 broadcast API — so the same join on kickoff instant plus home club is required,
 and `joinMatch` in `broadcast-core.ts` already performs it.
 
-**The `resultado` vocabulary is measured, not documented, and it is incomplete.**
-`NR` (normal) and `PN` (pênalti) are the values observed; `AMARELO` appears on
-`PENALIDADE` rows, which are cards sharing the array. **No own goal has been seen
-yet**, so whatever code CBF files one under is unknown — and that is not a
-cosmetic gap, because an own goal counts for the club that did *not* score it. If
-CBF also files it under the scoring club's `clube_id`, reading it naively puts a
-goal on the wrong side of the scoreboard. `sync-goals.ts` therefore refuses any
-`resultado` it does not recognise, and reconciles every match's goals against
-both CBF's scoreline and ours before writing.
+**The `resultado` vocabulary is complete, and CBF documents it itself — in the
+súmula rather than in the API.** Every match report prints the legend at the foot
+of its Gols table:
+
+```
+NR = Normal | PN = Pênalti | CT = Contra | FT = Falta
+```
+
+`AMARELO` appears on `PENALIDADE` rows, which are cards sharing the same array.
+
+**`CT` is the one that changes meaning rather than wording, and CBF files it
+under the club of the player who scored it** — so an own goal counts for the
+*other* side. Measured, not inferred: Grêmio **2x0** Vitória is listed as a `CT`
+by Camutanga, a Vitória player, plus one Grêmio goal, which counts 1x1 against
+the reported 2x0 until the attribution is flipped. `goalsFromRegistros` performs
+that flip; `FT` and `PN` count normally.
+
+This was found the hard way and is the argument for the closed vocabulary. The
+first build shipped knowing only `NR` and `PN`, and the first season-wide sync
+**refused 25 matches** — 16 `CT`, 9 `FT` — rather than filing them wrong. Had
+unknown codes defaulted to "ordinary", all 16 own goals would have been credited
+to the wrong club, with the page looking entirely plausible. `sync-goals.ts`
+still refuses any `resultado` it does not recognise, and reconciles every match
+against both CBF's scoreline and ours before writing.
+
+**One case remains undetectable from this API**, and it is worth knowing before
+trusting the reconciliation as complete: an own goal filed under the club it
+**counts for** and marked `NR` would balance perfectly and be recorded with an
+opposing player as that club's scorer. All 16 `CT` matches reconciled once the
+flip was in place, so CBF was consistent everywhere it could be checked — that is
+evidence, not proof. The **súmula** is the only source that could settle it,
+since its Gols table carries both a `Tipo` and the `Equipe` a goal counted for,
+where `registros` carries the type alone.
+
+**The súmula is reachable while `www` is not**, which is what made the legend
+obtainable during a ban: it is served from `conteudo.cbf.com.br`, a different
+edge. Its URL is **not derivable from `id_jogo`** — for `id_jogo=832123` the
+report is `sumulas/2026/142234se.pdf` — so take it from the `documentos` array
+in the match payload, where it arrives titled `Súmula`. `pdftotext -layout`
+reads it.
 
 **`tempo_jogo` and `minutos` are not safe to read as a match minute**, and the
 goals are deliberately shipped **without one**. The two fields use different

@@ -94,3 +94,74 @@ test("a match with no synced goals renders no scorer block at all", async ({ pag
   await expect(page.locator("main article [data-goal]")).toHaveCount(0);
   await expect(page.locator("[data-goals='home']")).toHaveCount(0);
 });
+
+/**
+ * Seed fixture 554805 — Atlético-MG 2x0 Vitória, rodada 7 — whose second goal
+ * is an own goal by Camutanga, a *Vitória* player.
+ *
+ * **This does NOT test the own-goal flip, and the first draft of this comment
+ * said it did.** `src/data/goals.ts` is a static file written by the sync, so
+ * the flip has already been applied to every entry in it; deleting the flip
+ * from `goalsFromRegistros` cannot change a single rendered pixel. That was
+ * confirmed rather than reasoned about — removing it leaves all 14 specs in
+ * this file green, while three in `tests/goals-core.test.ts` go red. The flip
+ * is unit-tested, and this is the one place that can say so.
+ *
+ * What this *does* test is worth having on its own: that the **committed data**
+ * is internally coherent where it is hardest to be — each side's scorers add up
+ * to that side's half of a scoreline that includes a goal credited across the
+ * middle — and that the qualifier reaches the page, so a reader is never told
+ * an opponent scored for us without being told how.
+ */
+const OWN_GOAL_MATCH = "554805";
+
+test("an own goal is marked and counts for the other club", async ({ page }) => {
+  await page.goto(`/partida/${OWN_GOAL_MATCH}`);
+  await expect(page.locator("main article [data-goal]").first()).toBeVisible();
+
+  const score = await page.locator("main article p.tabular-nums").innerText();
+  const [home, away] = score.split("×").map((part) => Number(part.trim()));
+
+  // The data invariant, read off the page rather than hard-coded.
+  await expect(page.locator("[data-goals='home'] [data-goal]")).toHaveCount(home);
+  await expect(page.locator("[data-goals='away'] [data-goal]")).toHaveCount(away);
+
+  // And it is labelled, so a reader is not told an opponent scored for us.
+  await expect(page.locator("main article [data-goal]").filter({ hasText: "contra" })).toHaveCount(1);
+});
+
+/**
+ * A fixture that carries scorers while our own record says it has not been
+ * played must render no scorers at all.
+ *
+ * Not a hypothetical: `src/data/goals.ts` is synced against the live provider
+ * while `src/data/matches.ts` is a frozen snapshot, so a match played after the
+ * snapshot was taken sits in exactly this state until the seed is regenerated —
+ * two of round 25's did on the day this landed. The page would otherwise draw a
+ * list of scorers underneath an empty "×".
+ *
+ * The state is **produced** rather than hunted for, so regenerating the seed
+ * cannot quietly delete this test's subject.
+ */
+test("a fixture with goals but no score renders no scorers", async ({ page }) => {
+  const response = await page.request.get("/api/matches");
+  const body = await response.json();
+
+  const scheduled = body.data.matches.find(
+    (match: Record<string, unknown>) => match.homeGoals === null && match.awayGoals === null,
+  );
+  expect(scheduled, "the snapshot should contain an unplayed fixture").toBeTruthy();
+
+  scheduled.goals = [
+    { clubCode: scheduled.homeCode, scorer: "Fulano" },
+    { clubCode: scheduled.awayCode, scorer: "Sicrano", kind: "own" },
+  ];
+  await page.route("**/api/matches*", (route) =>
+    route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(body) }),
+  );
+
+  await page.goto(`/partida/${scheduled.id}`);
+  await expect(page.locator("main article")).toBeVisible();
+  await expect(page.locator("main article [data-goal]")).toHaveCount(0);
+  await expect(page.getByText("Fulano")).toHaveCount(0);
+});

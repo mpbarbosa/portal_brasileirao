@@ -65,8 +65,12 @@ test("a penalty is known and qualified", () => {
  * because an unknown code might mean the goal counts for the other club.
  */
 test("an unknown resultado is distinguishable from an ordinary goal", () => {
-  assert.equal(goalKindOf("CT"), undefined, "the qualifier is unknown either way");
-  assert.equal(isKnownGoalResult("CT"), false, "but the code is not one we have seen");
+  // `ZZ` stands in for whatever CBF adds next. This test previously used `CT`,
+  // and that is worth knowing: `CT` turned out to be a real code — the own goal
+  // — and this assertion went red the moment it was mapped, which is the
+  // vocabulary behaving as a closed set rather than a guess.
+  assert.equal(goalKindOf("ZZ"), undefined, "the qualifier is unknown either way");
+  assert.equal(isKnownGoalResult("ZZ"), false, "but the code is not one we have seen");
   assert.equal(isKnownGoalResult("NR"), true);
 });
 
@@ -312,18 +316,99 @@ test("the captured payload's cards are not counted as goals", () => {
 });
 
 /**
- * Everything this module ships knows about CBF's goal vocabulary, asserted so
- * that widening it is deliberate. `own` exists on `GoalKind` and has **no code
- * mapped to it**: no own goal has been observed in a payload yet, so the code
- * CBF files one under is unmeasured — and guessing it is the one mistake that
- * would put a goal on the wrong side of a scoreboard.
+ * CBF's whole goal vocabulary, which its own súmula prints at the foot of every
+ * Gols table:
+ *
+ *     NR = Normal | PN = Pênalti | CT = Contra | FT = Falta
+ *
+ * Asserted as a closed set so that widening it stays deliberate. Anything
+ * outside it must still be refused rather than defaulted, because the cost of
+ * being wrong is a goal on the wrong side of a scoreboard rather than an odd
+ * word on the page.
  */
-test("the measured vocabulary is NR and PN, and nothing else is assumed", () => {
+test("the vocabulary is exactly CBF's four codes, and nothing else is assumed", () => {
   assert.deepEqual(
-    ["NR", "PN"].map(isKnownGoalResult),
-    [true, true],
+    ["NR", "PN", "CT", "FT"].map(isKnownGoalResult),
+    [true, true, true, true],
   );
-  for (const guess of ["CT", "GC", "CN", "OG", "AUTO"]) {
+  for (const guess of ["GC", "CN", "OG", "AUTO", "XX"]) {
     assert.equal(isKnownGoalResult(guess), false, `${guess} must not be assumed`);
   }
+});
+
+test("each code maps to the qualifier the súmula names", () => {
+  assert.equal(goalKindOf("NR"), undefined);
+  assert.equal(goalKindOf("PN"), "penalty");
+  assert.equal(goalKindOf("CT"), "own");
+  assert.equal(goalKindOf("FT"), "freekick");
+});
+
+// ---------------------------------------------------------------------------
+// The own-goal flip
+// ---------------------------------------------------------------------------
+
+/**
+ * Transcribed from CBF's payload for Grêmio 2x0 Vitória (19/03/2026), which is
+ * the match that established the rule.
+ *
+ * CBF lists the own goal under **Camutanga**, a *Vitória* player — the club of
+ * whoever put it in — plus one ordinary Grêmio goal. Counting by `clube_id` as
+ * it arrives gives 1x1 against a reported 2x0, which is precisely why
+ * `sync-goals` refused this match and all 15 other `CT` fixtures rather than
+ * shipping them wrong.
+ */
+const OWN_GOAL: CbfRegistro[] = [
+  { tipo: "GOL", resultado: "CT", clube_id: "60646", atleta_apelido: "Camutanga" },
+  { tipo: "GOL", resultado: "NR", clube_id: "20002", atleta_apelido: "Amuzu" },
+];
+
+test("an own goal counts for the club that did NOT score it", () => {
+  const goals = goalsFromRegistros(OWN_GOAL, SIDES);
+
+  assert.deepEqual(goals, [
+    // Filed by CBF under the away club; it counts for the home club.
+    { clubCode: "1769", scorer: "Camutanga", kind: "own" },
+    { clubCode: "1769", scorer: "Amuzu" },
+  ]);
+});
+
+/**
+ * The flip is what makes the real fixture add up. Without it this is 1x1
+ * against a 2x0 — the exact signal that refused 16 matches.
+ */
+test("the flip is what makes the real own-goal fixture reconcile", () => {
+  const goals = goalsFromRegistros(OWN_GOAL, SIDES);
+  assert.equal(goalsReconcile(goals, "1769", "1780", 2, 0), true);
+
+  // And the unflipped reading, for contrast, does not.
+  const unflipped = goals.map((goal) =>
+    goal.kind === "own" ? { ...goal, clubCode: "1780" } : goal,
+  );
+  assert.equal(goalsReconcile(unflipped, "1769", "1780", 2, 0), false);
+});
+
+test("an own goal by the home side counts for the away side", () => {
+  const [goal] = goalsFromRegistros(
+    [{ tipo: "GOL", resultado: "CT", clube_id: "20002", atleta_apelido: "Alguem" }],
+    SIDES,
+  );
+  assert.equal(goal.clubCode, "1780");
+});
+
+/** Only `own` flips. A free kick is a qualifier and nothing more. */
+test("a free-kick goal counts for the club that scored it", () => {
+  const [goal] = goalsFromRegistros(
+    [{ tipo: "GOL", resultado: "FT", clube_id: "20002", atleta_apelido: "Leonardo Pereira" }],
+    SIDES,
+  );
+  assert.deepEqual(goal, { clubCode: "1769", scorer: "Leonardo Pereira", kind: "freekick" });
+});
+
+test("the two new qualifiers read in pt-BR", () => {
+  assert.equal(goalKindLabel("own"), "contra");
+  assert.equal(goalKindLabel("freekick"), "falta");
+  assert.equal(
+    goalLabel({ clubCode: "1769", scorer: "Camutanga", kind: "own" }),
+    "Camutanga (contra)",
+  );
 });

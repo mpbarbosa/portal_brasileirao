@@ -19,19 +19,879 @@ import type { Goal } from "@/src/types";
  * never "goalless": a real 0-0 is deliberately absent rather than an empty
  * array, since the two would be indistinguishable here.
  *
- * **Coverage is one match.** CBF throttles at the socket rather than with a
- * status code — see `scripts/cbf-api.ts` — and blocked this workstation part
- * way through the first season-wide run, so the rest is a `npm run sync-goals`
- * away rather than a code change. This entry was not typed by hand: it is the
- * output of `goalsFromRegistros` over CBF's real payload for `id_jogo=832123`,
- * which reconciles against both scorelines.
+ * Last synced 2026-08-30.
  */
 export const GOALS: Record<string, Goal[]> = {
+  "554780": [
+    { clubCode: "1768", scorer: "Kevin Viveros" },
+    { clubCode: "1770", scorer: "Edenilson" },
+    { clubCode: "1768", scorer: "Kevin Viveros" },
+    { clubCode: "1768", scorer: "Aguirre" },
+    { clubCode: "1768", scorer: "Lucas Esquivel", kind: "freekick" },
+  ],
+  "554781": [
+    { clubCode: "1766", scorer: "Cuello" },
+  ],
+  "554782": [
+    { clubCode: "1782", scorer: "Ramon" },
+    { clubCode: "1777", scorer: "Jean Lucas" },
+  ],
+  "554783": [
+    { clubCode: "4241", scorer: "Jacy" },
+    { clubCode: "4241", scorer: "Lucas Ronier" },
+  ],
+  "554784": [
+    { clubCode: "1783", scorer: "Pedro" },
+    { clubCode: "1783", scorer: "Carrascal" },
+  ],
+  "554785": [
+    { clubCode: "1767", scorer: "Vinicius" },
+    { clubCode: "4286", scorer: "Rodriguinho" },
+  ],
+  "554786": [
+    { clubCode: "4364", scorer: "Igor" },
+    { clubCode: "4364", scorer: "Negueba" },
+    { clubCode: "6685", scorer: "Gabriel Barbosa" },
+    { clubCode: "6685", scorer: "Gabriel Barbosa", kind: "penalty" },
+  ],
+  "554787": [
+    { clubCode: "1765", scorer: "John Kennedy" },
+    { clubCode: "1765", scorer: "Canobbio" },
+  ],
+  "554788": [
+    { clubCode: "1776", scorer: "Luciano" },
+    { clubCode: "1776", scorer: "Calleri" },
+  ],
+  "554789": [
+    { clubCode: "1769", scorer: "Lopez" },
+    { clubCode: "1780", scorer: "Thiago Mendes" },
+    { clubCode: "1780", scorer: "Cuiabano" },
+  ],
+  "554790": [
+    { clubCode: "1783", scorer: "Samuel Lino" },
+    { clubCode: "1783", scorer: "Leo Pereira", kind: "freekick" },
+    { clubCode: "1783", scorer: "Pedro" },
+  ],
+  "554791": [
+    { clubCode: "4286", scorer: "Herrera" },
+    { clubCode: "1776", scorer: "Sabino" },
+    { clubCode: "1776", scorer: "Calleri" },
+  ],
+  "554792": [
+    { clubCode: "1772", scorer: "Walter Clar", kind: "penalty" },
+    { clubCode: "1767", scorer: "Nardoni" },
+  ],
+  "554793": [
+    { clubCode: "4241", scorer: "Pedro Rocha" },
+  ],
+  "554794": [
+    { clubCode: "1771", scorer: "Christian" },
+    { clubCode: "1780", scorer: "Barros" },
+    { clubCode: "1780", scorer: "Barros" },
+    { clubCode: "1771", scorer: "Neiser" },
+    { clubCode: "1780", scorer: "Brenner" },
+    { clubCode: "1771", scorer: "Japa" },
+  ],
+  "554795": [
+    { clubCode: "1768", scorer: "Mendoza" },
+    { clubCode: "1765", scorer: "Hercules" },
+    { clubCode: "1765", scorer: "Canobbio" },
+    { clubCode: "1768", scorer: "Luiz Gustavo" },
+    { clubCode: "1765", scorer: "Guilherme Arana" },
+  ],
+  "554796": [
+    { clubCode: "1777", scorer: "Willian José" },
+  ],
+  "554797": [
+    { clubCode: "1769", scorer: "Lopez" },
+  ],
+  "554798": [
+    { clubCode: "1779", scorer: "Memphis Depay" },
+    { clubCode: "6685", scorer: "Gabriel Barbosa" },
+  ],
+  "554799": [
+    { clubCode: "1782", scorer: "Renato Kayzer", kind: "freekick" },
+    { clubCode: "1782", scorer: "Erick" },
+  ],
+  "554800": [
+    { clubCode: "1768", scorer: "Mendoza" },
+    { clubCode: "1768", scorer: "Kevin Viveros", kind: "penalty" },
+    { clubCode: "1771", scorer: "Neiser" },
+  ],
+  "554801": [
+    { clubCode: "1766", scorer: "Roman Hurtado" },
+  ],
+  "554802": [
+    { clubCode: "1777", scorer: "Luciano Juba" },
+    { clubCode: "1777", scorer: "Erick" },
+  ],
+  "554804": [
+    { clubCode: "1783", scorer: "Léo Ortiz" },
+    { clubCode: "1783", scorer: "Samuel Lino" },
+    { clubCode: "1783", scorer: "Luiz" },
+  ],
+  "554805": [
+    { clubCode: "1767", scorer: "Camutanga", kind: "own" },
+    { clubCode: "1767", scorer: "Amuzu" },
+  ],
+  "554806": [
+    { clubCode: "4241", scorer: "Lavega" },
+  ],
+  "554807": [
+    { clubCode: "1769", scorer: "Allan" },
+    { clubCode: "1769", scorer: "Jhon Arias" },
+    { clubCode: "1770", scorer: "Danilo Santos" },
+  ],
+  "554808": [
+    { clubCode: "6684", scorer: "Ze Ivaldo", kind: "own" },
+    { clubCode: "6685", scorer: "Neymar Jr", kind: "penalty" },
+    { clubCode: "6684", scorer: "Carbonero" },
+  ],
+  "554809": [
+    { clubCode: "1765", scorer: "Canobbio" },
+    { clubCode: "1765", scorer: "Hercules" },
+    { clubCode: "1780", scorer: "Nuno" },
+    { clubCode: "1780", scorer: "Spinelli" },
+    { clubCode: "1780", scorer: "Thiago Mendes" },
+  ],
+  "554810": [
+    { clubCode: "1768", scorer: "Dudu" },
+    { clubCode: "1768", scorer: "Kevin Viveros" },
+  ],
+  "554811": [
+    { clubCode: "1770", scorer: "Alex Telles", kind: "penalty" },
+    { clubCode: "4286", scorer: "Lucas Barbosa" },
+    { clubCode: "1770", scorer: "Alexander Barboza" },
+  ],
+  "554812": [
+    { clubCode: "1783", scorer: "Lucas Paquetá" },
+    { clubCode: "1779", scorer: "Yuri Alberto" },
+  ],
+  "554814": [
+    { clubCode: "1765", scorer: "Castillo" },
+  ],
+  "554815": [
+    { clubCode: "6684", scorer: "Gabriel Mercado" },
+    { clubCode: "6684", scorer: "Alan Patrick", kind: "penalty" },
+  ],
+  "554816": [
+    { clubCode: "1777", scorer: "Everaldo" },
+    { clubCode: "4287", scorer: "Vitor Bueno" },
+    { clubCode: "4287", scorer: "Talairi" },
+    { clubCode: "4287", scorer: "Talairi" },
+    { clubCode: "4287", scorer: "Jajá" },
+  ],
+  "554817": [
+    { clubCode: "1769", scorer: "Jhon Arias" },
+  ],
+  "554818": [
+    { clubCode: "1780", scorer: "Thiago Mendes" },
+    { clubCode: "1780", scorer: "David" },
+    { clubCode: "1767", scorer: "Vinicius" },
+  ],
+  "554819": [
+    { clubCode: "1782", scorer: "Gabriel Baralhas" },
+  ],
+  "554820": [
+    { clubCode: "1777", scorer: "Everaldo" },
+    { clubCode: "1777", scorer: "Everaldo" },
+    { clubCode: "1777", scorer: "Luciano Juba" },
+  ],
+  "554821": [
+    { clubCode: "1770", scorer: "Arthur" },
+    { clubCode: "4364", scorer: "Shaylon" },
+    { clubCode: "1770", scorer: "Alex Telles", kind: "penalty" },
+    { clubCode: "1770", scorer: "Junior" },
+    { clubCode: "4364", scorer: "Igor" },
+  ],
+  "554822": [
+    { clubCode: "4286", scorer: "Isidro Pitta" },
+    { clubCode: "4286", scorer: "Gabriel Girotto" },
+    { clubCode: "4286", scorer: "Lucas Barbosa" },
+  ],
+  "554823": [
+    { clubCode: "1766", scorer: "Bernard" },
+    { clubCode: "1766", scorer: "Reinier" },
+    { clubCode: "1766", scorer: "Cuello" },
+    { clubCode: "1766", scorer: "Dudu" },
+  ],
+  "554824": [
+    { clubCode: "1780", scorer: "Tche Tche" },
+    { clubCode: "4241", scorer: "Alan", kind: "own" },
+  ],
+  "554825": [
+    { clubCode: "1771", scorer: "Christian" },
+    { clubCode: "1771", scorer: "Kauã Moraes" },
+    { clubCode: "1771", scorer: "Kaio Jorge" },
+  ],
+  "554826": [
+    { clubCode: "1765", scorer: "John Kennedy" },
+    { clubCode: "1765", scorer: "Hercules" },
+    { clubCode: "1765", scorer: "Castillo" },
+    { clubCode: "1779", scorer: "André" },
+  ],
+  "554827": [
+    { clubCode: "6684", scorer: "Alerrandro" },
+    { clubCode: "1776", scorer: "Calleri" },
+  ],
+  "554828": [
+    { clubCode: "1769", scorer: "Marlon Freitas" },
+    { clubCode: "1767", scorer: "Vinicius" },
+    { clubCode: "1769", scorer: "Marlon Freitas" },
+  ],
+  "554829": [
+    { clubCode: "6685", scorer: "Thaciano" },
+    { clubCode: "6685", scorer: "Moises" },
+  ],
+  "554830": [
+    { clubCode: "1766", scorer: "Victor Hugo" },
+    { clubCode: "1766", scorer: "Gustavo Scarpa" },
+    { clubCode: "1768", scorer: "Julimar" },
+  ],
+  "554831": [
+    { clubCode: "1769", scorer: "Jhon Arias" },
+    { clubCode: "1777", scorer: "David Duarte" },
+    { clubCode: "1769", scorer: "Ramos Mingo", kind: "own" },
+  ],
+  "554832": [
+    { clubCode: "1772", scorer: "Neto" },
+    { clubCode: "1782", scorer: "Matheuzinho", kind: "penalty" },
+  ],
+  "554833": [
+    { clubCode: "6684", scorer: "Bernabei" },
+  ],
+  "554834": [
+    { clubCode: "4241", scorer: "Tiago Coser" },
+    { clubCode: "1765", scorer: "John Kennedy" },
+  ],
+  "554835": [
+    { clubCode: "6685", scorer: "Lautaro" },
+    { clubCode: "1783", scorer: "Pedro" },
+    { clubCode: "1783", scorer: "Jorge", kind: "penalty" },
+    { clubCode: "1783", scorer: "Lucas Paquetá" },
+  ],
+  "554837": [
+    { clubCode: "4286", scorer: "Isidro Pitta" },
+  ],
+  "554838": [
+    { clubCode: "1776", scorer: "Calleri", kind: "penalty" },
+    { clubCode: "1776", scorer: "Ferreira" },
+    { clubCode: "1771", scorer: "Christian" },
+    { clubCode: "1776", scorer: "Ferreira" },
+    { clubCode: "1776", scorer: "Ferreira" },
+  ],
+  "554839": [
+    { clubCode: "1780", scorer: "David" },
+    { clubCode: "1770", scorer: "Lucas Villalba" },
+    { clubCode: "1770", scorer: "Matheus Martins" },
+  ],
+  "554840": [
+    { clubCode: "1768", scorer: "Mendoza" },
+    { clubCode: "1768", scorer: "Kevin Viveros" },
+  ],
+  "554841": [
+    { clubCode: "4241", scorer: "Breno" },
+    { clubCode: "1770", scorer: "Danilo Santos" },
+    { clubCode: "1770", scorer: "Arthur" },
+    { clubCode: "4241", scorer: "Lavega" },
+  ],
+  "554843": [
+    { clubCode: "4286", scorer: "Andres Hurtado" },
+    { clubCode: "1771", scorer: "Neiser" },
+    { clubCode: "1771", scorer: "Christian" },
+  ],
+  "554844": [
+    { clubCode: "1783", scorer: "Pedro" },
+    { clubCode: "1783", scorer: "Pedro" },
+    { clubCode: "1765", scorer: "Savarino" },
+  ],
+  "554846": [
+    { clubCode: "4364", scorer: "David Duarte", kind: "own" },
+    { clubCode: "1777", scorer: "Luciano Juba", kind: "penalty" },
+    { clubCode: "1777", scorer: "Sanabria" },
+  ],
+  "554847": [
+    { clubCode: "1780", scorer: "Hinestroza" },
+    { clubCode: "4287", scorer: "Marllon" },
+  ],
+  "554848": [
+    { clubCode: "6685", scorer: "Moises" },
+  ],
+  "554849": [
+    { clubCode: "1782", scorer: "Cacá" },
+    { clubCode: "1782", scorer: "Ramon" },
+  ],
+  "554850": [
+    { clubCode: "4286", scorer: "Isidro Pitta" },
+    { clubCode: "4287", scorer: "Talairi" },
+    { clubCode: "4286", scorer: "Isidro Pitta" },
+    { clubCode: "4287", scorer: "Marcelinho" },
+    { clubCode: "4286", scorer: "Tchamba", kind: "own" },
+    { clubCode: "4286", scorer: "Tchamba", kind: "own" },
+  ],
+  "554851": [
+    { clubCode: "1770", scorer: "Edenilson" },
+    { clubCode: "1770", scorer: "Matheus Martins" },
+    { clubCode: "1770", scorer: "Edenilson" },
+    { clubCode: "1772", scorer: "Marcinho" },
+    { clubCode: "1770", scorer: "Matheus Martins" },
+  ],
+  "554852": [
+    { clubCode: "4241", scorer: "Breno" },
+    { clubCode: "4241", scorer: "Pedro Rocha" },
+  ],
+  "554853": [
+    { clubCode: "1771", scorer: "Christian" },
+    { clubCode: "1771", scorer: "Lucas Romero" },
+  ],
+  "554854": [
+    { clubCode: "1783", scorer: "De Arrascaeta" },
+    { clubCode: "1783", scorer: "Lucas Paquetá" },
+  ],
+  "554855": [
+    { clubCode: "4364", scorer: "Lucas Oliveira" },
+    { clubCode: "4364", scorer: "Andre Luis" },
+    { clubCode: "6684", scorer: "Alan Patrick" },
+  ],
+  "554856": [
+    { clubCode: "1769", scorer: "Gustavo Gomez" },
+  ],
+  "554857": [
+    { clubCode: "6685", scorer: "Gabriel Barbosa" },
+    { clubCode: "1765", scorer: "Savarino" },
+    { clubCode: "6685", scorer: "Barreal" },
+    { clubCode: "1765", scorer: "Castillo" },
+    { clubCode: "1765", scorer: "John Kennedy" },
+  ],
+  "554858": [
+    { clubCode: "1776", scorer: "Luciano" },
+    { clubCode: "1780", scorer: "Puma Rodriguez", kind: "penalty" },
+    { clubCode: "1780", scorer: "Hinestroza" },
+  ],
+  "554860": [
+    { clubCode: "1782", scorer: "Rene" },
+    { clubCode: "1768", scorer: "Kevin Viveros", kind: "penalty" },
+    { clubCode: "1768", scorer: "Kevin Viveros" },
+    { clubCode: "1768", scorer: "Luiz Gustavo" },
+  ],
+  "554861": [
+    { clubCode: "1783", scorer: "Pedro" },
+    { clubCode: "1783", scorer: "Plata" },
+    { clubCode: "1783", scorer: "De Arrascaeta" },
+    { clubCode: "1783", scorer: "Pedro" },
+  ],
+  "554862": [
+    { clubCode: "6685", scorer: "Rollheiser", kind: "penalty" },
+    { clubCode: "6685", scorer: "Rollheiser", kind: "penalty" },
+    { clubCode: "1777", scorer: "Luciano Juba", kind: "freekick" },
+    { clubCode: "1777", scorer: "Willian José" },
+  ],
+  "554863": [
+    { clubCode: "1770", scorer: "Danilo Santos" },
+    { clubCode: "6684", scorer: "Carbonero" },
+    { clubCode: "1770", scorer: "Cristian Medina" },
+    { clubCode: "6684", scorer: "Bernabei" },
+  ],
+  "554864": [
+    { clubCode: "1769", scorer: "Lopez" },
+  ],
+  "554865": [
+    { clubCode: "1779", scorer: "Matheus Bidu" },
+  ],
+  "554866": [
+    { clubCode: "1765", scorer: "Savarino", kind: "penalty" },
+    { clubCode: "1772", scorer: "Enio" },
+    { clubCode: "1765", scorer: "John Kennedy" },
+  ],
+  "554867": [
+    { clubCode: "1767", scorer: "Gabriel Mec" },
+  ],
+  "554868": [
+    { clubCode: "1771", scorer: "Arroyo" },
+  ],
+  "554869": [
+    { clubCode: "1776", scorer: "Luciano" },
+  ],
+  "554871": [
+    { clubCode: "1770", scorer: "Ferraresi" },
+    { clubCode: "4287", scorer: "Alef Manga" },
+    { clubCode: "4287", scorer: "Jajá" },
+  ],
+  "554872": [
+    { clubCode: "1772", scorer: "Bolasie" },
+    { clubCode: "4286", scorer: "Gabriel Girotto" },
+    { clubCode: "4286", scorer: "Lucas Barbosa" },
+  ],
+  "554873": [
+    { clubCode: "1766", scorer: "Alan Minda" },
+    { clubCode: "1766", scorer: "Maycon", kind: "penalty" },
+    { clubCode: "1766", scorer: "Cassierra" },
+    { clubCode: "1771", scorer: "Kaio Jorge", kind: "penalty" },
+  ],
+  "554874": [
+    { clubCode: "1783", scorer: "Pedro" },
+    { clubCode: "1783", scorer: "Jorge", kind: "penalty" },
+    { clubCode: "1780", scorer: "Robert Renan" },
+    { clubCode: "1780", scorer: "Hugo Moura" },
+  ],
+  "554875": [
+    { clubCode: "6684", scorer: "Bernabei" },
+    { clubCode: "6684", scorer: "Alerrandro" },
+  ],
+  "554876": [
+    { clubCode: "4364", scorer: "Carlos Eduardo", kind: "penalty" },
+    { clubCode: "4364", scorer: "Edson Carioca" },
+    { clubCode: "1779", scorer: "Dieguinho" },
+  ],
+  "554877": [
+    { clubCode: "6685", scorer: "Rollheiser" },
+    { clubCode: "1769", scorer: "Lopez" },
+  ],
+  "554878": [
+    { clubCode: "1776", scorer: "Artur" },
+    { clubCode: "1777", scorer: "Luciano Juba" },
+    { clubCode: "1776", scorer: "Ferreira" },
+    { clubCode: "1777", scorer: "Erick" },
+  ],
+  "554879": [
+    { clubCode: "1782", scorer: "Rene" },
+    { clubCode: "1782", scorer: "Zé Vitor" },
+    { clubCode: "4241", scorer: "Pedro Rocha" },
+    { clubCode: "1782", scorer: "Diego Tarzia" },
+    { clubCode: "1782", scorer: "Erick", kind: "penalty" },
+  ],
+  "554880": [
+    { clubCode: "1766", scorer: "Cassierra" },
+    { clubCode: "1770", scorer: "Arthur" },
+  ],
+  "554881": [
+    { clubCode: "1777", scorer: "Luciano Juba", kind: "penalty" },
+    { clubCode: "1771", scorer: "Kauã Moraes" },
+    { clubCode: "1771", scorer: "Kaique Kenji" },
+  ],
+  "554882": [
+    { clubCode: "1779", scorer: "Raniele" },
+    { clubCode: "1776", scorer: "Luciano" },
+    { clubCode: "1779", scorer: "Matheuzinho" },
+    { clubCode: "1779", scorer: "Bidon" },
+    { clubCode: "1776", scorer: "Matheuzinho", kind: "own" },
+  ],
+  "554883": [
+    { clubCode: "4241", scorer: "Lavega" },
+    { clubCode: "6684", scorer: "Borre" },
+    { clubCode: "4241", scorer: "Rodrigo Moledo" },
+    { clubCode: "6684", scorer: "Felix Torres" },
+  ],
+  "554884": [
+    { clubCode: "1765", scorer: "John Kennedy" },
+    { clubCode: "1782", scorer: "Renato Kayzer", kind: "penalty" },
+    { clubCode: "1782", scorer: "Rene" },
+    { clubCode: "1765", scorer: "Kevin Serna" },
+  ],
+  "554885": [
+    { clubCode: "1783", scorer: "Carrascal" },
+  ],
+  "554886": [
+    { clubCode: "4364", scorer: "Carlos" },
+    { clubCode: "1772", scorer: "Carroll", kind: "own" },
+  ],
+  "554888": [
+    { clubCode: "6685", scorer: "Neymar Jr" },
+    { clubCode: "6685", scorer: "Adonis Frías" },
+  ],
+  "554889": [
+    { clubCode: "1780", scorer: "Thiago Mendes" },
+  ],
+  "554890": [
+    { clubCode: "1768", scorer: "Mendoza" },
+    { clubCode: "1783", scorer: "Pedro" },
+  ],
+  "554891": [
+    { clubCode: "1766", scorer: "Alan Minda" },
+    { clubCode: "4364", scorer: "Willian Machado" },
+    { clubCode: "1766", scorer: "Maycon", kind: "penalty" },
+    { clubCode: "1766", scorer: "Cisse" },
+  ],
+  "554892": [
+    { clubCode: "1767", scorer: "Viery" },
+    { clubCode: "1777", scorer: "Sanabria" },
+  ],
+  "554893": [
+    { clubCode: "1770", scorer: "Arthur" },
+    { clubCode: "1779", scorer: "Rodrigo Garro" },
+    { clubCode: "1770", scorer: "Arthur" },
+    { clubCode: "1770", scorer: "Arthur" },
+  ],
+  "554894": [
+    { clubCode: "4286", scorer: "Tiago Volpi", kind: "penalty" },
+    { clubCode: "4286", scorer: "Lucas Barbosa" },
+  ],
+  "554895": [
+    { clubCode: "4287", scorer: "Yago" },
+    { clubCode: "1772", scorer: "Neto" },
+    { clubCode: "1772", scorer: "Rafael Carvalheira" },
+    { clubCode: "4287", scorer: "Jajá" },
+    { clubCode: "4287", scorer: "Bruno Leonardo", kind: "own" },
+  ],
+  "554896": [
+    { clubCode: "1765", scorer: "John Kennedy" },
+    { clubCode: "1765", scorer: "Canobbio" },
+    { clubCode: "1776", scorer: "Matheus" },
+  ],
+  "554897": [
+    { clubCode: "6684", scorer: "Carbonero" },
+    { clubCode: "6684", scorer: "Alerrandro" },
+    { clubCode: "6684", scorer: "Bernabei" },
+    { clubCode: "6684", scorer: "Carbonero" },
+    { clubCode: "1780", scorer: "Hinestroza" },
+  ],
+  "554898": [
+    { clubCode: "1771", scorer: "Arroyo" },
+    { clubCode: "1769", scorer: "Felipe Anderson" },
+  ],
+  "554899": [
+    { clubCode: "4241", scorer: "Breno" },
+    { clubCode: "4241", scorer: "Breno" },
+    { clubCode: "4241", scorer: "Josue", kind: "penalty" },
+  ],
+  "554900": [
+    { clubCode: "1779", scorer: "Zakaria" },
+  ],
+  "554901": [
+    { clubCode: "1777", scorer: "Erick Pulga" },
+    { clubCode: "4241", scorer: "Bruno Melo" },
+    { clubCode: "4241", scorer: "Lavega" },
+    { clubCode: "4241", scorer: "Breno" },
+    { clubCode: "1777", scorer: "Everaldo" },
+  ],
+  "554902": [
+    { clubCode: "1771", scorer: "Kaio Jorge", kind: "penalty" },
+    { clubCode: "1771", scorer: "Sinisterra" },
+    { clubCode: "1772", scorer: "João Paulo" },
+  ],
+  "554903": [
+    { clubCode: "1769", scorer: "Lopez" },
+    { clubCode: "1769", scorer: "Allan" },
+    { clubCode: "1769", scorer: "Paulinho" },
+  ],
+  "554904": [
+    { clubCode: "6685", scorer: "Gabriel Barbosa" },
+    { clubCode: "1767", scorer: "Vinicius" },
+    { clubCode: "6685", scorer: "Gabriel Barbosa" },
+    { clubCode: "1767", scorer: "Vinicius" },
+    { clubCode: "1767", scorer: "Tete" },
+  ],
+  "554905": [
+    { clubCode: "4364", scorer: "Denilson" },
+  ],
+  "554906": [
+    { clubCode: "4287", scorer: "Jajá" },
+    { clubCode: "1768", scorer: "Kevin Viveros" },
+    { clubCode: "1768", scorer: "Kevin Viveros" },
+  ],
+  "554907": [
+    { clubCode: "1776", scorer: "Luciano" },
+    { clubCode: "1770", scorer: "Jordan Barrera" },
+  ],
+  "554908": [
+    { clubCode: "4286", scorer: "Rodriguinho" },
+    { clubCode: "4286", scorer: "Isidro Pitta" },
+    { clubCode: "4286", scorer: "Fernando" },
+  ],
+  "554909": [
+    { clubCode: "1782", scorer: "Rene" },
+    { clubCode: "1782", scorer: "Diego Tarzia" },
+  ],
+  "554910": [
+    { clubCode: "1768", scorer: "Kevin Viveros" },
+  ],
+  "554911": [
+    { clubCode: "1770", scorer: "Huguinho" },
+    { clubCode: "1777", scorer: "Ferraresi", kind: "own" },
+    { clubCode: "1777", scorer: "David Duarte" },
+  ],
+  "554912": [
+    { clubCode: "4286", scorer: "Fernando" },
+    { clubCode: "4286", scorer: "J. Capixaba", kind: "freekick" },
+    { clubCode: "4286", scorer: "Tiago Volpi", kind: "penalty" },
+    { clubCode: "6684", scorer: "Braian Aguirre" },
+  ],
+  "554913": [
+    { clubCode: "1765", scorer: "John Kennedy" },
+    { clubCode: "1771", scorer: "Matheus Pereira", kind: "freekick" },
+  ],
+  "554914": [
+    { clubCode: "1783", scorer: "Samuel Lino" },
+    { clubCode: "1783", scorer: "Pedro" },
+    { clubCode: "1783", scorer: "Samuel Lino" },
+  ],
+  "554915": [
+    { clubCode: "1767", scorer: "Gabriel Mec" },
+    { clubCode: "1779", scorer: "André" },
+    { clubCode: "1779", scorer: "André" },
+    { clubCode: "1779", scorer: "Kaio Lima" },
+  ],
+  "554916": [
+    { clubCode: "1769", scorer: "Paulinho" },
+  ],
+  "554917": [
+    { clubCode: "4287", scorer: "Marcelinho" },
+  ],
+  "554918": [
+    { clubCode: "6685", scorer: "Miguelito" },
+    { clubCode: "6685", scorer: "Barreal" },
+    { clubCode: "6685", scorer: "Gabriel Barbosa" },
+    { clubCode: "1782", scorer: "Rene" },
+  ],
+  "554919": [
+    { clubCode: "1766", scorer: "Vitor Hugo" },
+  ],
+  "554920": [
+    { clubCode: "1766", scorer: "Ruan" },
+    { clubCode: "1777", scorer: "Ademir" },
+  ],
+  "554921": [
+    { clubCode: "1770", scorer: "Lucas" },
+    { clubCode: "6685", scorer: "Barreal" },
+    { clubCode: "1770", scorer: "Jose Kadir" },
+  ],
+  "554922": [
+    { clubCode: "1783", scorer: "Pedro" },
+    { clubCode: "1783", scorer: "R. Thyere", kind: "own" },
+    { clubCode: "1783", scorer: "Lorran" },
+    { clubCode: "1783", scorer: "Pedro" },
+  ],
+  "554923": [
+    { clubCode: "1779", scorer: "Yuri Alberto" },
+    { clubCode: "1779", scorer: "Kaio Lima" },
+    { clubCode: "1779", scorer: "Yuri Alberto" },
+  ],
+  "554924": [
+    { clubCode: "1769", scorer: "Mauricio" },
+    { clubCode: "1769", scorer: "Mauricio" },
+    { clubCode: "1769", scorer: "Ramon Sosa" },
+    { clubCode: "4241", scorer: "Paulo Roberto" },
+  ],
+  "554925": [
+    { clubCode: "4286", scorer: "Sasha" },
+    { clubCode: "1765", scorer: "Ignacio" },
+  ],
+  "554926": [
+    { clubCode: "1771", scorer: "Kaio Jorge" },
+    { clubCode: "1771", scorer: "Matheus Pereira" },
+    { clubCode: "6684", scorer: "Carbonero" },
+  ],
+  "554927": [
+    { clubCode: "4364", scorer: "Bruno Santos" },
+    { clubCode: "4364", scorer: "Edson Carioca" },
+    { clubCode: "1767", scorer: "Vinicius" },
+  ],
+  "554928": [
+    { clubCode: "1776", scorer: "Artur", kind: "freekick" },
+    { clubCode: "1768", scorer: "Leozinho" },
+    { clubCode: "1768", scorer: "Leozinho" },
+  ],
+  "554929": [
+    { clubCode: "1782", scorer: "Renato Kayzer" },
+  ],
+  "554930": [
+    { clubCode: "1768", scorer: "Leozinho" },
+    { clubCode: "1768", scorer: "Kevin Viveros" },
+  ],
+  "554931": [
+    { clubCode: "1779", scorer: "Fabrizio Angileri" },
+    { clubCode: "1777", scorer: "David Duarte" },
+  ],
+  "554933": [
+    { clubCode: "1770", scorer: "Gabriel" },
+  ],
+  "554934": [
+    { clubCode: "1783", scorer: "Leo Pereira" },
+    { clubCode: "1776", scorer: "Calleri" },
+  ],
+  "554935": [
+    { clubCode: "1765", scorer: "Hulk", kind: "penalty" },
+    { clubCode: "1767", scorer: "Diego Caito" },
+  ],
+  "554936": [
+    { clubCode: "1766", scorer: "Victor Hugo" },
+    { clubCode: "1769", scorer: "Felipe Anderson" },
+    { clubCode: "1766", scorer: "Igor Gomes" },
+  ],
+  "554937": [
+    { clubCode: "4287", scorer: "Ze Ivaldo" },
+    { clubCode: "4287", scorer: "Alef Manga" },
+  ],
+  "554938": [
+    { clubCode: "6685", scorer: "Neymar Jr" },
+    { clubCode: "1772", scorer: "Marcinho" },
+    { clubCode: "1772", scorer: "João Ananias", kind: "own" },
+    { clubCode: "6685", scorer: "Neymar Jr", kind: "penalty" },
+  ],
+  "554939": [
+    { clubCode: "4364", scorer: "Igor" },
+    { clubCode: "1780", scorer: "Hinestroza" },
+  ],
+  "554944": [
+    { clubCode: "1771", scorer: "Matheus Pereira" },
+  ],
+  "554946": [
+    { clubCode: "6684", scorer: "Vitinho" },
+    { clubCode: "1783", scorer: "Samuel Lino" },
+  ],
+  "554947": [
+    { clubCode: "4364", scorer: "Marllon", kind: "own" },
+    { clubCode: "4287", scorer: "Picco" },
+    { clubCode: "4364", scorer: "Carroll" },
+  ],
+  "554949": [
+    { clubCode: "1769", scorer: "Mauricio" },
+    { clubCode: "1769", scorer: "Fabiano Josue de Souza Silva", kind: "own" },
+    { clubCode: "1769", scorer: "Jhon Arias" },
+    { clubCode: "1769", scorer: "Ramon Sosa", kind: "freekick" },
+  ],
+  "554951": [
+    { clubCode: "1770", scorer: "Alex Telles", kind: "freekick" },
+    { clubCode: "1765", scorer: "Ignacio" },
+  ],
+  "554952": [
+    { clubCode: "1779", scorer: "Rodrigo Garro" },
+    { clubCode: "1779", scorer: "Pedro Raul" },
+  ],
+  "554953": [
+    { clubCode: "4241", scorer: "Tiago Coser" },
+    { clubCode: "4241", scorer: "Pedro Rocha" },
+    { clubCode: "1772", scorer: "Tulio Oliveira" },
+  ],
+  "554954": [
+    { clubCode: "1771", scorer: "Joao Marcelo" },
+    { clubCode: "4364", scorer: "Reinaldo", kind: "penalty" },
+    { clubCode: "1771", scorer: "Kaio Jorge" },
+    { clubCode: "1771", scorer: "Wesley" },
+  ],
+  "554955": [
+    { clubCode: "1783", scorer: "Erick Pulgar" },
+    { clubCode: "1783", scorer: "Bruno Henrique" },
+  ],
+  "554956": [
+    { clubCode: "1776", scorer: "G. Martins", kind: "own" },
+    { clubCode: "1767", scorer: "Wallace" },
+    { clubCode: "1767", scorer: "Pavon" },
+  ],
+  "554958": [
+    { clubCode: "4287", scorer: "Jajá" },
+    { clubCode: "1766", scorer: "Reinier" },
+    { clubCode: "1766", scorer: "Bernard" },
+    { clubCode: "4287", scorer: "Talairi" },
+  ],
+  "554959": [
+    { clubCode: "1768", scorer: "Kevin Viveros" },
+    { clubCode: "1768", scorer: "Kevin Viveros" },
+  ],
+  "554960": [
+    { clubCode: "4286", scorer: "Pedro Henrique" },
+    { clubCode: "1768", scorer: "Kerwin Vargas" },
+  ],
+  "554961": [
+    { clubCode: "1766", scorer: "Vitor Hugo" },
+    { clubCode: "1766", scorer: "Cuello" },
+    { clubCode: "1766", scorer: "Cuello" },
+  ],
+  "554962": [
+    { clubCode: "1777", scorer: "Alejo", kind: "penalty" },
+    { clubCode: "1772", scorer: "Giovanni Augusto" },
+    { clubCode: "1777", scorer: "Kauan", kind: "own" },
+    { clubCode: "1772", scorer: "Marcinho" },
+    { clubCode: "1777", scorer: "Acevedo" },
+    { clubCode: "1772", scorer: "Tulio Oliveira" },
+  ],
+  "554963": [
+    { clubCode: "1771", scorer: "Bruno Rodrigues" },
+    { clubCode: "1779", scorer: "Gustavo" },
+    { clubCode: "1771", scorer: "Wanderson" },
+  ],
+  "554964": [
+    { clubCode: "1769", scorer: "Gustavo Gomez" },
+    { clubCode: "1765", scorer: "Hulk" },
+    { clubCode: "1769", scorer: "Mauricio" },
+    { clubCode: "1765", scorer: "Kevin Serna" },
+    { clubCode: "1765", scorer: "German Cano" },
+  ],
+  "554965": [
+    { clubCode: "6684", scorer: "Carbonero" },
+    { clubCode: "4287", scorer: "Vitor Bueno", kind: "freekick" },
+  ],
+  "554966": [
+    { clubCode: "1783", scorer: "Carrascal" },
+    { clubCode: "1783", scorer: "Luiz" },
+    { clubCode: "1783", scorer: "Pedro" },
+    { clubCode: "1783", scorer: "Pedro" },
+    { clubCode: "1783", scorer: "Samuel Lino" },
+    { clubCode: "4364", scorer: "Carroll" },
+  ],
+  "554967": [
+    { clubCode: "1776", scorer: "Pablo Maia" },
+    { clubCode: "4241", scorer: "Tiago Coser" },
+  ],
+  "554968": [
+    { clubCode: "6685", scorer: "Gabriel Barbosa" },
+    { clubCode: "6685", scorer: "Willian Arao" },
+    { clubCode: "6685", scorer: "Luan Peres" },
+  ],
+  "554969": [
+    { clubCode: "1782", scorer: "Matheuzinho", kind: "penalty" },
+  ],
+  "554970": [
+    { clubCode: "1768", scorer: "João Cruz" },
+    { clubCode: "1768", scorer: "Kevin Viveros" },
+    { clubCode: "1768", scorer: "Kevin Viveros" },
+    { clubCode: "1770", scorer: "Santiago" },
+    { clubCode: "1770", scorer: "Santiago" },
+  ],
+  "554971": [
+    { clubCode: "4286", scorer: "Gustavo Marques" },
+  ],
+  "554972": [
+    { clubCode: "1772", scorer: "Bruno Pacheco" },
+  ],
+  "554973": [
+    { clubCode: "4241", scorer: "Pedro Rocha" },
+    { clubCode: "4241", scorer: "Paulo Roberto" },
+    { clubCode: "1779", scorer: "Raniele" },
+  ],
+  "554974": [
+    { clubCode: "1783", scorer: "Pedro" },
+    { clubCode: "1771", scorer: "Arroyo" },
+    { clubCode: "1771", scorer: "Matheus Pereira" },
+  ],
+  "554975": [
+    { clubCode: "4287", scorer: "Jajá" },
+    { clubCode: "1765", scorer: "Hulk" },
+    { clubCode: "1765", scorer: "Kevin Serna" },
+  ],
   "554977": [
     { clubCode: "1769", scorer: "Lopez" },
     { clubCode: "1769", scorer: "Vitor Roque", kind: "penalty" },
     { clubCode: "1769", scorer: "Mauricio" },
     { clubCode: "1769", scorer: "Lopez" },
     { clubCode: "1780", scorer: "Facundo" },
+  ],
+  "554978": [
+    { clubCode: "4364", scorer: "Carlos" },
+    { clubCode: "6685", scorer: "Barreal" },
+  ],
+  "554979": [
+    { clubCode: "1777", scorer: "Alejo" },
+    { clubCode: "1777", scorer: "Jean Lucas" },
+  ],
+  "554981": [
+    { clubCode: "1766", scorer: "Thiago Borbas" },
+    { clubCode: "1766", scorer: "Reinier" },
+    { clubCode: "1782", scorer: "Erick" },
+  ],
+  "554988": [
+    { clubCode: "1776", scorer: "Luciano", kind: "penalty" },
+    { clubCode: "1776", scorer: "Gustavo Santana" },
+    { clubCode: "4286", scorer: "Fernando" },
   ],
 };

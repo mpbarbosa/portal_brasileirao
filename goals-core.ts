@@ -40,26 +40,56 @@ export interface CbfRegistro {
 export const GOAL_TIPO = "GOL";
 
 /**
- * CBF's `resultado` vocabulary for a goal, as **measured** rather than as
- * documented — the endpoint has no documentation to read.
+ * CBF's `resultado` vocabulary for a goal.
  *
- * `NR` is an ordinary goal and maps to no qualifier: annotating it would put a
- * word beside nearly every scorer to distinguish nothing.
+ * **Read off CBF's own súmula, not inferred.** Every match report prints the
+ * legend at the foot of its Gols table, and it is the whole vocabulary:
+ *
+ *     NR = Normal | PN = Pênalti | CT = Contra | FT = Falta
+ *
+ * (`https://conteudo.cbf.com.br/sumulas/2026/14252se.pdf`, Botafogo 0x3
+ * Flamengo — a host that answers even while `www` is refusing connections.)
+ *
+ * `NR` maps to no qualifier: annotating it would put a word beside nearly every
+ * scorer to distinguish nothing.
  *
  * **An unrecognised code is an error, not a shrug, and that is the opposite of
  * what `refereeRoleLabel` does one module away.** There, an unmapped role
  * renders verbatim, because the cost of being wrong is an English word on the
- * page. Here the cost is different in kind: a code this table does not know
- * could be an own goal, and an own goal counts for the club that did *not*
- * score it. Passing it through as ordinary would put a goal on the wrong side
- * of the scoreboard and look entirely plausible doing it. So `goalKindOf`
- * reports "unknown" as a distinct answer and `sync-goals.ts` refuses to write.
+ * page. Here the cost is different in kind, and `CT` is the proof rather than
+ * the hypothesis: an own goal counts for the club that did *not* score it, so
+ * passing an unknown code through as ordinary puts a goal on the wrong side of
+ * the scoreboard and looks entirely plausible doing it.
+ *
+ * That is not a thought experiment. This table shipped holding only `NR` and
+ * `PN`, and the first season-wide sync refused **25 matches** — 16 `CT` and 9
+ * `FT` — rather than filing them wrong. Had the unknown ones defaulted to
+ * ordinary, all 16 own goals would have been credited to the wrong club.
+ *
+ * **What this mapping does NOT cover, and `goalsReconcile` cannot see.** The
+ * check catches an own goal filed under the club that *scored* it, because the
+ * sums stop adding up. It is blind to the opposite convention: an own goal
+ * filed under the club it **counts for** and marked `NR`. The sums balance
+ * perfectly, nothing is refused, and the file records an opposing player as
+ * that club's scorer with no `kind` on them — plausible on the page and wrong.
+ *
+ * Across the played season all **16** `CT` matches reconciled once the flip
+ * below was applied, so CBF was consistent everywhere it could be checked. That
+ * is evidence of consistency, **not proof that the other convention never
+ * occurs**, and the difference matters because nothing in the API could tell
+ * you. The one source that could is the **súmula**, whose Gols table prints a
+ * `Tipo` and an `Equipe` per goal; the API's `registros` carries the type but
+ * not which side it counted for.
  */
 const GOAL_KINDS = new Map<string, GoalKind | undefined>([
   /** Normal. */
   ["NR", undefined],
   /** Pênalti. */
   ["PN", "penalty"],
+  /** Contra — an own goal. Counts for the OTHER club; see `goalsFromRegistros`. */
+  ["CT", "own"],
+  /** Falta — scored directly from a free kick. Counts normally. */
+  ["FT", "freekick"],
 ]);
 
 const normaliseResult = (resultado: string | undefined): string =>
@@ -143,18 +173,32 @@ export const goalsFromRegistros = (
   for (const registro of registros) {
     if ((registro.tipo ?? "").trim().toUpperCase() !== GOAL_TIPO) continue;
 
-    const clubCode =
+    const scoredBy =
       registro.clube_id === sides.homeCbfId
         ? sides.homeCode
         : registro.clube_id === sides.awayCbfId
           ? sides.awayCode
           : null;
-    if (!clubCode) continue;
+    if (!scoredBy) continue;
 
     const scorer = tidyScorerName(registro.atleta_apelido || registro.atleta_nome || "");
     if (!scorer) continue;
 
     const kind = goalKindOf(registro.resultado);
+
+    // **The own-goal flip, and it is measured rather than assumed.** CBF files
+    // a `CT` under the club of the player who put it in, so the goal counts for
+    // the other side. Confirmed on a real payload: Grêmio 2x0 Vitória is listed
+    // as `CT` by Camutanga — a Vitória player — plus one Grêmio goal, which
+    // counts 1x1 against a 2x0 until the flip is applied. `goalsReconcile` is
+    // what turns that from an assumption into a check, and it refused all 16
+    // `CT` matches before this line existed.
+    const clubCode =
+      kind === "own"
+        ? scoredBy === sides.homeCode
+          ? sides.awayCode
+          : sides.homeCode
+        : scoredBy;
 
     // `atleta_camisa` is deliberately not carried through. It would identify a
     // scorer where two share a short name, but nothing renders it — and a field
@@ -230,6 +274,8 @@ export const goalKindLabel = (kind: GoalKind | undefined): string | null => {
       return "pên.";
     case "own":
       return "contra";
+    case "freekick":
+      return "falta";
     default:
       return null;
   }
