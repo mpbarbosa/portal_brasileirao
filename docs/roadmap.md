@@ -771,9 +771,30 @@ paragraph of prose.
     kind. Those are how a reader likes the page drawn; this is a question asked
     of one table and then done with, and a reader arriving at the Classificação
     expects the Classificação.
-12. **Derived league statistics.** Melhores ataques, melhores defesas, total and
-    average goals. Under the Classificação — **not** a sixth `NAV_ITEMS` entry; the
-    bar is full and nothing in the tooling will tell you so.
+12. ~~**Derived league statistics.**~~ **Shipped** as **Números da temporada**,
+    beneath the Classificação: gols, gols por jogo, vitórias do mandante, and
+    the two leaderboards. `league-stats-core.ts`, every figure a reduction over
+    data the client already holds.
+
+    **Not a sixth `NAV_ITEMS` entry**, and a spec asserts the bar still has
+    five — the item is right that nothing in the tooling would tell you, so the
+    refusal is written as a test rather than left to review.
+
+    **Two absence-is-not-zero traps, and the second is the sharper one.**
+    Averages divide by matches *finished*, never the 380 a season schedules —
+    the prototype divides by the fixture count and is wrong every week but the
+    last. And a club with **no match played is left out of the leaderboards**
+    rather than ranked: it has conceded none, so it would *lead* the meanest
+    defence on no evidence, which unlike a blank average looks like an answer.
+
+    **One naming collision the glossary caught.** The proposal calls the
+    home-win share "aproveitamento dos mandantes"; **Aproveitamento** is already
+    a defined term here meaning points taken over points available, so it ships
+    as **Vitórias do mandante**. That is what `CONTEXT.md` is for, and the
+    `_Avoid_` line records it.
+
+    Specs address the figures by `data-figure` rather than regexing rendered
+    prose — a spec that breaks on a decimal comma is a spec that gets deleted.
 13. **Inset the scoreline.** Needs `surface-dim` emitted from `sync-md3-tokens` and
     a contrast-gate pairing, so it is a generator change rather than a class swap.
 14. **Say the zone on the row, not only in the key.** The other half of item 3, and

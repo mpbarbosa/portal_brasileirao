@@ -786,6 +786,26 @@ _Avoid_: adding it to `NAV_ITEMS`, fetching per-club data (everything it needs i
 already on the page), "time" for the entity — see **Clube** above. Its address is
 `/clube/<slug>`, so it is shareable and Back returns to the table.
 
+**Números da temporada**:
+The panel beneath the **Classificação**: gols, gols por jogo, **Vitórias do
+mandante**, and the *melhores ataques* and *melhores defesas* leaderboards.
+`league-stats-core.ts`, every figure a reduction over data the client already
+holds, so it costs no request.
+**Not a sixth destination**, which is the decision rather than a placement: MD3's
+**Barra de navegação** carries three to five and there are five. A sixth breaks
+nothing and reddens nothing, which is why refusing it is written down. If it ever
+wants to be one, that is the navigation *drawer* conversation.
+Averages divide by matches **finished**, never by the 380 a season schedules —
+otherwise the figure is wrong every week but the last. Nothing played renders
+**nothing**, not zero: a zero average claims the season is producing no goals
+where the truth is it has not started. A club with no match played is left out of
+the leaderboards rather than ranked, or it leads the meanest defence on no
+evidence at all.
+_Avoid_: "aproveitamento dos mandantes" for the home-win share — **Aproveitamento**
+is points taken over points available and reusing the word gives it two meanings
+on one screen; a sixth `NAV_ITEMS` entry; dividing by the fixture count;
+rendering `0` or `NaN` before a match has been played.
+
 **Completa / Casa / Fora**:
 The three slices of the **Classificação**, chosen by a segmented control above
 the table. `computeStandings(clubs, matches, side)` — one computation, three

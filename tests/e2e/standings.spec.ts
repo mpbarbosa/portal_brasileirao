@@ -41,6 +41,68 @@ test.describe("Classificação", () => {
 
   const side = (page: Page, name: string) => page.getByRole("radio", { name });
 
+  test("the season's numbers sit under the table, and are consistent with each other", async ({ page }) => {
+    const panel = page.locator("[data-league-stats]");
+    await expect(panel).toBeVisible();
+
+    // Below the table it summarises, not above it.
+    const table = (await page.locator("table").boundingBox())!;
+    const stats = (await panel.boundingBox())!;
+    expect(stats.y).toBeGreaterThan(table.y);
+
+    // Addressed by `data-figure`, not by regexing rendered prose: the wording
+    // is pt-BR copy that may be revised, and a spec that breaks on a comma is a
+    // spec that gets deleted.
+    const figure = (name: string) => panel.locator(`[data-figure="${name}"]`);
+    const num = async (name: string) =>
+      Number((await figure(name).locator("[data-value]").innerText()).replace(",", "."));
+
+    const goals = await num("gols");
+    const perMatch = await num("gols-por-jogo");
+    const played = Number((await figure("gols").locator("[data-hint]").innerText()).match(/\d+/)![0]);
+    const [homeWins, ofPlayed] = (
+      await figure("vitorias-do-mandante").locator("[data-hint]").innerText()
+    )
+      .match(/\d+/g)!
+      .map(Number);
+
+    // Derived rather than asserted against values: the snapshot ages.
+    expect(played).toBeGreaterThan(0);
+    expect(perMatch).toBeCloseTo(goals / played, 1);
+    expect(ofPlayed).toBe(played);
+    expect(homeWins).toBeLessThanOrEqual(played);
+    // The average is over matches *finished*, never the 380 a season schedules.
+    expect(played).toBeLessThan(380);
+  });
+
+  test("the leaderboards rank three clubs each and open their pages", async ({ page }) => {
+    const panel = page.locator("[data-league-stats]");
+    const boards = panel.locator("ol");
+    await expect(boards).toHaveCount(2);
+
+    for (const board of await boards.all()) {
+      await expect(board.locator("li")).toHaveCount(3);
+    }
+
+    // The attack leader has scored at least as many as the club below it.
+    const attack = boards.first().locator("li");
+    const figures = await attack.locator("span.font-semibold").allInnerTexts();
+    expect(Number(figures[0])).toBeGreaterThanOrEqual(Number(figures[1]));
+
+    await attack.first().getByRole("link").click();
+    await expect(page).toHaveURL(/\/clube\//);
+  });
+
+  test("the panel does not become a sixth destination", async ({ page }) => {
+    // The design decision this item carries. MD3's navigation bar takes three
+    // to five, there are five, and the fifth one's padding had to be measured
+    // at 320dp to fit. A sixth breaks nothing and reddens nothing, which is
+    // exactly why it is refused in a spec rather than left to review.
+    await expect(page.locator("[data-league-stats]")).toBeVisible();
+    await expect(page.locator('header nav[aria-label="Seções"] a')).toHaveCount(5);
+  });
+
+
   test("Casa and Fora re-rank the table against a subset of the fixtures", async ({ page }) => {
     const clubs = async () =>
       (await page.locator("table tbody tr td:nth-child(2)").allInnerTexts())
