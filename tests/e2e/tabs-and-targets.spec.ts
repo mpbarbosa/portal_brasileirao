@@ -1,4 +1,4 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Page } from "@/tests/e2e/clock";
 
 /**
  * The two halves of M9: the desktop navigation drawn as MD3 tabs, and MD3's

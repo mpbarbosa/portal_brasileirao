@@ -1,4 +1,4 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Page } from "@/tests/e2e/clock";
 
 /**
  * MD3's 48dp touch target, which is **not** the control's visible box.

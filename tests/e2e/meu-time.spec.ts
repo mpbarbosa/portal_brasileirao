@@ -1,4 +1,4 @@
-import { expect, test, type Page } from "@playwright/test";
+import { E2E_NOW, expect, test, type Page } from "@/tests/e2e/clock";
 
 /**
  * **Meu time** — the device-local preference, Phase 0 of `docs/accounts.md`.
@@ -155,7 +155,13 @@ const nextScheduled = async (page: Page): Promise<Upcoming | null> => {
         Date.parse(a.kickoff) - Date.parse(b.kickoff),
     )[0];
 
-  if (!soonest || Date.parse(soonest.kickoff) < Date.now()) return null;
+  // `E2E_NOW`, not `Date.now()`. This guard runs in Node, where the page's
+  // frozen clock does not reach — so with a real clock it went on measuring the
+  // snapshot against today and returned null the moment the soonest unplayed
+  // fixture slipped into the past. That happened four hours before it was
+  // found: two specs across two projects went quiet while the suite reported
+  // `690 passed`, and the only trace was a `4 skipped` line.
+  if (!soonest || Date.parse(soonest.kickoff) < E2E_NOW.getTime()) return null;
 
   return {
     id: soonest.id,

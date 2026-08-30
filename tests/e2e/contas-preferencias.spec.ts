@@ -1,4 +1,4 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Page } from "@/tests/e2e/clock";
 
 /**
  * Phase 2 of `docs/accounts.md`: **Meu time** stops being device-local once a

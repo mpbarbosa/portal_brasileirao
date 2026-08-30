@@ -1,4 +1,4 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Page } from "@/tests/e2e/clock";
 
 const goToArtilharia = async (page: Page) => {
   await page.getByRole("link", { name: /^Artilharia/ }).click();

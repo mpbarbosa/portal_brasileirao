@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "@/tests/e2e/clock";
 
 /**
  * The crawl surface: the two documents a robot fetches before anything else,

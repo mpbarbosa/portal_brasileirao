@@ -1,4 +1,4 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Page } from "@/tests/e2e/clock";
 
 /**
  * The suite runs against the frozen snapshot (DISABLE_FOOTBALL_DATA=true), so

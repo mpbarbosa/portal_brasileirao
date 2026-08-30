@@ -1,4 +1,4 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Page } from "@/tests/e2e/clock";
 
 const themeAttr = (page: Page) => page.locator("html").getAttribute("data-theme");
 const toggle = (page: Page) => page.getByRole("button", { name: /Ativar tema/ });

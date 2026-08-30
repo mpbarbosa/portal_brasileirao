@@ -2534,6 +2534,38 @@ This is deliberate and load-bearing: live scores, table positions and the curren
 round all change mid-match, so asserting against live data makes every run a coin
 flip. It also keeps the suite from spending the 10 req/min budget.
 
+**The browser's clock is frozen to the snapshot**, by the `page` fixture in
+`tests/e2e/clock.ts` — which is why every spec imports `test` and `expect` from
+there rather than from `@playwright/test`. `E2E_NOW` is **derived from
+`SNAPSHOT_DATE`**, never written down, so a `sync-seed-data` run moves the data
+and the clock together and nobody has to remember the second one.
+
+It is `setFixedTime`, never `install`: the full fake replaces the timer queue as
+well, which would hang `useNow`, every transition `motion.spec.ts` asserts on,
+and `waitUntil: "networkidle"`. Only what `Date.now()` answers changes, and that
+is the whole of what the app reads the clock for — `currentRound`, `liveBoard`,
+`countdownLabel` and `clubFocus` all take `now` as a parameter.
+
+**The failure it closes was live for four hours before anybody saw it.**
+`meu-time.spec.ts` skips when the snapshot's soonest unplayed fixture is in the
+past, and on 2026-08-30 that fixture (`2026-08-29T21:30Z`) slipped behind a real
+clock. Two specs across two projects went silent, the suite reported
+`690 passed`, and the only trace was a `4 skipped` line nobody reads. Running the
+browser at *today* asks the app to reason about a world its data does not
+describe, and the gap widens by a day every day.
+
+**A guard that runs in Node is not covered by it**, which is the half that is
+easy to miss: `nextScheduled` compares kickoffs in the test process, where the
+page's clock does not reach, so it takes `E2E_NOW` explicitly. Freezing the page
+alone left all four specs still skipping.
+
+**`tests/e2e/clock.spec.ts` exists because nothing else would notice the fixture
+breaking.** Every other spec passes whether or not the page clock is frozen — the
+Node-side guard is what unskips `meu-time`, and the rest assert shape rather than
+dates. Verified by removing the `setFixedTime` call: `meu-time` stayed green and
+only `clock.spec.ts` went red. Same green-means-nothing shape as the `page.route`
+stub that passed against the bug it named.
+
 Rules that follow from that:
 
 - Never assert a specific round number or scoreline — the snapshot ages, and
