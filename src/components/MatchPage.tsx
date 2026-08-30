@@ -5,6 +5,7 @@ import {
   hasHighlights,
   refereeRoleLabel,
 } from "@/match-core";
+import { goalLabel, goalsBySide } from "@/goals-core";
 import { stadiumSlug, venueName } from "@/venue-core";
 import { STADIUMS } from "@/src/data/stadiums";
 import { BroadcasterMark } from "@/src/components/BroadcasterMark";
@@ -20,7 +21,7 @@ import { RankSparkline } from "@/src/components/RankSparkline";
 import { formatRoute } from "@/route-core";
 import { StatusChip } from "@/src/components/StatusChip";
 import { Surface } from "@/src/components/Surface";
-import type { Club, ClubRankHistory, Match, RankAtRound } from "@/src/types";
+import type { Club, ClubRankHistory, Goal, Match, RankAtRound } from "@/src/types";
 
 interface MatchPageProps {
   match: Match | null;
@@ -143,6 +144,49 @@ function Side({ club, code, onNavigate }: { club: Club | null; code: string; onN
 }
 
 /**
+ * One club's scorers, under its half of the scoreboard.
+ *
+ * The club is named only for a screen reader. Sighted readers have the crest
+ * and the name directly above, and repeating it would put the club's name twice
+ * in eight vertical pixels — but a list of bare surnames read aloud, with no
+ * indication of which side scored them, says nothing at all. Same reasoning as
+ * the `Meu time: ` prefix in the classificação: announced beside the value
+ * rather than replacing it.
+ *
+ * An empty side still renders its (empty) column, so the two stay aligned under
+ * the two crests rather than one sliding across to fill the row.
+ */
+function GoalColumn({
+  goals,
+  club,
+  code,
+  side,
+}: {
+  goals: Goal[];
+  club: Club | null;
+  code: string;
+  side: "home" | "away";
+}) {
+  // Still a column, so the two sides stay under the two crests rather than one
+  // sliding across to fill the row. `data-goals` rides on the wrapper either
+  // way, so a spec can assert a side scored nothing.
+  if (goals.length === 0) return <div data-goals={side} />;
+
+  return (
+    <div data-goals={side}>
+      <p className="sr-only">Gols do {club?.shortName ?? code}</p>
+      <ul className="space-y-0.5 text-center text-body-small text-ink-muted">
+        {goals.map((goal, index) => (
+          <li key={`${goal.scorer}-${index}`} data-goal className="truncate">
+            {goalLabel(goal)}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+/**
  * One fixture in full: scoreboard, kickoff, venue, and either where to watch it
  * or where to find its goals.
  *
@@ -190,6 +234,11 @@ export function MatchPage({
   const officials = match.referees ?? [];
   const videos = highlights(match);
   const played = match.homeGoals !== null && match.awayGoals !== null;
+  // Absent means "not synced", never "goalless" — so a 0-0 and an unsynced
+  // match both render nothing here, and the scoreline above is what tells a
+  // reader which of the two they are looking at.
+  const scorers = goalsBySide(match);
+  const hasScorers = scorers.home.length + scorers.away.length > 0;
 
   return (
     <>
@@ -220,6 +269,16 @@ export function MatchPage({
 
           <Side club={away} code={match.awayCode} onNavigate={onNavigate} />
         </div>
+
+        {/* Inside the scoreboard card rather than in a section of its own: these
+            names are what the numbers above are made of, and a heading between
+            them would read as a separate topic. */}
+        {hasScorers && (
+          <div className="mt-4 grid grid-cols-2 gap-3 border-t border-outline-variant pt-3">
+            <GoalColumn goals={scorers.home} club={home} code={match.homeCode} side="home" />
+            <GoalColumn goals={scorers.away} club={away} code={match.awayCode} side="away" />
+          </div>
+        )}
       </Surface>
 
       <dl className="mt-4 space-y-3 text-body-medium">

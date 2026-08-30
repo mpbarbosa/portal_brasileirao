@@ -22,11 +22,9 @@
  *   1  bad arguments, upstream failure, or nothing could be joined.
  */
 import { readFileSync, writeFileSync } from "node:fs";
-import http from "node:http";
-import https from "node:https";
 import path from "node:path";
-import tls from "node:tls";
 
+import { buildAgent, CBF_HOST, getJson, sleep } from "@/scripts/cbf-api";
 import {
   channelsOf,
   joinMatch,
@@ -43,7 +41,6 @@ import {
 import type { Club, Venue } from "@/src/types";
 
 const ROOT = process.cwd();
-const CBF_HOST = "www.cbf.com.br";
 
 /** Quote a value for the generated source. */
 const ts = (value: string) => JSON.stringify(value);
@@ -62,137 +59,9 @@ interface CbfResponse {
   meta?: { current_page?: number; last_page?: number; total?: string };
 }
 
-// ---------------------------------------------------------------------------
-// TLS
-// ---------------------------------------------------------------------------
-
-/**
- * Every CBF host serves a valid Sectigo certificate but omits the intermediate,
- * so Node cannot build a chain and fetch fails with
- * UNABLE_TO_VERIFY_LEAF_SIGNATURE. Browsers paper over this by fetching the
- * intermediate from the certificate's AIA extension; Node does not.
- *
- * So do what the browser does: read the caIssuers URI off the leaf, download
- * that intermediate, and trust it *in addition to* the real roots. Verification
- * stays on — this completes the chain CBF should have sent, it does not skip
- * checking it.
- */
-const caIssuerUri = async (): Promise<string> =>
-  new Promise((resolve, reject) => {
-    const socket = tls.connect(
-      { host: CBF_HOST, port: 443, servername: CBF_HOST, rejectUnauthorized: false },
-      () => {
-        const cert = socket.getPeerCertificate(true);
-        socket.end();
-
-        const info = cert?.infoAccess?.["CA Issuers - URI"];
-        const uri = info?.[0];
-        if (!uri) {
-          reject(new Error("leaf certificate advertises no CA Issuers URI"));
-          return;
-        }
-        resolve(uri);
-      },
-    );
-    socket.once("error", reject);
-    socket.setTimeout(15_000, () => {
-      socket.destroy();
-      reject(new Error("timed out reading the certificate"));
-    });
-  });
-
-/**
- * CA certificates are distributed over plain HTTP by convention, and that is
- * fine: a certificate is self-authenticating — it carries its issuer's
- * signature — and the chain built from it is still verified against the real
- * root store below. Nothing is trusted because of how it arrived.
- */
-const download = (url: string): Promise<Buffer> =>
-  new Promise((resolve, reject) => {
-    const client = url.startsWith("http://") ? http : https;
-    client
-      .get(url, (response) => {
-        if (response.statusCode !== 200) {
-          reject(new Error(`${url} responded ${response.statusCode}`));
-          return;
-        }
-        const chunks: Buffer[] = [];
-        response.on("data", (chunk) => chunks.push(chunk));
-        response.on("end", () => resolve(Buffer.concat(chunks)));
-      })
-      .on("error", reject);
-  });
-
-const derToPem = (der: Buffer): string =>
-  `-----BEGIN CERTIFICATE-----\n${der
-    .toString("base64")
-    .replace(/(.{64})/g, "$1\n")
-    .trim()}\n-----END CERTIFICATE-----\n`;
-
-const buildAgent = async (): Promise<https.Agent> => {
-  const uri = await caIssuerUri();
-  console.log(`==> Completing CBF's certificate chain from ${uri}`);
-
-  const der = await download(uri);
-  // Sectigo serves DER; tolerate a PEM body just in case.
-  const pem = der.toString("utf8").includes("BEGIN CERTIFICATE")
-    ? der.toString("utf8")
-    : derToPem(der);
-
-  return new https.Agent({ ca: [...tls.rootCertificates, pem] });
-};
-
-const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-
-const getJsonOnce = <T>(url: string, agent: https.Agent): Promise<T> =>
-  new Promise((resolve, reject) => {
-    https
-      .get(url, { agent, headers: { Accept: "application/json" } }, (response) => {
-        if (response.statusCode !== 200) {
-          const error = new Error(`${url} responded ${response.statusCode}`);
-          // Mark 5xx as worth retrying; a 4xx will not fix itself.
-          (error as { retryable?: boolean }).retryable = (response.statusCode ?? 0) >= 500;
-          reject(error);
-          return;
-        }
-        let body = "";
-        response.setEncoding("utf8");
-        response.on("data", (chunk) => (body += chunk));
-        response.on("end", () => {
-          try {
-            resolve(JSON.parse(body) as T);
-          } catch (cause) {
-            reject(new Error(`${url} did not return JSON: ${String(cause)}`));
-          }
-        });
-      })
-      .on("error", reject);
-  });
-
-/**
- * CBF's endpoint returns an occasional 502 under sequential requests — a real
- * run walked six pages and failed on the seventh. Without a retry a single
- * blip aborts the whole sync, so transient failures back off and try again.
- */
-const getJson = async <T>(url: string, agent: https.Agent, attempts = 4): Promise<T> => {
-  let lastError: unknown;
-
-  for (let attempt = 1; attempt <= attempts; attempt += 1) {
-    try {
-      return await getJsonOnce<T>(url, agent);
-    } catch (error) {
-      lastError = error;
-      const retryable = (error as { retryable?: boolean }).retryable ?? true;
-      if (!retryable || attempt === attempts) break;
-
-      const wait = 1000 * 2 ** (attempt - 1);
-      console.warn(`    ${(error as Error).message} — retrying in ${wait}ms`);
-      await sleep(wait);
-    }
-  }
-
-  throw lastError;
-};
+// The TLS dance and the JSON reader live in scripts/cbf-api.ts, shared with
+// sync-goals.ts — a second copy of them is where drift starts, which is the
+// lesson scripts/commons-api.ts records for Wikimedia.
 
 // ---------------------------------------------------------------------------
 // Existing file

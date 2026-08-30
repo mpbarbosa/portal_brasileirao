@@ -298,6 +298,58 @@ export type MatchStatus =
   | "POSTPONED"
   | "CANCELLED";
 
+/**
+ * One goal, and who scored it.
+ *
+ * **No football-data tier this app can reach carries goal events.** Verified
+ * twice: a BSA match object and a Premier League one — both TIER_ONE, both free
+ * — return `area, competition, season, id, utcDate, status, venue, matchday,
+ * stage, group, lastUpdated, homeTeam, awayTeam, score, odds, referees` and no
+ * `goals` key at all. Not an empty array; absent. So this is the same kind of
+ * field as `broadcasters` and `venue`: merged in from a local file that a
+ * workstation script writes, never fetched by the running app.
+ *
+ * The source is CBF's own match endpoint, `/api/cbf/jogos/{id_jogo}`, whose
+ * `registros` array carries goals and cards together — see
+ * `docs/data-sources.md`.
+ */
+export interface Goal {
+  /**
+   * The club the goal **counts for**, as one of our codes.
+   *
+   * Deliberately not "the scorer's club", and the difference is the whole of
+   * why `sync-goals.ts` reconciles every match against its own scoreline: an
+   * own goal is the one case where those two clubs differ, and attributing it
+   * to the scorer would put a goal on the wrong side of the scoreboard while
+   * still looking perfectly plausible.
+   */
+  clubCode: ClubCode;
+  /**
+   * The scorer, as CBF's short name for them ("Vitor Roque", "Lopez").
+   *
+   * CBF's casing drifts — some entries arrive fully capitalised — so a name
+   * that is entirely uppercase is title-cased on the way in, the same
+   * normalisation `channelsOf` performs on "sportv". Accents that CBF simply
+   * omits are **not** restored, because that would be guessing at a name rather
+   * than fixing a casing convention.
+   */
+  scorer: string;
+  /**
+   * What kind of goal, where it is worth saying. Absent for an ordinary one —
+   * the common case, and annotating it "normal" would put a word on nearly
+   * every row to distinguish nothing.
+   */
+  kind?: GoalKind;
+}
+
+/**
+ * The qualifiers worth printing beside a scorer.
+ *
+ * `own` is the load-bearing one: it changes which club the goal counts for, not
+ * merely how the row reads.
+ */
+export type GoalKind = "penalty" | "own";
+
 export interface Match {
   id: string;
   round: number;
@@ -324,6 +376,14 @@ export interface Match {
    * search instead.
    */
   highlights?: Highlight[];
+  /**
+   * The goals, and who scored them, merged from `src/data/goals.ts`.
+   *
+   * Absent means "not synced", never "goalless" — a 0-0 and a match nobody has
+   * run the sync for are both an empty list here, so the page reads the
+   * scoreline to tell them apart rather than inferring from this.
+   */
+  goals?: Goal[];
   /**
    * The officials, from the provider's `referees` array — the one field on this
    * interface that comes from **no local file at all**.

@@ -774,11 +774,39 @@ all three theme blocks and referenced by **zero** components. The accent is alre
 generated, toned and contrast-checked; it has simply never been spent. Pick it up
 with item 9 rather than giving it an item of its own.
 
-**Explicitly not doing**, each with the reason in the proposal: lance a lance,
-escalações and match statistics (no reachable tier carries them); título/Z4
-probabilities as the prototype presents them; the localStorage image-URL manager
-(the inverse of the vendoring-with-attribution rule); the webfont pair; the
-hand-picked hexes; club-brand colours; the desktop sidebar.
+**Explicitly not doing**, each with the reason in the proposal: lance a lance and
+match statistics (no reachable source carries possession or shot counts);
+título/Z4 probabilities as the prototype presents them; the localStorage
+image-URL manager (the inverse of the vendoring-with-attribution rule); the
+webfont pair; the hand-picked hexes; club-brand colours; the desktop sidebar.
+
+**Two of those were struck on a premise that turned out to be false, and the
+correction is worth more than the items.** The list read "lance a lance,
+escalações and match statistics (no reachable tier carries them)", and the
+proposal's §1 expands it: a football-data match object carries no events and no
+lineups "at any tier this app can reach", so *"do not build these until a
+provider that carries them is adopted, which is a cost decision"*.
+
+Every word of that is true **about football-data** — re-verified against a live
+Série A match and a live Premier League one, both free TIER_ONE, both answering
+200 with no `goals` key at all. What was wrong was the generalisation from *that
+provider* to *every reachable source*. CBF — already adopted here, already
+synced from for `broadcasts.ts` and `venues.ts` — carries goals, both starting
+elevens and substitutions on `/api/cbf/jogos/{id_jogo}`, an endpoint nobody had
+looked at because the CBF survey stopped at the broadcast page. The condition
+the proposal set was satisfiable for free.
+
+**Goals shipped on the back of that** — `goals-core.ts`, `scripts/sync-goals.ts`,
+`src/data/goals.ts`, and the scorers under the Partida page's scoreline.
+**Escalações did not**, and are no longer on this list in either direction: the
+data exists, so the reason for refusing them has to be a UI one now, argued on
+its own merits, rather than an inherited claim about what is available.
+
+The shape of the error is the one `CLAUDE.md` names under *check the prompt that
+sent you*: a claim that produces no work when it holds is never exercised. "No
+provider carries this" is self-sealing — believing it means never looking again,
+so nothing can ever contradict it. It survived because it was **true when
+written and about the right provider**, which is the hardest kind to catch.
 
 ## Contas — what Phase 1 leaves outstanding
 
