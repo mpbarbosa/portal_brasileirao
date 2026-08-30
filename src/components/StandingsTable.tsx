@@ -1,17 +1,55 @@
 import { useMemo } from "react";
 
 import type { CampaignPlotKind } from "@/campaign-plot-core";
-import { clubKey } from "@/club-core";
+import { clubKey, recentForm, type FormResult } from "@/club-core";
+import { Button } from "@/src/components/Button";
 import { CampaignPlotToggle } from "@/src/components/CampaignPlotToggle";
 import { ClubCrest } from "@/src/components/ClubCrest";
+import { FormPill } from "@/src/components/FormPill";
 import { StarGlyph } from "@/src/components/MeuTime";
 import { LINK_UNDERLINE } from "@/src/components/interaction";
 import { lastRecordedRound } from "@/rank-history-core";
 import { RankSparkline } from "@/src/components/RankSparkline";
 import { formatRoute } from "@/route-core";
 import { ZONE_DEPTH, ZONE_DEPTH_WORD, pointsPercentageLabel } from "@/standings-core";
+import { markColumnLabel, markToggleLabel } from "@/standings-mark-core";
 import { Surface } from "@/src/components/Surface";
-import type { ClubCode, ClubRankHistory, RankAtRound, StandingsRow } from "@/src/types";
+import { useStandingsMark } from "@/src/useStandingsMark";
+import type { ClubCode, ClubRankHistory, Match, RankAtRound, StandingsRow } from "@/src/types";
+
+/**
+ * One club's **Forma** in the mark column — the same five pills the Clube page
+ * shows, at the row size.
+ *
+ * It shares a column with the **Campanha** rather than taking one of its own,
+ * and that was a measurement rather than a preference: the table is 734px
+ * inside a 734px container at desktop, so an eleventh column of five 28px pills
+ * overflowed it by 22px and one of 20px pills took 154px out of the tallies.
+ * Sharing costs nothing, and the two answer different questions about the same
+ * club — the campanha is a *position* trajectory and so is relative to nineteen
+ * other clubs, where the forma is what the club itself did. A reader looking at
+ * 6th place asks both, and a column that can be either lets them.
+ *
+ * **Fewer than five results is an absence, not a gap.** A club three matches
+ * into the season has three pills, not three pills and two blanks — the same
+ * rule `RankSparkline` follows by stopping at the last round with a result.
+ */
+function FormaStrip({ results }: { results: FormResult[] }) {
+  if (results.length === 0) {
+    // No decided match yet. An empty cell would read as a rendering fault, so
+    // say it in the one character a table row has room for — `RankSparkline`'s
+    // own answer to the same state.
+    return <span className="text-ink-faint">—</span>;
+  }
+
+  return (
+    <ul className="flex gap-1" aria-label="Forma, do mais antigo para o mais recente">
+      {results.map((result, index) => (
+        <FormPill key={index} result={result} size="row" />
+      ))}
+    </ul>
+  );
+}
 
 /** The two rail colours, shared between the cell and the key so a change to
  *  either colour cannot leave the other describing the old one. */
@@ -153,7 +191,7 @@ const CLUB_PADDING = "px-2 sm:px-3";
  *  way to close the gap and it is the wrong one — `RankSparkline` keeps one
  *  geometry across the table and the club page so a reader recognises the same
  *  shape in both, and a width that followed the viewport would not. */
-const CAMPAIGN_COLUMN = "w-0 px-3";
+const MARK_COLUMN = "w-0 px-3";
 
 interface StandingsTableProps {
   rows: StandingsRow[];
@@ -190,6 +228,25 @@ interface StandingsTableProps {
    */
   plotKind?: CampaignPlotKind;
   onTogglePlotKind?: () => void;
+  /**
+   * The season's fixtures, for the **Forma** the mark column can show instead
+   * of the campanha.
+   *
+   * A prop rather than a second endpoint, and the same argument
+   * `rank-history-core.ts` makes about the campanha: the client already holds
+   * the whole season from `/api/matches`, so "the last five decided results" is
+   * a filter over an array in memory. Omit it and the column offers only the
+   * campanha, with no choice to make — the table predates both marks and stands
+   * without either.
+   *
+   * **Note what is *not* here: the chosen mark.** `plotKind` is owned by `App`
+   * because the Clube and Partida pages draw the same campanha and must follow
+   * the same choice. Nothing outside this table has a mark *column*, so that
+   * choice is owned here, by `useStandingsMark`. The rule is the one CLAUDE.md
+   * states for preferences — ask which side owns a key before asking how to
+   * reconcile it — and the two answers genuinely differ.
+   */
+  matches?: Match[];
 }
 
 export function StandingsTable({
@@ -199,7 +256,16 @@ export function StandingsTable({
   followedCode,
   plotKind = "line",
   onTogglePlotKind,
+  matches,
 }: StandingsTableProps) {
+  const { kind: markKind, toggle: toggleMark } = useStandingsMark();
+
+  /** One pass over the fixtures for all twenty clubs, not one per row. */
+  const forma = useMemo(() => {
+    if (!matches || matches.length === 0) return new Map<ClubCode, FormResult[]>();
+    return new Map(rows.map((row) => [row.club.code, recentForm(matches, row.club.code)]));
+  }, [matches, rows]);
+
   const campaigns = useMemo(
     () => new Map<ClubCode, RankAtRound[]>((rankHistory ?? []).map((c) => [c.clubCode, c.entries])),
     [rankHistory],
@@ -227,9 +293,25 @@ export function StandingsTable({
           widest content and take the table's surplus straight back — the exact
           regression the "no wider than the mark it holds" spec was written
           for. */}
-      {showCampaign && onTogglePlotKind && (
-        <div className="mb-2 flex justify-end">
-          <CampaignPlotToggle kind={plotKind} onToggle={onTogglePlotKind} />
+      {showCampaign && (
+        <div className="mb-2 flex justify-end gap-2">
+          {/* Two controls, each doing one thing, and the second hidden while it
+              governs nothing. What the column *shows* is this table's business;
+              how a campanha is *drawn* is global — #235 made the plot kind one
+              mark across the Classificação, the Clube page and the Partida
+              page. Folding "forma" into that union would have put pill strips
+              on the Clube page directly above its own Últimos resultados, which
+              is the same five results twice. So the two choices compose: pick
+              the campanha and the plot toggle decides its mark; pick the forma
+              and there is no campanha on this page for it to govern. */}
+          {matches && matches.length > 0 && (
+            <Button size="sm" onClick={toggleMark}>
+              {markToggleLabel(markKind)}
+            </Button>
+          )}
+          {markKind === "campanha" && onTogglePlotKind && (
+            <CampaignPlotToggle kind={plotKind} onToggle={onTogglePlotKind} />
+          )}
         </div>
       )}
 
@@ -258,7 +340,9 @@ export function StandingsTable({
               {/* Beside the points rather than after SG: the campanha is read
                   against the total, and a narrow screen scrolls the tallies away
                   from it rather than it away from the tallies. */}
-              {showCampaign && <th scope="col" className={`${CAMPAIGN_COLUMN} py-2 text-left`}>Campanha</th>}
+              {showCampaign && (
+                <th scope="col" className={`${MARK_COLUMN} py-2 text-left`}>{markColumnLabel(markKind)}</th>
+              )}
               <th scope="col" className="px-2 py-2 text-right">J</th>
               <th scope="col" className="px-2 py-2 text-right">V</th>
               <th scope="col" className="px-2 py-2 text-right">E</th>
@@ -320,13 +404,17 @@ export function StandingsTable({
                 </td>
                 <td className={`${ROW_LINE} px-2 py-2 text-right font-semibold tabular-nums`}>{row.points}</td>
                 {showCampaign && (
-                  <td className={`${ROW_LINE} ${CAMPAIGN_COLUMN} py-2`}>
-                    <RankSparkline
-                      entries={campaigns.get(row.club.code) ?? []}
-                      clubCount={rows.length}
-                      lastRound={lastRound}
-                      kind={plotKind}
-                    />
+                  <td className={`${ROW_LINE} ${MARK_COLUMN} py-2`}>
+                    {markKind === "forma" ? (
+                      <FormaStrip results={forma.get(row.club.code) ?? []} />
+                    ) : (
+                      <RankSparkline
+                        entries={campaigns.get(row.club.code) ?? []}
+                        clubCount={rows.length}
+                        lastRound={lastRound}
+                        kind={plotKind}
+                      />
+                    )}
                   </td>
                 )}
                 <td className={`${ROW_LINE} px-2 py-2 text-right tabular-nums text-ink-muted`}>{row.played}</td>

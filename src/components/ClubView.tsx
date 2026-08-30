@@ -8,7 +8,6 @@ import {
   resultFor,
   scorersFor,
   standingFor,
-  type FormResult,
 } from "@/club-core";
 import { lastRecordedRound } from "@/rank-history-core";
 import { pointsPercentageLabel } from "@/standings-core";
@@ -20,6 +19,7 @@ import { FollowButton } from "@/src/components/MeuTime";
 import type { CampaignPlotKind } from "@/campaign-plot-core";
 import { CampaignPlotToggle } from "@/src/components/CampaignPlotToggle";
 import { RankSparkline } from "@/src/components/RankSparkline";
+import { FormPill } from "@/src/components/FormPill";
 import { Surface } from "@/src/components/Surface";
 import type {
   Club,
@@ -75,54 +75,6 @@ interface ClubViewProps {
    * preference stored is not what this feature is for.
    */
   onToggleFollow?: (code: ClubCode) => void;
-}
-
-const FORM_CLASS: Record<FormResult, string> = {
-  V: "bg-positive/20 text-primary",
-  E: "bg-surface-container-high text-on-surface-variant",
-  D: "bg-negative/20 text-error",
-};
-
-const FORM_TITLE: Record<FormResult, string> = {
-  V: "Vitória",
-  E: "Empate",
-  D: "Derrota",
-};
-
-/**
- * One result in the **Forma** guide.
- *
- * A pill carries its meaning on two channels that a screen reader gets neither
- * of: a colour, and a single letter. `title` was the whole of its accessible
- * naming, and `title` is **not reliably announced and not reachable by touch at
- * all** — so what actually reached a screen reader was five list items reading
- * "V", "E", "D", which is a spelling test rather than a form guide.
- *
- * `RankSparkline` is the in-repo precedent and it is followed rather than
- * re-invented: `title` for the mouse, and the same fact in text for everyone
- * else. The one difference is which half gets hidden. There the visible half is
- * a drawing and an em dash, so the text is *added*; here the visible half is a
- * letter that a screen reader will happily read out, so the letter is
- * `aria-hidden` and the word replaces it. Announcing both gives "V Vitória" on
- * every pill — the same doubling `alt=""` on a crest exists to avoid, since the
- * name is already beside it.
- *
- * **It is a component so that item 10 moves it rather than copying it.** The
- * proposal's reason for this item is that a Forma *column* in the classificação
- * should inherit the fix; the repo's rule is to extract at the second call site,
- * and there is one today — so this stays local, and the next caller relocates a
- * function instead of reconstructing a pill out of two lookup tables and a span.
- */
-function FormPill({ result }: { result: FormResult }) {
-  return (
-    <li
-      title={FORM_TITLE[result]}
-      className={`flex h-7 w-7 items-center justify-center rounded-x-small text-body-small font-bold ${FORM_CLASS[result]}`}
-    >
-      <span aria-hidden="true">{result}</span>
-      <span className="sr-only">{FORM_TITLE[result]}</span>
-    </li>
-  );
 }
 
 const stat = (label: string, value: string) => (
