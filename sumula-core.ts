@@ -207,3 +207,61 @@ export const sumulaGoalsReconcile = (goals: SumulaGoal[], scores: SumulaScores):
 
   return firstHalf === homeHalf + awayHalf && goals.length === homeFinal + awayFinal;
 };
+
+/**
+ * One entry of a match payload's `documentos` array, as CBF sends it.
+ *
+ * **Exactly two fields, and neither is a type code** — measured on a captured
+ * payload rather than hoped for. The three documents share a stem and differ by
+ * suffix: `…se.pdf` (Súmula), `…b.pdf` (Boletim Financeiro), `…rdj.pdf`
+ * (Relatório de Jogo).
+ */
+export interface SumulaDocumento {
+  url?: string;
+  title?: string;
+}
+
+/** What CBF appends to the shared stem for the súmula, before `.pdf`. */
+const SUMULA_SUFFIX = "se";
+
+/**
+ * Pick the súmula's URL out of a match payload's `documentos`.
+ *
+ * **The suffix is the key and the title is the fallback, and that is the wrong
+ * way round from how it first reads.** A `title` is a display string: it is
+ * ASCII-fragile, it is the field somebody renames, and here it is the one of
+ * the three carrying an accent — `"Súmula"`. Matching on it means matching on
+ * a byte sequence that has an obvious way to drift and no reason not to. The
+ * suffix is structural: it is what actually distinguishes the three documents
+ * on one stem, it is ASCII, and it cannot gain a diacritic.
+ *
+ * The title still earns its place as a second pass rather than being dropped,
+ * because a suffix is a convention observed on a sample of matches and a run
+ * that silently found no súmula would look exactly like a match that has none.
+ * Two independent ways to be right beats one, provided the sturdier is asked
+ * first.
+ *
+ * Returns `null` rather than a guess where neither matches. **A missing súmula
+ * is an absence, not an error**: CBF publishes them after the fact, so a fixture
+ * played an hour ago legitimately has none, and the caller records the match
+ * without a minute rather than refusing it — the rule `Club.coach` follows for
+ * a club between managers.
+ *
+ * **And never derive this address.** For `id_jogo` 832123 the súmula is
+ * `142234se.pdf`; the ids are unrelated, and the resemblance to `num_jogo` is
+ * the trap the module header sets out. `documentos` hands it over complete.
+ */
+export const sumulaUrlFrom = (documentos: SumulaDocumento[] | undefined): string | null => {
+  const entries = (documentos ?? []).filter(
+    (documento): documento is SumulaDocumento & { url: string } =>
+      typeof documento.url === "string" && documento.url.length > 0,
+  );
+
+  const bySuffix = entries.find((documento) =>
+    documento.url.toLowerCase().endsWith(`${SUMULA_SUFFIX}.pdf`),
+  );
+  if (bySuffix) return bySuffix.url;
+
+  const byTitle = entries.find((documento) => (documento.title ?? "").trim().toLowerCase() === "súmula");
+  return byTitle ? byTitle.url : null;
+};
