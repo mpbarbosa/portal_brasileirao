@@ -165,3 +165,43 @@ test("a fixture with goals but no score renders no scorers", async ({ page }) =>
   await expect(page.locator("main article [data-goal]")).toHaveCount(0);
   await expect(page.getByText("Fulano")).toHaveCount(0);
 });
+
+/**
+ * The minute, on a match that has one.
+ *
+ * **A different fixture on purpose.** 554977's minutes are not in the snapshot:
+ * the súmula join was wired after that entry was written, so it carries scorers
+ * and no clock. 554790 — Botafogo 0x3 Flamengo, rodada 6 — was re-synced with
+ * the join in place, and its three minutes were read off CBF's own PDF by hand
+ * before the parser ever ran: 12', 45+1', 48'.
+ *
+ * Asserted as *shape* rather than as those three values, because the snapshot
+ * ages and a re-sync can legitimately move which fixtures carry minutes. What
+ * must hold is that a minute renders beside a scorer, and that stoppage time
+ * survives as `45+1` rather than being flattened to a bare number.
+ */
+test("a goal that has a minute prints it beside the scorer", async ({ page }) => {
+  await page.goto("/partida/554790");
+  const scorers = page.locator("main article [data-goal]");
+  await expect(scorers.first()).toBeVisible();
+
+  const lines = await scorers.allInnerTexts();
+  expect(lines.length).toBeGreaterThan(0);
+  // Every line names a scorer and then a minute.
+  for (const line of lines) expect(line).toMatch(/\S+.*\d+(\+\d+)?'/);
+  // And stoppage time keeps its form rather than being rounded into the 45th.
+  expect(lines.join(" ")).toMatch(/\d+\+\d+'/);
+});
+
+test("a goal with no minute prints no placeholder", async ({ page }) => {
+  // 554977 predates the join. It must render exactly as it always did — no
+  // dash, no empty parentheses, no "—". Absent is absent.
+  await page.goto(`/partida/${MATCH}`);
+  const scorers = page.locator("main article [data-goal]");
+  await expect(scorers.first()).toBeVisible();
+
+  for (const line of await scorers.allInnerTexts()) {
+    expect(line).not.toMatch(/[—–-]\s*$/);
+    expect(line).not.toMatch(/'/);
+  }
+});

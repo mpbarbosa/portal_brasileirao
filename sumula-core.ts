@@ -265,3 +265,36 @@ export const sumulaUrlFrom = (documentos: SumulaDocumento[] | undefined): string
   const byTitle = entries.find((documento) => (documento.title ?? "").trim().toLowerCase() === "súmula");
   return byTitle ? byTitle.url : null;
 };
+
+/**
+ * The minutes for a match's goals, in order — or `null` where the súmula and
+ * the match API do not describe the same list.
+ *
+ * **Index order is the join, and the two guards are what make that defensible
+ * rather than hopeful.** Both lists come from CBF about one fixture in the
+ * order the goals were scored, so the nth súmula row is the nth registro — but
+ * "should be" is not a check. The names cannot do the work: the API sends an
+ * apelido (`Lopez`) where the súmula prints the full name (`Jose Manuel
+ * Alberto Lopez`), and no containment rule survives both.
+ *
+ * So this refuses unless **the súmula agrees with its own scorelines** and
+ * **its goal count equals the API's**. The first catches a parse that dropped a
+ * row or swallowed a card; the second catches the two sources disagreeing about
+ * the match at all. Together they leave the index join with nothing plausible
+ * left to be wrong about.
+ *
+ * `null` rather than a partial list, deliberately: minutes attached to the
+ * wrong goals are worse than no minutes, and they look right. That is the same
+ * bargain `goalsReconcile` strikes — absent data over wrong data — and the
+ * caller records the match without minutes rather than refusing it.
+ */
+export const sumulaMinutes = (
+  goalCount: number,
+  goals: SumulaGoal[],
+  scores: SumulaScores | null,
+): string[] | null => {
+  if (!scores || !sumulaGoalsReconcile(goals, scores)) return null;
+  if (goals.length !== goalCount) return null;
+
+  return goals.map(sumulaMinuteLabel);
+};
