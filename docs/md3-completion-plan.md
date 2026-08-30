@@ -396,10 +396,21 @@ Restated here so that "complete" is not read as "everything MD3 has":
   `display-medium`, `display-small` and `headline-large` are absent.
 - **`surface-dim`, `surface-bright`, `surface-tint` and the `*-fixed` roles.**
   Same rule. Emit one when something renders it.
-- **FAB, snackbar, text fields, switches, sliders, segmented buttons, progress
-  indicators, tooltips, badges.** The app renders none of them. A component with
-  no call site is a guess about the future that later has to be maintained or
-  deleted — M4's sentence, and it holds for every one of these.
+- **FAB, snackbar, text fields, switches, sliders, progress indicators,
+  tooltips, badges.** The app renders none of them. A component with no call site
+  is a guess about the future that later has to be maintained or deleted — M4's
+  sentence, and it holds for every one of these.
+
+  **Segmented buttons were on that list and have come off it**, which is the rule
+  working rather than an exception to it: #248 needed one for the Casa / Fora
+  split, so it was built at the moment something rendered it. It is a
+  `radiogroup` rather than a row of `Button`s — the choices are mutually
+  exclusive and exactly one is always on, which is a radio's contract and not a
+  button's — and it lives in its own component because a segment needs a shared
+  outline, collapsed inner borders and end caps that mean nothing individually.
+  Nothing here predicted which of the nine would be needed first, and that is the
+  argument for the rule: the list is not a plan, it is a record of what has no
+  call site **today**.
 - **The navigation drawer.** Not unadopted so much as owed: `NAV_ITEMS` is at
   MD3's maximum of five destinations, and a sixth section wants a drawer rather
   than a sixth entry. Nothing fails at the sixth — no build breaks, no test goes
