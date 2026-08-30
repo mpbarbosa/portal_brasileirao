@@ -257,8 +257,30 @@ export const pageStatus = (pathname: string, context: MetaContext = {}): PageSta
 /**
  * `robots.txt`.
  *
- * The API is disallowed because it is not content — a JSON envelope in an index
- * is noise, and crawling it spends the 10 req/min upstream budget on a robot.
+ * **The content API is crawlable, and it has to be.** This app renders on the
+ * client, so a fixture page is an empty shell until `/api/matches` answers.
+ * `Disallow: /api/` therefore did not keep JSON out of the index — it kept
+ * Googlebot from seeing the *pages*. Measured on 2026-08-30: Search Console's
+ * live test on `/partida/554977` reported **Erro soft 404** with 5 of 7
+ * resources refused as "bloqueado pelo robots.txt" (`/api/matches`,
+ * `/api/scorers`, `/api/health`, `/api/account/me`), and the fixture sat
+ * "Detectada, mas não indexada" with último rastreamento **N/D**. The server
+ * was blameless throughout: 200, self-canonical, correct title, no `noindex`.
+ *
+ * Keeping the JSON itself out of the index is a **different job needing a
+ * different tool**: `X-Robots-Tag: noindex`, set on every `/api` response in
+ * `server.ts`. That is the one instruction a crawler can obey only if it is
+ * allowed to fetch the thing, so blocking the fetch is what *prevents* it being
+ * read. Disallow and noindex are not two strengths of the same knob.
+ *
+ * The upstream budget was the other reason given, and the cache is what answers
+ * it: standings and fixtures are cached 60s, 15s while a match is LIVE, so the
+ * app makes roughly 5 upstream calls a minute at any traffic level. A crawler
+ * cannot spend a budget a reader would not.
+ *
+ * `/api/auth/` and `/api/account` stay disallowed — per-session, needed to
+ * render nothing, and the only endpoints where a fetch has a side effect.
+ *
  * The `Sitemap:` line is omitted rather than emitted relative when no origin is
  * known: the directive is defined as an absolute URL, and a relative one is
  * simply ignored, which looks like a working line that does nothing.
@@ -267,7 +289,10 @@ export const robotsTxt = (origin: string): string => {
   const lines = [
     "User-agent: *",
     "Allow: /",
-    "Disallow: /api/",
+    // Per-session and side-effecting. Everything else under /api is what the
+    // pages are built from and must stay fetchable — see above.
+    "Disallow: /api/auth/",
+    "Disallow: /api/account",
     // Per-requester pages. `noindex` on the page itself is the binding
     // instruction; this saves a crawler the fetch, and saves us serving a
     // personal page to one.

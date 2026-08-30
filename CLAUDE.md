@@ -754,6 +754,37 @@ the classificação still rendered beneath.
 club list actually arrived. Otherwise a provider outage would 404 all 380 fixture pages at
 once and a crawler would drop them over an incident lasting minutes.
 
+**`Disallow` and `noindex` are not two strengths of one knob, and getting that wrong
+made every content page a soft 404.** This app renders on the client, so a fixture page
+is an empty shell until `/api/matches` answers. `robots.txt` carried `Disallow: /api/`
+to keep JSON envelopes out of the index — and what it actually did was stop Googlebot
+fetching the payloads the *pages* are built from. Measured 2026-08-30 on the live site:
+Search Console's live test on `/partida/554977` reported **Erro soft 404** with **5 of 7
+resources** refused as "bloqueado pelo robots.txt", and the fixture sat *"Detectada, mas
+não indexada"*, último rastreamento **N/D**. The rendered title Google held was the
+generic `Partida · Portal Brasileirão` where curl got `Palmeiras 4 x 1 Vasco da Gama`
+twelve times out of twelve.
+
+**Nothing was wrong server-side, which is why nothing caught it** — 200, self-canonical,
+correct title and description, no `noindex`, every spec green. Only a crawler's own
+render could see it, and the home page was indexed throughout because enough of its
+meaning survives in the server-injected shell.
+
+So the content API is **crawlable**, and `X-Robots-Tag: noindex` on every `/api` response
+(a middleware mounted in `server.ts` immediately after `const app = express()`) is what
+keeps the JSON out of the index. That is the tool for the job because a crawler can obey
+`noindex` **only on a resource it was allowed to fetch** — blocking the fetch is what
+prevents the instruction being read. The middleware sits at the top rather than beside
+the content routes because `app.use` applies only to what follows it, and `/api/auth` and
+`/api/account` are registered several hundred lines above them. Those two stay
+`Disallow`ed: per-session, needed to render nothing, and the only `/api` endpoints where
+a fetch has a side effect.
+
+The upstream budget was the other reason for the blanket rule, and the cache answers it:
+60s for standings and fixtures, 15s while a match is LIVE, so the app makes roughly five
+upstream calls a minute at any traffic level. **A crawler cannot spend a budget a reader
+would not.**
+
 **The sitemap is load-bearing, not a nicety.** The round picker is a `<select>`, not a set
 of links, so every round but the current one — and with it nearly every fixture page — has
 no inbound link anywhere on the site. `/sitemap.xml` is the only way a crawler reaches
