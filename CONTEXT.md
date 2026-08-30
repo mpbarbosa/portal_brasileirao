@@ -596,30 +596,54 @@ computed fallback table legitimately differ. This is deliberate; see CLAUDE.md.
 _Avoid_: "played" as the predicate (a live match is being played and still must
 not count).
 
-**G4 / Z4**:
-The Libertadores places (positions 1–4) and the relegation zone (the last four
-positions), marked with a coloured rail in `StandingsTable` via `zoneClass`. Z4 is
-computed from the row count rather than hard-coded to 17–20, so the table stays
-correct if the division ever changes size. The **legenda das zonas** beneath the
-table is where those two names reach the reader — "G4 Libertadores — as quatro
-primeiras posições", "Z4 Rebaixamento — as quatro últimas posições". It counts in
-from the ends of the table in words rather than naming ordinals, both because Z4
-is derived from the row count and because that sentence is the whole of what a
-colourblind reader or a grayscale capture gets: the rail carries hue and nothing
-else.
+**G4 / G5 / G11 / Z4**:
+The four bands of the **Classificação**, declared once as `ZONES` in
+`standings-core.ts` and painted as a coloured rail by `zoneClass`. **G4** is the
+Libertadores fase de grupos (1º–4º), **G5** the pré-Libertadores (5º alone),
+**G11** the Sul-Americana fase de grupos (6º–11º) and **Z4** the rebaixamento
+(the last four positions). Eleven continental places, not the twelve a reader may
+remember: the Copa do Brasil and Libertadores champions hold berths of their own,
+so a champion finishing outside the zone slides every boundary below it up by one.
+**That is why the numbers are one literal rather than four conditions** — nothing
+here can check them against the CBF, a wrong band is indistinguishable from a
+right one to anyone reading the page, and re-reading them each season is a
+person's job that should touch exactly one place.
+A term names the **cumulative zone**, in the Brazilian idiom where G-4, G-6 and
+G-12 all count from the top; the rail beside it paints only that band's own
+positions, and the `where` clause is what says which. Z4 is computed from the row
+count rather than hard-coded to 17–20, so the table stays correct if the division
+ever changes size, and `zoneAt` asks the relegation band first so a division small
+enough for the two ends to overlap still has one defined answer.
+The **legenda das zonas** beneath the table is where all four names reach the
+reader — "G4 Libertadores — as quatro primeiras posições", "G5 Pré-Libertadores —
+a quinta posição", "G11 Sul-Americana — da sexta à décima primeira posição", "Z4
+Rebaixamento — as quatro últimas posições". It spells positions in words rather
+than ordinals, both because Z4 is derived from the row count and because that
+sentence is the whole of what a colourblind reader or a grayscale capture gets:
+the rail carries hue and a border style and nothing else.
+**Three hues and one pattern, because a fourth hue does not clear 3:1.** G4 and
+G5 share `positive`, G5 broken (`[border-left-style:dashed]`, never
+`border-dashed`, which would dash `ROW_LINE` across every cell); G11 is
+`tertiary` and Z4 `negative`. `warning` — the orange the reference table uses for
+the pré-Libertadores band — measures **2.19:1** against `surface` on light, a
+rail carrying hue and nothing else.
 _Avoid_: hard-coding `position > 16`; "top four"/"bottom four" in pt-BR copy;
-"17º ao 20º" in the key; a key that names only the colours ("verde",
-"vermelho") — that is the single-channel encoding again, one line further down.
+"17º ao 20º" in the key; "Sudamericana" (the sponsor's spelling — pt-BR press
+writes **Sul-Americana**); "qualificatórias" where **pré-Libertadores** is the
+word a reader here uses; reading G5 as "the fifth band" rather than "everything
+down to 5th"; a key that names only the colours ("verde", "vermelho") — that is
+the single-channel encoding again, one line further down.
 
 **Líder**:
 The club in 1st, marked in the **Classificação** by its position number sitting
 in a filled `tertiary` disc, with " — líder" beside it as `sr-only`. It is the
 only position that gets a mark: the leader's is the most-looked-at row on the
 page and read exactly like 2nd to 4th, which carry the same **G4** rail.
-**Nothing tiers 5–6 or 7–12.** Those are pré-Libertadores and Sul-Americana, and
-their boundaries move with who wins the Copa do Brasil — a hard-coded
-`position <= 6` is a claim that quietly becomes false in a season nobody
-re-reads, the same class of error as an invented stadium capacity.
+**Only the leader is marked this way.** The pré-Libertadores and Sul-Americana
+bands beneath are drawn too, but as *rails* — a rail says which band a row is
+in, where the disc says which row. Their boundaries move with who wins the Copa
+do Brasil, which is the hazard `ZONES` exists to hold in one place; the leader is
+the one position here that no competition rule can relocate.
 The fill is the solid role and **not `tertiary-container`**, which measures
 1.23:1 against the page on light: the disc would carry hue and nothing else, so
 it would say nothing in grayscale or to a colour-blind reader. The solid role is

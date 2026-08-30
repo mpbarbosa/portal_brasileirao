@@ -11,7 +11,7 @@ import { LINK_UNDERLINE } from "@/src/components/interaction";
 import { lastRecordedRound } from "@/rank-history-core";
 import { RankSparkline } from "@/src/components/RankSparkline";
 import { formatRoute } from "@/route-core";
-import { ZONE_DEPTH, ZONE_DEPTH_WORD, pointsPercentageLabel } from "@/standings-core";
+import { ZONES, type ZoneId, pointsPercentageLabel, zoneAt } from "@/standings-core";
 import { markColumnLabel, markToggleLabel } from "@/standings-mark-core";
 import { Surface } from "@/src/components/Surface";
 import { useStandingsMark } from "@/src/useStandingsMark";
@@ -51,63 +51,87 @@ function FormaStrip({ results }: { results: FormResult[] }) {
   );
 }
 
-/** The two rail colours, shared between the cell and the key so a change to
- *  either colour cannot leave the other describing the old one. */
-const G4_RAIL = "border-l-2 border-l-positive";
-const Z4_RAIL = "border-l-2 border-l-negative";
+/**
+ * The rail each band paints, keyed by the zone that owns it. Shared between the
+ * cell and the key below, so a change to one colour cannot leave the other
+ * describing the old one.
+ *
+ * **Three hues and one pattern, because a fourth hue is not available at this
+ * contrast.** MD3's floor for a non-text mark is 3:1 and the light theme is the
+ * tight one. Measured against `surface` there: `tertiary` 6.11, `negative`
+ * 4.26, `positive` 3.02 — and `warning`, the obvious orange and the hue the
+ * reference table uses for exactly this band, **2.19**. That is a rail carrying
+ * hue and nothing else, which is the single-channel failure the legenda exists
+ * to correct one line further down. Retoning `warning` would restyle the three
+ * tints already using it, so the pré-Libertadores band takes the Libertadores
+ * hue **broken** instead: the same competition, not yet in it, said on a channel
+ * that survives grayscale rather than on a fifth colour nobody can see.
+ *
+ * `[border-left-style:dashed]`, never `border-dashed`: the whole-element utility
+ * sets the style on all four sides, and `ROW_LINE` puts a 1px top border on
+ * every cell — it would dash the row separator across the entire table.
+ *
+ * `tertiary` is also the leader disc's fill. The two never meet in a row (1st is
+ * `g4`), and one is a filled shape where the other is a rule, so the hue is not
+ * doing two jobs in one place.
+ */
+const ZONE_RAIL: Record<ZoneId, string> = {
+  g4: "border-l-2 border-l-positive",
+  g5: "border-l-2 border-l-positive [border-left-style:dashed]",
+  g11: "border-l-2 border-l-tertiary",
+  z4: "border-l-2 border-l-negative",
+};
 
-/** Libertadores places (G4) and the relegation zone (Z4) get a rail colour.
- *  It rides on the first cell, not the row: the row scrolls horizontally and
- *  would carry the rail away underneath the frozen columns. */
+/** The band's rail rides on the first cell, not the row: the row scrolls
+ *  horizontally and would carry the rail away underneath the frozen columns.
+ *  A row in no band still gets 2px of transparent border, so every position
+ *  cell starts its text at the same place. */
 const zoneClass = (position: number, total: number): string => {
-  if (position <= ZONE_DEPTH) return G4_RAIL;
-  if (position > total - ZONE_DEPTH) return Z4_RAIL;
-  return "border-l-2 border-l-transparent";
+  const zone = zoneAt(position, total);
+  return zone ? ZONE_RAIL[zone.id] : "border-l-2 border-l-transparent";
 };
 
 /**
  * The key to the rail.
  *
  * `where` is the load-bearing half, not a gloss on the term. The rail is a
- * border colour and nothing else, so **hue is its only channel**: it says
- * nothing to a red/green-colourblind reader, and nothing in a grayscale
- * capture. Naming which positions each zone covers moves the fact onto a
- * channel every reader already has — the position column — after which the
- * rail confirms what the key said rather than being the only place it is said.
- * That is the same bargain the club page's form pills strike by carrying a
- * letter beside the colour.
+ * border colour and a border style and nothing else, and **the style separates
+ * exactly one band from one other**: to a red/green-colourblind reader or in a
+ * grayscale capture, three of the four rails are the same mark and the fourth is
+ * that mark broken. Naming which positions each band covers moves the fact onto a
+ * channel every reader already has — the position column — after which the rail
+ * confirms what the key said rather than being the only place it is said. That
+ * is the same bargain the club page's form pills strike by carrying a letter
+ * beside the colour.
  *
- * It counts in from the ends of the table rather than naming 17º–20º, because
- * Z4 is derived from the row count (see `zoneClass`, and `CONTEXT.md`): a
- * division that changed size would leave hard-coded ordinals wrong on the page
- * with nothing to catch it.
+ * It is also what disambiguates the terms: `G11` names the cumulative zone in
+ * the Brazilian idiom, "everything down to 11th", while the rail beside it
+ * paints 6th to 11th alone. See `ZONES`, which is where all four bands and
+ * their prose live — a key one file away from the rule it explains is a key
+ * that goes stale unnoticed, so this holds only the colours.
+ *
+ * Positions are spelled in words rather than as ordinals, because Z4 is derived
+ * from the row count (see `zoneAt`, and `CONTEXT.md`) and a hard-coded "17º ao
+ * 20º" would leave the page wrong with nothing to catch it.
  */
-const ZONE_KEY = [
-  {
-    rail: G4_RAIL,
-    term: "G4",
-    zone: "Libertadores",
-    where: `as ${ZONE_DEPTH_WORD} primeiras posições`,
-  },
-  {
-    rail: Z4_RAIL,
-    term: "Z4",
-    zone: "Rebaixamento",
-    where: `as ${ZONE_DEPTH_WORD} últimas posições`,
-  },
-];
+const ZONE_KEY = ZONES.map((zone) => ({
+  rail: ZONE_RAIL[zone.id],
+  term: zone.term,
+  zone: zone.competition,
+  where: zone.where,
+}));
 
 /**
  * The leader's position number, in a filled disc.
  *
  * Position 1 is the single most-looked-at row on the page and read exactly like
  * 2nd, 3rd and 4th — all four carry the same G4 rail and the same ink. This is
- * the whole of the emphasis: **the leader and nobody else.** The prototype this
- * came from also tiers 5–6 and 7–12, and those two are a hazard rather than a
- * feature — the pré-Libertadores and Sul-Americana boundaries move with who
- * wins the Copa do Brasil, so a hard-coded `position <= 6` is a claim that
- * quietly becomes false in a season nobody re-reads. Same class as an invented
- * stadium capacity: a plausible number is indistinguishable from a correct one.
+ * the whole of the emphasis: **the leader and nobody else.** The pré-Libertadores
+ * and Sul-Americana bands beneath are now drawn too, but as *rails*, and that
+ * separation is the point: a rail says which band a row is in, where the disc
+ * says which row. Their boundaries move with who wins the Copa do Brasil — the
+ * hazard `ZONES` is written to contain — while the leader is the one position in
+ * this table that no competition rule can relocate.
  *
  * **`tertiary`, not `tertiary-container`, and that was measured rather than
  * picked.** The container is MD3's usual choice for a filled badge, and here it
