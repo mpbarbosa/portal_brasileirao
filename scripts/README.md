@@ -43,10 +43,34 @@ Preview exactly what would change without touching the host:
 DEPLOY_HOST=ubuntu@1.2.3.4 ./scripts/deploy.sh --dry-run
 ```
 
-`deploy.sh` runs the preflight, syncs `dist/` plus the package manifests, then
-over SSH runs `npm ci --omit=dev`, restarts the service, and polls
-`/api/health` — failing loudly with the last 40 journal lines if the service
-doesn't come back.
+`deploy.sh` runs the preflight, rsyncs the release into a fresh staging directory
+on the host — `dist/`, the package manifests and `shell_scripts/` — and then runs
+`07_install_release.sh` from that staging copy. That is the same handoff CI makes
+after untarring a release from S3, so both routes end in `06_redeploy.sh` and only
+the transport differs.
+
+What that buys, and the reason the inline version was replaced: the release
+currently on disk is **retained** before anything overwrites it, and a payload
+that fails its health check is **flipped back** to it automatically. Before this
+the workstation path rsynced `--delete` over the running build and then found out
+whether the new one worked.
+
+So it can now end other than 0 or 1:
+
+| exit | meaning |
+| --- | --- |
+| 0 | deployed and healthy |
+| 1 | a step failed; the running release was left alone or restored |
+| 2 | the new release was unhealthy and the **previous** one is now serving |
+| 3 | unhealthy **and** the flip-back failed — the service is down |
+| 4 | payload installed, but the host has no service unit: run `03_install_systemd_service.sh` there |
+
+`--dry-run` compares the local `dist/` against the live one rather than against an
+empty staging directory, since that is the transfer `07` will actually perform.
+Nothing is staged and nothing is run.
+
+`scripts/rehearse-deploy-sh.sh` drives all of it against stubs — no host, no key,
+no outage.
 
 ## Secrets
 

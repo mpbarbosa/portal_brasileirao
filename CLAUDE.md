@@ -2699,8 +2699,8 @@ Rules that follow from that:
 in two parallel jobs:
 
 - **check** — `tsc --noEmit`, unit tests, build, then boots `dist/server.cjs` and
-  smoke-tests it, then shellchecks the deploy scripts and **runs the three
-  rehearsals**. The boot step is the one that catches a runtime
+  smoke-tests it, then shellchecks the deploy scripts and **runs the rehearsals**
+  — count the `rehearse-` steps in the workflow rather than a number here. The boot step is the one that catches a runtime
   dependency stranded in `devDependencies`; the rehearsals are the only thing
   that catches a script which no longer does what it says. The two host-script
   ones gate the deploy because `shell_scripts/` is packaged into the payload by
@@ -3098,7 +3098,8 @@ Four things about it are deliberate, and three are load-bearing:
   moments later anyway.
 
 **`scripts/rehearse-flip-back.sh` is the only behavioural coverage these two
-scripts have.** `npm run lint` is TypeScript and cannot see shell; CI only
+scripts have**, and `scripts/rehearse-deploy-sh.sh` is the only coverage the
+workstation path that now calls them has. `npm run lint` is TypeScript and cannot see shell; CI only
 shellchecks them. It drives all eight branches against a stubbed `systemctl`,
 `sudo`, `npm` and `journalctl`, with a real HTTP server for the health endpoint
 so the real `curl -sf` runs. **CI runs it on every push and pull request**, in
@@ -3296,10 +3297,37 @@ deployable and **unrecoverable**, which is the worst of the available states.
 Both subjects in the policy were read from it rather than reasoned out, which is
 the same discipline `/api/health` applies to a running build.
 
-`scripts/deploy.sh` is the workstation path — rsync over SSH — and ends in the same
-`06_redeploy.sh`, so both routes converge and only the transport differs. It builds
-from the **working tree** rather than from a git ref, which is why **Working
-alongside other sessions** above says never to run it by hand.
+`scripts/deploy.sh` is the workstation path — rsync over SSH — and it now really
+does converge with CI: it stages the release in a temporary directory on the host
+and runs `07_install_release.sh` from that staging copy, exactly as the SSM command
+does after untarring. Only the transport differs.
+
+**This paragraph asserted that convergence for months while it was false**, which
+is worth more than the fix. `deploy.sh` carried its own inline heredoc — `npm ci`,
+restart, health poll, `journalctl` — reaching neither `07` nor `06`, so it rsynced
+`--delete` straight over the running build and left an operator with nothing to
+return to. `07`'s own header made the same claim. Both read as descriptions and
+were memories: the retention and flip-back D5b added went to the pipeline only,
+and the two documents describing the shared path were never re-read against it.
+The failure is the one this file names under *a claim that produces no work when
+it holds is never exercised* — nothing in CI ran `deploy.sh`, so nothing could
+disagree with the sentence.
+
+**`scripts/rehearse-deploy-sh.sh` is what makes it exercised**, and it is the
+first behavioural coverage that script has ever had. It stubs `ssh` — running the
+command locally, the way a real `ssh` runs it through the login shell, which is
+what lets one stub serve both `ssh host 'mktemp -d'` and the `ssh host rsync
+--server` that rsync itself invokes — and asserts what the host looks like
+afterwards. It was confirmed **red against the previous `deploy.sh`**: ten
+assertions across retention, flip-back and the exit code, rather than taken on
+trust.
+
+Note it does **not** gate the release the way the flip-back and backup rehearsals
+do, because `deploy.sh` does not travel in the payload. It is in `check` because
+this is the script somebody reaches for during an incident.
+
+It still builds from the **working tree** rather than from a git ref, which is why
+**Working alongside other sessions** above says never to run it by hand.
 
 What is still missing from this pipeline, and the phased plan for closing it, is
 `docs/cicd-plan.md`.

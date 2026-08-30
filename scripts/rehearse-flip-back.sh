@@ -56,6 +56,14 @@ mkdir -p "$WORK/bin"
 cat > "$WORK/bin/systemctl" <<'EOF'
 #!/bin/bash
 echo "systemctl $*" >> "$STUB_LOG"
+# 07 asks whether this host has a service unit at all, which is how a first-ever
+# deploy is told apart from a broken one. Touch $STATE/no-unit to answer no; a
+# provisioned host is the default, so every other case is unaffected.
+if [[ "${1:-}" == list-unit-files ]]; then
+    [[ -f "$STATE/no-unit" ]] && exit 1
+    echo "${DEPLOY_SERVICE:-portal-brasileirao}.service enabled enabled"
+    exit 0
+fi
 if [[ "${1:-}" == restart ]]; then
     # A restart loads whatever is in dist/ *now*. This is the whole point of the
     # rehearsal: health afterwards depends on the bytes the script put there.
@@ -334,9 +342,37 @@ check "dist restored to previous" "sha=aaaa1111" "$(sha_in_dist)"
 check "health reports the PREVIOUS sha" aaaa1111 "$(health_sha)"
 stop_env
 
+# -------------------------------------------------------------------------
+# 8. A HOST WITH NO SERVICE UNIT — a first-ever deploy. 03 refuses to install
+#    the unit before dist/server.cjs exists, so the payload has to land and
+#    then the operator has to be told. The assertion that matters is the one
+#    about what did NOT happen: no restart, and so no health check to fail.
+#    scripts/deploy.sh used to own this case inline; it lives here now because
+#    only the script that installs the payload knows the payload has landed.
+# -------------------------------------------------------------------------
+echo "8  host has no service unit (first-ever deploy)          -> exit 4, no restart"
+start_env
+touch "$STATE/no-unit"
+make_release "$WORK/new" GOOD bbbb2222
+deploy_release "$WORK/new"
+check "exit code" 4 "$RC"
+check "payload was installed anyway" "sha=bbbb2222" "$(sha_in_dist)"
+check "names the script to run next" yes "$(said '03_install_systemd_service.sh')"
+check "never restarted the service" no "$(grep -q 'systemctl restart' "$STUB_LOG" && echo yes || echo no)"
+check "no flip-back attempted" no "$(said 'Flipping back')"
+stop_env
+
+echo "8b the unit exists, so the check does not fire           -> exit 0, restarted"
+start_env
+make_release "$WORK/new" GOOD bbbb2222
+deploy_release "$WORK/new"
+check "exit code" 0 "$RC"
+check "did restart the service" yes "$(grep -q 'systemctl restart' "$STUB_LOG" && echo yes || echo no)"
+stop_env
+
 echo ""
 if [[ "$FAIL" -eq 0 ]]; then
-    echo "All $PASS assertions held across 8 branches."
+    echo "All $PASS assertions held across 10 branches."
 else
     echo "$PASS passed, $FAIL FAILED."
 fi
