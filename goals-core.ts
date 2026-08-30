@@ -234,14 +234,46 @@ export const goalsReconcile = (
   goals.filter((goal) => goal.clubCode === awayCode).length === awayGoals &&
   goals.length === homeGoals + awayGoals;
 
-/** Attach synced goals to the matches that have any. */
+/**
+ * Attach synced goals to the matches whose own scoreline still agrees with them.
+ *
+ * **The reconciliation `sync-goals.ts` performs on the way out is repeated here
+ * on the way in**, because the two sides are versioned independently and drift
+ * apart between syncs: `goals.ts` is read from CBF on a workstation, while
+ * `src/data/matches.ts` is a frozen snapshot regenerated on its own schedule. A
+ * fixture played after that snapshot was taken carries scorers while the
+ * committed record still calls it SCHEDULED with no score at all. Measured on
+ * production 2026-08-30: for as long as the provider was failing and
+ * `/api/matches` answered `source: "fallback"`, round 25's Atlético-MG ×
+ * Vitória and São Paulo × Bragantino each shipped three scorers under
+ * `homeGoals: null`.
+ *
+ * **Dropping is the honest answer rather than attaching anyway**, and the
+ * `goals` field's own contract is what makes it so: absent means "not synced",
+ * never "goalless", so an absence is a state every reader already handles,
+ * where a list contradicting the score printed beside it is not.
+ *
+ * It is the **scoreline** that decides and not the status, because that also
+ * covers what a status check cannot see — a curated list left behind by a score
+ * the provider has since corrected. And it self-clears rather than needing a
+ * sync: the moment the two agree again, the goals reappear.
+ */
 export const withGoals = (
   matches: Match[],
   goals: Record<string, Goal[]>,
 ): Match[] =>
   matches.map((match) => {
     const scored = goals[match.id];
-    return scored && scored.length > 0 ? { ...match, goals: scored } : match;
+    if (!scored || scored.length === 0) return match;
+    if (match.homeGoals === null || match.awayGoals === null) return match;
+    const agrees = goalsReconcile(
+      scored,
+      match.homeCode,
+      match.awayCode,
+      match.homeGoals,
+      match.awayGoals,
+    );
+    return agrees ? { ...match, goals: scored } : match;
   });
 
 /**

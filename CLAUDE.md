@@ -923,6 +923,28 @@ reconciled against its own scoreline, so **a missing match means "not synced, or
 did not reconcile", never "goalless"**: a real 0-0 is deliberately absent rather
 than an empty array, because the two would be indistinguishable in the file.
 
+**That reconciliation is repeated at the merge, because the two files drift apart
+between syncs.** `goals.ts` is read from CBF on demand while `src/data/matches.ts`
+is a frozen snapshot regenerated on its own schedule, so a fixture played after
+that snapshot was taken carries scorers while the committed record still calls it
+SCHEDULED with no score at all. Measured on production 2026-08-30: for as long as
+the provider was failing and `/api/matches` answered `source: "fallback"`, round
+25's Atlético-MG × Vitória and São Paulo × Bragantino each shipped three scorers
+under `homeGoals: null`. `withGoals` therefore re-checks `goalsReconcile` against
+the scoreline in the payload it is building, and drops a list that does not
+agree — in the one function both cache branches call, which is the rule
+`withSquadOverrides` follows and for the same reason.
+
+**It tests the scoreline and not the status, which is what makes it
+self-clearing** and what lets it catch the case a status check cannot see: a
+curated list left behind by a score the provider has since corrected. Nothing has
+to be re-run — the moment the two agree again, the goals reappear. Regenerating
+the seed would patch this for a day and drift again on the next `sync-goals`,
+which is why the fix is in the merge rather than in the data. `MatchPage` keeps
+its own `played` gate on top, now unreachable through `/api/matches` and retained
+because the component is pure: a `Match` handed to it directly has passed no such
+check, and `tests/e2e/goals.spec.ts` reaches it by fulfilling a modified payload.
+
 **That sync is slow on purpose, and the reason is a property of CBF rather than
 of the script.** The host throttles at the **socket** — no 429, no `Retry-After`
 — so running a few hundred match fetches back to back (about one every 250ms)
