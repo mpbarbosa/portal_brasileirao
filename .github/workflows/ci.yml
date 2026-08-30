@@ -5,11 +5,6 @@ on:
     branches: [main]
   pull_request:
   workflow_dispatch:
-    inputs:
-      allow_non_descendant:
-        description: "Deploy even though the commit is an ancestor of what is live (a deliberate rollback)"
-        type: boolean
-        default: false
 
 # A newer push to the same branch makes the in-flight run obsolete.
 concurrency:
@@ -571,19 +566,9 @@ jobs:
         # this protects, and a site that is down cannot tell you what it is running.
         env:
           # `github.event.inputs`, not `inputs`: the latter is only populated for
-          # workflow_dispatch and workflow_call, and this step runs on every push
-          # to main. `github.event` always exists and simply carries no `inputs`
-          # key for a push, so the fallback takes over. Same form as
-          # sync-broadcasts.yml, which has been running on it for months.
-          ALLOW_NON_DESCENDANT: ${{ github.event.inputs.allow_non_descendant || 'false' }}
         run: |
           set -euo pipefail
           incoming="$GITHUB_SHA"
-
-          if [ "$ALLOW_NON_DESCENDANT" = "true" ]; then
-            echo "::warning::Ancestry guard overridden — this release may move production backwards."
-            exit 0
-          fi
 
           if ! curl -sf --max-time 10 "${SITE_URL}/api/health" -o live.json; then
             echo "::warning::Could not read ${SITE_URL}/api/health — installing without the ancestry check."
@@ -613,7 +598,8 @@ jobs:
           if git merge-base --is-ancestor "$incoming" "$live"; then
             echo "::error::Refusing to install ${incoming:0:7}: it is an ancestor of ${live_short}, which is live."
             echo "::error::Installing it would undo $(git rev-list --count "${incoming}..${live}") commit(s) already in production."
-            echo "::error::If this is a deliberate rollback, re-run from the Actions tab with allow_non_descendant=true."
+            echo "::error::To go backwards deliberately, run rollback.yml with the sha or a deploy-* tag."
+            echo "::error::To recover from an out-of-order queue, dispatch this workflow on main: its tip is a descendant and passes."
             exit 1
           fi
 
