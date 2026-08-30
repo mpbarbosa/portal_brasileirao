@@ -23,6 +23,7 @@ import { PlayersView } from "@/src/components/PlayersView";
 import { RoundBrowser } from "@/src/components/RoundBrowser";
 import { ScorersTable } from "@/src/components/ScorersTable";
 import { StadiumView } from "@/src/components/StadiumView";
+import { LeagueStats } from "@/src/components/LeagueStats";
 import { StandingsTable } from "@/src/components/StandingsTable";
 import { hasLiveMatch } from "@/live-core";
 import { findMatch } from "@/match-core";
@@ -433,6 +434,13 @@ export function App() {
                 onTogglePlotKind={togglePlotKind}
                 matches={matches?.matches}
               />
+              {matches && (
+                <LeagueStats
+                  rows={standings}
+                  matches={matches.matches}
+                  onSelectClub={(key) => navigate({ section: "clube", key })}
+                />
+              )}
             </>
           )}
 
