@@ -355,12 +355,28 @@ because a reader looking for work here will otherwise keep finding decisions.
   after all. Either build a door or remove it deliberately — leaving it is how
   a later reader diagnoses it as dead code and deletes the escape hatch instead.
 - ~~**#90 (`@vitejs/plugin-react` 5 → 6) cannot merge and will not fix
-  itself.**~~ **Closed** unmerged on 2026-08-27, superseded by the regrouped
-  Dependabot pull requests raised the same hour. The reasoning is kept because
-  the underlying work is not done: it needed `vite@^8` against this repo's `^6`,
-  and `dependabot.yml` grouping the two only helps pull requests raised *after*
-  it. **The Vite 6 → 8 upgrade is still outstanding**, and #97 and #100 are two
-  open attempts at it — real work rather than a merge.
+  itself.**~~ **Done, and this entry was two claims behind.** #90 was closed
+  unmerged on 2026-08-27, superseded by the regrouped Dependabot pull requests.
+  The reasoning was kept because the underlying work was not done — and both
+  halves of it have since landed without this line noticing.
+
+  **Vite 6 → 8 landed in `ad8853c`**, so "still outstanding" was false from that
+  merge onward; `package.json` read `"vite": "^8.2.2"` while this said
+  otherwise. And with vite 8 in place the plugin bump stopped being blocked at
+  `npm ci`, which is the whole of what made #90 unmergeable.
+
+  The plugin is now **`^6.1.1`**. Its three new peers —
+  `oxc-transform-react`, `@rolldown/plugin-babel`, `babel-plugin-react-compiler`
+  — are all `optional: true`, so nothing was added to satisfy it, and
+  `npm ls @vitejs/plugin-react` reports no unmet peer. Verified through the
+  paths a bundler change can actually break: `tsc`, the Vite build, the esbuild
+  server bundle, a production boot serving `/`, `/api/health`, `/api/standings`
+  and a deep link, **798 unit, 750 e2e, and the 96-spec bundle target**.
+
+  **The lesson is the entry rather than the upgrade.** A dependency claim in a
+  planning document has a shelf life measured in merges, and this one outlived
+  its truth by a day while reading as current. Check `package.json` before
+  believing a line about a version — it is the reading, the prose is the memory.
 
 ### Work, sequenced in `docs/cicd-plan.md`
 
