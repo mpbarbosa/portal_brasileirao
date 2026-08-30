@@ -516,7 +516,20 @@ const worstText = Math.min(
 );
 
 console.log(`seed ${SEED} -> hue ${seed.hue.toFixed(1)}, chroma ${seed.chroma.toFixed(1)}, tone ${seed.tone.toFixed(1)}`);
-console.log(`${pairings.length} pairings checked, worst text pairing ${worstText.toFixed(2)}:1`);
+// The token count is printed for the same reason the pairing count is: a figure
+// nobody can obtain from a command ends up hand-copied into a document and rots
+// there. `docs/roadmap.md` carried 47 for two days after M6 took it to 40.
+// THEME_INVARIANT is counted too: those four are emitted into src/index.css like
+// any other and a reader asking "how many colour tokens" means what the file
+// carries, not what the tonal system derives. Leaving them out printed 36 for a
+// stylesheet holding 40, which is the same class of wrong this line exists to stop.
+const tokenCount =
+  Object.keys(roleTokens("dark")).length +
+  Object.keys(extensionTokens("dark")).length +
+  Object.keys(THEME_INVARIANT).length;
+console.log(
+  `${tokenCount} colour tokens, ${pairings.length} pairings checked, worst text pairing ${worstText.toFixed(2)}:1`,
+);
 
 if (failures.length > 0) {
   console.error(

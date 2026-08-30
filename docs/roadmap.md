@@ -22,18 +22,19 @@ pipeline — what is still open** below carries what they did not close.
   60s/15s with a circuit breaker. Everything the provider does not carry is
   curated on a workstation and committed: broadcasts, venues, highlights, club
   Instagram handles, broadcaster marks.
-- **Shape** — 27 pure `*-core.ts` modules, every one with its own
-  `tests/<name>-core.test.ts`, and 23 components, one Express process serving the
-  API and the SPA. Counted on 2026-08-27: `ls *-core.ts`, `ls src/components/*.tsx`.
-- **Tests** — 570 unit and 548 end-to-end across desktop and mobile on
-  2026-08-27 (`npm run test:unit`, `npx playwright test --list`), all against a
-  frozen snapshot so a red build always means the code broke.
-- **Design** — Tailwind v4 with **Material Design 3** throughout: 47 colour
-  tokens generated from one seed, a shape scale, a type scale, state layers and
+- **Shape** — pure `*-core.ts` modules, every one with its own
+  `tests/<name>-core.test.ts`, and one component per view, behind a single
+  Express process serving both the API and the SPA. For how many of each:
+  `ls *-core.ts | wc -l`, `ls src/components/*.tsx | wc -l`.
+- **Tests** — a unit suite over the core modules and an end-to-end suite across
+  desktop and mobile, all against a frozen snapshot so a red build always means
+  the code broke. For how many: `npm run test:unit`, `npx playwright test --list`.
+- **Design** — Tailwind v4 with **Material Design 3** throughout: every colour
+  token generated from one seed, a shape scale, a type scale, state layers and
   motion, in two themes. Contrast is **enforced rather than recorded** —
   `npm run test:tokens` runs in CI and refuses a palette whose text pairings
-  fall below AA. Worst text pairing 4.59, across 76 pairings on 2026-08-27 —
-  both figures are printed by that command rather than kept here. Primitives:
+  fall below AA. That command prints the token count, the pairing count and the
+  worst pairing, which is why none of the three is written here. Primitives:
   `Surface`, `Button`, `StatusChip`, and the interaction constants.
 
 ## In progress
@@ -124,20 +125,75 @@ nobody re-runs. The check is two lines of Python over `matches.ts` and
   meaning of 0 ("deployed and health-checked") — a host with no service unit has
   nothing serving. Only the script that installs the payload can know the payload
   has landed, which is why the check belongs there rather than in a pre-flight.
-- **The summary's figures are hand-kept, and every one that could drift had.**
+- ~~**The summary's figures are hand-kept, and every one that could drift
+  had.**~~ **De-counted, after dating them was tried and failed in three days.**
+
   On 2026-08-27 **Where the project is** claimed 14 `*-core.ts` modules against
   27, 15 components against 22, 256 unit tests against 558 and 316 end-to-end
   against 548 — each roughly half the truth, in the first screen a new reader
-  meets. Corrected against measurement, and each figure now carries its date and
-  the command that prints it, which is the pattern #108 already used for the
-  host's Node version. Two figures had **not** drifted, and they are the two
-  describing a generated artefact that has not moved since M1: 47 colour tokens
-  and the 4.59 worst pairing. That is the whole argument for dating a number or
-  not writing it down — **nothing in CI reads this file**, so a count here is a
-  hand-kept copy of something a command already prints, exactly as
-  `What is left` was of **Near term**. Two more copies of the same numbers were
-  found and de-counted rather than refreshed (D6's "all 316 specs", M1's "70
-  pairings"), because in both the count was never the point.
+  meets. They were corrected, and each figure was given its date and the command
+  that prints it, the pattern #108 used for the host's Node version.
+
+  **Measured again on 2026-08-30, three days later:**
+
+  | figure | said | was |
+  | --- | --- | --- |
+  | `*-core.ts` modules | 27 | **37** |
+  | components | 23 | **28** |
+  | unit tests | 570 | **802** |
+  | end-to-end tests | 548 | **754** |
+  | colour tokens | 47 | **40** |
+  | pairings | 76 | **102** |
+  | worst text pairing | 4.59 | 4.59 |
+
+  So dating a number does not keep it true; it only records when it stopped
+  being. The figures are gone from that section now, replaced by the command
+  that prints each — which is what this entry already recommended for the two it
+  de-counted rather than refreshed, and did not apply to the rest.
+
+  **The file had also come to contradict itself**, which is the tell that no
+  reader was checking either number: the summary said 570 unit and 548 e2e while
+  the `@vitejs/plugin-react` entry further down recorded 798 and 750 from its own
+  verification run. Both were written in good faith, four days apart.
+
+  **The sharpest part is the carve-out.** This entry singled out two figures as
+  *not* drifted — "the two describing a generated artefact that has not moved
+  since M1: 47 colour tokens and the 4.59 worst pairing". The pairing count held.
+  The token count did not, and it was wrong in **both** directions:
+  `src/index.css` carried **50** tokens at M1 (`a58dfa5`), 47 from `e824862`, and
+  **40** from `c842640` — M6 retiring the seven aliases, at 09:35 on 2026-08-28,
+  the morning after this was written. So "has not moved since M1" was already
+  false when written, and the number it protected went stale the next day.
+
+  That is `CLAUDE.md`'s *check the prompt's carve-outs hardest* arriving in this
+  repository's own planning document: an exemption is the one claim that produces
+  no work when it holds, so it is the one nobody re-runs. The general rule this
+  file states elsewhere covers it — **a claim that produces no work when it holds
+  is never exercised** — and the only fix that does not need re-applying is to
+  delete the claim rather than refresh it.
+
+  **Which numbers to delete, since not all of them rot.** A number describing
+  what a *change* did is a reading, anchored to that change, and stays: "70
+  pairings became 86" records what #231 added, and is still true about #231
+  however many there are now. A number describing what the project *is* has no
+  anchor, so it is a claim about today that nobody re-derives — and those are the
+  ones deleted here. Same distinction the anchored-claim rule draws for a shared
+  ref: report the reading and where it was taken, not the property.
+
+  **No gate was added, deliberately**, and the negative is stated so the next
+  session does not add one. The obvious move is a grep over this section refusing
+  a re-introduced digit, the way `tests/design-tokens-core.test.ts` polices the
+  token vocabulary. That section legitimately says "Tailwind v4", "Material
+  Design 3", "10 requests/minute" and "60s/15s", so the rule needs an allowlist —
+  and a gate whose allowlist is longer than its rule is one somebody deletes on
+  the first false positive. There is nothing left here to go stale, which is a
+  weaker guarantee than a check and the strongest one available.
+
+  Two claims measured on 2026-08-30 that **did** hold, recorded so the next pass
+  does not re-derive them: the worst text pairing is still 4.59, and the
+  highlights backfill is still complete at 235 of 235 finished matches — the
+  entry under **In progress** above says to run that check before trusting it,
+  and it passes.
 
 Left over from **Árbitro** (item 1 below), which surfaced more about the
 provider than it needed to build:
@@ -552,8 +608,9 @@ a list that deletes what it finished cannot be told apart from one nobody wrote.
   set on. `docs/cicd-plan.md` gap F has the full settings and the four deliberate
   choices behind them.
 - ~~**The curated-data checkers never run on their own.**~~ **Done, in exactly
-  that shape.** `.github/workflows/curated-data.yml` runs the four monthly and
-  reports into an **issue** — opening one, commenting while the failure persists,
+  that shape.** `.github/workflows/curated-data.yml` runs them monthly — count
+  the `for c in` line in that workflow rather than a number here, which said
+  "four" while five were running — and reports into an **issue** — opening one, commenting while the failure persists,
   closing it when everything resolves. The job is always green, because CI has no
   network dependency on a third party and a link rotting on someone else's server
   is not a reason for a red build on a commit that did not touch it.
@@ -1181,11 +1238,18 @@ that no test in the suite would have failed on:
    migration rather than shrinking — M2 added state layers and M4 added a
    dialog, both motion, while nothing checked the preference. Closed in M5.
 
-**One documentation gap it exposed and did not close.** Every image in the
-README is a 960px capture, which is above the `sm` breakpoint — so the
-migration's single most visible change, a navigation bar replacing a hamburger
-below that width, appears in none of them. Whether the README documents one
-viewport or two is a product question, not a bug.
+~~**One documentation gap it exposed and did not close.**~~ **Closed, and by
+somebody answering the product question rather than by anyone working this
+entry.** It read: every image in the README is a 960px capture, above the `sm`
+breakpoint, so the migration's most visible change — a navigation bar replacing
+a hamburger below that width — appears in none of them.
+
+The README carries a **`classificacao-mobile` pair** at 375dp, and its alt text
+names the bottom navigation bar and its five destinations. So the README
+documents **two** viewports: `scripts/screenshot.ts` uses 960 CSS px at
+`deviceScaleFactor` 1.5 for desktop and 375 at 2 for mobile. The sentence stayed
+because nothing about adding a capture prompts anyone to re-read a paragraph
+about captures — the same shape as the figures above.
 
 ## The decision that comes first
 
@@ -1744,7 +1808,7 @@ it has drifted. Do not re-add one.
 It also sent the reader to "the README viewport question noted at the top of this
 section", which never resolved — that note has sat at the **end** of
 **Constraints that must survive any redesign** since both were written in the
-same commit. It is still open, and still a product decision rather than work:
-every README image is a 960px capture, above the `sm` breakpoint, so the
-navigation bar that replaced the hamburger below that width appears in none of
-them.
+same commit. **It has since been answered in practice**: the README carries a
+375dp `classificacao-mobile` pair whose alt text names the bottom navigation bar,
+so it documents two viewports rather than one. Both statements of the question
+outlived it, in two files, for the reason the figures above did.

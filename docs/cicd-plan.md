@@ -12,7 +12,7 @@ item below and is evidenced.
 The obvious reading of "implement a full CI/CD flow" is that there isn't one.
 There is. `.github/workflows/ci.yml` type-checks, unit-tests, gates the colour
 contrast, builds, boots the bundle and smoke-tests it, shellchecks the deploy
-scripts, runs 316 end-to-end specs across two devices, and then — on a push to
+scripts, runs the end-to-end suite across two devices, and then — on a push to
 `main` — builds a payload, mints an OIDC token, publishes to S3, installs over
 SSM with no inbound SSH, and asserts that the live site reports the commit it
 just built. Run `32993785303` did all of it in four minutes.

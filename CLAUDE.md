@@ -2280,11 +2280,16 @@ enforces rather than early and carved-out.
   its own sake — `raised` sits at tone 94 on light but tone 12 on dark, so light has far
   less room beneath it before AA fails. Contrast was measured, not eyeballed, and is now
   enforced rather than recorded: `npm run test:tokens` checks every text token against
-  `canvas`, `surface` **and** `raised` in both themes and refuses to emit a palette that
-  falls below AA. Worst text pairing is 4.59 across 70 pairings; `ink-ghost`, used only
-  for underline decoration and the large score separator, clears the 3:1 non-text floor.
-  Checking all three backgrounds rather than `canvas` alone is what caught light's
-  `ink-faint` on `bg-raised` at about 4.35. That pairing is **latent, not shipped** — every
+  each background this app actually paints text on — `surface` (the page),
+  `surface-container-low` (a card), `surface-container-lowest` (the scoreline tray) and
+  `surface-container` — in both themes, and refuses to emit a palette that falls below
+  AA. The count of backgrounds and of pairings is `backgroundsFor` in the generator and
+  the command's own output; neither is written here, because the version of this sentence
+  that named three backgrounds and 70 pairings went stale twice without anything noticing.
+  `ink-ghost`, used only for underline decoration and the large score separator, clears
+  the 3:1 non-text floor.
+  Checking every background rather than the page alone is what caught light's `ink-faint`
+  on what M2 renamed `surface-container`, then about 4.35. That pairing is **latent, not shipped** — every
   `bg-raised` call site today pairs with `ink-soft` or `ink-muted`, and `ink-faint` only
   appears inside filled surfaces. Which is the point: it is a trap that springs the first
   time someone puts faint text on a badge, a hover state or a dialog, and nothing would
