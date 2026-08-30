@@ -26,7 +26,15 @@ B is TIER_THREE and Série C/D are TIER_FOUR with data frozen at 2020.
 
 ## Evaluated and rejected
 
-### API Futebol — no broadcast data
+### API Futebol — no broadcast data, and that was the only question it was asked
+
+**Read the scope before reading the verdict.** This entry sits under *Evaluated
+and rejected* and the rejection is real, but it answers exactly one question —
+*does it carry broadcast data?* — because that is what sent us here in August. It
+does not. It is **not** an assessment of the source as a whole, and the paragraph
+below saying it "would otherwise be a good fit" is the load-bearing half. Re-read
+2026-08-30 against the live API rather than the spec, and everything from
+**What it carries that football-data does not** onward is from that pass.
 
 Brazil-focused, pt-BR domain terms, would otherwise be a good fit. Checked its
 **OpenAPI 3.1 spec** (`https://www.api-futebol.com.br/api-futebol.openapi.json`,
@@ -41,7 +49,92 @@ Its surface: `/ao-vivo`, `/atletas/{id}`, `/campeonatos[/{id}]`,
 `/partidas/{id}`, `/times/{id}[/partidas/{anteriores,ao-vivo,proximas}]`.
 
 Note their docs and pricing pages return **403 to WebFetch** but 200 to curl and
-to a browser.
+to a browser. The whole reference is published for machines at
+`https://www.api-futebol.com.br/ai.md` (~90 KB, every endpoint with real response
+samples), which is the cheapest way to read it.
+
+#### What it carries that football-data does not
+
+Written down because the broadcast answer above is read as *nothing here*, and
+three of these are things this app currently hand-maintains or does without:
+
+- **`estadio: {estadio_id, nome_popular}` on every fixture.** `venue-core.ts`
+  opens by stating that a stadium is not an entity in any payload and that
+  identity therefore has to be the slug of CBF's `Stadium - City - UF` string.
+  For this provider that sentence is false — there is a stable numeric id. It
+  still carries **no city, UF, capacity or year**, so `src/data/stadiums.ts` and
+  the CBF venue sweep are unaffected.
+- **Match detail**: posse de bola, finalizações, passes, desarmes, escanteios,
+  faltas; gols; substituições; cartões; and `escalacoes` with `esquema_tatico`,
+  técnico, titulares/reservas, `posicao` **and `camisa`** — the shirt number
+  CLAUDE.md records football-data as carrying for nobody in the division.
+- **Table extras**: `ultimos_jogos`, `variacao_posicao`, and
+  `faixa_classificacao` (`libertadores`, `rebaixamento`, …), which we compute.
+- **Séries B, C and D, the estaduais, feminino and sub-20**, all live for 2026 —
+  where football-data's free tier is Série A only and freezes C/D at 2020.
+
+And what it does **not** have, beyond broadcasts — checked against the same
+spec and by the same method, so it carries the same weight as the finding above.
+Zero occurrences of `arbitr`, `juiz` or `referee`, and zero of `elenco`, `squad`
+or `plantel`, across all 17 paths:
+
+- **No árbitro**, so `partida` pages gain no official from this source.
+- **No squad endpoint at all.** Lineups exist per match; an *elenco* does not, so
+  the Jogadores page cannot be built from it.
+- `/atletas/{id}` returns only `{atleta_id, nome, nome_popular, posicao}` — **no
+  date of birth and no nationality**. That one is a regression rather than a gap:
+  every curated player file here was built by joining on exact date of birth, and
+  none of that evidence exists on this side.
+
+#### The join is the risk, and the free tier structurally cannot test it
+
+Every id in this app is football-data's. Their `partida_id` 27650 is not our
+554977; their `time_id` 56 is not our club id. So anything of theirs rendered on
+a page we already serve needs a fixture-to-fixture and club-to-club
+reconciliation — the same join that **fails silently on TLA** for caRtola, two
+sections below.
+
+Their `test_` key is free and unmetered but returns **fictitious data by
+design**, so it validates response *shape* and can never validate that join.
+Only a funded `live_` key can. That is worth knowing before anyone writes an
+adapter expecting to prove the integration cheaply first.
+
+#### Plans, and what an unfunded key does
+
+Flexível is **R$99 per campeonato per month**; Profissional R$599 for ten
+campeonatos and **2.000 requests/day**; Elite R$999 for twenty and 5.000/day.
+Note the limits are **per day**, resetting midnight UTC-3 — not football-data's
+10/minute, so `cache-core.ts`'s reasoning does not carry over unexamined.
+
+**An account with no plan is 401 on every route, including `/me`, so it cannot
+ask what its plan is.** Measured against a real unfunded account. The status code
+is useless for telling the cases apart and only the body distinguishes them —
+established with two deliberate controls rather than inferred:
+
+| request | body (all **401**) |
+| --- | --- |
+| real key, no entitlement | `Este campeonato não faz parte do seu plano…` |
+| unknown key | `Credenciais Inválidas.` |
+| no `Authorization` header *(control)* | `Autenticação necessária` |
+| invented key *(control)* | `Credenciais Inválidas.` |
+
+Two defects in their own documentation, both found by calling it rather than
+reading it:
+
+- `ai.md` documents the error envelope as `{codigo, mensagem}`; the live API
+  sends **`{code, message}`**, at every route tried. An adapter narrowing the
+  documented Portuguese keys reads every error as empty.
+- Their test-environment page says the `test_` key can be read back from
+  `GET /me`. Not on an unfunded account, per the row above.
+
+#### What would have to be true to adopt it
+
+A funded `live_` key, and a reconciliation against our football-data fixtures
+that is demonstrated rather than assumed. The natural first target is the
+stadium id — smallest surface, exercises the club join for real, and replaces a
+documented weak point instead of adding one. Like `sync-broadcasts`, it belongs
+on the **workstation-sync** side of the line rather than as a request-time
+dependency.
 
 ### Sportmonks — has it, but paid
 
