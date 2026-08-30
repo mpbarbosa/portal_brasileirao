@@ -350,13 +350,17 @@ export function App() {
    * The **Ao vivo** page refetches; every other view is a snapshot of what
    * arrived once, which is right for a table and wrong for a scoreboard.
    *
-   * Only while that page is open, and only while the tab is visible. The
-   * cadence follows the server's own fixture cache — 15s while anything is
-   * LIVE, 60s otherwise — so polling faster would spend requests re-reading a
-   * cache entry, and the free tier allows ten a minute in total. A failed
-   * refresh is swallowed on purpose: the last good payload keeps rendering
-   * rather than the page blanking or growing an error banner over a score that
-   * is merely a minute old.
+   * Only while that page is open, and only while the tab is visible. **30s
+   * while anything is LIVE, 60s otherwise** — deliberately slower than the
+   * server's own fixture cache, which drops to `LIVE_MATCHES_CACHE_TTL_MS`
+   * (15s) in that state. Matching the cache would double this page's request
+   * rate to buy a scoreline that is at worst 45s old rather than 30s, against
+   * a free tier that allows ten upstream calls a minute in total; and polling
+   * *faster* than the cache buys nothing at all, since the extra requests
+   * re-read an entry that has not expired. A failed refresh is swallowed on
+   * purpose: the last good payload keeps rendering rather than the page
+   * blanking or growing an error banner over a score that is merely a minute
+   * old.
    */
   const refreshMs = matches && hasLiveMatch(matches.matches) ? 30_000 : 60_000;
 
