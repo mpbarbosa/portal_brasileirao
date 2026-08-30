@@ -2694,8 +2694,11 @@ the seed and wrong about the file it generalised from.
 were sixteen, and `partida-554977-{light,dark}` made it eighteen without anything here
 noticing. A number in prose has no gate on it.
 
-**Four of the eighteen can no longer come back byte-identical, and this paragraph twice
-said fewer than the truth.** They vary for two unrelated reasons, on two different clocks:
+**Six of the eighteen can no longer come back byte-identical, and this paragraph has now
+said fewer than the truth three times.** They vary for three unrelated reasons, on three
+different clocks — and note the count rose because a *feature* landed, not because anyone
+had miscounted, so re-derive it from what the pages render rather than trusting the number
+here:
 
 - **The desktop Classificação pair, per deploy.** `fullPage` is `!mobile && route === "/"`,
   so it photographs the whole page — including the **Rodapé**, whose Saúde do serviço
@@ -2710,10 +2713,17 @@ said fewer than the truth.** They vary for two unrelated reasons, on two differe
   and nothing else on the page. Fixtures more than a day out read "Começa em 1 dia" and do
   not move, which is why the band is three rows and not six.
 
-Both are the same lesson at different speeds, and the Ao vivo one is the sharper: the
-Classificação pair moves only when something shipped, while Ao vivo moves while you are
-looking at it. **Two refreshes of one build are expected to disagree on those four
-images.** Disagreeing on any of the other fourteen is a real difference and worth reading.
+- **The estádio pair, per reading.** `StadiumWeather` prints a temperature, a sensação, a
+  umidade, a vento and the instant it was read — "Leitura das 23:03, do Open-Meteo" — so the
+  card is different on any two captures far enough apart for the 15-minute cache to turn
+  over. This joined the list with the weather itself, in #240, and was found by re-shooting
+  rather than by anyone predicting it.
+
+All three are the same lesson at different speeds, and the Ao vivo one is the sharpest: the
+Classificação pair moves only when something shipped, the estádio pair when Open-Meteo is
+re-read, while Ao vivo moves while you are looking at it. **Two refreshes of one build are
+expected to disagree on those six images.** Disagreeing on any of the other twelve is a real
+difference and worth reading.
 
 Nothing automated is affected — `check-screenshots.sh` compares appearance *sources*
 between CAPTURED's sha and HEAD and never compares image bytes. What is lost is a **human**
@@ -2835,6 +2845,16 @@ iterations whose `finished` promise never resolves; awaiting it hangs the captur
 for the full timeout on exactly the page where a live match is the thing worth
 photographing. Verified both ways — awaiting all animations hung, the filtered
 form settled in 2ms.
+
+**A capture is cropped at the last section that fits in 1080 CSS px, so content ADDED ABOVE
+a section evicts that section from the frame** — silently, and with no gate anywhere that can
+see it. Both halves of the 2026-08-30 re-shoot hit it: `Gols` inside the scoreboard pushed the
+campanha *and* the melhores momentos out of `partida-554977`, which lost **581px**, and the
+clima card pushed the fixture list out of `estadio-maracana`, which grew 33px while losing the
+list beneath. The page is fine in a browser both times; only the photograph lost it. So a
+capture that gets **shorter** is content leaving the frame and one that gets **longer** is
+content arriving, and both oblige a re-read of the alt text — record the predecessors'
+heights before overwriting, because afterwards there is nothing left to compare against.
 
 `scripts/screenshot.ts` deliberately does **not** honour the trailer. It refuses a capture
 whose build differs from HEAD on any appearance path, which stays a plain file comparison —
