@@ -238,7 +238,14 @@ export function MatchPage({
   // match both render nothing here, and the scoreline above is what tells a
   // reader which of the two they are looking at.
   const scorers = goalsBySide(match);
-  const hasScorers = scorers.home.length + scorers.away.length > 0;
+  // **Gated on `played`, not merely on having goals**, and the reason is the
+  // seed/live split rather than defensiveness in the abstract. `goals.ts` is
+  // synced against the live provider while `src/data/matches.ts` is a frozen
+  // snapshot, so a fixture played after the snapshot was taken carries scorers
+  // while the committed record still calls it SCHEDULED with no score. Two of
+  // round 25's fixtures were in exactly that state the day this landed. Without
+  // this, the page draws a list of scorers underneath an empty "×".
+  const hasScorers = played && scorers.home.length + scorers.away.length > 0;
 
   return (
     <>

@@ -147,6 +147,19 @@ const getJsonOnce = <T>(url: string, agent: https.Agent): Promise<T> =>
  * So callers should pace themselves deliberately (`sleep` between requests) and
  * treat a run as something that takes minutes. The backoff here recovers from a
  * blip; it will not talk its way out of a block.
+ *
+ * **Both ends of that are now measured.** The ban came from ~250ms pacing and
+ * held for roughly **72 minutes**, during which plain `curl` was refused
+ * identically. At **~1 request/second** a full-season sync — 26 weekly windows
+ * plus 19 single-day re-runs, several hundred requests — ran start to finish
+ * with no refusal at all. So the limit is a *rate*, not a total, and one second
+ * is comfortably inside it. That is why the sleeps in `sync-goals.ts` are not
+ * an abundance of caution.
+ *
+ * Worth knowing during an outage: the ban is **per host**. `www` and `cms` both
+ * stop completing TLS while `conteudo` (súmulas, crests) and `bid` (player
+ * photos) keep answering, and TCP to `www:443` still connects — it is an edge
+ * rule, not a network drop, which is why it reads as a dead host.
  */
 export const getJson = async <T>(
   url: string,

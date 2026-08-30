@@ -345,10 +345,18 @@ export interface Goal {
 /**
  * The qualifiers worth printing beside a scorer.
  *
- * `own` is the load-bearing one: it changes which club the goal counts for, not
- * merely how the row reads.
+ * These are CBF's four `resultado` codes less the ordinary one, and the mapping
+ * is **read off CBF's own súmula** rather than inferred — every match report
+ * prints its legend at the foot of the Gols table:
+ *
+ *     NR = Normal | PN = Pênalti | CT = Contra | FT = Falta
+ *
+ * `own` is the load-bearing one, and not merely because of how the row reads:
+ * **it changes which club the goal counts for.** CBF files an own goal under
+ * the club of the player who scored it, so the goal counts for the *other*
+ * side — see `goalsFromRegistros`, which is where the flip happens.
  */
-export type GoalKind = "penalty" | "own";
+export type GoalKind = "penalty" | "own" | "freekick";
 
 export interface Match {
   id: string;
