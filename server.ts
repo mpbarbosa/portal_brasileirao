@@ -41,7 +41,13 @@ import { withGoals } from "@/goals-core";
 import { withLineups } from "@/escalacao-core";
 import { withHighlights } from "@/match-core";
 import { coachesOf, slugify, withClubDetails, withHymns, withInstagram, withWikipedia } from "@/club-core";
-import { compareForFeed, currentRound, matchesForRound, roundsOf } from "@/matches-core";
+import {
+  compareForFeed,
+  currentRound,
+  matchesForRound,
+  mergeByFreshness,
+  roundsOf,
+} from "@/matches-core";
 import { injectMeta, pageMeta, type MetaContext } from "@/page-meta-core";
 import { parseRoute, type Route } from "@/route-core";
 import { buildStadiums } from "@/venue-core";
@@ -328,6 +334,21 @@ const loadStandings = (): Promise<ApiEnvelope<StandingsRow[]>> =>
     () => computeStandings(CLUBS, SEED_MATCHES),
   );
 
+/**
+ * The freshest copy this process has seen of each fixture, carried across cache
+ * fills so `mergeByFreshness` has something to compare the next one against.
+ *
+ * It lives beside the cache rather than in it because the two answer different
+ * questions and expire on different terms: the cache entry answers "may I skip
+ * the upstream call", and is *deleted* the moment it goes stale, which is
+ * precisely when this is needed. A fill with nothing to compare against is a
+ * fill that shows whatever upstream regressed to.
+ *
+ * Bounded by the size of the fixture list — one season, 380 records — because
+ * only fixtures the newest response also carries are ever kept.
+ */
+let freshestMatches: Match[] = [];
+
 /** Fixture lists get the short TTL only while something is actually live. */
 const matchesTtl = (matches: Match[]): number =>
   matches.some((match) => match.status === "LIVE")
@@ -352,7 +373,11 @@ const loadMatches = async (): Promise<ApiEnvelope<MatchesPayload>> => {
 
   try {
     const raw = await fetchFromProvider<MatchesResponse>(matchesUrl());
-    const matches = mapMatches(raw);
+    // Upstream regresses individual records — a finished match comes back as
+    // TIMED with no score and a thirteen-hour-old stamp — so what this fill
+    // returned is not automatically what we serve. See `mergeByFreshness`.
+    const matches = mergeByFreshness(freshestMatches, mapMatches(raw));
+    freshestMatches = matches;
     const payload: MatchesPayload = {
       rounds: roundsOf(matches),
       currentRound: currentRound(matches, Date.now()),

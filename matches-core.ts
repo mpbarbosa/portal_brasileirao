@@ -73,3 +73,59 @@ export const currentRound = (matches: Match[], now: number): number | null => {
 
   return played.length ? Math.max(...played) : rounds[rounds.length - 1];
 };
+
+/**
+ * The provider's own claim about when a record was last touched, as a number.
+ *
+ * Absent or unparseable reads as *no claim at all* rather than as zero, so it
+ * loses every comparison — including against another record with no claim,
+ * where `-Infinity > -Infinity` is false and the incoming copy therefore wins.
+ * That is deliberate: with nothing to compare, the behaviour has to collapse
+ * back to "the newest response wins", which is what this app did before the
+ * merge existed.
+ */
+const stampOf = (match: Match): number => {
+  const parsed = match.lastUpdated ? Date.parse(match.lastUpdated) : Number.NaN;
+  return Number.isNaN(parsed) ? Number.NEGATIVE_INFINITY : parsed;
+};
+
+/**
+ * Keep the freshest copy the provider has given of each fixture.
+ *
+ * football-data regresses **individual records**, which is the whole reason
+ * this exists and the reason the obvious cheaper fixes do not work. Measured on
+ * 2026-08-31, one URL, one token, four minutes apart:
+ *
+ *     554986  00:38 -> FINISHED 1-1  lastUpdated 2026-08-30T23:37:19Z
+ *     554986  00:42 -> TIMED   null  lastUpdated 2026-08-30T10:20:34Z
+ *     554982  00:38 -> FINISHED 3-2  lastUpdated 2026-08-31T00:32:15Z
+ *     554982  00:42 -> FINISHED 3-2  lastUpdated 2026-08-31T00:40:35Z
+ *
+ * The last row is the finding: in the response that regressed one fixture by
+ * thirteen hours, a second fixture moved *forward*. So the responses are not
+ * two whole snapshots alternating, and "prefer the newer response" would still
+ * have shown a finished match as `A realizar`. The comparison has to be per
+ * fixture, and against the provider's own stamp rather than against a status
+ * ordering of our own invention — `lastUpdated` is what upstream **said**,
+ * where "FINISHED outranks SCHEDULED" is a guess about what it meant, and one
+ * that would pin a genuine correction (a result voided to POSTPONED) forever.
+ *
+ * `incoming` decides which fixtures exist. A record held only in `previous` is
+ * never resurrected: a fixture upstream has genuinely dropped must be able to
+ * disappear, and this function's job is to choose between two copies of one
+ * record, not to defend the shape of the list.
+ *
+ * It holds only for the life of the process, which is the honest bound — a
+ * restart starts from whatever the first fill returns, so a deploy landing
+ * mid-round can still serve one stale record until upstream next reports it.
+ */
+export const mergeByFreshness = (previous: Match[], incoming: Match[]): Match[] => {
+  if (previous.length === 0) return incoming;
+
+  const held = new Map(previous.map((match) => [match.id, match]));
+
+  return incoming.map((match) => {
+    const kept = held.get(match.id);
+    return kept && stampOf(kept) > stampOf(match) ? kept : match;
+  });
+};

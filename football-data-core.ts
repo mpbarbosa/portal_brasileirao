@@ -120,6 +120,10 @@ interface RawMatch {
   score?: { fullTime?: { home?: number | null; away?: number | null } };
   /** Empty for 223 of the season's 380 fixtures, finished ones included. */
   referees?: RawReferee[];
+  /** When upstream last touched this record. Present on every fixture in a
+   *  live payload, and the only field that can order two disagreeing copies
+   *  of one — see `mergeByFreshness`. */
+  lastUpdated?: string;
 }
 
 interface RawTableEntry {
@@ -315,6 +319,12 @@ export const mapMatch = (raw: RawMatch): Match | null => {
     // empty array for most fixtures, and a present-but-empty key would make
     // `"referees" in match` lie about what the provider actually said.
     ...(referees.length ? { referees } : {}),
+    // Same rule, and load-bearing here rather than merely tidy: an absent stamp
+    // has to stay absent so `mergeByFreshness` can tell "upstream claimed
+    // nothing" from "upstream claimed the epoch".
+    ...(typeof raw.lastUpdated === "string" && raw.lastUpdated
+      ? { lastUpdated: raw.lastUpdated }
+      : {}),
   };
 };
 

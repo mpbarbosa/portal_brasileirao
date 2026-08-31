@@ -493,6 +493,24 @@ export interface Match {
    * in retroactively rather than at kickoff.
    */
   referees?: Referee[];
+  /**
+   * When the provider last touched *this record*, verbatim from football-data.
+   *
+   * It exists because upstream regresses individual records: the same URL, four
+   * minutes apart, served fixture 554986 as FINISHED 1-1 stamped
+   * `2026-08-30T23:37:19Z` and then as TIMED with no score stamped
+   * `2026-08-30T10:20:34Z`, while a different fixture in the very same pair of
+   * responses moved *forward*. `mergeByFreshness` is what reads it, and this
+   * stamp is the only honest way to tell those two apart — status ordering
+   * would be a guess about what upstream meant, where this is what upstream
+   * said.
+   *
+   * Live-only, like `referees` directly above: `sync-seed-data` writes an
+   * explicit field list, so the frozen snapshot carries none of these and the
+   * end-to-end suite never sees one. Absent means the provider claimed nothing,
+   * which loses every comparison rather than winning by default.
+   */
+  lastUpdated?: string;
 }
 
 export interface StandingsRow {
