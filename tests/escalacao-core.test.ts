@@ -43,14 +43,21 @@ const atleta = (
   apelido: `${shirt.padStart(2, "0")} - ${name}`,
 } as CbfAtleta);
 
-const side = (id: string) => ({
+/**
+ * `shirtBase` exists because the default fixture gives **both** sides the same
+ * numbers, and a symmetric fixture cannot exercise a join that resolves a side
+ * *by* its numbers — the first version of the corporate-name test below asked
+ * the shirts to disambiguate two identical sheets and failed for that reason
+ * rather than for the reason it names. Pass a base to make the sides distinct.
+ */
+const side = (id: string, shirtBase = 0) => ({
   id,
   atletas: [
     ...Array.from({ length: STARTERS_PER_SIDE }, (_, i) =>
-      atleta(String(i + 1), `Titular${i + 1}`, { goleiro: i === 0 ? "true" : "false" }),
+      atleta(String(shirtBase + i + 1), `Titular${i + 1}`, { goleiro: i === 0 ? "true" : "false" }),
     ),
     ...Array.from({ length: 5 }, (_, i) =>
-      atleta(String(20 + i), `Reserva${i + 1}`, { reserva: "true" }),
+      atleta(String(shirtBase + 20 + i), `Reserva${i + 1}`, { reserva: "true" }),
     ),
   ],
 });
@@ -225,4 +232,41 @@ test("both sources must agree on HOW MANY before either is believed", () => {
   assert.equal(attachSubstitutions(lineups, [sub()], TEAMS, { PAL: 2, VAS: 0 }), null);
   // And the reverse: the API counted none.
   assert.equal(attachSubstitutions(lineups, [sub()], TEAMS, { PAL: 0, VAS: 0 }), null);
+});
+
+
+test("a súmula name the match API does not use still resolves, by the shirts", () => {
+  // Real strings, from CBF for Atlético-MG x Palmeiras on 2026-01-28: the
+  // súmula writes the corporate name and the match API the popular one. This
+  // cost 8 matches and 16 sides of the season backfill — the parse was perfect
+  // and the join was not, and because this function is all-or-nothing it took
+  // the Palmeiras side down with it.
+  // Distinct numbers per side, so the shirts genuinely identify one of them.
+  const lineups = lineupsFromAtletas(side("1"), side("2", 50), SIDES);
+  const attached = attachSubstitutions(
+    lineups,
+    [sub({ team: "Atlético Mineiro Saf/MG", onShirt: "20", offShirt: "1" })],
+    [
+      { code: "PAL" as const, cbfName: "Atlético Mineiro" },
+      { code: "VAS" as const, cbfName: "Palmeiras" },
+    ],
+    { PAL: 1, VAS: 0 },
+  );
+  assert.ok(attached, "the shirts name the side the string does not");
+  assert.equal(attached.find((l) => l.clubCode === "PAL")?.subs?.length, 1);
+});
+
+test("shirts shared by both sides are ambiguous, so the fixture still refuses", () => {
+  // The fallback must not become a guess. Both fixtures here wear 20 and 1, and
+  // the team string matches neither, so nothing can say which side changed.
+  const lineups = lineupsFromAtletas(side("1"), side("2"), SIDES);
+  assert.equal(
+    attachSubstitutions(
+      lineups,
+      [sub({ team: "Clube Que Não Existe/XX", onShirt: "20", offShirt: "1" })],
+      TEAMS,
+      { PAL: 1, VAS: 0 },
+    ),
+    null,
+  );
 });
