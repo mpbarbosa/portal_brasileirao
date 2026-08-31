@@ -370,12 +370,43 @@ what makes the logic testable without mocking HTTP.
   `"82 - Riquelme Avellar da Silva Fo..."`, so it cannot say who. **The shirt
   number is complete in both, and is the join.**
 
-  `attachSubstitutions` is **all-or-nothing per fixture**: a row whose team
-  matches neither side, or whose shirt is not on that side's sheet, returns
-  null for the whole match. A list missing one change reads as a complete
-  record of a match where that change never happened — the plausible lie
-  `goalsReconcile` exists to refuse. It also requires both sources to agree on
-  **how many**, per club, before believing either.
+  `attachSubstitutions` is **all-or-nothing per fixture**: a row that cannot be
+  placed returns null for the whole match. A list missing one change reads as a
+  complete record of a match where that change never happened — the plausible
+  lie `goalsReconcile` exists to refuse. It also requires both sources to agree
+  on **how many**, per club, before believing either.
+
+  **CBF's two surfaces do not spell the club the same way, and matching on the
+  name alone cost 8 matches of the season backfill.** The súmula prints the
+  corporate name and the match API the popular one: `Atlético Mineiro Saf/MG`
+  against `Atlético Mineiro`, and `Coritiba S.a.f./PR` against `Coritiba SAF` —
+  three spellings of "SAF" between two endpoints of one provider. Stripping the
+  UF left a string matching nothing, so the row could not be placed and the
+  all-or-nothing rule then took down **the side whose name did match too**.
+
+  **The fix is not to strip `Saf` as well.** That is guessing at a corporate
+  vocabulary CBF has never published, and it is the orthography-matching this
+  file already refuses for club identity, where the rule is *the upstream id,
+  never the `tla`*. A substitution instead names two shirts that must be on one
+  side's sheet, which is structure rather than spelling. The name is still tried
+  **first** — it is what CBF intends and it resolves almost every row — so the
+  fallback can only ever add a resolution.
+
+  **Two numbers are not always enough, and the tie-break is a law of the game.**
+  Coritiba x Bragantino (2026-01-28) fields an 8 and a 29 on *both* sheets, so
+  nine of ten rows resolved and the tenth refused the fixture. The narrowing is
+  that **the player coming on cannot have started** — Bragantino's 8 did,
+  Coritiba's is on the bench. Note the mirror is false and asserting it would
+  refuse every double substitution: a player who came on earlier can be
+  substituted again, so `off` is a starter only for a side's first change.
+
+  **Three fixtures still carry no substitutions and the cause is not
+  established** — `554753`, `554934`, `554945`. Their sheets are recorded, so
+  this is the súmula-to-API step alone. Whoever picks it up: **CBF's listing is
+  keyed by LOCAL date and our kickoffs are UTC**, so a 00:30Z fixture is listed
+  under the previous day — that cost a diagnostic probe here, and it is a
+  property of the listing rather than of the sync, whose month-wide windows
+  absorb the shift.
 
   **`INT` is why `sumulaSubstitutionLabel` exists rather than reusing
   `sumulaMinuteLabel`.** A half-time substitution prints `Tempo` as a literal

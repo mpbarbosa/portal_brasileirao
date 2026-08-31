@@ -215,13 +215,65 @@ export const attachSubstitutions = (
     return teams.find((t) => t.cbfName.trim().toLowerCase() === name)?.code ?? null;
   };
 
+  /**
+   * Which side a row belongs to, asked of the **shirts** when the names do not
+   * agree — and CBF's two surfaces do not always agree.
+   *
+   * The súmula writes the club's corporate name and the match API writes the
+   * popular one: `Atlético Mineiro Saf/MG` against `Atlético Mineiro`. Stripping
+   * the UF leaves `atlético mineiro saf`, which matches nothing, so
+   * `codeForTeam` returned null and — because this function is deliberately
+   * all-or-nothing — **the whole fixture was refused, including the side whose
+   * name did match**. That cost 8 matches and 16 sides of the season backfill:
+   * the parse was perfect and the join was not.
+   *
+   * The fix is not to strip ` Saf` as well. That is guessing at a corporate
+   * vocabulary CBF has never published — `SAF`, `S.A.F.`, `Ltda` and whatever
+   * comes next — and the same class of orthography-matching this repository
+   * already refuses for club identity, where the rule is *the upstream id,
+   * never the `tla`*.
+   *
+   * A substitution names two shirts that must **both** be on one side's sheet,
+   * which is structure rather than spelling. Where exactly one lineup holds
+   * both, that is the side. Where none or both do — two clubs fielding the same
+   * pair of numbers — this says nothing and the name is asked instead, so an
+   * ambiguous row still refuses the fixture rather than guessing.
+   *
+   * The name is tried **first**, deliberately: it is what CBF intends, it
+   * resolves 456 of the 472 sides already recorded, and leaving it primary
+   * means this change can only ever *add* a resolution.
+   */
+  const sideForRow = (sub: SumulaSubstitution): Lineup | null => {
+    const named = codeForTeam(sub.team);
+    if (named) {
+      const lineup = lineups.find((l) => l.clubCode === named);
+      if (lineup) return lineup;
+    }
+    const holdsBoth = lineups.filter(
+      (l) =>
+        // The player coming on must be on this side's sheet AND must not have
+        // started it — you cannot bring on someone already playing. That is a
+        // law of the game rather than a heuristic, and it is what separates a
+        // pair of numbers both sides happen to field: Coritiba x Bragantino
+        // (2026-01-28) has an 8 and a 29 on each sheet, and only Coritiba's 8
+        // is on the bench.
+        //
+        // Note the same rule does NOT hold for the player going off. A
+        // substitute who came on earlier can be substituted again, so `off` is
+        // a starter only for a side's first change and asserting it would
+        // refuse every double substitution.
+        l.players.some((p) => p.shirt === sub.onShirt && !p.starter) &&
+        l.players.some((p) => p.shirt === sub.offShirt),
+    );
+    return holdsBoth.length === 1 ? holdsBoth[0] : null;
+  };
+
   const placed = new Map<ClubCode, Substitution[]>();
 
   for (const sub of subs) {
-    const code = codeForTeam(sub.team);
-    if (!code) return null;
-    const lineup = lineups.find((l) => l.clubCode === code);
+    const lineup = sideForRow(sub);
     if (!lineup) return null;
+    const code = lineup.clubCode;
 
     const nameFor = (shirt: string) =>
       lineup.players.find((player) => player.shirt === shirt)?.name ?? null;
