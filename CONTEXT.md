@@ -81,7 +81,13 @@ A section of the **Partida** page, closed by default. Deliberately not the same
 word as **Elenco**, which is the whole squad under contract and is what the
 **Jogadores** page shows: the two answer different questions, and only the first
 is a fact about a fixture.
-Within it, **Titulares** are the eleven who started and **Reservas** the bench.
+Within it, **Titulares** are the eleven who started, **Reservas** the bench, and
+**Substituições** the changes, each read as "*entrou* X **por** Y" — the minute,
+then who came on, then whom they replaced. A change made at half time is
+**Intervalo** rather than a minute, because the súmula prints no time for one.
+_Avoid_ an arrow between the two names: it needs a glyph kept monochrome and
+correctly sized on every platform (the trap `SunIcon`/`MoonIcon` record), and a
+single arrow does not say which way it points.
 The goalkeeper is marked `(GOL)` because it is the one position CBF reports; no
 other is labelled, since naming them would mean guessing.
 _Avoid_: "elenco" for a match sheet (that is the season squad), "formação" and

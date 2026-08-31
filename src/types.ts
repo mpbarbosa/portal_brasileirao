@@ -332,10 +332,40 @@ export interface LineupPlayer {
   starter?: true;
 }
 
+/**
+ * One substitution, ready to print.
+ *
+ * Names rather than shirts, because the shirt is how the two sources were
+ * *joined* and not what a reader wants: the súmula truncates a long name to
+ * `"82 - Riquelme Avellar da Silva Fo..."`, so the number is the only complete
+ * thing in that table, and the escalação beside it is what turns it back into a
+ * person.
+ *
+ * `minute` is a rendered label — `"70'"`, `"45+2'"`, `"Intervalo"` — for the
+ * reason `Goal.minute` is one: CBF's clock conventions, including that a
+ * half-time substitution has no minute at all, belong in `sumula-core.ts` and
+ * nowhere else.
+ */
+export interface Substitution {
+  on: string;
+  off: string;
+  minute: string;
+}
+
 /** One club's escalação for one match. */
 export interface Lineup {
   clubCode: ClubCode;
   players: LineupPlayer[];
+  /**
+   * The substitutions this club made, in the order the súmula lists them.
+   *
+   * Absent where the súmula was not read — a match synced before CBF published
+   * it, or one whose table did not reconcile against the match API's own count.
+   * Absent is never "made none": a club that used no substitutes is vanishingly
+   * rare and would still be an empty list, which is why the sync writes nothing
+   * rather than an empty array it cannot tell apart.
+   */
+  subs?: Substitution[];
 }
 
 export interface Goal {

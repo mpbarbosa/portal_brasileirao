@@ -52,8 +52,9 @@
  * table beside the Gols table that module already parses, which is where that
  * work starts.
  */
-import type { ClubCode, Lineup, LineupPlayer, Match } from "@/src/types";
+import type { ClubCode, Lineup, LineupPlayer, Match, Substitution } from "@/src/types";
 import { type SideMap, tidyScorerName } from "@/goals-core";
+import { type SumulaSubstitution, sumulaSubstitutionLabel } from "@/sumula-core";
 
 /** One entry of CBF's `mandante.atletas` / `visitante.atletas`. */
 export interface CbfAtleta {
@@ -178,4 +179,70 @@ export const bySection = (lineup: Lineup): { starters: LineupPlayer[]; bench: Li
     starters: lineup.players.filter((p) => p.starter).sort(byShirt),
     bench: lineup.players.filter((p) => !p.starter).sort(byShirt),
   };
+};
+
+/**
+ * Attach the súmula's substitutions to the lineups they belong to.
+ *
+ * **Two sources, joined on the shirt number, and neither alone would do.** The
+ * match API knows *who* — ids that resolve against the roster — and cannot say
+ * *when*: its `tempo_jogo` is `"25:00"` beside a `tempo_subs` of `"TN2"`, the
+ * split clock that kept goals minuteless until `sumula-core.ts` arrived. The
+ * súmula knows *when* and prints a **truncated** name, so it cannot say who.
+ * The shirt number is complete in both.
+ *
+ * **All or nothing per match.** Any row that cannot be placed — a team string
+ * matching neither side, a shirt not on that side's sheet — returns null for
+ * the whole fixture rather than a partial list. A substitution list missing one
+ * change reads as a complete record of a match where that change never
+ * happened, which is a plausible lie of exactly the kind `goalsReconcile`
+ * exists to refuse.
+ *
+ * `expected` is the match API's own count per club. It is passed in rather than
+ * derived so the two sources have to agree on *how many* before either is
+ * believed — the same shape as `sumulaMinutes` aligning on the goal count.
+ */
+export const attachSubstitutions = (
+  lineups: Lineup[],
+  subs: SumulaSubstitution[],
+  teams: { code: ClubCode; cbfName: string }[],
+  expected: Record<string, number>,
+): Lineup[] | null => {
+  // The súmula prints `Palmeiras/SP`; the match API says `Palmeiras`. Compare on
+  // what precedes the final slash rather than trying to normalise a UF.
+  const codeForTeam = (team: string): ClubCode | null => {
+    const name = team.replace(/\s*\/\s*[A-Z]{2}\s*$/, "").trim().toLowerCase();
+    return teams.find((t) => t.cbfName.trim().toLowerCase() === name)?.code ?? null;
+  };
+
+  const placed = new Map<ClubCode, Substitution[]>();
+
+  for (const sub of subs) {
+    const code = codeForTeam(sub.team);
+    if (!code) return null;
+    const lineup = lineups.find((l) => l.clubCode === code);
+    if (!lineup) return null;
+
+    const nameFor = (shirt: string) =>
+      lineup.players.find((player) => player.shirt === shirt)?.name ?? null;
+    const on = nameFor(sub.onShirt);
+    const off = nameFor(sub.offShirt);
+    if (!on || !off) return null;
+
+    const list = placed.get(code) ?? [];
+    list.push({ on, off, minute: sumulaSubstitutionLabel(sub) });
+    placed.set(code, list);
+  }
+
+  // Both sources must agree on the count, per club, before either is believed.
+  for (const lineup of lineups) {
+    if ((placed.get(lineup.clubCode) ?? []).length !== (expected[lineup.clubCode] ?? 0)) {
+      return null;
+    }
+  }
+
+  return lineups.map((lineup) => {
+    const list = placed.get(lineup.clubCode);
+    return list && list.length > 0 ? { ...lineup, subs: list } : lineup;
+  });
 };

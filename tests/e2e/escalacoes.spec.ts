@@ -57,6 +57,23 @@ test.describe("Escalações", () => {
     }
   });
 
+  test("substitutions print a minute, a name and who they replaced", async ({ page }) => {
+    await page.goto(`/partida/${MATCH}`);
+    await page.getByRole("heading", { name: "Escalações" }).click();
+
+    const subs = page.locator("[data-subs] li");
+    // Both sides made changes in this fixture; the count comes from CBF's own
+    // `alteracoes`, which the sync refuses to write unless the súmula agrees.
+    await expect(subs.first()).toBeVisible();
+
+    // A minute, or the word for the one moment that has none. Asserted as a
+    // pattern rather than a value: the label is CBF's reckoning and the fixture
+    // is real data, so pinning "70'" would break on a re-sync of another match.
+    await expect(subs.first()).toHaveText(/^(\d{1,3}(\+\d{1,2})?'|Intervalo)/);
+    // "X por Y" — no arrow glyph, and the direction is in the words.
+    await expect(subs.first()).toContainText(" por ");
+  });
+
   test("a fixture with no synced sheet renders no section at all", async ({ page }) => {
     // Round 1 is in the snapshot and was not part of the sync window, so it
     // carries no escalação. Nothing renders — no heading, no empty panel, and

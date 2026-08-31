@@ -19,7 +19,7 @@ import type { Goal } from "@/src/types";
  * never "goalless": a real 0-0 is deliberately absent rather than an empty
  * array, since the two would be indistinguishable here.
  *
- * Last synced 2026-08-30.
+ * Last synced 2026-08-31.
  */
 export const GOALS: Record<string, Goal[]> = {
   "554780": [

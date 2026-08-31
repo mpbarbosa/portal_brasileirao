@@ -9,6 +9,8 @@ import {
   sumulaMinuteLabel,
   sumulaMinutes,
   sumulaUrlFrom,
+  parseSumulaSubstitutions,
+  sumulaSubstitutionLabel,
 } from "@/sumula-core";
 
 /**
@@ -263,4 +265,74 @@ test("no súmula at all attaches nothing rather than throwing", () => {
   // CBF publishes súmulas after the fact, so this is the ordinary state for a
   // match played an hour ago — not an error.
   assert.equal(sumulaMinutes(3, [], null), null);
+});
+
+
+// ---------------------------------------------------------------------------
+// Substituições
+// ---------------------------------------------------------------------------
+
+/**
+ * Transcribed from `pdftotext -layout` on 2026's rodada 24 súmula
+ * (Palmeiras 4x1 Vasco, `142234se.pdf`) rather than composed, because the whole
+ * parse is a column layout and a hand-made fixture would agree with whatever
+ * the regex happened to be. Note the truncated names: that is CBF's own
+ * output, and it is why the shirt is the join and the name is dropped.
+ */
+const SUBS_TABLE = [
+  "                                                     Substituições",
+  "        Tempo          1T/2T                  Equipe                         Entrou                                   Saiu",
+  "",
+  "            -           INT    Palmeiras/SP                  26 - Murilo Cerqueira Paim               2 - Alexander Nahuel Barboza Ullua",
+  "        12:00            2T    Vasco da Gama Saf/RJ          82 - Riquelme Avellar da Silva Fo...     66 - Luis Eduardo Soares da Silva",
+  "        25:00            2T    Palmeiras/SP                  32 - Emiliano Martinez Toranza           17 - Marlon Rodrigues Freitas",
+  "        +2:00            2T    Palmeiras/SP                  12 - Khellven Douglas Silva Olive...     4 - Agustin Giay",
+  "",
+  "",
+  "                                                     Cartões Amarelos",
+  "        30:00            1T    Palmeiras/SP                  5 - Somebody Else",
+].join("\n");
+
+test("the Substituições table parses, including the interval row", () => {
+  const subs = parseSumulaSubstitutions(SUBS_TABLE);
+  assert.equal(subs.length, 4);
+
+  // `Tempo` is a literal `-` at the interval, and there is no minute to record.
+  assert.equal(subs[0].period, "INT");
+  assert.equal(subs[0].minute, undefined);
+  assert.equal(subs[0].onShirt, "26");
+  assert.equal(subs[0].offShirt, "2");
+  assert.equal(subs[0].team, "Palmeiras/SP");
+
+  // A truncated name must not break the row — the shirt in front of it is whole.
+  assert.equal(subs[1].onShirt, "82");
+  assert.equal(subs[1].offShirt, "66");
+
+  assert.equal(subs[3].added, 2);
+});
+
+test("the parse stops before the Cartões table below it", () => {
+  // Those rows carry the same Tempo, the same 1T/2T and the same Equipe; only
+  // the absent Entrou/Saiu pair separates them, which is why the header search
+  // keys on `Entrou` rather than on `Tempo`.
+  const subs = parseSumulaSubstitutions(SUBS_TABLE);
+  assert.ok(subs.every((s) => s.onShirt !== "5"));
+});
+
+test("an interval substitution is a word, never a minute", () => {
+  // Sharing `sumulaMinuteLabel` would have rendered this as 45', because its
+  // reckoning reads anything that is not 1T as the second half.
+  assert.equal(sumulaSubstitutionLabel({ period: "INT", team: "x", onShirt: "1", offShirt: "2" }), "Intervalo");
+  assert.equal(
+    sumulaSubstitutionLabel({ period: "1T", minute: 30, team: "x", onShirt: "1", offShirt: "2" }),
+    "30'",
+  );
+  assert.equal(
+    sumulaSubstitutionLabel({ period: "2T", minute: 25, team: "x", onShirt: "1", offShirt: "2" }),
+    "70'",
+  );
+  assert.equal(
+    sumulaSubstitutionLabel({ period: "2T", added: 3, team: "x", onShirt: "1", offShirt: "2" }),
+    "90+3'",
+  );
 });

@@ -1020,13 +1020,31 @@ weighed and measured rather than asserted:
   receives only the one match they opened — 1.9 KB. Repo size and host memory,
   not client cost. Worth stating precisely, because the estimate was doing the
   arguing until it was measured.
-- **The minute.** The one objection that held, and it is why **substitutions are
-  not in this**. `alteracoes` resolves perfectly — 10 of 10 ids against their own
+- **The minute.** The one objection that held — **and it has since been closed**:
+  substitutions ship with a minute, from the súmula, in the follow-up described
+  at the end of this entry. The reasoning is kept because it is why they were
+  not in the first pass. `alteracoes` resolves perfectly — 10 of 10 ids against their own
   side's roster, a starter off and a reserve on every time — but `tempo_jogo` is
   `"25:00"` beside `tempo_subs` `"TN2"`, the split vocabulary that kept goals
   minuteless until `sumula-core.ts`. A substitution is mostly *when*. The súmula
   prints a Substituições table beside the Gols table that module already parses;
   that is the follow-up, and it is a parser rather than a new source.
+
+**The follow-up shipped, and it was a parser exactly as predicted.**
+`parseSumulaSubstitutions` reads that table and `attachSubstitutions` joins it to
+the sheet **on the shirt number** — which is the part the prediction missed and
+the part worth knowing. Neither source can stand alone: the match API resolves
+*who* and has no usable clock, the súmula has the clock and **truncates the
+name** to `"82 - Riquelme Avellar da Silva Fo..."`. The number in front of it is
+whole in both.
+
+Three things it turned up that the argument above did not anticipate: a
+substitution can be made at the **interval**, where CBF prints `Tempo` as a
+literal `-` and the answer is the word *Intervalo* rather than a minute — reusing
+`sumulaMinuteLabel` would have rendered it `45'`; the súmula's `Equipe` carries a
+UF (`Vasco da Gama Saf/RJ`) the match API does not; and the súmula fetch had to
+move **above** the goalless skip, since a 0-0 has no minutes to look up but does
+have substitutions.
 
 **One process note, because it cost a probe and the blame lands somewhere
 unobvious.** Building this started from a prose summary of the CBF survey, which

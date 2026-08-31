@@ -292,15 +292,32 @@ what makes the logic testable without mocking HTTP.
   refuse the string-boolean failure, which is the one that produces
   plausible-looking data.
 
-  **No substitutions and no minutes, and that is a scope decision rather than
-  a data gap.** `alteracoes` resolves cleanly — 10 of 10 ids matched their own
-  side's roster on the fixture this was built against, a starter going off and
-  a reserve coming on every time. What it lacks is a clock: `tempo_jogo` is
-  `"25:00"` beside `tempo_subs` `"TN2"`, the same split vocabulary that made
-  goals ship without a minute until `sumula-core.ts` arrived. A substitution
-  is mostly *when*, so one without a minute is worse than none. The súmula
-  prints a Substituições table beside the Gols table that module already
-  parses; that is where the work starts.
+  **Substitutions carry a minute, and it comes from a second source.** The
+  match API knows *who* — `alteracoes`, ids that resolve against the roster —
+  and cannot say *when*: `tempo_jogo` is `"25:00"` beside a `tempo_subs` of
+  `"TN2"`, the split clock that kept goals minuteless until `sumula-core.ts`.
+  The súmula knows *when* and **truncates the name** to
+  `"82 - Riquelme Avellar da Silva Fo..."`, so it cannot say who. **The shirt
+  number is complete in both, and is the join.**
+
+  `attachSubstitutions` is **all-or-nothing per fixture**: a row whose team
+  matches neither side, or whose shirt is not on that side's sheet, returns
+  null for the whole match. A list missing one change reads as a complete
+  record of a match where that change never happened — the plausible lie
+  `goalsReconcile` exists to refuse. It also requires both sources to agree on
+  **how many**, per club, before believing either.
+
+  **`INT` is why `sumulaSubstitutionLabel` exists rather than reusing
+  `sumulaMinuteLabel`.** A half-time substitution prints `Tempo` as a literal
+  `-`, and that function reckons `period === "1T" ? 0 : 45` — so `INT` would
+  have rendered as `45'`, a number the document does not state. It prints
+  **Intervalo**.
+
+  **The súmula fetch moved above the goalless skip** for this, and that is a
+  widening rather than a refactor: a 0-0 has no minutes to look up but it does
+  have substitutions, and leaving the fetch where it was would have silently
+  excluded every goalless match from the one feature that is mostly about time.
+  One PDF per fixture serves both.
 
 - `squad-core.ts` — the **Jogadores** page: every club's elenco, grouped into
   the lines a squad is read in. It exists because the provider reports a
