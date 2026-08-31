@@ -60,6 +60,20 @@ const ORGANIZATION: JsonLd = {
 };
 
 /**
+ * Who runs the competition, as distinct from the competition itself. An
+ * `organizer` is one of Google's recommended Event fields, and unlike the
+ * `superEvent` this replaced it is an **Organization** rather than an Event —
+ * so it adds no second item for a validator to find required fields missing
+ * from. The address is the confederation's own.
+ */
+const ORGANIZER: JsonLd = {
+  "@type": "SportsOrganization",
+  name: "Confederação Brasileira de Futebol",
+  alternateName: "CBF",
+  url: "https://www.cbf.com.br/",
+};
+
+/**
  * A club as a `SportsTeam`. `nested` omits the context, which belongs only on
  * a document's top-level node.
  *
@@ -134,11 +148,46 @@ export const stadiumNode = (stadium: Stadium, origin: string): JsonLd =>
     sameAs: [wikipediaUrl(stadium.wikipedia)].filter(Boolean),
   });
 
+/**
+ * A fixture as a `SportsEvent`.
+ *
+ * **There is deliberately no `superEvent`.** It was
+ * `{"@type": "SportsEvent", name: COMPETITION}` — a node carrying a name and
+ * nothing else, which Google validates *as an Event*, and an Event requires
+ * `startDate` and `location`. So every fixture page reported a second,
+ * invalid item ("Campeonato Brasileiro Série A": two critical errors) beside a
+ * fixture item that was itself valid. It was pre-existing and simply
+ * unobservable — no Eventos report could exist while `robots.txt` stopped
+ * Googlebot rendering the page at all, so fixing the crawl is what surfaced it.
+ *
+ * The alternative was to *complete* the node: the season's first kickoff is
+ * derivable from the fixture list and the location is Brasil. That was
+ * rejected. It buys the two criticals and leaves a permanent second item
+ * carrying its own recommended-field warnings, and a competition played across
+ * twenty grounds does not have a `location` in the sense an Event means it —
+ * inventing structure to satisfy a validator is the
+ * `maximumAttendeeCapacity` mistake in another costume.
+ *
+ * **The league association is not lost.** Both teams carry `memberOf` the
+ * competition, so it is still stated twice — on the entities that really are
+ * members, rather than on the event.
+ *
+ * Three of Google's recommended fields stay absent, each for a reason:
+ *
+ * - **`endDate`** — no source we hold reports a final whistle, and stoppage
+ *   time is unbounded, so any value would be kickoff plus a guess.
+ * - **`offers`** — this app sells nothing and holds no ticket address.
+ * - **`performer`** — the performers are the two clubs, which `homeTeam` and
+ *   `awayTeam` already name. Restating them costs either a doubled payload or
+ *   an `@id` reference whose resolution by the validator we cannot check from
+ *   here, to say a third time what the node says twice.
+ */
 const eventNode = (
   match: Match,
   clubs: Club[],
   origin: string,
   description: string,
+  image: string | undefined,
 ): JsonLd => {
   const byCode = new Map(clubs.map((club) => [club.code, club]));
   const home = byCode.get(match.homeCode);
@@ -157,10 +206,16 @@ const eventNode = (
     eventAttendanceMode: "https://schema.org/OfflineEventAttendanceMode",
     sport: "Futebol",
     url: url(origin, `/partida/${match.id}`),
+    // The page's own preview card, which is the image `page-meta-core` already
+    // chose for this route — passed in rather than rebuilt here, so the two
+    // cannot come to disagree about what a fixture page depicts. The crests are
+    // not a candidate: football-data.org's robots.txt blocks them, so a
+    // crawler cannot fetch one.
+    image,
     location: placeNode(match),
     homeTeam: home ? teamNode(home, origin) : undefined,
     awayTeam: away ? teamNode(away, origin) : undefined,
-    superEvent: { ...ORGANIZATION, "@type": "SportsEvent", name: COMPETITION },
+    organizer: ORGANIZER,
   });
 };
 
@@ -268,6 +323,7 @@ export const structuredData = (
   context: MetaContext = {},
   origin = "",
   description = SITE_DESCRIPTION,
+  image?: string,
 ): JsonLd[] => {
   const blocks: JsonLd[] = [];
 
@@ -280,7 +336,7 @@ export const structuredData = (
 
   if (route.section === "partida") {
     const match = findMatch(context.matches ?? [], route.id);
-    if (match) blocks.push(eventNode(match, context.clubs ?? [], origin, description));
+    if (match) blocks.push(eventNode(match, context.clubs ?? [], origin, description, image));
   }
 
   if (route.section === "estadio") {

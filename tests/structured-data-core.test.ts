@@ -223,3 +223,83 @@ test("jogadores gets its own breadcrumb trail", () => {
   );
   assert.equal(crumbs.itemListElement[1].item, "https://exemplo.test/jogadores");
 });
+
+test("a fixture emits exactly one Event, because an incomplete one is rejected", () => {
+  // The node dropped here was `{"@type": "SportsEvent", name: COMPETITION}` as
+  // `superEvent`. Google validates a nested Event *as an Event*, so a name on
+  // its own reported two critical errors — no `startDate`, no `location` —
+  // against a fixture item that was itself valid, on all 380 fixture pages.
+  // Nothing is compiler-enforced here, so this test is the decision.
+  const blocks = structuredData({ section: "partida", id: "554970" }, CONTEXT, ORIGIN);
+  const events = blocks.filter((block) => String(block["@type"]).endsWith("Event"));
+
+  assert.equal(events.length, 1);
+  assert.ok(!("superEvent" in events[0]));
+  // …and the one that remains carries every field Google requires of an Event.
+  for (const field of ["name", "startDate", "location"]) assert.ok(field in events[0]);
+  assert.ok("address" in (events[0].location as Record<string, unknown>));
+});
+
+test("the competition survives the drop, on the entities that are members of it", () => {
+  // Dropping `superEvent` must not lose the league. It is stated by both
+  // clubs — which really are members — rather than by the event.
+  const event = ofType(
+    structuredData({ section: "partida", id: "554970" }, CONTEXT, ORIGIN),
+    "SportsEvent",
+  ) as { homeTeam: { memberOf: unknown }; awayTeam: { memberOf: unknown } };
+
+  const competition = { "@type": "SportsOrganization", name: COMPETITION };
+  assert.deepEqual(event.homeTeam.memberOf, competition);
+  assert.deepEqual(event.awayTeam.memberOf, competition);
+});
+
+test("the organizer is an Organization, never an Event", () => {
+  // The whole point of preferring it to a completed `superEvent`: it answers a
+  // recommended field without adding a second item that requires a startDate
+  // and a location to be valid.
+  const event = ofType(
+    structuredData({ section: "partida", id: "554970" }, CONTEXT, ORIGIN),
+    "SportsEvent",
+  ) as { organizer: Record<string, unknown> };
+
+  assert.equal(event.organizer["@type"], "SportsOrganization");
+  assert.equal(event.organizer.name, "Confederação Brasileira de Futebol");
+  assert.ok(!String(event.organizer["@type"]).endsWith("Event"));
+});
+
+test("the event's image is the one the page already chose, and is omitted when absent", () => {
+  const withImage = ofType(
+    structuredData(
+      { section: "partida", id: "554970" },
+      CONTEXT,
+      ORIGIN,
+      "uma descrição",
+      `${ORIGIN}/og-default.png`,
+    ),
+    "SportsEvent",
+  );
+  assert.equal(withImage?.image, `${ORIGIN}/og-default.png`);
+
+  // Passed in rather than rebuilt, so a caller that has no image asserts none.
+  const without = ofType(
+    structuredData({ section: "partida", id: "554970" }, CONTEXT, ORIGIN),
+    "SportsEvent",
+  );
+  assert.ok(!("image" in (without ?? {})));
+});
+
+test("endDate, offers and performer stay absent, and each is a decision", () => {
+  // Recommended by Google and deliberately not emitted: no source reports a
+  // final whistle and stoppage time is unbounded; this app sells nothing and
+  // holds no ticket address; and the performers are the two clubs, which
+  // homeTeam and awayTeam already name. If a source for one of these ever
+  // arrives, delete its line here — do not guess a value to quiet a warning.
+  const event = ofType(
+    structuredData({ section: "partida", id: "554970" }, CONTEXT, ORIGIN),
+    "SportsEvent",
+  ) as Record<string, unknown>;
+
+  assert.ok(!("endDate" in event));
+  assert.ok(!("offers" in event));
+  assert.ok(!("performer" in event));
+});
