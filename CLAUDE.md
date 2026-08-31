@@ -3230,6 +3230,26 @@ edit is caught, one that a seed sync is listed and cleared by a trailer. The
 second replaced a test asserting the opposite, whose reasoning was correct about
 the seed and wrong about the file it generalised from.
 
+**A curated file can also move without reaching a capture, and that case is
+easy to mis-call in the alarming direction.** `cfa01d5` gave five fixtures their
+substitutions — `554740`, `554741`, `554744`, `554752`, `554762` — and the
+capture set photographs `554951` and `554977`. Disjoint, so no pixel in it could
+have moved; the pull request that shipped it nonetheless said a re-shoot was
+owed and that no trailer applied, and both halves were wrong.
+
+The check is one command against the commit, not a judgement about the file:
+
+```sh
+git show <sha> -- src/data/escalacoes.ts | grep -cE '"(554951|554977)"'
+```
+
+**Answer it before reaching for the camera.** Eighteen captures from a live
+production build to photograph nothing is exactly what the trailer exists to
+avoid — and the mistake runs the safe-looking way, which is why nothing catches
+it: an unnecessary re-shoot passes the gate, costs an hour, and commits the
+per-deploy and per-minute noise of the six images that never come back
+byte-identical.
+
 **Count the directory rather than this paragraph.** It said sixteen for as long as there
 were sixteen, and `partida-554977-{light,dark}` made it eighteen without anything here
 noticing. A number in prose has no gate on it.
