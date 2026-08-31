@@ -6,6 +6,7 @@ import { CLUB_HYMNS } from "@/src/data/club-hymns";
 import { CLUB_WIKIPEDIA } from "@/src/data/club-wikipedia";
 import {
   clubAddress,
+  clubMapUrl,
   clubArticle,
   clubKey,
   clubMatches,
@@ -320,6 +321,35 @@ test("an address with nothing left in it is absent, not empty", () => {
   assert.equal(clubAddress(""), null);
   assert.equal(clubAddress(null), null);
   assert.equal(clubAddress(undefined), null);
+});
+
+test("the sede pin points at the address, encoded", () => {
+  // Google's documented Maps URLs form, the same one `stadiumMapUrl` builds.
+  // The whole cleaned line is the search term: the address carries no
+  // separators upstream, so there is nothing here to geocode with.
+  assert.equal(
+    clubMapUrl("Rua Palestra Italia nº 214, Perdizes São Paulo, SP 05005-030"),
+    "https://www.google.com/maps/search/?api=1&query=" +
+      "Rua%20Palestra%20Italia%20n%C2%BA%20214%2C%20Perdizes%20S%C3%A3o%20Paulo%2C%20SP%2005005-030",
+  );
+});
+
+test("the address is cleaned before it is searched", () => {
+  // Otherwise the three clubs whose street and postcode arrive as the literal
+  // word send Google looking for "null".
+  assert.equal(
+    clubMapUrl("null São Paulo, SP null"),
+    "https://www.google.com/maps/search/?api=1&query=S%C3%A3o%20Paulo%2C%20SP",
+  );
+});
+
+test("no usable address means no link at all", () => {
+  // The pin is not drawn rather than drawn pointing at an empty search — the
+  // rule `stadiumMapUrl` follows for a ground with no verified coordinate.
+  assert.equal(clubMapUrl("null null"), null);
+  assert.equal(clubMapUrl("   "), null);
+  assert.equal(clubMapUrl(null), null);
+  assert.equal(clubMapUrl(undefined), null);
 });
 
 test("the sede is filled in from the committed club list", () => {

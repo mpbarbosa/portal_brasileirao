@@ -240,8 +240,17 @@ cartão** for the same split on the player card).
 **Sede**:
 The club's headquarters as a postal address, carried on `Club.address` and shown
 on the **Clube** page under the club's name, above the row of links, as a pin
-glyph followed by one line of text. The pin is the only mark in that header that
-is not a link: the app holds no map, so it says "this is a place" and stops.
+glyph followed by one line of text. **The whole line is a link**, mark and
+address together, opening the address on Google Maps — where the **Pino do
+mapa** on the **Página da partida** is the mark alone, because there the name
+beside it already leads somewhere else and a reader clicking it would have to be
+asked which of the two they meant. Here the address leads nowhere else, so there
+is nothing to disambiguate. Built by `clubMapUrl`, the sibling of
+`stadiumMapUrl`: same documented `?api=1&query=` form, but a search for a postal
+line rather than a pin on a verified coordinate — an address can land on the
+street rather than the door, and for a club whose address arrived half-populated
+it lands on the city. That is a weaker promise than the estádio pin's and the
+two should not be read as one.
 Comes from the provider's teams endpoint, like the **Site oficial**, and is the
 same field the club's `state` is already parsed out of — so it costs no request
 that was not already being made.
@@ -253,10 +262,33 @@ between them is left verbatim — there is no separator between the neighbourhoo
 and the city (`"Bairro Laranjeiras Rio de Janeiro, RJ"`), so the address cannot be
 split into components, which is why it is **a line rather than fields**.
 _Avoid_: "endereço" on the page (it is the club's seat, not a delivery address,
-and "endereço" also reads as a URL — which is exactly what the three links beside
-it are), "localização" (reads as a map pin the app cannot honour), parsing the
-line into street/bairro/cidade, truncating it (the cut falls on the city and the
-state, which is the half worth reading).
+and "endereço" also reads as a URL — which is exactly what the four links beside
+it are), "localização" (reads as a claim to know where the place is, which a
+search for a postal line is not — the pin is now a link, but it opens a *search*
+and the word has to stay honest about that), parsing the line into
+street/bairro/cidade, truncating it (the cut falls on the city and the state,
+which is the half worth reading).
+
+**Pino do mapa**:
+The teardrop-and-hole mark that opens a place on Google Maps, drawn by
+`MapPinGlyph` in `ClubLinks.tsx`. It has two call sites and they promise
+different things: on a **Página da partida** it carries a ground's *verified
+coordinate*, so it names a point; on a **Clube** page it carries the **Sede**'s
+postal line as a *search*, so it names whatever Google decides that line means.
+Both build Google's documented `?api=1&query=` address rather than the
+`/maps/place/…` shape a browser's address bar hands you, which is the app's own
+internal form and changes without notice.
+One mark, defined once, for the same reason the **Wikipédia** mark is: the two
+pages had drawn two slightly different pins for what turned out to be one idea,
+and the drift only became visible the day the second one started leading
+somewhere.
+_Avoid_: Google's own pin (fixed artwork in a fixed red — it cannot take
+`currentColor`, so it would sit cold beside a link that brightens, the same
+argument the **Instagram do clube** mark makes about Meta's gradient), embedding
+a map (the app holds none, and one would be a runtime dependency on a third
+party for an asset), calling either use a "localização" — one is a coordinate
+and the other is a search, and the word claims more than the search delivers.
+
 **Site oficial**:
 The club's own website, linked from its page and shown as a globe glyph followed
 by the bare host (`palmeiras.com.br`). The globe distinguishes the club's *own*

@@ -291,14 +291,23 @@ test.describe("Clube", () => {
     await expect(page.locator("main > article")).toContainText(name);
   });
 
-  /* Selected by destination rather than position: the header now holds four
+  /* Selected by destination rather than position: the header now holds five
      external links, and picking one by index is what broke these specs when a
      name first became a control. The site link is the one defined by exclusion,
      so every link added beside it has to be excluded here too — the hymn was
-     the first, and it matched as the site until it was. */
+     the first, and it matched as the site until it was; the sede's map link was
+     the second, and it did exactly the same thing the day the pin stopped being
+     inert. Note the count above is not what caught either of them: the failure
+     is a locator resolving to two elements, not a number written in a comment. */
   const siteLink = (page: Page) =>
     page.locator(
-      "main header a[target='_blank']:not([href*='instagram.com']):not([href*='youtube.com']):not([href*='wikipedia.org'])",
+      [
+        "main header a[target='_blank']",
+        ":not([href*='instagram.com'])",
+        ":not([href*='youtube.com'])",
+        ":not([href*='wikipedia.org'])",
+        ":not([href*='google.com/maps'])",
+      ].join(""),
     );
   const instagramLink = (page: Page) => page.locator("main header a[href*='instagram.com']");
   const hymnLink = (page: Page) => page.locator("main header a[href*='youtube.com']");
@@ -439,9 +448,42 @@ test.describe("Clube", () => {
 
     // One line, verbatim from the provider: there is no separator between the
     // neighbourhood and the city, so it is not split into fields.
+    //
+    // Unanchored at the end, deliberately: the line carries a screen-reader
+    // suffix saying where it leads, and `toHaveText` reads text content rather
+    // than what is painted, so a `$` here would be asserting the absence of
+    // that suffix while appearing to assert the address.
     await expect(page.locator("main [data-sede]")).toHaveText(
-      /Rua Palestra Italia .*Perdizes São Paulo, SP 05005-030$/,
+      /Rua Palestra Italia .*Perdizes São Paulo, SP 05005-030/,
     );
+  });
+
+  test("the sede points at the address on Google Maps", async ({ page }) => {
+    await page.goto("/clube/palmeiras");
+
+    const sede = page.locator("main [data-sede-map]");
+    await expect(sede).toBeVisible();
+
+    // Google's documented Maps URLs form, carrying the club's own address as
+    // the search term — the club page has no coordinate to point at, which is
+    // the one thing that differs from the estádio pin on the match page.
+    const href = await sede.getAttribute("href");
+    expect(href).toMatch(/^https:\/\/www\.google\.com\/maps\/search\/\?api=1&query=/);
+    expect(href).toContain(encodeURIComponent("Perdizes São Paulo, SP 05005-030"));
+
+    // The whole line is the target, mark and address together — not the mark
+    // alone, which is what the match page does and for a reason that does not
+    // apply here.
+    await expect(sede).toContainText("Rua Palestra Italia");
+    await expect(sede).toHaveAccessibleName(/^Sede: Rua Palestra Italia .*Google Maps/);
+  });
+
+  test("the sede opens safely in a new tab", async ({ page }) => {
+    await page.goto("/clube/palmeiras");
+
+    const sede = page.locator("main [data-sede-map]");
+    await expect(sede).toHaveAttribute("target", "_blank");
+    await expect(sede).toHaveAttribute("rel", /noopener/);
   });
 
   test("a half-empty address shows the city, never upstream's word null", async ({ page }) => {
@@ -452,8 +494,16 @@ test.describe("Clube", () => {
       await page.goto(`/clube/${slug}`);
 
       const sede = page.locator("main [data-sede]");
-      await expect(sede).toHaveText(/^[A-ZÁ-Ú][^,]+, [A-Z]{2}$/);
+      // The label and the destination suffix are screen-reader text, so they
+      // are named here rather than anchored around: what is being asserted is
+      // that the city and the UF are the whole of the *visible* line.
+      await expect(sede).toHaveText(
+        /^Sede: [A-ZÁ-Ú][^,]+, [A-Z]{2} — no Google Maps \(abre em nova aba\)$/,
+      );
       expect(await page.locator("main").innerText()).not.toMatch(/\bnull\b/i);
+      // And that the half-empty address is searched as the part that is real,
+      // never with upstream's interpolated word in the query.
+      expect(await sede.locator("a").getAttribute("href")).not.toMatch(/null/i);
     }
   });
 
@@ -462,9 +512,10 @@ test.describe("Clube", () => {
 
     // Without the screen-reader label the address reads out as a bare string
     // with nothing saying what it is.
-    await expect(page.locator("main [data-sede] .sr-only")).toHaveText("Sede:");  });
+    await expect(page.locator("main [data-sede] .sr-only").first()).toHaveText("Sede:");
+  });
 
-  test("every club carries all four links", async ({ page }) => {
+  test("every club carries all five links", async ({ page }) => {
     // A missing handle renders as no link at all rather than a broken one, so
     // this would pass silently if the merge stopped working — hence checking
     // that the club actually named in the URL is the one that has it.
@@ -482,6 +533,13 @@ test.describe("Clube", () => {
     await expect(wikipediaLink(page)).toHaveAttribute(
       "href",
       "https://pt.wikipedia.org/wiki/Sociedade_Esportiva_Palmeiras",
+    );
+    // The fifth is the sede, which is the only one of them built from a field
+    // rather than looked up: the address itself is the query.
+    await expect(page.locator("main [data-sede-map]")).toHaveAttribute(
+      "href",
+      "https://www.google.com/maps/search/?api=1&query=" +
+        encodeURIComponent("Rua Palestra Italia nº 214, Perdizes São Paulo, SP 05005-030"),
     );
   });
 });
