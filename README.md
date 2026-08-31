@@ -32,9 +32,9 @@ desktop shots above look no different. Five is Material Design 3's ceiling for t
 the bar is now at it: the labels fit at 375dp because the items carry no horizontal padding, and
 below 360dp the active indicator narrows rather than let the last destination fall off the edge.*
 
-![Página Ao vivo no tema claro, numa noite de domingo: a secção Agora traz dois cartões da 25ª rodada — Corinthians 0 × 0 Santos e Flamengo 0 × 0 Botafogo — cada um com escudos, a rodada, a etiqueta "Bola rolando" ao lado de um ponto verde, uma ligação Ver a partida e as marcas das emissoras, e ao pé a nota de que os placares são atualizados automaticamente enquanto a página estiver aberta. Abaixo, a secção A seguir lista quatro jogos por vir — Clube do Remo × Coritiba, Flamengo × Mirassol, Bragantino × Bahia e São Paulo × Atlético-MG — cada um com a data, o horário, a contagem regressiva e a etiqueta A realizar.](docs/screenshots/ao-vivo-light.png)
+![Página Ao vivo no tema claro, com a rodada já encerrada: a secção Agora não traz nenhum cartão e diz "Nenhuma partida em andamento agora". Abaixo, A seguir lista seis jogos por vir — Clube do Remo × Coritiba, Flamengo × Mirassol, Bragantino × Bahia, São Paulo × Atlético-MG, Fluminense × Vasco da Gama e Coritiba × Mirassol — cada um com a data, o horário, a contagem regressiva, as marcas das emissoras e a etiqueta A realizar; e Últimos resultados abre com Bahia 3 × 2 Internacional, marcado Encerrado.](docs/screenshots/ao-vivo-light.png)
 
-![A mesma página Ao vivo no tema escuro, com os mesmos dois cartões de partidas em andamento, a mesma secção A seguir com os mesmos quatro jogos, as mesmas etiquetas "Bola rolando" e as mesmas marcas das emissoras sobre fundo claro.](docs/screenshots/ao-vivo-dark.png)
+![A mesma página Ao vivo no tema escuro, com a mesma secção Agora vazia, a mesma lista A seguir e os mesmos últimos resultados, e as marcas das emissoras mantendo o fundo claro para continuarem legíveis.](docs/screenshots/ao-vivo-dark.png)
 
 *Ao vivo, light and dark — what is being played now, what is next, and what just finished.
 Matches in progress get a card each rather than a row, so simultaneous kickoffs are all
@@ -45,13 +45,13 @@ refetches on its own. There is deliberately no match minute: the provider report
 and a score and never an elapsed clock, so the page says **bola rolando** rather than
 guessing a number.*
 
-![Página do clube Palmeiras no tema claro: escudo, o técnico Abel Ferreira, o endereço da sede, site oficial, perfil no Instagram, hino do clube e artigo na Wikipédia; à direita, o botão Seguir, que marca o clube como o time do leitor; os números da temporada (1º lugar, 52 pontos, 25 jogos, saldo +24 e 69% de aproveitamento); ao lado do título Campanha, um botão oferece vê-la em barras em vez da linha, e abaixo o gráfico da campanha do 11º lugar na 1ª rodada ao 1º na 25ª, os últimos cinco resultados, o próximo jogo — Mirassol × Palmeiras, domingo 30/08 às 18:30, marcado como A realizar e com a marca do Prime Video — e os artilheiros do clube, José Manuel López com 8 gols e Mauricio com 7.](docs/screenshots/clube-palmeiras-light.png)
+![Página do clube Palmeiras no tema claro: escudo, o técnico Abel Ferreira, o endereço da sede, site oficial, perfil no Instagram, hino do clube e artigo na Wikipédia; à direita, o botão Seguir, que marca o clube como o time do leitor; os números da temporada (1º lugar, 52 pontos, 25 jogos, saldo +24 e 69% de aproveitamento); ao lado do título Campanha, um botão oferece vê-la em barras em vez da linha, e abaixo o gráfico da campanha do 11º lugar na 1ª rodada ao 1º na 25ª, os últimos cinco resultados, o próximo jogo — Botafogo × Palmeiras, domingo 06/09 às 18:30, marcado como A realizar e com as marcas do Premiere, da Record, do YouTube e da CazéTV — e os artilheiros do clube, José Manuel López com 8 gols e Mauricio com 7.](docs/screenshots/clube-palmeiras-light.png)
 
-![A mesma página do clube Palmeiras no tema escuro: os mesmos escudo, técnico, endereço da sede, quatro links, o mesmo botão Seguir, números da temporada, o mesmo botão que troca a campanha para barras, gráfico da campanha e jogos, com as marcas das emissoras mantendo o fundo claro para continuarem legíveis.](docs/screenshots/clube-palmeiras-dark.png)
+![A mesma página do clube Palmeiras no tema escuro: os mesmos escudo, técnico, endereço da sede, quatro links, o mesmo botão Seguir, números da temporada, o mesmo botão que troca a campanha para barras, gráfico da campanha e o mesmo próximo jogo, com as marcas das emissoras mantendo o fundo claro para continuarem legíveis.](docs/screenshots/clube-palmeiras-dark.png)
 
-![Página de jogos no tema claro: seletor de rodada e os jogos da 25ª rodada, cada um com os clubes, data, horário e as marcas das emissoras que o transmitem.](docs/screenshots/jogos-light.png)
+![Página de jogos no tema claro: o seletor de rodada na 25ª e os dez jogos dela, todos já marcados Encerrado — entre eles Corinthians 0 × 1 Santos, Flamengo 3 × 0 Botafogo, Grêmio 3 × 1 Chapecoense e Mirassol 1 × 1 Palmeiras — cada um com o placar no próprio título, a data, o horário e as marcas das emissoras que o transmitiram.](docs/screenshots/jogos-light.png)
 
-![A mesma página de jogos no tema escuro, com o mesmo seletor de rodada e as mesmas marcas das emissoras sobre fundo claro.](docs/screenshots/jogos-dark.png)
+![A mesma página de jogos no tema escuro, com o mesmo seletor de rodada, os mesmos dez jogos encerrados e as mesmas marcas das emissoras sobre fundo claro.](docs/screenshots/jogos-dark.png)
 
 *Jogos, light and dark. Every round of the season is reachable from the picker, and each
 fixture carries the broadcasters showing it — ge, Globo, Premiere, SporTV, Cazé TV, YouTube
