@@ -6,6 +6,7 @@ import {
   capacityLabel,
   findStadium,
   stadiumLocation,
+  stadiumMapUrl,
   stadiumMatches,
   stadiumPhotoPage,
   stadiumPhotoUrl,
@@ -285,4 +286,36 @@ test("a file page keeps its underscores, and encodes only the accents", () => {
     "https://commons.wikimedia.org/wiki/File:Est%C3%A1dio_C%C3%ADcero_de_Souza_Marques_(3).jpg",
   );
   assert.ok(!stadiumPhotoPage(accented).includes("%5F"));
+});
+
+test("a map link is Google's documented form, at full precision", () => {
+  // `?api=1&query=` is the published Maps URLs contract. The `/maps/@` and
+  // `/maps/place` shapes an address bar produces are Google's own internal
+  // addresses and carry a zoom this app has no opinion about.
+  assert.equal(
+    stadiumMapUrl([-23.545556, -46.474]),
+    "https://www.google.com/maps/search/?api=1&query=-23.545556,-46.474",
+  );
+
+  // Latitude first, and the sign survives — both hemispheres of the mistake a
+  // swapped tuple makes are south-west of Brazil, so a reversed pair still
+  // lands somewhere plausible-looking rather than erroring.
+  assert.ok(stadiumMapUrl([-23.545556, -46.474])!.includes("query=-23.5"));
+
+  // Not rounded, deliberately unlike `weather-core`, which rounds this same
+  // field because its URL is also a cache key. Nothing caches this one.
+  assert.ok(stadiumMapUrl([-23.545556, -46.474])!.includes("-23.545556"));
+});
+
+test("a ground with no verified coordinate gets no link at all", () => {
+  // The caller renders no pin rather than a link into the Atlantic — the rule
+  // `capacityLabel` follows for the same file. `0, 0` is off West Africa, and
+  // is exactly what a defaulted coordinate would produce.
+  assert.equal(stadiumMapUrl(undefined), null);
+  assert.equal(stadiumMapUrl([Number.NaN, -46.474]), null);
+  assert.equal(stadiumMapUrl([-23.545556, Number.POSITIVE_INFINITY]), null);
+
+  // But a real zero is a real place, and must not be swept up with them: the
+  // equator and the meridian are coordinates, not absences.
+  assert.ok(stadiumMapUrl([0, 0])?.includes("query=0,0"));
 });

@@ -200,3 +200,30 @@ export const stadiumLocation = (stadium: Stadium): string =>
  */
 export const capacityLabel = (stadium: Stadium): string | null =>
   stadium.capacity === undefined ? null : stadium.capacity.toLocaleString("pt-BR");
+
+/**
+ * Where a ground is, on Google Maps — or null where no coordinate was verified,
+ * in which case the caller renders no pin at all rather than a link that lands
+ * in the middle of the Atlantic. The same rule `capacityLabel` follows, and the
+ * same rule the weather card follows for the very same field.
+ *
+ * `?api=1&query=<lat>,<lng>` is Google's **documented** Maps URLs form, which is
+ * why it is preferred over the `/maps/@…` and `/maps/place/…` shapes a browser's
+ * address bar hands you: those are the app's own internal addresses, they carry
+ * a zoom level and a rendering mode this app has no opinion about, and Google
+ * changes them without notice. This one is the published contract.
+ *
+ * The coordinate is printed at full stored precision, deliberately unlike
+ * `weather-core`, which rounds the identical field. That rounding is not a
+ * presentation choice there — the coordinate goes into the URL that is also the
+ * cache key, so two callers a metre apart must agree on one string. Here the
+ * URL is an address and nothing caches it, so there is nothing to round toward.
+ */
+export const stadiumMapUrl = (
+  coordinates: readonly [number, number] | undefined,
+): string | null => {
+  if (!coordinates) return null;
+  const [lat, lng] = coordinates;
+  if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
+  return `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
+};

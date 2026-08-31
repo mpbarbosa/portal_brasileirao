@@ -206,6 +206,39 @@ test.describe("Página da partida", () => {
     await expect(venue).toContainText(/–\s[A-Z]{2}$/);
   });
 
+  test("the venue carries a pin to the ground on Google Maps", async ({ page }) => {
+    await openFirstMatch(page, UPCOMING_ROUND);
+
+    const pin = page.locator("[data-stadium-map]");
+    await expect(pin).toBeVisible();
+
+    // Google's documented Maps URLs form, carrying a real coordinate — a
+    // stringified `undefined` or a `0,0` would still be a working link, which
+    // is exactly why the assertion is on the number rather than on the host.
+    const href = await pin.getAttribute("href");
+    expect(href).toMatch(/^https:\/\/www\.google\.com\/maps\/search\/\?api=1&/);
+    expect(href).toMatch(/[?&]query=-\d+\.\d+,-\d+\.\d+$/);
+
+    // Icon-only, so the accessible name is the whole of what a screen reader
+    // gets. The mark is `aria-hidden`; without the span this announces as its
+    // own URL.
+    await expect(pin).toHaveAccessibleName(/Google Maps/);
+
+    // A second destination on the same line, not a replacement for the first:
+    // the name still opens this app's page for the ground.
+    await expect(
+      page.locator("dd").filter({ hasText: "·" }).first().getByRole("link"),
+    ).toHaveCount(2);
+  });
+
+  test("the pin opens safely in a new tab", async ({ page }) => {
+    await openFirstMatch(page, UPCOMING_ROUND);
+
+    const pin = page.locator("[data-stadium-map]");
+    await expect(pin).toHaveAttribute("target", "_blank");
+    await expect(pin).toHaveAttribute("rel", /noopener/);
+  });
+
   test("an upcoming match offers no highlights", async ({ page }) => {
     // It has not been played.
     await openFirstMatch(page, UPCOMING_ROUND);
