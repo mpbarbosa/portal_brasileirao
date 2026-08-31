@@ -383,10 +383,12 @@ The intermediate URI is read off the leaf rather than hard-coded here, because
 it changes when CBF renews; `openssl x509 -noout -text` on the leaf prints the
 current one under `Authority Information Access`.
 
-**Two CBF hosts are exceptions and serve a complete chain**, which is worth
+**Three CBF hosts are exceptions and serve a complete chain**, which is worth
 knowing before writing off a whole domain: `conteudo.cbf.com.br` (the crests,
-below) and `bid.cbf.com.br` (the player photographs, below). Both are reachable
-with a plain `curl`.
+below), `bid.cbf.com.br` (the player photographs, below) and
+`campeonatos.cbf.com.br` (the documented read API, below). All three are
+reachable with a plain `curl` — re-measured 2026-08-31, exit 0 on each, against
+exit 60 on `www.` and `cms.` in the same sweep.
 
 ### `www.cbf.com.br/futebol-brasileiro/onde-assistir`
 
@@ -600,6 +602,63 @@ the league table moves on the final whistle. That is independent corroboration
 of a choice CLAUDE.md flags as a deliberate difference from football-data, and
 it is worth having written down before somebody reads the live/fallback gap as a
 bug and "fixes" it by counting live matches.
+
+### `campeonatos.cbf.com.br/Help` — CBF's own read API, documented in public and closed to us
+
+Measured 2026-08-31. This is the one CBF surface that is a **real API with real
+documentation** rather than a page to be scraped: an ASP.NET Web API help page,
+served at `/Help`, listing **37 endpoints across 15 controllers**, each with a
+Portuguese description of what it returns. Every one is a `GET` — there are no
+`POST`, `PUT` or `DELETE` entries at all, so it is a read surface by design.
+
+**And every endpoint answers 401.** Not a rate limit, not a User-Agent check:
+
+```
+HTTP/1.1 401 Unauthorized
+WWW-Authenticate: Basic realm="campeonatos.cbf.com.br"
+Server: Microsoft-IIS/10.0
+```
+
+So it is a **credentialed partner API whose documentation happens to be public**.
+`/Help` itself is 200 and needs nothing. Do not read the open documentation as an
+invitation, do not go looking for credentials, and do not add a "checker" that
+fetches an endpoint and reports the 401 — the answer is already written here.
+
+**The TLS chain is intact on this host**, unlike `www.` and `cms.` — plain `curl`
+exits 0. See the chain section above, where this is now the third exception.
+
+**What it would settle, if credentials ever existed**, and why each is worth
+naming rather than listing all 37:
+
+- `campeonatos/CampeonatoEstadio/Estadio?codigo_estadio={codigo_estadio}` and
+  `CampeonatoEstadios?id_campeonato={id_campeonato}` — **a stadium as an
+  entity**, with its own code. `venue-core.ts` opens by saying a stadium "is not
+  an entity anywhere in the data", which is why identity here is the *slug of a
+  free-text string* and why `ARENA MRV` and `Arena MRV` had to be argued into
+  being one ground. This is where that entity exists — behind the 401.
+- `campeonatos/CampeonatoClassificacao/Classificacao?id_campeonato={id}&rodada={rodada}`
+  — **a table at an arbitrary round.** Both public sources refuse this: ge's SDE
+  endpoint and CBF's own `/futebol-brasileiro/tabelas/...` page each ignore a
+  `rodada` parameter and answer with the current round, tested on both. The app
+  computes its campanha by re-running `computeStandings` per round for exactly
+  this reason, so this would be a cross-check rather than a replacement.
+- `campeonatos/AlteracaoJogo/alteracoesJogosCampeonato?...` — **fixture
+  reschedulings**, as first-class records. That is the class of thing behind the
+  one fixture that would not join during the season-wide broadcast sweep: our
+  seed said `20:40Z` for `Remo x Palmeiras` where CBF and ge both said 16:00 BRT.
+- `campeonatos/Jogo/jogosExercicio?Exercicio={Exercicio}` — a whole season's
+  fixtures in one request, against the paged `onde-assistir` feed we do use.
+- `campeonatos/Clubes/Clubes?UF={UF}` — clubs carrying their federation unit,
+  which `sync-seed-data` currently parses out of a postal address.
+
+**The id space is visible even though the API is not, which is worth writing down
+because it looks like a way in and is not.** The public standings page inlines
+`competitionId: "1260611"`, `championshipId: "42"`, `categoryId: "1"` and
+`fase_id: "1993"` in its RSC payload, and the endpoints above take
+`id_campeonato`, `codigo_campeonato`, `codigo_categoria` and `id_campeonatoFase`.
+The correspondence is **plausible and unverified** — it cannot be checked without
+credentials, so treat it as a lead for whoever ever has them rather than as a
+fact.
 
 ### `cms.cbf.com.br/api/paginas` — Strapi v4, news only
 
