@@ -648,8 +648,6 @@ naming rather than listing all 37:
   seed said `20:40Z` for `Remo x Palmeiras` where CBF and ge both said 16:00 BRT.
 - `campeonatos/Jogo/jogosExercicio?Exercicio={Exercicio}` — a whole season's
   fixtures in one request, against the paged `onde-assistir` feed we do use.
-- `campeonatos/Clubes/Clubes?UF={UF}` — clubs carrying their federation unit,
-  which `sync-seed-data` currently parses out of a postal address.
 
 **The id space is visible even though the API is not, which is worth writing down
 because it looks like a way in and is not.** The public standings page inlines
