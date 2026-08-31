@@ -1283,4 +1283,9 @@ export const HIGHLIGHTS: Record<string, Highlight[]> = {
   "554970": [
     { url: "https://www.youtube.com/watch?v=pJBVrWUNq-s", channel: "ge tv" },
   ],
+  // Mirassol 1 x 1 Palmeiras, rodada 25.
+  "554986": [
+    { url: "https://www.youtube.com/watch?v=z3J2HPWvJZI", channel: "ge tv" },
+    { url: "https://www.youtube.com/watch?v=WdWqybj-mVA", channel: "UOL Esporte" },
+  ],
 };
