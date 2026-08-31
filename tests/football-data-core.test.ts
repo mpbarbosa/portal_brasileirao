@@ -170,6 +170,22 @@ test("carries the officials a captured payload reports", () => {
   assert.deepEqual(mapped?.referees, [{ name: "Bruno de Araújo", role: "REFEREE" }]);
 });
 
+test("the provider's own lastUpdated stamp is carried through", () => {
+  // `mergeByFreshness` is the only reader, and without this it has nothing to
+  // compare — the fixture that shipped as "A realizar" while it was finished.
+  const mapped = mapMatch({ ...FIXTURE, lastUpdated: "2026-08-30T23:37:19Z" });
+
+  assert.equal(mapped?.lastUpdated, "2026-08-30T23:37:19Z");
+});
+
+test("a fixture with no stamp has no lastUpdated key at all", () => {
+  // Same rule as `referees` below, and load-bearing rather than tidy: an absent
+  // stamp must read as "upstream claimed nothing", which loses every
+  // comparison, and not as a value that could win one.
+  assert.equal("lastUpdated" in (mapMatch(FIXTURE) ?? {}), false);
+  assert.equal("lastUpdated" in (mapMatch({ ...FIXTURE, lastUpdated: "" }) ?? {}), false);
+});
+
 test("a fixture upstream names nobody for has no referees key at all", () => {
   // Present-and-empty would make `"referees" in match` lie about what upstream
   // said, and 223 of the season's 380 fixtures are in exactly this state.

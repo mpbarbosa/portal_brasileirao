@@ -1,7 +1,13 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { compareForFeed, currentRound, matchesForRound, roundsOf } from "@/matches-core";
+import {
+  compareForFeed,
+  currentRound,
+  matchesForRound,
+  mergeByFreshness,
+  roundsOf,
+} from "@/matches-core";
 import type { Match } from "@/src/types";
 
 const match = (overrides: Partial<Match> & Pick<Match, "id">): Match => ({
@@ -141,4 +147,108 @@ test("feed order places postponed after scheduled and cancelled last", () => {
     feed.map((entry) => entry.id),
     ["live", "scheduled", "postponed", "finished", "cancelled"],
   );
+});
+
+/**
+ * The regression these guard is the one the user reported: fixture 554986
+ * finished 1-1 and the Partida page said "A realizar", because the fill behind
+ * it had landed on upstream's stale copy of that record.
+ */
+test("a record the provider stamps older does not displace a fresher one", () => {
+  const held = [
+    match({
+      id: "554986",
+      status: "FINISHED",
+      homeGoals: 1,
+      awayGoals: 1,
+      lastUpdated: "2026-08-30T23:37:19Z",
+    }),
+  ];
+  const regressed = [
+    match({ id: "554986", status: "SCHEDULED", lastUpdated: "2026-08-30T10:20:34Z" }),
+  ];
+
+  const merged = mergeByFreshness(held, regressed);
+
+  assert.equal(merged[0].status, "FINISHED");
+  assert.equal(merged[0].homeGoals, 1);
+});
+
+/** The other half of the same response, and the reason this is per fixture
+ *  rather than "prefer the newer response": one record went backwards while
+ *  another went forwards. */
+test("a record the provider stamps newer is taken, in the same merge", () => {
+  const held = [
+    match({ id: "554986", status: "FINISHED", lastUpdated: "2026-08-30T23:37:19Z" }),
+    match({ id: "554982", status: "LIVE", lastUpdated: "2026-08-31T00:32:15Z" }),
+  ];
+  const incoming = [
+    match({ id: "554986", status: "SCHEDULED", lastUpdated: "2026-08-30T10:20:34Z" }),
+    match({
+      id: "554982",
+      status: "FINISHED",
+      homeGoals: 3,
+      awayGoals: 2,
+      lastUpdated: "2026-08-31T00:40:35Z",
+    }),
+  ];
+
+  const merged = mergeByFreshness(held, incoming);
+
+  assert.equal(merged.find((entry) => entry.id === "554986")?.status, "FINISHED");
+  assert.equal(merged.find((entry) => entry.id === "554982")?.status, "FINISHED");
+  assert.equal(merged.find((entry) => entry.id === "554982")?.homeGoals, 3);
+});
+
+test("incoming decides which fixtures exist — a dropped one is not resurrected", () => {
+  const held = [
+    match({ id: "kept", lastUpdated: "2026-08-31T00:00:00Z" }),
+    match({ id: "gone", lastUpdated: "2026-08-31T00:00:00Z" }),
+  ];
+
+  const merged = mergeByFreshness(held, [match({ id: "kept" })]);
+
+  assert.deepEqual(
+    merged.map((entry) => entry.id),
+    ["kept"],
+  );
+});
+
+/** Without stamps there is nothing to compare, so the behaviour has to collapse
+ *  back to what this app did before the merge existed. The seed snapshot
+ *  carries no stamps at all, which makes this the end-to-end suite's path. */
+test("with no stamp on either side the newest response wins", () => {
+  const merged = mergeByFreshness(
+    [match({ id: "554986", status: "FINISHED", homeGoals: 1, awayGoals: 1 })],
+    [match({ id: "554986", status: "SCHEDULED" })],
+  );
+
+  assert.equal(merged[0].status, "SCHEDULED");
+});
+
+test("an unstamped held record never displaces a stamped incoming one", () => {
+  const merged = mergeByFreshness(
+    [match({ id: "554986", status: "FINISHED" })],
+    [match({ id: "554986", status: "POSTPONED", lastUpdated: "2026-08-31T00:00:00Z" })],
+  );
+
+  assert.equal(merged[0].status, "POSTPONED");
+});
+
+/** An unparseable stamp is "no claim", not "the epoch" — held as a distinct
+ *  case because reading it as a date would make it beat every real stamp
+ *  or lose to every one, depending on which way `NaN` fell out. */
+test("an unparseable stamp loses to a real one", () => {
+  const merged = mergeByFreshness(
+    [match({ id: "554986", status: "FINISHED", lastUpdated: "not a date" })],
+    [match({ id: "554986", status: "SCHEDULED", lastUpdated: "2026-08-30T10:20:34Z" })],
+  );
+
+  assert.equal(merged[0].status, "SCHEDULED");
+});
+
+test("the first fill has nothing to compare against and passes straight through", () => {
+  const incoming = [match({ id: "554986", status: "FINISHED" })];
+
+  assert.deepEqual(mergeByFreshness([], incoming), incoming);
 });
