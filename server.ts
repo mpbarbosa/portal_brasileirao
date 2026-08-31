@@ -535,7 +535,7 @@ const renderShell = async (
       // A page that does not exist gets no structured data: describing a
       // SportsEvent on a 404 asserts the fixture is real.
       jsonLd: status.index
-        ? jsonLdScript(structuredData(route, context, origin, meta.description))
+        ? jsonLdScript(structuredData(route, context, origin, meta.description, meta.image?.url))
         : undefined,
     }),
   );

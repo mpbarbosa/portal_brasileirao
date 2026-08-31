@@ -909,6 +909,36 @@ schema.org's event statuses describe **whether an event happened as announced**,
 it is in its lifecycle: there is no "in progress" and no "finished". LIVE and FINISHED are
 therefore both `EventScheduled`, and only POSTPONED and CANCELLED get a value of their own.
 
+**A fixture page emits exactly one Event node, and the second one it used to emit was
+rejected.** `superEvent` was `{"@type": "SportsEvent", name: COMPETITION}` — a name and
+nothing else. Google validates a nested Event **as an Event**, and an Event requires
+`startDate` and `location`, so every one of the 380 fixture pages reported a second,
+invalid item ("Campeonato Brasileiro Série A", two critical errors) beside a fixture item
+that was itself valid. It only disqualified the page from Event rich results; indexing was
+never affected.
+
+**It was pre-existing and simply unobservable.** No `Eventos` report can exist while
+`robots.txt` stops Googlebot rendering the page at all, so the crawl fix (#273) is what
+made a months-old defect visible — worth knowing before reading it as a regression of the
+commit that surfaced it.
+
+**Completing the node was the obvious fix and is the wrong one.** The season's first
+kickoff is derivable from the fixture list and the location is Brasil, but that buys the
+two criticals and leaves a permanent second item carrying its own warnings — and a
+competition played across twenty grounds has no `location` in the sense an Event means it.
+Inventing structure to satisfy a validator is the `maximumAttendeeCapacity` mistake in
+another costume. The node is dropped instead, and **the league association is not lost**:
+both teams carry `memberOf` the competition, which is where membership actually belongs.
+
+`organizer` (the CBF) and `image` (the page's own preview card, passed in from
+`page-meta-core` rather than rebuilt, so the two cannot disagree) answer two of Google's
+recommended fields. **Three stay absent on purpose** — `endDate`, because no source here
+reports a final whistle and stoppage time is unbounded; `offers`, because this app sells
+nothing; and `performer`, because the performers are the two clubs that `homeTeam` and
+`awayTeam` already name. Nothing here is compiler-enforced the way `trailFor` is, so
+`tests/structured-data-core.test.ts` holds each of those decisions instead — including the
+count of Event nodes, confirmed red by reinstating `superEvent` before it was believed.
+
 `jsonLdScript` escapes `<` as `\u003c`, not as `&lt;`: a `script` element's contents are
 not HTML-parsed, so an entity would reach the JSON parser literally and break it, while an
 unescaped `</script>` in a club name would close the tag and spill the payload into the
