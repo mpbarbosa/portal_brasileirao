@@ -1,9 +1,10 @@
 import { expect, test, type Page } from "@playwright/test";
 
 /**
- * Seed fixture 554977 — Palmeiras 4x1 Vasco da Gama, rodada 24 — is the one
- * match `src/data/goals.ts` carries, and its entry is CBF's real payload run
- * through `goalsFromRegistros`.
+ * Seed fixture 554977 — Palmeiras 4x1 Vasco da Gama, rodada 24 — is the match
+ * these specs read, and its entry is CBF's real payload run through
+ * `goalsFromRegistros`. It was once the *only* match `src/data/goals.ts`
+ * carried; the file now holds 184, so nothing here may assume it is alone.
  *
  * Chosen because it exercises every branch worth seeing at once: two goals by
  * one scorer, a penalty, and a side that scored exactly once.
@@ -34,18 +35,45 @@ const withoutGoals = async (page: Page) => {
   );
 };
 
+/**
+ * Strip the minutes from the payload, so the "synced before the súmula
+ * existed" state is what renders.
+ *
+ * Produced rather than hunted for, for the reason `withoutGoals` above gives
+ * and this spec originally ignored: it pinned 554977 as the match with no
+ * minutes, on a comment reading "554977 predates the join". A later
+ * `sync-goals` run gave it minutes and the assertion died — 7 of the 184
+ * matches now carry one. Which fixtures happen to lack a minute is exactly
+ * the "how much curated data exists" the header refuses to depend on, and
+ * every future sync moves it.
+ */
+const withoutMinutes = async (page: Page) => {
+  const response = await page.request.get("/api/matches");
+  const body = await response.json();
+  body.data.matches = body.data.matches.map((match: Record<string, unknown>) => ({
+    ...match,
+    goals: Array.isArray(match.goals)
+      ? match.goals.map(({ minute: _dropped, ...goal }: Record<string, unknown>) => goal)
+      : match.goals,
+  }));
+  await page.route("**/api/matches*", (route) =>
+    route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(body) }),
+  );
+};
+
 test("a finished match names who scored", async ({ page }) => {
   await page.goto(`/partida/${MATCH}`);
 
   const scorers = page.locator("main article [data-goal]");
   await expect(scorers.first()).toBeVisible();
-  await expect(scorers).toHaveText([
-    "Lopez",
-    "Vitor Roque (pên.)",
-    "Mauricio",
-    "Lopez",
-    "Facundo",
-  ]);
+  // The minute is optional on purpose: it arrives per match when its súmula is
+  // parsed, so pinning its presence either way makes this a test of how much
+  // has been synced rather than of who scored.
+  const withOptionalMinute = (name: string) =>
+    new RegExp(`^${name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}(\\d+(\\+\\d+)?')?$`);
+  await expect(scorers).toHaveText(
+    ["Lopez", "Vitor Roque (pên.)", "Mauricio", "Lopez", "Facundo"].map(withOptionalMinute),
+  );
 });
 
 /**
@@ -70,7 +98,10 @@ test("a penalty is marked and an ordinary goal is not", async ({ page }) => {
 
   const scorers = page.locator("main article [data-goal]");
   await expect(scorers.filter({ hasText: "pên." })).toHaveCount(1);
-  await expect(scorers.filter({ hasText: "Mauricio" })).toHaveText("Mauricio");
+  // What must hold is that the ordinary goal is *unmarked* — not that its line
+  // is the bare name, which stopped being true when its minute was synced.
+  await expect(scorers.filter({ hasText: "Mauricio" })).not.toContainText("pên.");
+  await expect(scorers.filter({ hasText: "Mauricio" })).toContainText("Mauricio");
 });
 
 /**
@@ -194,8 +225,10 @@ test("a goal that has a minute prints it beside the scorer", async ({ page }) =>
 });
 
 test("a goal with no minute prints no placeholder", async ({ page }) => {
-  // 554977 predates the join. It must render exactly as it always did — no
-  // dash, no empty parentheses, no "—". Absent is absent.
+  // Absent is absent: no dash, no empty parentheses, no "—". The minuteless
+  // state is produced rather than found, so this cannot rot the next time a
+  // súmula is parsed.
+  await withoutMinutes(page);
   await page.goto(`/partida/${MATCH}`);
   const scorers = page.locator("main article [data-goal]");
   await expect(scorers.first()).toBeVisible();
