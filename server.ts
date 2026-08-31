@@ -37,6 +37,7 @@ import {
   type TeamsResponse,
 } from "@/football-data-core";
 import { withBroadcasters, withVenues } from "@/broadcast-core";
+import { readMatchState, writeMatchState } from "@/match-state-store";
 import { withGoals } from "@/goals-core";
 import { withLineups } from "@/escalacao-core";
 import { withHighlights } from "@/match-core";
@@ -347,7 +348,34 @@ const loadStandings = (): Promise<ApiEnvelope<StandingsRow[]>> =>
  * Bounded by the size of the fixture list — one season, 380 records — because
  * only fixtures the newest response also carries are ever kept.
  */
-let freshestMatches: Match[] = [];
+const MATCH_STATE_FILE =
+  process.env.MATCH_STATE_FILE ?? path.join(process.cwd(), "data", "match-state.json");
+
+let freshestMatches: Match[] = readMatchState(MATCH_STATE_FILE);
+/** What is already on disk, so an unchanged fill does not rewrite it. */
+let persistedState = JSON.stringify(freshestMatches);
+
+/**
+ * Keep the file in step with the memory.
+ *
+ * Failure is logged and swallowed: this is a cache warmer, and a full disk or a
+ * read-only mount must degrade to the process-local behaviour #281 shipped
+ * rather than fail the request a reader is waiting on. The write is skipped
+ * when nothing changed, which is the common case — a fill that agrees with what
+ * we already held rewrites nothing.
+ */
+const rememberMatches = (matches: Match[]): void => {
+  freshestMatches = matches;
+  const next = JSON.stringify(matches);
+  if (next === persistedState) return;
+
+  try {
+    writeMatchState(MATCH_STATE_FILE, next);
+    persistedState = next;
+  } catch (cause) {
+    console.error("não foi possível gravar o estado das partidas:", cause);
+  }
+};
 
 /** Fixture lists get the short TTL only while something is actually live. */
 const matchesTtl = (matches: Match[]): number =>
@@ -377,7 +405,7 @@ const loadMatches = async (): Promise<ApiEnvelope<MatchesPayload>> => {
     // TIMED with no score and a thirteen-hour-old stamp — so what this fill
     // returned is not automatically what we serve. See `mergeByFreshness`.
     const matches = mergeByFreshness(freshestMatches, mapMatches(raw));
-    freshestMatches = matches;
+    rememberMatches(matches);
     const payload: MatchesPayload = {
       rounds: roundsOf(matches),
       currentRound: currentRound(matches, Date.now()),
