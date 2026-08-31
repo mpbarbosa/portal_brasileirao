@@ -646,6 +646,46 @@ Two traps, both of which the tests hold:
 record only ever *wins* by carrying a newer stamp than what upstream just
 served, so an old file can prevent a regression and cannot cause one.
 
+**The client half: `App` polls for an unsettled Partida as well as for Ao vivo.**
+The server can hold the freshest record it has ever seen, and a page that read
+the payload once still shows whatever arrived then — so a reader watching a match
+finish never saw it finish, and one who landed during the regression above stayed
+on the wrong answer until they reloaded by hand.
+
+`isAwaitingResult` in `matches-core.ts` is the gate, because polling *every*
+match page would spend requests on fixtures decided months ago. Two of its
+branches are decisions rather than mechanics. **A kickoff already past keeps its
+page asking, with no late bound** — the regression above lasted about five hours,
+so a bound of `LATE_GRACE_MS` (three) would have stopped asking an hour before
+the answer arrived. And **POSTPONED is not settled**, following `isConcluded`,
+because a postponed fixture acquires a new kickoff worth learning.
+
+**One cadence for both sections, and `refreshMs` stays where it is.** The Partida
+page could reasonably poll on whether *its own* fixture is live, but the number
+that argument is pinned to is the server's fixture-cache TTL, which is driven by
+whether **any** match is — so a per-fixture cadence would ask more often than
+there is anything new to get, and would be a second thing to keep true the next
+time that TTL moves.
+
+The gate is read at render rather than from a ticking clock: `App` owns twenty
+standings rows and twenty sparklines, and a clock there would re-render all of
+them to answer a question whose answer changes once — which is why `MeuTimeStrip`
+and `LiveView` carry their own `useNow` instead of asking `App` for one. The one
+case it cannot catch is a page left open across the moment its fixture comes
+*within* a day of kickoff, which fails toward waiting rather than toward a wrong
+answer.
+
+**`tests/e2e/partida-refetch.spec.ts` installs its own clock, and that is a
+deliberate exception to `tests/e2e/clock.ts`.** The shared fixture uses
+`setFixedTime` precisely because the full fake replaces the timer queue — which
+would hang `useNow`, the transitions `motion.spec.ts` asserts on, and
+`networkidle`. But a 60s poll cannot be observed without moving time, and waiting
+a real minute per assertion is not a suite. That file takes the full fake
+knowingly: nothing on the Partida route calls `useNow`, it never awaits
+`networkidle`, and the clock does not leave the file. It also flips its prepared
+payload behind a **flag rather than a call count**, because React mounts effects
+twice under StrictMode and "the second request" is not a thing a test can name.
+
 **`/api/standings` and `/api/scorers` do not get this treatment, and cannot.**
 Watched across the same incident, standings held one fingerprint over 10
 samples and scorers likewise, while `/matches` regressed in the very same

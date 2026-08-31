@@ -185,3 +185,46 @@ export const mergeByFreshness = (
     return retractsResult(kept, match, now) ? kept : match;
   });
 };
+
+/**
+ * How far ahead of kickoff a fixture becomes worth asking about again.
+ *
+ * A day, matching `isImminent`'s lead in `next-match-core.ts`, so the two agree
+ * about when a fixture starts mattering rather than drifting apart — the same
+ * reason that module reuses `LATE_GRACE_MS` instead of picking its own window.
+ */
+const AWAIT_LEAD_MS = 24 * 60 * 60 * 1000;
+
+/**
+ * Whether a fixture still has something to tell us, and so whether a page
+ * showing it should keep asking.
+ *
+ * The Partida page was a snapshot of whatever arrived when the app loaded, so a
+ * reader watching a match finish never saw it finish. Polling *every* match page
+ * would spend requests on fixtures decided months ago, so this is the gate.
+ *
+ * Each branch, because none of them is arbitrary:
+ *
+ * - **Concluded is settled.** FINISHED and CANCELLED are the two states nothing
+ *   further arrives for — `isConcluded`'s existing distinction, which
+ *   deliberately excludes POSTPONED because a postponed fixture is still coming
+ *   and will acquire a new kickoff worth learning about.
+ * - **A kickoff already past keeps its page asking, with no late bound.** This
+ *   is the state the whole thing exists for: a fixture upstream has finished but
+ *   is still reporting as SCHEDULED looks exactly like this, and on 2026-08-31
+ *   that lasted about five hours — so a bound of `LATE_GRACE_MS` (three) would
+ *   have stopped asking an hour before the answer arrived. An abandoned fixture
+ *   polling on an open tab costs nothing beyond the server's own cache, which is
+ *   what actually rations the upstream request.
+ * - **An unreadable kickoff keeps asking**, because "we cannot tell" is a reason
+ *   to look again rather than a reason to stop.
+ *
+ * Takes `now` as a parameter like everything else in this file.
+ */
+export const isAwaitingResult = (match: Match, now: number): boolean => {
+  if (isConcluded(match)) return false;
+  if (match.status === "LIVE") return true;
+
+  const at = Date.parse(match.kickoff);
+  return Number.isNaN(at) || at <= now + AWAIT_LEAD_MS;
+};

@@ -28,6 +28,7 @@ import { LeagueStats } from "@/src/components/LeagueStats";
 import { StandingsTable } from "@/src/components/StandingsTable";
 import { hasLiveMatch } from "@/live-core";
 import { findMatch } from "@/match-core";
+import { isAwaitingResult } from "@/matches-core";
 import { computeRankHistory } from "@/rank-history-core";
 import { buildStadiums } from "@/venue-core";
 import { STADIUMS } from "@/src/data/stadiums";
@@ -348,10 +349,11 @@ export function App() {
   }, [route.section, accountState, syncedAccountId, preferences.landing, follow, loading, navigate]);
 
   /**
-   * The **Ao vivo** page refetches; every other view is a snapshot of what
-   * arrived once, which is right for a table and wrong for a scoreboard.
+   * **Ao vivo** and an unsettled **Partida** refetch; every other view is a
+   * snapshot of what arrived once, which is right for a table and wrong for a
+   * scoreboard.
    *
-   * Only while that page is open, and only while the tab is visible. **30s
+   * Only while such a page is open, and only while the tab is visible. **30s
    * while anything is LIVE, 60s otherwise** — deliberately slower than the
    * server's own fixture cache, which drops to `LIVE_MATCHES_CACHE_TTL_MS`
    * (15s) in that state. Matching the cache would double this page's request
@@ -362,11 +364,37 @@ export function App() {
    * purpose: the last good payload keeps rendering rather than the page
    * blanking or growing an error banner over a score that is merely a minute
    * old.
+   *
+   * **One cadence for both, deliberately.** The Partida page could reasonably
+   * poll on whether *its own* fixture is live, but the number this is pinned to
+   * is the server's cache TTL, which is driven by whether **any** match is — so
+   * a per-fixture cadence would ask more often than there is anything new to
+   * get, and would be a second thing to keep true the next time that TTL moves.
+   * The paragraph above is the argument, and it does not become a different
+   * argument on a page showing one match.
    */
   const refreshMs = matches && hasLiveMatch(matches.matches) ? 30_000 : 60_000;
 
+  /**
+   * Whether the fixture on screen still has something to tell us.
+   *
+   * Read at render rather than from a ticking clock: `App` owns twenty
+   * standings rows and twenty sparklines, and a clock here would re-render all
+   * of them to answer a question whose answer changes once — which is exactly
+   * why `MeuTimeStrip` and `LiveView` keep their own `useNow` instead of asking
+   * for one here. It is re-evaluated on every poll, since each one sets state.
+   * The one case it cannot catch is a page left open across the moment its
+   * fixture comes *within* a day of kickoff, and that fails toward waiting
+   * rather than toward a wrong answer.
+   */
+  const openFixture =
+    route.section === "partida" ? findMatch(matches?.matches ?? [], route.id) : null;
+  const watching =
+    route.section === "ao-vivo" ||
+    (openFixture !== null && isAwaitingResult(openFixture, Date.now()));
+
   useEffect(() => {
-    if (route.section !== "ao-vivo") return;
+    if (!watching) return;
 
     let cancelled = false;
     const timer = setInterval(() => {
@@ -388,7 +416,7 @@ export function App() {
       cancelled = true;
       clearInterval(timer);
     };
-  }, [route.section, refreshMs]);
+  }, [watching, refreshMs]);
 
   return (
     <div className="min-h-screen">
