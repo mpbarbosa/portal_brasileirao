@@ -1119,32 +1119,60 @@ because re-running a push run replays its payload. The input and its branch are
 gone; the step points at `rollback.yml`, and at dispatching `ci.yml` on `main`
 for the out-of-order case, where the tip is a descendant and passes unaided.
 
-#### Correction: `allow_non_descendant` still has no door
+#### ~~Correction: `allow_non_descendant` still has no door~~ — **resolved, the second way**
 
 This plan said D5 was where `ci.yml`'s override would become reachable. Having
-designed the phase, that turns out to be wrong. `rollback.yml` does its own SSM
-install and never enters `ci.yml`, so the override remains reachable only if
-`main` is moved backwards. It is not costing anything and it is the correct
-escape hatch for a guard that must be overridable — but the door is still not
-there, and a later phase should either build one or remove it deliberately
-rather than leaving this note to rot.
+designed the phase, that turned out to be wrong: `rollback.yml` does its own SSM
+install and never enters `ci.yml`, so the override was reachable only if `main`
+were moved backwards.
 
-#### What remains: the half that can leave production down
+It asked for one of two things — *"build one or remove it deliberately rather
+than leaving this note to rot"* — and **the second was done**: #258 removed the
+input, its `env`, its branch and the refusal message that told an operator to
+re-run with it set. `grep -c allow_non_descendant .github/workflows/ci.yml` is
+**0**.
 
-Untouched, and still the reason this phase wants a window rather than a gap
-between other things:
+**The note rotted anyway, for eight lines.** The paragraph immediately above
+this one already says *"The input and its branch are gone; the step points at
+`rollback.yml`"* — so the document carried the correction and the stale claim
+**adjacent to each other**, which is `CLAUDE.md`'s *the commit that makes a claim
+stale is frequently adjacent to it*, in this plan's own text. Kept struck rather
+than deleted, because the reasoning about *why* neither door was worth building
+is what a future session needs before adding one back.
 
-- `07_install_release.sh` still does `rsync -a --delete` into `dist/`, so a
-  payload that fails its health check leaves the service down with **nothing on
-  disk to return to**. `rollback.yml` shortens that outage from "find the sha,
-  drive SSM by hand" to one dispatch, which is worth having — but it still
-  needs a person.
-- The automatic flip-back on a failed health check, which needs no person at
-  all, is the item that actually closes defect 5.
+#### ~~What remains: the half that can leave production down~~ — **shipped; see D5b above**
 
-Do that with the two-stage rehearsal above: stub `systemctl` and the health URL
-and drive every branch — writing *flip-back itself fails* first — before any
-live exercise.
+**This section was false for days and said the most alarming thing in the
+document**, so read the strike-through rather than skimming past it: it claimed
+production had no automatic flip-back and that a bad release would leave the
+service down with nothing on disk to return to. Both halves shipped in
+**D5b — "What shipped: retention and flip-back on the host"**, a few hundred
+lines above, and the code says so:
+
+```
+07_install_release.sh:81   echo "==> Retaining the current release in ${PREVIOUS}"
+07_install_release.sh:133  export ROLLBACK_FROM="$PREVIOUS"
+06_redeploy.sh:87          flip_back() { … }
+06_redeploy.sh:140         "ROLLED BACK: … is serving the PREVIOUS release"
+06_redeploy.sh:143         exit 2
+.github/workflows/ci.yml   ./scripts/rehearse-flip-back.sh   (runs in `check`)
+```
+
+Even the prescription — *"do that with the two-stage rehearsal above: stub
+`systemctl` and the health URL and drive every branch, writing flip-back itself
+fails first"* — was **carried out to the letter**: `scripts/rehearse-flip-back.sh`
+drives ten branches against exactly those stubs, and case 1 is *the flip-back
+itself fails*, written first for the reason this section gave. It has since
+gained the workstation path too, via `scripts/rehearse-deploy-sh.sh`, since
+`scripts/deploy.sh` now hands off to `07` rather than carrying its own copy.
+
+**Why this one is worth a paragraph rather than a deletion.** A stale figure
+misinforms; a stale *"production can be left down"* changes what a reader does
+in an incident — they reach for a manual `rollback.yml` dispatch believing there
+is nothing else, when the release has already flipped itself back and exited 2.
+The failure is the ordinary one this repository keeps recording: **a claim that
+produces no work when it holds is never exercised**, so nothing distinguished
+"still true" from "quietly false" while D5b landed elsewhere in the same file.
 
 ### D6 — The bundle is what gets tested — **done**
 
@@ -1271,13 +1299,32 @@ the observable that only holds if the payload was carried forward rather than
 rebuilt. The node24 bump is merged too, verified by the deprecation warning's
 absence.
 
-What remains, in order: **D4** (Dependabot, one file), **D5** (rollback),
-**D6** (bundle-mode e2e), **D7** (hygiene).
+~~What remains, in order: **D4** (Dependabot, one file), **D5** (rollback),
+**D6** (bundle-mode e2e), **D7** (hygiene).~~
 
-**D5 is the one to give a window to rather than fit in.** It is the only
-remaining change that can leave production down if it is wrong, and the only one
-with a precondition — the S3 lifecycle policy — that could change its design
-before a line is written. Everything else here can be done between other things.
+**Nothing remains here that is a change to this repository.** Every one of those
+four carries **— done** in its own heading above, which is what makes this the
+third stale claim in this file rather than a fourth thing to do:
+
+| | |
+| --- | --- |
+| **D4** | `.github/dependabot.yml` |
+| **D5** | `rollback.yml`, plus retention and automatic flip-back in `07`/`06` |
+| **D6** | `PLAYWRIGHT_TARGET=bundle` in `playwright.config.ts` |
+| **D7** | all but **gap F** |
+
+**Gap F is a repository setting, not work**: branch protection on `main`, which
+this plan has already designed and verified and which only the maintainer can
+apply. It is stated here so that a reader looking for something to *do* stops at
+this line instead of reading four "done" sections hunting for the undone one.
+
+~~**D5 is the one to give a window to rather than fit in.**~~ It got one, and the
+advice held: it is the only change here that could leave production down, so it
+shipped behind a ten-branch rehearsal that runs in `check` on every push. Its
+stated precondition — the S3 lifecycle policy — was never answered and did
+**not** change the design: the smaller of the two shapes was taken, keeping the
+previous release **on the host**, which is what the plan predicted an unknown
+retention would push it toward.
 
 ### How this plan has changed since it was written
 
