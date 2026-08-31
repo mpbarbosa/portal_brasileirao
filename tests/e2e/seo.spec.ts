@@ -16,7 +16,7 @@ const canonical = (page: import("@playwright/test").Page) =>
   page.locator('link[rel="canonical"]').getAttribute("href");
 
 test.describe("robots.txt", () => {
-  test("is served as plain text and keeps robots out of the API", async ({ request }) => {
+  test("is served as plain text and blocks only the per-session API routes", async ({ request }) => {
     const response = await request.get("/robots.txt");
 
     expect(response.status()).toBe(200);
@@ -24,7 +24,29 @@ test.describe("robots.txt", () => {
 
     const body = await response.text();
     expect(body).toMatch(/^User-agent: \*$/m);
-    expect(body).toMatch(/^Disallow: \/api\/$/m);
+    expect(body).toMatch(/^Disallow: \/api\/auth\/$/m);
+    expect(body).toMatch(/^Disallow: \/api\/account$/m);
+
+    // A blanket /api/ disallow is what made every client-rendered page a soft
+    // 404 to Googlebot: it could not fetch the payloads the page is built from.
+    expect(body).not.toMatch(/^Disallow: \/api\/$/m);
+  });
+
+  test("the content API is fetchable but carries noindex, and the page it renders does not", async ({
+    page,
+    request,
+  }) => {
+    // The two halves of the fix, asserted together because either alone is the
+    // bug: crawlable-and-indexable puts JSON in the index, blocked-and-noindex
+    // is where this started.
+    const payload = await request.get("/api/matches");
+    expect(payload.status()).toBe(200);
+    expect(payload.headers()["x-robots-tag"]).toContain("noindex");
+
+    // A subresource header must not reach the document that loaded it.
+    const rendered = await page.goto("/jogos");
+    expect(rendered?.headers()["x-robots-tag"]).toBeUndefined();
+    await expect(page.locator('meta[name="robots"]')).toHaveCount(0);
   });
 
   test("points at the sitemap with an absolute URL", async ({ request }) => {

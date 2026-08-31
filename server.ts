@@ -196,6 +196,25 @@ const CLUBS = withWikipedia(
 
 const app = express();
 
+// The content API must be crawlable — this app renders on the client, so
+// `Disallow: /api/` left Googlebot with an empty shell and a soft 404 on every
+// page. `robotsTxt` in `seo-core.ts` carries the measurement. Keeping the JSON
+// out of the *index* is the separate job, and this header is what does it: a
+// crawler can only obey `noindex` on a resource it was allowed to fetch, which
+// is exactly why the disallow could not do this job.
+//
+// A subresource's header does not propagate to the document that loaded it, so
+// this does not noindex the pages rendered from these payloads.
+//
+// Mounted immediately after the app exists so it covers every /api route
+// whatever order they are registered in: `app.use` applies only to what
+// follows it, and /api/auth and /api/account are registered well above the
+// content routes.
+app.use("/api", (_req, res, next) => {
+  res.setHeader("X-Robots-Tag", "noindex");
+  next();
+});
+
 const envelope = <T>(
   data: T,
   source: ApiEnvelope<T>["source"],

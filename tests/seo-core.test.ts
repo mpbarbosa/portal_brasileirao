@@ -164,7 +164,24 @@ test("robots allows the site, disallows the API and names the sitemap", () => {
 
   assert.match(txt, /^User-agent: \*$/m);
   assert.match(txt, /^Allow: \/$/m);
-  assert.match(txt, /^Disallow: \/api\/$/m);
+  assert.match(txt, /^Disallow: \/api\/auth\/$/m);
+  assert.match(txt, /^Disallow: \/api\/account$/m);
+
+  // The regression this guards: a blanket `Disallow: /api/` does not keep JSON
+  // out of the index, it stops a client-rendered page rendering at all. It put
+  // every fixture page on "Erro soft 404" in Search Console's live test.
+  assert.ok(!/^Disallow: \/api\/$/m.test(txt), "the content API must stay crawlable");
+  for (const endpoint of [
+    "/api/matches",
+    "/api/standings",
+    "/api/clubs",
+    "/api/scorers",
+    "/api/squads",
+    "/api/coaches",
+    "/api/players",
+  ]) {
+    assert.ok(!txt.includes(`Disallow: ${endpoint}`), `${endpoint} must stay crawlable`);
+  }
   assert.match(txt, /^Sitemap: https:\/\/site\.test\/sitemap\.xml$/m);
 });
 
@@ -172,7 +189,7 @@ test("robots omits the sitemap line when there is no origin to make it absolute"
   // The directive is defined as an absolute URL; a relative one is ignored,
   // which reads as a working line that does nothing.
   assert.ok(!robotsTxt("").includes("Sitemap:"));
-  assert.match(robotsTxt(""), /Disallow: \/api\//);
+  assert.match(robotsTxt(""), /Disallow: \/api\/auth\//);
 });
 
 test("the sitemap carries the sections even with no data loaded", () => {
