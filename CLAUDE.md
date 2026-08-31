@@ -472,6 +472,84 @@ match is LIVE, capping the app at roughly 5 upstream calls/minute at any traffic
 The breaker opens after 3 consecutive failures for 60s, so a downed upstream gets one
 probe a minute rather than one per request.
 
+### The provider regresses individual records, and the app remembers
+
+**football-data serves fixture records that go backwards**, and this is not a
+staleness the cache above can absorb — it is upstream contradicting itself.
+Measured 2026-08-31, one URL, one token, four minutes apart:
+
+    554986  00:38 -> FINISHED 1-1  lastUpdated 2026-08-30T23:37:19Z
+    554986  00:42 -> TIMED   null  lastUpdated 2026-08-30T10:20:34Z
+    554982  00:38 -> FINISHED 3-2  lastUpdated 2026-08-31T00:32:15Z
+    554982  00:42 -> FINISHED 3-2  lastUpdated 2026-08-31T00:40:35Z
+
+The last row is the whole reason the fix has the shape it does. In the response
+that took one fixture back thirteen hours, **another moved forward** — so these
+are not two snapshots alternating, and "prefer the newer response" does not
+work. A finished match rendered as *A realizar* on the Partida page for as long
+as the fill behind it held the regressed copy.
+
+`mergeByFreshness` in `matches-core.ts` keeps, per fixture, whichever copy
+upstream stamps newer. Three things about it are decisions:
+
+- **It compares `lastUpdated`, never a status ordering.** The stamp is what the
+  provider *said*; "FINISHED outranks SCHEDULED" is a guess about what it meant,
+  and it would pin a genuine correction — a result voided to POSTPONED — for
+  ever. `mapMatch` carries the stamp through for this and for nothing else.
+- **Incoming decides which fixtures exist.** A record held only in memory is
+  never resurrected; a fixture upstream genuinely drops must be able to vanish.
+- **An absent stamp is "no claim" and loses every comparison**, so the behaviour
+  collapses to "the newest response wins" where there is nothing to compare.
+  `sync-seed-data` writes an explicit field list, so the frozen snapshot carries
+  no stamps at all — which makes that the **end-to-end suite's path**, and green
+  e2e is therefore not evidence this works. `tests/matches-core.test.ts` covers
+  the rule; the live path was verified by replaying two captured payloads.
+
+**The memory is persisted, and that half was learned the hard way.** It was
+process-local at first, which the code comment described honestly and which
+still was not enough: measured that night, the tick before a deploy served the
+regression correctly (upstream had regressed 4 records, production refilled 12s
+later and served none of them wrong) and the tick *after* the restart served two
+finished matches as unplayed — then every tick for the next fifteen minutes did
+the same, because upstream sat on its stale generation throughout. **Five
+deploys landed in thirty-five minutes** that night. "It self-heals on the next
+good fill" is true and is not a bound worth resting on.
+
+`match-state-store.ts` is the only file that knows where those bytes go — the
+`account-core.ts`/`account-store.ts` split again. The file is `MATCH_STATE_FILE`,
+defaulting to `./data/match-state.json`, and on the host it must stay **inside
+`DEPLOY_DIR`** and **outside `dist/`** for exactly `accounts.db`'s reasons: the
+systemd unit sets `ProtectSystem=strict` with `ReadWritePaths=${DEPLOY_DIR}`,
+both rsyncs delete `dist/` with `--delete`, and `express.static` serves it over
+HTTP. Unlike `accounts.db` it is **regenerable** — losing it costs one window,
+not data — so it is deliberately not in the backup.
+
+Two traps, both of which the tests hold:
+
+- **`writeFileSync` is not atomic and a deploy kills the process.** A write
+  interrupted mid-flight leaves truncated JSON, and the next boot would read
+  nothing at the moment it most needs to read something. It writes to a sibling
+  and renames.
+- **Every read failure is an empty memory, never a throw.** This runs at boot,
+  so a missing, truncated or wrongly-shaped file must leave the server starting
+  normally — same class as `node:sqlite`'s lazy load. A site that is down
+  because a cache warmed badly is far worse than one serving a stale scoreline.
+
+**A stale file is harmless, before anyone adds an expiry to it.** A stored
+record only ever *wins* by carrying a newer stamp than what upstream just
+served, so an old file can prevent a regression and cannot cause one.
+
+**`/api/standings` and `/api/scorers` do not get this treatment, and cannot.**
+Watched across the same incident, standings held one fingerprint over 10
+samples and scorers likewise, while `/matches` regressed in the very same
+ticks — and the standings table agreed with the **fresh** matches generation
+exactly, disagreeing with the stale one on precisely the four clubs whose
+fixtures had regressed. So upstream's table was *ahead* of its own match list.
+More to the point, **neither payload carries a usable stamp**: standings has
+none at all, and scorers' only `lastUpdated` fields sit on the player and team
+identity records (2023, 2022), never on the tally. Any guard there would have to
+be a semantic guess of the kind the first bullet above rejects.
+
 ### API envelope
 
 Every data endpoint returns `ApiEnvelope<T>`: `source`, a human-readable pt-BR `note`, and
