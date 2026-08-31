@@ -3,6 +3,7 @@ import { test } from "node:test";
 
 import {
   type CbfAtleta,
+  attachSubstitutions,
   STARTERS_PER_SIDE,
   bySection,
   lineupFor,
@@ -13,6 +14,7 @@ import {
   withLineups,
 } from "@/escalacao-core";
 import type { SideMap } from "@/goals-core";
+import type { SumulaSubstitution } from "@/sumula-core";
 import type { Lineup, Match } from "@/src/types";
 
 const SIDES: SideMap = {
@@ -155,4 +157,72 @@ test("bySection sorts by shirt as a number, not as text", () => {
     bench.map((p) => p.shirt),
     ["23"],
   );
+});
+
+
+// ---------------------------------------------------------------------------
+// Substitutions — two sources joined on the shirt number
+// ---------------------------------------------------------------------------
+
+const TEAMS = [
+  { code: "PAL" as const, cbfName: "Palmeiras" },
+  { code: "VAS" as const, cbfName: "Vasco da Gama Saf" },
+];
+
+const sub = (over: Partial<SumulaSubstitution> = {}): SumulaSubstitution => ({
+  period: "2T",
+  minute: 25,
+  team: "Palmeiras/SP",
+  onShirt: "20",
+  offShirt: "1",
+  ...over,
+});
+
+test("a substitution resolves both shirts against that side's own sheet", () => {
+  const lineups = lineupsFromAtletas(side("1"), side("2"), SIDES);
+  const attached = attachSubstitutions(lineups, [sub()], TEAMS, { PAL: 1, VAS: 0 });
+  assert.ok(attached);
+  const pal = attached.find((l) => l.clubCode === "PAL");
+  assert.deepEqual(pal?.subs, [{ on: "Reserva1", off: "Titular1", minute: "70'" }]);
+  // The other side made none, so it carries no key rather than an empty list.
+  assert.equal(attached.find((l) => l.clubCode === "VAS")?.subs, undefined);
+});
+
+test("the súmula's Equipe carries a UF the match API does not", () => {
+  const lineups = lineupsFromAtletas(side("1"), side("2"), SIDES);
+  // `Vasco da Gama Saf/RJ` against the API's `Vasco da Gama Saf`.
+  const attached = attachSubstitutions(
+    lineups,
+    [sub({ team: "Vasco da Gama Saf/RJ" })],
+    TEAMS,
+    { PAL: 0, VAS: 1 },
+  );
+  assert.equal(attached?.find((l) => l.clubCode === "VAS")?.subs?.length, 1);
+});
+
+test("anything that cannot be placed refuses the WHOLE fixture, not the row", () => {
+  const lineups = lineupsFromAtletas(side("1"), side("2"), SIDES);
+  const expected = { PAL: 2, VAS: 0 };
+
+  // A shirt nobody on that sheet wears. Dropping just this row would read as a
+  // complete record of a match where the change never happened.
+  assert.equal(
+    attachSubstitutions(lineups, [sub(), sub({ onShirt: "99" })], TEAMS, expected),
+    null,
+  );
+
+  // A team string matching neither side.
+  assert.equal(
+    attachSubstitutions(lineups, [sub({ team: "Botafogo/RJ" })], TEAMS, { PAL: 0, VAS: 0 }),
+    null,
+  );
+});
+
+test("both sources must agree on HOW MANY before either is believed", () => {
+  const lineups = lineupsFromAtletas(side("1"), side("2"), SIDES);
+  // The súmula lists one; the match API counted two. One of them is wrong and
+  // this cannot tell which, so it refuses rather than picking.
+  assert.equal(attachSubstitutions(lineups, [sub()], TEAMS, { PAL: 2, VAS: 0 }), null);
+  // And the reverse: the API counted none.
+  assert.equal(attachSubstitutions(lineups, [sub()], TEAMS, { PAL: 0, VAS: 0 }), null);
 });

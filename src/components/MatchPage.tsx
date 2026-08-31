@@ -191,6 +191,28 @@ function LineupColumn({ lineup, name }: { lineup: Lineup; name: string }) {
           </ul>
         </>
       )}
+      {lineup.subs && lineup.subs.length > 0 && (
+        <>
+          <p className="mt-2 mb-1 text-body-small text-ink-faint">Substituições</p>
+          {/* "X por Y" — the way a substitution is said in pt-BR, and the reason
+              there is no arrow here. An up/down pair would be two more glyphs to
+              keep monochrome and correctly sized across platforms, which is the
+              trap `SunIcon` and `MoonIcon` exist to record; and a single arrow
+              between two names does not say which way it points. */}
+          <ul className="space-y-0.5 text-body-small text-on-surface-variant" data-subs>
+            {lineup.subs.map((sub, index) => (
+              <li key={`${sub.minute}-${sub.on}-${index}`} className="flex gap-2">
+                <span className="w-10 shrink-0 text-right tabular-nums text-ink-faint">
+                  {sub.minute}
+                </span>
+                <span className="truncate">
+                  {sub.on} <span className="text-ink-faint">por {sub.off}</span>
+                </span>
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
     </div>
   );
 }

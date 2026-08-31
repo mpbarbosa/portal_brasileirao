@@ -13,7 +13,7 @@ import type { Lineup } from "@/src/types";
  * anything less, so an absent match means "not synced or not published", never
  * "no lineup".
  *
- * Generated 2026-08-30.
+ * Generated 2026-08-31.
  */
 export const ESCALACOES: Record<string, Lineup[]> = {
   "554971": [
@@ -44,6 +44,13 @@ export const ESCALACOES: Record<string, Lineup[]> = {
         { name: "Matheus Fernandes", shirt: "35" },
         { name: "Yuri Alves", shirt: "41" },
       ],
+      subs: [
+        { on: "Fabinho", off: "Eric Ramires", minute: "63'" },
+        { on: "Henry Mosquera", off: "Herrera", minute: "63'" },
+        { on: "Sasha", off: "Lucas Barbosa", minute: "72'" },
+        { on: "Yuri Alves", off: "Vinicinho", minute: "85'" },
+        { on: "Gustavo Neves", off: "Rodriguinho", minute: "85'" },
+      ],
     },
     {
       clubCode: "1767",
@@ -71,6 +78,12 @@ export const ESCALACOES: Record<string, Lineup[]> = {
         { name: "Wallace", shirt: "82", starter: true },
         { name: "Vinicius", shirt: "95" },
         { name: "Enamorado", shirt: "99" },
+      ],
+      subs: [
+        { on: "Pavon", off: "Tete", minute: "Intervalo" },
+        { on: "Jovane", off: "Amuzu", minute: "63'" },
+        { on: "Vinicius", off: "Krovinovic", minute: "87'" },
+        { on: "Danilo", off: "Erick Noriega", minute: "90+1'" },
       ],
     },
   ],
@@ -102,6 +115,13 @@ export const ESCALACOES: Record<string, Lineup[]> = {
         { name: "Enio", shirt: "97" },
         { name: "Anderson Paixão", shirt: "98", keeper: true, starter: true },
       ],
+      subs: [
+        { on: "Garcez", off: "Dylan", minute: "57'" },
+        { on: "Everton", off: "Heitor Rodrigues", minute: "65'" },
+        { on: "Bruno", off: "Giovanni Augusto", minute: "74'" },
+        { on: "Fernando", off: "Yago Felipe", minute: "74'" },
+        { on: "Franco Rossi", off: "Tulio Oliveira", minute: "74'" },
+      ],
     },
     {
       clubCode: "1776",
@@ -129,6 +149,13 @@ export const ESCALACOES: Record<string, Lineup[]> = {
         { name: "Luis Osorio", shirt: "54" },
         { name: "Cauly", shirt: "80", starter: true },
         { name: "Daniel", shirt: "94", starter: true },
+      ],
+      subs: [
+        { on: "Gustavo Santana", off: "Calleri", minute: "30'" },
+        { on: "Marcos Antônio", off: "Daniel", minute: "Intervalo" },
+        { on: "Ferreira", off: "Pablo Maia", minute: "65'" },
+        { on: "Newton", off: "Lucas Ramon", minute: "65'" },
+        { on: "Pedro Ferreira", off: "Cauly", minute: "75'" },
       ],
     },
   ],
@@ -160,6 +187,13 @@ export const ESCALACOES: Record<string, Lineup[]> = {
         { name: "Fernando", shirt: "88" },
         { name: "Rodrigo Rodrigues", shirt: "99" },
       ],
+      subs: [
+        { on: "Vitor Tissi", off: "Thiago Santos", minute: "61'" },
+        { on: "Paulo Roberto", off: "Pedro Rocha", minute: "61'" },
+        { on: "Fabinho", off: "Lavega", minute: "71'" },
+        { on: "Lucas Taverna", off: "JP Chermont", minute: "83'" },
+        { on: "Fernando", off: "Josue", minute: "83'" },
+      ],
     },
     {
       clubCode: "1779",
@@ -187,6 +221,13 @@ export const ESCALACOES: Record<string, Lineup[]> = {
         { name: "Dieguinho", shirt: "61" },
         { name: "Jesse Lingard", shirt: "77" },
         { name: "Alex Santana", shirt: "80" },
+      ],
+      subs: [
+        { on: "Memphis Depay", off: "Pedro Raul", minute: "Intervalo" },
+        { on: "Matheus", off: "Pedro Milans", minute: "Intervalo" },
+        { on: "Guilherme", off: "Bidon", minute: "70'" },
+        { on: "Dieguinho", off: "Andre Carrillo", minute: "70'" },
+        { on: "Jesse Lingard", off: "Kaio Lima", minute: "81'" },
       ],
     },
   ],
@@ -218,6 +259,13 @@ export const ESCALACOES: Record<string, Lineup[]> = {
         { name: "Luis Pacheco", shirt: "50" },
         { name: "Arthur Gabriel", shirt: "56", starter: true },
       ],
+      subs: [
+        { on: "Murilo", off: "Alexander Barboza", minute: "Intervalo" },
+        { on: "Martinez", off: "Marlon Freitas", minute: "70'" },
+        { on: "Felipe Anderson", off: "Allan", minute: "70'" },
+        { on: "Jhon Arias", off: "Vitor Roque", minute: "70'" },
+        { on: "Khellven", off: "Giay", minute: "84'" },
+      ],
     },
     {
       clubCode: "1780",
@@ -245,6 +293,13 @@ export const ESCALACOES: Record<string, Lineup[]> = {
         { name: "Ramon Rique", shirt: "83" },
         { name: "Barros", shirt: "88" },
         { name: "Paulo Henrique", shirt: "96", starter: true },
+      ],
+      subs: [
+        { on: "Riquelme Avellar", off: "Cuiabano", minute: "57'" },
+        { on: "Ramon Rique", off: "Thiago Mendes", minute: "57'" },
+        { on: "Facundo", off: "David", minute: "64'" },
+        { on: "Nuno", off: "Adson", minute: "64'" },
+        { on: "Marino", off: "Hinestroza", minute: "71'" },
       ],
     },
   ],
@@ -276,6 +331,13 @@ export const ESCALACOES: Record<string, Lineup[]> = {
         { name: "Gabriel Brazão", shirt: "77", keeper: true, starter: true },
         { name: "Samuel Pierre", shirt: "81" },
       ],
+      subs: [
+        { on: "Gabriel Bontempo", off: "Rony", minute: "Intervalo" },
+        { on: "Rollheiser", off: "João Schmidt", minute: "61'" },
+        { on: "Thaciano", off: "Barreal", minute: "73'" },
+        { on: "Caballero", off: "Gabriel Barbosa", minute: "81'" },
+        { on: "Davi Fernandes", off: "Igor Vinicius", minute: "81'" },
+      ],
     },
     {
       clubCode: "4364",
@@ -303,6 +365,13 @@ export const ESCALACOES: Record<string, Lineup[]> = {
         { name: "Alesson", shirt: "77", starter: true },
         { name: "Wallisson", shirt: "80" },
         { name: "Carlos Eduardo", shirt: "96" },
+      ],
+      subs: [
+        { on: "Lucas Oliveira", off: "Gabriel", minute: "28'" },
+        { on: "Wallisson", off: "Gustavo", minute: "61'" },
+        { on: "Japa", off: "Carlos", minute: "61'" },
+        { on: "Fernandinho", off: "Alesson", minute: "77'" },
+        { on: "Carlos Eduardo", off: "Bruno Santos", minute: "77'" },
       ],
     },
   ],
@@ -334,6 +403,13 @@ export const ESCALACOES: Record<string, Lineup[]> = {
         { name: "Rene", shirt: "91", starter: true },
         { name: "Matheusinho", shirt: "98" },
       ],
+      subs: [
+        { on: "Emmanuel Martinez", off: "Walace", minute: "Intervalo" },
+        { on: "Pochettino", off: "Diego Tarzia", minute: "Intervalo" },
+        { on: "Marinho", off: "Erick", minute: "62'" },
+        { on: "Renato Kayzer", off: "Matheuzinho", minute: "69'" },
+        { on: "Matheusinho", off: "Britez", minute: "76'" },
+      ],
     },
     {
       clubCode: "1777",
@@ -361,6 +437,12 @@ export const ESCALACOES: Record<string, Lineup[]> = {
         { name: "Zé Guilherme", shirt: "66" },
         { name: "Ruan Pablo", shirt: "77" },
         { name: "Kike Olivera", shirt: "99", starter: true },
+      ],
+      subs: [
+        { on: "Jean Lucas", off: "Erick", minute: "70'" },
+        { on: "Michel Araujo", off: "Rodrigo Nestor", minute: "81'" },
+        { on: "Ruan Pablo", off: "Erick Pulga", minute: "81'" },
+        { on: "Everaldo", off: "Alejo", minute: "90+3'" },
       ],
     },
   ],

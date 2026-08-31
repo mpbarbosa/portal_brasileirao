@@ -156,6 +156,101 @@ export const sumulaMinuteLabel = (goal: SumulaGoal): string => {
   return `${base + (goal.minute ?? 0)}'`;
 };
 
+/**
+ * One row of the Substituições table.
+ *
+ * The shirt numbers are the load-bearing fields and the names are not, which
+ * inverts the Gols table. CBF **truncates** a long name in this table —
+ * `"82 - Riquelme Avellar da Silva Fo..."` — so the printed name cannot be
+ * displayed and cannot be matched on. The number in front of it is complete,
+ * and the escalação from the match API already maps numbers to names for the
+ * same fixture, so the shirt is what this carries and the name is dropped
+ * rather than half-recorded.
+ */
+export interface SumulaSubstitution {
+  period: SumulaPeriod;
+  /**
+   * The minute within the half, as CBF prints it. **Absent at the interval**,
+   * where `Tempo` is a literal `-` — a substitution made at half time has no
+   * minute, and inventing 45 for it would be a number the document does not
+   * state.
+   */
+  minute?: number;
+  /** Minutes into stoppage, where the row reads `+2` or `+2:00`. */
+  added?: number;
+  /** The `Equipe` column, verbatim — `Vasco da Gama Saf/RJ`. */
+  team: string;
+  /** Shirt of the player coming on (the `Entrou` column). */
+  onShirt: string;
+  /** Shirt of the player going off (the `Saiu` column). */
+  offShirt: string;
+}
+
+/**
+ * `Tempo` for a substitution: `12:00`, `+2:00`, or a literal `-` at the
+ * interval. The Gols table cannot produce the third, which is why this is its
+ * own pattern rather than a shared one.
+ */
+const SUB_ROW =
+  /^\s*(?:(\d{1,3}):(\d{2})|\+\s*(\d{1,3})(?::\d{2})?|(-))\s+(1T|2T|INT)\s+(\S.*?)\s{2,}(\d{1,3})\s*-\s*\S.*?\s{2,}(\d{1,3})\s*-\s*\S.*?\s*$/;
+
+/**
+ * Read the Substituições table out of a `pdftotext -layout` súmula.
+ *
+ * Bounded the way `parseSumulaGoals` is, and for the same reason: it starts at
+ * the header row carrying `Tempo` **and** `Entrou`, which no other table in the
+ * document has, and stops at the first blank run after the last row. The Gols
+ * header carries `Tempo` and `Tipo`; keying on the column that is unique to
+ * each table is what keeps the two parsers from reading each other's rows.
+ */
+export const parseSumulaSubstitutions = (text: string): SumulaSubstitution[] => {
+  const lines = text.split("\n");
+  const start = lines.findIndex(
+    (line) => line.includes("Tempo") && line.includes("Entrou") && line.includes("Saiu"),
+  );
+  if (start === -1) return [];
+
+  const subs: SumulaSubstitution[] = [];
+  let seen = false;
+
+  for (const line of lines.slice(start + 1)) {
+    const match = SUB_ROW.exec(line);
+    if (!match) {
+      // Two blank-ish lines after at least one row is the end of the table.
+      // Reading on would pick up whatever CBF prints next.
+      if (seen && line.trim() === "") break;
+      continue;
+    }
+    seen = true;
+    const [, mm, , added, dash, period, team, onShirt, offShirt] = match;
+    subs.push({
+      period: period as SumulaPeriod,
+      ...(dash !== undefined ? {} : added === undefined ? { minute: Number(mm) } : { added: Number(added) }),
+      team: team.trim(),
+      onShirt,
+      offShirt,
+    });
+  }
+
+  return subs;
+};
+
+/**
+ * The minute a reader recognises, or the word for when there is none.
+ *
+ * `sumulaMinuteLabel`'s reckoning, with the one case a goal cannot be in: at
+ * the interval CBF prints no time at all, so this prints **Intervalo** rather
+ * than a number. Sharing that function instead would have silently rendered a
+ * half-time substitution as `45'`, since its `period === "1T" ? 0 : 45` reads
+ * `INT` as the second half.
+ */
+export const sumulaSubstitutionLabel = (sub: SumulaSubstitution): string => {
+  if (sub.period === "INT") return "Intervalo";
+  const base = sub.period === "1T" ? 0 : HALF_MINUTES;
+  if (sub.added !== undefined) return `${base + HALF_MINUTES}+${sub.added}'`;
+  return `${base + (sub.minute ?? 0)}'`;
+};
+
 /** The two scorelines the Cronologia block states, home first. */
 export interface SumulaScores {
   halfTime: [number, number];

@@ -454,6 +454,17 @@ the example below shows and as prose summarising this endpoint has been known to
 omit. A probe looking for them at the top level of `jogo` finds `undefined` and
 reads as "the data is gone".
 
+The **súmula** on `conteudo.cbf.com.br` — reached through `jogo.documentos`, and
+already fetched per match for the goal minutes — carries a **Substituições**
+table this endpoint cannot match: `Tempo`, `1T/2T`, `Equipe`, `Entrou`, `Saiu`.
+The two are complementary rather than redundant, and neither is sufficient:
+`alteracoes` here resolves *who* through ids and has no usable clock, while the
+súmula has the clock and **truncates** a long name (`"82 - Riquelme Avellar da
+Silva Fo..."`). The shirt number is complete in both and is what joins them. Note
+its `Equipe` prints a UF (`Vasco da Gama Saf/RJ`) that `mandante.nome` does not,
+and that a substitution made at half time has `Tempo` of `-` with `1T/2T` of
+`INT`.
+
 Three things about `atletas` that only appear when you parse it: 23 a side with
 exactly 11 whose `reserva` is `"false"`; **the booleans are strings**, so a
 truthiness check reports nobody as a starter; and `apelido` carries a zero-padded

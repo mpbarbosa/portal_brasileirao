@@ -41,7 +41,12 @@ import os from "node:os";
 import path from "node:path";
 
 import { buildAgent, CBF_HOST, getJson, sleep } from "@/scripts/cbf-api";
-import { type CbfAtleta, lineupsFromAtletas, lineupsReconcile } from "@/escalacao-core";
+import {
+  type CbfAtleta,
+  attachSubstitutions,
+  lineupsFromAtletas,
+  lineupsReconcile,
+} from "@/escalacao-core";
 import { joinMatch, SERIE_A_CATEGORIA_ID, type CbfFixture } from "@/broadcast-core";
 import {
   goalsFromRegistros,
@@ -58,6 +63,7 @@ import {
 } from "@/football-data-core";
 import {
   parseSumulaGoals,
+  parseSumulaSubstitutions,
   parseSumulaScores,
   sumulaMinutes,
   sumulaUrlFrom,
@@ -88,8 +94,21 @@ interface CbfMatchResponse {
      * need is right; re-read the payload before concluding a feature needs a
      * second request.
      */
-    mandante?: { id?: string; nome?: string; gols?: string | null; atletas?: CbfAtleta[] };
-    visitante?: { id?: string; nome?: string; gols?: string | null; atletas?: CbfAtleta[] };
+    mandante?: {
+      id?: string;
+      nome?: string;
+      gols?: string | null;
+      atletas?: CbfAtleta[];
+      /** Only its LENGTH is read: the count the súmula must agree with. */
+      alteracoes?: unknown[];
+    };
+    visitante?: {
+      id?: string;
+      nome?: string;
+      gols?: string | null;
+      atletas?: CbfAtleta[];
+      alteracoes?: unknown[];
+    };
     registros?: CbfRegistro[];
     /**
      * The three PDFs CBF publishes per match — súmula, boletim financeiro,
@@ -287,6 +306,7 @@ const before = Object.keys(goals).length;
 const escalacoes: Record<string, Lineup[]> = replace ? {} : await readExistingLineups();
 const lineupsBefore = Object.keys(escalacoes).length;
 const noLineup: string[] = [];
+const noSubs: string[] = [];
 
 const unjoined: string[] = [];
 const unknownCodes = new Map<string, string>();
@@ -399,8 +419,53 @@ for (const jogo of serieA) {
     awayCode: ours.awayCode,
   };
   const lineups = lineupsFromAtletas(detail.mandante, detail.visitante, sides);
+
+  /**
+   * The súmula, fetched **once** and read twice — for the goal minutes below
+   * and for the substitutions just above them.
+   *
+   * It moved above the 0-0 skip when substitutions landed, and that is a
+   * deliberate widening rather than a refactor: a goalless match has no minutes
+   * to look up but it does have substitutions, so leaving the fetch where it was
+   * would have silently excluded every 0-0 from the one feature that is mostly
+   * about time. The cost is one extra PDF per goalless fixture.
+   */
+  const sumulaUrl = sumulaUrlFrom(detail.documentos);
+  let sumula: string | null = null;
+  if (sumulaUrl) {
+    sumula = await sumulaText(sumulaUrl, agent);
+    await sleep(SUMULA_PACE_MS);
+  }
+
   if (lineupsReconcile(lineups)) {
-    escalacoes[id] = lineups;
+    /**
+     * Substitutions ride on the sheet rather than being their own record,
+     * because a change is only meaningful against the eleven it changed — and
+     * because the shirt number is the join, so one cannot be resolved without
+     * the other.
+     *
+     * `attachSubstitutions` is all-or-nothing per fixture. Failing here leaves
+     * the escalação recorded without `subs`, which is the same soft failure the
+     * minutes take: a sheet with no changes listed is honest, a sheet missing
+     * one change is a lie about the match.
+     */
+    const expected: Record<string, number> = {
+      [ours.homeCode]: detail.mandante?.alteracoes?.length ?? 0,
+      [ours.awayCode]: detail.visitante?.alteracoes?.length ?? 0,
+    };
+    const teams = [
+      { code: ours.homeCode, cbfName: String(detail.mandante?.nome ?? "") },
+      { code: ours.awayCode, cbfName: String(detail.visitante?.nome ?? "") },
+    ];
+    const withSubs = sumula
+      ? attachSubstitutions(lineups, parseSumulaSubstitutions(sumula), teams, expected)
+      : null;
+    if (!withSubs && sumula) {
+      noSubs.push(`${label} — súmula's Substituições did not line up with the match API`);
+    } else if (!sumula) {
+      noSubs.push(`${label} — no súmula to read substitutions from`);
+    }
+    escalacoes[id] = withSubs ?? lineups;
   } else if (lineups.length > 0 || (detail.mandante?.atletas?.length ?? 0) > 0) {
     noLineup.push(
       `${label} — team sheet incomplete (` +
@@ -432,17 +497,12 @@ for (const jogo of serieA) {
    * minute would be a plausible lie, which is why `sumulaMinutes` refuses
    * rather than doing its best.
    */
-  const sumulaUrl = sumulaUrlFrom(detail.documentos);
   let minutes: string[] | null = null;
-  if (sumulaUrl) {
-    const text = await sumulaText(sumulaUrl, agent);
-    await sleep(SUMULA_PACE_MS);
-    if (text) {
-      minutes = sumulaMinutes(scored.length, parseSumulaGoals(text), parseSumulaScores(text));
-      if (!minutes) withoutMinutes.push(`${label} — súmula did not line up with the goal list`);
-    } else {
-      withoutMinutes.push(`${label} — súmula could not be read`);
-    }
+  if (sumula) {
+    minutes = sumulaMinutes(scored.length, parseSumulaGoals(sumula), parseSumulaScores(sumula));
+    if (!minutes) withoutMinutes.push(`${label} — súmula did not line up with the goal list`);
+  } else if (sumulaUrl) {
+    withoutMinutes.push(`${label} — súmula could not be read`);
   } else {
     withoutMinutes.push(`${label} — no súmula published yet`);
   }
@@ -592,7 +652,19 @@ ${lineupIds
             `    {\n      clubCode: ${JSON.stringify(lineup.clubCode)},\n` +
             `      players: [\n` +
             lineup.players.map((player) => `        ${renderPlayer(player)},`).join("\n") +
-            `\n      ],\n    },`,
+            `\n      ],\n` +
+            (lineup.subs && lineup.subs.length > 0
+              ? `      subs: [\n` +
+                lineup.subs
+                  .map(
+                    (sub) =>
+                      `        { on: ${JSON.stringify(sub.on)}, off: ${JSON.stringify(sub.off)}, ` +
+                      `minute: ${JSON.stringify(sub.minute)} },`,
+                  )
+                  .join("\n") +
+                `\n      ],\n`
+              : "") +
+            `    },`,
         )
         .join("\n") +
       `\n  ],`,
@@ -606,6 +678,15 @@ console.log(
   `==> Wrote src/data/escalacoes.ts — ${lineupIds.length} match(es) ` +
     `(${lineupsBefore} before, ${lineupIds.length - lineupsBefore} added this run)`,
 );
+
+if (noSubs.length) {
+  console.warn(`\n    ${noSubs.length} team sheet(s) recorded WITHOUT substitutions:`);
+  for (const line of noSubs) console.warn(`      ${line}`);
+  console.warn(
+    `    Not a failure — the sheets are recorded and correct. A re-run picks the\n` +
+      `    changes up once CBF publishes a súmula whose table agrees with the API.`,
+  );
+}
 
 if (noLineup.length) {
   console.warn(`\n    ${noLineup.length} match(es) recorded WITHOUT a team sheet:`);
