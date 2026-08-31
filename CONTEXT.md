@@ -75,6 +75,20 @@ word promises axes and a legend that are deliberately absent), "colunas" for the
 kind (the table already has columns and one of them is this one), "tipo de gráfico" in
 the control's copy (the button names the mark, not a setting).
 
+**Escalação** (pl. **escalações**):
+The eleven a club put on the pitch for **one match**, and the bench beside them.
+A section of the **Partida** page, closed by default. Deliberately not the same
+word as **Elenco**, which is the whole squad under contract and is what the
+**Jogadores** page shows: the two answer different questions, and only the first
+is a fact about a fixture.
+Within it, **Titulares** are the eleven who started and **Reservas** the bench.
+The goalkeeper is marked `(GOL)` because it is the one position CBF reports; no
+other is labelled, since naming them would mean guessing.
+_Avoid_: "elenco" for a match sheet (that is the season squad), "formação" and
+"esquema" (those name the shape — 4-3-3 — which this app does not carry),
+"lineup" and "starting XI" in user-facing copy, "titular" for a squad regular
+in general rather than for this match's starter.
+
 **Rodada**:
 One matchday of the championship — the set of fixtures sharing a `round` number.
 The second tab (`TABS`, id `"rodada"`), whose heading renders as `Nª rodada`.

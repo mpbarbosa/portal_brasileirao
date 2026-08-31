@@ -1000,9 +1000,44 @@ the proposal set was satisfiable for free.
 
 **Goals shipped on the back of that** — `goals-core.ts`, `scripts/sync-goals.ts`,
 `src/data/goals.ts`, and the scorers under the Partida page's scoreline.
-**Escalações did not**, and are no longer on this list in either direction: the
+~~**Escalações did not**, and are no longer on this list in either direction: the
 data exists, so the reason for refusing them has to be a UI one now, argued on
-its own merits, rather than an inherited claim about what is available.
+its own merits, rather than an inherited claim about what is available.~~
+**Argued, and the answer was yes.** Shipped as a closed `<details>` on the
+Partida page — `escalacao-core.ts`, `src/data/escalacoes.ts`, and the same
+`sync-goals` run that writes the goals.
+
+**The argument, because "it was obvious" is not one.** Three objections were
+weighed and measured rather than asserted:
+
+- **Page length.** Real, and the sharpest of the three: 46 names rendered open
+  would evict the campanhas and the melhores momentos from a page that already
+  lost the latter to the Gols band. A closed `<details>` costs one row, which is
+  the same answer `PlayersView` reached for a thousand players.
+- **Payload.** Measured at **1,912 bytes** trimmed for one match, so ~710 KB for
+  a full season against a `src/data` that is 460 KB today. That sounds
+  disqualifying and is not: the file lives in the *server* bundle, and a reader
+  receives only the one match they opened — 1.9 KB. Repo size and host memory,
+  not client cost. Worth stating precisely, because the estimate was doing the
+  arguing until it was measured.
+- **The minute.** The one objection that held, and it is why **substitutions are
+  not in this**. `alteracoes` resolves perfectly — 10 of 10 ids against their own
+  side's roster, a starter off and a reserve on every time — but `tempo_jogo` is
+  `"25:00"` beside `tempo_subs` `"TN2"`, the split vocabulary that kept goals
+  minuteless until `sumula-core.ts`. A substitution is mostly *when*. The súmula
+  prints a Substituições table beside the Gols table that module already parses;
+  that is the follow-up, and it is a parser rather than a new source.
+
+**One process note, because it cost a probe and the blame lands somewhere
+unobvious.** Building this started from a prose summary of the CBF survey, which
+says the payload "carries `atletas` … and `alteracoes`" without saying **where**.
+Read literally that is the top level, where neither exists — they are nested
+under `mandante` and `visitante` — so the first probe came back with both keys
+`undefined` and, taken at face value, would have said the data had gone away.
+`docs/data-sources.md` had the nesting right all along, in its worked example,
+and is the thing to read. Prose that summarises a payload is a reading of it; the
+committed shape is the payload.
+Relayed field names are readings too.
 
 The shape of the error is the one `CLAUDE.md` names under *check the prompt that
 sent you*: a claim that produces no work when it holds is never exercised. "No
