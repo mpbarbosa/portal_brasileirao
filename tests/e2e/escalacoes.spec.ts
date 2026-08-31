@@ -75,13 +75,40 @@ test.describe("Escalações", () => {
   });
 
   test("a fixture with no synced sheet renders no section at all", async ({ page }) => {
-    // Round 1 is in the snapshot and was not part of the sync window, so it
-    // carries no escalação. Nothing renders — no heading, no empty panel, and
-    // no dash standing in for a value nobody has.
-    await page.goto("/jogos?rodada=1");
-    const first = page.locator("main a[href^='/partida/']").first();
-    await first.click();
+    /**
+     * The unsynced state is **produced**, not hunted for, and the first version
+     * of this spec did the opposite twice over.
+     *
+     * It went to `/jogos?rodada=1` — which is not the route: `route-core.ts`
+     * parses `/jogos/1`, so the query was ignored and the page showed the
+     * *current* round. It then clicked whatever fixture happened to be first
+     * and asserted no escalação, which held only while no current-round fixture
+     * had one. A sync widening coverage from six matches to 34 gave it one, and
+     * the spec went red for a reason that has nothing to do with what it tests.
+     *
+     * That is `goals.spec.ts`'s lesson one file over, which its own header
+     * states: never depend on *which* record happens to lack a value, because
+     * every sync moves it. Strip `lineups` from the payload and the branch is
+     * reached rather than found.
+     */
+    const response = await page.request.get("/api/matches");
+    const body = await response.json();
+    body.data.matches = body.data.matches.map(
+      ({ lineups: _lineups, ...match }: Record<string, unknown>) => match,
+    );
+    await page.route("**/api/matches*", (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify(body),
+      }),
+    );
+
+    await page.goto(`/partida/${MATCH}`);
     await expect(page.locator("main article")).toBeVisible();
+    // Nothing renders — no heading, no empty panel, and no dash standing in for
+    // a value nobody has.
     await expect(page.getByRole("heading", { name: "Escalações" })).toHaveCount(0);
+    await expect(page.locator("[data-lineup]")).toHaveCount(0);
   });
 });
