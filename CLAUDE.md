@@ -3234,6 +3234,50 @@ re-read, while Ao vivo moves while you are looking at it. **Two refreshes of one
 expected to disagree on those six images.** Disagreeing on any of the other twelve is a real
 difference and worth reading.
 
+**Those same six captures' CAPTIONS rot too, and that is a different cost from the
+byte-noise above.** The list is framed as image reproducibility — two shoots of one
+build disagree, and that is a nuisance. A caption describing values no longer in the
+frame is a defect, and the two sit under one heading.
+
+**A caption is true of its own image and stays true; it goes false at the re-shoot.**
+Alt text describes a picture, and the picture never changes once committed — so
+nothing is wrong on the day the sky changes. What happens is that the *next* frame
+carries different values, and the sentence beneath it was written for the last one.
+The obligation therefore lands on whoever shoots, in exactly the case nothing will
+ask them: **the frame changed with the sky rather than with an appearance-path
+commit, so no commit exists for the gate to enumerate.** That is the cut, and it is
+not live-versus-static:
+
+    weather, Ao vivo fixtures, standings   live upstream     no commit, gate blind
+    scorers and minutes                    src/data/goals    watched path, listed
+
+The second row is not hypothetical — `sync-goals` gave `554977` its minutes, the
+gate duly listed it, and that is how `goals.spec.ts`'s pinned "minuteless fixture"
+broke. Those captions rot as well, and something can see them coming. For the first
+row nothing ever will.
+
+**The rule that does not follow is "quote fewer live values", and the evidence
+against it is the commit that discovered the problem.** #296 found the estádio
+caption describing *"um ícone de nuvem, 22 °C, «Nublado»"* against a frame reading
+sun, 26 °C, *"Céu limpo"* — and the careful response, from a session that had just
+learned this, was to write **more**: three quoted values became six, gaining the
+sensação, the umidade and the vento. Measured eight minutes after that merged, four
+of the six already read differently upstream. **That does not make the caption false**
+— the image still shows what it says, and reading it as false is the alarming
+misread this file warns about elsewhere. What it measures is the re-write cost at
+the next shoot, which #296 doubled. Trimming it back would also reverse house
+precedent: `eb628f0` deliberately rewrote captions to describe what is *in the
+frame*, and the Ao vivo caption names a live *"Bahia 3 × 2 Internacional"* while the club
+caption names *"1º lugar, 52 pontos, 25 jogos, saldo +24 e 69% de aproveitamento"*. A rule that strips those needs a
+better argument than the estádio card provides.
+
+**And do not read the dark captions as the drift-proof half.** `estadio-maracana-dark`
+says *"o mesmo cartão do clima com a hora da leitura"*, which looks like somebody
+choosing stable phrasing and is not: **every** dark caption in the README says "the
+same X", because it describes a repeat of the light one. The asymmetry is real and
+that explanation of it is wrong — it is a property of being second, not a technique
+to copy.
+
 Nothing automated is affected — `check-screenshots.sh` compares appearance *sources*
 between CAPTURED's sha and HEAD and never compares image bytes. What is lost is a **human**
 signal: "classificacao-light.png changed" used to mean the table looks different, and now
