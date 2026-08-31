@@ -53,7 +53,10 @@ test("the reloaded memory still rejects a regressed record", () => {
   const merged = mergeByFreshness(readMatchState(file), [
     match({ id: "554986", status: "SCHEDULED", homeGoals: null, awayGoals: null,
             lastUpdated: "2026-08-30T10:20:34Z" }),
-  ]);
+    // Ahead of the fixture's own kickoff, so `retractsResult` cannot fire and
+    // this stays a test of the stamp comparison surviving a restart — which is
+    // what the store is for. The coherence rule has its own cases next door.
+  ], Date.parse("2026-08-30T20:00:00Z"));
 
   assert.equal(merged[0].status, "FINISHED");
   assert.equal(merged[0].homeGoals, 1);

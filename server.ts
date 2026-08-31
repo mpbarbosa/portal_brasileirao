@@ -402,9 +402,11 @@ const loadMatches = async (): Promise<ApiEnvelope<MatchesPayload>> => {
   try {
     const raw = await fetchFromProvider<MatchesResponse>(matchesUrl());
     // Upstream regresses individual records — a finished match comes back as
-    // TIMED with no score and a thirteen-hour-old stamp — so what this fill
-    // returned is not automatically what we serve. See `mergeByFreshness`.
-    const matches = mergeByFreshness(freshestMatches, mapMatches(raw));
+    // TIMED with no score, sometimes stamped older than the copy it destroys
+    // and sometimes newer — so what this fill returned is not automatically
+    // what we serve. `now` is what separates the second case from an honest
+    // re-schedule. See `mergeByFreshness`.
+    const matches = mergeByFreshness(freshestMatches, mapMatches(raw), now);
     rememberMatches(matches);
     const payload: MatchesPayload = {
       rounds: roundsOf(matches),
