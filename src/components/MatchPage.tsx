@@ -405,6 +405,90 @@ export function MatchPage({
         )}
       </Surface>
 
+      {/* Directly under the scoreboard, above the kickoff and the ground, and
+          that is the one thing about this section's placement worth defending.
+          It answers the question a reader arrives at a *finished* match with —
+          "can I watch it" — and every fact below it (when it kicked off, where,
+          which channel carried it) is by then a matter of record. It sat under
+          the campanhas until this commit, which put two charts and a 46-name
+          team sheet between the score and the video.
+
+          It cannot go *inside* the list below: a `<dl>` takes only `dt`/`dd`
+          and the `div`s that pair them, so a `<section>` there is invalid
+          markup rather than a layout choice. Above the whole list is as close
+          to "Data e hora" as it can get.
+
+          `mt-4` rather than the `mt-6` the other sections carry, because those
+          separate one section from the next and this one hangs off the
+          scoreboard card — the same gap the list used to take from it. */}
+      {hasHighlights(match) && (
+        <section className="mt-4">
+          <h3 className="mb-2 text-body-medium font-medium text-ink-muted">Melhores momentos</h3>
+
+          {/* Curated links beat the search: they point at the rights holders'
+              own packages rather than whatever a query happens to surface.
+              Several broadcasters cover the same match, so all are offered and
+              labelled by channel — the reader picks. */}
+          {videos.length > 0 ? (
+            <>
+              <ul className="flex flex-wrap gap-2">
+                {videos.map((video) => (
+                  <li key={video.url}>
+                    <a
+                      href={video.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      // Tonal: this is a curated link to the actual video, and
+                      // it sits beside a fallback that only guesses. They read
+                      // identically before M4 despite the comment above saying
+                      // they are not the same kind of answer.
+                      className={controlClasses("md", "inline-flex items-center gap-2", "tonal")}
+                    >
+                      <span aria-hidden="true">▶</span>
+                      {/* The publisher is a broadcaster like any other, so it
+                          wears the same mark it wears under "Onde assistir".
+                          The mark carries the channel name as its alt, so the
+                          link still reads aloud as "ge tv". */}
+                      <BroadcasterMark name={video.channel} size="sm" decorative />
+                      <span className="sr-only">
+                        {video.channel} — melhores momentos no YouTube (abre em nova
+                        aba)
+                      </span>
+                    </a>
+                  </li>
+                ))}
+              </ul>
+              <p className="mt-2 text-body-small text-ink-faint">
+                {videos.length === 1
+                  ? "Melhores momentos no YouTube."
+                  : "Melhores momentos no YouTube, por emissora."}
+              </p>
+            </>
+          ) : (
+            <>
+              <a
+                href={highlightsSearchUrl(
+                  home?.shortName ?? match.homeCode,
+                  away?.shortName ?? match.awayCode,
+                )}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={controlClasses("md", "inline-flex items-center gap-2")}
+              >
+                <span aria-hidden="true">▶</span>
+                Procurar melhores momentos no YouTube
+                <span className="sr-only"> (abre em nova aba)</span>
+              </a>
+              {/* Honest about what this is: without a curated link we do not
+                  know the official video, so this opens a search and says so. */}
+              <p className="mt-2 text-body-small text-ink-faint">
+                Abre uma busca no YouTube — não é um vídeo oficial escolhido por nós.
+              </p>
+            </>
+          )}
+        </section>
+      )}
+
       <dl className="mt-4 space-y-3 text-body-medium">
         <div>
           <dt className="text-body-small text-ink-faint">Data e hora</dt>
@@ -493,9 +577,11 @@ export function MatchPage({
         <section className="mt-6">
           {/* Closed by default, and the reason is the same one PlayersView
               gives for its clubs: 46 names rendered open would push the
-              campanhas and the melhores momentos off the bottom of the page,
-              and those are what the rest of this view is about. Collapsed it
-              costs one row.
+              campanhas off the bottom of the page, and those are what the rest
+              of this view is about. Collapsed it costs one row. Melhores
+              momentos used to be behind it too and no longer is — it sits above
+              the metadata now, so it is out of this section's reach whichever
+              way the disclosure is left.
 
               A native `<details>` rather than a button and a piece of state —
               disclosure semantics, keyboard behaviour and `aria-expanded` for
@@ -550,74 +636,6 @@ export function MatchPage({
               kind={plotKind}
             />
           </Surface>
-        </section>
-      )}
-
-      {hasHighlights(match) && (
-        <section className="mt-6">
-          <h3 className="mb-2 text-body-medium font-medium text-ink-muted">Melhores momentos</h3>
-
-          {/* Curated links beat the search: they point at the rights holders'
-              own packages rather than whatever a query happens to surface.
-              Several broadcasters cover the same match, so all are offered and
-              labelled by channel — the reader picks. */}
-          {videos.length > 0 ? (
-            <>
-              <ul className="flex flex-wrap gap-2">
-                {videos.map((video) => (
-                  <li key={video.url}>
-                    <a
-                      href={video.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      // Tonal: this is a curated link to the actual video, and
-                      // it sits beside a fallback that only guesses. They read
-                      // identically before M4 despite the comment above saying
-                      // they are not the same kind of answer.
-                      className={controlClasses("md", "inline-flex items-center gap-2", "tonal")}
-                    >
-                      <span aria-hidden="true">▶</span>
-                      {/* The publisher is a broadcaster like any other, so it
-                          wears the same mark it wears under "Onde assistir".
-                          The mark carries the channel name as its alt, so the
-                          link still reads aloud as "ge tv". */}
-                      <BroadcasterMark name={video.channel} size="sm" decorative />
-                      <span className="sr-only">
-                        {video.channel} — melhores momentos no YouTube (abre em nova
-                        aba)
-                      </span>
-                    </a>
-                  </li>
-                ))}
-              </ul>
-              <p className="mt-2 text-body-small text-ink-faint">
-                {videos.length === 1
-                  ? "Melhores momentos no YouTube."
-                  : "Melhores momentos no YouTube, por emissora."}
-              </p>
-            </>
-          ) : (
-            <>
-              <a
-                href={highlightsSearchUrl(
-                  home?.shortName ?? match.homeCode,
-                  away?.shortName ?? match.awayCode,
-                )}
-                target="_blank"
-                rel="noopener noreferrer"
-                className={controlClasses("md", "inline-flex items-center gap-2")}
-              >
-                <span aria-hidden="true">▶</span>
-                Procurar melhores momentos no YouTube
-                <span className="sr-only"> (abre em nova aba)</span>
-              </a>
-              {/* Honest about what this is: without a curated link we do not
-                  know the official video, so this opens a search and says so. */}
-              <p className="mt-2 text-body-small text-ink-faint">
-                Abre uma busca no YouTube — não é um vídeo oficial escolhido por nós.
-              </p>
-            </>
-          )}
         </section>
       )}
     </>
