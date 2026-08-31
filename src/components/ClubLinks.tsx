@@ -53,6 +53,44 @@ export function WikipediaGlyph() {
 }
 
 /**
+ * A map pin: a place, on whatever map the link beside it opens.
+ *
+ * Here rather than beside either call site, because it now has two — the
+ * estádio line on the match page and the **sede** on the club page — which is
+ * the rule `ClubView` states and this file is the exception to. It arrived the
+ * same way the Wikipédia mark did: local to `MatchPage` while it had one
+ * caller, moved the day a second wanted the same mark.
+ *
+ * Both were already drawing a pin, in two slightly different paths, for two
+ * things that had nothing in common: one opened a map, the other was inert and
+ * meant "this is a place". Making the sede a link is what collapsed those into
+ * one idea, so the two drawings became a drift with nothing left to justify it.
+ * This is `MatchPage`'s path, kept because it was the one already pointing at a
+ * map — a teardrop and a hole, the pin every map has drawn for twenty years.
+ *
+ * Google's own pin is artwork with a fixed form and a fixed red, so it cannot
+ * take `currentColor` and would sit cold beside a link that brightens — the
+ * argument `InstagramGlyph` already makes about Meta's gradient.
+ *
+ * **The mark moves and the anchor does not**, which is the exception to the
+ * rule this file's header states. `WikipediaLink` moves whole because its two
+ * callers want the identical link; these two want the same *mark* around
+ * genuinely different anchors — the match page wraps the pin alone, because the
+ * stadium name beside it already leads to this app's own page for the ground,
+ * and the club page wraps the whole sede line, because nothing else on it
+ * competes. Hoisting a `MapLink` would mean a prop deciding which, which is a
+ * flag at a call site: easy to pass wrong and impossible to see.
+ */
+export function MapPinGlyph() {
+  return (
+    <svg {...GLYPH}>
+      <path d="M12 21.5c4.5-4.9 7-8.3 7-11.5a7 7 0 1 0-14 0c0 3.2 2.5 6.6 7 11.5Z" />
+      <circle cx="12" cy="10" r="2.5" />
+    </svg>
+  );
+}
+
+/**
  * An article on the Portuguese Wikipedia, or nothing when there is none — an
  * absent article renders as no link rather than a broken one.
  *

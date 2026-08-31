@@ -503,6 +503,41 @@ export const clubAddress = (raw: string | null | undefined): string | null => {
 };
 
 /**
+ * The club's **sede** on Google Maps — or null where the provider reported no
+ * usable address, in which case the caller renders no pin at all rather than a
+ * link that searches for nothing.
+ *
+ * The sibling of `stadiumMapUrl` in `venue-core.ts`, and deliberately the same
+ * documented `?api=1&query=` form rather than a second convention: that is
+ * Google's published Maps URLs contract, where the `/maps/place/…` shape a
+ * browser's address bar hands you is the app's own internal address and changes
+ * without notice. What differs is only what there is to point at. A ground has
+ * a verified coordinate; a sede has a **postal line and nothing else** — the
+ * provider interpolates it without separators, so it cannot be split into
+ * fields (see `clubAddress`) and there is nothing here to geocode with. The
+ * whole line therefore goes in as a search term, which is what `query` accepts.
+ *
+ * That is why this returns a *search*, not a pin: a coordinate names a point
+ * and an address names whatever Google decides it names. It can land on the
+ * street rather than the door, and for a club whose address arrived
+ * half-populated it can land on the city. Pointing a reader at the right city
+ * is worth more than an inert glyph, but it is not the same promise the
+ * estádio pin makes, and the two should not be read as one.
+ *
+ * The address is passed through `clubAddress` first, so a `"null São Paulo, SP
+ * null"` from upstream is searched as the part that is real. Encoding is
+ * `encodeURIComponent`, which is what makes `nº`, the accents and the commas
+ * survive the trip — a raw `+`-joined query would corrupt exactly the clubs
+ * whose addresses carry them.
+ */
+export const clubMapUrl = (raw: string | null | undefined): string | null => {
+  const address = clubAddress(raw);
+  if (!address) return null;
+
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
+};
+
+/**
  * Fill in details the live payloads omit.
  *
  * Club objects embedded in standings and fixtures carry only id, name, crest

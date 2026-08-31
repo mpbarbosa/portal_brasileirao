@@ -12,7 +12,7 @@ import { STADIUMS } from "@/src/data/stadiums";
 import { BroadcasterMark } from "@/src/components/BroadcasterMark";
 import { controlClasses } from "@/src/components/Button";
 import { ClubCrest } from "@/src/components/ClubCrest";
-import { GLYPH, WikipediaLink } from "@/src/components/ClubLinks";
+import { MapPinGlyph, WikipediaLink } from "@/src/components/ClubLinks";
 import { clubKey } from "@/club-core";
 import { BACK_LINK, ICON_LINK, STATE_LAYER, LINK_UNDERLINE } from "@/src/components/interaction";
 import { lastRecordedRound } from "@/rank-history-core";
@@ -56,32 +56,6 @@ const kickoffLabel = (kickoff: string): string => {
     minute: "2-digit",
   });
 };
-
-/**
- * A map pin: where the ground is.
- *
- * Local to this file, because it has one call site — the rule `ClubView` states
- * and `ClubLinks` is the exception to. It moves to `ClubLinks` the day the
- * stadium page or anything else wants the same mark, and not before.
- *
- * It borrows `GLYPH` rather than restating those attributes, which is the whole
- * reason that bag is exported: a mark defined beside its call site drifts from
- * the ones defined together, and `inline-block` and `aria-hidden` are exactly
- * the attributes nobody notices are missing.
- *
- * A teardrop and a hole, which is the pin every map has drawn for twenty years.
- * Google's own pin is artwork with a fixed form and a fixed red, so it cannot
- * take `currentColor` and would sit cold beside a link that brightens — the
- * argument `InstagramGlyph` already makes about Meta's gradient.
- */
-function MapPinGlyph() {
-  return (
-    <svg {...GLYPH}>
-      <path d="M12 21.5c4.5-4.9 7-8.3 7-11.5a7 7 0 1 0-14 0c0 3.2 2.5 6.6 7 11.5Z" />
-      <circle cx="12" cy="10" r="2.5" />
-    </svg>
-  );
-}
 
 /**
  * One club's campanha, stacked with its opponent's rather than drawn on shared

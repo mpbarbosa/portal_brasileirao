@@ -1,5 +1,6 @@
 import {
   clubKey,
+  clubMapUrl,
   clubMatches,
   coachOf,
   findClub,
@@ -14,7 +15,7 @@ import { lastRecordedRound } from "@/rank-history-core";
 import { formatRoute } from "@/route-core";
 import { pointsPercentageLabel } from "@/standings-core";
 import { ClubCrest } from "@/src/components/ClubCrest";
-import { GLYPH, InstagramLink, WikipediaLink } from "@/src/components/ClubLinks";
+import { GLYPH, InstagramLink, MapPinGlyph, WikipediaLink } from "@/src/components/ClubLinks";
 import { BACK_LINK, LINK_UNDERLINE, STATE_LAYER } from "@/src/components/interaction";
 import { MatchList } from "@/src/components/MatchList";
 import { FollowButton } from "@/src/components/MeuTime";
@@ -109,15 +110,24 @@ export function StatTile({ label, value }: { label: string; value: string }) {
  * broadcaster marks: no runtime dependency on a third party for an asset. These
  * three stay local because they have one call site each, the same way
  * `MatchPage` keeps `Campaign` and `Side`. The Wikipédia mark left for
- * `ClubLinks` when the match page became its second caller, and the Instagram
- * mark followed it when the player card did — that rule is what moved them, and
- * what keeps these here.
+ * `ClubLinks` when the match page became its second caller, the Instagram mark
+ * followed it when the player card did, and the **sede's pin** followed both the
+ * day it became a link — that rule is what moved all three, and what keeps these
+ * here.
  *
  * All three are monochrome outlines — a plain globe for the club's own site, a
- * pair of quavers for the hymn rather than YouTube's play button, a pin for the
- * sede: each names the *thing* and not the host that happens to keep it. Their
- * shared attributes come from `GLYPH`, so a mark defined here cannot drift from
- * the one defined there.
+ * pair of quavers for the hymn rather than YouTube's play button, three candles
+ * for the **Painel**: each names the *thing* and not the host that happens to
+ * keep it. Their shared attributes come from `GLYPH`, so a mark defined here
+ * cannot drift from the one defined there.
+ *
+ * **The count in this paragraph is load-bearing and nothing checks it.** It read
+ * "two" for the length of one rebase: #289 took the sede's pin out of this block
+ * and #290 added the Painel's candles to it, in two branches that shared not one
+ * conflicting line — so both comments emerged from a clean textual merge
+ * describing a file neither of them had seen. `PanelGlyph`'s own "like the three
+ * above it" broke in the mirror direction at the same instant. Recount before
+ * trusting either.
  */
 
 /** A globe: the club's own site, as distinct from a profile it keeps elsewhere. */
@@ -127,18 +137,6 @@ function SiteGlyph() {
       <circle cx="12" cy="12" r="9" />
       <path d="M3 12h18" />
       <path d="M12 3a15 15 0 0 1 0 18a15 15 0 0 1 0-18" />
-    </svg>
-  );
-}
-
-/** A map pin: the club's sede. The one mark in this header that is not a link —
- *  the app holds no map, and an address is not an address bar, so the pin says
- *  "this is a place" and stops there. */
-function SedeGlyph() {
-  return (
-    <svg {...GLYPH}>
-      <path d="M12 21s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11" />
-      <circle cx="12" cy="10" r="2.5" />
     </svg>
   );
 }
@@ -157,7 +155,7 @@ function HymnGlyph() {
 
 /** Three candles: the **Painel**. It draws the mark the page it opens is made
  *  of, rather than a generic chart glyph — the row's whole promise is that
- *  particular drawing. Local, like the three above it, because it has one call
+ *  particular drawing. Local, like the two above it, because it has one call
  *  site; the rule that moved the Wikipédia mark into `ClubLinks` is a second
  *  caller, not a hunch that there might be one. */
 function PanelGlyph() {
@@ -215,6 +213,7 @@ export function ClubView({
   const clubScorers = scorersFor(scorers, code);
   const hymn = hymnUrl(club.hymn);
   const coach = coachOf(club, coaches);
+  const mapUrl = clubMapUrl(club.address);
 
   // Same domains as the Classificação, so the shape a reader recognises in the
   // table is the shape they find here — only the box is bigger. `clubCount`
@@ -261,14 +260,39 @@ export function ClubView({
           )}
           {/* The one line here that is allowed to wrap. Truncating an address
               cuts from the right, which is where the city and the state are —
-              the half a reader who is not going there actually wants. */}
-          {club.address && (
+              the half a reader who is not going there actually wants.
+
+              Guarded on the URL rather than on the address, and the two are the
+              same question: `clubMapUrl` returns null exactly where
+              `clubAddress` does, so there is no state in which the club has a
+              sede worth printing and no link to put under it. Guarding on both
+              would add a branch nothing can reach.
+
+              The **whole line** is the link, mark and address together, where
+              the estádio pin on the match page is icon-only. That is not two
+              house styles: there the name already leads somewhere else — this
+              app's page for the ground — so a reader clicking it has to be
+              asked which of the two they meant. Here the address leads nowhere
+              else, so there is nothing to disambiguate and no reason to hand a
+              wrapping line's worth of target back. */}
+          {mapUrl && (
             <p data-sede className="mt-0.5 text-body-small text-ink-faint">
-              <SedeGlyph />
-              {/* The mark is aria-hidden, so without this the address is read
-                  out as a bare string with nothing saying what it is. */}
-              <span className="sr-only">Sede: </span>
-              {club.address}
+              <a
+                href={mapUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={LINK_UNDERLINE}
+                data-sede-map
+              >
+                <MapPinGlyph />
+                {/* The mark is aria-hidden, so without this the address is read
+                    out as a bare string with nothing saying what it is — and as
+                    part of the link's accessible name, it is also what says
+                    where the line goes. */}
+                <span className="sr-only">Sede: </span>
+                {club.address}
+                <span className="sr-only"> — no Google Maps (abre em nova aba)</span>
+              </a>
             </p>
           )}
           {/* Each link reads as the thing itself — a bare host, a bare handle,
