@@ -252,12 +252,18 @@ what makes the logic testable without mocking HTTP.
   `sync-goals.ts` checks it twice, against CBF's own scoreline and against ours,
   writing neither a match that fails nor a run's worth of unverified data.
 
-  **The minute is deliberately not carried.** CBF's `tempo_jogo` is `"2"` on
-  every goal and `"TN1"`/`"TN2"` on the cards in the same array, so the two use
-  different vocabularies, and `minutos` is `mm:ss` with no half attached.
-  Printing "10'" for a goal scored at 55 minutes is `live-core.ts`'s "73'"
-  failure on a larger surface. Establish what those fields mean before rendering
-  one. The shirt number is dropped for a different reason: nothing renders it,
+  **The minute does not come from the match API, and that is why it took a
+  second source.** CBF's `tempo_jogo` there is `"2"` on every goal and
+  `"TN1"`/`"TN2"` on the cards in the same array, so the two use different
+  vocabularies, and `minutos` is `mm:ss` with no half attached — printing "10'"
+  for a goal scored at 55 minutes would be `live-core.ts`'s "73'" failure on a
+  larger surface. So goals shipped **minuteless** until `sumula-core.ts` parsed
+  the súmula, which states the half. `Goal.minute` is optional for that reason
+  and not as a nicety: a match synced before its súmula existed simply has none,
+  and **nothing renders a placeholder**. Do not read the paragraph this replaces
+  as current — it survived the arrival of the minute by 45 lines and said the
+  opposite of the paragraph under `escalacao-core.ts`.
+  The shirt number is dropped for a different reason: nothing renders it,
   and a field nothing dereferences is upkeep for no reader's benefit — the rule
   `Club.coach` already states.
 
