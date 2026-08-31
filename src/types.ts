@@ -527,6 +527,17 @@ export interface StandingsRow {
 }
 
 /**
+ * A result from one club's point of view — vitória, empate, derrota.
+ *
+ * It lives here rather than in `club-core`, which is where it was written and
+ * which still exports it, because two modules now name it: `resultFor` decides
+ * it and `RoundCandle` carries it. A shared shape belongs in the one file that
+ * is the source of truth for shared shapes, and a second literal union spelled
+ * out beside this one is how the two come to disagree about a fourth letter.
+ */
+export type FormResult = "V" | "E" | "D";
+
+/**
  * A club's place in the classificação after one round. `played` rides along
  * because a postponed fixture leaves a club a game short of its rivals, which
  * is the difference between "dropped four places" and "has a game in hand".
@@ -547,6 +558,50 @@ export interface ClubRankHistory {
   clubCode: ClubCode;
   shortName: string;
   entries: RankAtRound[];
+}
+
+/**
+ * One rodada of a club's season, as a candle — the shape the **Painel do
+ * clube** is drawn from.
+ *
+ * `RankAtRound` says where a club finished a round. This says how it got
+ * there: the body of the candle runs `open` → `close`, and `best`/`worst` are
+ * the ends of the pavio — every position the club held while the round was
+ * being played, which a single end-of-round point cannot show.
+ *
+ * The pair is named for the **reader's axis and not for a trader's**: 1º is the
+ * top of the chart, so `best` is the numerically smallest position and is drawn
+ * above `worst`. "High" and "low" would put the high at the bottom of the
+ * drawing for anybody reading the numbers.
+ */
+export interface RoundCandle {
+  round: number;
+  /** Where the round began — the previous round's close. Equal to `close` in
+   *  round 1, which has no before: a table of clubs that have played nothing is
+   *  an alphabetical list, not a ranking. */
+  open: number;
+  close: number;
+  best: number;
+  worst: number;
+  /** Points taken in this round, or **null** where the club did not play —
+   *  an absence, not a zero, exactly as `pointsPercentage` treats a club with
+   *  no games. */
+  points: number | null;
+  /** Points and games after the round, mirroring `RankAtRound.played`. */
+  totalPoints: number;
+  played: number;
+  /** The club's own result, where the round produced exactly one. Null for a
+   *  round it did not play. */
+  result: FormResult | null;
+}
+
+/** One club's painel: a candle for every round played so far, oldest first.
+ *  `clubCode` is the identity and `shortName` rides along for display, exactly
+ *  as they do on `ClubRankHistory`. */
+export interface ClubCandles {
+  clubCode: ClubCode;
+  shortName: string;
+  candles: RoundCandle[];
 }
 
 /**

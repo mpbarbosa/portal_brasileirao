@@ -34,6 +34,10 @@ export type SectionId =
   | "clube"
   | "partida"
   | "estadio"
+  /** The **Painel do clube**: a drill-down from a drill-down, reached only from
+   *  the club page it describes. Absent from NAV_ITEMS for `clube`'s reason
+   *  before the bar was full, and now for the bar's reason as well. */
+  | "painel"
   /**
    * `conta` and `entrar` are not destinations either, and for a different
    * reason than the three above: those are drill-downs into something chosen,

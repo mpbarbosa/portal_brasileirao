@@ -245,6 +245,26 @@ export const pageMeta = (
       };
     }
 
+    case "painel": {
+      const club = findClub(context.clubs ?? [], route.key);
+      if (!club) {
+        return { title: suffix("Painel do clube"), description: SITE_DESCRIPTION, image: site };
+      }
+
+      return {
+        title: suffix(`Painel do ${club.shortName}`),
+        description:
+          `A campanha do ${club.shortName} rodada a rodada no Campeonato Brasileiro ` +
+          "Série A: onde cada rodada começou, onde terminou e até onde o clube " +
+          "subiu ou caiu enquanto ela era disputada.",
+        // The crest, exactly as the club page takes it, and for the same
+        // reason: this page is about one club and nothing else. The rule that
+        // sends a *fixture* to the site card is the one that does not apply
+        // here — a match is two clubs, and a painel is one.
+        image: crestImage(club) ?? site,
+      };
+    }
+
     case "estadio": {
       const stadium = findStadium(context.stadiums ?? [], route.key);
       if (!stadium) {

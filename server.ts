@@ -500,6 +500,7 @@ app.get("/sitemap.xml", async (req, res) => {
  *  titled, canonicalised or judged to exist. The rest need no data at all. */
 const needsData = (route: Route): boolean =>
   route.section === "clube" ||
+  route.section === "painel" ||
   route.section === "partida" ||
   route.section === "estadio" ||
   (route.section === "jogos" && route.round !== null);

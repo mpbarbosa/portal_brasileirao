@@ -143,6 +143,44 @@ test("a club and a match that do not exist are 404", () => {
   assert.equal(pageStatus("/partida/999999", CONTEXT).reason, "unknown-match");
 });
 
+/**
+ * The half of a new `Route` variant that no compiler reaches. `SECTIONS` is a
+ * `Set<string>`, so a section left out of it is a 404 for a page that exists,
+ * and one added without a rule below is a **200 with a copy of the shell** for
+ * every argument anybody invents under it.
+ */
+test("a painel is judged by the club it names, under either address", () => {
+  assert.equal(pageStatus("/painel/flamengo", CONTEXT).status, 200);
+  assert.equal(pageStatus("/painel/1783", CONTEXT).status, 200);
+  assert.equal(pageStatus("/painel/nao-existe", CONTEXT).reason, "unknown-club");
+  assert.equal(pageStatus("/painel", CONTEXT).reason, "unnamed-detail");
+  // Absent data is not proof of absence, here as everywhere else.
+  assert.equal(pageStatus("/painel/nao-existe", {}).status, 200);
+});
+
+test("a painel canonicalises to the club's slug, as the club page does", () => {
+  assert.equal(canonicalPath({ section: "painel", key: "1783" }, CONTEXT), "/painel/flamengo");
+  // A key that resolves to nothing is left alone; `pageStatus` 404s it above.
+  assert.equal(
+    canonicalPath({ section: "painel", key: "nao-existe" }, CONTEXT),
+    "/painel/nao-existe",
+  );
+  assert.equal(subjectResolved({ section: "painel", key: "1783" }, CONTEXT), true);
+  assert.equal(subjectResolved({ section: "painel", key: "nao-existe" }, CONTEXT), false);
+});
+
+test("every club's painel is in the sitemap, since only its club page links there", () => {
+  const paths = sitemapEntries(CONTEXT).map((entry) => entry.path);
+
+  for (const club of CLUBS) {
+    assert.ok(paths.includes(`/painel/${club.slug}`), `no painel for ${club.shortName}`);
+  }
+  assert.equal(
+    paths.filter((path) => path.startsWith("/painel/")).length,
+    paths.filter((path) => path.startsWith("/clube/")).length,
+  );
+});
+
 test("a round outside the season is a 404, a real one is not", () => {
   assert.equal(pageStatus("/jogos/2", CONTEXT).status, 200);
   assert.equal(pageStatus("/jogos/99", CONTEXT).reason, "unknown-round");

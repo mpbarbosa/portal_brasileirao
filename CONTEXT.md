@@ -95,6 +95,41 @@ _Avoid_: "elenco" for a match sheet (that is the season squad), "formação" and
 "lineup" and "starting XI" in user-facing copy, "titular" for a squad regular
 in general rather than for this match's starter.
 
+**Painel**:
+The page that reads one club's **Campanha** rodada a rodada, at
+`/painel/<clube>` and reached from a row on the **Clube** page and from the
+sitemap — never from the nav bar, which is full at MD3's five destinations.
+Modelled as `ClubCandles` and computed by `computeRankCandles` in
+`rank-candles-core.ts`, drawn by `RankCandles`.
+It answers what the sparkline cannot. A **Campanha** joins the position a club
+held at the *end* of each round, so a round is one point and its inside is
+invisible: a club that sat 4º on Saturday night and finished 9º because three
+rivals played on Sunday draws the same segment as one that walked calmly down.
+A **vela** keeps the two apart.
+_Avoid_: "dashboard" (English, and it promises a grid of panels this page is
+not), "gráfico do clube" (it is one chart among tiles, and the page is named for
+what it is *for*), "estatísticas" (nothing here is a statistic the app does not
+already print somewhere else — it is the same campanha read closer).
+
+**Vela** (and **corpo**, **pavio**):
+One rodada in the **Painel**, drawn as a candle. The **corpo** runs from the
+position the round opened at to the one it closed at; the **pavio** is the thin
+line through it, spanning every position the club held while the round was being
+played. A stub on the left marks which end is the opening — direction cannot be
+carried by colour here, because colour carries the club's **result**: verde for
+vitória, cinza for empate, vermelho for derrota, and a hollow mark for a round
+the club did not play.
+Those two facts are separate on purpose, and the rounds worth looking at are
+exactly the ones where they disagree: winning and still dropping a place is an
+ordinary Sunday. `open`, `close`, `best` and `worst` are the field names on
+`RoundCandle`; `best` is the numerically *smallest* position, since 1º is the
+top of the chart.
+_Avoid_: "candlestick"/"high"/"low" in code or copy (a high drawn at the bottom
+of the picture is a trap for whoever reads the numbers next; the y axis here is
+inverted and the names say so), "sombra" for the pavio (it reads as a drop
+shadow), "abertura/fechamento" in user-facing copy (market words for a football
+page — the legend says "onde a rodada começou" instead).
+
 **Rodada**:
 One matchday of the championship — the set of fixtures sharing a `round` number.
 The second tab (`TABS`, id `"rodada"`), whose heading renders as `Nª rodada`.

@@ -30,6 +30,7 @@ const SECTIONS = new Set([
   "artilharia",
   "jogadores",
   "clube",
+  "painel",
   "partida",
   "estadio",
   "conta",
@@ -82,10 +83,15 @@ export const resolveOrigin = (
  * A key that resolves to nothing is left alone; `pageStatus` gives it a 404.
  */
 export const canonicalRoute = (route: Route, context: MetaContext = {}): Route => {
-  if (route.section !== "clube") return route;
+  // The painel is addressed by the same key as the club, so it inherits the
+  // same duplicate — `/painel/1783` and `/painel/flamengo` are one page. It is
+  // listed here rather than left out because the section that resolves a club
+  // key and the section that needs canonicalising are the same set, and the
+  // next one to be added will be too.
+  if (route.section !== "clube" && route.section !== "painel") return route;
 
   const club = findClub(context.clubs ?? [], route.key);
-  return club ? { section: "clube", key: clubKey(club) } : route;
+  return club ? { section: route.section, key: clubKey(club) } : route;
 };
 
 /** The canonical path for a route: `formatRoute`, after slug resolution. */
@@ -114,6 +120,7 @@ export const canonicalUrl = (
 export const subjectResolved = (route: Route, context: MetaContext = {}): boolean => {
   switch (route.section) {
     case "clube":
+    case "painel":
       return Boolean(findClub(context.clubs ?? [], route.key));
     case "partida":
       return Boolean(findMatch(context.matches ?? [], route.id));
@@ -208,7 +215,12 @@ export const pageStatus = (pathname: string, context: MetaContext = {}): PageSta
       return FOUND;
     }
 
-    case "clube": {
+    // One case for both: a painel exists exactly when its club does, so an
+    // unknown key is `unknown-club` under either address. Split branches would
+    // be two copies of one rule, and the club page's is the one that gets
+    // updated.
+    case "clube":
+    case "painel": {
       if (second === undefined) return missing("unnamed-detail");
       if (context.clubs?.length && !findClub(context.clubs, second)) {
         return missing("unknown-club");
@@ -369,6 +381,15 @@ export const sitemapEntries = (context: {
       lastmod: updatedAt,
       changefreq: "weekly",
       priority: 0.6,
+    });
+    // Below the club page it hangs off, and listed for the reason the rounds
+    // are: the only link to it is on that one page, so a crawler that has not
+    // reached the club has no route here at all.
+    entries.push({
+      path: `/painel/${clubKey(club)}`,
+      lastmod: updatedAt,
+      changefreq: "weekly",
+      priority: 0.4,
     });
   }
 

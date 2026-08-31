@@ -10,6 +10,7 @@ import {
   type HealthReading,
   type MatchesPayload,
 } from "@/src/api";
+import { ClubDashboard } from "@/src/components/ClubDashboard";
 import { ClubView } from "@/src/components/ClubView";
 import { Footer } from "@/src/components/Footer";
 import { LiveView } from "@/src/components/LiveView";
@@ -485,8 +486,24 @@ export function App() {
               onSelectMatch={(id) => navigate({ section: "partida", id })}
               followedCode={preferences.club ?? undefined}
               onToggleFollow={toggleClub}
+              onOpenPanel={(key) => navigate({ section: "painel", key })}
               plotKind={plotKind}
               onTogglePlotKind={togglePlotKind}
+            />
+          )}
+
+          {route.section === "painel" && (
+            <ClubDashboard
+              clubKey={route.key}
+              loading={loading}
+              standings={standings}
+              matches={matches?.matches ?? []}
+              clubs={matches?.clubs}
+              // Back to the club page rather than to the table: this is a
+              // drill-down from that page and from nowhere else, so "voltar"
+              // means the page it was opened from.
+              onBack={() => navigate({ section: "clube", key: route.key })}
+              onSelectClub={(key) => navigate({ section: "clube", key })}
             />
           )}
 

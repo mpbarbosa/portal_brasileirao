@@ -188,6 +188,70 @@ what makes the logic testable without mocking HTTP.
   draw one as a line and the other as bars would be comparing two pictures rather
   than two clubs.
 
+- `rank-candles-core.ts` — the **Painel do clube** (`/painel/<clube>`): the same
+  campanha read one level closer, as a candle per rodada. It exists because the
+  sparkline joins the position held at the **end** of each round, so a round is one
+  point and its inside is invisible — a club that sat 4th on Saturday night and
+  finished the round 9th because three rivals played on Sunday draws the same
+  segment as one that walked calmly down. The **corpo** runs open → close, and the
+  **pavio** spans every position held while the round was played.
+  **The intra-round positions are real, not interpolated**, and that is the whole
+  of what the module computes: it re-runs `computeStandings` at each distinct
+  kickoff instant of the round, so a snapshot is a table somebody could have looked
+  at. Distinct instants rather than one per match, because four fixtures at 16:00
+  on a Saturday resolve together and treating them as four steps would invent three
+  tables nobody saw. **Measured rather than estimated**, since the page computes this
+  on the main thread while it renders: a season played out to the last round is 192
+  distinct kickoff instants across 380 fixtures, and `computeRankCandles` over it
+  takes 41ms cold and about 13ms warm — against 2.8ms for `computeRankHistory` over
+  the 24-round seed. A reading on this workstation on 2026-08-31 rather than a
+  constant; what it is here for is the order of magnitude, which is one `useMemo`
+  and not a jank budget.
+  **What is counted at each step is the round's own state, never the wall clock**,
+  and getting that backwards is the trap. A partial table inside round *r* counts
+  everything from rounds before *r* plus the round-*r* matches that have kicked off
+  by this instant. Filtering on kickoff alone lets a postponed round-3 fixture
+  played in June drop out of the table at the start of round 20 — the club appears
+  to fall several places and climb back, a swing that never happened, because
+  `open` (the previous round's close) counts that fixture and a wall-clock filter
+  does not. With the round convention a round's last partial **is** its close, by
+  construction, so the candle's close is the campanha's own position.
+  Nothing here re-implements a ranking rule: positions and points come from
+  `computeStandings` and the per-round result from `club-core`'s `resultFor`, for
+  the reason `computeRankHistory` re-runs the table rather than carrying a tally.
+  `tests/rank-candles-core.test.ts` asserts every close equals `computeRankHistory`'s
+  position for the same round, which is what makes that a property rather than a
+  coincidence.
+  **Colour carries the result and the geometry carries the direction**, and they
+  are deliberately not the same channel — the rounds worth looking at are the ones
+  where they disagree, and a club winning while it drops a place is an ordinary
+  Sunday. So a candle needs a third mark to say which end it opened at, which is
+  the stub on its left; 38 of those trace the same path the sparkline draws, since
+  each round opens where the last closed.
+  A round the club did not play is drawn **hollow** rather than in a grey fill: it
+  sat next to an empate drawn in `ink-muted`, two greys a step apart on a 5px mark,
+  and neither the marks nor the two swatches in the key could be told apart at
+  343dp. Colour cannot separate a result from the absence of one when both are
+  neutral by definition.
+  Two things about the drawing are worth knowing before "fixing" them. The y
+  domain is the **whole division**, so a leader's painel leaves its lower two
+  thirds empty — that is what makes two clubs' painéis comparable and what gives
+  the G4/Z4 guides a meaning. And **round 1's pavio is wide for everybody**,
+  because before a club's first match the clubs level on nothing are ordered by
+  name: the table really did show them there, and the alternative is a special
+  case that hides a round of real data.
+  The axes are **HTML around the SVG, never `<text>` inside it** — a drawing that
+  scales to its container scales its type with it, so a label sized for a desktop
+  is six pixels tall on a phone. Below `sm` the box takes a fixed height and
+  `preserveAspectRatio="none"`, because at 2.4:1 a 343dp phone gets 143px for
+  twenty position bands and a season reads as a strip of dashes; the marks are
+  filled rects, so a non-uniform scale changes their proportions and nothing else.
+  The SVG is `grow min-w-0` and **not `w-full`**: in a flex row `w-full` is 100% of
+  the container rather than of what the y-axis gutter leaves, and with
+  `overflow-visible` the last candles painted outside the card while every
+  assertion about them passed. `tests/e2e/painel.spec.ts` measures the drawing's
+  box against the panel's, and was confirmed red against that markup.
+
 - `venue-core.ts` — the **Página do estádio**. `buildStadiums` groups fixtures into
   grounds, because **a stadium is not an entity in any payload**: football-data has no
   venue field at any tier, and CBF reports only a `Stadium - City - UF` string per match.
@@ -768,18 +832,34 @@ data — a pure mapper in `football-data-core.ts`, a seed snapshot in
 *for the entry itself* — that promise held when Jogadores was added — but see the width
 arithmetic below: the bar had slack for four items' padding and not for five.
 
-**A new `Route` variant is a four-file change, and only one of the four is enforced.**
-Since the crawl surface landed, a variant also needs a case in `page-meta-core.ts`, a
-`pageStatus` rule and sitemap entry in `seo-core.ts`, and breadcrumbs in
-`structured-data-core.ts`. Only `structured-data-core`'s `trailFor` is caught by the
-compiler — its switch returns a value, so a missing case makes it non-exhaustive and
-`tsc` fails. The other three fall through to defaults and fail **silently**: the page
-gets generic metadata, is absent from the sitemap, and — the one that actually
-matters — `pageStatus` answers **200 with a copy of the shell** for every unrecognised
-argument under the new section. That is an unbounded set of duplicate pages offered to a
-crawler, and nothing goes red. `/estadio/qualquer-coisa` did exactly this until the rule
-was added. Adding the variant is the easy half; grep the other three files for a sibling
-section (`"partida"` is the closest analogue) and follow it through.
+**A new `Route` variant is a four-file change, and the half of it that is enforced is
+not the half that matters.** Since the crawl surface landed, a variant also needs a case
+in `page-meta-core.ts`, a `pageStatus` rule and sitemap entry in `seo-core.ts`, and
+breadcrumbs in `structured-data-core.ts`. **Three** things go red on their own, measured
+by adding the `painel` variant and running `tsc`: `structured-data-core`'s `trailFor`,
+`page-meta-core`'s `pageMeta`, and `src/navigation.ts`'s `SectionId` — the first two
+because their switches return a value, so a missing case makes them non-exhaustive, and
+the third because `NavBar` takes `route.section` as that type whether or not the section
+is a nav destination.
+
+This paragraph said "only `structured-data-core`" for months, and it was believed
+because nobody had added a variant since it was written — the claim produces no work
+when it holds, which is the shape this file warns about elsewhere. Read the correction
+as a floor rather than a promise: **only `structured-data-core` says in its own comments
+that the exhaustiveness is deliberate.** The other two happen to be exhaustive today,
+nothing declares that they must stay so, and a `default` branch added to either for
+tidiness would remove the check with no test going red.
+
+**`seo-core.ts` is the file that fails silently, and it is the one that matters.** Both
+its rules fall through to defaults: the page is absent from the sitemap, and —
+the real cost — `pageStatus` answers **200 with a copy of the shell** for every
+unrecognised argument under the new section. That is an unbounded set of duplicate pages
+offered to a crawler, and nothing goes red. `/estadio/qualquer-coisa` did exactly this
+until the rule was added. `SECTIONS` is a `Set<string>`, so no compiler can reach it;
+`tests/seo-core.test.ts` is where a new section earns a 404 case. Adding the variant is
+the easy half; grep `seo-core.ts` for a sibling section (`"partida"` is the closest
+analogue, and `"clube"` if the new one is addressed by a club key) and follow it
+through.
 
 **The desktop destinations are MD3 primary tabs as of M9**, not the filled chip they
 were: the active label is `primary` over a 3dp indicator drawn as an `after`
@@ -1098,6 +1178,15 @@ Club URLs use a **slug** (`/clube/flamengo`), derived from the short name by `sl
 slugs existed — still works. The seed generator rejects duplicate slugs the same way it
 rejects duplicate codes and names; `atletico-mg` and `athletico-pr` differ by one letter
 and both are real clubs.
+
+`/painel/<key>` takes **the same key**, resolved by the same `findClub`, and inherits
+the same duplicate — so `canonicalRoute` rewrites it to the slug exactly as it does for
+`/clube/…`, and `pageStatus` judges both with one `unknown-club` branch rather than two
+copies of one rule. It is a second section rather than `/clube/<key>/painel` for a
+mechanical reason: `pageStatus` refuses a third path segment outright, and loosening
+that is what keeps `/jogos/24/qualquer-coisa` from being an indexable page. The club
+page is the only link to it, so `/sitemap.xml` is a crawler's only other route there —
+the same argument the rounds and the stadiums already make, and 20 more URLs.
 
 ### Data
 
