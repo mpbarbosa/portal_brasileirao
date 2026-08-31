@@ -7,6 +7,7 @@ import {
   matchesForRound,
   mergeByFreshness,
   roundsOf,
+  isAwaitingResult,
 } from "@/matches-core";
 import type { Match } from "@/src/types";
 
@@ -251,4 +252,72 @@ test("the first fill has nothing to compare against and passes straight through"
   const incoming = [match({ id: "554986", status: "FINISHED" })];
 
   assert.deepEqual(mergeByFreshness([], incoming), incoming);
+});
+
+const KICKOFF = Date.parse("2026-08-30T21:30:00Z");
+const DAY = 24 * 60 * 60 * 1000;
+
+/**
+ * The Partida page polls on this. Every branch is a request the app either
+ * spends or does not, so each is pinned rather than left to reading.
+ */
+test("a finished match has nothing left to say", () => {
+  assert.equal(
+    isAwaitingResult(match({ id: "1", status: "FINISHED", kickoff: "2026-08-30T21:30:00Z" }), KICKOFF + DAY),
+    false,
+  );
+});
+
+test("a cancelled match has nothing left to say either", () => {
+  assert.equal(
+    isAwaitingResult(match({ id: "1", status: "CANCELLED", kickoff: "2026-08-30T21:30:00Z" }), KICKOFF),
+    false,
+  );
+});
+
+test("a live match is asked about", () => {
+  assert.equal(
+    isAwaitingResult(match({ id: "1", status: "LIVE", kickoff: "2026-08-30T21:30:00Z" }), KICKOFF),
+    true,
+  );
+});
+
+/**
+ * The regression this exists for: upstream had 554986 finished while still
+ * reporting it SCHEDULED, and that lasted about five hours — so a late bound of
+ * `LATE_GRACE_MS` (three) would have stopped asking before the answer arrived.
+ */
+test("a kickoff long past keeps its page asking — there is no late bound", () => {
+  const stuck = match({ id: "554986", status: "SCHEDULED", kickoff: "2026-08-30T21:30:00Z" });
+
+  assert.equal(isAwaitingResult(stuck, KICKOFF + 5 * 60 * 60 * 1000), true);
+  assert.equal(isAwaitingResult(stuck, KICKOFF + 30 * DAY), true);
+});
+
+test("a fixture within a day of kickoff is asked about", () => {
+  assert.equal(
+    isAwaitingResult(match({ id: "1", kickoff: "2026-08-30T21:30:00Z" }), KICKOFF - DAY + 1000),
+    true,
+  );
+});
+
+/** The half that stops every match page polling for ever. */
+test("a fixture more than a day out is not", () => {
+  assert.equal(
+    isAwaitingResult(match({ id: "1", kickoff: "2026-08-30T21:30:00Z" }), KICKOFF - DAY - 1000),
+    false,
+  );
+});
+
+/** Postponed is deliberately not concluded: it will acquire a new kickoff, and
+ *  that is worth learning. */
+test("a postponed fixture whose kickoff has passed is still asked about", () => {
+  assert.equal(
+    isAwaitingResult(match({ id: "1", status: "POSTPONED", kickoff: "2026-08-30T21:30:00Z" }), KICKOFF + DAY),
+    true,
+  );
+});
+
+test("an unreadable kickoff is a reason to look again, not to stop", () => {
+  assert.equal(isAwaitingResult(match({ id: "1", kickoff: "not a date" }), KICKOFF), true);
 });
