@@ -53,7 +53,7 @@ test("the reloaded memory still rejects a regressed record", () => {
   const merged = mergeByFreshness(readMatchState(file), [
     match({ id: "554986", status: "SCHEDULED", homeGoals: null, awayGoals: null,
             lastUpdated: "2026-08-30T10:20:34Z" }),
-  ]);
+  ], Date.parse("2026-08-31T00:42:00Z"));
 
   assert.equal(merged[0].status, "FINISHED");
   assert.equal(merged[0].homeGoals, 1);

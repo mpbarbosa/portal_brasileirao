@@ -115,17 +115,73 @@ const stampOf = (match: Match): number => {
  * disappear, and this function's job is to choose between two copies of one
  * record, not to defend the shape of the list.
  *
- * It holds only for the life of the process, which is the honest bound — a
- * restart starts from whatever the first fill returns, so a deploy landing
- * mid-round can still serve one stale record until upstream next reports it.
+ * The memory is persisted by `match-state-store.ts`, so it survives a restart.
+ * What it does not survive is the case below: a regression upstream stamps
+ * *newer* than the record it destroys.
  */
-export const mergeByFreshness = (previous: Match[], incoming: Match[]): Match[] => {
+
+/**
+ * Whether `incoming` withdraws a result `kept` already carried, in the one way
+ * that cannot be an honest correction.
+ *
+ * **This exists because the stamp comparison above was defeated in production.**
+ * The regression `mergeByFreshness` was built against replayed an *older*
+ * generation, so `lastUpdated` caught it. Upstream has since produced the
+ * opposite shape — measured 2026-08-31T12:53:50Z, one token, straight from
+ * `/v4/competitions/BSA/matches?matchday=25`:
+ *
+ *     554982  FINISHED  3-2   lastUpdated 2026-08-31T08:25:09Z
+ *     554985  TIMED     null  lastUpdated 2026-08-31T08:25:09Z
+ *     554986  TIMED     null  lastUpdated 2026-08-31T08:25:09Z
+ *
+ * One generation, one stamp, the result lost on two of the six records it
+ * touched. Against `554986`'s good copy — `FINISHED 1-1`, stamped
+ * `2026-08-30T23:37:19Z` — the broken record is nine hours **newer**, so the
+ * guard working exactly as designed prefers it. Freshness is not correctness,
+ * and persistence does not help: it stores the loser.
+ *
+ * The test is coherence, not a status ranking — which is the objection the
+ * comparison above rejects, and it still stands. A record saying **a match is
+ * scheduled to be played at a time that has already passed, and has no score**
+ * contradicts itself, whatever it is stamped. Every genuine correction states
+ * itself some other way and still wins:
+ *
+ * - **POSTPONED and CANCELLED** are how a played result is honestly voided,
+ *   and neither is SCHEDULED. This is the case the first bullet in CLAUDE.md's
+ *   `The provider regresses individual records` warns would be pinned for ever
+ *   by a status ordering; it is not pinned by this.
+ * - **A corrected score** arrives with goals on it, so nothing is withdrawn.
+ * - **A genuine re-schedule** carries the new kickoff, which is in the future.
+ *
+ * A kickoff that will not parse is treated as *not* past, so upstream wins —
+ * the same direction `kickoffValue` sorts it, and the conservative one for a
+ * rule whose whole job is to overrule the provider.
+ */
+const retractsResult = (kept: Match, incoming: Match, now: number): boolean => {
+  if (kept.homeGoals === null || kept.awayGoals === null) return false;
+  if (incoming.homeGoals !== null || incoming.awayGoals !== null) return false;
+  if (incoming.status !== "SCHEDULED") return false;
+
+  const at = Date.parse(incoming.kickoff);
+  return !Number.isNaN(at) && at < now;
+};
+
+export const mergeByFreshness = (
+  previous: Match[],
+  incoming: Match[],
+  now: number,
+): Match[] => {
   if (previous.length === 0) return incoming;
 
   const held = new Map(previous.map((match) => [match.id, match]));
 
   return incoming.map((match) => {
     const kept = held.get(match.id);
-    return kept && stampOf(kept) > stampOf(match) ? kept : match;
+    if (!kept) return match;
+
+    // The provider's own claim first: where it is coherent, it decides.
+    if (stampOf(kept) > stampOf(match)) return kept;
+
+    return retractsResult(kept, match, now) ? kept : match;
   });
 };

@@ -569,6 +569,49 @@ upstream stamps newer. Three things about it are decisions:
   e2e is therefore not evidence this works. `tests/matches-core.test.ts` covers
   the rule; the live path was verified by replaying two captured payloads.
 
+**The stamp comparison alone was defeated in production, and the fix is a second
+rule rather than a change to that one.** The shape above replays an *older*
+generation, which `lastUpdated` catches. Upstream also produces the opposite —
+measured 2026-08-31T12:53:50Z, one token, straight off
+`/v4/competitions/BSA/matches?matchday=25`:
+
+    554982  FINISHED  3-2   lastUpdated 2026-08-31T08:25:09Z
+    554985  TIMED     null  lastUpdated 2026-08-31T08:25:09Z
+    554986  TIMED     null  lastUpdated 2026-08-31T08:25:09Z
+
+One generation, one stamp, the result lost on two of the six records it touched.
+Against `554986`'s good copy — `FINISHED 1-1` stamped `2026-08-30T23:37:19Z` —
+the broken record is nine hours **newer**, so the guard working exactly as
+designed prefers it. **Freshness is not correctness**, and persisting the memory
+does not help: it stores the loser. Production served the fixture as *A
+realizar* for fifteen hours on a process whose uptime showed no restart could
+explain it.
+
+`retractsResult` is the second rule, and it tests **coherence, not a status
+ranking** — the objection in the first bullet above still stands and is not
+worked around. A record saying *this match is scheduled to be played at a time
+that has already passed, and has no score* contradicts itself whatever it is
+stamped, so the held result stands. Every honest correction states itself some
+other way and still wins: POSTPONED and CANCELLED are how a result is genuinely
+voided, a corrected scoreline arrives carrying goals, and a real re-schedule
+names a kickoff in the future. That is why it needs `now`, which arrives as a
+parameter like everywhere else — an unparseable kickoff counts as *not* past, so
+upstream wins, the direction `kickoffValue` already sorts it.
+
+**Which of those tests can go red, and when, is the thing to know before editing
+them.** Only two assert the new behaviour and fail with the rule switched off;
+the other six exist to fail if it is ever made *broader*, and they pass with it
+off by construction. All three directions were confirmed by mutation — the rule
+disabled, its status check dropped, and its clock check dropped — each failing
+exactly the tests named for it, and the whole thing was then replayed through
+`mapMatches` against the captured payload above.
+
+**It cannot resurrect a result already lost from the held state**, which is the
+same bound `match-state-store.ts` carries: if the memory has only ever seen the
+broken record, there is nothing to hold and recovery still waits on upstream
+reporting the result once. This stops the next withdrawal winning, not the one
+already won.
+
 **The memory is persisted, and that half was learned the hard way.** It was
 process-local at first, which the code comment described honestly and which
 still was not enough: measured that night, the tick before a deploy served the
