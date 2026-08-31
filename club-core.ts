@@ -5,7 +5,7 @@
  */
 import { compareByKickoff, isConcluded } from "@/matches-core";
 import { countsTowardStandings } from "@/standings-core";
-import type { Club, ClubCode, Match, Scorer, StandingsRow } from "@/src/types";
+import type { Club, ClubCode, FormResult, Match, Scorer, StandingsRow } from "@/src/types";
 
 /**
  * URL-safe form of a club name: "Atlético-MG" becomes "atletico-mg".
@@ -201,7 +201,10 @@ export const ofClubs = (clubs: Club[]): string => {
   return `${parts.slice(0, -1).join(", ")} e ${parts[parts.length - 1]}`;
 };
 
-export type FormResult = "V" | "E" | "D";
+/** Re-exported, not redefined: the type moved to `src/types.ts` when
+ *  `RoundCandle` became its second reader, and every existing caller imports it
+ *  from here. */
+export type { FormResult };
 
 export const playsIn = (match: Match, code: ClubCode): boolean =>
   match.homeCode === code || match.awayCode === code;

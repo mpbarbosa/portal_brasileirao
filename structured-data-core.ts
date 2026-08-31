@@ -284,6 +284,21 @@ const trailFor = (route: Route, context: MetaContext): Array<{ name: string; pat
         { name: club?.shortName ?? "Clube", path: canonicalPath(route, context) },
       ];
     }
+    case "painel": {
+      // Three deep, and the middle crumb is the club's own page rather than the
+      // site root: the painel is a way of reading that club, so a trail that
+      // skipped it would tell a crawler these two pages are siblings under the
+      // table when one is a drill-down from the other.
+      const club = findClub(context.clubs ?? [], route.key);
+      return [
+        HOME_CRUMB,
+        {
+          name: club?.shortName ?? "Clube",
+          path: canonicalPath({ section: "clube", key: route.key }, context),
+        },
+        { name: "Painel", path: canonicalPath(route, context) },
+      ];
+    }
     case "estadio": {
       const stadium = findStadium(context.stadiums ?? [], route.key);
       return [

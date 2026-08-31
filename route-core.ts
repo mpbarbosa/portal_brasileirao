@@ -22,6 +22,18 @@ export type Route =
    * job (`findClub`), not the router's.
    */
   | { section: "clube"; key: string }
+  /**
+   * The **Painel do clube** — one club's season rodada a rodada, drawn as
+   * candles. Same `key` as `clube` and resolved by the same `findClub`, since
+   * it is the same subject read a different way.
+   *
+   * A section of its own rather than `/clube/<key>/painel`, and the reason is
+   * mechanical: `pageStatus` refuses a third path segment outright, so a
+   * nested address would mean loosening the rule that keeps
+   * `/jogos/24/qualquer-coisa` from being an indexable page. Two segments is
+   * also what every other detail view here takes.
+   */
+  | { section: "painel"; key: string }
   /** A single fixture, addressed by our match id. */
   | { section: "partida"; id: string }
   /**
@@ -109,6 +121,9 @@ export const parseRoute = (pathname: string): Route => {
     case "clube":
       return second ? { section: "clube", key: second } : HOME;
 
+    case "painel":
+      return second ? { section: "painel", key: second } : HOME;
+
     case "partida":
       return second ? { section: "partida", id: second } : HOME;
 
@@ -141,6 +156,8 @@ export const formatRoute = (route: Route): string => {
       return "/privacidade";
     case "clube":
       return `/clube/${encodeURIComponent(route.key)}`;
+    case "painel":
+      return `/painel/${encodeURIComponent(route.key)}`;
     case "partida":
       return `/partida/${encodeURIComponent(route.id)}`;
     case "estadio":

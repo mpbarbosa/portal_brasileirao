@@ -1,4 +1,5 @@
 import {
+  clubKey,
   clubMatches,
   coachOf,
   findClub,
@@ -10,10 +11,11 @@ import {
   standingFor,
 } from "@/club-core";
 import { lastRecordedRound } from "@/rank-history-core";
+import { formatRoute } from "@/route-core";
 import { pointsPercentageLabel } from "@/standings-core";
 import { ClubCrest } from "@/src/components/ClubCrest";
 import { GLYPH, InstagramLink, WikipediaLink } from "@/src/components/ClubLinks";
-import { BACK_LINK, LINK_UNDERLINE } from "@/src/components/interaction";
+import { BACK_LINK, LINK_UNDERLINE, STATE_LAYER } from "@/src/components/interaction";
 import { MatchList } from "@/src/components/MatchList";
 import { FollowButton } from "@/src/components/MeuTime";
 import type { CampaignPlotKind } from "@/campaign-plot-core";
@@ -69,6 +71,12 @@ interface ClubViewProps {
    */
   followedCode?: ClubCode;
   /**
+   * Open the club's **Painel** — the season rodada a rodada. Omit and the row
+   * offering it is left out entirely, the same way every optional affordance on
+   * this page behaves: the club page stands on its own without it.
+   */
+  onOpenPanel?: (key: string) => void;
+  /**
    * Follow or unfollow. Omit and no control renders at all — which is what the
    * page does before preferences are wired in, and what it must keep doing if
    * they are ever switched off. A club page that only works for somebody with a
@@ -77,12 +85,22 @@ interface ClubViewProps {
   onToggleFollow?: (code: ClubCode) => void;
 }
 
-const stat = (label: string, value: string) => (
-  <Surface key={label} filled className="px-3 py-2">
-    <p className="text-body-small text-ink-faint">{label}</p>
-    <p className="font-semibold tabular-nums">{value}</p>
-  </Surface>
-);
+/**
+ * One figure in the row under the club's name.
+ *
+ * Exported because the **Painel** opens with the same row, and the repo's rule
+ * is to extract at the second call site — the same move `StarGlyph` made when
+ * the Classificação became its second caller. Two copies of a tile is how one
+ * of them comes to be a step off the other in padding or in ink.
+ */
+export function StatTile({ label, value }: { label: string; value: string }) {
+  return (
+    <Surface filled className="px-3 py-2">
+      <p className="text-body-small text-ink-faint">{label}</p>
+      <p className="font-semibold tabular-nums">{value}</p>
+    </Surface>
+  );
+}
 
 /**
  * The marks in the club's header.
@@ -137,6 +155,20 @@ function HymnGlyph() {
   );
 }
 
+/** Three candles: the **Painel**. It draws the mark the page it opens is made
+ *  of, rather than a generic chart glyph — the row's whole promise is that
+ *  particular drawing. Local, like the three above it, because it has one call
+ *  site; the rule that moved the Wikipédia mark into `ClubLinks` is a second
+ *  caller, not a hunch that there might be one. */
+function PanelGlyph() {
+  return (
+    <svg {...GLYPH}>
+      <path d="M6 4v16M12 4v16M18 4v16" />
+      <path d="M4 9h4v7H4zM10 6h4v6h-4zM16 11h4v6h-4z" />
+    </svg>
+  );
+}
+
 export function ClubView({
   clubKey: key,
   loading = false,
@@ -150,6 +182,7 @@ export function ClubView({
   plotKind = "line",
   onTogglePlotKind,
   coaches,
+  onOpenPanel,
   followedCode,
   onToggleFollow,
 }: ClubViewProps) {
@@ -286,16 +319,19 @@ export function ClubView({
 
       {row && (
         <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-5">
-          {stat("Posição", `${row.position}º`)}
-          {stat("Pontos", String(row.points))}
-          {stat("Jogos", String(row.played))}
-          {stat("Saldo", row.goalDifference > 0 ? `+${row.goalDifference}` : String(row.goalDifference))}
+          <StatTile label="Posição" value={`${row.position}º`} />
+          <StatTile label="Pontos" value={String(row.points)} />
+          <StatTile label="Jogos" value={String(row.played)} />
+          <StatTile
+            label="Saldo"
+            value={row.goalDifference > 0 ? `+${row.goalDifference}` : String(row.goalDifference)}
+          />
           {/* Last of the five, reading left to right as the sentence a reader
               would say: it is where the club sits, what it took, out of how
               many, and how much of what was available that is. The em dash is
               the same absence the table's % column renders — a club yet to play
               has no aproveitamento, where 0% is a club that has taken nothing. */}
-          {stat("Aproveitamento", pointsPercentageLabel(row) ?? "—")}
+          <StatTile label="Aproveitamento" value={pointsPercentageLabel(row) ?? "—"} />
         </div>
       )}
 
@@ -333,6 +369,50 @@ export function ClubView({
             </p>
           </Surface>
         </section>
+      )}
+
+      {/* Directly under the campanha, because it is the same subject read
+          further: the sparkline says where each round ended, and the painel
+          says what happened inside it. It renders whether or not there is a
+          campanha yet — a page that hides the door until the season has started
+          is a page nobody finds in March.
+
+          **The whole row is the link**, with a chevron closing it, for the
+          reason the Meu time strip is: a 96px phrase inside a 736px band leaves
+          most of the largest control on the page inert. `min-h-12` is the touch
+          floor, which applies here and not to the club names in the table
+          below — this is a standalone control on its own line rather than a
+          link inside content. */}
+      {onOpenPanel && (
+        <Surface
+          as="a"
+          filled
+          href={formatRoute({ section: "painel", key: clubKey(club) })}
+          onClick={(event: React.MouseEvent) => {
+            // Let modified clicks open a new tab, as any link should.
+            if (
+              event.metaKey || event.ctrlKey || event.shiftKey ||
+              event.altKey || event.button !== 0
+            ) {
+              return;
+            }
+            event.preventDefault();
+            onOpenPanel(clubKey(club));
+          }}
+          className={`mt-4 flex min-h-12 items-center gap-2 px-3 py-2 ${STATE_LAYER}`}
+          data-panel-link={club.code}
+        >
+          <PanelGlyph />
+          <span className="min-w-0 grow">
+            <span className="block font-medium text-on-surface">Painel do clube</span>
+            <span className="block text-body-small text-ink-muted">
+              Cada rodada em velas: onde começou, onde terminou e quanto oscilou
+            </span>
+          </span>
+          <svg {...GLYPH} className="ml-auto h-5 w-5 shrink-0 text-ink-muted">
+            <path d="m9.5 5.5 6.5 6.5-6.5 6.5" />
+          </svg>
+        </Surface>
       )}
 
       <section className="mt-6">
