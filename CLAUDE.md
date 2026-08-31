@@ -2792,9 +2792,34 @@ Rules that follow from that:
 - `allInnerTexts()` and `locator.all()` query immediately and do **not** auto-wait,
   unlike `expect(locator)`. Wait for the table to populate first, or they sample a
   half-rendered DOM — this produced a real flake.
-- **Never assert how much curated data exists.** `broadcasts.ts` grows on every sync,
-  so a test counting curated fixtures fails the next time the script runs. Assert the
-  *shape* of a rendered line instead. This broke CI once already.
+- **Never assert how much curated data exists**, and that includes *which* record
+  happens to hold a value. `broadcasts.ts` grows on every sync, so a test counting
+  curated fixtures fails the next time the script runs. Assert the *shape* of a rendered
+  line instead. This broke CI **twice**: once on a count, and once on
+  `goals.spec.ts` pinning fixture 554977 as the match with no minute, on a comment
+  reading "554977 predates the join". A later `sync-goals` run gave it one. Seven of the
+  184 matches carry a minute today and none is mixed, so which fixture lacks one moves
+  every sync. `withoutGoals` in that same file already had the answer — **produce the
+  state with a prepared payload rather than hunting the season for a fixture in it** —
+  and the minute spec did not follow it.
+- **Do not pipe a test run through `head` or `tail`.** This is the ledger rule under
+  **The protocol for commit, push, merge and deploy**, and it is *worse* here, because
+  two things fail together:
+
+  1. **A pipeline's exit status is the last command's**, so `npx playwright test | tail`
+     exits **0** however many specs failed.
+  2. **Playwright prints the failed-test list BEFORE the `N passed` summary.** So the
+     last four lines of a *failing* run are three failure lines and then `754 passed` —
+     character-for-character the shape of a passing run's tail. The `N failed` header is
+     the line above the window.
+
+  Measured: the escalações work ran the suite twice through `| tail -4`, read `758
+  passed` both times, and shipped a red `main` that skipped every deploy for over
+  twenty minutes. Write the run to a file and grep it for `failed`/`flaky`, or use
+  `--reporter=line`; either way check the exit status of **the test command itself**.
+  And note the truncation destroys the evidence: with `tail` inside the command, only
+  those four lines are ever written, so afterwards you cannot even establish whether the
+  specs failed outright or were flaky.
 - **Turning text into a control changes its element.** Making a club or player name
   clickable turned a `span` into a `button` (later an `<a>`), which silently broke every
   spec selecting `span:first-child`. Select the cell's element children (`td > *`) rather
