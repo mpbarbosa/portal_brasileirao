@@ -122,6 +122,34 @@ export const BACK_LINK = [
 ].join(" ");
 
 /**
+ * A link whose whole body is a mark — no words beside it, so there is nothing
+ * for an underline to be drawn under.
+ *
+ * `LINK_UNDERLINE` is the wrong constant for one of these, and it is wrong in
+ * the direction that never announces itself: `GLYPH` is `inline-block`, and
+ * text-decoration is not drawn through an atomic inline box, so the rule
+ * compiles, matches, applies — and paints nothing. The link ends up with no
+ * rest state distinguishing it from the text beside it and no hover feedback at
+ * all, which is visible only to somebody who already suspects it. The same
+ * family as the `duration-*` utility that compiles to nothing and the
+ * `group-open:rotate-90` that matched and did not move.
+ *
+ * So it brightens, which is `BACK_LINK`'s answer to the same problem and for
+ * the same reason above it: a bare mark has no container for a veil to sit in.
+ * It takes the identical colour pair, so the two read as one idiom.
+ *
+ * It carries **no touch-target floor**, and that is the decision rather than an
+ * omission. `BACK_LINK` takes one because it is a standalone control on a line
+ * of its own; this sits *inside* a line of content, beside the words it belongs
+ * to, so a 48dp box would push the line apart to fit it. That is the exclusion
+ * `tabs-and-targets.spec.ts` names rather than infers.
+ */
+export const ICON_LINK = [
+  "text-ink-muted transition hover:text-on-surface-variant",
+  FOCUS_RING,
+].join(" ");
+
+/**
  * The veil for a control filled with `primary-container`, and the day the note
  * above anticipated.
  *

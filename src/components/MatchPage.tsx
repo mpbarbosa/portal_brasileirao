@@ -7,14 +7,14 @@ import {
 } from "@/match-core";
 import { goalLabel, goalsBySide } from "@/goals-core";
 import { bySection, lineupFor } from "@/escalacao-core";
-import { stadiumSlug, venueName } from "@/venue-core";
+import { stadiumMapUrl, stadiumSlug, venueName } from "@/venue-core";
 import { STADIUMS } from "@/src/data/stadiums";
 import { BroadcasterMark } from "@/src/components/BroadcasterMark";
 import { controlClasses } from "@/src/components/Button";
 import { ClubCrest } from "@/src/components/ClubCrest";
-import { WikipediaLink } from "@/src/components/ClubLinks";
+import { GLYPH, WikipediaLink } from "@/src/components/ClubLinks";
 import { clubKey } from "@/club-core";
-import { BACK_LINK, STATE_LAYER, LINK_UNDERLINE } from "@/src/components/interaction";
+import { BACK_LINK, ICON_LINK, STATE_LAYER, LINK_UNDERLINE } from "@/src/components/interaction";
 import { lastRecordedRound } from "@/rank-history-core";
 import type { CampaignPlotKind } from "@/campaign-plot-core";
 import { CampaignPlotToggle } from "@/src/components/CampaignPlotToggle";
@@ -56,6 +56,32 @@ const kickoffLabel = (kickoff: string): string => {
     minute: "2-digit",
   });
 };
+
+/**
+ * A map pin: where the ground is.
+ *
+ * Local to this file, because it has one call site — the rule `ClubView` states
+ * and `ClubLinks` is the exception to. It moves to `ClubLinks` the day the
+ * stadium page or anything else wants the same mark, and not before.
+ *
+ * It borrows `GLYPH` rather than restating those attributes, which is the whole
+ * reason that bag is exported: a mark defined beside its call site drifts from
+ * the ones defined together, and `inline-block` and `aria-hidden` are exactly
+ * the attributes nobody notices are missing.
+ *
+ * A teardrop and a hole, which is the pin every map has drawn for twenty years.
+ * Google's own pin is artwork with a fixed form and a fixed red, so it cannot
+ * take `currentColor` and would sit cold beside a link that brightens — the
+ * argument `InstagramGlyph` already makes about Meta's gradient.
+ */
+function MapPinGlyph() {
+  return (
+    <svg {...GLYPH}>
+      <path d="M12 21.5c4.5-4.9 7-8.3 7-11.5a7 7 0 1 0-14 0c0 3.2 2.5 6.6 7 11.5Z" />
+      <circle cx="12" cy="10" r="2.5" />
+    </svg>
+  );
+}
 
 /**
  * One club's campanha, stacked with its opponent's rather than drawn on shared
@@ -276,6 +302,15 @@ export function MatchPage({
   const showCampaigns =
     lastRound > 0 && homeCampaign.length > 0 && awayCampaign.length > 0;
   const venue = match.venue;
+  // The pin is drawn from the *curated* coordinate rather than from anything in
+  // the fixture, because no provider this app reaches carries a venue
+  // coordinate at any tier — CBF sends a `Stadium - City - UF` string and
+  // football-data has no venue field at all. A ground nobody has verified a
+  // point for therefore renders no pin, which is the rule `capacityLabel` and
+  // the weather card already follow for the same file.
+  const mapUrl = venue
+    ? stadiumMapUrl(STADIUMS[stadiumSlug(venue.stadium)]?.coordinates)
+    : null;
   // Absent and empty are the same thing to a reader, and both render nothing —
   // the player card's rule. Upstream names nobody for 223 of the season's 380
   // fixtures, so that is the common case rather than the edge one.
@@ -388,6 +423,35 @@ export function MatchPage({
                 own. The name comes from `venueName` so it matches the heading
                 of the page it opens — CBF writes "ARENA MRV". */}
             <dd className="font-medium">
+              {/* Two destinations on one line, and they are genuinely different
+                  places: the name opens this app's page for the ground, the pin
+                  opens where it is. So the pin is its own anchor rather than
+                  the name's icon — wrapping both in one link would mean picking
+                  which of the two a reader meant, and getting it wrong half the
+                  time.
+
+                  It leads rather than trails, which is what was asked for and
+                  is also what a map pin does everywhere else: it marks the
+                  thing it sits before. `GLYPH` already carries the `mr-1` that
+                  separates it from the name.
+
+                  Icon-only, so the accessible name is the `sr-only` span and
+                  nothing else — `aria-hidden` on the mark means a link with no
+                  text at all would be announced as its own URL. */}
+              {mapUrl && (
+                <a
+                  href={mapUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={ICON_LINK}
+                  data-stadium-map
+                >
+                  <MapPinGlyph />
+                  <span className="sr-only">
+                    Ver {venueName(venue, STADIUMS)} no Google Maps (abre em nova aba)
+                  </span>
+                </a>
+              )}
               <a
                 href={formatRoute({ section: "estadio", key: stadiumSlug(venue.stadium) })}
                 onClick={(event) => {
