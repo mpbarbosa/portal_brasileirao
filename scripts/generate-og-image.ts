@@ -38,6 +38,7 @@ import { chromium } from "@playwright/test";
 // The size and the output path come from the module that advertises them in
 // `og:image:width`/`height`. A second copy here is how the tags come to promise
 // a box the file does not fill.
+import { BRAND_MARK_PATH, BRAND_MARK_VIEWBOX } from "@/brand-core";
 import { OG_IMAGE_HEIGHT, OG_IMAGE_PATH, OG_IMAGE_WIDTH } from "@/page-meta-core";
 
 const OUT_PATH = path.join(process.cwd(), "public", OG_IMAGE_PATH.replace(/^\//, ""));
@@ -95,16 +96,27 @@ const card = (t: Record<TokenName, string>): string => `<!doctype html>
     display: flex; flex-direction: column; justify-content: center;
     padding: 0 88px; position: relative; overflow: hidden;
   }
-  /* Off-canvas disc: a hint of a ball without depending on an emoji font
-     being installed on whichever machine runs this. */
+  /* Off-canvas disc. It was introduced as "a hint of a ball", and it is not
+     one any more: the card now carries the real mark, and the mark is
+     deliberately not a ball — a site badge among twenty club crests reads as a
+     twenty-first club. What it still does is give the flat surface a second
+     tone in the corner the type does not reach, which is worth keeping. */
   .disc {
     position: absolute; right: -180px; top: -180px;
     width: 620px; height: 620px; border-radius: 50%;
     background: ${t["color-surface-container"]};
     border: 2px solid ${t["color-outline-variant"]};
   }
-  .rule { width: 132px; height: 10px; border-radius: 5px;
-          background: ${t["color-primary"]}; margin-bottom: 40px; }
+  /* The mark, where a 132x10 primary bar used to stand in for one. That bar
+     was a placeholder for a brand mark this app did not have; keeping both
+     would be an accent beside an accent. 96px because the card is read as a
+     thumbnail in most feeds, where the arch has to survive alongside 92px
+     type. It carries no <title> and is aria-hidden by omission: this is a
+     raster in the end, and the alt text is whatever the sharing surface
+     shows. */
+  .mark { width: 96px; height: 96px; margin-bottom: 34px; position: relative;
+          color: ${t["color-primary"]}; }
+  .mark svg { display: block; width: 100%; height: 100%; }
   h1 { font-size: 92px; line-height: 1.04; font-weight: 800; letter-spacing: -0.02em;
        color: ${t["color-on-surface"]}; position: relative; }
   h2 { font-size: 42px; line-height: 1.25; font-weight: 600; margin-top: 22px;
@@ -113,7 +125,7 @@ const card = (t: Record<TokenName, string>): string => `<!doctype html>
               color: ${t["color-on-surface-variant"]}; position: relative; }
 </style></head><body>
   <div class="disc"></div>
-  <div class="rule"></div>
+  <div class="mark"><svg viewBox="${BRAND_MARK_VIEWBOX}" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="${BRAND_MARK_PATH}" /></svg></div>
   <h1>Portal Brasileirão</h1>
   <h2>Campeonato Brasileiro Série A</h2>
   <p class="sections">Classificação &middot; Ao vivo &middot; Jogos &middot; Artilharia</p>
