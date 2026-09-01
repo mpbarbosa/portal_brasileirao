@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 
+import { BrandMark } from "@/src/components/BrandMark";
 import { Button } from "@/src/components/Button";
 import { MoonIcon, SunIcon } from "@/src/components/SectionIcons";
 import { FOCUS_RING, STATE_LAYER } from "@/src/components/interaction";
@@ -250,11 +251,34 @@ export function NavBar({
             data-brand
             className={`-mx-2 min-w-0 shrink rounded-small px-2 py-1 ${STATE_LAYER}`}
           >
+            {/* The mark sits beside the *title line*, not beside the two-line
+                block, and that is arithmetic rather than taste. Below `sm` the
+                brand's widest line is the subtitle at 174px against 128px of
+                title, and the whole block gets 202px at 375dp signed out — so
+                a mark placed beside the block adds its own width to the widest
+                line and pushes the subtitle under the Entrar pill. Measured: it
+                overflowed its box by 3.6px and painted over the control.
+                Beside the title it costs nothing, because 24 + 8 + 128 = 160 is
+                still inside the 174 the subtitle already claims. Above `sm`
+                there is no subtitle, so the two arrangements are the same
+                element in the same place.
+
+                `shrink-0` and a fixed size, never a percentage: this row's
+                elastic member is the wordmark, and a logo that gave way under
+                pressure would leave the app announcing itself with a sliver of
+                an arch. 28px above `sm` against the 40dp trailing controls,
+                24px below it.
+
+                `text-primary` rather than `text-on-surface`: the mark is the
+                one element on this bar that is the brand rather than a reading
+                of it, and primary-as-ink is a pairing the contrast gate already
+                measures against every surface this app paints text on. */}
             {/* `whitespace-nowrap` and no `truncate`: the app's own name is the
                 one string on this bar that must never be cut, and it was —
                 measured signed in at `ad8853c`, it read "Portal Brasile…" at
                 1280 and "P…" at 640. See the row note below for why. */}
-            <span className="block whitespace-nowrap text-title-medium font-bold text-on-surface">
+            <span className="flex items-center gap-2 whitespace-nowrap text-title-medium font-bold text-on-surface">
+              <BrandMark className="size-6 shrink-0 text-primary sm:size-7" />
               Portal Brasileirão
             </span>
             {/* Below `sm` only, where the destinations are in the bottom bar and

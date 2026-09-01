@@ -3,11 +3,13 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link
-      rel="icon"
-      type="image/svg+xml"
-      href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>%E2%9A%BD</text></svg>"
-    />
+    <!-- The site's own mark, not the ⚽ emoji that stood here: a glyph is
+         rendered by the platform's emoji font, so the tab showed a different
+         picture on every OS and none of them was this app. `favicon.svg`
+         carries a `prefers-color-scheme` block, which is why one file serves a
+         light and a dark tab strip. -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <title>Portal Brasileirão — Campeonato Brasileiro Série A</title>
     <meta
       name="description"

@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" role="img" aria-label="Portal Brasileirão">
+  <!--
+    The Portal Brasileirão mark: an arch — the portal — standing on the ground,
+    with a rising campanha read out of it.
+
+    Theme-aware, and it has to be: this file is loaded as an image, where
+    `currentColor` inherits nothing. The two fills are `primary` from
+    src/index.css — #006d49 on light, #6fdba9 on dark — so one file is legible
+    on either. In JSX use `BrandMark` instead, which takes its colour from the
+    parent the way every other glyph here does.
+
+    One path with fill-rule="evenodd": the bars are holes rather than painted
+    shapes, so they show whatever is behind the mark instead of a colour that
+    would have to be kept in step with the surface underneath it.
+  -->
+  <style>
+    path { fill: #006d49 }
+    @media (prefers-color-scheme: dark) { path { fill: #6fdba9 } }
+  </style>
+  <path fill-rule="evenodd" d="M3 11A9 9 0 0 1 21 11V19.5A2.5 2.5 0 0 1 18.5 22H5.5A2.5 2.5 0 0 1 3 19.5ZM6.4 19.4V16.8H8.8V19.4ZM10.8 19.4V14.4H13.2V19.4ZM15.2 19.4V11.4H17.6V19.4Z"/>
+</svg>
