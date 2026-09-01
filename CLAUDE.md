@@ -1019,6 +1019,39 @@ find "Classificação" among the destinations to get back. It takes `STATE_LAYER
 `-mx-2 px-2`, the negative margin buying the veil room to sit in without moving the text
 off the content column's left edge.
 
+**The brand mark sits beside the TITLE LINE, not beside the two-line block, and
+that is arithmetic.** `BrandMark` is a filled arch — the portal — with a rising
+campanha knocked out of it, drawn in `currentColor` at `text-primary`, and it lives
+in its own file rather than in `SectionIcons.tsx`: that file exists to hold one
+`base` attribute bag (`fill: none`, `stroke: currentColor`, width 2) so a glyph
+defined beside its call site cannot drift from it, and this mark shares none of that
+contract. **Filled rather than stroked** because a favicon is read at 16px, where the
+same geometry stroked is mush — measured at 16, 24 and 28 in both themes.
+
+Below `sm` the brand's widest line is the **subtitle** at 174px against 128px of
+title, and the block gets 202px at 375dp signed out. So a mark placed beside the
+*block* adds its width to the widest line: the subtitle overflowed its box by 3.6px
+and painted under the Entrar pill. Beside the title it costs nothing, because
+24 + 8 + 128 = 160 is still inside the 174 the subtitle already claims; above `sm`
+there is no subtitle and the two arrangements are the same element in the same place.
+
+**The whole suite was green over that, 802 specs, and the spec that should have caught
+it is the one directly above the new one.** "Shows the brand at every width, whole and
+never cut" asserts the subtitle is *visible* — and an element overflowing its box is
+visible, painting over its neighbour, which is the same trap that spec's own comment
+records about a truncated element. The replacement measures `scrollWidth` against
+`clientWidth` **and** the gap to the next control, because those fail independently,
+and it was confirmed red against the beside-the-block markup before being believed.
+
+`public/logo.svg` and `public/favicon.svg` carry the same geometry with explicit fills
+and a `prefers-color-scheme` block, because a file loaded as an image inherits no
+colour from anything; the favicon's viewBox is the mark's own bounding box so it fills
+a 16px tab slot instead of sitting inside 3px of transparent margin. They replaced a
+`⚽` emoji data URI, which the platform's emoji font drew — a different picture on
+every OS, and none of them this app. **`public/og-default.png` still carries no mark**:
+`sync-og-image` would have to draw it, and that is a separate change to a committed
+raster, not a line to slip into this one.
+
 **The theme toggle draws SVGs, not `☀` and `☽`.** A font decides a character's size and
 weight, and those two are decided by different parts of it: measured in the shipped
 bundle, the crescent drew about a third the height of the 24px icons beside it, so one

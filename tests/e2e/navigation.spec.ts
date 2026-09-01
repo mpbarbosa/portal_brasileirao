@@ -74,6 +74,60 @@ test.describe("Navegação", () => {
     ).toBeHidden();
   });
 
+  test("the brand's phone subtitle is not overrun by the mark beside it", async ({
+    page,
+  }) => {
+    // **This is the sibling of the spec above, and it is here because that one
+    // passed against the defect.** It asserts the subtitle is *visible*, which
+    // is the property its own comment records an ellipsis does not remove —
+    // and an element that overflows its box is visible too, painting over
+    // whatever is to its right.
+    //
+    // Introducing the brand mark made that concrete. Placed beside the
+    // two-line block, the mark adds its width to the block's *widest* line,
+    // which below `sm` is this subtitle at 174px and not the 128px title. At
+    // 375dp signed out the block gets 202px, so the subtitle overflowed its
+    // box by 3.6px and painted under the Entrar pill. The whole suite — 802
+    // specs — was green over it.
+    //
+    // The mark therefore sits beside the title line, where 24 + 8 + 128 is
+    // still inside the 174 the subtitle already claims. Both readings are
+    // asserted, because they fail independently: `scrollWidth` catches the
+    // text outgrowing its own box, and the gap to the next control catches a
+    // block that fits but has been pushed into its neighbour.
+    for (const signedIn of [false, true]) {
+      if (signedIn) await devLogin(page, "Marcelo");
+      await page.setViewportSize({ width: 375, height: 800 });
+      await page.goto("/");
+
+      const state = signedIn ? "signed in" : "signed out";
+      const subtitle = page
+        .getByText("Campeonato Brasileiro Série A", { exact: true })
+        .first();
+      await expect(subtitle).toBeVisible();
+
+      const fit = await subtitle.evaluate((el) => {
+        const next = el.closest("[data-brand]")?.nextElementSibling;
+        return {
+          shown: el.clientWidth,
+          full: el.scrollWidth,
+          right: el.getBoundingClientRect().right,
+          nextLeft: next ? next.getBoundingClientRect().left : Infinity,
+        };
+      });
+
+      expect(fit.full, `the subtitle should measure something ${state}`).toBeGreaterThan(0);
+      expect(
+        fit.shown,
+        `the subtitle overflows its own box ${state} at 375px`,
+      ).toBeGreaterThanOrEqual(fit.full);
+      expect(
+        fit.right,
+        `the subtitle runs into the trailing controls ${state} at 375px`,
+      ).toBeLessThanOrEqual(fit.nextLeft);
+    }
+  });
+
   test("the wordmark is the way home", async ({ page }) => {
     // The one control every site puts in this corner, and this app had two
     // `<p>` elements there — so a reader on a club page had to find
