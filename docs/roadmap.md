@@ -854,7 +854,8 @@ paragraph of prose.
     directly above its own **Últimos resultados**: the same five results twice.
     Two questions, two lifetimes, two keys; when the column shows the campanha
     the plot kind still decides its mark, so the choices compose. A spec asserts
-    the club page still draws a campanha while the table shows the forma.
+    a campanha is still drawn while the table shows the forma — on the Painel
+    now rather than on the club page, which the campanha left.
 
     `FormPill` moved out of `ClubView` at its second call site, which is what it
     was shaped for in item 6 — the Classificação relocated a function rather

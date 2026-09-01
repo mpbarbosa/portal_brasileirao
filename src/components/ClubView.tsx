@@ -11,7 +11,6 @@ import {
   scorersFor,
   standingFor,
 } from "@/club-core";
-import { lastRecordedRound } from "@/rank-history-core";
 import { formatRoute } from "@/route-core";
 import { pointsPercentageLabel } from "@/standings-core";
 import { ClubCrest } from "@/src/components/ClubCrest";
@@ -19,15 +18,11 @@ import { GLYPH, InstagramLink, MapPinGlyph, WikipediaLink } from "@/src/componen
 import { BACK_LINK, LINK_UNDERLINE, STATE_LAYER } from "@/src/components/interaction";
 import { MatchList } from "@/src/components/MatchList";
 import { FollowButton } from "@/src/components/MeuTime";
-import type { CampaignPlotKind } from "@/campaign-plot-core";
-import { CampaignPlotToggle } from "@/src/components/CampaignPlotToggle";
-import { RankSparkline } from "@/src/components/RankSparkline";
 import { FormPill } from "@/src/components/FormPill";
 import { Surface } from "@/src/components/Surface";
 import type {
   Club,
   ClubCode,
-  ClubRankHistory,
   Match,
   Scorer,
   StandingsRow,
@@ -46,16 +41,6 @@ interface ClubViewProps {
   onBack: () => void;
   /** Omit to render fixtures as plain text — the page stands on its own. */
   onSelectMatch?: (id: string) => void;
-  /** Every club's campanha. Omit and the section is left out entirely. */
-  rankHistory?: ClubRankHistory[];
-  /**
-   * Which mark the campanha is drawn as, and the way to flip it — one choice
-   * shared with the Classificação and the Partida page, owned by `App`. Omit
-   * and the section draws the line with no control, which is what it did
-   * before the choice existed.
-   */
-  plotKind?: CampaignPlotKind;
-  onTogglePlotKind?: () => void;
   /**
    * Head coaches by club code, from `/api/coaches`. Omit — as every caller does
    * until that request lands — and the club's own frozen value stands in, which
@@ -176,9 +161,6 @@ export function ClubView({
   scorers,
   onBack,
   onSelectMatch,
-  rankHistory,
-  plotKind = "line",
-  onTogglePlotKind,
   coaches,
   onOpenPanel,
   followedCode,
@@ -214,15 +196,6 @@ export function ClubView({
   const hymn = hymnUrl(club.hymn);
   const coach = coachOf(club, coaches);
   const mapUrl = clubMapUrl(club.address);
-
-  // Same domains as the Classificação, so the shape a reader recognises in the
-  // table is the shape they find here — only the box is bigger. `clubCount`
-  // comes from the table rather than from the history, because the y axis is
-  // the size of the division, not the number of clubs that happen to have a
-  // campanha recorded.
-  const campaign = rankHistory?.find((entry) => entry.clubCode === code)?.entries ?? [];
-  const lastRound = lastRecordedRound(rankHistory ?? []);
-  const clubCount = standings.length || rankHistory?.length || 0;
 
   return (
     <>
@@ -359,47 +332,14 @@ export function ClubView({
         </div>
       )}
 
-      {campaign.length > 0 && lastRound > 0 && (
-        <section className="mt-6">
-          {/* Sits directly under the Posição tile, which it explains: the tile
-              says where the club is, this says how it got there.
-
-              The control shares the heading's row rather than sitting above the
-              section: it changes this drawing and nothing else on the page, and
-              a full-width row of its own would read as a page-level setting.
-              `flex-wrap` because the label is a sentence — at 375dp it takes
-              the second line rather than squeezing the heading. */}
-          <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-            <h3 className="text-body-medium font-medium text-ink-muted">Campanha</h3>
-            {onTogglePlotKind && (
-              <CampaignPlotToggle kind={plotKind} onToggle={onTogglePlotKind} />
-            )}
-          </div>
-          <Surface filled className="px-3 py-3">
-            <RankSparkline
-              entries={campaign}
-              clubCount={clubCount}
-              lastRound={lastRound}
-              size="page"
-              kind={plotKind}
-            />
-            {/* The drawing carries no axis, so the ends are named in text —
-                which is also the only version a screen reader gets. */}
-            <p className="mt-2 flex justify-between text-body-small tabular-nums text-ink-faint">
-              <span>{campaign[0].position}º · 1ª rodada</span>
-              <span>
-                {campaign[campaign.length - 1].position}º · {lastRound}ª rodada
-              </span>
-            </p>
-          </Surface>
-        </section>
-      )}
-
-      {/* Directly under the campanha, because it is the same subject read
-          further: the sparkline says where each round ended, and the painel
-          says what happened inside it. It renders whether or not there is a
-          campanha yet — a page that hides the door until the season has started
-          is a page nobody finds in March.
+      {/* The whole of this page's campanha is now one door rather than a
+          drawing plus a door beneath it. The mark and the candles were the same
+          subject at two grains — where each round ended, and what happened
+          inside it — and reading them apart meant reading them on two pages.
+          Both live on the **Painel** now, so this row is what the club page
+          says about a campanha. It renders whether or not there is one yet: a
+          page that hides the door until the season has started is a page
+          nobody finds in March.
 
           **The whole row is the link**, with a chevron closing it, for the
           reason the Meu time strip is: a 96px phrase inside a 736px band leaves
@@ -429,8 +369,12 @@ export function ClubView({
           <PanelGlyph />
           <span className="min-w-0 grow">
             <span className="block font-medium text-on-surface">Painel do clube</span>
+            {/* Names the whole campanha rather than only the velas, since the
+                line moved there too: this row is now the only thing the club
+                page says about it, and a description of the lower half sends a
+                reader looking for the upper one somewhere else. */}
             <span className="block text-body-small text-ink-muted">
-              Cada rodada em velas: onde começou, onde terminou e quanto oscilou
+              A campanha inteira: onde cada rodada terminou e o que houve dentro dela
             </span>
           </span>
           <svg {...GLYPH} className="ml-auto h-5 w-5 shrink-0 text-ink-muted">

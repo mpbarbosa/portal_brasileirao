@@ -273,19 +273,23 @@ test.describe("Classificação", () => {
     await expect(page.locator("table thead th").nth(3)).toHaveText("Forma");
   });
 
-  test("choosing the forma does not change the campanha on the club page", async ({ page }) => {
+  test("choosing the forma does not change the campanha elsewhere", async ({ page }) => {
     // The whole reason this is a second preference rather than a third member
     // of `CampaignPlotKind`. That kind is global — #235 made the campanha one
-    // mark across the Classificação, the Clube page and the Partida page — so
-    // folding "forma" into it would put pill strips on the club page directly
-    // above its own Últimos resultados: the same five results twice.
+    // mark across the Classificação, the Painel do clube and the Partida page
+    // — so folding "forma" into it would put pill strips on the club page
+    // directly above its own Últimos resultados: the same five results twice.
+    //
+    // Two hops rather than one: the campanha left the club page for the
+    // Painel, which is where the line and the candles are now read together.
     await page.getByRole("button", { name: "Ver a forma" }).click();
     await expect(page.locator("table thead th").nth(3)).toHaveText("Forma");
 
     await page.locator("table tbody tr td:nth-child(2) a").first().click();
+    await page.locator("main a[data-panel-link]").click();
 
-    // The club page still draws a campanha, and still exactly one.
-    const campaign = page.locator("main section svg[role='img']");
+    // Excluding the candles, which are the other `role="img"` on that page.
+    const campaign = page.locator("main svg[role='img']:not([data-candles])");
     await expect(campaign).toHaveCount(1);
     await expect(campaign).toHaveAttribute("aria-label", /^Campanha: /);
   });

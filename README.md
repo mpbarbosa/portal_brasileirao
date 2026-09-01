@@ -97,8 +97,12 @@ single round. So the Palmeiras page documents the estádio and the emissoras, an
 documents the árbitro. Where upstream names nobody the line is absent rather than blank, which
 is the common case at 223 of 380.*
 
-*A club page, in both themes. **Campanha** traces where the club sat after every round, and
-the marks under each fixture say which broadcaster showed it. The marks keep a light backing
+*A club page, in both themes. The **Painel do clube** row opens the club's campanha —
+the line tracing where it sat after every round, and beneath it a candle per rodada —
+and the marks under each fixture say which broadcaster showed it. **These two images
+predate that move** and still show the campanha on the club page itself; the alt text
+describes what they contain, which is the point of alt text, and they are re-shot from
+production rather than edited here. The marks keep a light backing
 in both themes on purpose — Globo's circle and the Premiere wordmark are dark artwork on a
 transparent ground, and they vanish against a dark page without it.*
 

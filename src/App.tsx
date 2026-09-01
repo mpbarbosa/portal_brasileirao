@@ -508,15 +508,12 @@ export function App() {
               matches={matches?.matches ?? []}
               clubs={matches?.clubs}
               scorers={scorers}
-              rankHistory={rankHistory}
               coaches={coaches ?? undefined}
               onBack={() => navigate({ section: "classificacao" })}
               onSelectMatch={(id) => navigate({ section: "partida", id })}
               followedCode={preferences.club ?? undefined}
               onToggleFollow={toggleClub}
               onOpenPanel={(key) => navigate({ section: "painel", key })}
-              plotKind={plotKind}
-              onTogglePlotKind={togglePlotKind}
             />
           )}
 
@@ -527,6 +524,9 @@ export function App() {
               standings={standings}
               matches={matches?.matches ?? []}
               clubs={matches?.clubs}
+              rankHistory={rankHistory}
+              plotKind={plotKind}
+              onTogglePlotKind={togglePlotKind}
               // Back to the club page rather than to the table: this is a
               // drill-down from that page and from nowhere else, so "voltar"
               // means the page it was opened from.

@@ -161,9 +161,11 @@ what makes the logic testable without mocking HTTP.
   **`App` owns the choice and all three campanha sections receive it**, which is
   `useTheme`'s arrangement — and **no test defends it**, which is the part to know
   before "simplifying" it back. Calling `useCampaignPlotKind` in the Classificação,
-  `ClubView` and `MatchPage` independently was built and run: **all 184 specs across
-  the three suites pass**, including the two that navigate between sections and
-  assert the mark carried over. They pass because a route change unmounts the other
+  `ClubDashboard` and `MatchPage` independently was built and run: **all 184 specs
+  across the three suites pass**, including the two that navigate between sections
+  and assert the mark carried over. (That reading was taken while the second
+  section was `ClubView`; the sparkline has since moved to the **Painel**, which
+  changes which component holds it and nothing about the argument.) They pass because a route change unmounts the other
   two, so the copies never coexist long enough to disagree — a property of the
   router, not a decision anybody made, and one that ends the first time two campanha
   sections render at once. The arrangement is held by this paragraph and by nothing
@@ -171,7 +173,8 @@ what makes the logic testable without mocking HTTP.
   and the choice is not.
   **The toggle renders in three places and carries no margin or alignment of its
   own**, because the three place it differently: right-aligned above the table,
-  and sharing the `Campanha` heading's row on the two pages. Layout belonging to a
+  and sharing the `Campanha` heading's row on the **Painel** and the **Partida**
+  pages. Layout belonging to a
   control is layout that has to be cancelled at two of the three — the rule
   `Surface` already follows.
   In the Classificação it sits **above the table and outside the scrolling
@@ -189,7 +192,13 @@ what makes the logic testable without mocking HTTP.
   than two clubs.
 
 - `rank-candles-core.ts` — the **Painel do clube** (`/painel/<clube>`): the same
-  campanha read one level closer, as a candle per rodada. It exists because the
+  campanha read one level closer, as a candle per rodada. **The sparkline is on
+  this page too, directly above it**, and that is where the whole of a club's
+  campanha now lives — the club page carries the door and no drawing. The line
+  and the candles are one answer at two grains, and while they sat on two pages
+  a reader comparing them was navigating rather than looking; the club page's
+  own comment already said the painel was "the same subject read further", one
+  click away. It exists because the
   sparkline joins the position held at the **end** of each round, so a round is one
   point and its inside is invisible — a club that sat 4th on Saturday night and
   finished the round 9th because three rivals played on Sunday draws the same
