@@ -9,7 +9,7 @@ import { Surface } from "@/src/components/Surface";
 import { clubKey } from "@/club-core";
 import { countdownLabel } from "@/live-core";
 import { clubFocus, type ClubFocus, isHome, isImminent, opponentOf } from "@/next-match-core";
-import { clubNamer } from "@/src/components/MatchList";
+import { clubNamer, clubResolver } from "@/src/components/MatchList";
 import { formatRoute } from "@/route-core";
 import { useNow } from "@/src/useNow";
 import type { Club, ClubCode, Match } from "@/src/types";
@@ -137,18 +137,31 @@ function ProximoJogo({
   focus,
   code,
   now,
-  clubName,
+  clubs,
   onSelectMatch,
 }: {
   focus: ClubFocus;
   code: ClubCode;
   now: number;
-  clubName: (code: ClubCode) => string;
+  /**
+   * The clubs the payload named — the list, not a prepared namer.
+   *
+   * The line needs two answers about each side now, its name and its crest, and
+   * threading two callbacks from one call site is how they come to be built
+   * from different lists. `clubNamer` and `clubResolver` share a fallback chain
+   * precisely so both can be derived here from the one input.
+   */
+  clubs?: Club[];
   onSelectMatch?: (id: string) => void;
 }) {
   if (focus.kind === "none") return null;
 
+  const clubName = clubNamer(clubs);
+  const clubOf = clubResolver(clubs);
+
   const { match } = focus;
+  const home = clubOf(match.homeCode);
+  const away = clubOf(match.awayCode);
   const playing = focus.kind === "playing";
   const urgent = isImminent(focus, now);
 
@@ -178,10 +191,28 @@ function ProximoJogo({
       >
         {heading}
       </span>
-      <span className="block truncate font-medium text-on-surface">
-        {clubName(match.homeCode)}{" "}
-        <span className="font-semibold tabular-nums text-on-surface-variant">{score(match)}</span>{" "}
-        {clubName(match.awayCode)}
+      {/* A flex row rather than a sentence with crests dropped into it, for two
+          reasons a run of inline images would get wrong. An `<img>` sits on the
+          text baseline, so a 20px mark beside a 16px word rides low and pushes
+          the line box taller; `items-center` is what puts the two marks and the
+          three words on one optical line. And the row shrinks *both* names
+          under pressure instead of truncating the whole string, so a narrow
+          screen loses the tail of each club rather than the away side and the
+          scoreline entirely. The crest sits before the name on each side, the
+          reading order a fixture is written in.
+
+          The marks say nothing a reader does not already have: `ClubCrest` is
+          `aria-hidden` by design, the visible body is `aria-hidden` here in any
+          case, and `spoken` below is unchanged — the link's accessible name was
+          already a sentence naming both clubs. */}
+      <span className="flex items-center gap-1.5 font-medium text-on-surface">
+        {home && <ClubCrest club={home} size={20} />}
+        <span className="truncate">{clubName(match.homeCode)}</span>
+        <span className="shrink-0 font-semibold tabular-nums text-on-surface-variant">
+          {score(match)}
+        </span>
+        {away && <ClubCrest club={away} size={20} />}
+        <span className="truncate">{clubName(match.awayCode)}</span>
       </span>
       <span className="block truncate text-body-small text-ink-faint">
         {playing ? where : `${kickoffLabel(match.kickoff)} · ${where}`}
@@ -405,7 +436,7 @@ export function MeuTimeStrip({
         focus={focus}
         code={club.code}
         now={now}
-        clubName={clubNamer(clubs)}
+        clubs={clubs}
         onSelectMatch={onSelectMatch}
       />
     </Surface>
