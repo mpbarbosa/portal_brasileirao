@@ -31,7 +31,14 @@
  * `text-primary` and both palettes follow. `public/logo.svg` carries the same
  * geometry with explicit fills and a `prefers-color-scheme` block, because a
  * file loaded as an image inherits no colour from anything.
+ *
+ * **The geometry itself lives in `brand-core.ts`**, not here. Four things draw
+ * this mark — this component, the two `.svg` files and the link-preview card —
+ * and only the two TypeScript ones can share a constant; `tests/brand-mark.test.ts`
+ * holds the SVGs to it by reading them off disk.
  */
+
+import { BRAND_MARK_PATH, BRAND_MARK_VIEWBOX } from "@/brand-core";
 
 interface BrandMarkProps {
   /** Tailwind classes for size and colour; the path inherits `currentColor`. */
@@ -46,16 +53,13 @@ interface BrandMarkProps {
 export function BrandMark({ className }: BrandMarkProps) {
   return (
     <svg
-      viewBox="0 0 24 24"
+      viewBox={BRAND_MARK_VIEWBOX}
       className={className}
       fill="currentColor"
       aria-hidden
       focusable={false}
     >
-      <path
-        fillRule="evenodd"
-        d="M3 11A9 9 0 0 1 21 11V19.5A2.5 2.5 0 0 1 18.5 22H5.5A2.5 2.5 0 0 1 3 19.5ZM6.4 19.4V16.8H8.8V19.4ZM10.8 19.4V14.4H13.2V19.4ZM15.2 19.4V11.4H17.6V19.4Z"
-      />
+      <path fillRule="evenodd" d={BRAND_MARK_PATH} />
     </svg>
   );
 }
