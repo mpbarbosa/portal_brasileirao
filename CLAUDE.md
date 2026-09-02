@@ -290,6 +290,40 @@ what makes the logic testable without mocking HTTP.
   authoritative answers in `/api/standings` and `src/data/goals.ts`, and the
   scout copy of each is measurably worse. `goals` is carried only as the
   numerator of the conversion rate.
+  **`profileScatter` is the second half, and it is a different mark under the
+  same rules.** The strip reports six rates one at a time; the scatter puts two
+  on one drawing, because the fact worth seeing is a *pair* — a club finalizando
+  muito whose goleiro also works hard is playing an open game, and one doing the
+  first without the second is controlling matches, and those two are identical
+  on every row of the strip. It **pads the domain by 6%** so the division's
+  highest and lowest are not centred on the frame with half their mark outside
+  it, which is `RankCandles`' painting-outside-the-card failure one mark down;
+  and it returns **null below three clubs**, because a scatter is a claim about
+  a distribution and two dots with a median line is a chart shaped like an
+  argument nobody can make.
+  `quadrantLabel` names the corner in words rather than in `<text>` inside the
+  SVG, for `RankCandles`' reason, and the four names are **descriptive rather
+  than appraising** — "jogo aberto" is a fact about how a match goes where
+  "melhor ataque" would be a verdict two rates cannot support.
+  **The y axis counts defesas, not finalizações sofridas**, and the label says
+  exactly that: a defence beaten often in front of a beaten goleiro reads lower
+  than the pressure on it was. It is a proxy, and the honest way to ship one is
+  to name what it counts — `providerLabel`'s rule.
+  **The scatter scales uniformly and is capped in width**, unlike the candles.
+  `preserveAspectRatio="none"` is available to `RankCandles` because its marks
+  are filled rects; a circle under it becomes an ellipse whose eccentricity is a
+  property of the reader's screen. Uniform scaling then makes a width cap
+  necessary rather than decorative: uncapped, the figure renders as tall as the
+  card is wide — one chart taller than the whole strip above it — and flattening
+  the box instead would compress the y axis and misreport the distance between
+  two clubs, which is the one thing the drawing is for.
+  **The Painel now carries three `role="img"` drawings and two `<figure>`s.** A
+  spec written when it had one of each resolves to all of them, which is why the
+  scatter's `<svg>` takes `data-scatter-svg` and its figure `data-scatter` —
+  `data-candles`' device, one mark later. Three specs across
+  `painel.spec.ts` and `standings.spec.ts` had to narrow, and they went red
+  rather than quiet, which is the whole reason those lookups are written
+  negatively.
 - `venue-core.ts` — the **Página do estádio**. `buildStadiums` groups fixtures into
   grounds, because **a stadium is not an entity in any payload**: football-data has no
   venue field at any tier, and CBF reports only a `Stadium - City - UF` string per match.

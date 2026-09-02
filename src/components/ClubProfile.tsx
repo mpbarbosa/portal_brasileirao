@@ -9,6 +9,7 @@ import {
   type ProfileRow,
 } from "@/scouts-core";
 import { LINK_UNDERLINE } from "@/src/components/interaction";
+import { ProfileScatter } from "@/src/components/ProfileScatter";
 import { Surface } from "@/src/components/Surface";
 import { CLUB_SCOUTS, CLUB_SCOUTS_THROUGH_ROUND } from "@/src/data/club-scouts";
 import type { ClubCode } from "@/src/types";
@@ -50,6 +51,16 @@ export function ClubProfile({ clubCode }: ClubProfileProps) {
             <ProfileEntry key={row.id} row={row} />
           ))}
         </dl>
+        {/* Inside the same Surface as the strip, and beneath it. Two sections
+            would mean two credit lines and two statements of which rodada the
+            figures run through, for one set of numbers from one file — and a
+            reader would have to check whether the two dates agreed. The strip
+            comes first because it needs no interpretation; the scatter is the
+            pair of rows read against each other. */}
+        <div className="mt-3 border-t border-outline-variant pt-3">
+          <ProfileScatter division={CLUB_SCOUTS} clubCode={clubCode} />
+        </div>
+
         {/* The key, the recency and the credit, in that order.
             The key is not decoration: the tick is the division's median, and an
             unexplained mark on a track is a mark a reader has to guess at.
@@ -59,7 +70,7 @@ export function ClubProfile({ clubCode }: ClubProfileProps) {
             somebody else's work. */}
         <p className="mt-2 border-t border-outline-variant pt-2 text-body-small text-ink-faint">
           Cada barra vai do menor ao maior da divisão, e o traço marca a mediana.
-          Média por jogo até a {CLUB_SCOUTS_THROUGH_ROUND}ª rodada. Números de{" "}
+          Médias por jogo até a {CLUB_SCOUTS_THROUGH_ROUND}ª rodada. Números de{" "}
           <a
             href="https://github.com/henriquepgomide/caRtola"
             target="_blank"

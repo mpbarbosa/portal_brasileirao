@@ -71,9 +71,14 @@ test.describe("Painel do clube", () => {
   test("the painel draws the club's campanha above the candles", async ({ page }) => {
     await openPanel(page);
 
-    // Excluding the candles, which are the other `role="img"` on this page:
-    // both marks draw the same season and an unscoped lookup resolves to two.
-    const sparkline = page.locator("main svg[role='img']:not([data-candles])");
+    // Excluding the candles and the scatter, which are the other two
+    // `role="img"` drawings on this page. The first two draw the same season,
+    // so an unscoped lookup resolved to both; the Perfil's scatter made it
+    // three, and this line is why adding a drawing to the Painel goes red here
+    // rather than quietly widening what "the sparkline" means.
+    const sparkline = page.locator(
+      "main svg[role='img']:not([data-candles]):not([data-scatter-svg])",
+    );
 
     await expect(sparkline).toHaveCount(1);
     await expect(sparkline).toHaveAttribute("aria-label", /^Campanha: /);
@@ -175,7 +180,10 @@ test.describe("Painel do clube", () => {
     // other assertion in this file passed throughout, because the candles were
     // all still there and all still correct.
     const chart = (await page.locator("main svg[data-candles]").boundingBox())!;
-    const panel = (await page.locator("main figure").boundingBox())!;
+    // The campanha's own figure, not the Perfil's scatter — this page carries
+    // two, and a bare `main figure` is a strict-mode violation rather than a
+    // wrong answer, which is the good kind of breakage.
+    const panel = (await page.locator("main figure:not([data-scatter])").boundingBox())!;
 
     expect(chart.x).toBeGreaterThanOrEqual(panel.x - 1);
     expect(chart.x + chart.width).toBeLessThanOrEqual(panel.x + panel.width + 1);
@@ -339,6 +347,81 @@ test.describe("Painel do clube", () => {
       const centre = markerBox.x + markerBox.width / 2;
       expect(Math.abs(centre - (box.x + fraction * box.width))).toBeLessThanOrEqual(1.5);
     }
+  });
+
+  test("the scatter plots the whole division, with this club filled in", async ({ page }) => {
+    await openPanel(page);
+
+    const scatter = page.locator("main figure[data-scatter]");
+    await expect(scatter).toBeVisible();
+    await expect(scatter.locator("circle")).toHaveCount(20);
+    // Exactly one, which is what the drawing is for: placing *this* club among
+    // the rest rather than being a table of twenty.
+    await expect(scatter.locator("[data-scatter-point='subject']")).toHaveCount(1);
+  });
+
+  test("every dot says which club it is, since none is labelled on the page", async ({
+    page,
+  }) => {
+    const name = await openPanel(page);
+
+    // No `<text>` inside the SVG — a drawing that scales scales its type — so
+    // the `<title>` is the only thing a pointer or a screen reader has.
+    // `allTextContents`, not `allInnerTexts`: an SVG `<title>` is not rendered
+    // text, so `innerText` is undefined for every one of them — and
+    // `toMatch(undefined)` throws rather than failing an assertion, which reads
+    // as a broken spec instead of a missing title.
+    const titles = await page
+      .locator("main figure[data-scatter] circle title")
+      .allTextContents();
+    expect(titles.length).toBe(20);
+    for (const title of titles) {
+      expect(title).toMatch(/^.+ — [\d,]+ finalizações e [\d,]+ defesas por jogo$/);
+    }
+    expect(new Set(titles).size).toBe(20);
+
+    // And at least one is a name this test knows independently — read off the
+    // page heading rather than out of the same resolver. Distinctness alone
+    // proves nothing here: twenty club *codes* are twenty different strings and
+    // match the shape above, so a resolver that had stopped resolving would
+    // pass every assertion up to this line.
+    expect(titles.some((title) => title.startsWith(`${name} — `))).toBe(true);
+  });
+
+  test("no dot is drawn outside the box it is plotted in", async ({ page }) => {
+    await openPanel(page);
+
+    // The domain is padded precisely so the division's highest and lowest clubs
+    // are not centred on the frame with half their mark outside it. Unlike the
+    // strip's marker, this one *can* be checked by containment — the assertion
+    // runs over all twenty dots, so it reaches the extremes whichever club's
+    // panel is open, which is the trap the marker spec fell into.
+    const svg = page.locator("main figure[data-scatter] svg");
+    const box = await svg.boundingBox();
+    expect(box).not.toBeNull();
+    if (!box) return;
+
+    for (const dot of await svg.locator("circle").all()) {
+      const mark = await dot.boundingBox();
+      expect(mark).not.toBeNull();
+      if (!mark) continue;
+      expect(mark.x).toBeGreaterThanOrEqual(box.x - 0.5);
+      expect(mark.y).toBeGreaterThanOrEqual(box.y - 0.5);
+      expect(mark.x + mark.width).toBeLessThanOrEqual(box.x + box.width + 0.5);
+      expect(mark.y + mark.height).toBeLessThanOrEqual(box.y + box.height + 0.5);
+    }
+  });
+
+  test("the scatter names the club's own reading, since the drawing carries no text", async ({
+    page,
+  }) => {
+    const name = await openPanel(page);
+    const caption = page.locator("main figure[data-scatter] figcaption");
+
+    await expect(caption).toContainText(name);
+    await expect(caption).toHaveText(/finaliza(?:ções)?.*defesas por jogo/);
+    // Descriptive, never a verdict: two rates cannot support one.
+    await expect(caption).toHaveText(/jogo (aberto|controlado|recuado|fechado)/);
   });
 
   test("its metadata names the club, and is injected server-side", async ({ page }) => {

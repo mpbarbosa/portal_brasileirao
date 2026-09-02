@@ -288,8 +288,11 @@ test.describe("Classificação", () => {
     await page.locator("table tbody tr td:nth-child(2) a").first().click();
     await page.locator("main a[data-panel-link]").click();
 
-    // Excluding the candles, which are the other `role="img"` on that page.
-    const campaign = page.locator("main svg[role='img']:not([data-candles])");
+    // Excluding the candles and the Perfil's scatter, which are the other two
+    // `role="img"` drawings on that page.
+    const campaign = page.locator(
+      "main svg[role='img']:not([data-candles]):not([data-scatter-svg])",
+    );
     await expect(campaign).toHaveCount(1);
     await expect(campaign).toHaveAttribute("aria-label", /^Campanha: /);
   });

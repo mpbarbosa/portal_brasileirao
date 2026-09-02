@@ -212,8 +212,12 @@ export function rankLabel(row: ProfileRow): string {
  * pt-BR decimal comma, via `toLocaleString` rather than a hand-rolled replace —
  * the app already renders numbers this way and a second convention here would
  * show `11.7` beside `11,7` on the same page.
+ *
+ * It takes the two fields it reads rather than a whole `ProfileRow`, so the
+ * scatter — which has a value and a unit and no rank — can write its figures
+ * through this and not through a second copy of the same three lines.
  */
-export function valueLabel(row: ProfileRow): string {
+export function valueLabel(row: Pick<ProfileRow, "unit" | "value">): string {
   if (row.unit === "porcento") {
     return `${row.value.toLocaleString("pt-BR", { maximumFractionDigits: 0 })}%`;
   }
@@ -221,4 +225,160 @@ export function valueLabel(row: ProfileRow): string {
     minimumFractionDigits: 1,
     maximumFractionDigits: 1,
   });
+}
+
+/* --------------------------------------------------- ataque × defesa ------ */
+
+/**
+ * The scatter beneath the strip: twenty clubs on two axes at once.
+ *
+ * It exists because the strip reports six rates **one at a time**, and the fact
+ * worth seeing is a *pair*. A club shooting often and defending a busy goal is
+ * playing an open game; one shooting as often with an idle keeper is
+ * controlling matches. Those two sit in the same place on every row of the
+ * strip and in opposite corners here.
+ *
+ * **Finalizações against defesas do goleiro**, which is one attacking rate and
+ * one defensive one measured on the same denominator. Note what the y axis
+ * actually counts, because the label says it and this comment must not claim
+ * more: a *save*, not a shot faced. A leaky defence in front of a beaten
+ * goalkeeper reads lower than the pressure on it really was. It is a proxy and
+ * the honest way to ship a proxy is to label it as what it counts — the rule
+ * `providerLabel` follows in naming what is configured rather than what is
+ * working.
+ */
+export interface ScatterAxis {
+  id: ScoutMetricId;
+  label: string;
+  /** The domain's ends, already padded — not the division's raw floor. */
+  min: number;
+  max: number;
+  /** The division's median, and where it falls in the padded domain. */
+  median: number;
+  medianAt: number;
+}
+
+export interface ScatterPoint {
+  clubCode: ClubCode;
+  x: number;
+  y: number;
+  /** Position in the padded domain, 0 at `min` and 1 at `max`. */
+  atX: number;
+  atY: number;
+  /** The club whose Painel this is. Exactly one point carries it. */
+  subject: boolean;
+}
+
+export interface ProfileScatter {
+  x: ScatterAxis;
+  y: ScatterAxis;
+  points: ScatterPoint[];
+}
+
+/**
+ * Six per cent of the span at each end.
+ *
+ * **A padded domain, not the raw one.** Unpadded, the division's highest and
+ * lowest clubs land exactly on the frame, so half of each of those marks is
+ * drawn outside the box — the failure `RankCandles` records for a drawing that
+ * paints past the card it sits in, one mark down. It also leaves a reader
+ * unable to tell "at the edge of the division" from "clipped".
+ */
+const PAD = 0.06;
+
+function axis(
+  division: ClubScouts[],
+  id: ScoutMetricId,
+  label: string,
+): ScatterAxis | null {
+  const values = division
+    .map((entry) => rawValue(entry, id))
+    .filter((value): value is number => value !== null);
+  if (values.length === 0) return null;
+
+  const sorted = [...values].sort((a, b) => a - b);
+  const low = sorted[0] ?? 0;
+  const high = sorted[sorted.length - 1] ?? 0;
+  // A division level on this metric has no span to pad, so give it one rather
+  // than dividing by zero — every club then sits mid-axis, claiming no leader,
+  // which is `markerFraction`'s answer to the same state.
+  const pad = high > low ? PAD * (high - low) : 1;
+
+  const min = low - pad;
+  const max = high + pad;
+  const middle = median(sorted);
+
+  return { id, label, min, max, median: middle, medianAt: (middle - min) / (max - min) };
+}
+
+/**
+ * Every club placed on the two axes, or null where the drawing would say
+ * nothing.
+ *
+ * Null rather than an empty figure below **three** clubs: a scatter is a
+ * statement about a *distribution*, and two dots and a median line is a chart
+ * shaped like an argument nobody can make. The section omits it and keeps the
+ * strip, the same way a club with no counters gets no Perfil at all.
+ */
+export function profileScatter(
+  division: ClubScouts[],
+  clubCode: ClubCode,
+): ProfileScatter | null {
+  const x = axis(division, "finishes", "Finalizações");
+  const y = axis(division, "saves", "Defesas do goleiro");
+  if (!x || !y) return null;
+
+  const points: ScatterPoint[] = [];
+  for (const entry of division) {
+    const valueX = rawValue(entry, "finishes");
+    const valueY = rawValue(entry, "saves");
+    // Both or neither: a club plotted at a real x and an invented y is worse
+    // than a club left off, because nothing on the drawing says which half was
+    // measured.
+    //
+    // **Unreachable today, and kept anyway.** Both axes are per-match rates, so
+    // both are null exactly when `matches` is 0 — there is no state where one
+    // is missing and the other is not, and no test can construct one. That
+    // stops being true the moment an axis is `conversion`, which is absent for
+    // a club that has taken no shot at all. `tests/scouts-core.test.ts` says so
+    // at the case that looks like it covers this and does not.
+    if (valueX === null || valueY === null) continue;
+
+    points.push({
+      clubCode: entry.clubCode,
+      x: valueX,
+      y: valueY,
+      atX: (valueX - x.min) / (x.max - x.min),
+      atY: (valueY - y.min) / (y.max - y.min),
+      subject: entry.clubCode === clubCode,
+    });
+  }
+
+  if (points.length < 3) return null;
+  if (!points.some((point) => point.subject)) return null;
+
+  return { x, y, points };
+}
+
+/**
+ * Which corner a club sits in, in words.
+ *
+ * The drawing carries no `<text>` — a figure that scales to its container
+ * scales its type with it, which is `RankCandles`' rule — so the quadrant has
+ * to be said in HTML beside it, and this is the one place it is spelled. Four
+ * phrases, from the two medians, and deliberately **descriptive rather than
+ * appraising**: "jogo aberto" is a fact about how a match goes, where
+ * "melhor ataque" would be a verdict the two numbers do not support.
+ */
+export function quadrantLabel(scatter: ProfileScatter): string {
+  const point = scatter.points.find((entry) => entry.subject);
+  if (!point) return "";
+
+  const shoots = point.x >= scatter.x.median;
+  const busy = point.y >= scatter.y.median;
+
+  if (shoots && busy) return "jogo aberto: finaliza muito e o goleiro trabalha muito";
+  if (shoots && !busy) return "jogo controlado: finaliza muito e o goleiro trabalha pouco";
+  if (!shoots && busy) return "jogo recuado: finaliza pouco e o goleiro trabalha muito";
+  return "jogo fechado: finaliza pouco e o goleiro trabalha pouco";
 }

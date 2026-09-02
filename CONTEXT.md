@@ -158,6 +158,19 @@ desarmes por jogo is either the most or the least in the division and the number
 cannot tell you which. The bar runs from the division's lowest to its highest
 and the traço marks the mediana, so the mark is a *position* rather than a
 length — and therefore owes no zero, unlike the **barras** of a campanha.
+Beneath the strip it carries the **ataque × defesa**: the twenty clubs plotted
+on finalizações against defesas do goleiro, this one filled in. It says what a
+row cannot, because the fact worth seeing is a *pair* — a club finalizando muito
+whose goleiro also works hard is playing an open game, and one doing the first
+without the second is controlling matches. Those two are identical on every row
+of the strip and sit in opposite corners here. The two dashed lines are the
+division's **medianas**, and they are what make the corners readable; the corner
+a club is in is named in words beside the drawing (**jogo aberto**, **jogo
+controlado**, **jogo recuado**, **jogo fechado**), because the drawing carries no
+`<text>` — a figure that scales to its container scales its type with it.
+Note what the y axis counts and say no more than that: a **defesa**, not a
+finalização sofrida. A defence beaten often in front of a beaten goleiro reads
+lower than the pressure on it was.
 The numbers are **scouts**, and they come from outside: no provider this app
 reads reports a finalização or a desarme at any tier. They are curated into
 `src/data/club-scouts.ts` from caRtola, a week at a time, so the section names
@@ -168,7 +181,12 @@ in the data file, where it names what the source calls them), "estatísticas"
 (the **Painel** entry above says why), "índice"/"nota" (nothing here is scored
 or weighted; every row is a count divided by matches), "ataque"/"defesa" as
 row labels (faltas and cartões are neither, and a heading that sorts six rates
-into two virtues is a judgement the data does not carry).
+into two virtues is a judgement the data does not carry — the phrase names the
+*scatter's two axes*, where it is accurate, and nothing else), "melhor
+ataque"/"defesa mais vazada" for a corner of that scatter (a verdict two rates
+cannot support; the four names describe how a match goes and stop there),
+"finalizações sofridas" for the y axis (it counts defesas, which is not the
+same number and is lower by every goal conceded).
 
 **Rodada**:
 One matchday of the championship — the set of fixtures sharing a `round` number.

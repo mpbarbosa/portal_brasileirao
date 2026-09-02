@@ -213,8 +213,9 @@ for filtering to Brazil. Not adopted on cost grounds.
 > this cannot answer, but *how many finalizações* — which nothing else this app
 > can reach answers at all. `src/data/club-scouts.ts` is the result, written by
 > `npm run sync-cartola-scouts` and rendered as the **Perfil** on the Painel do
-> clube. Read **What a season aggregate survives that a scoreline does not**
-> below before extending it.
+> clube — a strip of six rates and, beneath it, the twenty clubs plotted on
+> finalizações against defesas do goleiro. Read **What a season aggregate
+> survives that a scoreline does not** below before extending it.
 
 `github.com/henriquepgomide/caRtola`, MIT. Cartola FC — the fantasy game — 2014
 to 2026, as per-round CSVs. Checked 2026-08-30, at which point it was the only

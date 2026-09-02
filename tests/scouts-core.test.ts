@@ -6,6 +6,8 @@ import {
   finishes,
   markerFraction,
   medianFraction,
+  profileScatter,
+  quadrantLabel,
   rankLabel,
   valueLabel,
 } from "@/scouts-core";
@@ -136,6 +138,108 @@ test("rankLabel names the division it ranked within", () => {
   assert.equal(rankLabel(row), `${row.rank}º de 3`);
 });
 
+/* -------------------------------------------------- ataque × defesa ------- */
+
+/** A division spread across both axes, so the medians fall somewhere useful. */
+const spread = (): ClubScouts[] => [
+  scouts("AAA", { shotsOff: 40, saves: 10 }),
+  scouts("BBB", { shotsOff: 60, saves: 30 }),
+  scouts("CCC", { shotsOff: 80, saves: 50 }),
+  scouts("DDD", { shotsOff: 100, saves: 70 }),
+];
+
+test("exactly one point is the subject, and every club is plotted", () => {
+  const scatter = profileScatter(spread(), "BBB");
+  assert.equal(scatter?.points.length, 4);
+  assert.equal(scatter?.points.filter((point) => point.subject).length, 1);
+  assert.equal(scatter?.points.find((point) => point.subject)?.clubCode, "BBB");
+});
+
+test("a scatter of two clubs is not a scatter", () => {
+  // A statement about a distribution needs one. Two dots and a median line is a
+  // chart shaped like an argument nobody can make, so the section omits it and
+  // keeps the strip.
+  assert.equal(profileScatter([scouts("AAA"), scouts("BBB")], "AAA"), null);
+});
+
+test("a club absent from the division gets no scatter rather than an empty one", () => {
+  assert.equal(profileScatter(spread(), "ZZZ"), null);
+});
+
+test("the domain is padded, so no club is drawn on the frame", () => {
+  // Unpadded, the highest and lowest clubs land exactly on the edge and half of
+  // each mark is painted outside the box — and a reader cannot tell "at the
+  // edge of the division" from "clipped".
+  const scatter = profileScatter(spread(), "AAA");
+  for (const point of scatter?.points ?? []) {
+    assert.ok(point.atX > 0 && point.atX < 1, `atX ${point.atX}`);
+    assert.ok(point.atY > 0 && point.atY < 1, `atY ${point.atY}`);
+  }
+  // And the padding is real rather than incidental: the domain's ends sit
+  // outside every club, not on the nearest one.
+  const xs = (scatter?.points ?? []).map((point) => point.x);
+  assert.ok((scatter?.x.min ?? 0) < Math.min(...xs));
+  assert.ok((scatter?.x.max ?? 0) > Math.max(...xs));
+});
+
+test("a club with nothing measured is left off rather than plotted at zero", () => {
+  const division = [...spread(), scouts("EEE", { matches: 0 })];
+  const scatter = profileScatter(division, "AAA");
+  assert.equal(scatter?.points.length, 4);
+  assert.equal(scatter?.points.some((point) => point.clubCode === "EEE"), false);
+
+  // **This does not cover the `||` in `profileScatter`, and saying so is the
+  // point.** An earlier version of this case was named for "either axis
+  // missing" and passed against a mutation that plotted a half-measured club,
+  // because both of today's axes derive from `matches` alone — so one-null-and-
+  // one-not is unreachable and the test could only ever exercise both-null.
+  // The `||` stays because it stops being defensive the moment an axis is
+  // `conversion`, which carries an absence of its own (no shot taken); it is
+  // simply not something this suite can reach today. A vacuous assertion is
+  // worse than a missing one, because it reads as cover.
+});
+
+test("the medians fall inside the padded domain", () => {
+  const scatter = profileScatter(spread(), "AAA");
+  assert.ok((scatter?.x.medianAt ?? 0) > 0 && (scatter?.x.medianAt ?? 1) < 1);
+  assert.ok((scatter?.y.medianAt ?? 0) > 0 && (scatter?.y.medianAt ?? 1) < 1);
+});
+
+test("the quadrant is read off both medians, and names four different games", () => {
+  const seen = new Set<string>();
+  for (const code of ["AAA", "BBB", "CCC", "DDD"]) {
+    const scatter = profileScatter(spread(), code);
+    assert.ok(scatter);
+    seen.add(quadrantLabel(scatter));
+  }
+  // This division runs both axes together, so it can only reach the two
+  // diagonal corners — which is the point of asserting the count rather than
+  // the words: a label that ignored one axis would collapse them.
+  assert.equal(seen.size, 2);
+
+  // One club moved off the diagonal reaches a third.
+  const crossed = [
+    scouts("AAA", { shotsOff: 40, saves: 10 }),
+    scouts("BBB", { shotsOff: 60, saves: 30 }),
+    scouts("CCC", { shotsOff: 80, saves: 50 }),
+    scouts("DDD", { shotsOff: 100, saves: 5 }),
+  ];
+  const scatter = profileScatter(crossed, "DDD");
+  assert.ok(scatter);
+  assert.match(quadrantLabel(scatter), /finaliza muito e o goleiro trabalha pouco/);
+});
+
+test("the quadrant describes the game rather than appraising it", () => {
+  // A verdict is what two rates cannot support. `_Avoid_` in CONTEXT.md says so
+  // for the row labels; this is the same rule one drawing along.
+  for (const code of ["AAA", "DDD"]) {
+    const scatter = profileScatter(spread(), code);
+    assert.ok(scatter);
+    const label = quadrantLabel(scatter);
+    assert.doesNotMatch(label, /melhor|pior|bom|ruim|fraco|forte/i);
+  }
+});
+
 /* ------------------------------------------------------- the committed data */
 
 test("every club in the division has counters, and they name real clubs", () => {
@@ -176,5 +280,15 @@ test("each metric ranks all twenty clubs, and somebody is first", () => {
     for (const rank of ranks) {
       assert.ok(rank && rank >= 1 && rank <= CLUBS.length, `${id} rank ${rank} is out of range`);
     }
+  }
+});
+
+test("every club in the division is on the scatter, and finds itself", () => {
+  for (const club of CLUBS) {
+    const scatter = profileScatter(CLUB_SCOUTS, club.code);
+    assert.ok(scatter, `${club.shortName} has no scatter`);
+    assert.equal(scatter.points.length, CLUBS.length, club.shortName);
+    assert.equal(scatter.points.filter((point) => point.subject).length, 1, club.shortName);
+    assert.ok(quadrantLabel(scatter).length > 0, club.shortName);
   }
 });
