@@ -275,25 +275,47 @@ const fullPage = !mobile && route === "/";
  * down, and it was the one that had not bitten anybody. A height that moves at
  * all — either way — is a caption to open the picture and re-read.
  *
- * **The value is measured, not rounded up to something comfortable.** That
- * section runs 965..1065 at this viewport, so anything below 1065 does not fix
- * it; and raising it too far silently pulls *other* pages past their next
- * boundary, which is a change to what the README documents rather than a
- * restoration. Crop heights per route at candidate values:
+ * **The value is measured, not rounded up to something comfortable — but the
+ * measurements are deliberately no longer reproduced here.** They were a
+ * four-row table of crop heights at four candidate values, plus the conclusion
+ * resting on it (*"the safe band is [1065, 1089]"*). By 2026-09-01 every row was
+ * wrong: ao-vivo had moved 970 -> 1083, jogadores 1036 -> 1048, 554951
+ * 1089 -> 1076, 554977 1023 -> 1082. Nothing was broken by that — 1080 still
+ * cuts every route at a sensible boundary — but the evidence was gone while
+ * reading exactly like evidence.
  *
- *                1040  1080  1090  1105
- *     ao-vivo     970   970   970  1108
- *     jogadores  1036  1036  1084  1084
- *     554951      963  1089  1089  1089
- *     554977     1023  1023  1023  1125
+ * **It went stale two ways at once, which is why the table is deleted rather
+ * than refreshed.** #240 (Clima on the estádio page), #294 (Melhores momentos
+ * moved up the Partida page) and #310 (crests on fixture rows) each legitimately
+ * changed a documented route's height. #309 touched no `src/` path at all and
+ * simply *added* a route — so the table also documented 4 routes where 8
+ * crop-bound ones now exist, and its "safe band" was never a statement about the
+ * whole set: five of the eight sit above 1065 today, where the table showed one.
+ * None of those four had any reason to open this comment, which is the real
+ * lesson — a claim that produces no work when it holds is never exercised.
  *
- * The safe band is [1065, 1089] — at 1090 Jogadores joins, at 1105 two more.
- * 1080 sits inside it with room either way and moves exactly one pair.
+ * **Re-derive instead; the evidence is in the repository and cannot go stale.**
+ * Every committed PNG's own height over the 1.5 device scale IS the crop this
+ * value produced:
  *
- * Keep this equal to the cropped viewport height below. They are separate
- * concerns — one bounds the crop, the other decides what is rendered — but a
- * crop taller than the viewport clips content that was never scrolled into
- * view, and the crests and broadcaster marks are lazy.
+ *     file docs/screenshots/*-light.png      # height / 1.5 = the crop
+ *
+ * The rule the table was evidence for is what survived, and it has outlived
+ * three layouts: raising this too far silently pulls *other* pages past their
+ * next boundary, which is a change to what the README documents rather than a
+ * restoration. Move it only with a fresh measurement against production, and
+ * re-read the alt text of any capture whose height moves — either way, per the
+ * paragraph above.
+ *
+ * **The cropped viewport height below is NOT equal to this, and cannot be.**
+ * This comment used to say "keep this equal", and the arithmetic never allowed
+ * it: `cropHeight` returns `cut + pad` where only `cut` is tested against the
+ * maximum and `pad` adds up to 24 afterwards, so the ceiling is 1104. Two routes
+ * exceed the 1080 viewport in the committed set today (ao-vivo 1083.3, 554977
+ * 1082.0), by 3.3px. That is benign — the overshoot is padding rather than
+ * content — but the concern behind the sentence is real and unchanged: a crop
+ * taller than the viewport clips content that was never scrolled into view, and
+ * the crests and broadcaster marks are lazy. Watch the margin, not the equality.
  */
 const MAX_HEIGHT = 1080;
 
