@@ -1,4 +1,6 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import path from "node:path";
 import { test } from "node:test";
 
 import {
@@ -290,5 +292,105 @@ test("every club in the division is on the scatter, and finds itself", () => {
     assert.equal(scatter.points.length, CLUBS.length, club.shortName);
     assert.equal(scatter.points.filter((point) => point.subject).length, 1, club.shortName);
     assert.ok(quadrantLabel(scatter).length > 0, club.shortName);
+  }
+});
+
+/*
+ * `docs/perfil-ataque.md` — the append-only log of editorial readings.
+ *
+ * Two rules are checked here and a third deliberately is not. **Freshness is
+ * not a test**: "a sync landed with no fresh reading" would put a prose file in
+ * front of a release (`test:unit` runs in `check`, and `deploy` needs it), and
+ * its only remedy is for somebody to write a paragraph — so whoever met it
+ * could satisfy it without being able to fix it, which is filler by design. The
+ * reminder is printed by `sync-cartola-scouts.ts` instead, where it reaches the
+ * person who has the rates in front of them.
+ *
+ * What survives is what a person can fix in the edit they just made.
+ */
+const LOG_PATH = path.join(import.meta.dirname, "..", "docs", "perfil-ataque.md");
+
+/**
+ * Read on call, never at module scope.
+ *
+ * A `readFileSync` evaluated at import takes the **whole file** down when the
+ * document is missing or renamed — measured rather than reasoned: `pass 0`,
+ * `fail 1`, with the reporter naming this test file rather than the document,
+ * and every other case in this file — none of which has anything to do with the
+ * log — vanishing with it. Lazily, the same absence fails these two and names
+ * the document.
+ *
+ * **The count that stood here is deliberately gone rather than corrected.** It
+ * was right when written and had a shelf life of one merge: two open PRs were
+ * both adding cases to this very file, so whichever landed first would have made
+ * it wrong with nothing going red. `pass 0` and `fail 1` stay because neither
+ * can move — zero is zero, and one file is one file. That is `node:sqlite`'s shape in `openStore`: a static read at import
+ * makes an absent dependency everyone's problem instead of the one caller's.
+ *
+ * Read twice rather than cached, because two reads of a small file are cheaper
+ * than a cache that reintroduces the coupling it was written to remove.
+ */
+const perfilLog = (): string => {
+  try {
+    return readFileSync(LOG_PATH, "utf8");
+  } catch (cause) {
+    assert.fail(
+      `docs/perfil-ataque.md could not be read (${String(cause)}). It is the ` +
+        `append-only log of Perfil readings; if it was renamed, these two cases move ` +
+        `with it. Only they depend on it — nothing else in this file does.`,
+    );
+  }
+};
+
+/** Every `## Rodada N` heading, in the order the file lists them. */
+const logRounds = (log: string): number[] =>
+  [...log.matchAll(/^## Rodada (\d+)\b/gm)].map((match) => Number(match[1]));
+
+test("the perfil log is newest-first, and no rodada is written twice", () => {
+  const rounds = logRounds(perfilLog());
+  assert.ok(rounds.length > 0, "docs/perfil-ataque.md has no `## Rodada N` entry at all");
+
+  // Strictly descending covers both halves at once: out-of-order and duplicate.
+  // The failure this guards is not hypothetical — COORDINATION.md acquired two
+  // insertion conventions the moment one session prepended wrongly, because
+  // nothing there but prose asked for an order.
+  for (let i = 1; i < rounds.length; i += 1) {
+    assert.ok(
+      (rounds[i] ?? 0) < (rounds[i - 1] ?? 0),
+      `docs/perfil-ataque.md: rodada ${rounds[i]} is listed below rodada ${rounds[i - 1]}, ` +
+        `so the file is no longer newest-first. Move your entry directly under the ` +
+        `\`---\` that follows the rules, above every existing \`## Rodada\` heading.`,
+    );
+  }
+});
+
+test("the perfil log restates no figure the page already computes", () => {
+  // Rule 1: this file names clubs and shapes; `scouts-core` states the figures.
+  // A rate written into prose is frozen the moment the next sync runs, and it
+  // would be a second, worse answer sitting beside the page's own.
+  //
+  // Scoped to the entries: the rules above them have to be able to quote a
+  // shape without tripping their own gate.
+  const log = perfilLog();
+  const firstEntry = log.search(/^## Rodada \d+\b/m);
+  assert.ok(firstEntry >= 0);
+  const entries = log.slice(firstEntry);
+
+  const banned: [RegExp, string][] = [
+    [/\d+(?:[.,]\d+)?\s*%/, "a percentage"],
+    [/\d+[.,]\d+/, "a decimal — a per-jogo rate"],
+    [/\d+º/, "a rank, which `rankLabel` already renders"],
+  ];
+
+  for (const [pattern, what] of banned) {
+    const hit = entries.match(pattern);
+    assert.equal(
+      hit,
+      null,
+      `docs/perfil-ataque.md quotes ${what} (${hit?.[0]}). The page computes it, so ` +
+        `this file must not restate it — the next \`sync-cartola-scouts\` would make it ` +
+        `wrong. Write the comparison instead: "finaliza mais que os dois líderes e ` +
+        `converte pior que qualquer um deles".`,
+    );
   }
 });
