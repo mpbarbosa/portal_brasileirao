@@ -51,9 +51,10 @@
  * club that played would draw an empty column. Season aggregates are therefore
  * the only thing this file carries.
  */
-import { writeFileSync } from "node:fs";
+import { existsSync, writeFileSync } from "node:fs";
 import path from "node:path";
 
+import { lastRoundWithResult } from "@/rank-history-core";
 import { CLUBS } from "@/src/data/clubs";
 import { SEED_MATCHES, SNAPSHOT_DATE } from "@/src/data/matches";
 import type { ClubScouts } from "@/src/types";
@@ -113,6 +114,7 @@ type CounterField = (typeof COUNTERS)[keyof typeof COUNTERS];
 
 const season = seasonArgument();
 const CLUB_BY_SLUG = new Map(CLUBS.map((club) => [club.slug, club]));
+let previousRound: number | null = null;
 
 main().catch((error: unknown) => {
   console.error(`Error: ${error instanceof Error ? error.message : String(error)}`);
@@ -120,6 +122,10 @@ main().catch((error: unknown) => {
 });
 
 async function main(): Promise<void> {
+  // Read before anything is written, or it reports the value this run is about
+  // to produce and no sync ever looks like it advanced.
+  previousRound = await committedRound();
+
   const snapshots = await readSeason();
   console.log(`Read ${snapshots.length} snapshots for ${season} (rodada 1..${snapshots.length}).`);
 
@@ -332,6 +338,37 @@ function playedThrough(clubCode: string, round: number): number {
  * the division, which measured 7% across the 2026 season.
  */
 function validate(totals: Map<string, ClubScouts>, rounds: number): void {
+  // **The seed must reach at least as far as caRtola does, and this is the one
+  // refusal the goals band cannot stand in for.**
+  //
+  // The numerators come from caRtola and the denominator from our own fixture
+  // list, and the two advance on different schedules — caRtola weekly, the seed
+  // whenever somebody runs `sync-seed-data`. Sync a round the seed has not
+  // recorded and every rate is divided by a round too few.
+  //
+  // Measured by reproducing the mismatch one round earlier, against data
+  // already on disk (scouts through 24 over a seed through 23): **every club's
+  // finalizações inflated, 4.3%–4.5%, mean 4.4%**. Nothing about the output
+  // looks wrong — twenty plausible rates, the right ranks, six rows.
+  //
+  // And the goals band moves the *reassuring* way, which is why this cannot be
+  // left to it: the scout total rises while the seed total does not, so the
+  // shortfall goes 7.0% -> 3.1% — further inside -2%..15%. A gate that reports
+  // more comfortably as the thing it guards gets worse is not a gate.
+  //
+  // The reverse is fine and is not refused: a seed *ahead* of caRtola still
+  // counts only rounds 1..`rounds`, because `playedThrough` bounds on the round
+  // rather than on the snapshot date.
+  const seedLastRound = lastRoundWithResult(SEED_MATCHES);
+  if (seedLastRound === null || seedLastRound < rounds) {
+    throw new Error(
+      `caRtola publishes rodada ${rounds} but the seed's last round with a ` +
+        `result is ${seedLastRound ?? "none"} (snapshot ${SNAPSHOT_DATE}). ` +
+        `Every rate would divide by a round too few and inflate by roughly 4%. ` +
+        `Run \`npx tsx scripts/sync-seed-data.ts\` and \`npm run sync-rank-history\` first.`,
+    );
+  }
+
   const expected = CLUBS.length;
   if (totals.size !== expected) {
     throw new Error(`Got ${totals.size} clubs, expected ${expected}.`);
@@ -450,6 +487,64 @@ export const CLUB_SCOUTS_THROUGH_ROUND = ${rounds};
   console.log(
     `Wrote src/data/club-scouts.ts — ${ordered.length} clubs through rodada ${rounds}.`,
   );
+
+  remindAboutTheLog(rounds, previousRound);
+}
+
+/**
+ * Ask for a fresh reading in `docs/perfil-ataque.md`, at the one moment the
+ * person who could write a good one has the rates in front of them.
+ *
+ * **This is deliberately a printed line and not a test.** The obvious form —
+ * fail `test:unit` when a sync lands with no fresh entry — was proposed, built
+ * and dropped: `test:unit` runs in `check` and `deploy` is `needs: [check,
+ * e2e]`, so a missing paragraph would hold a release, and its only remedy is
+ * for somebody to write prose. Whoever met it could **satisfy** it without
+ * being able to **fix** it, which is filler by design. Same family as the
+ * `page.route` stub `src/useAccount.ts` records: a check that passes for the
+ * wrong reason converts an open question into a false answer.
+ *
+ * Two conditions, and each removes something somebody would otherwise have to
+ * remember:
+ *
+ * - **Only when a rodada actually advanced.** Printed on a re-run that changed
+ *   nothing, the line is wallpaper within a week.
+ * - **Only when the document exists.** It is added by a separate pull request,
+ *   so until that lands this must not name a file that is not there — which
+ *   would be the stale claim the log itself is written to avoid. That makes the
+ *   merge order between the two self-resolving rather than something either
+ *   author has to hold in their head.
+ */
+function remindAboutTheLog(rounds: number, previous: number | null): void {
+  if (previous !== null && rounds <= previous) return;
+  if (!existsSync(path.join(ROOT, "docs/perfil-ataque.md"))) return;
+
+  console.log(
+    `\n==> A fresh reading is owed in docs/perfil-ataque.md\n` +
+      `    Rodada ${rounds} just landed. Append an entry ABOVE every existing\n` +
+      `    \`## Rodada\` heading, in the form \`## Rodada ${rounds} — <what changed>\`.\n` +
+      `    Rule 1: name clubs and shapes, never a rate — the page computes\n` +
+      `    those, and \`npm run test:unit\` refuses a decimal, a percentage\n` +
+      `    or a \`Nº\` rank in that file.`,
+  );
+}
+
+/**
+ * The rodada the committed file already covers, or null on a first run.
+ *
+ * Read before the write, and through a dynamic import so a missing file is a
+ * `null` rather than a crash — this script is what *creates* that file, so it
+ * must run on a checkout that does not yet have one.
+ */
+async function committedRound(): Promise<number | null> {
+  try {
+    const existing = (await import("@/src/data/club-scouts")) as {
+      CLUB_SCOUTS_THROUGH_ROUND?: number;
+    };
+    return existing.CLUB_SCOUTS_THROUGH_ROUND ?? null;
+  } catch {
+    return null;
+  }
 }
 
 function seasonArgument(): string {

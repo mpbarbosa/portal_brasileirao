@@ -1,11 +1,37 @@
 import { expect, test, type Page } from "@/tests/e2e/clock";
+import { SEED_MATCHES } from "@/src/data/matches";
 
 /**
- * Rounds are chosen for what they contain, and are stable because the data is
- * committed: 24 has finished matches with goals, 25 is entirely still to come.
+ * The two rounds these tests need, **derived from the committed data rather
+ * than written down** — `clock.ts`'s rule for `E2E_NOW`, one file over.
+ *
+ * They were literals, `24` and `25`, under a comment saying they were "stable
+ * because the data is committed". That was true when written and false the
+ * first time `sync-seed-data` ran: round 25 finished, and `an upcoming match
+ * offers no highlights` opened a played fixture and found the search link it
+ * asserts is absent. The comment is what stopped anyone asking — a claim that
+ * produces no work while it holds.
+ *
+ * Derived, a seed sync moves both without anybody remembering, which is the
+ * whole of what `SNAPSHOT_DATE` buys the clock.
  */
-const PLAYED_ROUND = "24";
-const UPCOMING_ROUND = "25";
+const settled = (match: (typeof SEED_MATCHES)[number]) =>
+  match.status === "FINISHED" && match.homeGoals !== null;
+
+const lastPlayed = Math.max(...SEED_MATCHES.filter(settled).map((match) => match.round));
+
+/** A round with finished matches carrying goals. */
+const PLAYED_ROUND = String(lastPlayed);
+/** The first round with nothing played yet. */
+const UPCOMING_ROUND = String(lastPlayed + 1);
+
+/**
+ * At the end of a season there is no upcoming round, and the four tests that
+ * need one are skipped rather than asserting against an empty page. Not
+ * reachable from today's snapshot; here because the alternative is a suite that
+ * goes red in November for being correct.
+ */
+const noUpcomingRound = !SEED_MATCHES.some((match) => match.round === lastPlayed + 1);
 
 /**
  * Open a finished fixture with the curated links stripped from the payload, so
@@ -92,6 +118,7 @@ test.describe("Página da partida", () => {
   });
 
   test("a fixture in the round list links to its own page", async ({ page }) => {
+    test.skip(noUpcomingRound, "the season has no round left to play");
     await page.goto(`/jogos/${UPCOMING_ROUND}`);
 
     const link = page.locator("main ul > li a").first();
@@ -179,6 +206,7 @@ test.describe("Página da partida", () => {
   });
 
   test("the page shows the round and the status", async ({ page }) => {
+    test.skip(noUpcomingRound, "the season has no round left to play");
     await openFirstMatch(page, UPCOMING_ROUND);
 
     // Scoped to the scoreboard card. The campanha section also names rounds
@@ -191,6 +219,7 @@ test.describe("Página da partida", () => {
   });
 
   test("an upcoming match shows kickoff, stadium and where to watch", async ({ page }) => {
+    test.skip(noUpcomingRound, "the season has no round left to play");
     await openFirstMatch(page, UPCOMING_ROUND);
 
     await expect(page.getByText("Data e hora")).toBeVisible();
@@ -240,6 +269,7 @@ test.describe("Página da partida", () => {
   });
 
   test("an upcoming match offers no highlights", async ({ page }) => {
+    test.skip(noUpcomingRound, "the season has no round left to play");
     // It has not been played.
     await openFirstMatch(page, UPCOMING_ROUND);
 
