@@ -140,7 +140,11 @@ export function ClubDashboard({
       </button>
 
       <header className="mt-3 flex items-center gap-3">
-        <ClubCrest club={club} size={44} />
+        {/* `fallback="mark"` for the reason `ClubView` takes it — this is the
+            same 44px club header, and the club page is the only link to this
+            one. Two headers a click apart holding a missing crest two different
+            ways reads as a bug rather than as a choice. */}
+        <ClubCrest club={club} size={44} fallback="mark" />
         <div className="min-w-0 grow">
           <h2 className="truncate text-title-large font-bold">Painel do {club.shortName}</h2>
           {/* Both grains, because the page holds both: the line says where
