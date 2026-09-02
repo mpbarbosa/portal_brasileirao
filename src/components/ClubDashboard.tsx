@@ -2,14 +2,17 @@ import { useMemo } from "react";
 
 import { clubKey, findClub, standingFor } from "@/club-core";
 import { candlesFor, computeRankCandles, summariseCandles } from "@/rank-candles-core";
-import { lastRoundWithResult } from "@/rank-history-core";
+import { lastRecordedRound, lastRoundWithResult } from "@/rank-history-core";
 import { formatRoute } from "@/route-core";
+import type { CampaignPlotKind } from "@/campaign-plot-core";
+import { CampaignPlotToggle } from "@/src/components/CampaignPlotToggle";
 import { ClubCrest } from "@/src/components/ClubCrest";
 import { StatTile } from "@/src/components/ClubView";
 import { BACK_LINK, LINK_UNDERLINE } from "@/src/components/interaction";
 import { RankCandles } from "@/src/components/RankCandles";
+import { RankSparkline } from "@/src/components/RankSparkline";
 import { Surface } from "@/src/components/Surface";
-import type { Club, Match, StandingsRow } from "@/src/types";
+import type { Club, ClubRankHistory, Match, StandingsRow } from "@/src/types";
 
 interface ClubDashboardProps {
   /** Slug or code, straight from the URL — the same key the club page takes. */
@@ -20,6 +23,20 @@ interface ClubDashboardProps {
   standings: StandingsRow[];
   matches: Match[];
   clubs?: Club[];
+  /**
+   * Every club's campanha, for the line above the candles. Omit and that
+   * section is left out entirely — the candles are computed here from the
+   * fixture list and stand without it.
+   */
+  rankHistory?: ClubRankHistory[];
+  /**
+   * Which mark the campanha is drawn as, and the way to flip it — one choice
+   * shared with the Classificação and the Partida page, owned by `App`. Omit
+   * and the line is drawn with no control, which is what the section did
+   * before the choice existed.
+   */
+  plotKind?: CampaignPlotKind;
+  onTogglePlotKind?: () => void;
   /** Back to the club's own page, which is what this one drills down from. */
   onBack: () => void;
   /** Follow the link to the club page in-app. Omit and it stays a plain
@@ -54,6 +71,9 @@ export function ClubDashboard({
   standings,
   matches,
   clubs,
+  rankHistory,
+  plotKind = "line",
+  onTogglePlotKind,
   onBack,
   onSelectClub,
 }: ClubDashboardProps) {
@@ -97,8 +117,19 @@ export function ClubDashboard({
   // than the rest, which is `lastRecordedRound`'s argument for the sparkline.
   const lastRound = lastRoundWithResult(matches) ?? 0;
   // The y domain is the size of the division, not the number of clubs that
-  // happen to have a campanha recorded.
+  // happen to have a campanha recorded. **Both marks on this page share it**:
+  // two drawings of one season on two y domains would be two pictures of two
+  // different divisions stacked on top of each other.
   const clubCount = standings.length || division.length;
+
+  // The line's own x domain, and deliberately not the candles' `lastRound`
+  // above. The sparkline is the mark the Classificação draws, where the domain
+  // is `lastRecordedRound` over the history payload; drawing it here against
+  // the fixtures' last round would give the reader a different shape from the
+  // one they clicked through from. The candles are computed here from the
+  // fixture list and keep the domain that computation used.
+  const campaign = rankHistory?.find((entry) => entry.clubCode === club.code)?.entries ?? [];
+  const campaignLastRound = lastRecordedRound(rankHistory ?? []);
 
   const href = formatRoute({ section: "clube", key: clubKey(club) });
 
@@ -112,8 +143,12 @@ export function ClubDashboard({
         <ClubCrest club={club} size={44} />
         <div className="min-w-0 grow">
           <h2 className="truncate text-title-large font-bold">Painel do {club.shortName}</h2>
+          {/* Both grains, because the page holds both: the line says where
+              each rodada ended and the velas say what happened inside it. It
+              read "A campanha rodada a rodada" while the line was still on the
+              club page, which now describes only the lower half. */}
           <p className="truncate text-body-medium text-ink-muted">
-            A campanha rodada a rodada
+            A campanha inteira, rodada a rodada
           </p>
         </div>
       </header>
@@ -124,6 +159,46 @@ export function ClubDashboard({
           <StatTile label="Pontos" value={String(summary.points)} />
           <StatTile label="Rodadas" value={String(summary.rounds)} />
         </div>
+      )}
+
+      {/* The line first and the candles beneath it, because they are the same
+          season at two grains and the coarse one is how a reader gets their
+          bearings: this says where each round *ended*, and the candles below
+          say what happened while it was being played. It used to sit on the
+          club page with the candles a click away, which put the two halves of
+          one answer on two pages.
+
+          The control shares the heading's row rather than sitting above the
+          section: it changes this drawing and nothing else on the page, and a
+          full-width row of its own would read as a page-level setting.
+          `flex-wrap` because the label is a sentence — at 375dp it takes the
+          second line rather than squeezing the heading. */}
+      {campaign.length > 0 && campaignLastRound > 0 && (
+        <section className="mt-6">
+          <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+            <h3 className="text-body-medium font-medium text-ink-muted">Campanha</h3>
+            {onTogglePlotKind && (
+              <CampaignPlotToggle kind={plotKind} onToggle={onTogglePlotKind} />
+            )}
+          </div>
+          <Surface filled className="px-3 py-3">
+            <RankSparkline
+              entries={campaign}
+              clubCount={clubCount}
+              lastRound={campaignLastRound}
+              size="page"
+              kind={plotKind}
+            />
+            {/* The drawing carries no axis, so the ends are named in text —
+                which is also the only version a screen reader gets. */}
+            <p className="mt-2 flex justify-between text-body-small tabular-nums text-ink-faint">
+              <span>{campaign[0].position}º · 1ª rodada</span>
+              <span>
+                {campaign[campaign.length - 1].position}º · {campaignLastRound}ª rodada
+              </span>
+            </p>
+          </Surface>
+        </section>
       )}
 
       <section className="mt-6">

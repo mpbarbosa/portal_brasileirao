@@ -53,9 +53,12 @@ Brazilian football word, same as under **Classificação**), "evolução" on its
 
 The reader chooses which mark it is drawn as — **Linha** or **Barras** — from a
 button labelled with the mark it switches to ("Ver a campanha em barras"): above the
-table in the **Classificação**, and beside the Campanha heading on the **Clube** and
-**Partida** pages. It is **one choice for all three**, not one per page, so a reader
-who picks barras in the table finds barras when they open a club. The choice is
+table in the **Classificação**, and beside the Campanha heading on the **Painel do
+clube** and the **Partida** page. It is **one choice for all three**, not one per
+page, so a reader who picks barras in the table finds barras when they open a
+painel. The **Clube** page draws no campanha at all: the mark sits on the Painel
+above the candles, because a line and the candles that read the same rounds one
+grain finer are one answer, and they were on two pages. The choice is
 `campaign-plot-core.ts`'s `CampaignPlotKind`, held in `localStorage` beside the theme
 and never on the account: it is a property of the screen being read rather than of
 the person reading, so no side but the device can hold a value and there is nothing
@@ -101,6 +104,10 @@ The page that reads one club's **Campanha** rodada a rodada, at
 sitemap — never from the nav bar, which is full at MD3's five destinations.
 Modelled as `ClubCandles` and computed by `computeRankCandles` in
 `rank-candles-core.ts`, drawn by `RankCandles`.
+**It carries the whole campanha, not only the velas**: the sparkline sits
+directly above them, and the **Clube** page draws no campanha at all. The two
+are one answer at two grains, and while they sat on two pages a reader
+comparing them was navigating rather than looking.
 It answers what the sparkline cannot. A **Campanha** joins the position a club
 held at the *end* of each round, so a round is one point and its inside is
 invisible: a club that sat 4º on Saturday night and finished 9º because three
@@ -951,10 +958,13 @@ nothing, and the two marks answer different questions about the same club — a
 campanha is a *position* trajectory and so is relative to nineteen other clubs,
 where the forma is what the club itself did.
 **Distinct from the plot kind, which is global.** `CampaignPlotKind` says how a
-campanha is *drawn* and governs the Clube and Partida pages too; this says what
-*this column holds*, and nothing outside the table has such a column. Folding
-"forma" into that union would put pill strips on the Clube page directly above
-its own **Últimos resultados** — the same five results twice, eight lines apart.
+campanha is *drawn* and governs the Painel and the Partida page too; this says
+what *this column holds*, and nothing outside the table has such a column.
+Folding "forma" into that union would put pill strips on the Clube page directly
+above its own **Últimos resultados** — the same five results twice, eight lines
+apart. (That argument was written when the Clube page drew a campanha; the
+campanha has since moved to the Painel, and the pill strips folding would put
+there are the objection either way.)
 _Avoid_: a third member of `CampaignPlotKind`; a shared storage key; showing
 both marks at once (the width is the whole reason there is a choice).
 

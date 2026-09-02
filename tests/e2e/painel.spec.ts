@@ -68,6 +68,103 @@ test.describe("Painel do clube", () => {
     expect(Number(drawn)).toBeLessThanOrEqual(38);
   });
 
+  test("the painel draws the club's campanha above the candles", async ({ page }) => {
+    await openPanel(page);
+
+    // Excluding the candles, which are the other `role="img"` on this page:
+    // both marks draw the same season and an unscoped lookup resolves to two.
+    const sparkline = page.locator("main svg[role='img']:not([data-candles])");
+
+    await expect(sparkline).toHaveCount(1);
+    await expect(sparkline).toHaveAttribute("aria-label", /^Campanha: /);
+
+    // Above, not below — the coarse mark is how a reader gets their bearings
+    // before reading a round's inside. Order is the whole reason the section
+    // was placed where it was rather than appended to the end of the page.
+    const line = (await sparkline.boundingBox())!;
+    const candles = (await page.locator("main svg[data-candles]").boundingBox())!;
+    expect(line.y).toBeLessThan(candles.y);
+  });
+
+  test("the campanha names both ends, since the drawing carries no axis", async ({ page }) => {
+    await openPanel(page);
+
+    // Shape, never a value: the snapshot ages and the table reorders.
+    const ends = page.locator("main svg[role='img']:not([data-candles]) ~ p span");
+
+    await expect(ends).toHaveCount(2);
+    await expect(ends.first()).toHaveText(/^\d+º · 1ª rodada$/);
+    await expect(ends.last()).toHaveText(/^\d+º · \d+ª rodada$/);
+  });
+
+  test("the campanha ends where the painel's summary says the club is", async ({ page }) => {
+    // The two are computed from different payloads — the sparkline from the
+    // rank history, the tile from /api/standings — so with a live provider they
+    // can differ mid-round. Against the frozen snapshot nothing is in play, so
+    // they must agree, and disagreement here means a real bug.
+    await openPanel(page);
+
+    const position = (
+      await page.locator("main p", { hasText: /^\d+º$/ }).first().innerText()
+    ).trim();
+    const endLabel = await page
+      .locator("main svg[role='img']:not([data-candles]) ~ p span")
+      .last()
+      .innerText();
+
+    expect(endLabel.startsWith(position)).toBe(true);
+  });
+
+  test("the painel follows the mark chosen in the Classificação", async ({ page }) => {
+    // The point of the whole choice: it is one preference for the app, not one
+    // per page. Chosen in the table, then found on a page the reader navigated
+    // to without touching a control. The choice is made in the table before
+    // the painel is ever opened; it survives `openPanel`'s own reload because
+    // it lives in `localStorage`, which is what makes it one preference for
+    // the app rather than one per mount.
+    await page.goto("/");
+    await expect(page.locator("table tbody tr")).toHaveCount(20);
+    await page.getByRole("button", { name: /ver a campanha em barras/i }).click();
+    await openPanel(page);
+
+    const sparkline = page.locator("main svg[role='img']:not([data-candles])");
+    await expect(sparkline.locator("polyline")).toHaveCount(0);
+    expect(await sparkline.locator("rect").count()).toBeGreaterThan(0);
+  });
+
+  test("the painel carries the control, not only the consequence", async ({ page }) => {
+    // A preference the reader can see the effect of but cannot change from here
+    // would send them back to the table to undo their own choice.
+    await openPanel(page);
+
+    const toggle = page.getByRole("button", { name: /ver a campanha em barras/i });
+    await expect(toggle).toBeVisible();
+
+    await toggle.click();
+    const sparkline = page.locator("main svg[role='img']:not([data-candles])");
+    expect(await sparkline.locator("rect").count()).toBeGreaterThan(0);
+    await expect(
+      page.getByRole("button", { name: /ver a campanha em linha/i }),
+    ).toBeVisible();
+  });
+
+  test("a choice made on the painel is what the table then draws", async ({ page }) => {
+    // The other direction, which is the one a single shared hook would get
+    // wrong: three independent copies of the preference agree only while a
+    // route change unmounts two of them. Two hops back rather than one, since
+    // the painel's "voltar" means the club page it drilled down from.
+    await openPanel(page);
+    await page.getByRole("button", { name: /ver a campanha em barras/i }).click();
+
+    await page.getByRole("button", { name: /voltar/i }).first().click();
+    await page.getByRole("button", { name: /voltar/i }).first().click();
+    await expect(page.locator("table tbody tr")).toHaveCount(20);
+
+    const cell = page.locator("table tbody tr td:nth-child(4)").first();
+    await expect(cell.locator("polyline")).toHaveCount(0);
+    expect(await cell.locator("rect").count()).toBeGreaterThan(0);
+  });
+
   test("the drawing stays inside the panel it is drawn in", async ({ page }) => {
     await openPanel(page);
 

@@ -123,82 +123,21 @@ test.describe("Clube", () => {
     }
   });
 
-  test("the club page draws the club's campanha", async ({ page }) => {
+  test("the club page draws no campanha mark — it offers the painel instead", async ({
+    page,
+  }) => {
     await openClubAt(page, 1);
 
-    const sparkline = page.locator("main section svg[role='img']");
-
-    await expect(sparkline).toHaveCount(1);
-    await expect(sparkline).toHaveAttribute("aria-label", /^Campanha: /);
-  });
-
-  test("the campanha names both ends, since the drawing carries no axis", async ({ page }) => {
-    await openClubAt(page, 1);
-
-    // Shape, never a value: the snapshot ages and the table reorders.
-    const ends = page.locator("main section svg[role='img'] ~ p span");
-
-    await expect(ends).toHaveCount(2);
-    await expect(ends.first()).toHaveText(/^\d+º · 1ª rodada$/);
-    await expect(ends.last()).toHaveText(/^\d+º · \d+ª rodada$/);
-  });
-
-  test("the campanha ends where the standings summary says the club is", async ({ page }) => {
-    // The two are computed from different payloads — the sparkline from the
-    // fixture list, the tile from /api/standings — so with a live provider they
-    // can differ mid-round. Against the frozen snapshot nothing is in play, so
-    // they must agree, and disagreement here means a real bug.
-    await openClubAt(page, 1);
-
-    const position = (await page.locator("main p", { hasText: /^\d+º$/ }).first().innerText()).trim();
-    const endLabel = await page.locator("main section svg[role='img'] ~ p span").last().innerText();
-
-    expect(endLabel.startsWith(position)).toBe(true);
-  });
-
-  test("the club page follows the mark chosen in the Classificação", async ({ page }) => {
-    // The point of the whole choice: it is one preference for the app, not one
-    // per page. Chosen in the table, then found on a page the reader navigated
-    // to without touching a control.
-    await page
-      .getByRole("button", { name: /ver a campanha em barras/i })
-      .click();
-    await openClubAt(page, 1);
-
-    const sparkline = page.locator("main section svg[role='img']");
-    await expect(sparkline.locator("polyline")).toHaveCount(0);
-    expect(await sparkline.locator("rect").count()).toBeGreaterThan(0);
-  });
-
-  test("the club page carries the control, not only the consequence", async ({ page }) => {
-    // A preference the reader can see the effect of but cannot change from here
-    // would send them back to the table to undo their own choice.
-    await openClubAt(page, 1);
-
-    const toggle = page.getByRole("button", { name: /ver a campanha em barras/i });
-    await expect(toggle).toBeVisible();
-
-    await toggle.click();
-    const sparkline = page.locator("main section svg[role='img']");
-    expect(await sparkline.locator("rect").count()).toBeGreaterThan(0);
+    // The whole campanha moved to the Painel, where the line sits above the
+    // candles that read the same rounds one grain finer. Splitting the two
+    // halves of one answer across two pages is what this asserts is over, and
+    // it is the only assertion that can see the section come back: every other
+    // spec here would pass with it reinstated.
+    await expect(page.locator("main svg[role='img']")).toHaveCount(0);
     await expect(
-      page.getByRole("button", { name: /ver a campanha em linha/i }),
-    ).toBeVisible();
-  });
-
-  test("a choice made on the club page is what the table then draws", async ({ page }) => {
-    // The other direction, which is the one a single shared hook would get
-    // wrong: three independent copies of the preference agree only while a
-    // route change unmounts two of them.
-    await openClubAt(page, 1);
-    await page.getByRole("button", { name: /ver a campanha em barras/i }).click();
-
-    await page.getByRole("button", { name: /voltar/i }).first().click();
-    await expect(page.locator("table tbody tr")).toHaveCount(20);
-
-    const cell = page.locator("table tbody tr td:nth-child(4)").first();
-    await expect(cell.locator("polyline")).toHaveCount(0);
-    expect(await cell.locator("rect").count()).toBeGreaterThan(0);
+      page.getByRole("button", { name: /ver a campanha em/i }),
+    ).toHaveCount(0);
+    await expect(page.locator("main a[data-panel-link]")).toBeVisible();
   });
 
   test("the form guide uses at most five results", async ({ page }) => {
