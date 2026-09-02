@@ -318,8 +318,26 @@ const settle = async (page: Page) => {
   if (route === "/") {
     await page.locator("table tbody tr").nth(19).waitFor({ timeout: 30_000 });
   } else if (route.startsWith("/clube/")) {
-    // The campanha sparkline is the last thing the club page computes.
-    await page.locator("main svg polyline").first().waitFor({ timeout: 30_000 });
+    // The played-fixture list, which is the last thing on this page to depend
+    // on a payload: it needs `/api/matches` in full, where the tiles above it
+    // need only the standings row.
+    //
+    // It waited on `main svg polyline` — the campanha sparkline — until the
+    // mark moved to the **Painel**. That is worth recording rather than just
+    // fixing: the wait was still *correct* as a readiness signal right up to
+    // the commit that removed the element, and then it did not degrade, it
+    // timed out at 30s and refused both club captures. A per-route wait
+    // encodes a claim about what a page contains, so it goes stale exactly
+    // like the alt text this file warns about two paragraphs up — and unlike
+    // the alt text, it fails loudly, which is the good direction.
+    // Filtered on the "×" a scoreline carries, because a bare `main ul > li`
+    // resolves to the forma pills above it — five letters that render from the
+    // same payload but say nothing about whether the fixtures below arrived.
+    await page
+      .locator("main ul > li")
+      .filter({ hasText: "×" })
+      .first()
+      .waitFor({ timeout: 30_000 });
   } else if (route.startsWith("/jogos")) {
     // The round picker renders before the fixtures do, so waiting on it alone
     // would photograph an empty round.
