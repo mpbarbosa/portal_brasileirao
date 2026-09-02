@@ -2430,6 +2430,92 @@ slug under any provisioning. Both misaims were caught that way, and the same tel
 already appears above under grepping a curled payload: a new string **and** the
 old one it replaced both missing is a broken instrument, not a broken deploy.
 
+**The two rules above are written about `git` commands, and the read that slips
+through is the one with NO REF IN IT.** Every example names a ref you could
+doubt — `git check-ignore`, `git rev-parse`, `git -C "$W"`. `grep README.md`,
+`ls docs/screenshots/` and `sed -n '255,300p' scripts/screenshot.ts` name no
+commit at all, so nothing in the command's *shape* prompts the question, and **a
+ref-less read is a reading of an unknown tree.** Three instances in one evening,
+all out of the shared root while `origin/main` ran well ahead of it:
+
+- A README caption read in root contradicted the screenshot it captions. It had
+  been rewritten to match that frame in the same commit that re-shot it — on a
+  tree the reader was not looking at. Reported as a live defect on `main`, and a
+  worktree was cut to fix it.
+- `ls docs/screenshots/` answered **18** where `git ls-tree --name-only
+  origin/main docs/screenshots/` answers **20** (measured at `a8e8fbb`); the two
+  missing were the newest pair. That figure had already been given to a user.
+- `sed -n '255,300p'` on a file that had genuinely moved by 32 insertions, which
+  happened to miss the moved region.
+
+The fix has the same shape as `git -C "$W"`: `git show "origin/main:<path>"` for
+a file, and **`git ls-tree origin/main <dir>` for a listing** — the second is the
+one nobody derives from a rule phrased around file *contents*.
+
+**A count is the quietest form of it, and worse than a wrong string.** The stale
+caption *disagreed* with its frame, so an incoherence existed to be noticed. The
+stale 18 was **correct for the tree it was read from**: no mismatch, no
+impossible value, nothing for the known-negative rule above to bite on. A stale
+count also omits precisely the *newest* work — it is not "slightly low", it is
+blind to whatever just landed — and it travels as arithmetic, which reads as
+derived rather than observed.
+
+**And this bounds the known-negative rule directly: a WHOLLY stale reading is
+self-consistent, and only a PARTLY stale one has a tell.** The session that first
+reported that caption had read the README **and** the screenshot from the same
+stale root, and within that tree the caption really did contradict the frame — a
+coherent finding, correct for its tree. The session that "caught" it had *mixed*
+trees, stale caption against a current image, which is the only reason a
+contradiction existed at all. **The sloppier mixed reading was luckier than the
+careful uniform one.** Incoherence indicts the instrument only where the
+instrument is inconsistently aimed; point it uniformly at the wrong tree and
+every check agrees with every other.
+
+**The refusal that actually fired was at the WRITE step, not the read step.**
+Every read in that chain agreed. What stopped a wrong commit was the edit itself:
+a find-and-replace guarding `assert s.count(old) == 1`, built from the root's
+text and applied in a worktree at `origin/main`, which raised `AssertionError:
+0`. The general form outlives git — **an edit that names what it expects to find
+is self-aiming; an edit that names a POSITION borrows the aim of whatever it is
+pointed at.** Line numbers (that caption is line 105 in the stale tree and 121 on
+`origin/main`), loose regexes and `sed -i` by address all apply cleanly to the
+wrong tree and commit something plausible.
+
+**Its bound belongs beside it, or the guard becomes an excuse to stop using a
+ref: a PASSING assertion is not evidence you read the right tree.** It refuses
+only where the two trees differ at exactly the span being edited. A second
+session that night md5'd its own edited span at both trees — identical — so its
+assertion passed and refused nothing, while the file around it had moved. It
+refuses a wrong aim; it never confirms a right one. That evening it fired once
+and was silent once.
+
+**And the probe that cannot detect a thing is the one everybody reaches for.**
+`rtk`, the harness wrapper in front of `git` here, injects `-10 --no-merges` into
+a bare `git log` carrying no explicit count (upstream `rtk-ai/rtk#3661`,
+reproduces on 0.46.0) — and **a pipe bypasses the hook.** Since you cannot count
+`git log` output without `| wc -l`, `| grep -c` or `| cat`, every convenient way
+of measuring it disables the thing being measured. Two sessions ran piped probes,
+got the true figure, and separately concluded the injection was not active: an
+unfalsifiable negative, twice, each reported as a measurement. Measured on one
+range, one command per call, because several `git log`s in one call contaminate
+each other:
+
+    git rev-list --count 596d6ff..b6af028            39   ground truth
+    git rev-list --count --merges 596d6ff..b6af028   20
+    git log --oneline 596d6ff..b6af028   (unpiped)   19   the hook, silently
+    git log 596d6ff..b6af028 | grep -c '^commit '    39   the hook, bypassed
+
+Both endpoints are written as shas rather than as `origin/main`, so the reading
+is reproducible: the point is the **disagreement between the rows**, and a moving
+endpoint would change all four and settle nothing.
+
+**The tell needs no known-good number: `git log A..B` must always include `B`.**
+In the filtered run the range's own endpoint was absent from its own output. Use
+`git rev-list --count`, which the hook does not touch, and treat any *"how far is
+production behind"* or *"what shipped between X and Y"* figure taken from a bare
+`git log` as suspect — especially one **confirmed** by a piped re-derivation,
+where the confirmation is structurally guaranteed.
+
 **A follow-up named in a merged PR or a plan document is a magnet.** Both of the
 collisions above were exactly that: #174 handed the account control on in
 `docs/md3-completion-plan.md` under M9, and the screenshot refresh was owed in
