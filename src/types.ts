@@ -605,6 +605,56 @@ export interface ClubCandles {
 }
 
 /**
+ * A club's **scouts** for the season — the per-action counters no provider this
+ * app can reach reports, curated into `src/data/club-scouts.ts` from caRtola's
+ * snapshots of the Cartola FC market. `scouts-core.ts` turns them into the
+ * **perfil** the Painel renders; nothing renders a counter raw.
+ *
+ * Three things about the shape are decisions rather than mechanics:
+ *
+ * - **`matches` travels with the counters and is not the club's `played`.** The
+ *   source is a weekly snapshot and the standings are live, so by Saturday the
+ *   table has a round the scouts do not. Dividing one by the other silently
+ *   understates every rate — and by exactly the amount that makes it look like
+ *   a form dip.
+ * - **Finalizações are three fields, not one.** `shotsSaved`/`shotsOff`/
+ *   `shotsWoodwork` are what the source counts, and `goals` is the fourth
+ *   outcome of a shot rather than a separate event, which is why `finishes` in
+ *   `scouts-core.ts` adds all four. Storing a pre-summed total would make the
+ *   conversion rate underivable.
+ * - **There is no `goalsConceded` and no `ownGoals`**, though the source
+ *   carries both. `/api/standings` and `src/data/goals.ts` already answer those
+ *   authoritatively, and the scout copy is *worse* — see the sync script for
+ *   the measurement. A second, wronger answer to a question already answered is
+ *   how the two come to disagree on a page that shows them together.
+ */
+export interface ClubScouts {
+  clubCode: ClubCode;
+  /**
+   * Matches these counters cover. Never `StandingsRow.played` — see above.
+   */
+  matches: number;
+  /** Goals scored by this club's players. Own goals are the other club's. */
+  goals: number;
+  /** Finalizações defendidas — on target, saved. */
+  shotsSaved: number;
+  /** Finalizações para fora. */
+  shotsOff: number;
+  /** Finalizações na trave. */
+  shotsWoodwork: number;
+  /** Desarmes. */
+  tackles: number;
+  /** Faltas cometidas. */
+  foulsCommitted: number;
+  /** Cartões amarelos. */
+  yellowCards: number;
+  /** Cartões vermelhos. */
+  redCards: number;
+  /** Defesas do goleiro. */
+  saves: number;
+}
+
+/**
  * A player, as much as the provider knows. Every field beyond id and name is
  * optional: squad listings, the person endpoint and the scorer table each carry
  * a different subset, and the card renders whatever it has.

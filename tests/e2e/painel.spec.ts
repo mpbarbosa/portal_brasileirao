@@ -280,6 +280,67 @@ test.describe("Painel do clube", () => {
     expect(panels.length).toBe(20);
   });
 
+  test("the perfil reads six rates, each with its place in the division", async ({ page }) => {
+    await openPanel(page);
+
+    const perfil = page.locator("main [data-profile]");
+    await expect(perfil).toBeVisible();
+    await expect(perfil.locator("[data-profile-row]")).toHaveCount(6);
+
+    // Every row carries a figure *and* a rank: the figure alone says nothing —
+    // 13 desarmes a game is either the most or the least in the league, and
+    // only the rank can tell a reader which.
+    for (const row of await perfil.locator("[data-profile-row]").all()) {
+      await expect(row).toHaveText(/\d+º de 20/);
+    }
+  });
+
+  test("the perfil says how old it is rather than implying it is live", async ({ page }) => {
+    await openPanel(page);
+
+    // The source is a weekly snapshot, so the caption names the rodada it runs
+    // through — the `StadiumWeather` rule. And it credits caRtola, whose data
+    // this is.
+    const caption = page.locator("main [data-profile] p").last();
+    await expect(caption).toHaveText(/\d+ª rodada/);
+    await expect(caption.getByRole("link", { name: "caRtola" })).toHaveAttribute(
+      "href",
+      /github\.com\/henriquepgomide\/caRtola/,
+    );
+  });
+
+  test("each marker is centred on its value, not hung off it", async ({ page }) => {
+    await openPanel(page);
+
+    const tracks = await page.locator("main [data-profile-track]").all();
+    expect(tracks.length).toBe(6);
+
+    for (const track of tracks) {
+      const box = await track.boundingBox();
+      const marker = track.locator("[data-profile-marker]");
+      const markerBox = await marker.boundingBox();
+      // The fraction the component positioned it at, read back off the element
+      // rather than recomputed here — recomputing it would be a second copy of
+      // `markerFraction` and could agree with itself while both were wrong.
+      const left = await marker.evaluate((node) => (node as HTMLElement).style.left);
+      expect(box).not.toBeNull();
+      expect(markerBox).not.toBeNull();
+      if (!box || !markerBox) continue;
+
+      const fraction = Number.parseFloat(left) / 100;
+      expect(Number.isFinite(fraction)).toBe(true);
+
+      // Centred, which is the whole of what keeps a club at the top of the
+      // division from drawing half a dot past the end of its own track. An
+      // assertion that the marker merely stays *inside* the track cannot see
+      // this: it passes for every club that is not at an extreme, which on any
+      // given day is eighteen of the twenty — so it would pass against the bug
+      // it names, which is worse than not testing it.
+      const centre = markerBox.x + markerBox.width / 2;
+      expect(Math.abs(centre - (box.x + fraction * box.width))).toBeLessThanOrEqual(1.5);
+    }
+  });
+
   test("its metadata names the club, and is injected server-side", async ({ page }) => {
     const name = await openPanel(page);
     const path = new URL(page.url()).pathname;
