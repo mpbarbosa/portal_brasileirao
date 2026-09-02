@@ -6,7 +6,7 @@ import type { Squad } from "@/src/types";
  * Regenerate with: npx tsx scripts/sync-seed-data.ts
  *
  * Frozen elencos (20 clubs, 948 players), taken
- * 2026-08-26 from football-data.org. The offline fallback behind
+ * 2026-09-02 from football-data.org. The offline fallback behind
  * `/api/squads`, so it goes stale the moment a transfer window opens.
  *
  * Clubs are referenced through `CLUBS_BY_CODE` rather than restated, so this
@@ -704,7 +704,7 @@ export const SEED_SQUADS: Squad[] = [
     { id: "276212", name: "Pablo Pereira", position: "Defence", nationality: "Brazil", dateOfBirth: "2006-07-01" },
     { id: "192652", name: "Paulinho", position: "Defence", nationality: "Brazil", dateOfBirth: "2005-05-23" },
     { id: "276204", name: "Pedro Kauã", position: "Defence", nationality: "Brazil", dateOfBirth: "2006-03-29" },
-    { id: "11680", name: "Rafael Borré", position: "Centre-Forward", nationality: "Colombia", dateOfBirth: "1995-09-15" },
+    { id: "11680", name: "Rafael Borré", position: "Offence", nationality: "Colombia", dateOfBirth: "1995-09-15" },
     { id: "278143", name: "Raykkonen", position: "Midfield", nationality: "Brazil", dateOfBirth: "2008-07-13" },
     { id: "1091", name: "Richard", position: "Offence", nationality: "Brazil", dateOfBirth: "1994-02-18" },
     { id: "113611", name: "Rodrigo Villagra", position: "Midfield", nationality: "Argentina", dateOfBirth: "2001-02-14" },
@@ -822,7 +822,7 @@ export const SEED_SQUADS: Squad[] = [
     { id: "251329", name: "João Pedro", position: "Goalkeeper", nationality: "Brazil", dateOfBirth: "2008-03-18" },
     { id: "1849", name: "João Schmidt", position: "Midfield", nationality: "Brazil", dateOfBirth: "1993-05-19" },
     { id: "249491", name: "João Victor", position: "Offence", nationality: "Brazil", dateOfBirth: "2007-08-12" },
-    { id: "192844", name: "Lautaro Diaz", position: "Midfield", nationality: "Argentina", dateOfBirth: "1998-05-21" },
+    { id: "192844", name: "Lautaro Diaz", position: "Offence", nationality: "Argentina", dateOfBirth: "1998-05-21" },
     { id: "1086", name: "Luan Peres", position: "Defence", nationality: "Brazil", dateOfBirth: "1994-07-19" },
     { id: "1304", name: "Lucas Veríssimo", position: "Defence", nationality: "Brazil", dateOfBirth: "1995-07-02" },
     { id: "260876", name: "Mateus Caucaia", position: "Midfield", nationality: "Brazil", dateOfBirth: "2007-06-29" },

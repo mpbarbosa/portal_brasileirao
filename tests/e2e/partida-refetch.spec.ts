@@ -1,6 +1,6 @@
 import { test, expect, type Page } from "@playwright/test";
 
-import { SNAPSHOT_DATE } from "@/src/data/matches";
+import { SEED_MATCHES, SNAPSHOT_DATE } from "@/src/data/matches";
 import type { Match } from "@/src/types";
 
 /**
@@ -23,10 +23,39 @@ import type { Match } from "@/src/types";
  */
 const E2E_NOW = new Date(`${SNAPSHOT_DATE}T12:00:00.000Z`);
 
-/** Kickoff already past at `E2E_NOW`, still reported unplayed — the bug's shape. */
-const STUCK = "554970";
-/** Round 25, days out — the half that stops every match page polling for ever. */
-const DISTANT = "554981";
+/**
+ * Both fixtures are **derived from the committed data, not written down** —
+ * `clock.ts`'s rule for `E2E_NOW`, and for the same reason.
+ *
+ * They were the literals `554970` and `554981`, the second described as "round
+ * 25, days out". True when written; the first `sync-seed-data` after round 25
+ * was played turned it into a FINISHED fixture, so `a fixture days away is not
+ * polled` opened a page whose chip reads *Encerrado* and failed on the
+ * assertion before the one it exists for. Its sibling survived only because its
+ * own state is imposed by the prepared payload rather than read from the seed —
+ * so one of the two literals was already load-bearing and the other was not,
+ * and nothing said which.
+ */
+const settled = (match: Match) => match.status === "FINISHED" && match.homeGoals !== null;
+
+/**
+ * Kickoff already past at `E2E_NOW`, which is the regression's shape. Its
+ * status is overridden by `serve`, so all this has to be is a fixture the clock
+ * has gone past — the most recent one there is.
+ */
+const STUCK = [...SEED_MATCHES]
+  .filter((match) => Date.parse(match.kickoff) < E2E_NOW.getTime())
+  .sort((a, b) => Date.parse(b.kickoff) - Date.parse(a.kickoff))[0]!.id;
+
+/**
+ * The half that stops every match page polling for ever, so this one must be
+ * genuinely far off: the **latest kickoff in the season that has not been
+ * played**, which is as far from `isAwaitingResult`'s one-day window as the
+ * fixture list goes.
+ */
+const DISTANT = [...SEED_MATCHES]
+  .filter((match) => !settled(match))
+  .sort((a, b) => Date.parse(b.kickoff) - Date.parse(a.kickoff))[0]!.id;
 
 interface Payload {
   rounds: number[];

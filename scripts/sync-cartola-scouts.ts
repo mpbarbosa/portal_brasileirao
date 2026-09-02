@@ -51,7 +51,7 @@
  * club that played would draw an empty column. Season aggregates are therefore
  * the only thing this file carries.
  */
-import { writeFileSync } from "node:fs";
+import { existsSync, writeFileSync } from "node:fs";
 import path from "node:path";
 
 import { lastRoundWithResult } from "@/rank-history-core";
@@ -114,6 +114,7 @@ type CounterField = (typeof COUNTERS)[keyof typeof COUNTERS];
 
 const season = seasonArgument();
 const CLUB_BY_SLUG = new Map(CLUBS.map((club) => [club.slug, club]));
+let previousRound: number | null = null;
 
 main().catch((error: unknown) => {
   console.error(`Error: ${error instanceof Error ? error.message : String(error)}`);
@@ -121,6 +122,10 @@ main().catch((error: unknown) => {
 });
 
 async function main(): Promise<void> {
+  // Read before anything is written, or it reports the value this run is about
+  // to produce and no sync ever looks like it advanced.
+  previousRound = await committedRound();
+
   const snapshots = await readSeason();
   console.log(`Read ${snapshots.length} snapshots for ${season} (rodada 1..${snapshots.length}).`);
 
@@ -482,6 +487,64 @@ export const CLUB_SCOUTS_THROUGH_ROUND = ${rounds};
   console.log(
     `Wrote src/data/club-scouts.ts — ${ordered.length} clubs through rodada ${rounds}.`,
   );
+
+  remindAboutTheLog(rounds, previousRound);
+}
+
+/**
+ * Ask for a fresh reading in `docs/perfil-ataque.md`, at the one moment the
+ * person who could write a good one has the rates in front of them.
+ *
+ * **This is deliberately a printed line and not a test.** The obvious form —
+ * fail `test:unit` when a sync lands with no fresh entry — was proposed, built
+ * and dropped: `test:unit` runs in `check` and `deploy` is `needs: [check,
+ * e2e]`, so a missing paragraph would hold a release, and its only remedy is
+ * for somebody to write prose. Whoever met it could **satisfy** it without
+ * being able to **fix** it, which is filler by design. Same family as the
+ * `page.route` stub `src/useAccount.ts` records: a check that passes for the
+ * wrong reason converts an open question into a false answer.
+ *
+ * Two conditions, and each removes something somebody would otherwise have to
+ * remember:
+ *
+ * - **Only when a rodada actually advanced.** Printed on a re-run that changed
+ *   nothing, the line is wallpaper within a week.
+ * - **Only when the document exists.** It is added by a separate pull request,
+ *   so until that lands this must not name a file that is not there — which
+ *   would be the stale claim the log itself is written to avoid. That makes the
+ *   merge order between the two self-resolving rather than something either
+ *   author has to hold in their head.
+ */
+function remindAboutTheLog(rounds: number, previous: number | null): void {
+  if (previous !== null && rounds <= previous) return;
+  if (!existsSync(path.join(ROOT, "docs/perfil-ataque.md"))) return;
+
+  console.log(
+    `\n==> A fresh reading is owed in docs/perfil-ataque.md\n` +
+      `    Rodada ${rounds} just landed. Append an entry ABOVE every existing\n` +
+      `    \`## Rodada\` heading, in the form \`## Rodada ${rounds} — <what changed>\`.\n` +
+      `    Rule 1: name clubs and shapes, never a rate — the page computes\n` +
+      `    those, and \`npm run test:unit\` refuses a decimal, a percentage\n` +
+      `    or a \`Nº\` rank in that file.`,
+  );
+}
+
+/**
+ * The rodada the committed file already covers, or null on a first run.
+ *
+ * Read before the write, and through a dynamic import so a missing file is a
+ * `null` rather than a crash — this script is what *creates* that file, so it
+ * must run on a checkout that does not yet have one.
+ */
+async function committedRound(): Promise<number | null> {
+  try {
+    const existing = (await import("@/src/data/club-scouts")) as {
+      CLUB_SCOUTS_THROUGH_ROUND?: number;
+    };
+    return existing.CLUB_SCOUTS_THROUGH_ROUND ?? null;
+  } catch {
+    return null;
+  }
 }
 
 function seasonArgument(): string {
