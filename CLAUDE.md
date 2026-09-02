@@ -2539,6 +2539,46 @@ far is production behind"* or *"what shipped between X and Y"* figure taken from
 a bare `git log` as suspect — especially one **confirmed** by a piped
 re-derivation, where the confirmation is structurally guaranteed.
 
+**The count above is called the quietest form of this; a stale ABSENCE is
+quieter still, and it is the one that ends the work.** A count at least names
+something that exists, so a later reader can re-derive it and disagree — which
+is how the 18 was caught. *This is not here* has no such handle: the conclusion
+terminates the task, so nothing downstream is ever in a position to contradict
+it. On 2026-09-02, asked for a scatter of finalizações × gols, a session
+surveyed for shot data — `ls src/data`, `grep -ril finaliza` over the working
+tree — and reported that no source this app can reach carries them, offering a
+paid API key and a substitute chart instead. Local `main` was `596d6ff`, **47
+commits** behind an `origin/main` of `f0ac476`, where `scouts-core.ts`,
+`src/data/club-scouts.ts` and `scripts/sync-cartola-scouts.ts` had already
+shipped exactly that. The user answered with a screenshot of the feature
+running.
+
+**Nothing in that survey looked careless, which is the whole difficulty.**
+Alongside the two ref-less reads it ran live probes, and those were current and
+correct: CBF's `/api/cbf/jogos/{id}` really does carry no `finaliza`, `chute`,
+`estatistic` or `posse`, and the súmula PDF really does not either. So a current
+artefact agreed with a stale one — but unlike the caption, where the agreement
+was luck, here it is **structural**: *the free tier does not carry it* is the
+answer a survey of a free tier expects, so the conclusion arrived pre-confirmed
+and read as measured. This is the *a claim that produces no work when it holds*
+shape, twice named elsewhere on this page, arriving as a finding rather than as
+a carve-out.
+
+The refusal therefore belongs at the **conclusion** rather than at the read, and
+it is one command beside the search:
+
+```sh
+git grep -il <term> origin/main -- '*.ts' '*.tsx'
+git rev-list --count main..origin/main
+```
+
+**Print the count in the same output as the finding**, not as a separate check
+somebody remembers to run: a 47 sitting beside a *nothing here* indicts itself,
+where a 47 read a minute earlier is a number nobody carries forward. And note
+what this does **not** ask for — it is not *search harder*. That survey was
+thorough, and thoroughness is what made it convincing; it was aimed at a tree
+nobody had named.
+
 **A follow-up named in a merged PR or a plan document is a magnet.** Both of the
 collisions above were exactly that: #174 handed the account control on in
 `docs/md3-completion-plan.md` under M9, and the screenshot refresh was owed in
