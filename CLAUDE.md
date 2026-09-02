@@ -3288,7 +3288,7 @@ in two parallel jobs:
   They run on `.nvmrc`'s Node rather than a developer's, which is the whole
   point: the first bug this placement found was invisible on a newer major.
   **Count the `run:` lines rather than this sentence** — it said "both" for as
-  long as there were three, which is the failure the eighteen-captures paragraph
+  long as there were three, which is the failure the capture-count paragraph
   below records about a number written in prose.
 - **e2e** — Playwright, with the browser cached on the exact `@playwright/test`
   version. A version bump needs a matching browser build, so the cache key must
@@ -3313,7 +3313,7 @@ not something the check can verify.
 during a paint, a selector nothing matches, a comment: the edit is real and the render is
 identical. `docs/screenshots/CAPTURED` records which commit the images depict, so a refresh
 always leaves something to commit — that is the mechanical answer and it is the right one
-wherever it applies. But it still charges **eighteen** captures from a live-data
+wherever it applies. But it still charges **twenty** captures from a live-data
 production build to certify that nothing changed, and records no reason.
 
 **`src/data` is a watched path, and it is the one on the list that reports too
@@ -3363,10 +3363,12 @@ per-deploy and per-minute noise of the six images that never come back
 byte-identical.
 
 **Count the directory rather than this paragraph.** It said sixteen for as long as there
-were sixteen, and `partida-554977-{light,dark}` made it eighteen without anything here
-noticing. A number in prose has no gate on it.
+were sixteen, `partida-554977-{light,dark}` made it eighteen without anything here
+noticing, and `painel-palmeiras-{light,dark}` has since made it twenty. A number in prose
+has no gate on it — this one has now been wrong twice, and the second time it was wrong
+in a paragraph telling you it would be.
 
-**Six of the eighteen can no longer come back byte-identical, and this paragraph has now
+**Six of the twenty can no longer come back byte-identical, and this paragraph has now
 said fewer than the truth three times.** They vary for three unrelated reasons, on three
 different clocks — and note the count rose because a *feature* landed, not because anyone
 had miscounted, so re-derive it from what the pages render rather than trusting the number

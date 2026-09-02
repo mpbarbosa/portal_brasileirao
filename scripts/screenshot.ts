@@ -355,6 +355,18 @@ const settle = async (page: Page) => {
     await first.waitFor({ timeout: 30_000 });
     await first.click();
     await page.locator("[data-squad] section h4").first().waitFor({ timeout: 30_000 });
+  } else if (route.startsWith("/painel/")) {
+    // A candle, not the card around it. `RankCandles` renders its `<figure>`
+    // and its key from props, so the panel is on the page before the drawing
+    // is — and `computeRankCandles` runs on the main thread over the whole
+    // division's fixtures, which is the gap this closes. `data-round` is what
+    // the end-to-end spec selects, so the two agree on what "drawn" means.
+    //
+    // Written as a per-route case knowing what that costs: #308's club capture
+    // timed out for thirty seconds twice because its wait named an element a
+    // commit had moved away. If the candles ever leave this page, this line is
+    // the one that fails, and it fails loudly.
+    await page.locator("main svg[data-candles] g[data-round]").first().waitFor({ timeout: 30_000 });
   } else if (route === "/ao-vivo") {
     // "Agora" renders before any data arrives — it has to, since "nothing is
     // being played" is an answer rather than an empty state. So the heading is
