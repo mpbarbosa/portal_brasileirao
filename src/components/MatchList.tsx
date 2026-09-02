@@ -1,6 +1,7 @@
 import { formatRoute } from "@/route-core";
 import { BroadcasterMark } from "@/src/components/BroadcasterMark";
 import { CLUBS_BY_CODE } from "@/src/data/clubs";
+import { FIXTURE_ROW, FixtureSides } from "@/src/components/FixtureSides";
 import { LINK_UNDERLINE } from "@/src/components/interaction";
 import { StatusChip } from "@/src/components/StatusChip";
 import { Surface } from "@/src/components/Surface";
@@ -59,11 +60,6 @@ export const clubNamer = (clubs?: Club[]): ((code: ClubCode) => string) => {
   return (code) => resolve(code)?.shortName ?? code;
 };
 
-const score = (match: Match): string =>
-  match.homeGoals === null || match.awayGoals === null
-    ? "×"
-    : `${match.homeGoals} × ${match.awayGoals}`;
-
 interface MatchListProps {
   matches: Match[];
   clubs?: Club[];
@@ -93,18 +89,36 @@ export function MatchList({
     return <p className="text-body-medium text-ink-muted">{emptyLabel}</p>;
   }
 
-  const clubName = clubNamer(clubs);
-
   return (
     <ul className="space-y-2">
       {matches.map((match) => (
+        /**
+         * Two columns on a tablet and up; stacked on a phone.
+         *
+         * `StatusChip` is `shrink-0` and the fixture line is what gives way, so
+         * side by side the chip costs the club names 72px of a 343px row —
+         * measured at 375dp, that put **12 of 24** names into an ellipsis once
+         * each side gained a crest, against 2 of 24 before. Stacking returns
+         * the whole width: 0 of 24 at 375dp, 4 at 320dp.
+         *
+         * So the marks were never what broke this; the column was. Shrinking
+         * the crest or hiding it under `sm` would each have bought back about a
+         * fifth of what the chip holds, and left the board reading `Botaf… 2 ×
+         * 3 Athletic…` on the device it is read on most.
+         *
+         * **`items-start`, never `items-center`, on the stacked axis.** A flex
+         * item's cross size stretches by default, and `inline-flex` on the chip
+         * does not save it — as a flex item it is blockified. Confirmed by
+         * forcing `align-items: stretch` in the page: the chip went 72px to
+         * 309px and stopped reading as a chip at all.
+         */
         <Surface
           as="li"
           filled
           key={match.id}
-          className="flex items-center justify-between gap-4 px-4 py-3"
+          className="flex flex-col items-start gap-1.5 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4"
         >
-          <div className="min-w-0">
+          <div className="min-w-0 max-w-full">
             {onSelectMatch ? (
               <a
                 href={formatRoute({ section: "partida", id: match.id })}
@@ -118,17 +132,13 @@ export function MatchList({
                   event.preventDefault();
                   onSelectMatch(match.id);
                 }}
-                className={`block truncate font-medium ${LINK_UNDERLINE}`}
+                className={`${FIXTURE_ROW} font-medium ${LINK_UNDERLINE}`}
               >
-                {clubName(match.homeCode)}{" "}
-                <span className="font-semibold tabular-nums text-on-surface-variant">{score(match)}</span>{" "}
-                {clubName(match.awayCode)}
+                <FixtureSides match={match} clubs={clubs} />
               </a>
             ) : (
-              <p className="truncate font-medium">
-                {clubName(match.homeCode)}{" "}
-                <span className="font-semibold tabular-nums text-on-surface-variant">{score(match)}</span>{" "}
-                {clubName(match.awayCode)}
+              <p className={`${FIXTURE_ROW} font-medium`}>
+                <FixtureSides match={match} clubs={clubs} />
               </p>
             )}
             <p className="mt-0.5 text-body-small text-ink-faint">{kickoffLabel(match.kickoff)}</p>
@@ -144,7 +154,13 @@ export function MatchList({
               </p>
             )}
           </div>
-          <StatusChip status={match.status} />
+          {/* Above the fixture on a phone, beside it from `sm`. Stacked, it
+              would otherwise land at the foot under the broadcaster marks,
+              where a status reads as an afterthought rather than as the label
+              for the card it belongs to. `order-first` is one utility and puts
+              it where the eye starts; `StatusChip` already takes a className,
+              so this needs no wrapper element around it. */}
+          <StatusChip status={match.status} className="order-first sm:order-none" />
         </Surface>
       ))}
     </ul>
