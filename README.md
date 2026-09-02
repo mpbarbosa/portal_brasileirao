@@ -105,6 +105,19 @@ now reach.* The marks keep a light backing
 in both themes on purpose — Globo's circle and the Premiere wordmark are dark artwork on a
 transparent ground, and they vanish against a dark page without it.*
 
+![Painel do clube Palmeiras no tema claro: o escudo ao lado do título “Painel do Palmeiras” e, sob ele, “A campanha inteira, rodada a rodada”; três números — 1º de posição, 52 pontos e 25 rodadas; a Campanha, com um botão que a troca de linha para barras, desenhada do 11º lugar na 1ª rodada ao 1º na 25ª; e, abaixo, a mesma campanha rodada a rodada em velas, cada uma indo da posição em que a rodada começou à do fim dela, verde para vitória, cinzenta para empate e vermelha para derrota, com a linha fina do pavio atravessando as posições ocupadas enquanto a rodada era disputada e duas linhas tracejadas marcando o G4 e o Z4; sob o desenho, a legenda das quatro cores e a frase que explica o que o corpo, o traço e o pavio significam. As secções Destaques e Perfil ficam abaixo do recorte.](docs/screenshots/painel-palmeiras-light.png)
+
+![O mesmo painel no tema escuro, com o mesmo escudo e título, os mesmos três números, a mesma campanha em linha e as mesmas velas rodada a rodada, com as mesmas cores dos resultados e as mesmas tracejadas do G4 e do Z4.](docs/screenshots/painel-palmeiras-dark.png)
+
+*The **Painel do clube**, in both themes — the page that row opens. The line at the top is
+the campanha as the Classificação draws it; the velas beneath read the same rounds one
+grain finer, because a round is one point on the line and a club can lose four places
+inside it. Colour carries the result and the geometry carries the direction, and the rounds
+worth looking at are the ones where they disagree. **Destaques and Perfil sit below the
+frame**: a capture is cropped at the last section fitting in 1080 CSS px, and the velas take
+most of it.*
+
+
 ![Página do estádio Maracanã no tema claro: o nome popular em destaque, "Rio de Janeiro – RJ" abaixo, o nome oficial "Estádio Jornalista Mário Filho" e uma ligação para o artigo na Wikipédia; uma fotografia aérea do estádio ao entardecer, iluminado, com a cidade e os morros do Rio ao fundo, e logo abaixo a linha de crédito com o nome do fotógrafo e a licença; dois números lado a lado — capacidade de 78.838 e inaugurado em 1950; os mandantes Fluminense, Flamengo e Vasco da Gama, cada um com escudo e ligação para a sua página; e o clima no estádio, com um ícone de chuva, 21 °C, “Garoa fraca”, a sensação de 22 °C, a umidade de 95% e o vento de 21 km/h ao lado, e sob o cartão a hora da leitura — 21:46 — e a fonte, o Open-Meteo.](docs/screenshots/estadio-maracana-light.png)
 
 ![A mesma página do estádio no tema escuro, com a mesma fotografia aérea e a mesma linha de crédito, o mesmo nome popular e oficial, a mesma capacidade e ano de inauguração, os mesmos três mandantes e o mesmo cartão do clima com a hora da leitura.](docs/screenshots/estadio-maracana-dark.png)

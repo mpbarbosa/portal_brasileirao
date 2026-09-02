@@ -373,7 +373,7 @@ echo
 # there (see CLAUDE.md, "Contas": unset credentials mean the feature does not
 # render at all), so no account control is drawn, while production answers
 # /api/account/me 200 and draws one. Every capture then loses a control from the
-# app bar, in all eighteen frames, and the README alt text describes it.
+# app bar, in all twenty frames, and the README alt text describes it.
 #
 # NOTHING CATCHES THAT, WHICH IS THE POINT. scripts/screenshot.ts compares
 # appearance *sources* against HEAD and checks the build serves real provider
