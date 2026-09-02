@@ -2494,11 +2494,12 @@ and was silent once.
 a bare `git log` carrying no explicit count (upstream `rtk-ai/rtk#3661`,
 reproduces on 0.46.0) — and **a pipe bypasses the hook.** Since you cannot count
 `git log` output without `| wc -l`, `| grep -c` or `| cat`, every convenient way
-of measuring it disables the thing being measured. Two sessions ran piped probes,
-got the true figure, and separately concluded the injection was not active: an
-unfalsifiable negative, twice, each reported as a measurement. Measured on one
-range, one command per call, because several `git log`s in one call contaminate
-each other:
+of measuring it disables the thing being measured — **the probe has no failing
+branch.** A session ran three piped probes, got the true figure three times, and
+concluded the injection was not active, reporting it as a measurement. Repetition
+cannot help there, and more probes would have produced more confirmations of
+nothing. Measured on one range, one command per call, because several `git log`s
+in one call contaminate each other:
 
     git rev-list --count 596d6ff..b6af028            39   ground truth
     git rev-list --count --merges 596d6ff..b6af028   20
@@ -2510,11 +2511,23 @@ is reproducible: the point is the **disagreement between the rows**, and a movin
 endpoint would change all four and settle nothing.
 
 **The tell needs no known-good number: `git log A..B` must always include `B`.**
-In the filtered run the range's own endpoint was absent from its own output. Use
-`git rev-list --count`, which the hook does not touch, and treat any *"how far is
-production behind"* or *"what shipped between X and Y"* figure taken from a bare
-`git log` as suspect — especially one **confirmed** by a piped re-derivation,
-where the confirmation is structurally guaranteed.
+In the filtered run the range's own endpoint was absent from its own output —
+self-evident from that output alone, with nothing to compare against and nothing
+in it that can go stale. Every other check here needs a figure you already trust;
+this one needs only the range you typed.
+
+**This is the one claim on this page where repetition IS corroboration**, and the
+distinction is worth keeping straight, because the rest of the section says the
+opposite. Three sessions watched it fire at three different endpoints — 39 / 20
+merges, 42 / 21, and one more — and each of those runs **could have shown the
+endpoint present**. A probe with a failing branch, run three times, is evidence;
+the piped probe above has no failing branch, so running it three times was worth
+exactly as much as running it once. Ask which kind you have before counting.
+
+Use `git rev-list --count`, which the hook does not touch, and treat any *"how
+far is production behind"* or *"what shipped between X and Y"* figure taken from
+a bare `git log` as suspect — especially one **confirmed** by a piped
+re-derivation, where the confirmation is structurally guaranteed.
 
 **A follow-up named in a merged PR or a plan document is a magnet.** Both of the
 collisions above were exactly that: #174 handed the account control on in
