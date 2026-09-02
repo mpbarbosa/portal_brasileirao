@@ -7,6 +7,7 @@ import { formatRoute } from "@/route-core";
 import type { CampaignPlotKind } from "@/campaign-plot-core";
 import { CampaignPlotToggle } from "@/src/components/CampaignPlotToggle";
 import { ClubCrest } from "@/src/components/ClubCrest";
+import { ClubProfile } from "@/src/components/ClubProfile";
 import { StatTile } from "@/src/components/ClubView";
 import { BACK_LINK, LINK_UNDERLINE } from "@/src/components/interaction";
 import { RankCandles } from "@/src/components/RankCandles";
@@ -250,6 +251,13 @@ export function ClubDashboard({
           </Surface>
         </section>
       )}
+
+      {/* Below the Destaques rather than above the Campanha: the velas are what
+          this page is, and the Perfil is the context they are read in. It also
+          renders from a committed file while everything above it comes from
+          `/api/matches`, so putting it first would leave a reader looking at a
+          full section while the page's own subject was still loading. */}
+      <ClubProfile clubCode={club.code} />
 
       {/* A real link, not only the back control above it. The breadcrumb says
           this page sits under the club's, and a crawler that is told so should

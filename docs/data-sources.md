@@ -207,6 +207,15 @@ for filtering to Brazil. Not adopted on cost grounds.
 
 ### caRtola — player scouts only, no fixtures, and a week behind
 
+> **Taken up for the scouts, and still rejected for fixtures.** Everything below
+> stands and is the reason the line falls where it does. What changed is that a
+> second question was asked of the same source: not *what was the score*, which
+> this cannot answer, but *how many finalizações* — which nothing else this app
+> can reach answers at all. `src/data/club-scouts.ts` is the result, written by
+> `npm run sync-cartola-scouts` and rendered as the **Perfil** on the Painel do
+> clube. Read **What a season aggregate survives that a scoreline does not**
+> below before extending it.
+
 `github.com/henriquepgomide/caRtola`, MIT. Cartola FC — the fantasy game — 2014
 to 2026, as per-round CSVs. Checked 2026-08-30, at which point it was the only
 free Brazil-focused source found carrying a **2026** directory, which is what
@@ -243,6 +252,58 @@ per club. Run over `rodada-24` minus `rodada-23` against `/api/matches?round=24`
 all **10 of 10** fixtures agreed with football-data. That makes caRtola usable as
 an occasional **offline audit** of the provider's history — never as a source the
 app reads.
+
+#### What a season aggregate survives that a scoreline does not
+
+The two objections above are fatal to one use and not to the other, and the
+difference is worth stating because it is not a softening of either.
+
+**Being a week behind.** A scoreline a week old is *wrong* — the fixture has
+been played and the page says otherwise. A rate measured through rodada 24 is
+still true on the Saturday of rodada 25; it is merely not yet 25 rounds long.
+So the Perfil names the rodada it runs through, the way the clima card names the
+instant it was read, and nothing about it goes stale in the sense a result does.
+
+**Carrying no fixture.** A per-round series would need one, and there is a
+sharper reason not to build one than the missing field. The snapshot is weekly
+and a midweek round falls between two of them, so a round's actions can land in
+a neighbouring window. Measured across 2026 to rodada 24: of 470 club-rounds,
+**441 windows held exactly one match, 19 held none and 10 held two** — 94%. A
+season total is the same either way; a bar per rodada would draw an empty column
+for a club that played. Nothing in this app plots a scout against a rodada, and
+that is the reason.
+
+#### Summing one snapshot by club is wrong, and it looks like data
+
+The counters are **cumulative season totals**, and a counter **follows the
+player through a transfer**. So a club aggregate taken from the latest file
+credits a goalkeeper's whole season to whichever badge he wears today. Measured
+on `rodada-24.csv` against our own seed:
+
+```
+             gols sofridos (seed)   GS summed at r24
+Botafogo              37                    5
+Internacional         28                   39
+Cruzeiro              33                   22
+```
+
+Differencing consecutive snapshots and attributing each increment to the club
+the player was listed at **in that snapshot** fixes it: goals-against then
+matched the seed exactly for 12 of 20 clubs, total error 24 across 611 goals.
+`scripts/sync-cartola-scouts.ts` does that, counts positive increments only (a
+negative one is a player leaving, never an action undone), and **refuses a gap
+in the round files** — differencing rodada 6 against rodada 8 succeeds and
+silently folds two rounds into one window.
+
+**Gols sofridos and gols contra are deliberately not written**, though the
+source carries both. `/api/standings` and `src/data/goals.ts` answer those
+authoritatively and this copy is measurably worse; a second, wronger answer to a
+question already on the page is how the two come to disagree in front of a
+reader. Goals are carried only as the numerator of the conversion rate, which is
+a fact about shooting rather than a scoreline — and the sync gates on them
+staying within a **-2%..15%** band of the seed's own goals-for, which measured
+7.0% short across 2026 (own goals, which the source files under the scorer's
+club, plus players who have left the division).
 
 #### The join is the trap, and it fails silently
 

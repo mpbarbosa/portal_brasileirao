@@ -113,10 +113,16 @@ held at the *end* of each round, so a round is one point and its inside is
 invisible: a club that sat 4º on Saturday night and finished 9º because three
 rivals played on Sunday draws the same segment as one that walked calmly down.
 A **vela** keeps the two apart.
+Beneath the velas it carries the **Perfil**, which is the one thing on the page
+not derived from the campanha.
 _Avoid_: "dashboard" (English, and it promises a grid of panels this page is
 not), "gráfico do clube" (it is one chart among tiles, and the page is named for
-what it is *for*), "estatísticas" (nothing here is a statistic the app does not
-already print somewhere else — it is the same campanha read closer).
+what it is *for*), "estatísticas" (too broad to name anything — the
+**Classificação** is statistics too, and so is a scoreline; say **Perfil** or
+**Campanha** and mean one of them). That last line used to say the page held no
+statistic the app did not already print, which was true until the **Perfil**
+landed and is recorded here rather than quietly deleted: the word is still
+avoided, for a different reason.
 
 **Vela** (and **corpo**, **pavio**):
 One rodada in the **Painel**, drawn as a candle. The **corpo** runs from the
@@ -136,6 +142,33 @@ of the picture is a trap for whoever reads the numbers next; the y axis here is
 inverted and the names say so), "sombra" for the pavio (it reads as a drop
 shadow), "abertura/fechamento" in user-facing copy (market words for a football
 page — the legend says "onde a rodada começou" instead).
+
+**Perfil**:
+The section at the foot of the **Painel** saying what kind of side a club is:
+six rates — finalizações, conversão, desarmes, faltas cometidas, cartões and
+defesas do goleiro — each read against the twenty clubs rather than on its own.
+Modelled as `ClubScouts`, computed by `clubProfile` in `scouts-core.ts` and
+drawn by `ClubProfile`.
+It answers what neither the **Classificação** nor the **Campanha** can. Those
+report where a club has got to; this reports how it plays, and the two come
+apart in the way that is worth looking at — a side 4º em finalizações and 20º em
+conversão has an identity the table can only show the consequence of.
+**A rate alone says nothing**, which is why every row carries its place: 13
+desarmes por jogo is either the most or the least in the division and the number
+cannot tell you which. The bar runs from the division's lowest to its highest
+and the traço marks the mediana, so the mark is a *position* rather than a
+length — and therefore owes no zero, unlike the **barras** of a campanha.
+The numbers are **scouts**, and they come from outside: no provider this app
+reads reports a finalização or a desarme at any tier. They are curated into
+`src/data/club-scouts.ts` from caRtola, a week at a time, so the section names
+the rodada it runs through instead of implying it is live.
+_Avoid_: "scouts" in user-facing copy (Cartola FC jargon, and this is a
+championship companion rather than a fantasy tool — the word is fine in code and
+in the data file, where it names what the source calls them), "estatísticas"
+(the **Painel** entry above says why), "índice"/"nota" (nothing here is scored
+or weighted; every row is a count divided by matches), "ataque"/"defesa" as
+row labels (faltas and cartões are neither, and a heading that sorts six rates
+into two virtues is a judgement the data does not carry).
 
 **Rodada**:
 One matchday of the championship — the set of fixtures sharing a `round` number.
