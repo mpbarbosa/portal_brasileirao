@@ -316,8 +316,15 @@ const LOG_PATH = path.join(import.meta.dirname, "..", "docs", "perfil-ataque.md"
  * A `readFileSync` evaluated at import takes the **whole file** down when the
  * document is missing or renamed — measured rather than reasoned: `pass 0`,
  * `fail 1`, with the reporter naming this test file rather than the document,
- * and the 24 cases above that have nothing to do with the log vanishing with
- * it. Lazily, the same absence is `pass 24`, `fail 2`, naming the document. That is `node:sqlite`'s shape in `openStore`: a static read at import
+ * and every other case in this file — none of which has anything to do with the
+ * log — vanishing with it. Lazily, the same absence fails these two and names
+ * the document.
+ *
+ * **The count that stood here is deliberately gone rather than corrected.** It
+ * was right when written and had a shelf life of one merge: two open PRs were
+ * both adding cases to this very file, so whichever landed first would have made
+ * it wrong with nothing going red. `pass 0` and `fail 1` stay because neither
+ * can move — zero is zero, and one file is one file. That is `node:sqlite`'s shape in `openStore`: a static read at import
  * makes an absent dependency everyone's problem instead of the one caller's.
  *
  * Read twice rather than cached, because two reads of a small file are cheaper
