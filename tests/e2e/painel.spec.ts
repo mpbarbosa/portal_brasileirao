@@ -352,7 +352,7 @@ test.describe("Painel do clube", () => {
   test("the scatter plots the whole division, with this club filled in", async ({ page }) => {
     await openPanel(page);
 
-    const scatter = page.locator("main figure[data-scatter]");
+    const scatter = page.locator('main figure[data-scatter-pair="ataque-defesa"]');
     await expect(scatter).toBeVisible();
     await expect(scatter.locator("circle")).toHaveCount(20);
     // Exactly one, which is what the drawing is for: placing *this* club among
@@ -372,11 +372,11 @@ test.describe("Painel do clube", () => {
     // `toMatch(undefined)` throws rather than failing an assertion, which reads
     // as a broken spec instead of a missing title.
     const titles = await page
-      .locator("main figure[data-scatter] circle title")
+      .locator('main figure[data-scatter-pair="ataque-defesa"] circle title')
       .allTextContents();
     expect(titles.length).toBe(20);
     for (const title of titles) {
-      expect(title).toMatch(/^.+ — [\d,]+ finalizações e [\d,]+ defesas por jogo$/);
+      expect(title).toMatch(/^.+ — [\d,]+ finalizações por jogo e [\d,]+ defesas do goleiro por jogo$/);
     }
     expect(new Set(titles).size).toBe(20);
 
@@ -388,6 +388,35 @@ test.describe("Painel do clube", () => {
     expect(titles.some((title) => title.startsWith(`${name} — `))).toBe(true);
   });
 
+  test("both pairings render, share an x axis and differ on y", async ({ page }) => {
+    await openPanel(page);
+
+    // The page carries two scatters on purpose. The failure this refuses is the
+    // one a shared component invites: a dropped `pair` prop rendering the same
+    // drawing twice, which looks deliberate and is a duplicate.
+    await expect(page.locator("main figure[data-scatter]")).toHaveCount(2);
+
+    const jogo = page.locator('main figure[data-scatter-pair="ataque-defesa"]');
+    const volume = page.locator('main figure[data-scatter-pair="volume-conversao"]');
+    await expect(jogo).toBeVisible();
+    await expect(volume).toBeVisible();
+
+    // Same x, different y — read off the rendered captions rather than the
+    // props, so a component that ignored its `pair` fails here.
+    await expect(jogo).toContainText("Defesas do goleiro por jogo");
+    await expect(volume).toContainText("Conversão");
+    await expect(volume).not.toContainText("Defesas do goleiro");
+    for (const figure of [jogo, volume]) {
+      await expect(figure).toContainText("mais finalizações");
+    }
+
+    // A percentage axis must never be captioned "por jogo" — the bug reads as a
+    // typo and is a claim about what the figure counts.
+    const caption = (await volume.locator("figcaption").innerText()).toLowerCase();
+    expect(caption).toMatch(/\d+% de conversão/);
+    expect(caption).not.toMatch(/% de conversão por jogo/);
+  });
+
   test("no dot is drawn outside the box it is plotted in", async ({ page }) => {
     await openPanel(page);
 
@@ -396,7 +425,7 @@ test.describe("Painel do clube", () => {
     // strip's marker, this one *can* be checked by containment — the assertion
     // runs over all twenty dots, so it reaches the extremes whichever club's
     // panel is open, which is the trap the marker spec fell into.
-    const svg = page.locator("main figure[data-scatter] svg");
+    const svg = page.locator('main figure[data-scatter-pair="ataque-defesa"] svg');
     const box = await svg.boundingBox();
     expect(box).not.toBeNull();
     if (!box) return;
@@ -416,10 +445,13 @@ test.describe("Painel do clube", () => {
     page,
   }) => {
     const name = await openPanel(page);
-    const caption = page.locator("main figure[data-scatter] figcaption");
+    const caption = page.locator('main figure[data-scatter-pair="ataque-defesa"] figcaption');
 
     await expect(caption).toContainText(name);
-    await expect(caption).toHaveText(/finaliza(?:ções)?.*defesas por jogo/);
+    // "defesas do goleiro", not "defesas": the caption is derived from the axis
+    // label now rather than written by hand, so it says the same words as the
+    // label printed directly above the drawing. The two used to differ.
+    await expect(caption).toHaveText(/finalizações por jogo.*defesas do goleiro por jogo/);
     // Descriptive, never a verdict: two rates cannot support one.
     await expect(caption).toHaveText(/jogo (aberto|controlado|recuado|fechado)/);
   });
