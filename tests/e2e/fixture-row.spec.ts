@@ -47,6 +47,42 @@ const openJogos = async (page: Page) => {
   await expect(rows(page).first()).toBeVisible();
 };
 
+/**
+ * Serve the round with every club given a long name.
+ *
+ * **The assertion below is about the row's LAYOUT and was resting on the
+ * season's DATA.** It measures how much room the fixture line could have had,
+ * and the line is content-sized — so it only reaches the cap when the names are
+ * long enough to need it. Round 26 opens with *Bragantino × Bahia*, which is
+ * not, and the spec went red on `main` at 191.125 against a 237.078 threshold
+ * with nothing about the layout having changed. It blocked every deploy, since
+ * `deploy` is `needs: [check, e2e]`.
+ *
+ * Which fixture is first is exactly the "how much curated data exists" this
+ * suite refuses to depend on elsewhere — `openMatchWithoutVideo` in
+ * `match-page.spec.ts` says it plainly: tested by **producing the state that
+ * reaches it** rather than by hoping the season still contains one. The season
+ * rolls forward every week and will supply a short pairing again.
+ *
+ * Every club rather than the first fixture's two, so the helper does not have
+ * to know which fixture the feed puts first — that ordering is
+ * `compareForFeed`'s business and not this spec's.
+ *
+ * Prepared once and fulfilled from memory, never `route.fetch()` per request:
+ * `meu-time.spec.ts` records a proxying handler coming back as something other
+ * than the envelope under the suite's workers, green in isolation.
+ */
+const withLongNames = async (page: Page) => {
+  const body = await (await page.request.get("/api/matches")).json();
+  body.data.clubs = body.data.clubs.map((club: Record<string, unknown>) => ({
+    ...club,
+    shortName: `Associação Atlética ${club.tla}`,
+  }));
+  await page.route("**/api/matches*", (route) =>
+    route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(body) }),
+  );
+};
+
 test.describe("Fixture row", () => {
   test("below sm the chip sits above the fixture line, not beside it", async ({ page }) => {
     // The mechanism, and the whole of what the stacking buys. Stated as a
@@ -68,12 +104,19 @@ test.describe("Fixture row", () => {
       // this test asserted that and failed at 375dp with 266.86 against 309.
       // `items-start` is exactly what stops a flex item stretching on the
       // cross axis, so the line is *content*-sized and only reaches the full
-      // width when the names need it — which is 320dp, not 375dp.
+      // width when the names need it.
       //
       // What separates the two layouts is therefore how much room the line
       // *could* have had: side by side it is capped at the row's content box
       // less the chip and the gap, and stacked it is not capped by the chip at
       // all. `px-4` plus the border is the 34px.
+      //
+      // **The names are supplied rather than borrowed from the season**, which
+      // is what `withLongNames` is for and why this stopped being a spec that
+      // goes red every time the round rolls onto a short pairing. It still
+      // bites: put the row back side by side and the cap returns, whatever the
+      // names are.
+      await withLongNames(page);
       await page.setViewportSize({ width, height: 800 });
       await openJogos(page);
 
