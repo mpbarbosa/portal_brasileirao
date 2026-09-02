@@ -20,19 +20,43 @@ const kickoffLabel = (kickoff: string): string => {
 };
 
 /**
- * Resolve a club code to the name a fixture row should print.
+ * Resolve a club code to the club itself, or to nothing.
  *
  * A `Match` carries codes, never clubs, so every surface that renders a fixture
  * needs this — and it is exported rather than written twice because the
  * fallback chain *is* the logic: the payload's own club list first (which is
- * the only one that names a club the seed snapshot has never heard of), the
- * committed snapshot second, and the bare code last so a row still reads as
- * something rather than as a blank. A second copy that stopped at the snapshot
- * would silently print `1783` for a promoted club.
+ * the only one that holds a club the seed snapshot has never heard of), and the
+ * committed snapshot second.
+ *
+ * It stops there, and `clubNamer` below is what adds the bare code. That split
+ * is the whole reason this exists separately: a **name** can always fall back
+ * to the code, because a row reading `1783` is still a row; a **crest** cannot,
+ * because there is no mark to draw for a club nothing knows about, and an
+ * invented one would be a mark meaning nothing. Callers that want a crest get
+ * `null` and leave the slot empty — the same absence `ClubCrest` already
+ * renders for a crestless club.
+ *
+ * Deliberately *not* `clubsOf` from `match-core.ts`, which resolves both sides
+ * of a match at once and consults **only** the list handed to it. That is right
+ * for a page holding the payload it was rendered from; it is wrong here, where
+ * the snapshot is what names a club during an outage.
+ */
+export const clubResolver = (clubs?: Club[]): ((code: ClubCode) => Club | null) => {
+  const byCode = new Map(clubs?.map((club) => [club.code, club]));
+  return (code) => byCode.get(code) ?? CLUBS_BY_CODE.get(code) ?? null;
+};
+
+/**
+ * Resolve a club code to the name a fixture row should print.
+ *
+ * Built on `clubResolver` rather than repeating its two lookups, so the two
+ * cannot come to disagree about which list wins — a second copy that stopped at
+ * the snapshot would silently print `1783` for a promoted club. The bare code
+ * is this function's own last resort, for the reason given above.
  */
 export const clubNamer = (clubs?: Club[]): ((code: ClubCode) => string) => {
-  const byCode = new Map(clubs?.map((club) => [club.code, club]));
-  return (code) => byCode.get(code)?.shortName ?? CLUBS_BY_CODE.get(code)?.shortName ?? code;
+  const resolve = clubResolver(clubs);
+  return (code) => resolve(code)?.shortName ?? code;
 };
 
 const score = (match: Match): string =>
