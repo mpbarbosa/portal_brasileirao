@@ -25,6 +25,18 @@ percentage or a `Nº` rank anywhere below the first entry heading. Write compari
 instead — *finaliza mais que os dois líderes e converte pior que qualquer um deles*
 rather than two numbers.
 
+**Rule 1 protects against staleness and NOT against misreading, which is a distinction
+that cost a correction to learn.** The rodada-24 entry first read *"nearly the lowest
+volume"* when Coritiba was simply the lowest. That names no figure, it is exactly the
+comparison this rule asks for, and it was wrong — so nothing here can catch it.
+
+What does the work instead is the falsification line each entry ends with. And the
+failure is worth naming precisely, because it does not feel like one: **a hedge is
+normally the safe direction, and here it made the claim less falsifiable.** "Nearly the
+lowest" cannot be refuted by a club overtaking Coritiba; "the lowest" can. Caution that
+buys vagueness is a cost nobody counts, and it is the only defence available against
+the class Rule 1 cannot see.
+
 That constraint turns out to buy something beyond tidiness. A comparison survives a
 re-sync far more often than a figure does: a rate moves every week, while the fact
 that one club out-shoots another and converts worse usually holds for months. It is
@@ -39,6 +51,15 @@ that — it is the origin of most of the stale claims `CLAUDE.md` records. An
 *appended* one obliges verifying nothing, because each entry is a reading of a stated
 rodada rather than a claim about now. Same discipline as the anchored-claim rule
 applied to a document.
+
+**The boundary is PUBLICATION, not merge.** An entry becomes unamendable the moment
+somebody else could have read it and relied on it — which for a branch nobody has
+built on is later than it sounds, and for a sentence quoted to another session is
+earlier. Merging is usually where the two coincide; it is not what makes the rule
+bite. So a known error in an unpublished entry is **fixed in place**, because shipping
+it in order to append a correction below leaves the top of the history permanently
+wrong and merely annotated at the bottom. This is the same axis as the commit-subject
+one: the reading convention, not the medium and not the ref.
 
 **The ordering is enforced; the freshness deliberately is not.**
 `tests/scouts-core.test.ts` asserts the rounds run strictly downward through the
