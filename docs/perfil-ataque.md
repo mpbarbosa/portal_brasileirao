@@ -107,8 +107,8 @@ number. Read apart, the four corners are populated and they describe different t
   Botafogo are the three best converters, and none of them leads the league in
   finalizações — Flamengo sits mid-table on volume while topping conversion outright.
   Whatever separates the leaders here, it is not how often they shoot.
-- **Coritiba is the club to watch, and only this reading names it.** Nearly the lowest
-  volume in the division with one of its best conversions — a small, accurate attack.
+- **Coritiba is the club to watch, and only this reading names it.** The lowest
+  volume in the division — not nearly, the lowest — with one of its best conversions — a small, accurate attack.
   It is invisible in the table, invisible in gols marcados, and invisible on a page
   that reports its rank in each metric separately.
 - **Fluminense is Coritiba inverted.** Near the top of the league in volume, mid-table
