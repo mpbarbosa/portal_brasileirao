@@ -111,6 +111,48 @@ paragraph.
 
 ---
 
+## Rodada 25 — the Coritiba reading survives its first vote, and Vasco takes the lead it did not want
+
+Written 2026-09-02 against `CLUB_SCOUTS_THROUGH_ROUND = 25`. First entry appended
+under Rule 2, and the first test of whether Rule 3 has anything to promote.
+
+**Read the window before the movement.** Only half the division advanced a match in
+this window; the rest carry the same counters they carried last entry. So a club can
+change place here **without having played**, purely because others did, and any
+movement below that is not called out as a club's own is that artefact rather than a
+change in how it plays. This is the first entry able to say that at all, which is
+itself the argument for a log over a single dated document.
+
+- **Coritiba: the reading holds, and on the axis it was written to be tested on.** Last
+  entry recorded what would falsify it — conversion regressing toward the division's
+  middle while volume stayed at the bottom. Neither happened. It is still the lowest
+  volume in the division, and its conversion moved **up** a place rather than back. One
+  vote of the three Rule 3 asks for.
+- **Vasco now leads the division in finalizações, and is still among its worst
+  converters.** Last entry named that shape on Bragantino and Vasco together; this one
+  sharpens it, because the club that took the volume lead is the one that converts
+  worse. The two swapped ends of the volume order without either changing what it is.
+  Internacional stays the floor of conversion, unmoved.
+- **Athletico-PR is the entry's genuine mover.** It climbs into the best converters
+  while staying in the bottom third of volume — which is Coritiba's shape arriving a
+  round later at a bigger club, and the reason to keep watching it rather than to
+  conclude anything now.
+- **Botafogo slipped out of the top three converters** without its volume moving. Last
+  entry named Flamengo, Palmeiras and Botafogo as the three clear converters; that trio
+  is now Flamengo, Palmeiras and Coritiba, which is a sentence the previous entry could
+  not have predicted and the page cannot say.
+- **Nothing moved at the two extremes.** Flamengo keeps conversion outright and does
+  not lead volume; Mirassol is still poor at both, and Internacional still the worst
+  converter. The clubs the last entry called settled stayed settled.
+
+**What would falsify the Coritiba reading from here**, unchanged from last entry
+because changing it after one favourable round is how a test stops being one: its
+conversion regressing toward the division's middle while its volume stays at the
+bottom. Two more entries decide it. Note the honest risk in the other direction too —
+three consecutive confirmations of a club that has played the fewest shots in the
+division is exactly what a lucky small sample also produces, so promotion under Rule 3
+should carry that caveat into whatever `scouts-core.ts` ends up saying.
+
 ## Rodada 24 — two ways to be bad at attacking, and they look nothing alike
 
 First entry. Written 2026-09-02 against `CLUB_SCOUTS_THROUGH_ROUND = 24`, seeded by a
