@@ -29,7 +29,14 @@ const isPlainClick = (event: React.MouseEvent) =>
 function Side({ club, code }: { club: Club | null; code: string }) {
   return (
     <div className="flex min-w-0 flex-1 flex-col items-center gap-1.5 text-center">
-      {club && <ClubCrest club={club} size={40} />}
+      {/* `fallback="mark"` like the club and match pages: at 40px a failed
+          crest can hold its slot with a picture, and this card is the one thing
+          the page exists to show. The *A seguir* and *Últimos resultados* rows
+          below stay on letters — they go through `FixtureSides` at 20px, which
+          is classificação size, where the arch is mush and three letters read.
+          Every crest here at 40px and up takes the mark; every one at 24px and
+          down keeps its letters. */}
+      {club && <ClubCrest club={club} size={40} fallback="mark" />}
       <span className="truncate text-body-medium font-semibold">{club?.shortName ?? code}</span>
     </div>
   );
