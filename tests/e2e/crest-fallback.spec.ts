@@ -45,7 +45,7 @@ const CLUB_ROUTES = ["/api/clubs", "/api/matches", "/api/standings"];
  * monogram branch then renders *nothing at all*. On the match page that is a
  * 56px hole beside the scoreline.
  */
-const withoutCrests = async (page: Page, { stripIdentity = false } = {}) => {
+const withoutCrests = async (page: Page, { stripIdentity = false, goLive = false } = {}) => {
   const walk = (value: unknown): unknown => {
     if (Array.isArray(value)) return value.map(walk);
     if (value === null || typeof value !== "object") return value;
@@ -61,6 +61,19 @@ const withoutCrests = async (page: Page, { stripIdentity = false } = {}) => {
 
   for (const path of CLUB_ROUTES) {
     const body = walk(await (await page.request.get(path)).json());
+
+    // The Ao vivo live card is the one crest slot the snapshot cannot reach:
+    // `src/data/matches.ts` holds no LIVE fixture and the suite boots with
+    // `DISABLE_FOOTBALL_DATA=true`. One SCHEDULED fixture is flipped in the
+    // payload already being prepared, which is `meu-time.spec.ts`'s answer —
+    // the real response with one record changed, so everything the page derives
+    // from it stays coherent.
+    if (goLive && path === "/api/matches") {
+      const matches = (body as unknown as { data: { matches: { status: string }[] } }).data.matches;
+      const target = matches.find((m) => m.status === "SCHEDULED");
+      if (target) Object.assign(target, { status: "LIVE", homeGoals: 1, awayGoals: 0 });
+    }
+
     await page.route(`**${path}*`, (r) =>
       r.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(body) }),
     );
@@ -112,6 +125,29 @@ test("the mark draws where the monogram would have nothing to draw", async ({ pa
   await page.goto("/partida/554977");
 
   await expect(page.locator('main article [data-crest-fallback="mark"]')).toHaveCount(2);
+});
+
+test("Ao vivo: the 40px live card takes the mark, the 20px rows keep letters", async ({
+  page,
+}) => {
+  // Both halves on one page, which is the whole of the scoping decision. The
+  // live card is 40px and can hold a picture; the *A seguir* and *Últimos
+  // resultados* rows below go through `FixtureSides` at 20px, which is
+  // classificação size. Asserting only the first would let someone put the mark
+  // on `FixtureSides` too — and that would carry it onto Jogos, the club page
+  // and the estádio page, none of which was asked for.
+  await withoutCrests(page, { goLive: true });
+  await page.goto("/ao-vivo");
+
+  const live = page.locator('main [data-live-match] [data-crest-fallback="mark"]');
+  await expect(live.first()).toBeVisible();
+  expect(await live.first().evaluate((el) => el.getBoundingClientRect().width)).toBeCloseTo(
+    40,
+    0,
+  );
+
+  // The rows below hold their slots with letters, and no mark reaches them.
+  await expect(page.locator('main [data-crest-fallback="monogram"]').first()).toBeVisible();
 });
 
 test("the classificação keeps its letters — the mark is not legible at 18px", async ({ page }) => {
