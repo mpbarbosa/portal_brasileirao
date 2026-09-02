@@ -308,17 +308,39 @@ test("every club in the division is on the scatter, and finds itself", () => {
  *
  * What survives is what a person can fix in the edit they just made.
  */
-const PERFIL_LOG = readFileSync(
-  path.join(import.meta.dirname, "..", "docs", "perfil-ataque.md"),
-  "utf8",
-);
+const LOG_PATH = path.join(import.meta.dirname, "..", "docs", "perfil-ataque.md");
+
+/**
+ * Read on call, never at module scope.
+ *
+ * A `readFileSync` evaluated at import takes the **whole file** down when the
+ * document is missing or renamed — measured rather than reasoned: `pass 0`,
+ * `fail 1`, with the reporter naming this test file rather than the document,
+ * and the 24 cases above that have nothing to do with the log vanishing with
+ * it. Lazily, the same absence is `pass 24`, `fail 2`, naming the document. That is `node:sqlite`'s shape in `openStore`: a static read at import
+ * makes an absent dependency everyone's problem instead of the one caller's.
+ *
+ * Read twice rather than cached, because two reads of a small file are cheaper
+ * than a cache that reintroduces the coupling it was written to remove.
+ */
+const perfilLog = (): string => {
+  try {
+    return readFileSync(LOG_PATH, "utf8");
+  } catch (cause) {
+    assert.fail(
+      `docs/perfil-ataque.md could not be read (${String(cause)}). It is the ` +
+        `append-only log of Perfil readings; if it was renamed, these two cases move ` +
+        `with it. Only they depend on it — nothing else in this file does.`,
+    );
+  }
+};
 
 /** Every `## Rodada N` heading, in the order the file lists them. */
-const logRounds = (): number[] =>
-  [...PERFIL_LOG.matchAll(/^## Rodada (\d+)\b/gm)].map((match) => Number(match[1]));
+const logRounds = (log: string): number[] =>
+  [...log.matchAll(/^## Rodada (\d+)\b/gm)].map((match) => Number(match[1]));
 
 test("the perfil log is newest-first, and no rodada is written twice", () => {
-  const rounds = logRounds();
+  const rounds = logRounds(perfilLog());
   assert.ok(rounds.length > 0, "docs/perfil-ataque.md has no `## Rodada N` entry at all");
 
   // Strictly descending covers both halves at once: out-of-order and duplicate.
@@ -342,9 +364,10 @@ test("the perfil log restates no figure the page already computes", () => {
   //
   // Scoped to the entries: the rules above them have to be able to quote a
   // shape without tripping their own gate.
-  const firstEntry = PERFIL_LOG.search(/^## Rodada \d+\b/m);
+  const log = perfilLog();
+  const firstEntry = log.search(/^## Rodada \d+\b/m);
   assert.ok(firstEntry >= 0);
-  const entries = PERFIL_LOG.slice(firstEntry);
+  const entries = log.slice(firstEntry);
 
   const banned: [RegExp, string][] = [
     [/\d+(?:[.,]\d+)?\s*%/, "a percentage"],
