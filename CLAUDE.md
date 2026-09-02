@@ -1229,7 +1229,7 @@ would not.**
 **The sitemap is load-bearing, not a nicety.** The round picker is a `<select>`, not a set
 of links, so every round but the current one — and with it nearly every fixture page — has
 no inbound link anywhere on the site. `/sitemap.xml` is the only way a crawler reaches
-them. **463 URLs at full season — count the file rather than this sentence.** It read 442
+them. **488 URLs at full season — count the file rather than this sentence.** It read 442
 for months, and 442 was *correct when written*: the gap is exactly the 19 estádio pages,
 `/jogadores` and `/privacidade`, each of which added itself to the sitemap without touching
 this line. Nothing here went red, because a number in prose has no gate on it — Search
@@ -1237,12 +1237,22 @@ Console is what noticed, reporting 463 páginas encontradas against a paragraph 
 claiming 442. **Adding a section changes this count**, which is the half of the four-file
 rule above that no compiler can hold.
 
+**It has gone stale twice now, and the second time is the sharper lesson.** The repair to
+463 merged on 2026-08-30; on 2026-09-01 the served file was **488**. Twenty of those
+twenty-five are `/painel/<key>` — a section documented under **Routing** below, in a
+sentence that says in its own words "20 more URLs" — so the two paragraphs contradicted
+each other from the day the painel landed, and this count was wrong when it was written
+rather than drifting there afterwards. The remaining five are estádios, 19 to 24, which is
+the ordinary growth the paragraph already anticipates. **A number repaired once is not a
+number that stays repaired.** The rule the whole passage argues for is the one that keeps
+being proved: count the file.
+
 ```sh
 curl -sf https://brasileirao.mpbarbosa.com/sitemap.xml | grep -c '<loc>'
-# 463 = 380 partida + 39 jogos + 20 clube + 19 estadio + 5 standalone
+# 488 = 380 partida + 39 jogos + 24 estadio + 20 painel + 20 clube + 5 standalone
 ```
 
-Either figure is far under the 50,000 limit, so no sitemap index is needed. A
+None of those figures is anywhere near the 50,000 limit, so no sitemap index is needed. A
 finished match takes its kickoff as `lastmod`, because that is when the page stopped
 changing; claiming today's date for a fixture played in April trains a crawler to stop
 believing the field.
