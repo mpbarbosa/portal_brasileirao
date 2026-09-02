@@ -13,7 +13,9 @@ import {
   rankLabel,
   valueLabel,
 } from "@/scouts-core";
-import { CLUB_SCOUTS } from "@/src/data/club-scouts";
+import { lastRoundWithResult } from "@/rank-history-core";
+import { SEED_MATCHES } from "@/src/data/matches";
+import { CLUB_SCOUTS, CLUB_SCOUTS_THROUGH_ROUND } from "@/src/data/club-scouts";
 import { CLUBS } from "@/src/data/clubs";
 import type { ClubScouts } from "@/src/types";
 
@@ -292,6 +294,47 @@ test("every club in the division is on the scatter, and finds itself", () => {
     assert.equal(scatter.points.length, CLUBS.length, club.shortName);
     assert.equal(scatter.points.filter((point) => point.subject).length, 1, club.shortName);
     assert.ok(quadrantLabel(scatter).length > 0, club.shortName);
+  }
+});
+
+test("the counters never reach further than the seed that measured them", () => {
+  // The denominator comes from our own fixture list and the numerators from
+  // caRtola, and the two advance on different schedules. Sync a round the seed
+  // has not recorded and every rate divides by a round too few — measured at
+  // 4.3%–4.5% per club by reproducing the mismatch one round earlier.
+  //
+  // `sync-cartola-scouts.ts` refuses at write time; this catches a file that
+  // got past it, and it is the assertion that would have gone red rather than
+  // the sync's own goals band, which moves the *reassuring* way under exactly
+  // this fault (7.0% -> 3.1%, further inside its -2%..15%).
+  const seedLastRound = lastRoundWithResult(SEED_MATCHES);
+  assert.ok(seedLastRound !== null, "the seed holds no finished match");
+  assert.ok(
+    CLUB_SCOUTS_THROUGH_ROUND <= (seedLastRound ?? 0),
+    `club-scouts covers rodada ${CLUB_SCOUTS_THROUGH_ROUND} but the seed ends at ${seedLastRound}`,
+  );
+});
+
+test("each club's match count is the seed's own, at the round the counters cover", () => {
+  // The other direction, and the one the gate above cannot see: the seed moves
+  // on and nobody re-runs the sync. `rank-history.ts` states that rule in prose
+  // for itself; this is the same rule with something behind it.
+  //
+  // Note it does NOT cover the sync-against-a-lagging-seed case, because there
+  // both sides read the same lagging seed and agree with each other. That is
+  // what the test above and the script's own refusal are for. Saying so here
+  // because two data tests in one file read as belt and braces, and these two
+  // catch opposite faults.
+  for (const entry of CLUB_SCOUTS) {
+    const played = SEED_MATCHES.filter(
+      (match) =>
+        match.round <= CLUB_SCOUTS_THROUGH_ROUND &&
+        match.status === "FINISHED" &&
+        match.homeGoals !== null &&
+        match.awayGoals !== null &&
+        (match.homeCode === entry.clubCode || match.awayCode === entry.clubCode),
+    ).length;
+    assert.equal(entry.matches, played, `${entry.clubCode} counts ${entry.matches}, seed says ${played}`);
   }
 });
 

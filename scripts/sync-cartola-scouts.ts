@@ -54,6 +54,7 @@
 import { writeFileSync } from "node:fs";
 import path from "node:path";
 
+import { lastRoundWithResult } from "@/rank-history-core";
 import { CLUBS } from "@/src/data/clubs";
 import { SEED_MATCHES, SNAPSHOT_DATE } from "@/src/data/matches";
 import type { ClubScouts } from "@/src/types";
@@ -332,6 +333,37 @@ function playedThrough(clubCode: string, round: number): number {
  * the division, which measured 7% across the 2026 season.
  */
 function validate(totals: Map<string, ClubScouts>, rounds: number): void {
+  // **The seed must reach at least as far as caRtola does, and this is the one
+  // refusal the goals band cannot stand in for.**
+  //
+  // The numerators come from caRtola and the denominator from our own fixture
+  // list, and the two advance on different schedules — caRtola weekly, the seed
+  // whenever somebody runs `sync-seed-data`. Sync a round the seed has not
+  // recorded and every rate is divided by a round too few.
+  //
+  // Measured by reproducing the mismatch one round earlier, against data
+  // already on disk (scouts through 24 over a seed through 23): **every club's
+  // finalizações inflated, 4.3%–4.5%, mean 4.4%**. Nothing about the output
+  // looks wrong — twenty plausible rates, the right ranks, six rows.
+  //
+  // And the goals band moves the *reassuring* way, which is why this cannot be
+  // left to it: the scout total rises while the seed total does not, so the
+  // shortfall goes 7.0% -> 3.1% — further inside -2%..15%. A gate that reports
+  // more comfortably as the thing it guards gets worse is not a gate.
+  //
+  // The reverse is fine and is not refused: a seed *ahead* of caRtola still
+  // counts only rounds 1..`rounds`, because `playedThrough` bounds on the round
+  // rather than on the snapshot date.
+  const seedLastRound = lastRoundWithResult(SEED_MATCHES);
+  if (seedLastRound === null || seedLastRound < rounds) {
+    throw new Error(
+      `caRtola publishes rodada ${rounds} but the seed's last round with a ` +
+        `result is ${seedLastRound ?? "none"} (snapshot ${SNAPSHOT_DATE}). ` +
+        `Every rate would divide by a round too few and inflate by roughly 4%. ` +
+        `Run \`npx tsx scripts/sync-seed-data.ts\` and \`npm run sync-rank-history\` first.`,
+    );
+  }
+
   const expected = CLUBS.length;
   if (totals.size !== expected) {
     throw new Error(`Got ${totals.size} clubs, expected ${expected}.`);
