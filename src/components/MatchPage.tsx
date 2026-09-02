@@ -123,7 +123,7 @@ function Side({ club, code, onNavigate }: { club: Club | null; code: string; onN
 
   return (
     <div className="flex min-w-0 flex-1 flex-col items-center gap-2 text-center">
-      {club && <ClubCrest club={club} size={56} />}
+      {club && <ClubCrest club={club} size={56} fallback="mark" />}
       {club ? (
         <a
           href={formatRoute({ section: "clube", key: clubKey(club) })}

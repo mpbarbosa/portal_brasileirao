@@ -38,11 +38,24 @@
  * holds the SVGs to it by reading them off disk.
  */
 
+import type { CSSProperties } from "react";
+
 import { BRAND_MARK_PATH, BRAND_MARK_VIEWBOX } from "@/brand-core";
 
 interface BrandMarkProps {
   /** Tailwind classes for size and colour; the path inherits `currentColor`. */
   className?: string;
+  /**
+   * Inline size, for a caller whose dimension is a runtime number.
+   *
+   * `ClubCrest` is the one: its `size` is a prop, so the mark's box is computed
+   * rather than chosen, and **Tailwind cannot express it** — class names are
+   * extracted by scanning source text, so `w-[${n}px]` generates no CSS at all.
+   * That is the same mechanism `interaction.ts` records for
+   * `hover:bg-${role}/8`. Every other call site sizes with `className` and
+   * should keep doing so.
+   */
+  style?: CSSProperties;
 }
 
 /**
@@ -50,11 +63,12 @@ interface BrandMarkProps {
  * Brasileirão", so a label here would have a screen reader say the name twice —
  * the rule `SectionIcons` follows for the same reason.
  */
-export function BrandMark({ className }: BrandMarkProps) {
+export function BrandMark({ className, style }: BrandMarkProps) {
   return (
     <svg
       viewBox={BRAND_MARK_VIEWBOX}
       className={className}
+      style={style}
       fill="currentColor"
       aria-hidden
       focusable={false}
