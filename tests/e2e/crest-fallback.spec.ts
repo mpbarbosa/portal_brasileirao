@@ -79,6 +79,22 @@ test("the club page holds a missing crest with the mark", async ({ page }) => {
   await expect(page.locator("main img[src*='crests.football-data.org']")).toHaveCount(0);
 });
 
+test("the painel holds a missing crest the same way the club page does", async ({
+  page,
+}) => {
+  // The club page is the only link to this one, and both draw the same 44px
+  // club header — so holding a missing crest two different ways one click apart
+  // reads as a bug. #305 shipped with them disagreeing, deliberately and
+  // briefly; this is the case that stops it happening again.
+  await withoutCrests(page);
+  await page.goto("/painel/palmeiras");
+
+  const held = page.locator('main [data-crest-fallback="mark"]');
+  await expect(held).toHaveCount(1);
+  expect(await held.evaluate((el) => el.getBoundingClientRect().width)).toBeCloseTo(44, 0);
+  await expect(page.locator('main [data-crest-fallback="monogram"]')).toHaveCount(0);
+});
+
 test("the match page holds both missing crests with the mark", async ({ page }) => {
   await withoutCrests(page);
   await page.goto("/partida/554977");
