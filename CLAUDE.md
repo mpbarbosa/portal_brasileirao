@@ -2174,14 +2174,61 @@ git reflog show <branch> --format='%gs' | sed 's/:.*//'
 ```
 
 `branch` alone is unstarted. A `commit` with nothing above it landed. A `merge`
-means the branch only followed `main`. A `reset` above a `commit` means somebody
-threw work away, and `--is-ancestor` will still say yes.
+means the branch only followed `main`. A `reset` above a `commit` means the ref
+was **moved off a commit it held** — read on, because that is not the same claim
+as *work was thrown away*.
+
+**`reset` above `commit` does NOT establish that work was discarded, and no
+git-side test can establish that it was.** The same shape is written by a reset
+*forward* — `git reset --hard` back to a commit you still hold, which is how
+anybody redoes a botched rebase — and an ordinary **rebase** produces the same
+false answer with no `reset` in the reflog at all. Built as a fixture, branches
+created before `main` advanced, per the fixture rule below:
+
+    branch      reflog operations                what really happened
+    resetaway   reset, commit, branch            held work, discarded
+    redone      reset, commit, commit, branch    held work, redone, landed
+    rebased     rebase (finish), commit, branch  held work, rebased, landed
+
+    test                                resetaway  redone   rebased
+    --is-ancestor <tip> main                yes       yes      yes
+    every reflog commit reachable            no        no       no
+    rev-list --count main..<branch>           0         0        0
+
+**All three tests answer identically for all three branches.** Ancestry of the
+*tip* cannot separate them because a discarded branch is reset **to** `main`,
+so its tip is trivially an ancestor. And checking whether the reflog's own
+commits survive fails the other way: a rebase orphans the pre-rebase hashes, so
+a branch whose work landed in full reports unreachable commits exactly as a
+discard does. Measured on a real branch as well as the fixture —
+`worktree-scouts-round-25` merged as `4e0f926` while `fae8a05` and `e6a625a`,
+its own pre-rebase commits, are not ancestors of `main`.
+
+**What settles it is outside git**, because the reflog records what happened to
+the ref and never *why*. Ask whether the branch's pull request merged:
+
+```sh
+gh pr list --head <branch> --state merged --json number,mergeCommit
+```
+
+One row and a merge commit is *landed*; zero rows on a branch that was pushed is
+*not*. Failing that, look for the content on `main` rather than for the commit.
+
+**And read the direction this fails in before treating it as urgent: it is a
+false report, not lost work.** Every row of the table is `count 0`, and a
+session that believes work was discarded deletes the branch anyway — on that
+belief there is nothing left to save. What the misreading costs is telling
+somebody a branch's work was thrown away when it shipped, and whatever gets
+needlessly redone on the strength of that. Say *the ref was moved and I could
+not tell which* rather than guessing either way.
 
 **Read it on the topic branch you are about to delete, never on `main`.** A
 topic branch's reflog is three or four entries and the shape is legible at a
 glance; `main` here carries `commit`, `merge`, `rebase (finish)`, `pull
---ff-only` *and* `reset` accumulated over months, so the same command answers
-"somebody threw work away" about a branch nobody has ever abandoned. The rule is
+--ff-only` *and* `reset` accumulated over months, so the same command shows a
+`reset` above a `commit` on a branch nobody has ever abandoned — and a reader
+applying the shorthand this section has just spent four paragraphs qualifying
+will call that discarded work. The rule is
 scoped to the question it serves — *may I delete this branch, and did its work
 land* — and that question is never asked about `main`.
 
