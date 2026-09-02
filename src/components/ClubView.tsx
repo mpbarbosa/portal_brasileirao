@@ -208,7 +208,7 @@ export function ClubView({
       </button>
 
       <header className="mt-3 flex items-center gap-3">
-        <ClubCrest club={club} size={44} />
+        <ClubCrest club={club} size={44} fallback="mark" />
         {/* `min-w-0` on the growing half, so the truncating lines inside it
             shorten instead of pushing the control off the row. */}
         <div className="min-w-0 grow">
