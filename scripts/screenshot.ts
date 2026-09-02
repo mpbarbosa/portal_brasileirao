@@ -293,12 +293,28 @@ const fullPage = !mobile && route === "/";
  * whole set: five of the eight sit above 1065 today, where the table showed one.
  * None of those four had any reason to open this comment, which is the real
  * lesson — a claim that produces no work when it holds is never exercised.
+ * Measured on one route, by reading the height out of every committed revision
+ * of `ao-vivo-light.png`: its 970 was last true at `50eee58` (2026-08-29) and
+ * first wrong at `f863ea3` the same day. Across the **ten** re-shoots since, the
+ * crop moved **five** times — 998.0, 997.3, 1057.3, 1027.3, 1083.3 — by several
+ * different sessions, and not one of them opened this comment.
  *
  * **Re-derive instead; the evidence is in the repository and cannot go stale.**
- * Every committed PNG's own height over the 1.5 device scale IS the crop this
- * value produced:
+ * Every **crop-bound desktop** PNG's height over the 1.5 device scale IS the
+ * crop this value produced:
  *
  *     file docs/screenshots/*-light.png      # height / 1.5 = the crop
+ *
+ * **That glob catches ten files and the rule holds for eight**, so the two
+ * exclusions are named here rather than left for the reader to notice — one of
+ * them lies quietly. `classificacao` takes the `fullPage` branch
+ * (`!mobile && route === "/"`), so its 2162 is a whole page and not a crop at
+ * all; that one is obvious. `classificacao-mobile` is the trap:
+ * `deviceScaleFactor` is `mobile ? 2 : 1.5`, so dividing its 1624 by 1.5 yields
+ * **1082.7** — which sits between ao-vivo's 1083.3 and 554977's 1082.0 and reads
+ * as a perfectly ordinary crop height. The true figure is 812, the mobile
+ * viewport. The `file` output carries the tell if you know to look for it: the
+ * eight are **1440** wide and the mobile pair **750**.
  *
  * The rule the table was evidence for is what survived, and it has outlived
  * three layouts: raising this too far silently pulls *other* pages past their
