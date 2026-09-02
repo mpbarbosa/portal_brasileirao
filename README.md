@@ -38,16 +38,16 @@ below 360dp the active indicator narrows rather than let the last destination fa
 
 *Ao vivo, light and dark — what is being played now, what is next, and what just finished.
 Matches in progress get a card each rather than a row, so simultaneous kickoffs are all
-visible at once — the shots above caught one being played, which earlier sets never did.
-Between rounds "Agora" answers in a sentence rather than vanishing, which is the more common
+visible at once. These shots caught none being played, which is the ordinary state:
+between rounds "Agora" answers in a sentence rather than vanishing, which is the more common
 state and the reason it is written as a sentence at all. It is the only page that
 refetches on its own. There is deliberately no match minute: the provider reports a status
 and a score and never an elapsed clock, so the page says **bola rolando** rather than
 guessing a number.*
 
-![Página do clube Palmeiras no tema claro: escudo, o técnico Abel Ferreira, o endereço da sede — com um alfinete, que abre o endereço no mapa —, site oficial, perfil no Instagram, hino do clube e artigo na Wikipédia; à direita, o botão Seguir, que marca o clube como o time do leitor; os números da temporada (1º lugar, 52 pontos, 25 jogos, saldo +24 e 69% de aproveitamento); ao lado do título Campanha, um botão oferece vê-la em barras em vez da linha, e abaixo o gráfico da campanha do 11º lugar na 1ª rodada ao 1º na 25ª; sob ele, uma faixa Painel do clube, “Cada rodada em velas: onde começou, onde terminou e quanto oscilou”, que leva a essa página; os últimos cinco resultados, o próximo jogo — Botafogo × Palmeiras, domingo 06/09 às 18:30, marcado como A realizar e com as marcas do Premiere, da Record, do YouTube e da CazéTV — e os artilheiros do clube, José Manuel López com 8 gols e Mauricio com 7.](docs/screenshots/clube-palmeiras-light.png)
+![Página do clube Palmeiras no tema claro: escudo, o técnico Abel Ferreira, o endereço da sede — com um alfinete, que abre o endereço no mapa —, site oficial, perfil no Instagram, hino do clube e artigo na Wikipédia; à direita, o botão Seguir, que marca o clube como o time do leitor; os números da temporada (1º lugar, 52 pontos, 25 jogos, saldo +24 e 69% de aproveitamento); logo abaixo, uma faixa Painel do clube, “A campanha inteira: onde cada rodada terminou e o que houve dentro dela”, que leva a essa página — a própria campanha não é desenhada aqui, mudou-se para o painel; os últimos cinco resultados, o próximo jogo — Botafogo × Palmeiras, domingo 06/09 às 18:30, marcado como A realizar e com as marcas do Premiere, da Record, do YouTube e da CazéTV —, os artilheiros do clube, José Manuel López com 8 gols e Mauricio com 7, e o começo dos Jogos disputados: Mirassol 1 × 1 Palmeiras a 30/08, com a marca do prime video, e Palmeiras 4 × 1 Vasco da Gama a 23/08, com as da tvglobo e do Premiere.](docs/screenshots/clube-palmeiras-light.png)
 
-![A mesma página do clube Palmeiras no tema escuro: os mesmos escudo, técnico, endereço da sede com o seu alfinete, quatro links, o mesmo botão Seguir, números da temporada, o mesmo botão que troca a campanha para barras, gráfico da campanha, a mesma faixa do Painel do clube e o mesmo próximo jogo, com as marcas das emissoras mantendo o fundo claro para continuarem legíveis.](docs/screenshots/clube-palmeiras-dark.png)
+![A mesma página do clube Palmeiras no tema escuro: os mesmos escudo, técnico, endereço da sede com o seu alfinete, quatro links, o mesmo botão Seguir e os mesmos números da temporada; a mesma faixa do Painel do clube, igualmente sem gráfico da campanha acima dela; os mesmos últimos resultados, o mesmo próximo jogo, os mesmos artilheiros e os mesmos dois primeiros jogos disputados, com as marcas das emissoras mantendo o fundo claro para continuarem legíveis.](docs/screenshots/clube-palmeiras-dark.png)
 
 ![Página de jogos no tema claro: o seletor de rodada na 4ª — a rodada mais antiga que ainda tem jogo por disputar, e por isso a que a página abre — e os jogos dela, todos os que cabem no enquadramento marcados Encerrado: entre eles Bragantino 1 × 1 Athletico-PR, Coritiba 0 × 1 São Paulo, Cruzeiro 1 × 1 Corinthians, Grêmio 2 × 1 Atlético-MG e Palmeiras 2 × 1 Fluminense, cada um com o placar no próprio título, a data, o horário e as marcas das emissoras que o transmitiram. Os dois últimos do recorte destoam nas datas — Bahia 2 × 0 Chapecoense a 17/07 e Botafogo 0 × 0 Vitória a 23/07, contra o fim de fevereiro dos outros — porque foram adiados e jogados meses depois; e o décimo jogo da rodada, Flamengo × Mirassol, é o que ainda falta disputar e fica abaixo do recorte.](docs/screenshots/jogos-light.png)
 
@@ -98,15 +98,14 @@ documents the árbitro. Where upstream names nobody the line is absent rather th
 is the common case at 223 of 380.*
 
 *A club page, in both themes. The **Painel do clube** row opens the club's campanha —
-the line tracing where it sat after every round, and beneath it a candle per rodada —
-and the marks under each fixture say which broadcaster showed it. **These two images
-predate that move** and still show the campanha on the club page itself; the alt text
-describes what they contain, which is the point of alt text, and they are re-shot from
-production rather than edited here. The marks keep a light backing
+the line tracing where it sat after every round, and beneath it a candle per rodada — and
+the marks under each fixture say which broadcaster showed it. The campanha is not drawn
+here: moving it let **Jogos disputados** into the frame, which is what these two images
+now reach.* The marks keep a light backing
 in both themes on purpose — Globo's circle and the Premiere wordmark are dark artwork on a
 transparent ground, and they vanish against a dark page without it.*
 
-![Página do estádio Maracanã no tema claro: o nome popular em destaque, "Rio de Janeiro – RJ" abaixo, o nome oficial "Estádio Jornalista Mário Filho" e uma ligação para o artigo na Wikipédia; uma fotografia aérea do estádio ao entardecer, iluminado, com a cidade e os morros do Rio ao fundo, e logo abaixo a linha de crédito com o nome do fotógrafo e a licença; dois números lado a lado — capacidade de 78.838 e inaugurado em 1950; os mandantes Fluminense, Flamengo e Vasco da Gama, cada um com escudo e ligação para a sua página; e o clima no estádio, com um ícone de nuvem, 27 °C, “Parcialmente nublado”, a sensação de 30 °C, a umidade de 70% e o vento de 10 km/h ao lado, e sob o cartão a hora da leitura e a fonte, o Open-Meteo.](docs/screenshots/estadio-maracana-light.png)
+![Página do estádio Maracanã no tema claro: o nome popular em destaque, "Rio de Janeiro – RJ" abaixo, o nome oficial "Estádio Jornalista Mário Filho" e uma ligação para o artigo na Wikipédia; uma fotografia aérea do estádio ao entardecer, iluminado, com a cidade e os morros do Rio ao fundo, e logo abaixo a linha de crédito com o nome do fotógrafo e a licença; dois números lado a lado — capacidade de 78.838 e inaugurado em 1950; os mandantes Fluminense, Flamengo e Vasco da Gama, cada um com escudo e ligação para a sua página; e o clima no estádio, com um ícone de chuva, 21 °C, “Garoa fraca”, a sensação de 22 °C, a umidade de 95% e o vento de 21 km/h ao lado, e sob o cartão a hora da leitura — 21:46 — e a fonte, o Open-Meteo.](docs/screenshots/estadio-maracana-light.png)
 
 ![A mesma página do estádio no tema escuro, com a mesma fotografia aérea e a mesma linha de crédito, o mesmo nome popular e oficial, a mesma capacidade e ano de inauguração, os mesmos três mandantes e o mesmo cartão do clima com a hora da leitura.](docs/screenshots/estadio-maracana-dark.png)
 
