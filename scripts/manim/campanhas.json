@@ -1,0 +1,712 @@
+{
+  "snapshot": "2026-09-02",
+  "clubs": [
+    {
+      "code": "1769",
+      "name": "Palmeiras",
+      "tla": "PAL",
+      "rounds": [
+        {
+          "round": 1,
+          "position": 11,
+          "points": 1,
+          "played": 1,
+          "match": {
+            "opponent": "Atlético-MG",
+            "opponentTla": "CAM",
+            "home": false,
+            "goalsFor": 2,
+            "goalsAgainst": 2,
+            "result": "E"
+          }
+        },
+        {
+          "round": 2,
+          "position": 2,
+          "points": 4,
+          "played": 2,
+          "match": {
+            "opponent": "Vitória",
+            "opponentTla": "VIT",
+            "home": true,
+            "goalsFor": 5,
+            "goalsAgainst": 1,
+            "result": "V"
+          }
+        },
+        {
+          "round": 3,
+          "position": 1,
+          "points": 7,
+          "played": 3,
+          "match": {
+            "opponent": "Internacional",
+            "opponentTla": "SCI",
+            "home": false,
+            "goalsFor": 3,
+            "goalsAgainst": 1,
+            "result": "V"
+          }
+        },
+        {
+          "round": 4,
+          "position": 1,
+          "points": 10,
+          "played": 4,
+          "match": {
+            "opponent": "Fluminense",
+            "opponentTla": "FLU",
+            "home": true,
+            "goalsFor": 2,
+            "goalsAgainst": 1,
+            "result": "V"
+          }
+        },
+        {
+          "round": 5,
+          "position": 3,
+          "points": 10,
+          "played": 5,
+          "match": {
+            "opponent": "Vasco da Gama",
+            "opponentTla": "VAS",
+            "home": false,
+            "goalsFor": 1,
+            "goalsAgainst": 2,
+            "result": "D"
+          }
+        },
+        {
+          "round": 6,
+          "position": 3,
+          "points": 13,
+          "played": 6,
+          "match": {
+            "opponent": "Mirassol",
+            "opponentTla": "MIR",
+            "home": true,
+            "goalsFor": 1,
+            "goalsAgainst": 0,
+            "result": "V"
+          }
+        },
+        {
+          "round": 7,
+          "position": 2,
+          "points": 16,
+          "played": 7,
+          "match": {
+            "opponent": "Botafogo",
+            "opponentTla": "BOT",
+            "home": true,
+            "goalsFor": 2,
+            "goalsAgainst": 1,
+            "result": "V"
+          }
+        },
+        {
+          "round": 8,
+          "position": 1,
+          "points": 19,
+          "played": 8,
+          "match": {
+            "opponent": "São Paulo",
+            "opponentTla": "PAU",
+            "home": false,
+            "goalsFor": 1,
+            "goalsAgainst": 0,
+            "result": "V"
+          }
+        },
+        {
+          "round": 9,
+          "position": 1,
+          "points": 22,
+          "played": 9,
+          "match": {
+            "opponent": "Grêmio",
+            "opponentTla": "FBP",
+            "home": true,
+            "goalsFor": 2,
+            "goalsAgainst": 1,
+            "result": "V"
+          }
+        },
+        {
+          "round": 10,
+          "position": 1,
+          "points": 25,
+          "played": 10,
+          "match": {
+            "opponent": "Bahia",
+            "opponentTla": "BAH",
+            "home": false,
+            "goalsFor": 2,
+            "goalsAgainst": 1,
+            "result": "V"
+          }
+        },
+        {
+          "round": 11,
+          "position": 1,
+          "points": 26,
+          "played": 11,
+          "match": {
+            "opponent": "Corinthians",
+            "opponentTla": "COR",
+            "home": false,
+            "goalsFor": 0,
+            "goalsAgainst": 0,
+            "result": "E"
+          }
+        },
+        {
+          "round": 12,
+          "position": 1,
+          "points": 29,
+          "played": 12,
+          "match": {
+            "opponent": "Athletico-PR",
+            "opponentTla": "CAP",
+            "home": true,
+            "goalsFor": 1,
+            "goalsAgainst": 0,
+            "result": "V"
+          }
+        },
+        {
+          "round": 13,
+          "position": 1,
+          "points": 32,
+          "played": 13,
+          "match": {
+            "opponent": "Bragantino",
+            "opponentTla": "RBB",
+            "home": false,
+            "goalsFor": 1,
+            "goalsAgainst": 0,
+            "result": "V"
+          }
+        },
+        {
+          "round": 14,
+          "position": 1,
+          "points": 33,
+          "played": 14,
+          "match": {
+            "opponent": "Santos",
+            "opponentTla": "SAN",
+            "home": true,
+            "goalsFor": 1,
+            "goalsAgainst": 1,
+            "result": "E"
+          }
+        },
+        {
+          "round": 15,
+          "position": 1,
+          "points": 34,
+          "played": 15,
+          "match": {
+            "opponent": "Clube do Remo",
+            "opponentTla": "CRE",
+            "home": false,
+            "goalsFor": 1,
+            "goalsAgainst": 1,
+            "result": "E"
+          }
+        },
+        {
+          "round": 16,
+          "position": 1,
+          "points": 35,
+          "played": 16,
+          "match": {
+            "opponent": "Cruzeiro",
+            "opponentTla": "CRU",
+            "home": true,
+            "goalsFor": 1,
+            "goalsAgainst": 1,
+            "result": "E"
+          }
+        },
+        {
+          "round": 17,
+          "position": 1,
+          "points": 38,
+          "played": 17,
+          "match": {
+            "opponent": "Flamengo",
+            "opponentTla": "FLA",
+            "home": false,
+            "goalsFor": 3,
+            "goalsAgainst": 0,
+            "result": "V"
+          }
+        },
+        {
+          "round": 18,
+          "position": 1,
+          "points": 41,
+          "played": 18,
+          "match": {
+            "opponent": "Chapecoense",
+            "opponentTla": "CHA",
+            "home": true,
+            "goalsFor": 1,
+            "goalsAgainst": 0,
+            "result": "V"
+          }
+        },
+        {
+          "round": 19,
+          "position": 1,
+          "points": 44,
+          "played": 19,
+          "match": {
+            "opponent": "Coritiba",
+            "opponentTla": "COR",
+            "home": false,
+            "goalsFor": 3,
+            "goalsAgainst": 1,
+            "result": "V"
+          }
+        },
+        {
+          "round": 20,
+          "position": 1,
+          "points": 44,
+          "played": 20,
+          "match": {
+            "opponent": "Atlético-MG",
+            "opponentTla": "CAM",
+            "home": true,
+            "goalsFor": 1,
+            "goalsAgainst": 2,
+            "result": "D"
+          }
+        },
+        {
+          "round": 21,
+          "position": 1,
+          "points": 47,
+          "played": 21,
+          "match": {
+            "opponent": "Vitória",
+            "opponentTla": "VIT",
+            "home": false,
+            "goalsFor": 4,
+            "goalsAgainst": 0,
+            "result": "V"
+          }
+        },
+        {
+          "round": 22,
+          "position": 1,
+          "points": 48,
+          "played": 22,
+          "match": {
+            "opponent": "Internacional",
+            "opponentTla": "SCI",
+            "home": true,
+            "goalsFor": 0,
+            "goalsAgainst": 0,
+            "result": "E"
+          }
+        },
+        {
+          "round": 23,
+          "position": 1,
+          "points": 48,
+          "played": 23,
+          "match": {
+            "opponent": "Fluminense",
+            "opponentTla": "FLU",
+            "home": false,
+            "goalsFor": 2,
+            "goalsAgainst": 3,
+            "result": "D"
+          }
+        },
+        {
+          "round": 24,
+          "position": 1,
+          "points": 51,
+          "played": 24,
+          "match": {
+            "opponent": "Vasco da Gama",
+            "opponentTla": "VAS",
+            "home": true,
+            "goalsFor": 4,
+            "goalsAgainst": 1,
+            "result": "V"
+          }
+        },
+        {
+          "round": 25,
+          "position": 1,
+          "points": 52,
+          "played": 25,
+          "match": {
+            "opponent": "Mirassol",
+            "opponentTla": "MIR",
+            "home": false,
+            "goalsFor": 1,
+            "goalsAgainst": 1,
+            "result": "E"
+          }
+        }
+      ]
+    },
+    {
+      "code": "1783",
+      "name": "Flamengo",
+      "tla": "FLA",
+      "rounds": [
+        {
+          "round": 1,
+          "position": 13,
+          "points": 0,
+          "played": 1,
+          "match": {
+            "opponent": "São Paulo",
+            "opponentTla": "PAU",
+            "home": false,
+            "goalsFor": 1,
+            "goalsAgainst": 2,
+            "result": "D"
+          }
+        },
+        {
+          "round": 2,
+          "position": 15,
+          "points": 1,
+          "played": 2,
+          "match": {
+            "opponent": "Internacional",
+            "opponentTla": "SCI",
+            "home": true,
+            "goalsFor": 1,
+            "goalsAgainst": 1,
+            "result": "E"
+          }
+        },
+        {
+          "round": 3,
+          "position": 11,
+          "points": 4,
+          "played": 3,
+          "match": {
+            "opponent": "Vitória",
+            "opponentTla": "VIT",
+            "home": false,
+            "goalsFor": 2,
+            "goalsAgainst": 1,
+            "result": "V"
+          }
+        },
+        {
+          "round": 4,
+          "position": 12,
+          "points": 4,
+          "played": 3,
+          "match": null
+        },
+        {
+          "round": 5,
+          "position": 7,
+          "points": 7,
+          "played": 4,
+          "match": {
+            "opponent": "Cruzeiro",
+            "opponentTla": "CRU",
+            "home": true,
+            "goalsFor": 2,
+            "goalsAgainst": 0,
+            "result": "V"
+          }
+        },
+        {
+          "round": 6,
+          "position": 5,
+          "points": 10,
+          "played": 5,
+          "match": {
+            "opponent": "Botafogo",
+            "opponentTla": "BOT",
+            "home": false,
+            "goalsFor": 3,
+            "goalsAgainst": 0,
+            "result": "V"
+          }
+        },
+        {
+          "round": 7,
+          "position": 4,
+          "points": 13,
+          "played": 6,
+          "match": {
+            "opponent": "Clube do Remo",
+            "opponentTla": "CRE",
+            "home": true,
+            "goalsFor": 3,
+            "goalsAgainst": 0,
+            "result": "V"
+          }
+        },
+        {
+          "round": 8,
+          "position": 6,
+          "points": 14,
+          "played": 7,
+          "match": {
+            "opponent": "Corinthians",
+            "opponentTla": "COR",
+            "home": false,
+            "goalsFor": 1,
+            "goalsAgainst": 1,
+            "result": "E"
+          }
+        },
+        {
+          "round": 9,
+          "position": 6,
+          "points": 14,
+          "played": 8,
+          "match": {
+            "opponent": "Bragantino",
+            "opponentTla": "RBB",
+            "home": false,
+            "goalsFor": 0,
+            "goalsAgainst": 3,
+            "result": "D"
+          }
+        },
+        {
+          "round": 10,
+          "position": 5,
+          "points": 17,
+          "played": 9,
+          "match": {
+            "opponent": "Santos",
+            "opponentTla": "SAN",
+            "home": true,
+            "goalsFor": 3,
+            "goalsAgainst": 1,
+            "result": "V"
+          }
+        },
+        {
+          "round": 11,
+          "position": 3,
+          "points": 20,
+          "played": 10,
+          "match": {
+            "opponent": "Fluminense",
+            "opponentTla": "FLU",
+            "home": false,
+            "goalsFor": 2,
+            "goalsAgainst": 1,
+            "result": "V"
+          }
+        },
+        {
+          "round": 12,
+          "position": 2,
+          "points": 23,
+          "played": 11,
+          "match": {
+            "opponent": "Bahia",
+            "opponentTla": "BAH",
+            "home": true,
+            "goalsFor": 2,
+            "goalsAgainst": 0,
+            "result": "V"
+          }
+        },
+        {
+          "round": 13,
+          "position": 2,
+          "points": 26,
+          "played": 12,
+          "match": {
+            "opponent": "Atlético-MG",
+            "opponentTla": "CAM",
+            "home": false,
+            "goalsFor": 4,
+            "goalsAgainst": 0,
+            "result": "V"
+          }
+        },
+        {
+          "round": 14,
+          "position": 2,
+          "points": 27,
+          "played": 13,
+          "match": {
+            "opponent": "Vasco da Gama",
+            "opponentTla": "VAS",
+            "home": true,
+            "goalsFor": 2,
+            "goalsAgainst": 2,
+            "result": "E"
+          }
+        },
+        {
+          "round": 15,
+          "position": 2,
+          "points": 30,
+          "played": 14,
+          "match": {
+            "opponent": "Grêmio",
+            "opponentTla": "FBP",
+            "home": false,
+            "goalsFor": 1,
+            "goalsAgainst": 0,
+            "result": "V"
+          }
+        },
+        {
+          "round": 16,
+          "position": 2,
+          "points": 31,
+          "played": 15,
+          "match": {
+            "opponent": "Athletico-PR",
+            "opponentTla": "CAP",
+            "home": false,
+            "goalsFor": 1,
+            "goalsAgainst": 1,
+            "result": "E"
+          }
+        },
+        {
+          "round": 17,
+          "position": 2,
+          "points": 31,
+          "played": 16,
+          "match": {
+            "opponent": "Palmeiras",
+            "opponentTla": "PAL",
+            "home": true,
+            "goalsFor": 0,
+            "goalsAgainst": 3,
+            "result": "D"
+          }
+        },
+        {
+          "round": 18,
+          "position": 2,
+          "points": 34,
+          "played": 17,
+          "match": {
+            "opponent": "Coritiba",
+            "opponentTla": "COR",
+            "home": true,
+            "goalsFor": 3,
+            "goalsAgainst": 0,
+            "result": "V"
+          }
+        },
+        {
+          "round": 19,
+          "position": 2,
+          "points": 37,
+          "played": 18,
+          "match": {
+            "opponent": "Chapecoense",
+            "opponentTla": "CHA",
+            "home": false,
+            "goalsFor": 4,
+            "goalsAgainst": 0,
+            "result": "V"
+          }
+        },
+        {
+          "round": 20,
+          "position": 2,
+          "points": 38,
+          "played": 19,
+          "match": {
+            "opponent": "São Paulo",
+            "opponentTla": "PAU",
+            "home": true,
+            "goalsFor": 1,
+            "goalsAgainst": 1,
+            "result": "E"
+          }
+        },
+        {
+          "round": 21,
+          "position": 2,
+          "points": 39,
+          "played": 20,
+          "match": {
+            "opponent": "Internacional",
+            "opponentTla": "SCI",
+            "home": false,
+            "goalsFor": 1,
+            "goalsAgainst": 1,
+            "result": "E"
+          }
+        },
+        {
+          "round": 22,
+          "position": 2,
+          "points": 42,
+          "played": 21,
+          "match": {
+            "opponent": "Vitória",
+            "opponentTla": "VIT",
+            "home": true,
+            "goalsFor": 2,
+            "goalsAgainst": 0,
+            "result": "V"
+          }
+        },
+        {
+          "round": 23,
+          "position": 2,
+          "points": 45,
+          "played": 22,
+          "match": {
+            "opponent": "Mirassol",
+            "opponentTla": "MIR",
+            "home": false,
+            "goalsFor": 5,
+            "goalsAgainst": 1,
+            "result": "V"
+          }
+        },
+        {
+          "round": 24,
+          "position": 2,
+          "points": 45,
+          "played": 23,
+          "match": {
+            "opponent": "Cruzeiro",
+            "opponentTla": "CRU",
+            "home": false,
+            "goalsFor": 1,
+            "goalsAgainst": 2,
+            "result": "D"
+          }
+        },
+        {
+          "round": 25,
+          "position": 2,
+          "points": 48,
+          "played": 24,
+          "match": {
+            "opponent": "Botafogo",
+            "opponentTla": "BOT",
+            "home": true,
+            "goalsFor": 3,
+            "goalsAgainst": 0,
+            "result": "V"
+          }
+        }
+      ]
+    }
+  ]
+}

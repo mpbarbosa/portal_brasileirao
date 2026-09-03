@@ -171,3 +171,8 @@ docs/screenshots/local/
 # curated-data layer. Tracked files there are unaffected, but the next file
 # added under it would be unstageable with nothing going red.
 /data/
+
+# Manim (scripts/manim/README.md): the virtualenv and the rendered video are
+# both regenerable, and a 1080p mp4 has no business in a git history.
+.venv-manim/
+media/
