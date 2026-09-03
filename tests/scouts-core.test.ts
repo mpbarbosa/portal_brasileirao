@@ -257,6 +257,25 @@ test("the two pairings register vertically: every club sits at the same x", () =
   }
 });
 
+test("each pairing carries its own name, and it is the glossary's", () => {
+  // The names are `CONTEXT.md`'s. They existed before the page rendered either,
+  // which is why the title lives on the pair rather than at the call site: a
+  // second place to name a pairing is a second place for it to drift.
+  const jogo = profileScatter(spread(), "AAA", SCATTER_PAIRS["ataque-defesa"]);
+  const volume = profileScatter(spread(), "AAA", SCATTER_PAIRS["volume-conversao"]);
+  assert.equal(jogo?.title, "Ataque × defesa");
+  assert.equal(volume?.title, "Volume × conversão");
+});
+
+test("no two pairings share a title, and none is empty", () => {
+  // Two drawings stacked under one heading, on the same x axis, are told apart
+  // by their titles and by nothing else — so a repeated or absent one is worse
+  // than no title at all.
+  const titles = Object.values(SCATTER_PAIRS).map((pair) => pair.title);
+  assert.equal(new Set(titles).size, titles.length);
+  for (const title of titles) assert.ok(title.trim().length > 0);
+});
+
 test("every pairing offers four distinct corners", () => {
   for (const pair of Object.values(SCATTER_PAIRS)) {
     const phrases = Object.values(pair.corners);

@@ -82,7 +82,14 @@ export function ProfileScatter({ division, clubCode, pair }: ProfileScatterProps
           card pointing at nothing, half a card away from the axis it names. An
           axis label has to share the width of its axis. */}
       <div className="max-w-[28rem]">
-        <p className="text-label-small text-ink-faint">{axisCaption(scatter.y)}</p>
+        {/* The drawing's own name, which it had nowhere before: a reader met the
+            y axis as the topmost line and had to infer the pairing from its two
+            ends. `h4` under the section's `h3` rather than a styled paragraph,
+            so the outline and a screen reader's heading list carry it too — and
+            one step lighter than the section heading, which it must not
+            compete with. */}
+        <h4 className="text-body-small font-medium text-ink-muted">{scatter.title}</h4>
+        <p className="mt-1 text-label-small text-ink-faint">{axisCaption(scatter.y)}</p>
 
         <div className="mt-0.5 flex gap-2">
         {/* The y axis, as words rather than numbers. The domain is padded so
