@@ -217,8 +217,10 @@ goals (xG) and expected points (xPts)** below.
 Written 2026-09-03, prompted by a reader's question rather than by a feature:
 *can this app separate desempenho subjacente from resultado convertido* — compare
 each club's xPts against its real points, so a club converting above what it
-creates is distinguishable from one converting below. That is the one question
-the app's data cannot answer at all, in any degraded form.
+creates is distinguishable from one converting below. No provider this app reads
+carries the input, and the **modelled** expected goals the Projeção already shows
+are a different quantity that must not be substituted for it — the subsection
+below is the whole of why.
 
 **Start with the negative, because it is total.** No source this app currently
 reads carries xG at any tier — not football-data (the field list at the top of
@@ -235,6 +237,44 @@ football-data and Open-Meteo, so it inherits that precedent whole: its own kill
 switch (`DISABLE_WEATHER`'s argument — two feeds fail independently and one flag
 covering both takes the table off the page to silence a card), its own
 `ApiEnvelope` `source`, its own cache entry.
+
+#### The app already computes an expected goals, and it is **not** this one
+
+This is the trap in the whole section, and it was nearly written the wrong way
+round. `season-sim-core.ts` computes `expectedHomeGoals` and `expectedAwayGoals`
+for a fixture and the **Projeção** renders them; `CONTEXT.md`'s verbete is
+careful that they are *"the mean of that grid, not the Poisson λ it was built
+from"*. So "this app has no expected goals" is false as a sentence and true only
+about a provider.
+
+**The two quantities share a name and answer opposite questions**, and nothing
+enforces the distinction but this paragraph:
+
+- The app's is **prospective and modelled**. It comes out of a Dixon–Coles
+  scoreline grid built from each club's attack, defence and mando — the season's
+  results compressed into strengths, projected forward. It exists for a fixture
+  that has **not been played** and says *espera-se 1,7 × 0,8*.
+- A provider's is **retrospective and observed**. It comes out of the shots
+  actually taken, weighted by where and how each was struck. It exists only for
+  a match that **has** been played and says *this side created 1,22 worth of
+  chances and scored three*.
+
+Feed the second into the first and you get nonsense in both directions: a
+projection built on what a club deserved rather than on what it did, or a
+"conversion" reading that compares a club to a forecast of itself. **Whoever
+adds a provider xG must name it something else in this codebase** — the CONTEXT
+rule, applied before the field exists rather than after.
+
+**One thing does carry over, and it is the expensive half.** xPts is
+*probability of each result × points for it*, and the Poisson-grid-to-W/D/L
+machinery that performs exactly that sum is already here — `poissonPmf`, the
+81-cell grid, `dixonColesTau`, and the closed-form summation
+`predictMatchOutcome` uses. It is reached through a `StrengthModel` rather than
+through two supplied expected-goal figures, so an xPts feature needs λ and μ
+**injected**, not a second Poisson written beside the first. A second
+implementation of the scoreline grid is how the Projeção and an xPts column come
+to disagree about the same fixture — the failure `computeRankHistory` re-runs
+`computeStandings` to avoid.
 
 #### Measured here, by curl, on 2026-09-03
 
@@ -261,9 +301,9 @@ entry below whose fields are stated rather than relayed.
   who reads the site and assumes the API matches finds out after paying.
 - `league-table` is **404**; the table comes from `league-teams`.
 
-**So xPts would have to be computed here**, from per-match xG, and that is a
-`*-core.ts` module rather than a field: Poisson over the two fixture xG totals →
-win/draw/loss probabilities → expected points. It works and it is an
+**So xPts would have to be computed here**, from per-match xG — through
+`season-sim-core.ts`'s existing grid with λ and μ injected, per the subsection
+above, and not as a fresh Poisson. It works and it is an
 **approximation of an approximation** — the honest calculation runs over the
 shot-level xG distribution, and a match total loses the shape of it. If that
 ever ships, the page says so, for the reason `live-core.ts` refuses to print a
