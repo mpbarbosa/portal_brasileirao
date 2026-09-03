@@ -560,6 +560,31 @@ export const clubMapUrl = (raw: string | null | undefined): string | null => {
  * asserts against. Worth remembering before adding the eighth: this function is
  * the one place where "works in CI" and "works in production" genuinely differ.
  */
+/**
+ * Replace a club's técnico where the provider names the wrong person.
+ *
+ * **Separate from `withClubDetails` on purpose, and it is the same split
+ * `player-overrides.ts` draws from `squads.ts`.** That function *fills* — it
+ * supplies what no live payload carries, so it reads `club.coach ?? source`
+ * and the provider wins every tie. This one *corrects*, so the override wins.
+ * Folding the two together would make `withClubDetails` mean both, and the
+ * next reader could not tell from a call site which one a field got.
+ *
+ * A code with no override passes through untouched, and an override naming a
+ * club that is not in the list is simply unused rather than an error — the list
+ * is whatever the caller happens to hold, and a standings payload missing a
+ * promoted club is not this function's problem. `tests/club-core.test.ts` is
+ * where an override naming a club nobody has earns its complaint.
+ */
+export const withCoachOverrides = (
+  clubs: Club[],
+  overrides: Record<ClubCode, string>,
+): Club[] =>
+  clubs.map((club) => {
+    const coach = overrides[club.code]?.trim();
+    return coach ? { ...club, coach } : club;
+  });
+
 export const withClubDetails = (clubs: Club[], known: Club[]): Club[] => {
   const byCode = new Map(known.map((club) => [club.code, club]));
 

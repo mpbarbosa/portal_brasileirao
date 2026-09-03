@@ -1,39 +1,41 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
+import { COACH_OVERRIDES } from "@/src/data/coach-overrides";
 import { CLUBS } from "@/src/data/clubs";
 import { CLUB_HYMNS } from "@/src/data/club-hymns";
 import { CLUB_WIKIPEDIA } from "@/src/data/club-wikipedia";
 import {
   clubAddress,
-  clubMapUrl,
   clubArticle,
   clubKey,
+  clubMapUrl,
   clubMatches,
   coachOf,
   coachesOf,
   crestMonogram,
   findClub,
   hasClubArticle,
+  hymnUrl,
+  instagramHandle,
+  instagramUrl,
   lastFixture,
   nextFixture,
   ofClub,
   ofClubs,
+  officialSiteUrl,
   playsIn,
   recentForm,
   resultFor,
-  officialSiteUrl,
   scorersFor,
   slugify,
   standingFor,
+  wikipediaUrl,
   withClubDetails,
+  withCoachOverrides,
   withHymns,
   withInstagram,
   withWikipedia,
-  hymnUrl,
-  instagramHandle,
-  instagramUrl,
-  wikipediaUrl,
 } from "@/club-core";
 import type { Match, Scorer, StandingsRow } from "@/src/types";
 
@@ -732,4 +734,63 @@ test("a list of clubs repeats the article rather than sharing one", () => {
 test("one club needs no join, and none needs no article", () => {
   assert.equal(ofClubs([club("1783", "Flamengo")]), "do Flamengo");
   assert.equal(ofClubs([]), "");
+});
+
+/* ------------------------------------------------- técnico corrections ---- */
+
+const clubWith = (code: string, coach?: string) =>
+  ({ code, name: `Club ${code}`, shortName: code, state: "SP", ...(coach ? { coach } : {}) });
+
+test("an override replaces the provider's coach rather than filling a gap", () => {
+  // The whole difference from `withClubDetails`, which reads `club.coach ??
+  // source` and lets the provider win. Here the provider is what is wrong.
+  const [club] = withCoachOverrides([clubWith("1767", "Jéssica Lima")], { "1767": "Luís Castro" });
+  assert.equal(club?.coach, "Luís Castro");
+});
+
+test("a club with no override is returned untouched", () => {
+  const original = clubWith("9999", "Alguém");
+  const [club] = withCoachOverrides([original], { "1767": "Luís Castro" });
+  assert.equal(club, original, "the object itself, not a copy — nothing to change");
+});
+
+test("an override fills nothing: a club the provider names no coach for still gets one", () => {
+  // Deliberate. The correction is keyed to the club, not to the provider having
+  // said something — a club between coaches upstream is exactly when the frozen
+  // wrong name would otherwise surface through `withClubDetails`' fallback.
+  const [club] = withCoachOverrides([clubWith("1767")], { "1767": "Luís Castro" });
+  assert.equal(club?.coach, "Luís Castro");
+});
+
+test("an override naming a club that is not in the list is unused, not an error", () => {
+  const clubs = withCoachOverrides([clubWith("9999", "Alguém")], { "1767": "Luís Castro" });
+  assert.equal(clubs.length, 1);
+  assert.equal(clubs[0]?.coach, "Alguém");
+});
+
+test("a blank override is ignored rather than blanking the name", () => {
+  const [club] = withCoachOverrides([clubWith("1767", "Jéssica Lima")], { "1767": "   " });
+  assert.equal(club?.coach, "Jéssica Lima");
+});
+
+/* --------------------------------------------------- the committed data --- */
+
+test("every coach override names a club in this division, and changes something", () => {
+  // Asserting the data, the way `player-photos.test.ts` does: the compiler is
+  // satisfied by an entry for a club that was relegated two seasons ago.
+  const byCode = new Map(CLUBS.map((club) => [club.code, club]));
+
+  for (const [code, coach] of Object.entries(COACH_OVERRIDES)) {
+    const club = byCode.get(code);
+    assert.ok(club, `${code} is not a club in this division`);
+    assert.ok(coach.trim().length > 0, `${code} has an empty override`);
+    // An override that agrees with the seed is one upstream has since fixed —
+    // which arrives as a regenerated seed and in no other way. It should be
+    // deleted rather than left to look load-bearing.
+    assert.notEqual(
+      coach,
+      club?.coach,
+      `${code}: the override equals the seed's own value, so upstream has fixed it`,
+    );
+  }
 });

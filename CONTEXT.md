@@ -316,6 +316,11 @@ ladder rather than a list: the club's name, then who it plays under, then where
 it keeps its office, each step fainter than the one before.
 A club upstream lists no coach for has **no line at all** — never a dash, and
 never a bare label.
+Where the provider names the **wrong person**, `src/data/coach-overrides.ts`
+replaces it on the way out. The bar is *factually wrong and establishable*, both
+halves: an abbreviated or unfamiliar spelling stays, because it is what every
+other source shows the same reader, and a name nobody can corroborate stays too
+— doubt about the provider is not knowledge of the answer.
 _Avoid_: "treinador" (correct Portuguese, but "técnico" is what Brazilian
 football says and what every source the app reads writes), "coach", "manager",
 "comissão técnica" (the whole staff, which the app does not carry), putting the
