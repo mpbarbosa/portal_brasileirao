@@ -559,6 +559,72 @@ test.describe("Painel do clube", () => {
     await expect(caption).toHaveText(/jogo (aberto|controlado|recuado|fechado)/);
   });
 
+  test("the subject club leaves a rastro that ends on its own dot", async ({ page }) => {
+    await openPanel(page);
+
+    for (const pair of ["ataque-defesa", "volume-conversao"]) {
+      const svg = page.locator(`main figure[data-scatter-pair="${pair}"] svg[data-scatter-svg]`);
+      const segments = svg.locator("[data-scatter-trail]");
+
+      // One fewer segment than there are rodadas drawn, and never more than the
+      // window allows. Not an exact count: the seed advances, and a spec that
+      // pins how much curated data exists is the failure this repository has
+      // broken CI on twice.
+      const drawn = await segments.count();
+      expect(drawn).toBeGreaterThan(0);
+      expect(drawn).toBeLessThan(8);
+
+      await expect(svg.locator("[data-scatter-trail-start]")).toHaveCount(1);
+
+      // **The frozen frame, measured in the browser.** `scatterTrail` places the
+      // rastro with the scatter's own axes, so its last segment must land on the
+      // subject's dot to the pixel. If this drifts, something has given the
+      // rastro a domain of its own — which would make every earlier point a
+      // claim about a frame nobody can see.
+      const last = segments.last();
+      const dot = svg.locator("[data-scatter-point='subject']");
+      expect(await last.getAttribute("x2")).toBe(await dot.getAttribute("cx"));
+      expect(await last.getAttribute("y2")).toBe(await dot.getAttribute("cy"));
+
+      // The oldest segment is the faintest. A two-point rastro is one segment
+      // with no ramp to sit on, and the obvious `Math.max(1, …)` guard paints it
+      // at the *oldest* opacity — the faintest thing on the drawing.
+      const first = Number(await segments.first().getAttribute("stroke-opacity"));
+      const newest = Number(await last.getAttribute("stroke-opacity"));
+      expect(newest).toBeGreaterThan(first);
+    }
+  });
+
+  test("the rastro stays inside the drawing", async ({ page }) => {
+    await openPanel(page);
+
+    // The clamp's whole purpose, asserted where it fails visibly: 12% of rastro
+    // points sit at a domain edge, and unclamped they paint outside the box —
+    // `RankCandles`' painting-past-the-card failure one figure over.
+    const svg = page.locator('main figure[data-scatter-pair="ataque-defesa"] svg[data-scatter-svg]');
+    const box = (await svg.boundingBox())!;
+
+    for (const mark of await svg.locator("[data-scatter-trail]").all()) {
+      const seg = (await mark.boundingBox())!;
+      expect(seg.x).toBeGreaterThanOrEqual(box.x - 2);
+      expect(seg.y).toBeGreaterThanOrEqual(box.y - 2);
+      expect(seg.x + seg.width).toBeLessThanOrEqual(box.x + box.width + 2);
+      expect(seg.y + seg.height).toBeLessThanOrEqual(box.y + box.height + 2);
+    }
+  });
+
+  test("the key says what the rastro is not", async ({ page }) => {
+    await openPanel(page);
+    const key = page.locator("main [data-scatter-key]");
+
+    await expect(key).toContainText("rastro");
+    // Both caveats, in the one place that is true of both drawings. Without the
+    // second, a rastro crossing a mediana reads as a club that changed corner
+    // that week.
+    await expect(key).toContainText(/média acumulada/);
+    await expect(key).toContainText(/divisão hoje/);
+  });
+
   test("its metadata names the club, and is injected server-side", async ({ page }) => {
     const name = await openPanel(page);
     const path = new URL(page.url()).pathname;
