@@ -199,12 +199,33 @@ function LineupColumn({ lineup, name }: { lineup: Lineup; name: string }) {
               keep monochrome and correctly sized across platforms, which is the
               trap `SunIcon` and `MoonIcon` exist to record; and a single arrow
               between two names does not say which way it points. */}
-          <ul className="space-y-0.5 text-body-small text-on-surface-variant" data-subs>
+          {/* The minute column is sized by the WIDEST LABEL IN THIS LIST, never
+              by a number, which is why this is a grid where the sheet above is a
+              flex row. A shirt is at most two digits — `w-6` can hold every value
+              that column will ever carry — but `sumulaSubstitutionLabel` writes
+              three shapes: `70'`, a stoppage-time `90+8'`, and **Intervalo**, a
+              word. At `w-10` that word measured 50px against a 40px box and
+              overflowed the row's own 8px gap, printing `IntervaloMarcelinho por
+              …` on 250 rows across 147 fixtures in the live payload — and it is
+              not clipped, so no `truncate` and no clip check could see it.
+              Widening to fit is a bet on the system font stack, which this app
+              does not control (the typeface is deliberately the system stack, and
+              `90+1'` already measures the full 40px in Chromium), so the column
+              takes `auto` and the browser measures the words for us. `subgrid` is
+              what keeps every row's names on one edge rather than each row
+              sizing its own label — the alignment is the reason the column
+              exists, and a ragged left margin is the failure `LineupColumn`'s own
+              comment describes one list up. */}
+          <ul
+            className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-2 gap-y-0.5 text-body-small text-on-surface-variant"
+            data-subs
+          >
             {lineup.subs.map((sub, index) => (
-              <li key={`${sub.minute}-${sub.on}-${index}`} className="flex gap-2">
-                <span className="w-10 shrink-0 text-right tabular-nums text-ink-faint">
-                  {sub.minute}
-                </span>
+              <li
+                key={`${sub.minute}-${sub.on}-${index}`}
+                className="col-span-2 grid grid-cols-subgrid"
+              >
+                <span className="text-right tabular-nums text-ink-faint">{sub.minute}</span>
                 <span className="truncate">
                   {sub.on} <span className="text-ink-faint">por {sub.off}</span>
                 </span>

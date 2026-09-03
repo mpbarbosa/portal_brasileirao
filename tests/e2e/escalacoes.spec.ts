@@ -111,4 +111,81 @@ test.describe("Escalações", () => {
     await expect(page.getByRole("heading", { name: "Escalações" })).toHaveCount(0);
     await expect(page.locator("[data-lineup]")).toHaveCount(0);
   });
+
+  test("a word-length minute keeps its own column and never touches the name", async ({ page }) => {
+    /**
+     * `sumulaSubstitutionLabel` writes three shapes into one column — `70'`, a
+     * stoppage-time `90+8'`, and **Intervalo**, which is a word rather than a
+     * number. At a fixed `w-10` that word measured 50px in a 40px box and ate
+     * the row's whole 8px gap: the page read `IntervaloMarcelinho por Gabriel
+     * Girotto`, on 250 rows across 147 fixtures of the live payload.
+     *
+     * **Nothing existing could see it.** The label is not clipped — it paints
+     * over the gap — so `truncate` never engages and a `scrollWidth >
+     * clientWidth` check on the *row* passes; only the cell's own overflow and
+     * the distance between the two cells say anything.
+     *
+     * Produced with a prepared payload rather than hunted for, which is the
+     * rule the file header and `goals.spec.ts` both state: which fixture
+     * carries an `Intervalo` moves on every `sync-goals`, and pinning one is
+     * exactly how that spec's "minuteless fixture" broke.
+     */
+    const LABELS = ["7'", "Intervalo", "45+2'", "90+8'"];
+    const response = await page.request.get("/api/matches");
+    const body = await response.json();
+    body.data.matches = body.data.matches.map((match: Record<string, unknown>) =>
+      match.id === MATCH && Array.isArray(match.lineups)
+        ? {
+            ...match,
+            lineups: match.lineups.map((lineup: Record<string, unknown>) => ({
+              ...lineup,
+              subs: LABELS.map((minute, index) => ({
+                minute,
+                on: (lineup.players as { name: string }[])[index].name,
+                off: (lineup.players as { name: string }[])[index + 11].name,
+              })),
+            })),
+          }
+        : match,
+    );
+    await page.route("**/api/matches*", (route) =>
+      route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(body) }),
+    );
+
+    await page.goto(`/partida/${MATCH}`);
+    await page.getByRole("heading", { name: "Escalações" }).click();
+
+    const list = page.locator("[data-subs]").first();
+    await expect(list.locator("li")).toHaveCount(LABELS.length);
+
+    const rows = await list.evaluate((ul) =>
+      [...ul.querySelectorAll("li")].map((li) => {
+        const [minute, name] = li.children;
+        const m = minute.getBoundingClientRect();
+        const n = name.getBoundingClientRect();
+        return {
+          label: (minute as HTMLElement).innerText.trim(),
+          overflow: minute.scrollWidth - minute.clientWidth,
+          gap: Math.round(n.left - m.right),
+          nameLeft: Math.round(n.left),
+        };
+      }),
+    );
+
+    for (const row of rows) {
+      // The label fits its own box. This is the assertion that fails against a
+      // fixed width, whatever number is chosen, once a font renders the word
+      // wider than it.
+      expect(row.overflow, `"${row.label}" overflows its column`).toBe(0);
+      // …and the gap the row asks for is the gap it gets, so the label cannot
+      // reach the name even when it is the widest thing in the column.
+      expect(row.gap, `"${row.label}" leaves no gap before the name`).toBeGreaterThanOrEqual(8);
+    }
+
+    // The names start on ONE edge. Sizing each row's label independently would
+    // satisfy both assertions above and leave a ragged margin, which is the
+    // failure the shared column exists to prevent.
+    expect(new Set(rows.map((row) => row.nameLeft)).size).toBe(1);
+  });
+
 });
