@@ -655,6 +655,56 @@ export interface ClubScouts {
 }
 
 /**
+ * One club's scouts **as they stood after a given rodada** — the same counters
+ * `ClubScouts` carries, at every point of the season rather than only at the
+ * end. `src/data/club-scouts-history.ts` holds them, and the Perfil scatters
+ * draw the subject club's **rastro** from them.
+ *
+ * Four things about the shape are decisions rather than mechanics:
+ *
+ * - **A tuple, not an object, and this is the one curated file shaped that
+ *   way.** `rank-history.ts`'s one-object-per-round style is right for 25 rows a
+ *   person reads and wrong for 760 nobody will: measured on a real `vite build`,
+ *   the objects cost **+9.3 kB gzip** on the client bundle against **+5.7 kB**
+ *   for tuples, on data the Painel is the only reader of. The field order is
+ *   stated below and held by this type's arity — `tsc --noEmit` is the lint
+ *   gate here, so a tuple of the wrong length cannot be written.
+ * - **The rodada is the ARRAY INDEX, never a field.** Index 0 is rodada 1. A
+ *   stored `round` that can disagree with its own position is a second source
+ *   of truth for one fact, which is the trap `Goal.clubCode` records in another
+ *   costume.
+ * - **The counters are CUMULATIVE through that rodada, not the rodada's own.**
+ *   caRtola publishes weekly and a midweek round falls between two snapshots, so
+ *   a round's own figures are not recoverable — `scripts/sync-cartola-scouts.ts`
+ *   measured 19 empty windows and 10 double ones across 470 club-rounds. A
+ *   cumulative reading carries at most one match's worth of that error and
+ *   self-corrects at the next snapshot; a per-rodada one would draw a club that
+ *   played as a club that did not.
+ * - **Only the counters the scatters draw are carried.** `SCATTER_PAIRS`' axes
+ *   are `finishes`, `conversion` and `saves`, so `tackles`, `foulsCommitted`,
+ *   `yellowCards` and `redCards` are absent. Adding a pairing on one of those is
+ *   a generator edit and a resync, not a migration.
+ *
+ * `matches` travels with the counters for `ClubScouts`' reason and one more: the
+ * generator and the page must not each compute a denominator, or they come to
+ * disagree about what rodada 12 was.
+ */
+export type ScoutHistoryEntry = readonly [
+  /** Finished matches this club had played in rounds 1..this one. */
+  matches: number,
+  /** Goals scored by this club's players. */
+  goals: number,
+  /** Finalizações defendidas — on target, saved. */
+  shotsSaved: number,
+  /** Finalizações para fora. */
+  shotsOff: number,
+  /** Finalizações na trave. */
+  shotsWoodwork: number,
+  /** Defesas do goleiro. */
+  saves: number,
+];
+
+/**
  * A player, as much as the provider knows. Every field beyond id and name is
  * optional: squad listings, the person endpoint and the scorer table each carry
  * a different subset, and the card renders whatever it has.
