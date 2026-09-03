@@ -853,13 +853,19 @@ export interface ApiEnvelope<T> {
    *   because it fails independently: the weather being unreachable says
    *   nothing about the scores, and one banner covering both would claim
    *   otherwise.
+   * - `traffic-log` — this deployment's own nginx access log, parsed from the
+   *   snapshots `shell_scripts/12_traffic_report.sh` writes. Named separately
+   *   for `open-meteo`'s reason and one step further: it is not an upstream at
+   *   all. Nothing about it can be stale because a provider is down, and
+   *   calling it `football-data` would put the fixture banner's wording over a
+   *   page that has never asked football-data anything.
    * - `placeholder` — seed fixtures, because no provider token is configured.
    * - `fallback` — seed fixtures, because the upstream failed or is disabled.
    *
    * The last two are deliberately distinct: one is "not set up", the other is
    * "set up and currently broken", and only the second is worth alerting on.
    */
-  source: "football-data" | "open-meteo" | "placeholder" | "fallback";
+  source: "football-data" | "open-meteo" | "traffic-log" | "placeholder" | "fallback";
   note: string;
   updatedAt: string;
   data: T;
@@ -888,4 +894,117 @@ export interface Health {
   /** The **configured** provider — `"football-data"` or `"seed"`. Not a claim
    *  that the last upstream request succeeded; that is the envelope's job. */
   provider: string | null;
+}
+
+
+/**
+ * One `<count> <label>` row from a traffic summary — a path and its hits, a
+ * country and its visitors, a day and its requests.
+ *
+ * The label is free text from the host's own `uniq -c` output rather than a
+ * key this app defines, which is why it is a `string` and not a union: a
+ * referrer is somebody else's URL and a city is whatever the geo database
+ * calls it.
+ */
+export interface TrafficCountRow {
+  label: string;
+  count: number;
+}
+
+/**
+ * One traffic snapshot as the page receives it — the state of nginx's whole log
+ * window at the instant the report ran.
+ *
+ * **Every count here is cumulative over that window, not per hour.** The timer
+ * writes a snapshot an hour and each one re-reads the entire log, so `requests`
+ * rises between snapshots and a rate is the difference between two of them
+ * (`TrafficTimelinePoint.ratePerMin`). Reading `requests` as "requests this
+ * hour" is the one misreading this shape invites.
+ *
+ * Almost everything is nullable because a host genuinely reports less: a
+ * summary written before a section existed, or one from a host with no GeoLite2
+ * database, is a real snapshot with real numbers in the fields it does carry.
+ * The page omits a tile rather than printing a dash for a figure nobody
+ * measured — `parseHealth`'s rule.
+ */
+export interface TrafficSnapshot {
+  /** The summary file this came from, e.g. `summary-20260903-140702.txt`. */
+  file: string;
+  /** ISO instant the report ran — the reading's own time, not "now". */
+  generated: string;
+  /** Lines nginx had in the window, before any parsing. */
+  logLines: number | null;
+  requests: number | null;
+  /**
+   * Distinct client addresses in the window — the closest thing to a visitor
+   * count this app can honestly report, and deliberately not called one. One
+   * household behind one address is one; one reader on a phone crossing between
+   * mobile networks is several.
+   */
+  uniqueIps: number | null;
+  /** First and last timestamp in the window, as the report printed them. */
+  dateRange: string | null;
+  /** Which GeoLite2 database resolved the countries, or null when none did. */
+  geoSource: string | null;
+  topPaths: TrafficCountRow[];
+  statusCodes: TrafficCountRow[];
+  referrers: TrafficCountRow[];
+  /** Countries by distinct address, and by request volume. The two answer
+   *  different questions and the page shows both — see `parseGeoSection`. */
+  countriesByVisitor: TrafficCountRow[];
+  countriesByVolume: TrafficCountRow[];
+  /** Empty unless the host carries a GeoLite2 **City** database. */
+  citiesByVisitor: TrafficCountRow[];
+  citiesByVolume: TrafficCountRow[];
+  /** Requests per hour of day, keyed "00".."23" in the host's timezone. An
+   *  hour with no traffic is an absent key. */
+  byHour: Record<string, number>;
+  /** Requests per calendar day, labelled as nginx writes it (`03/Sep/2026`). */
+  byDay: TrafficCountRow[];
+  /** Distinct addresses per calendar day. Only per-day counts leave the host —
+   *  the addresses themselves are reduced away there. */
+  uniqueIpsByDay: TrafficCountRow[];
+  /** Hits whose user-agent names a crawler. A share, not a filter: they are
+   *  counted in `requests` like everything else. */
+  bots: number | null;
+  /** `/api/health` hits — the reconciler, the deploy's live-commit assertion,
+   *  and any uptime monitor. Excluded from `topPaths` and from nothing else,
+   *  so the figure is what the chart set aside rather than a hidden filter. */
+  monitorHits: number | null;
+}
+
+/** One snapshot's position on the cross-snapshot timeline. */
+export interface TrafficTimelinePoint {
+  /** The snapshot's `generated` instant in epoch milliseconds. */
+  t: number;
+  /** Cumulative, as above. */
+  requests: number;
+  uniqueIps: number;
+  /**
+   * Requests per minute since the previous snapshot, or null for the first one
+   * and for any pair whose stamps do not separate. Null means "not measurable",
+   * which is not zero — an hour that genuinely served nobody is a 0.
+   */
+  ratePerMin: number | null;
+  /** Cumulative requests per country at this snapshot, so the page can derive
+   *  a per-country rate the same way. Empty with no geo database. */
+  countries: Record<string, number>;
+}
+
+/**
+ * `/api/traffic-dashboard`'s `data` — what `/trafego` draws.
+ *
+ * An unlisted page: absent from `NAV_ITEMS`, `noindex`, `Disallow`ed and not in
+ * the sitemap. It reports aggregates only and carries no visitor address, but
+ * unlisted is not private — anybody who knows the address can read it.
+ */
+export interface TrafficDashboard {
+  /** How many summaries parsed. Zero is the fallback shape, with a null latest. */
+  snapshotCount: number;
+  /** Mean requests/min across the whole snapshot window; null under two
+   *  snapshots, when there is no interval to divide by. */
+  windowRatePerMin: number | null;
+  /** Oldest first. */
+  timeline: TrafficTimelinePoint[];
+  latest: TrafficSnapshot | null;
 }

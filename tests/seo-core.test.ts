@@ -230,6 +230,36 @@ test("robots omits the sitemap line when there is no origin to make it absolute"
   assert.match(robotsTxt(""), /Disallow: \/api\/auth\//);
 });
 
+test("/trafego is a real page that must never be indexed", () => {
+  // PRIVATE, not FOUND and not 404: the page exists and works, and a search
+  // result for this site's own request log is a page nobody searched for shown
+  // to somebody it does not concern.
+  //
+  // **This is the one that fires.** Deleting `case "trafego":` from
+  // `pageStatus` reddens this test and nothing else in the file — the page
+  // silently becomes a 200 that a crawler may index, which is the failure the
+  // explicit case exists to prevent. Verified by mutation rather than reasoned
+  // out, and the sibling assertion below is held by `default` instead.
+  const status = pageStatus("/trafego");
+  assert.equal(status.status, 200);
+  assert.equal(status.index, false);
+  assert.equal(status.reason, "private");
+});
+
+test("/trafego takes no argument, and one makes it a 404", () => {
+  // This one is held by `default`, not by the explicit case — confirmed by
+  // deleting the case and watching only the test above go red. Worth keeping
+  // anyway and worth saying which guard holds it: the router resolves
+  // /trafego/<anything> to the same page, so without a 404 here there would be
+  // infinitely many indexable duplicates of it.
+  assert.equal(pageStatus("/trafego/qualquer-coisa").status, 404);
+  assert.equal(pageStatus("/trafego/2026/09").status, 404);
+});
+
+test("robots.txt keeps a crawler off /trafego", () => {
+  assert.match(robotsTxt("https://exemplo.com"), /Disallow: \/trafego/);
+});
+
 test("the sitemap carries the sections even with no data loaded", () => {
   const paths = sitemapEntries({}).map((entry) => entry.path);
 
@@ -242,6 +272,9 @@ test("the sitemap carries the sections even with no data loaded", () => {
     // Reachable only from /entrar and /conta, both of which are Disallowed, so
     // without this line a crawler has no route to the privacy notice at all.
     "/privacidade",
+    // `/trafego` is deliberately absent, and this `deepEqual` is what holds it
+    // out: it is `noindex`, so listing it would be the sitemap inviting a
+    // crawl the page's own tag then refuses.
   ]);
 });
 

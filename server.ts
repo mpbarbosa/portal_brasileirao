@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { createServer as createHttpServer } from "node:http";
 import { createServer as createNetServer } from "node:net";
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 
 import "dotenv/config";
@@ -59,6 +59,7 @@ import {
 } from "@/matches-core";
 import { injectMeta, pageMeta, type MetaContext } from "@/page-meta-core";
 import { parseRoute, type Route } from "@/route-core";
+import { buildTrafficDashboard } from "@/traffic-report-core";
 import { buildStadiums } from "@/venue-core";
 import { buildWeatherUrl, parseWeather } from "@/weather-core";
 import { STADIUMS } from "@/src/data/stadiums";
@@ -138,6 +139,7 @@ import type {
   Squad,
   Stadium,
   StandingsRow,
+  TrafficDashboard,
   WeatherSnapshot,
 } from "@/src/types";
 
@@ -194,6 +196,7 @@ const snapshotLabel = SNAPSHOT_DATE.split("-").reverse().join("/");
 
 const NOTE_LIVE = "Dados do football-data.org (Campeonato Brasileiro Série A).";
 const NOTE_WEATHER = "Condições atuais no estádio, do Open-Meteo.";
+const NOTE_TRAFFIC = "Instantâneos do log de acesso da produção.";
 const NOTE_PLACEHOLDER =
   `Dados congelados de ${snapshotLabel} — defina FOOTBALL_DATA_TOKEN para dados ao vivo.`;
 const NOTE_FALLBACK =
@@ -253,9 +256,15 @@ const envelope = <T>(
       ? NOTE_LIVE
       : source === "open-meteo"
         ? NOTE_WEATHER
-        : source === "placeholder"
-          ? NOTE_PLACEHOLDER
-          : NOTE_FALLBACK,
+        : source === "traffic-log"
+          // Named rather than left to fall through to NOTE_FALLBACK, which is
+          // about the provider and would read as an outage on a page that has
+          // never asked the provider anything. The traffic route builds its own
+          // envelope with a count in the note, so this branch is a floor.
+          ? NOTE_TRAFFIC
+          : source === "placeholder"
+            ? NOTE_PLACEHOLDER
+            : NOTE_FALLBACK,
   updatedAt: new Date(updatedAt).toISOString(),
   data,
 });
@@ -1364,6 +1373,76 @@ app.get("/api/stadium-weather/:slug", async (req, res) => {
     // fifteen-minute cache already caps what a hard-down Open-Meteo costs.
     res.json(envelope<WeatherSnapshot | null>(null, "fallback", now));
   }
+});
+
+/**
+ * The traffic snapshots `shell_scripts/12_traffic_report.sh` writes on the host,
+ * parsed into what `/trafego` draws.
+ *
+ * **The directory is the source of truth and nothing is committed.** The
+ * sibling this was ported from commits its snapshots, because its host carries
+ * a git checkout; this host carries a deploy directory, so the app reads the
+ * files the timer wrote beside it. That removes a whole class of staleness —
+ * there is no copy in git to drift from the host — and it is why the default
+ * path is relative to `process.cwd()`, which under systemd is `DEPLOY_DIR`.
+ *
+ * `TRAFFIC_REPORTS_DIR` overrides it, and must work unset like every other
+ * variable here: an unconfigured host, and every dev checkout, simply has no
+ * such directory and gets the `fallback` envelope. That is the ordinary state,
+ * not an error, which is why the read is wrapped rather than allowed to throw.
+ *
+ * Cached for 5 minutes because the timer writes once an hour, so a shorter TTL
+ * would re-read a directory of files to produce the same bytes. The cache is
+ * what bounds the cost of a directory that grows: every summary is read on a
+ * miss, and `13_install_traffic_timer.sh` prunes to a month for the same
+ * reason.
+ */
+const TRAFFIC_REPORTS_DIR = process.env.TRAFFIC_REPORTS_DIR
+  ? path.resolve(process.env.TRAFFIC_REPORTS_DIR)
+  : path.join(process.cwd(), "traffic-reports");
+const TRAFFIC_CACHE_TTL_MS = 5 * 60 * 1000;
+
+/** A month of hourly snapshots. Past this the timeline is longer than anybody
+ *  reads and the read is longer than anybody should wait. */
+const TRAFFIC_MAX_SNAPSHOTS = 720;
+
+const readTrafficReports = (): { file: string; text: string }[] => {
+  try {
+    return (
+      readdirSync(TRAFFIC_REPORTS_DIR)
+        .filter((file) => /^summary-.*\.txt$/.test(file))
+        // Newest last, matching what the parser sorts to anyway — but bounded
+        // here, so a directory nobody pruned cannot make one request read ten
+        // thousand files. The timeline loses its oldest points rather than the
+        // page losing everything.
+        .sort()
+        .slice(-TRAFFIC_MAX_SNAPSHOTS)
+        .map((file) => ({
+          file,
+          text: readFileSync(path.join(TRAFFIC_REPORTS_DIR, file), "utf8"),
+        }))
+    );
+  } catch {
+    // No directory, no permission, nothing written yet. All three are a page
+    // that says so, never a 500 — the rule every route here follows.
+    return [];
+  }
+};
+
+app.get("/api/traffic-dashboard", (_req, res) => {
+  const now = Date.now();
+  const key = "traffic:dashboard";
+  const hit = cache.read<ApiEnvelope<TrafficDashboard>>(key, now);
+  if (hit) {
+    res.set("Cache-Control", "public, max-age=300");
+    res.json(hit.value);
+    return;
+  }
+
+  const payload = buildTrafficDashboard(readTrafficReports(), new Date(now).toISOString());
+  cache.write(key, payload, TRAFFIC_CACHE_TTL_MS, now);
+  res.set("Cache-Control", "public, max-age=300");
+  res.json(payload);
 });
 
 app.get("/api/standings", async (_req, res) => {

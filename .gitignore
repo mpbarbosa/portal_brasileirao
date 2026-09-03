@@ -171,3 +171,14 @@ docs/screenshots/local/
 # curated-data layer. Tracked files there are unaffected, but the next file
 # added under it would be unstageable with nothing going red.
 /data/
+
+# Traffic snapshots. These are written on the HOST by
+# shell_scripts/12_traffic_report.sh, into $DEPLOY_DIR/traffic-reports, and the
+# app reads that directory directly — so the host is the source of truth and
+# there is deliberately no committed copy to go stale against it. This entry is
+# for the local ones: running the report against any nginx log, or the local
+# dashboard window, writes summaries here.
+#
+# The leading slash matters for the reason /data/ carries one: a bare
+# `traffic-reports/` has no internal slash and so would match at any depth.
+/traffic-reports/

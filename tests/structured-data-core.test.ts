@@ -303,3 +303,19 @@ test("endDate, offers and performer stay absent, and each is a decision", () => 
   assert.ok(!("offers" in event));
   assert.ok(!("performer" in event));
 });
+
+test("/trafego's breadcrumb stops at the site root", () => {
+  // The case exists because the compiler requires it — `trailFor` returns a
+  // value, so a missing case makes the switch non-exhaustive, which is what
+  // makes this the one file of the four that cannot be forgotten. Its content
+  // is beside the point: no crawler may index the page, so the trail describes
+  // nothing to anybody. What is asserted is that it is well-formed rather than
+  // that anyone reads it.
+  const crumbs = ofType(structuredData({ section: "trafego" }, {}, ORIGIN), "BreadcrumbList");
+  const trail = crumbs?.itemListElement as Array<Record<string, unknown>>;
+
+  assert.deepEqual(
+    trail.map((step) => step.name),
+    ["Classificação", "Tráfego"],
+  );
+});

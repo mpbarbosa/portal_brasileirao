@@ -54,6 +54,23 @@ export type Route =
   | { section: "conta" }
   | { section: "entrar" }
   /**
+   * The **Tráfego** page — this deployment's own access log, read back as
+   * charts.
+   *
+   * Unlisted rather than private, and the distinction is the whole of its
+   * security story: it is absent from `NAV_ITEMS`, `noindex`, `Disallow`ed and
+   * out of the sitemap, so nothing links to it and no crawler should hold it —
+   * but anybody who knows the address can open it. That is acceptable because
+   * the payload is aggregates only and carries no visitor address (see
+   * `traffic-report-core`), and it would not be if it ever carried one.
+   *
+   * Takes no argument, and is not a nav destination for a reason `conta` and
+   * `entrar` only half share: the bar is full at MD3's five, and this would not
+   * belong in it at six either. A football portal's sections are what a reader
+   * came for, and its own request log is not one of them.
+   */
+  | { section: "trafego" }
+  /**
    * The privacy notice. **Public and indexable**, unlike the two above: a
    * notice only a signed-in reader can find is not a notice, and Google's
    * consent screen links to it from outside this site entirely.
@@ -118,6 +135,9 @@ export const parseRoute = (pathname: string): Route => {
     case "privacidade":
       return { section: "privacidade" };
 
+    case "trafego":
+      return { section: "trafego" };
+
     case "clube":
       return second ? { section: "clube", key: second } : HOME;
 
@@ -154,6 +174,8 @@ export const formatRoute = (route: Route): string => {
       return "/entrar";
     case "privacidade":
       return "/privacidade";
+    case "trafego":
+      return "/trafego";
     case "clube":
       return `/clube/${encodeURIComponent(route.key)}`;
     case "painel":

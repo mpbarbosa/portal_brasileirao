@@ -16,6 +16,7 @@ import { Footer } from "@/src/components/Footer";
 import { LiveView } from "@/src/components/LiveView";
 import { AccountButton, AccountView, SignInView } from "@/src/components/AccountView";
 import { PrivacyView } from "@/src/components/PrivacyView";
+import { TrafficView } from "@/src/components/TrafficView";
 import { MeuTimeStrip } from "@/src/components/MeuTime";
 import { MatchPage } from "@/src/components/MatchPage";
 import { NavBar } from "@/src/components/NavBar";
@@ -574,6 +575,13 @@ export function App() {
 
           {route.section === "privacidade" && (
             <PrivacyView onBack={() => navigate({ section: "classificacao" })} />
+          )}
+
+          {/* Unlisted: nothing in the app links here and it is `noindex`. The
+              back link goes to the table because there is no page this was
+              opened *from* — the address was typed. */}
+          {route.section === "trafego" && (
+            <TrafficView onBack={() => navigate({ section: "classificacao" })} />
           )}
 
           {route.section === "conta" && (
