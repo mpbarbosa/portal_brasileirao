@@ -30,6 +30,24 @@ Flamengo são o padrão) — são os **códigos numéricos do provedor**, nunca 
 O vídeo sai em `media/videos/campanhas/1080p60/Campanhas.mp4`. `-ql` (480p15)
 renderiza em segundos e serve para conferir o enquadramento.
 
+## O render commitado
+
+**`docs/videos/campanhas-palmeiras-flamengo.mp4`** — 1920×1080, 60fps, 23s,
+3,3 MB — é o vídeo pronto, versionado junto do resto do projeto como os slides
+em `docs/carrossel/` e as capturas em `docs/screenshots/`.
+
+Ele é **regenerável** pelos dois comandos acima, e mesmo assim está commitado
+pela razão que o `og-default.png` já registra: um artefato de divulgação precisa
+existir para quem clona o repositório sem instalar o Manim. `media/` continua
+ignorado — é a árvore de trabalho do Manim, cujo caminho muda com a flag de
+qualidade; o entregável tem nome e lugar próprios.
+
+**Regerar é um commit deliberado.** Nada compara os bytes: o vídeo não passa por
+nenhum gate, e o `docs/screenshots` guard não olha para ele. Se os dados
+mudarem — um `sync-seed-data` seguido de `sync-rank-history` — o mp4 commitado
+descreve a temporada anterior e continua verde. O subtítulo do próprio vídeo diz
+até que data os dados vão, que é a única defesa que ele tem.
+
 ## O que é decisão e o que é mecânica
 
 - **O JSON é gerado, não editado.** `rank-history.ts` e `matches.ts` são a

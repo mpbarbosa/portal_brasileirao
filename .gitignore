@@ -172,7 +172,9 @@ docs/screenshots/local/
 # added under it would be unstageable with nothing going red.
 /data/
 
-# Manim (scripts/manim/README.md): the virtualenv and the rendered video are
-# both regenerable, and a 1080p mp4 has no business in a git history.
+# Manim (scripts/manim/README.md): the virtualenv and manim's own output tree.
+# The DELIVERABLE render is committed at docs/videos/ — this ignores the working
+# copy manim writes beside the scene, which is the same bytes under a name that
+# changes with the quality flag.
 .venv-manim/
 media/
