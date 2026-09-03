@@ -178,6 +178,18 @@ jobs:
       - name: Rehearse the reconciler's decisions (reconcile.yml)
         run: ./scripts/rehearse-reconcile.sh
 
+      # The one rehearsal here whose subject is neither a host script nor a
+      # workflow: `sync-schedule.sh` runs on a workstation, by hand or from a
+      # timer, and decides whether to run three data syncs and in what order.
+      # Nothing else can catch that order — the scouts sync divides caRtola's
+      # counters by the seed's match counts, so a seed that lags inflates every
+      # rate (measured at 4.3-4.5% per club), and the only thing standing
+      # between that and a commit is the sequence in this script. It needs no
+      # network: `curl`, `npx` and `npm` are stubbed while the seed and the
+      # counters are read by real node against this checkout.
+      - name: Rehearse the sync schedule (scripts/sync-schedule.sh)
+        run: ./scripts/rehearse-sync-schedule.sh
+
 
       # Everything above has passed, so THIS dist/ is the one that type-checked,
       # passed the unit suite, booted as a bundle and served three endpoints.
