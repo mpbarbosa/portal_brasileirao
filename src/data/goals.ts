@@ -19,7 +19,7 @@ import type { Goal } from "@/src/types";
  * never "goalless": a real 0-0 is deliberately absent rather than an empty
  * array, since the two would be indistinguishable here.
  *
- * Last synced 2026-08-31.
+ * Last synced 2026-09-03.
  */
 export const GOALS: Record<string, Goal[]> = {
   "554740": [
@@ -1079,6 +1079,38 @@ export const GOALS: Record<string, Goal[]> = {
     { clubCode: "1766", scorer: "Thiago Borbas", minute: "25'" },
     { clubCode: "1766", scorer: "Reinier", minute: "63'" },
     { clubCode: "1782", scorer: "Erick", minute: "87'" },
+  ],
+  "554982": [
+    { clubCode: "6684", scorer: "Alan Patrick", minute: "15'" },
+    { clubCode: "1777", scorer: "Erick Pulga", minute: "22'" },
+    { clubCode: "1777", scorer: "Erick Pulga", minute: "42'" },
+    { clubCode: "1777", scorer: "Erick", minute: "45+3'" },
+    { clubCode: "6684", scorer: "Vitinho", minute: "52'" },
+  ],
+  "554983": [
+    { clubCode: "6685", scorer: "Oliva", minute: "32'" },
+  ],
+  "554984": [
+    { clubCode: "1783", scorer: "Samuel Lino", minute: "12'" },
+    { clubCode: "1783", scorer: "Samuel Lino", minute: "85'" },
+    { clubCode: "1783", scorer: "Carrascal", minute: "89'" },
+  ],
+  "554985": [
+    { clubCode: "1772", scorer: "Garcez", minute: "15'" },
+    { clubCode: "1767", scorer: "G. Martins", minute: "17'" },
+    { clubCode: "1767", scorer: "Pavon", minute: "27'" },
+    { clubCode: "1767", scorer: "G. Martins", minute: "55'" },
+  ],
+  "554986": [
+    { clubCode: "4364", scorer: "Carlos", minute: "50'" },
+    { clubCode: "1769", scorer: "Mauricio", minute: "74'" },
+  ],
+  "554987": [
+    { clubCode: "4241", scorer: "Welison", kind: "own", minute: "47'" },
+    { clubCode: "4287", scorer: "Zé Ricardo", minute: "60'" },
+    { clubCode: "4287", scorer: "Yago", minute: "64'" },
+    { clubCode: "4241", scorer: "Fabinho", minute: "76'" },
+    { clubCode: "4241", scorer: "Pedro Rocha", minute: "90+2'" },
   ],
   "554988": [
     { clubCode: "1776", scorer: "Luciano", kind: "penalty", minute: "13'" },
