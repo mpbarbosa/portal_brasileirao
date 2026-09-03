@@ -227,6 +227,26 @@ export function valueLabel(row: Pick<ProfileRow, "unit" | "value">): string {
   });
 }
 
+/**
+ * One axis's value in words — "10,4 finalizações por jogo", "18% de conversão".
+ *
+ * **The unit decides the sentence, not just the number.** "por jogo" is true of
+ * every rate and false of a percentage, and the component used to append it
+ * unconditionally because both of its axes were rates. A caption reading "18%
+ * de conversão por jogo" is wrong in a way that reads as a typo and is actually
+ * a claim about what the figure counts.
+ */
+export function axisPhrase(axis: ScatterAxis, value: number): string {
+  const figure = valueLabel({ unit: axis.unit, value });
+  const noun = axis.label.toLowerCase();
+  return axis.unit === "porcento" ? `${figure} de ${noun}` : `${figure} ${noun} por jogo`;
+}
+
+/** The axis itself in words, for the label printed beside the drawing. */
+export function axisCaption(axis: ScatterAxis): string {
+  return axis.unit === "porcento" ? axis.label : `${axis.label} por jogo`;
+}
+
 /* --------------------------------------------------- ataque × defesa ------ */
 
 /**
@@ -250,6 +270,8 @@ export function valueLabel(row: Pick<ProfileRow, "unit" | "value">): string {
 export interface ScatterAxis {
   id: ScoutMetricId;
   label: string;
+  /** How the value is written, so a caption cannot print `18` for 18%. */
+  unit: ProfileRow["unit"];
   /** The domain's ends, already padded — not the division's raw floor. */
   min: number;
   max: number;
@@ -270,6 +292,7 @@ export interface ScatterPoint {
 }
 
 export interface ProfileScatter {
+  pair: ScatterPairId;
   x: ScatterAxis;
   y: ScatterAxis;
   points: ScatterPoint[];
@@ -308,7 +331,17 @@ function axis(
   const max = high + pad;
   const middle = median(sorted);
 
-  return { id, label, min, max, median: middle, medianAt: (middle - min) / (max - min) };
+  const unit = METRICS.find((metric) => metric.id === id)?.unit ?? "por-jogo";
+
+  return {
+    id,
+    label,
+    unit,
+    min,
+    max,
+    median: middle,
+    medianAt: (middle - min) / (max - min),
+  };
 }
 
 /**
@@ -320,18 +353,74 @@ function axis(
  * shaped like an argument nobody can make. The section omits it and keeps the
  * strip, the same way a club with no counters gets no Perfil at all.
  */
+/**
+ * A pairing the Painel draws, and the words its four corners need.
+ *
+ * **The corner phrases travel with the pair rather than living in
+ * `quadrantLabel`.** Two pairings share one drawing and share nothing else:
+ * "jogo aberto" is meaningless on an axis of conversão, and a switch inside the
+ * label function is how the second pairing comes to describe the first one's
+ * corners. Adding a third pairing is then an entry here and no edit anywhere.
+ *
+ * Every phrase stays **descriptive rather than appraising**, which is the rule
+ * `CONTEXT.md` states for the first pairing and which bites harder on this one:
+ * conversão sounds like a virtue, so "melhor ataque" is one word away and is a
+ * verdict two rates cannot support.
+ */
+export interface ScatterPair {
+  id: ScatterPairId;
+  x: ScoutMetricId;
+  y: ScoutMetricId;
+  xLabel: string;
+  yLabel: string;
+  /** Named for the axes a club is above the median on, never for a rank. */
+  corners: { both: string; xOnly: string; yOnly: string; neither: string };
+}
+
+export type ScatterPairId = "ataque-defesa" | "volume-conversao";
+
+export const SCATTER_PAIRS: Record<ScatterPairId, ScatterPair> = {
+  "ataque-defesa": {
+    id: "ataque-defesa",
+    x: "finishes",
+    y: "saves",
+    xLabel: "Finalizações",
+    yLabel: "Defesas do goleiro",
+    corners: {
+      both: "jogo aberto: finaliza muito e o goleiro trabalha muito",
+      xOnly: "jogo controlado: finaliza muito e o goleiro trabalha pouco",
+      yOnly: "jogo recuado: finaliza pouco e o goleiro trabalha muito",
+      neither: "jogo fechado: finaliza pouco e o goleiro trabalha pouco",
+    },
+  },
+  "volume-conversao": {
+    id: "volume-conversao",
+    x: "finishes",
+    y: "conversion",
+    xLabel: "Finalizações",
+    yLabel: "Conversão",
+    corners: {
+      both: "volume e aproveitamento: finaliza muito e converte muito",
+      xOnly: "volume sem aproveitamento: finaliza muito e converte pouco",
+      yOnly: "aproveitamento sem volume: finaliza pouco e converte muito",
+      neither: "nem volume nem aproveitamento: finaliza pouco e converte pouco",
+    },
+  },
+};
+
 export function profileScatter(
   division: ClubScouts[],
   clubCode: ClubCode,
+  pair: ScatterPair = SCATTER_PAIRS["ataque-defesa"],
 ): ProfileScatter | null {
-  const x = axis(division, "finishes", "Finalizações");
-  const y = axis(division, "saves", "Defesas do goleiro");
+  const x = axis(division, pair.x, pair.xLabel);
+  const y = axis(division, pair.y, pair.yLabel);
   if (!x || !y) return null;
 
   const points: ScatterPoint[] = [];
   for (const entry of division) {
-    const valueX = rawValue(entry, "finishes");
-    const valueY = rawValue(entry, "saves");
+    const valueX = rawValue(entry, pair.x);
+    const valueY = rawValue(entry, pair.y);
     // Both or neither: a club plotted at a real x and an invented y is worse
     // than a club left off, because nothing on the drawing says which half was
     // measured.
@@ -357,7 +446,7 @@ export function profileScatter(
   if (points.length < 3) return null;
   if (!points.some((point) => point.subject)) return null;
 
-  return { x, y, points };
+  return { pair: pair.id, x, y, points };
 }
 
 /**
@@ -374,11 +463,12 @@ export function quadrantLabel(scatter: ProfileScatter): string {
   const point = scatter.points.find((entry) => entry.subject);
   if (!point) return "";
 
-  const shoots = point.x >= scatter.x.median;
-  const busy = point.y >= scatter.y.median;
+  const { corners } = SCATTER_PAIRS[scatter.pair];
+  const aboveX = point.x >= scatter.x.median;
+  const aboveY = point.y >= scatter.y.median;
 
-  if (shoots && busy) return "jogo aberto: finaliza muito e o goleiro trabalha muito";
-  if (shoots && !busy) return "jogo controlado: finaliza muito e o goleiro trabalha pouco";
-  if (!shoots && busy) return "jogo recuado: finaliza pouco e o goleiro trabalha muito";
-  return "jogo fechado: finaliza pouco e o goleiro trabalha pouco";
+  if (aboveX && aboveY) return corners.both;
+  if (aboveX) return corners.xOnly;
+  if (aboveY) return corners.yOnly;
+  return corners.neither;
 }

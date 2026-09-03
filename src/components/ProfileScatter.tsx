@@ -1,8 +1,11 @@
 import {
+  axisCaption,
+  axisPhrase,
   profileScatter,
   quadrantLabel,
-  valueLabel,
+  SCATTER_PAIRS,
   type ProfileScatter as Scatter,
+  type ScatterPairId,
   type ScatterPoint,
 } from "@/scouts-core";
 import { CLUBS_BY_CODE } from "@/src/data/clubs";
@@ -34,6 +37,12 @@ const DOT = { other: 4, subject: 6.5 } as const;
 interface ProfileScatterProps {
   division: ClubScouts[];
   clubCode: ClubCode;
+  /**
+   * Which pairing to draw. Required rather than defaulted: the page now carries
+   * two of these, and a default is how the second one silently renders the
+   * first one's axes when a prop is dropped in a refactor.
+   */
+  pair: ScatterPairId;
 }
 
 /**
@@ -57,8 +66,8 @@ interface ProfileScatterProps {
  * the leaders, say — would pin which club happens to hold a value, which is the
  * assertion this repository has broken CI on twice.
  */
-export function ProfileScatter({ division, clubCode }: ProfileScatterProps) {
-  const scatter = profileScatter(division, clubCode);
+export function ProfileScatter({ division, clubCode, pair }: ProfileScatterProps) {
+  const scatter = profileScatter(division, clubCode, SCATTER_PAIRS[pair]);
   if (!scatter) return null;
 
   const subject = scatter.points.find((point) => point.subject);
@@ -67,13 +76,13 @@ export function ProfileScatter({ division, clubCode }: ProfileScatterProps) {
   const label = summarise(scatter, subject);
 
   return (
-    <figure data-scatter={scatter.points.length}>
+    <figure data-scatter={scatter.points.length} data-scatter-pair={pair}>
       {/* The cap belongs to the whole figure, not to the drawing alone: with
           it on the box, "mais finalizações" sat at the far right of a 700px
           card pointing at nothing, half a card away from the axis it names. An
           axis label has to share the width of its axis. */}
       <div className="max-w-[28rem]">
-        <p className="text-label-small text-ink-faint">{scatter.y.label} por jogo</p>
+        <p className="text-label-small text-ink-faint">{axisCaption(scatter.y)}</p>
 
         <div className="mt-0.5 flex gap-2">
         {/* The y axis, as words rather than numbers. The domain is padded so
@@ -100,7 +109,7 @@ export function ProfileScatter({ division, clubCode }: ProfileScatterProps) {
                carries three `role="img"` drawings and two `<figure>`s, and a
                lookup written when there was one of each resolves to all of
                them — `data-candles` is the same device, one mark earlier. */
-            data-scatter-svg=""
+            data-scatter-svg={pair}
           >
             <title>{label}</title>
 
@@ -157,18 +166,12 @@ export function ProfileScatter({ division, clubCode }: ProfileScatterProps) {
       </div>
 
       <figcaption className="mt-2 text-body-small text-ink-muted">
-        Cada ponto é um clube; o cheio é o {nameOf(subject.clubCode)}, que faz{" "}
-        <span className="tabular-nums">{figure(subject.x)}</span> finalizações e{" "}
-        <span className="tabular-nums">{figure(subject.y)}</span> defesas por jogo —{" "}
+        Cada ponto é um clube; o cheio é o {nameOf(subject.clubCode)}, com{" "}
+        {axisPhrase(scatter.x, subject.x)} e {axisPhrase(scatter.y, subject.y)} —{" "}
         {quadrantLabel(scatter)}. As linhas tracejadas são as medianas da divisão.
       </figcaption>
     </figure>
   );
-}
-
-/** A rate as the strip writes one, so the two cannot disagree about a comma. */
-function figure(value: number): string {
-  return valueLabel({ unit: "por-jogo", value });
 }
 
 function nameOf(clubCode: ClubCode): string {
@@ -178,8 +181,8 @@ function nameOf(clubCode: ClubCode): string {
 /** One club's dot, in words. Every mark says what it draws — `RankCandles`' rule. */
 function describe(scatter: Scatter, point: ScatterPoint): string {
   return (
-    `${nameOf(point.clubCode)} — ${figure(point.x)} ${scatter.x.label.toLowerCase()} ` +
-    `e ${figure(point.y)} defesas por jogo`
+    `${nameOf(point.clubCode)} — ${axisPhrase(scatter.x, point.x)} ` +
+    `e ${axisPhrase(scatter.y, point.y)}`
   );
 }
 
@@ -187,7 +190,7 @@ function describe(scatter: Scatter, point: ScatterPoint): string {
 function summarise(scatter: Scatter, subject: ScatterPoint): string {
   return (
     `${nameOf(subject.clubCode)} entre os ${scatter.points.length} clubes: ` +
-    `${figure(subject.x)} finalizações e ${figure(subject.y)} defesas do goleiro ` +
-    `por jogo — ${quadrantLabel(scatter)}.`
+    `${axisPhrase(scatter.x, subject.x)} e ${axisPhrase(scatter.y, subject.y)} — ` +
+    `${quadrantLabel(scatter)}.`
   );
 }

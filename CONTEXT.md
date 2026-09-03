@@ -168,8 +168,31 @@ division's **medianas**, and they are what make the corners readable; the corner
 a club is in is named in words beside the drawing (**jogo aberto**, **jogo
 controlado**, **jogo recuado**, **jogo fechado**), because the drawing carries no
 `<text>` — a figure that scales to its container scales its type with it.
-Note what the y axis counts and say no more than that: a **defesa**, not a
-finalização sofrida. A defence beaten often in front of a beaten goleiro reads
+Beneath it, on the same x axis, it carries the **volume × conversão**: the same
+twenty clubs plotted on finalizações against conversão. The pair exists because
+**finalizar muito e marcar muito são coisas diferentes**, and the first drawing
+cannot separate them — a club can lead the division in finalizações and sit at
+the foot of it in conversão, which is one identity and two opposite corners. It
+is the reading that answers "eficiência do ataque" without the word: conversão
+*is* the efficiency, so it is an axis rather than something to infer from a
+slope. The four corners are **volume e aproveitamento**, **volume sem
+aproveitamento**, **aproveitamento sem volume** and **nem volume nem
+aproveitamento** — descriptive like the first pairing's, and the rule bites
+harder here because conversão sounds like a virtue and "melhor ataque" is one
+word away.
+The x axis is shared with the drawing above on purpose: finalizações is the
+volume every other rate is spent on, so reading it against two different y axes
+is the point rather than a repetition.
+**The y axis is a percentage, so it is never captioned "por jogo"** — that reads
+as a typo and is a claim about what the figure counts.
+Note what this pairing deliberately does **not** plot: **gols marcados**. The
+`scouts` carry a goals column and it is measurably worse than the one the
+**Classificação** and `src/data/goals.ts` already answer, so plotting it would
+put two answers to one question in front of a reader. Conversão uses that column
+only as a numerator, which is a fact about *finalizar* rather than a scoreline.
+
+Note what the first pairing's y axis counts and say no more than that: a
+**defesa**, not a finalização sofrida. A defence beaten often in front of a beaten goleiro reads
 lower than the pressure on it was.
 The numbers are **scouts**, and they come from outside: no provider this app
 reads reports a finalização or a desarme at any tier. They are curated into
@@ -186,7 +209,11 @@ into two virtues is a judgement the data does not carry — the phrase names the
 ataque"/"defesa mais vazada" for a corner of that scatter (a verdict two rates
 cannot support; the four names describe how a match goes and stop there),
 "finalizações sofridas" for the y axis (it counts defesas, which is not the
-same number and is lower by every goal conceded).
+same number and is lower by every goal conceded), "gols por jogo" as an axis of
+the second scatter (the scout copy of a result, worse than the one the table
+already gives — see above), "pontaria" for conversão (it reads as aim, where the
+number counts finishing), "aproveitamento" as a *row* label in the strip (the
+row is **conversão**; the word belongs to the scatter's corner names).
 
 **Rodada**:
 One matchday of the championship — the set of fixtures sharing a `round` number.

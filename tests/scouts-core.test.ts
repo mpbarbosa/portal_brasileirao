@@ -8,8 +8,11 @@ import {
   finishes,
   markerFraction,
   medianFraction,
+  axisCaption,
+  axisPhrase,
   profileScatter,
   quadrantLabel,
+  SCATTER_PAIRS,
   rankLabel,
   valueLabel,
 } from "@/scouts-core";
@@ -192,15 +195,85 @@ test("a club with nothing measured is left off rather than plotted at zero", () 
   assert.equal(scatter?.points.length, 4);
   assert.equal(scatter?.points.some((point) => point.clubCode === "EEE"), false);
 
-  // **This does not cover the `||` in `profileScatter`, and saying so is the
-  // point.** An earlier version of this case was named for "either axis
-  // missing" and passed against a mutation that plotted a half-measured club,
-  // because both of today's axes derive from `matches` alone — so one-null-and-
-  // one-not is unreachable and the test could only ever exercise both-null.
-  // The `||` stays because it stops being defensive the moment an axis is
-  // `conversion`, which carries an absence of its own (no shot taken); it is
-  // simply not something this suite can reach today. A vacuous assertion is
-  // worse than a missing one, because it reads as cover.
+  // Both axes of THIS pairing derive from `matches` alone, so one-null-and-one-
+  // not is unreachable here and this case can only ever exercise both-null. The
+  // case below is the one that reaches the `||`, and it exists because the
+  // volume × conversão pairing gave `conversion` an absence of its own.
+});
+
+test("a club that has taken no shot is left off the conversão scatter, not plotted at zero", () => {
+  // **The case the `||` in `profileScatter` was written for, unreachable until
+  // a conversão axis existed.** This club has played, so `finishes` is a real
+  // 0 rather than null — but `conversion` is 0/0, which is an absence and not a
+  // 0%. Half-measured, so it is left off: a dot at a real x and an invented y
+  // is worse than no dot, because nothing on the drawing says which half was
+  // measured.
+  const mute = scouts("EEE", { goals: 0, shotsSaved: 0, shotsOff: 0, shotsWoodwork: 0 });
+  assert.equal(rawValue0(mute), 0, "finishes must be a real zero, or this tests nothing");
+
+  const division = [...spread(), mute];
+  const scatter = profileScatter(division, "AAA", SCATTER_PAIRS["volume-conversao"]);
+  assert.equal(scatter?.points.length, 4);
+  assert.equal(scatter?.points.some((point) => point.clubCode === "EEE"), false);
+});
+
+/** `finishes` per match, read the way the module does, for the guard above. */
+function rawValue0(entry: ClubScouts): number {
+  const [row] = clubProfile([entry], entry.clubCode);
+  return row?.value ?? -1;
+}
+
+test("each pairing names its own corners, and never the other one's", () => {
+  const division = spread();
+  const jogo = profileScatter(division, "DDD", SCATTER_PAIRS["ataque-defesa"]);
+  const volume = profileScatter(division, "DDD", SCATTER_PAIRS["volume-conversao"]);
+
+  assert.equal(jogo?.pair, "ataque-defesa");
+  assert.equal(volume?.pair, "volume-conversao");
+  assert.match(quadrantLabel(jogo!), /goleiro/);
+  assert.match(quadrantLabel(volume!), /converte/);
+  // The failure this guards is a scatter carrying one pairing's points under
+  // the other's vocabulary, which renders a complete, plausible caption about
+  // the wrong axes.
+  assert.doesNotMatch(quadrantLabel(volume!), /goleiro/);
+});
+
+test("the two pairings register vertically: every club sits at the same x", () => {
+  // Not a coincidence to be preserved by luck. Both pairings take x from the
+  // same metric over the same division, so `axis` pads it identically and a
+  // reader can trace one club straight down from one drawing to the other.
+  // Change either pairing's x and the two stop lining up — which looks like
+  // nothing and quietly makes the stacked layout misleading.
+  const division = spread();
+  const a = profileScatter(division, "AAA", SCATTER_PAIRS["ataque-defesa"]);
+  const b = profileScatter(division, "AAA", SCATTER_PAIRS["volume-conversao"]);
+  assert.ok(a && b);
+  assert.equal(a.x.id, b.x.id);
+
+  const at = (scatter: typeof a, code: string) =>
+    scatter!.points.find((point) => point.clubCode === code)?.atX;
+  for (const code of ["AAA", "BBB", "CCC", "DDD"]) {
+    assert.equal(at(a, code), at(b, code), `${code} sits at two different x`);
+  }
+});
+
+test("every pairing offers four distinct corners", () => {
+  for (const pair of Object.values(SCATTER_PAIRS)) {
+    const phrases = Object.values(pair.corners);
+    assert.equal(new Set(phrases).size, 4, `${pair.id} repeats a corner`);
+    for (const phrase of phrases) assert.ok(phrase.length > 0);
+  }
+});
+
+test("a percentage axis is never captioned 'por jogo'", () => {
+  const scatter = profileScatter(spread(), "AAA", SCATTER_PAIRS["volume-conversao"]);
+  assert.ok(scatter);
+  // The bug this refuses reads as a typo and is a claim about what the figure
+  // counts: "18% de conversão por jogo".
+  assert.equal(axisCaption(scatter.x), "Finalizações por jogo");
+  assert.equal(axisCaption(scatter.y), "Conversão");
+  assert.match(axisPhrase(scatter.x, 10.4), /^10,4 finalizações por jogo$/);
+  assert.match(axisPhrase(scatter.y, 17.8), /^18% de conversão$/);
 });
 
 test("the medians fall inside the padded domain", () => {

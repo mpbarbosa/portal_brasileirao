@@ -57,8 +57,18 @@ export function ClubProfile({ clubCode }: ClubProfileProps) {
             reader would have to check whether the two dates agreed. The strip
             comes first because it needs no interpretation; the scatter is the
             pair of rows read against each other. */}
+        {/* Two pairings, stacked, sharing the x axis on purpose — finalizações
+            is the volume every other rate is spent on, so reading it against
+            two different y axes is the point rather than a repetition. The
+            order is not arbitrary: ataque × defesa says how a match goes, which
+            needs no arithmetic, and volume × conversão says how much the
+            shooting is worth, which is a ratio the first drawing cannot show.
+            Same reason the strip precedes both. */}
         <div className="mt-3 border-t border-outline-variant pt-3">
-          <ProfileScatter division={CLUB_SCOUTS} clubCode={clubCode} />
+          <ProfileScatter division={CLUB_SCOUTS} clubCode={clubCode} pair="ataque-defesa" />
+        </div>
+        <div className="mt-3 border-t border-outline-variant pt-3">
+          <ProfileScatter division={CLUB_SCOUTS} clubCode={clubCode} pair="volume-conversao" />
         </div>
 
         {/* The key, the recency and the credit, in that order.
