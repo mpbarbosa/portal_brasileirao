@@ -10,11 +10,14 @@ import {
   resultFor,
   scorersFor,
   standingFor,
+  videosFor,
 } from "@/club-core";
 import { formatRoute } from "@/route-core";
 import { pointsPercentageLabel } from "@/standings-core";
 import { ClubCrest } from "@/src/components/ClubCrest";
+import { ClubVideos } from "@/src/components/ClubVideos";
 import { GLYPH, InstagramLink, MapPinGlyph, WikipediaLink } from "@/src/components/ClubLinks";
+import { CLUB_VIDEOS } from "@/src/data/club-videos";
 import { BACK_LINK, LINK_UNDERLINE, STATE_LAYER } from "@/src/components/interaction";
 import { MatchList } from "@/src/components/MatchList";
 import { FollowButton } from "@/src/components/MeuTime";
@@ -196,6 +199,7 @@ export function ClubView({
   const hymn = hymnUrl(club.hymn);
   const coach = coachOf(club, coaches);
   const mapUrl = clubMapUrl(club.address);
+  const videos = videosFor(CLUB_VIDEOS, code);
 
   return (
     <>
@@ -395,6 +399,15 @@ export function ClubView({
              fixture list further down the page; nothing carried it in text. */
           <ul
             aria-label="Últimos resultados, do mais antigo para o mais recente"
+            /* The hook exists because this stopped being the page's only
+               labelled list. `club.spec.ts` selected `main ul[aria-label] > li`
+               and measured five pills; **Vídeos do clube** carries a labelled
+               `ul` of its own — a rail of links needs one as much as a row of
+               results does — so the spec resolved six and went red. That is the
+               `data-scatter` shape one section over: a selector written when the
+               page had one of a thing quietly widens the day it has two, and the
+               fix is a hook on the subject rather than a looser assertion. */
+            data-form-guide
             className="flex gap-1.5"
           >
             {form.map((result, index) => (
@@ -433,6 +446,17 @@ export function ClubView({
           </ul>
         </section>
       )}
+
+      {/* Between the artilheiros and the fixture list, which is where the
+          page's *extras* sit — and deliberately not below **Jogos disputados**,
+          a section that runs to 25 rows by mid-season and buries whatever
+          follows it. Nor above **Últimos resultados**: a reader who opened a
+          club page came for its football, and a rail of thumbnails pushing the
+          form guide down the page would be answering a question nobody asked
+          first. It renders nothing at all for a club with no curated entry,
+          which is most of them, so for those pages this is not a decision the
+          reader can see. */}
+      <ClubVideos videos={videos} clubName={club.shortName} />
 
       <section className="mt-6">
         <h3 className="mb-2 text-body-medium font-medium text-ink-muted">Jogos disputados</h3>

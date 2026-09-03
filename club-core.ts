@@ -5,7 +5,7 @@
  */
 import { compareByKickoff, isConcluded } from "@/matches-core";
 import { countsTowardStandings } from "@/standings-core";
-import type { Club, ClubCode, FormResult, Match, Scorer, StandingsRow } from "@/src/types";
+import type { Club, ClubCode, ClubVideo, FormResult, Match, Scorer, StandingsRow } from "@/src/types";
 
 /**
  * URL-safe form of a club name: "Atlético-MG" becomes "atletico-mg".
@@ -256,6 +256,21 @@ export const standingFor = (rows: StandingsRow[], code: ClubCode): StandingsRow 
 export const scorersFor = (scorers: Scorer[], code: ClubCode): Scorer[] =>
   scorers.filter((scorer) => scorer.club.code === code);
 
+/**
+ * The curated videos about a club, in file order — which is the order the
+ * reader meets them, so the file is where the ordering decision lives.
+ *
+ * Entries whose id will not parse are **dropped rather than rendered**, one at
+ * a time, so a single bad line does not take the rest of a club's rail with it
+ * — `highlights.ts`' rule for `isHighlightUrl`, met one file over. A club with
+ * no entry, or whose only entries were dropped, returns an empty list and the
+ * section is left out entirely.
+ */
+export const videosFor = (
+  videos: Record<ClubCode, ClubVideo[]>,
+  code: ClubCode,
+): ClubVideo[] => (videos[code] ?? []).filter((video) => youtubeVideoId(video.id) !== null);
+
 
 /**
  * Normalise a club's official site to an HTTPS origin.
@@ -329,20 +344,25 @@ export const instagramUrl = (raw: string | null | undefined): string | null => {
 };
 
 /**
- * The canonical watch address for a hymn video.
+ * The video id inside whatever a person pasted.
  *
- * Accepts what a person is likely to paste — a bare id, a `watch?v=` link, a
- * `youtu.be` short link, an `embed/` link — because the hymn list is
- * hand-maintained and being strict about the input format buys nothing. Only
- * the id is kept, so a link copied while the video played inside a mix does not
- * carry `&list=RD…&start_radio=1` into the file and drop every reader into
- * autoplaying radio instead of the hymn.
+ * Accepts a bare id, a `watch?v=` link, a `youtu.be` short link or an `embed/`
+ * link, because every list that feeds this is hand-maintained and being strict
+ * about the input format buys nothing. Only the id is kept, so a link copied
+ * while the video played inside a mix or a playlist does not carry
+ * `&list=RD…&start_radio=1` into the file and drop every reader into whatever
+ * YouTube plays next.
  *
- * Returns null for anything that is not a plausible video id — YouTube's are
- * exactly 11 characters of the URL-safe alphabet — which the UI renders as no
- * link rather than a broken one.
+ * Returns null for anything that is not a plausible id — YouTube's are exactly
+ * 11 characters of the URL-safe alphabet — which every caller renders as no
+ * link rather than as a broken one.
+ *
+ * **One parser, two curated files.** `club-hymns.ts` and `club-videos.ts` store
+ * the same kind of value and a second copy of this is how one of them comes to
+ * accept a `youtu.be` link the other rejects. It is the rule `slugify` already
+ * carries in this file, and the one `venue-core.ts` reuses it under.
  */
-export const hymnUrl = (raw: string | undefined): string | null => {
+export const youtubeVideoId = (raw: string | undefined): string | null => {
   const value = raw?.trim();
   if (!value) return null;
 
@@ -360,10 +380,52 @@ export const hymnUrl = (raw: string | undefined): string | null => {
       (url.pathname.split("/").filter(Boolean).pop() ?? "");
   }
 
-  if (!/^[A-Za-z0-9_-]{11}$/.test(id)) return null;
-
-  return `https://www.youtube.com/watch?v=${id}`;
+  return /^[A-Za-z0-9_-]{11}$/.test(id) ? id : null;
 };
+
+/** The canonical watch address for a video id, or null if there is no id to
+ *  build one from. The origin is written **here and nowhere else**, so the
+ *  hymn link and the Vídeos rail cannot come to point at two spellings of
+ *  YouTube. */
+export const videoWatchUrl = (raw: string | undefined): string | null => {
+  const id = youtubeVideoId(raw);
+  return id && `https://www.youtube.com/watch?v=${id}`;
+};
+
+/**
+ * YouTube's own thumbnail for a video, at the size the rail draws.
+ *
+ * `hqdefault` is 480×360 and exists for every video — the higher `maxresdefault`
+ * does **not**, and 404s for anything uploaded below that resolution, which
+ * renders as a broken image on exactly the entries a curator is least likely to
+ * re-check.
+ *
+ * **Hotlinked rather than vendored, which is the opposite of the stadium and
+ * player photographs and rests on a different argument.** Those are somebody's
+ * copyrighted work fetched from a volunteer-run host that answers a burst with a
+ * 429; this is the platform's own artwork for the video, served from its image
+ * CDN for precisely this purpose. Vendoring it would also freeze it: an uploader
+ * who changes a thumbnail would leave us serving the old one for ever, with
+ * nothing to notice.
+ *
+ * The host is still a third party the **e2e suite must not reach**, so it is in
+ * `OFFLINE_HOSTS` in `tests/e2e/fixtures.ts` beside the crest CDN — that list
+ * exists for exactly this decision.
+ */
+export const videoThumbnailUrl = (raw: string | undefined): string | null => {
+  const id = youtubeVideoId(raw);
+  return id && `https://img.youtube.com/vi/${id}/hqdefault.jpg`;
+};
+
+/**
+ * The canonical watch address for a hymn video.
+ *
+ * Kept as its own name rather than folded into `videoWatchUrl`, because the two
+ * read differently at the call site and `ClubView` has both: one is *the club's
+ * hymn*, the other is *an entry in the rail*. They are the same function today
+ * and there is no second implementation to drift.
+ */
+export const hymnUrl = (raw: string | undefined): string | null => videoWatchUrl(raw);
 
 /**
  * The canonical article address for a Wikipedia title.
