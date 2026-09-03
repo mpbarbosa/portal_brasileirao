@@ -4,10 +4,11 @@ import {
   axisPhrase,
   profileScatter,
   quadrantLabel,
-  quadrantParts,
+  subjectQuadrant,
   SCATTER_PAIRS,
   type ProfileScatter as Scatter,
   type ScatterAxis,
+  type Quadrant,
   type ScatterPairId,
   type ScatterPoint,
 } from "@/scouts-core";
@@ -100,7 +101,12 @@ export function ProfileScatter({ division, clubCode, pair }: ProfileScatterProps
   if (!subject) return null;
 
   const label = summarise(scatter, subject);
-  const corner = quadrantParts(scatter);
+  // Unreachable given the `subject` guard above — `subjectQuadrant` answers null
+  // for exactly the same state — and kept because the tint, the ring and the
+  // corner label all read it, and three `corner &&` guards inside the drawing
+  // would be three places for the picture and the caption to fall out of step.
+  const corner = subjectQuadrant(scatter);
+  if (!corner) return null;
 
   return (
     <figure data-scatter={scatter.points.length} data-scatter-pair={pair}>
@@ -127,11 +133,21 @@ export function ProfileScatter({ division, clubCode, pair }: ProfileScatterProps
               that no mark is drawn half outside the frame, which means its ends
               are values no club actually has — printing `1,96` there would be a
               figure the drawing cannot support. */}
+          {/* `data-scatter-axis-end` on these two and not on the x axis's pair:
+              these are the words a left-hand corner label can land beside, and
+              a spec measures the gap. The x axis's ends sit below the box,
+              outside the drawing, where nothing inside it can reach them. */}
           <div className="flex shrink-0 flex-col justify-between text-label-small text-ink-faint">
-            <span>mais</span>
-            <span>menos</span>
+            <span data-scatter-axis-end="mais">mais</span>
+            <span data-scatter-axis-end="menos">menos</span>
           </div>
 
+          {/* `relative`, because the quadrant's name is HTML positioned OVER the
+              drawing rather than `<text>` inside it — `RankCandles`' rule, the
+              same one that puts the axes in HTML. A wrapper is what gives that
+              label something to be positioned against; the x-axis row below
+              stays a child of the grid, in the drawing's own column. */}
+          <div className="relative min-w-0">
           <svg
             width={BOX.width}
             height={BOX.height}
@@ -151,6 +167,34 @@ export function ProfileScatter({ division, clubCode, pair }: ProfileScatterProps
             data-scatter-svg={pair}
           >
             <title>{label}</title>
+
+            {/* **The reader's own quadrant, tinted.** Drawn first, so every mark
+                and both guides sit on top of it. This is what makes the corner
+                visible before a word is read — the medians alone divide the box
+                into four equal-looking regions and say nothing about which one
+                is yours.
+
+                `surface-container` rather than `primary` at a low opacity: one
+                tonal step up from the card this sits on, so it is a *surface*
+                and re-themes with everything else. An opacity hack on an accent
+                would be a state layer, which MD3 spends on interaction and this
+                is not. */}
+            <rect
+              x={corner.aboveX ? BOX.width * scatter.x.medianAt : 0}
+              y={corner.aboveY ? 0 : BOX.height * (1 - scatter.y.medianAt)}
+              width={
+                corner.aboveX
+                  ? BOX.width * (1 - scatter.x.medianAt)
+                  : BOX.width * scatter.x.medianAt
+              }
+              height={
+                corner.aboveY
+                  ? BOX.height * (1 - scatter.y.medianAt)
+                  : BOX.height * scatter.y.medianAt
+              }
+              className="fill-surface-container"
+              data-scatter-quadrant={corner.aboveX ? (corner.aboveY ? "both" : "xOnly") : corner.aboveY ? "yOnly" : "neither"}
+            />
 
             {/* The two medians, which is what makes the four corners readable at
                 all. Dashed and in the outline token for the reason the G4 and Z4
@@ -175,6 +219,29 @@ export function ProfileScatter({ division, clubCode, pair }: ProfileScatterProps
               vectorEffect="non-scaling-stroke"
             />
 
+            {/* A ring on the subject, drawn under it so it reads as a ring and
+                not as a bigger dot. Six colour-blind-safe pixels of green in a
+                field of grey is not much to find; this is the mark that says
+                "this one" at a glance.
+
+                **Its radius is bounded by `PAD`, not by taste.** The domain is
+                padded by 6% of the span, which leaves the division's extreme
+                club roughly 10.7 box units of clearance on the short axis — so
+                a ring much wider than this paints outside the frame for
+                whichever club happens to be that extreme, and that is not the
+                club whose panel anyone is looking at while they choose a
+                radius. `non-scaling-stroke` keeps the line a hairline at every
+                width, which also keeps its contribution to the extent small. */}
+            <circle
+              cx={BOX.width * subject.atX}
+              cy={BOX.height * (1 - subject.atY)}
+              r={DOT.subject + 2.5}
+              className="fill-none stroke-primary"
+              strokeWidth={1}
+              vectorEffect="non-scaling-stroke"
+              data-scatter-ring=""
+            />
+
             {/* The subject last, so it is painted over its neighbours rather than
                 under one of them — with twenty clubs on one box, two dots
                 overlapping is ordinary and the reader's own club disappearing
@@ -196,6 +263,35 @@ export function ProfileScatter({ division, clubCode, pair }: ProfileScatterProps
                 </circle>
               ))}
           </svg>
+
+            {/* The corner's name, in the corner it names. It sits in the outer
+                angle of the tinted quadrant, which is the one region `PAD`
+                guarantees is empty: the domain is padded by 6% of the span, so
+                no club can be plotted against the frame. `pointer-events-none`
+                so it never intercepts a dot's `<title>`, and `aria-hidden`
+                because the figure's own label already says the corner in a
+                sentence — read aloud, this would say it a second time.
+
+                **A LEFT-hand label drops a line, and that asymmetry is the
+                whole reason this is not four symmetric corners.** The y axis's
+                own words sit in the gutter immediately left of the box, at its
+                top and bottom edges — so a label hugging a left corner lands on
+                the same baseline as "mais" or "menos", 8px away, and
+                *"mais jogo recuado"* reads as one phrase. That is the exact
+                run-on this figure's previous pass removed from the x axis, one
+                axis over; it was caught by looking at a club in each quadrant
+                rather than at the one whose panel happened to be open, since
+                the common right-hand case has nothing beside it. A right-hand
+                label keeps the corner, where the tint's own edge separates it
+                from anything. */}
+            <span
+              aria-hidden="true"
+              data-scatter-corner=""
+              className={`pointer-events-none absolute max-w-[46%] text-label-small text-ink-muted ${cornerPlacement(corner)}`}
+            >
+              {corner.phrase.term}
+            </span>
+          </div>
 
           <p className="col-start-2 mt-1 flex justify-between text-label-small text-ink-faint">
             <span>menos {scatter.x.label.toLowerCase()}</span>
@@ -223,18 +319,18 @@ export function ProfileScatter({ division, clubCode, pair }: ProfileScatterProps
         <Reading axis={scatter.x} value={subject.x} />
         <Reading axis={scatter.y} value={subject.y} />
 
-        {corner && (
-          /* The corner in two weights. The term is what a scanning eye should
-             land on and the gloss is what it means, which is why
-             `quadrantParts` hands them over separately rather than the
-             component cutting the sentence at its colon. Lowercase, because
-             these words are descriptive rather than a verdict and read the same
-             way here as they do inside the drawing's own label. */
-          <p className="mt-1.5 text-body-small text-ink-muted">
-            <span className="font-medium text-on-surface">{corner.term}</span> —{" "}
-            {corner.gloss}
-          </p>
-        )}
+        {/* The corner in two weights. The term is what a scanning eye should
+            land on and the gloss is what it means, which is why
+            `subjectQuadrant` hands them over separately rather than the
+            component cutting the sentence at its colon. Lowercase, because
+            these words are descriptive rather than a verdict and read the same
+            way here as they do inside the drawing's own label — and the term
+            is now printed on the drawing too, in the corner it names, so the
+            two must be the same string from the same place. */}
+        <p className="mt-1.5 text-body-small text-ink-muted">
+          <span className="font-medium text-on-surface">{corner.phrase.term}</span> —{" "}
+          {corner.phrase.gloss}
+        </p>
       </figcaption>
     </figure>
   );
@@ -275,6 +371,30 @@ export function ScatterKey({ className }: { className?: string }) {
       </ul>
     </div>
   );
+}
+
+/**
+ * Where the corner's name sits, given which corner it is.
+ *
+ * **Exported and unit-tested because no browser test can reach three of its
+ * four cases.** `openPanel` in the end-to-end suite opens the *leader*, which
+ * on any plausible table is a club above the median on finalizações — so the
+ * rendered spec only ever exercises a right-hand label, and the left-hand rule
+ * below is the one that had the bug. That is this repository's own trap, written
+ * down for the Perfil's marker: an assertion that passes for eighteen of twenty
+ * clubs passes against the bug it names. `tests/button-classes.test.ts` is the
+ * precedent for asserting a class string directly.
+ *
+ * The rule: a right-hand label hugs its corner, where the tint's edge separates
+ * it from everything. A **left**-hand label drops a line, because the y axis's
+ * own "mais"/"menos" live in the gutter at the box's top and bottom edges, 8px
+ * away — and a label on that baseline reads as one phrase with them.
+ */
+export function cornerPlacement(corner: Pick<Quadrant, "aboveX" | "aboveY">): string {
+  if (corner.aboveX) {
+    return `right-0 text-right ${corner.aboveY ? "top-0" : "bottom-0"}`;
+  }
+  return `left-0 ${corner.aboveY ? "top-4" : "bottom-4"}`;
 }
 
 /** One axis's reading: the figure in the page's ink, its unit beside it. */

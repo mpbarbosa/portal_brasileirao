@@ -165,9 +165,15 @@ whose goleiro also works hard is playing an open game, and one doing the first
 without the second is controlling matches. Those two are identical on every row
 of the strip and sit in opposite corners here. The two dashed lines are the
 division's **medianas**, and they are what make the corners readable; the corner
-a club is in is named in words beside the drawing (**jogo aberto**, **jogo
-controlado**, **jogo recuado**, **jogo fechado**), because the drawing carries no
-`<text>` — a figure that scales to its container scales its type with it.
+a club is in is **tinted and named on the drawing itself** (**jogo aberto**,
+**jogo controlado**, **jogo recuado**, **jogo fechado**), with the same term
+repeated in the reading beneath. The words are HTML positioned over the figure
+rather than `<text>` inside it, because a figure that scales to its container
+scales its type with it. Each term names *how a match goes* and never how well:
+the corner is a description, so "jogo aberto" is a fact and "melhor ataque"
+would be a verdict two rates cannot support.
+_Avoid_: "quadrante" on the page — the reader is told the corner's name, not the
+geometry; and any of the four terms as praise or blame.
 Beneath it, on the same x axis, it carries the **volume × conversão**: the same
 twenty clubs plotted on finalizações against conversão. The pair exists because
 **finalizar muito e marcar muito são coisas diferentes**, and the first drawing
