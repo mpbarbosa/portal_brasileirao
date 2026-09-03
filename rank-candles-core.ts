@@ -391,14 +391,28 @@ export const describeCandle = (candle: RoundCandle): string => {
  * The same duty `describeCampaign` performs for the sparkline: a drawing of a
  * season is not readable by a screen reader and not readable at all where the
  * marks do not render, so the shape of it is stated in words.
+ *
+ * **`name` is what makes a comparação legible without eyes.** Two velas drawn
+ * on one page carry two summaries of the same shape, and unnamed they differ
+ * only in their figures — a screen reader hears "Campanha rodada a rodada: 25
+ * rodadas, 52 pontos…" twice and has nothing to hang either on. It is optional
+ * rather than required because a painel drawing one club has already said
+ * whose season it is, in the page heading and in the section's, and repeating
+ * it in the chart's own name is the heading a third time.
  */
-export const describeCandles = (candles: RoundCandle[]): string => {
+export const describeCandles = (candles: RoundCandle[], name?: string): string => {
   const summary = summariseCandles(candles);
-  if (!summary) return "Campanha ainda não disponível";
+  // Named even in the absence, for the reason the named branch exists at all:
+  // a comparison whose second club has no campanha yet must say *which* club
+  // has none, or the sentence describes the page rather than a drawing.
+  if (!summary) {
+    return name ? `Campanha do ${name} ainda não disponível` : "Campanha ainda não disponível";
+  }
 
   const last = candles[candles.length - 1];
+  const subject = name ? `Campanha do ${name} rodada a rodada` : "Campanha rodada a rodada";
   return (
-    `Campanha rodada a rodada: ${summary.rounds} rodadas, ${summary.points} pontos, ` +
+    `${subject}: ${summary.rounds} rodadas, ${summary.points} pontos, ` +
     `${last.close}º na ${last.round}ª rodada. ` +
     `Melhor: ${summary.best.position}º na ${summary.best.round}ª. ` +
     `Pior: ${summary.worst.position}º na ${summary.worst.round}ª.`
