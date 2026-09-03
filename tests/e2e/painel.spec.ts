@@ -235,14 +235,19 @@ test.describe("Painel do clube", () => {
     // Scoped to the figure: "1º" is also the Posição tile three sections up,
     // which is a different claim about the same club and resolves to two
     // elements under strict mode.
-    const figure = page.locator("main figure");
+    const figure = page.locator("main figure[data-candles-figure]");
     await expect(figure.getByText("1º", { exact: true })).toBeVisible();
     await expect(figure.getByText("20º", { exact: true })).toBeVisible();
     await expect(figure.getByText("1ª rodada", { exact: true })).toBeVisible();
-    const main = figure;
-    // Every colour in the drawing is named in the key.
+
+    // The key is **outside** the figure and stated once for the section, which
+    // is where it moved when the comparação made a second drawing possible —
+    // inside the caption it would sit between the two charts it describes.
+    // Every colour in the drawing is still named in it.
+    const key = page.locator("main [data-candles-key]");
+    await expect(key).toHaveCount(1);
     for (const word of ["Vitória", "Empate", "Derrota", "Sem jogo"]) {
-      await expect(main.getByText(word, { exact: true })).toBeVisible();
+      await expect(key.getByText(word, { exact: true })).toBeVisible();
     }
   });
 
@@ -639,5 +644,176 @@ test.describe("Painel do clube", () => {
     expect(html).toMatch(/rel="canonical" href="[^"]*\/painel\//);
     // Three deep: the painel hangs off the club's page, not off the table.
     expect(html).toMatch(/"position":3/);
+  });
+
+  /**
+   * The **comparação**: the same velas read against a second club.
+   *
+   * What makes this a comparison rather than two charts is that both drawings
+   * take the *division's* domains — twenty positions and the season's last
+   * round — so they are the same box at the same scale and a reader can drop a
+   * vertical line through both. These specs measure exactly that, because it
+   * is the property a later "simplification" would take away without anything
+   * else going red: two charts of two clubs each scaled to its own campanha
+   * look entirely reasonable and are not comparable.
+   */
+  test.describe("comparação com outro clube", () => {
+    /** Pick the first club offered, and read back the name it names. */
+    const compareWithFirst = async (page: Page) => {
+      const select = page.locator("#comparar-clube");
+      const option = select.locator("option").nth(1);
+      const name = (await option.innerText()).trim();
+      await select.selectOption(await option.getAttribute("value") ?? "");
+      return name;
+    };
+
+    test("the painel draws one club until a second is asked for", async ({ page }) => {
+      await openPanel(page);
+
+      // The resting state is one drawing, which is what every other spec on
+      // this page assumes — and the reason the comparison is opt-in.
+      await expect(page.locator("main svg[data-candles]")).toHaveCount(1);
+      await expect(page.locator("#comparar-clube")).toHaveValue("");
+    });
+
+    test("choosing a club draws its velas beneath, and names both", async ({ page }) => {
+      const subject = await openPanel(page);
+      const other = await compareWithFirst(page);
+
+      const charts = page.locator("main svg[data-candles]");
+      await expect(charts).toHaveCount(2);
+
+      // Named only once there are two: on its own the drawing is what the page
+      // heading has just said, and a third statement of the club is noise.
+      await expect(page.locator(`main svg[data-candles-club="${subject}"]`)).toHaveCount(1);
+      await expect(page.locator(`main svg[data-candles-club="${other}"]`)).toHaveCount(1);
+      // The subject stays first — the page is its painel, and the comparison
+      // is what it is being read against.
+      expect(await charts.first().getAttribute("data-candles-club")).toBe(subject);
+    });
+
+    test("both drawings share one frame, which is what makes them comparable", async ({ page }) => {
+      await openPanel(page);
+      await compareWithFirst(page);
+
+      const charts = page.locator("main svg[data-candles]");
+      const first = (await charts.nth(0).boundingBox())!;
+      const second = (await charts.nth(1).boundingBox())!;
+
+      // Same width and same left edge, so a rodada sits at the same x in both.
+      // Without this a reader comparing round 12 is comparing two different
+      // places on the page.
+      expect(Math.abs(first.x - second.x)).toBeLessThanOrEqual(1);
+      expect(Math.abs(first.width - second.width)).toBeLessThanOrEqual(1);
+      // Same height, because the y axis is the whole division in both — a
+      // per-club y domain is the failure this asserts against, and it would
+      // leave a leader's chart and a struggler's looking equally busy.
+      expect(Math.abs(first.height - second.height)).toBeLessThanOrEqual(1);
+
+      // And the same axis, stated in text: both drawings run 1º to the size of
+      // the division. Counting rather than reading one — the labels belong to
+      // the figures, so two figures owe two pairs.
+      const figures = page.locator("main figure[data-candles-figure]");
+      await expect(figures).toHaveCount(2);
+      for (const nth of [0, 1]) {
+        const figure = figures.nth(nth);
+        await expect(figure.getByText("1º", { exact: true })).toBeVisible();
+        await expect(figure.getByText("20º", { exact: true })).toBeVisible();
+      }
+    });
+
+    test("both drawings span the same rounds", async ({ page }) => {
+      await openPanel(page);
+      await compareWithFirst(page);
+
+      // A club with a game in hand must not be drawn on a shorter axis than the
+      // one beside it: the x domain is the *season's* last round, not either
+      // club's own.
+      //
+      // **Read off the axis label, not off `data-candles`.** That attribute
+      // counts the marks drawn, and `candleShapes` maps the candles it is
+      // given — so it reports the same number whatever domain the drawing was
+      // handed, and a spec comparing the two counts passes against exactly the
+      // bug it is written for. Confirmed by mutation: giving the second chart
+      // its own `lastRound` left a count assertion green and this one red.
+      const ends = await page
+        .locator("main figure[data-candles-figure] p span:nth-child(2)")
+        .allInnerTexts();
+
+      expect(ends).toHaveLength(2);
+      expect(ends[0]).toMatch(/^\d{1,2}ª rodada$/);
+      expect(ends[0]).toBe(ends[1]);
+    });
+
+    test("the key is stated once for the section, not under each drawing", async ({ page }) => {
+      await openPanel(page);
+      await compareWithFirst(page);
+
+      // Two drawings, one vocabulary. Said twice it would sit *between* the
+      // charts it explains and leave a reader checking whether the two
+      // statements agree — which is why it left the figure's own caption.
+      await expect(page.locator("main [data-candles-key]")).toHaveCount(1);
+      await expect(page.locator("main [data-candles-key]")).toContainText("Sem jogo");
+    });
+
+    test("a painel never offers to compare a club with itself", async ({ page }) => {
+      const subject = await openPanel(page);
+
+      const names = await page
+        .locator("#comparar-clube option")
+        .evaluateAll((nodes) => nodes.map((node) => node.textContent?.trim() ?? ""));
+
+      // Nineteen clubs and the resting option, and the subject in none of them.
+      expect(names).not.toContain(subject);
+      expect(names[0]).toBe("Nenhum");
+      expect(names.length).toBeGreaterThan(2);
+    });
+
+    /**
+     * **What this asserts is that the choice is not PERSISTED, and it does not
+     * reach the reset in `ClubDashboard`.** Both are worth being exact about.
+     *
+     * The reset — clearing `compareCode` when the subject changes — is
+     * unreachable from a browser today: every route out of this page changes
+     * `route.section`, so `App` swaps the component and a fresh painel gets
+     * fresh state whatever the reset does. Deleting it would leave this spec
+     * green. It stays because the moment anything links one painel to another
+     * the component stops unmounting, and the first thing a reader would see
+     * is a club drawn against itself.
+     *
+     * What *would* fail here is the design this rejected — putting the choice
+     * in `localStorage` beside the plot kind, which would have every painel
+     * opening with a second club already drawn.
+     */
+    test("a second painel opens with no comparison of its own", async ({ page }) => {
+      await openPanel(page);
+      await compareWithFirst(page);
+      await expect(page.locator("main svg[data-candles]")).toHaveCount(2);
+
+      // Second row rather than the first: a different club from the one this
+      // started on, which is the whole point.
+      await page.goto("/");
+      await expect(page.locator("table tbody tr")).toHaveCount(20);
+      const cell = page.locator("table tbody tr").nth(1).locator("td:nth-child(2) a");
+      const name = (await cell.innerText()).trim();
+      await cell.click();
+      await page.locator("main a[data-panel-link]").click();
+      await expect(pageHeading(page)).toHaveText(`Painel do ${name}`);
+
+      await expect(page.locator("main svg[data-candles]")).toHaveCount(1);
+      await expect(page.locator("#comparar-clube")).toHaveValue("");
+    });
+
+    test("going back to Nenhum leaves the painel as it was", async ({ page }) => {
+      await openPanel(page);
+      await compareWithFirst(page);
+      await expect(page.locator("main svg[data-candles]")).toHaveCount(2);
+
+      await page.locator("#comparar-clube").selectOption("");
+      await expect(page.locator("main svg[data-candles]")).toHaveCount(1);
+      // Unnamed again, since the page heading is once more the only thing that
+      // needs to say whose season this is.
+      await expect(page.locator('main svg[data-candles-club=""]')).toHaveCount(1);
+    });
   });
 });

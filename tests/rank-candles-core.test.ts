@@ -472,3 +472,35 @@ test("the whole painel is summarised in words for a reader who cannot see it", (
 test("a season with nothing in it says so rather than drawing a blank", () => {
   assert.equal(describeCandles([]), "Campanha ainda não disponível");
 });
+
+/**
+ * The **comparação** puts two of these drawings on one page, and the accessible
+ * name is the only thing that tells them apart for a reader who cannot see
+ * them: unnamed, both open "Campanha rodada a rodada" and differ only in their
+ * figures. The named form is what the second drawing takes.
+ */
+test("a comparação names the club, since two summaries otherwise differ only in their figures", () => {
+  const named = describeCandles(candlesOf("AAA"), "Aaa");
+  const bare = describeCandles(candlesOf("AAA"));
+
+  assert.match(named, /^Campanha do Aaa rodada a rodada:/);
+  assert.notEqual(named, bare);
+  // The reading itself is the same sentence — the name is a prefix, not a
+  // second summary written for the comparison, or the two drawings would
+  // report one season two ways.
+  assert.equal(named.replace("Campanha do Aaa rodada a rodada", "Campanha rodada a rodada"), bare);
+});
+
+test("an unnamed painel does not print the club, which its two headings already have", () => {
+  assert.match(describeCandles(candlesOf("AAA")), /^Campanha rodada a rodada:/);
+});
+
+/**
+ * The absence has to be named too. A comparação whose second club has no
+ * campanha yet would otherwise say "Campanha ainda não disponível" under a
+ * drawing of the first club's — a sentence about the page rather than about
+ * either drawing.
+ */
+test("an empty comparação says WHICH club has no campanha", () => {
+  assert.equal(describeCandles([], "Aaa"), "Campanha do Aaa ainda não disponível");
+});
