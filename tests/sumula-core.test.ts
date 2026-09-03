@@ -319,6 +319,120 @@ test("the parse stops before the Cartões table below it", () => {
   assert.ok(subs.every((s) => s.onShirt !== "5"));
 });
 
+/**
+ * Transcribed verbatim from `pdftotext -layout` on 554984's súmula
+ * (Flamengo 3x0 Botafogo, `142241se.pdf`), where one row arrives with each cell
+ * on its own line. Composing this would have been worthless — the whole defect
+ * is a layout the regex could not see, so the fixture has to be the layout.
+ *
+ * The stacked row sits **between** two ordinary ones deliberately: it is what
+ * the document does, and it is also the arrangement that would catch a fix that
+ * consumed the wrong number of lines and swallowed the row below.
+ */
+const STACKED_SUBS_TABLE = [
+  "Substituições",
+  "  Tempo      1T/2T                  Equipe                                      Entrou                                          Saiu",
+  "",
+  "  20:00        1T    Botafogo/RJ                            33 - Lucas Gabriel Nunes Monzon                 13 - Alex Nicolao Telles",
+  "     -        INT    Botafogo/RJ                            90 - Danilo Pereira da Silva                    10 - Alvaro Montoro",
+  "12:00",
+  "2T",
+  "Flamengo/RJ",
+  "20 - Lucas Tolentino Coelho de Lima",
+  "                                                                                        7 - Luiz de Araujo Guimaraes Neto",
+  "                                          21:00            2T    Botafogo/RJ                   6 - Cristian Nicolas Medina                                88 - Edenilson Andrade dos Santos",
+  "",
+  "",
+].join("\n");
+
+test("a row whose cells are stacked on separate lines is still one substitution", () => {
+  const subs = parseSumulaSubstitutions(STACKED_SUBS_TABLE);
+
+  // Four rows: two ordinary, the stacked one, and the ordinary row after it.
+  assert.equal(subs.length, 4);
+
+  const stacked = subs[2];
+  assert.equal(stacked.team, "Flamengo/RJ");
+  assert.equal(stacked.period, "2T");
+  assert.equal(stacked.minute, 12);
+  // Column order is the table's own, so the first cell is Entrou.
+  assert.equal(stacked.onShirt, "20");
+  assert.equal(stacked.offShirt, "7");
+  assert.equal(sumulaSubstitutionLabel(stacked), "57'");
+});
+
+test("the row below a stacked one is not swallowed by it", () => {
+  // The stacked form consumes five lines. Consuming four or six would either
+  // re-read a cell as a row or drop the next row entirely, and the count check
+  // in `attachSubstitutions` would then refuse the whole fixture.
+  const subs = parseSumulaSubstitutions(STACKED_SUBS_TABLE);
+  assert.equal(subs[3].team, "Botafogo/RJ");
+  assert.equal(subs[3].onShirt, "6");
+  assert.equal(subs[3].offShirt, "88");
+});
+
+test("an incomplete stack yields nothing rather than a half-read row", () => {
+  // Four of the five cells. A row assembled from this would be a plausible lie
+  // of exactly the kind the all-or-nothing join exists to refuse, so the parse
+  // must simply not see it.
+  const truncated = [
+    "  Tempo      1T/2T   Equipe    Entrou      Saiu",
+    "  20:00        1T    Botafogo/RJ    33 - Lucas Gabriel Nunes Monzon      13 - Alex Nicolao Telles",
+    "12:00",
+    "2T",
+    "Flamengo/RJ",
+    "20 - Lucas Tolentino Coelho de Lima",
+    "",
+    "",
+  ].join("\n");
+
+  const subs = parseSumulaSubstitutions(truncated);
+  assert.equal(subs.length, 1);
+  assert.equal(subs[0].onShirt, "33");
+});
+
+test("prose inside the table region is not read as a stacked row", () => {
+  // Single-spaced text is exactly what a lone Equipe cell looks like, and
+  // 554945's súmula really does carry lines like these — a numbered roll of
+  // names read out before kickoff.
+  //
+  // The prose sits **above the first row**, which is what makes it reachable at
+  // all: the blank-run terminator only arms once a row has been seen, so a
+  // fixture with the prose *below* the table is checked against a parse that
+  // already broke out. That was this test's first spelling, and it asserted
+  // nothing.
+  //
+  // **Know what this one is worth before trusting it: no single loosening of the
+  // stacked-row rule makes it fail.** Four were tried — dropping the Tempo gate,
+  // dropping the period gate, loosening the `N - name` cell pattern, and all of
+  // them at once — and it stayed green through every one. The reason is
+  // structural rather than lucky: the cell pattern is also used *negatively*, to
+  // refuse a block whose Equipe line is a player cell, so loosening it tightens
+  // that check by exactly as much as it loosens the other two. The constraint
+  // actually refusing this fixture is the `N - name` requirement on the fourth
+  // line, which real prose cannot satisfy — CBF numbers those lines `12.`, not
+  // `12 -`.
+  //
+  // So this is a regression test against real text, not a proof of any one rule.
+  // The rule that has a mutation behind it is the all-five-cells requirement,
+  // which `an incomplete stack yields nothing` reddens on its own.
+  const withProse = [
+    "  Tempo      1T/2T   Equipe    Entrou      Saiu",
+    "1. andré dos santos eleodoro",
+    "torcedor ilustre do fluminense",
+    "2. andré luís da costa oliveira",
+    "torcedor ilustre do fluminense",
+    "Nada houve de anormal",
+    "  20:00        1T    Botafogo/RJ    33 - Lucas Gabriel Nunes Monzon      13 - Alex Nicolao Telles",
+    "",
+    "",
+  ].join("\n");
+
+  const subs = parseSumulaSubstitutions(withProse);
+  assert.equal(subs.length, 1);
+  assert.equal(subs[0].onShirt, "33");
+});
+
 test("an interval substitution is a word, never a minute", () => {
   // Sharing `sumulaMinuteLabel` would have rendered this as 45', because its
   // reckoning reads anything that is not 1T as the second half.

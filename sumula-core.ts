@@ -195,6 +195,44 @@ const SUB_ROW =
   /^\s*(?:(\d{1,3}):(\d{2})|\+\s*(\d{1,3})(?::\d{2})?|(-))\s+(1T|2T|INT)\s+(\S.*?)\s{2,}(\d{1,3})\s*-\s*\S.*?\s{2,}(\d{1,3})\s*-\s*\S.*?\s*$/;
 
 /**
+ * The same row when `pdftotext` gives up on the columns and stacks the cells.
+ *
+ * **One row per súmula arrives as five consecutive single-cell lines**, in the
+ * table's own column order, and the single-line pattern above cannot see it:
+ *
+ * ```
+ *  12:00
+ *  2T
+ *  Flamengo/RJ
+ *  20 - Lucas Tolentino Coelho de Lima
+ *                                        7 - Luiz de Araujo Guimaraes Neto
+ * ```
+ *
+ * That is not a rare shape — it is in **three of the four** fixtures whose
+ * substitutions the season refused, and in each one it is exactly the row
+ * `attachSubstitutions` was missing. Because the join is all-or-nothing per
+ * fixture and checks the count against the match API, a single dropped row
+ * discards **both** sides' changes: 554934, 554945 and 554984 each parsed one
+ * short and lost all fourteen, sixteen and eight of them respectively.
+ *
+ * Each cell gets its own pattern and all five must match consecutively, so this
+ * can only ever recognise the row the table already holds — it never assembles
+ * one out of neighbouring prose. A block that is four-fifths right yields
+ * nothing, the count check then fails, and the fixture is refused exactly as it
+ * is today: absent, never wrong.
+ */
+const SPLIT_TEMPO = /^\s*(?:(\d{1,3}):(\d{2})|\+\s*(\d{1,3})(?::\d{2})?|(-))\s*$/;
+const SPLIT_PERIOD = /^\s*(1T|2T|INT)\s*$/;
+/**
+ * A lone `Equipe` cell. Deliberately refused a run of two or more spaces: that
+ * is what holds the columns apart, so a line containing one is a row this
+ * pattern has no business reading, not a club with a wide name.
+ */
+const SPLIT_TEAM = /^\s*(\S(?:[^\s]|\s(?!\s))*?)\s*$/;
+/** A lone `Entrou`/`Saiu` cell — `20 - Lucas Tolentino Coelho de Lima`. */
+const SPLIT_PLAYER = /^\s*(\d{1,3})\s*-\s*\S.*?\s*$/;
+
+/**
  * Read the Substituições table out of a `pdftotext -layout` súmula.
  *
  * Bounded the way `parseSumulaGoals` is, and for the same reason: it starts at
@@ -213,23 +251,56 @@ export const parseSumulaSubstitutions = (text: string): SumulaSubstitution[] => 
   const subs: SumulaSubstitution[] = [];
   let seen = false;
 
-  for (const line of lines.slice(start + 1)) {
+  /** The `Tempo` cell's three spellings, shared by both row shapes. */
+  const timeOf = (mm: string | undefined, added: string | undefined, dash: string | undefined) =>
+    dash !== undefined ? {} : added === undefined ? { minute: Number(mm) } : { added: Number(added) };
+
+  const body = lines.slice(start + 1);
+
+  for (let i = 0; i < body.length; i += 1) {
+    const line = body[i];
     const match = SUB_ROW.exec(line);
-    if (!match) {
-      // Two blank-ish lines after at least one row is the end of the table.
-      // Reading on would pick up whatever CBF prints next.
-      if (seen && line.trim() === "") break;
+
+    if (match) {
+      seen = true;
+      const [, mm, , added, dash, period, team, onShirt, offShirt] = match;
+      subs.push({
+        period: period as SumulaPeriod,
+        ...timeOf(mm, added, dash),
+        team: team.trim(),
+        onShirt,
+        offShirt,
+      });
       continue;
     }
-    seen = true;
-    const [, mm, , added, dash, period, team, onShirt, offShirt] = match;
-    subs.push({
-      period: period as SumulaPeriod,
-      ...(dash !== undefined ? {} : added === undefined ? { minute: Number(mm) } : { added: Number(added) }),
-      team: team.trim(),
-      onShirt,
-      offShirt,
-    });
+
+    // The stacked form: five consecutive single-cell lines in column order.
+    // Every one has to match, so a partial block yields nothing at all.
+    const tempo = SPLIT_TEMPO.exec(line);
+    if (tempo) {
+      const period = SPLIT_PERIOD.exec(body[i + 1] ?? "");
+      const team = SPLIT_TEAM.exec(body[i + 2] ?? "");
+      const on = SPLIT_PLAYER.exec(body[i + 3] ?? "");
+      const off = SPLIT_PLAYER.exec(body[i + 4] ?? "");
+      // A `N - name` cell also satisfies SPLIT_TEAM, and a block whose third
+      // line is one is misaligned rather than a club with a numeric name.
+      if (period && team && on && off && !SPLIT_PLAYER.test(body[i + 2] ?? "")) {
+        seen = true;
+        subs.push({
+          period: period[1] as SumulaPeriod,
+          ...timeOf(tempo[1], tempo[3], tempo[4]),
+          team: team[1].trim(),
+          onShirt: on[1],
+          offShirt: off[1],
+        });
+        i += 4;
+        continue;
+      }
+    }
+
+    // Two blank-ish lines after at least one row is the end of the table.
+    // Reading on would pick up whatever CBF prints next.
+    if (seen && line.trim() === "") break;
   }
 
   return subs;

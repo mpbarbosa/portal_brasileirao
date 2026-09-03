@@ -472,13 +472,47 @@ what makes the logic testable without mocking HTTP.
   refuse every double substitution: a player who came on earlier can be
   substituted again, so `off` is a starter only for a side's first change.
 
-  **Three fixtures still carry no substitutions and the cause is not
-  established** — `554753`, `554934`, `554945`. Their sheets are recorded, so
-  this is the súmula-to-API step alone. Whoever picks it up: **CBF's listing is
-  keyed by LOCAL date and our kickoffs are UTC**, so a 00:30Z fixture is listed
-  under the previous day — that cost a diagnostic probe here, and it is a
-  property of the listing rather than of the sync, whose month-wide windows
-  absorb the shift.
+  **Those three fixtures are resolved, and the cause was mostly not the join at
+  all.** `554753`, `554934` and `554945` were left unexplained above, plus
+  `554984` which arrived later; every side of the season now carries its changes
+  — **484 of 484**, 2318 recorded. Two causes, and the bigger one sits one module
+  upstream in `sumula-core.ts`:
+
+  **`pdftotext` stacks one row per súmula, and the parse could not see it.** In
+  three of the four fixtures exactly one row arrives as five consecutive
+  single-cell lines instead of one columnar line:
+
+  ```
+   12:00
+   2T
+   Flamengo/RJ
+   20 - Lucas Tolentino Coelho de Lima
+                                         7 - Luiz de Araujo Guimaraes Neto
+  ```
+
+  `parseSumulaSubstitutions` reads that shape now, requiring **all five** cells
+  to match consecutively so it can never assemble a row out of neighbouring
+  prose. Note what the all-or-nothing rule turns a single dropped row into: the
+  count check disagreed, so `554934`, `554945` and `554984` lost **every**
+  change on both sides — eight, ten and eight of them — over one row each. The
+  rule is still right; the blast radius is worth knowing.
+
+  **The join's other half was the name after all, and the widening is narrow.**
+  `554753` parsed all ten rows and still refused: the shirt fallback resolved
+  eight and two were genuinely ambiguous, both sides fielding the same pair of
+  numbers. So the name had to resolve, and `codeForTeam` now compares the two
+  spellings with **non-alphanumerics dropped**, asking whether the API's name is
+  how the súmula's begins — `Coritiba S.a.f.` against `Coritiba SAF` is two full
+  stops, and `Cruzeiro Saf` against `Cruzeiro` is a prefix. It still does **not**
+  enumerate `SAF`/`S.A.F.`/`Ltda`, and a prefix fitting *both* sides resolves
+  nothing, so the shirt structure still gets its turn and an ambiguous row still
+  refuses the fixture.
+
+  **A diagnostic trap that cost a probe here: CBF's listing is keyed by LOCAL
+  date and our kickoffs are UTC**, so a 00:30Z fixture is listed under the
+  previous day. That is a property of the listing rather than of the sync, whose
+  month-wide windows absorb the shift — but a narrow window aimed at one fixture
+  will miss it, and so will a single-page read of a busy date.
 
   **`INT` is why `sumulaSubstitutionLabel` exists rather than reusing
   `sumulaMinuteLabel`.** A half-time substitution prints `Tempo` as a literal
