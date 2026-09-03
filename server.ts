@@ -41,7 +41,15 @@ import { readMatchState, writeMatchState } from "@/match-state-store";
 import { withGoals } from "@/goals-core";
 import { withLineups } from "@/escalacao-core";
 import { withHighlights } from "@/match-core";
-import { coachesOf, slugify, withClubDetails, withHymns, withInstagram, withWikipedia } from "@/club-core";
+import {
+  coachesOf,
+  slugify,
+  withClubDetails,
+  withCoachOverrides,
+  withHymns,
+  withInstagram,
+  withWikipedia,
+} from "@/club-core";
 import {
   compareForFeed,
   currentRound,
@@ -116,6 +124,7 @@ import { ESCALACOES } from "@/src/data/escalacoes";
 import { HIGHLIGHTS } from "@/src/data/highlights";
 import { VENUES } from "@/src/data/venues";
 import { SEED_MATCHES, SNAPSHOT_DATE } from "@/src/data/matches";
+import { COACH_OVERRIDES } from "@/src/data/coach-overrides";
 import { PLAYER_OVERRIDES } from "@/src/data/player-overrides";
 import { SEED_SCORERS } from "@/src/data/scorers";
 import { SEED_SQUADS } from "@/src/data/squads";
@@ -195,10 +204,21 @@ const breaker = new CircuitBreaker();
 
 /** The committed club list, plus the handles, hymns and articles no provider
  *  supplies. Enriching once here means every payload built from CLUBS carries
- *  them. */
-const CLUBS = withWikipedia(
-  withHymns(withInstagram(SEED_CLUBS, CLUB_INSTAGRAM), CLUB_HYMNS),
-  CLUB_WIKIPEDIA,
+ *  them.
+ *
+ *  `withCoachOverrides` is last and is a *correction* rather than an enrichment:
+ *  it covers every path that reads the frozen list — the seed branch of each
+ *  cache, `/api/clubs`, and the `known` argument `withClubDetails` falls back
+ *  to. It does **not** cover the live provider's own value, because
+ *  `withClubDetails` prefers what the payload carries; each of its three call
+ *  sites applies the override itself, and `tests/e2e/coaches.spec.ts` is what
+ *  makes that a rule rather than something to remember. */
+const CLUBS = withCoachOverrides(
+  withWikipedia(
+    withHymns(withInstagram(SEED_CLUBS, CLUB_INSTAGRAM), CLUB_HYMNS),
+    CLUB_WIKIPEDIA,
+  ),
+  COACH_OVERRIDES,
 );
 
 const app = express();
@@ -326,9 +346,12 @@ const loadStandings = (): Promise<ApiEnvelope<StandingsRow[]>> =>
     async () => {
       const rows = mapStandings(await fetchFromProvider<StandingsResponse>(standingsUrl()));
       // Same gap as fixtures: the standings payload has no website either.
-      const enriched = withClubDetails(
-        rows.map((row) => row.club),
-        CLUBS,
+      const enriched = withCoachOverrides(
+        withClubDetails(
+          rows.map((row) => row.club),
+          CLUBS,
+        ),
+        COACH_OVERRIDES,
       );
       return rows.map((row, index) => ({ ...row, club: enriched[index] }));
     },
@@ -426,7 +449,7 @@ const loadMatches = async (): Promise<ApiEnvelope<MatchesPayload>> => {
         ESCALACOES,
       ),
       // Fixtures carry no website or handle; the committed club list does.
-      clubs: withClubDetails(clubsFromMatches(raw), CLUBS),
+      clubs: withCoachOverrides(withClubDetails(clubsFromMatches(raw), CLUBS), COACH_OVERRIDES),
     };
 
     breaker.recordSuccess();
@@ -1183,16 +1206,31 @@ const loadSquads = (): Promise<ApiEnvelope<Squad[]>> =>
     SQUADS_CACHE_TTL_MS,
     async () => {
       const squads = mapSquads(await fetchFromProvider<TeamsResponse>(teamsUrl()));
-      const enriched = withClubDetails(
-        squads.map((squad) => squad.club),
-        CLUBS,
+      const enriched = withCoachOverrides(
+        withClubDetails(
+          squads.map((squad) => squad.club),
+          CLUBS,
+        ),
+        COACH_OVERRIDES,
       );
       return withSquadOverrides(
         sortSquads(squads.map((squad, index) => ({ ...squad, club: enriched[index] }))),
         PLAYER_OVERRIDES,
       );
     },
-    () => withSquadOverrides(sortSquads(SEED_SQUADS), PLAYER_OVERRIDES),
+    // The seed branch reads `SEED_SQUADS`, which carries its own frozen club
+    // objects and never passes through `CLUBS` — so the correction has to be
+    // applied here too. Found by `tests/e2e/coaches.spec.ts` rather than by
+    // reading: `/api/clubs` was already right, and `/api/coaches` and
+    // `/api/squads` served the wrong técnico from this one line.
+    () =>
+      withSquadOverrides(
+        sortSquads(SEED_SQUADS).map((squad) => ({
+          ...squad,
+          club: withCoachOverrides([squad.club], COACH_OVERRIDES)[0] ?? squad.club,
+        })),
+        PLAYER_OVERRIDES,
+      ),
   );
 
 app.get("/api/squads", async (_req, res) => {

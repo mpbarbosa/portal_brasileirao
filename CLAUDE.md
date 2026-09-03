@@ -1492,6 +1492,45 @@ churn; what it buys is that the two files cannot disagree about which matches
 they cover. Coverage grows a window at a time, like `broadcasts.ts`, and a
 missing match means "not synced", never "no lineup published".
 
+`src/data/coach-overrides.ts` corrects the **técnico** where the provider names
+the wrong person — the sibling of `player-overrides.ts`, keyed by club code, and
+existing for the same reason: `clubs.ts` and `squads.ts` are generated, so a
+hand-edit is overwritten by the next `sync-seed-data` without a word.
+
+**The bar is `nationality`'s, not `name`'s: correct only where the value is
+factually wrong, and only where the right answer can be established.** Both
+halves bind, and the second is what keeps the file short. Two independent
+sources must agree against the provider — the `position` rule one file over —
+and they rot in *different directions*, which is why one is not enough: an
+infobox is edited within hours of a sacking, while Wikidata's `P286` keeps a
+superseded claim ranked `preferred` for years. Where the sources disagree with
+each other, the provider stands.
+
+**Vasco is the entry that is deliberately absent**, and the file says so at the
+point somebody would add it. It is served as `Possato`, which nothing
+corroborates — but en.wikipedia says Pedro Emanuel, Wikidata's preferred `P286`
+says Fábio Carille from 2024-12-19, and pt.wikipedia's infobox carries no coach
+field at all. **Doubt that the provider is right is not knowledge of what is
+right**, and this file may only hold the second.
+
+`withCoachOverrides` in `club-core.ts` is separate from `withClubDetails` on
+purpose, and the split is the same one `player-overrides.ts` draws from
+`squads.ts`: that function **fills**, so it reads `club.coach ?? source` and the
+provider wins every tie; this one **corrects**, so the override wins. Folding
+them together would make `withClubDetails` mean both, and no call site would say
+which a field had got.
+
+**It has FIVE application sites and no compiler can see that it needs all
+five** — once over the frozen `CLUBS` list, once at each of `withClubDetails`'
+three call sites (that function prefers whatever the live payload carries), and
+once in the **squads seed branch**, which reads `SEED_SQUADS` and its own frozen
+club objects and never passes through `CLUBS` at all. The fifth was found by
+`tests/e2e/coaches.spec.ts` and not by reading: `/api/clubs` was already correct
+while `/api/coaches`, `/api/squads` and the club page served the wrong name from
+one line. That spec is what makes five a rule rather than something to remember,
+and it carries a case asserting at least one override exists, so emptying the
+file cannot make the rest of it pass vacuously.
+
 `src/data/club-hymns.ts` holds each club's hymn on YouTube, hand-maintained the
 same way and for the same reason — no provider carries one. It stores the video
 id alone; `hymnUrl` in `club-core.ts` builds the address. Every id was checked
