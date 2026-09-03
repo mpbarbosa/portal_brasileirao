@@ -895,8 +895,9 @@ case to zero anywhere between the function and the cell.
 **Projeção**:
 Each club's odds of finishing champion, inside the **G4** and inside the **Z4**,
 estimated by simulating every fixture still to be played — `projectSeason` in
-`season-sim-core.ts`, a seeded Monte Carlo over a Dixon–Coles bivariate Poisson
-fitted to the current table. It is never a forecast and the copy must not read as
+`season-sim-core.ts`, a seeded Monte Carlo over a Dixon–Coles model — two
+independent Poissons with the τ correction on the four lowest scorelines — fitted
+to the current table. It is never a forecast and the copy must not read as
 one: it is **simulado**, a model with its parameters read out of the same snapshot
 the **Classificação** is built from, and `docs/brasileirao-pro-proposal.md` names
 that framing as the condition on the feature existing at all.
@@ -927,7 +928,11 @@ _Avoid_: "previsão" and "prognóstico" (both claim knowledge of the result;
 "projeção" and "simulado" are what this is), presenting a percentage without the
 simulado framing, a título column that moves on refresh with no match played
 (the RNG is seeded precisely so it cannot), hard-coding a zone depth beside the
-one in `standings-core.ts`.
+one in `standings-core.ts`, "Poisson bivariado"/"bivariate Poisson" for the model
+(that is Karlis & Ntzoufras, a shared covariance component this app does not
+implement — Dixon–Coles corrects two *independent* Poissons, and `buildScoreGrid`
+multiplies two marginals; this entry and two comments in `season-sim-core.ts`
+carried the wrong name for months while the code carried the right one).
 
 **Clima no estádio**:
 What the sky is doing at a ground, right now — temperature, a pt-BR description

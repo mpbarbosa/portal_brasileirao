@@ -103,9 +103,18 @@ export const remainingFixtures = (clubs: Club[], matches: Match[]): Match[] => {
 };
 
 // --- The model ------------------------------------------------------------------
-// A Dixon–Coles-corrected bivariate Poisson over each club's current form. Every
-// parameter below is estimated from the snapshot rather than written down, so the
-// model has nothing in it that a reader cannot check against the table.
+// Two independent Poissons with the Dixon–Coles correction, over each club's
+// current form. Every parameter below is estimated from the snapshot rather than
+// written down, so the model has nothing in it that a reader cannot check against
+// the table.
+//
+// **Not a bivariate Poisson**, which this comment called it until 2026-09-03. That
+// is a different model — Karlis & Ntzoufras, with a shared covariance component —
+// and the only dependence between the two sides here is `dixonColesTau`, which
+// touches the four lowest scorelines and leaves every other cell of the grid a
+// product of two independent marginals. The arithmetic was always Dixon–Coles; the
+// name was not, in three places, and it travelled out of the repository before
+// anybody read it against the code.
 
 /** Goals per club per match before any has been played — the only number here
  *  that is not read from the data, and it is used only while there is no data to
@@ -368,8 +377,9 @@ export interface SampledScore {
 export type FixtureSampler = (match: Match, rng: Rng) => SampledScore;
 
 /**
- * The default sampler: a Dixon–Coles-corrected bivariate Poisson built from the
- * current table, with each matchup's distribution memoised. A pair meets twice
+ * The default sampler: the Dixon–Coles model above — two independent Poissons with
+ * the τ correction, not a bivariate Poisson — built from the current table, with
+ * each matchup's distribution memoised. A pair meets twice
  * in a season and the two fixtures are different distributions, because the
  * mando is on opposite sides — so the key carries both codes in order.
  */
