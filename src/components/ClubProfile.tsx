@@ -12,6 +12,7 @@ import { LINK_UNDERLINE } from "@/src/components/interaction";
 import { ProfileScatter, ScatterKey } from "@/src/components/ProfileScatter";
 import { Surface } from "@/src/components/Surface";
 import { CLUB_SCOUTS, CLUB_SCOUTS_THROUGH_ROUND } from "@/src/data/club-scouts";
+import { CLUB_SCOUTS_HISTORY } from "@/src/data/club-scouts-history";
 import type { ClubCode } from "@/src/types";
 
 interface ClubProfileProps {
@@ -65,10 +66,20 @@ export function ClubProfile({ clubCode }: ClubProfileProps) {
             shooting is worth, which is a ratio the first drawing cannot show.
             Same reason the strip precedes both. */}
         <div className="mt-3 border-t border-outline-variant pt-3">
-          <ProfileScatter division={CLUB_SCOUTS} clubCode={clubCode} pair="ataque-defesa" />
+          <ProfileScatter
+            division={CLUB_SCOUTS}
+            history={CLUB_SCOUTS_HISTORY}
+            clubCode={clubCode}
+            pair="ataque-defesa"
+          />
         </div>
         <div className="mt-3 border-t border-outline-variant pt-3">
-          <ProfileScatter division={CLUB_SCOUTS} clubCode={clubCode} pair="volume-conversao" />
+          <ProfileScatter
+            division={CLUB_SCOUTS}
+            history={CLUB_SCOUTS_HISTORY}
+            clubCode={clubCode}
+            pair="volume-conversao"
+          />
         </div>
 
         {/* The keys, the recency and the credit, in that order — and **every

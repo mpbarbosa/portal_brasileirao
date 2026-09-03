@@ -1,4 +1,4 @@
-import type { ClubCode, ClubScouts } from "@/src/types";
+import type { ClubCode, ClubScouts, ScoutHistoryEntry } from "@/src/types";
 
 /**
  * scouts-core — the **perfil do clube**: what kind of side this is, from the
@@ -56,8 +56,37 @@ export interface ProfileRow {
  * understates exactly the clubs that score, and makes conversão exceed 100% for
  * a good enough side.
  */
-export function finishes(scouts: ClubScouts): number {
+export function finishes(scouts: ScoutCounters): number {
   return scouts.goals + scouts.shotsSaved + scouts.shotsOff + scouts.shotsWoodwork;
+}
+
+/**
+ * The counters a rate can be read from — what `rawValue` actually touches.
+ *
+ * **It exists so the rastro computes its rates through the same switch the
+ * drawing does**, rather than through a second copy that would have to restate
+ * two rules: that `finishes` adds *four* counters, and that conversão at zero
+ * shots is an absence rather than 0%. `ClubScouts` satisfies it, so nothing at
+ * the existing call sites changes.
+ *
+ * **The four optional fields are the load-bearing part.** A history row carries
+ * only what the scatters draw, so it simply does not have desarmes — and an
+ * optional field makes that a `null` rate, which this module already treats as
+ * *dropped from the strip*, instead of a zero that would read as a club that
+ * tackles nobody. Filling them with 0 to satisfy `ClubScouts` was the obvious
+ * shape and is the one that produces a plausible wrong answer.
+ */
+export interface ScoutCounters {
+  matches: number;
+  goals: number;
+  shotsSaved: number;
+  shotsOff: number;
+  shotsWoodwork: number;
+  saves: number;
+  tackles?: number;
+  foulsCommitted?: number;
+  yellowCards?: number;
+  redCards?: number;
 }
 
 /**
@@ -68,7 +97,7 @@ export function finishes(scouts: ClubScouts): number {
  * club with no matches counted has no rate, and that is not the same fact as a
  * club that fouls nobody.
  */
-function rawValue(scouts: ClubScouts, id: ScoutMetricId): number | null {
+function rawValue(scouts: ScoutCounters, id: ScoutMetricId): number | null {
   if (scouts.matches <= 0) return null;
   const per = (total: number) => total / scouts.matches;
 
@@ -81,12 +110,17 @@ function rawValue(scouts: ClubScouts, id: ScoutMetricId): number | null {
       // in a season, and 0/0 is an absence rather than 0%.
       return shots > 0 ? (100 * scouts.goals) / shots : null;
     }
+    // The three below read counters a rastro row does not carry. `undefined` is
+    // an **absence** and takes the same road a club with no matches takes —
+    // never `?? 0`, which would report a club that fouls nobody.
     case "tackles":
-      return per(scouts.tackles);
+      return scouts.tackles === undefined ? null : per(scouts.tackles);
     case "fouls":
-      return per(scouts.foulsCommitted);
+      return scouts.foulsCommitted === undefined ? null : per(scouts.foulsCommitted);
     case "cards":
-      return per(scouts.yellowCards + scouts.redCards);
+      return scouts.yellowCards === undefined || scouts.redCards === undefined
+        ? null
+        : per(scouts.yellowCards + scouts.redCards);
     case "saves":
       return per(scouts.saves);
   }
@@ -532,8 +566,8 @@ export function profileScatter(
       clubCode: entry.clubCode,
       x: valueX,
       y: valueY,
-      atX: (valueX - x.min) / (x.max - x.min),
-      atY: (valueY - y.min) / (y.max - y.min),
+      atX: positionOn(x, valueX),
+      atY: positionOn(y, valueY),
       subject: entry.clubCode === clubCode,
     });
   }
@@ -542,6 +576,167 @@ export function profileScatter(
   if (!points.some((point) => point.subject)) return null;
 
   return { pair: pair.id, title: pair.title, x, y, points };
+}
+
+/**
+ * Where a value falls in an axis's padded domain, 0 at `min` and 1 at `max`.
+ *
+ * **The clamp is a no-op for the twenty clubs and load-bearing for the rastro.**
+ * `axis` pads outward from the division's own floor and ceiling, so every club
+ * plotted today is strictly inside — but the rastro plots the *same club eight
+ * rodadas ago* against today's domain, and a side whose rates have since
+ * converged on the division genuinely sat outside it. Measured: 12% of rastro
+ * points do. Unclamped, those paint the line outside the box, which is
+ * `RankCandles`' painting-past-the-card failure and what
+ * `tests/e2e/painel.spec.ts` measures.
+ *
+ * A clamped point reads as *at or beyond the edge of today's division*, which is
+ * the honest answer. Widening the domain to fit instead was measured (×1.26
+ * median, ×2.40 worst) and rejected on a second ground: the frame would then
+ * depend on whose painel it is, and two clubs' drawings would stop being
+ * comparable.
+ */
+function positionOn(axis: ScatterAxis, value: number): number {
+  const span = axis.max - axis.min;
+  if (span <= 0) return 0.5;
+  return Math.min(1, Math.max(0, (value - axis.min) / span));
+}
+
+/* ------------------------------------------------------------- o rastro ---- */
+
+/**
+ * One rodada of the subject club's **rastro** — where it sat on this drawing
+ * when the season had got that far.
+ *
+ * `atX`/`atY` are in the scatter's own padded domain and clamped, exactly like a
+ * `ScatterPoint`, so a component places a rastro point and a club's dot with one
+ * arithmetic. `x`/`y` stay unclamped, because a caption may need to state the
+ * reading and a clamped figure is not one.
+ */
+export interface TrailPoint {
+  round: number;
+  x: number;
+  y: number;
+  /** Position in the padded domain, 0 at `min` and 1 at `max`. Clamped. */
+  atX: number;
+  atY: number;
+}
+
+/**
+ * The rastro covers the last eight rodadas, not the season.
+ *
+ * **This was decided by measurement and the first design was wrong.** The plan
+ * assumed the problem was early-season noise decaying over a few rounds, and a
+ * floor on matches would answer it. It does not: measured across both drawings
+ * and all twenty clubs, a whole-season rastro puts **34% of its points outside
+ * the frame, overshooting by up to 1.40 of the box**, and raising the floor from
+ * 5 matches to 15 throws away half the trail to reach 17%.
+ *
+ * The cause is not noise. The league mean is flat across the season — 10.0 to
+ * 9.7 finalizações a game, 3.0 to 3.0 defesas — while the **spread narrows**,
+ * from 5.3–16.3 at rodada 3 to 7.9–11.7 at rodada 25. Twenty seasons converging
+ * is real football, and a frame padded 6% around where they ended cannot hold
+ * where they began. Nothing about that decays with another five rounds.
+ *
+ * Windowed to the last eight, the same points fall outside **12% of the time and
+ * overshoot by at most 0.14 of the box** — a clamp that nudges, rather than one
+ * pinning a third of the line to the border and calling it data.
+ *
+ * **And the window is the better claim, not merely the drawable one.** A Painel
+ * asks how a club is playing *now*; eight rodadas is the form a reader is
+ * looking for, where a season-long trail mostly redraws the fact that early
+ * averages are noisy.
+ */
+export const TRAIL_ROUNDS = 8;
+
+/**
+ * A floor on matches beneath the window, for the opening of a season.
+ *
+ * By rodada 25 the last eight rounds are all far past this and it does nothing.
+ * At rodada 6 the window reaches back to rodada 1, where a rate over three
+ * matches swings to the edge of any domain — one 4-0 moves conversão further
+ * than the rest of the season will.
+ *
+ * It is a floor on **matches and not on the rodada**, because a club with a
+ * postponed fixture is a round further on than its counters are — the
+ * distinction `ClubScouts.matches` exists to keep.
+ */
+export const MIN_TRAIL_MATCHES = 5;
+
+/**
+ * The subject club's rastro across the drawing it is already plotted on.
+ *
+ * **It takes the built `ProfileScatter` rather than the division**, and that is
+ * the decision the whole thing rests on: the axes come from the scatter, so the
+ * frame is frozen at the current rodada by construction and this function has no
+ * way to compute a domain of its own. Recomputing the domain per rodada would
+ * move the frame *and* the mark together, and movement against a moving frame
+ * means nothing — a club could climb the drawing while standing still.
+ *
+ * The consequence is a claim the caption owes the reader rather than a defect:
+ * the corner names describe **today's** division, so an older point means *where
+ * this club would fall on today's frame*, not the corner it was in then.
+ *
+ * Rates are read through `rawValue`, the same switch the drawing uses, so the
+ * rule that finalizações add four counters and the rule that conversão at zero
+ * shots is an absence cannot be implemented twice and drift.
+ *
+ * Returns `[]` rather than a short list where there is nothing to draw: an
+ * unknown club, a club yet to reach `MIN_TRAIL_MATCHES`, or a single usable
+ * point — which is the club's own dot drawn a second time and reads as a mark
+ * nobody put there.
+ */
+export function scatterTrail(
+  history: Record<ClubCode, ScoutHistoryEntry[]>,
+  clubCode: ClubCode,
+  scatter: ProfileScatter,
+): TrailPoint[] {
+  // `noUncheckedIndexedAccess` is off in this project, so the compiler types
+  // this as present whatever key it is given. The guard is real.
+  const rows = history[clubCode] ?? [];
+  const pair = SCATTER_PAIRS[scatter.pair];
+  const trail: TrailPoint[] = [];
+
+  // The window counts back from the last rodada **stored**, not from the last
+  // rodada played: the two differ by a week whenever caRtola is behind the
+  // table, and counting from the live round would silently shorten the rastro
+  // on exactly the days the Painel is most read.
+  const from = Math.max(0, rows.length - TRAIL_ROUNDS);
+
+  for (let index = from; index < rows.length; index += 1) {
+    const row = rows[index];
+    if (!row) continue;
+
+    const counters = countersFrom(row);
+    if (counters.matches < MIN_TRAIL_MATCHES) continue;
+
+    const valueX = rawValue(counters, pair.x);
+    const valueY = rawValue(counters, pair.y);
+    // Both or neither, for `profileScatter`'s reason: half a point is worse
+    // than no point, because the drawing cannot say which half was measured.
+    if (valueX === null || valueY === null) continue;
+
+    trail.push({
+      round: index + 1,
+      x: valueX,
+      y: valueY,
+      atX: positionOn(scatter.x, valueX),
+      atY: positionOn(scatter.y, valueY),
+    });
+  }
+
+  return trail.length < 2 ? [] : trail;
+}
+
+/**
+ * A stored row as the counters `rawValue` reads.
+ *
+ * The four counters the scatters do not draw stay **absent** rather than zero —
+ * see `ScoutCounters`, where that is the whole point of the optional fields.
+ */
+function countersFrom(row: ScoutHistoryEntry): ScoutCounters {
+  const [matches, goals, shotsSaved, shotsOff, shotsWoodwork, saves] = row;
+  return { matches, goals, shotsSaved, shotsOff, shotsWoodwork, saves };
 }
 
 /**

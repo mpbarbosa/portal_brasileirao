@@ -3,6 +3,8 @@ import {
   axisFigure,
   axisPhrase,
   profileScatter,
+  scatterTrail,
+  TRAIL_ROUNDS,
   quadrantLabel,
   subjectQuadrant,
   SCATTER_PAIRS,
@@ -13,7 +15,7 @@ import {
   type ScatterPoint,
 } from "@/scouts-core";
 import { CLUBS_BY_CODE } from "@/src/data/clubs";
-import type { ClubCode, ClubScouts } from "@/src/types";
+import type { ClubCode, ClubScouts, ScoutHistoryEntry } from "@/src/types";
 
 /**
  * The box the drawing is laid out in, in its own units.
@@ -39,6 +41,23 @@ const BOX = { width: 320, height: 200 } as const;
 const DOT = { other: 4, subject: 6.5 } as const;
 
 /**
+ * The rastro: how the club's last eight rodadas are drawn.
+ *
+ * **A segment per rodada with a rising opacity, and deliberately not one
+ * `<polyline>`.** A single line cannot fade along its length without an SVG
+ * gradient — a `<defs>`, an id that must be unique across two figures on one
+ * page, and a colour that then stops being the theme token everything else
+ * uses. Eight `<line>`s carry the direction of travel for nothing, and read as
+ * *where the club came from* without an arrowhead or a word.
+ *
+ * The ends of that ramp are bounded below by legibility and above by the mark it
+ * leads to: the newest segment must stay quieter than the dot it arrives at, or
+ * the rastro becomes the thing the eye lands on and the drawing stops being
+ * about twenty clubs.
+ */
+const TRAIL = { from: 0.15, to: 0.55, width: 1.5, start: 2 } as const;
+
+/**
  * The cap the drawing and its reading share.
  *
  * It belongs to both rather than to the drawing alone: with it on the box,
@@ -59,6 +78,14 @@ interface ProfileScatterProps {
    * first one's axes when a prop is dropped in a refactor.
    */
   pair: ScatterPairId;
+  /**
+   * Every club's counters at each rodada, for the subject's **rastro**.
+   *
+   * A prop rather than an import, exactly as `division` is: this component is
+   * pure and its tests hand it a division, so a module-scope import would make
+   * the rastro the one thing a test could not vary.
+   */
+  history: Record<ClubCode, ScoutHistoryEntry[]>;
 }
 
 /**
@@ -93,7 +120,12 @@ interface ProfileScatterProps {
  * section** by `ScatterKey`; what is left here is one club's reading, and the
  * accent rule down its left is what says so at a glance.
  */
-export function ProfileScatter({ division, clubCode, pair }: ProfileScatterProps) {
+export function ProfileScatter({
+  division,
+  clubCode,
+  pair,
+  history,
+}: ProfileScatterProps) {
   const scatter = profileScatter(division, clubCode, SCATTER_PAIRS[pair]);
   if (!scatter) return null;
 
@@ -107,6 +139,10 @@ export function ProfileScatter({ division, clubCode, pair }: ProfileScatterProps
   // would be three places for the picture and the caption to fall out of step.
   const corner = subjectQuadrant(scatter);
   if (!corner) return null;
+
+  // Takes the built scatter, so the rastro is placed in the drawing's own frozen
+  // domain and this component has no arithmetic of its own to get wrong.
+  const trail = scatterTrail(history, clubCode, scatter);
 
   return (
     <figure data-scatter={scatter.points.length} data-scatter-pair={pair}>
@@ -218,6 +254,62 @@ export function ProfileScatter({ division, clubCode, pair }: ProfileScatterProps
               strokeDasharray="4 4"
               vectorEffect="non-scaling-stroke"
             />
+
+            {/* **The rastro, under every dot.** Drawn after the guides and
+                before the twenty marks, which is the order that keeps the
+                drawing's own job first: this is one club's history and the
+                figure is a distribution, so a line painted over the other
+                nineteen would put the least important mark on top. It ends
+                where the subject's dot begins — `scatterTrail`'s last point is
+                that dot, by construction, since both are placed by the same
+                axes.
+
+                `stroke-primary` and not a second colour: it is the same club as
+                the filled dot, and a rastro in its own hue would read as a
+                second series. */}
+            {trail.slice(1).map((point, index) => {
+              const previous = trail[index];
+              if (!previous) return null;
+              // 0 at the oldest segment, 1 at the newest. There are
+              // `length - 1` segments, so the last index is `length - 2`.
+              //
+              // A **two-point** rastro is one segment and has no ramp to sit on:
+              // `index / 0` is not a number, and the obvious guard —
+              // `Math.max(1, …)` — silently paints that lone segment at the
+              // *oldest* opacity, which is the faintest thing on the drawing.
+              // A single segment is the newest one.
+              const age = trail.length > 2 ? index / (trail.length - 2) : 1;
+              return (
+                <line
+                  key={point.round}
+                  x1={BOX.width * previous.atX}
+                  y1={BOX.height * (1 - previous.atY)}
+                  x2={BOX.width * point.atX}
+                  y2={BOX.height * (1 - point.atY)}
+                  className="stroke-primary"
+                  strokeOpacity={TRAIL.from + (TRAIL.to - TRAIL.from) * age}
+                  strokeWidth={TRAIL.width}
+                  strokeLinecap="round"
+                  vectorEffect="non-scaling-stroke"
+                  data-scatter-trail={point.round}
+                />
+              );
+            })}
+
+            {/* Where the rastro starts, so the line has a tail rather than
+                fading out of nothing. One mark and not eight: a dot per rodada
+                turns eight short segments into a string of beads, and the
+                rodadas are not individually readable at 320 units wide. */}
+            {trail[0] && (
+              <circle
+                cx={BOX.width * trail[0].atX}
+                cy={BOX.height * (1 - trail[0].atY)}
+                r={TRAIL.start}
+                className="fill-primary"
+                fillOpacity={TRAIL.from}
+                data-scatter-trail-start={trail[0].round}
+              />
+            )}
 
             {/* A ring on the subject, drawn under it so it reads as a ring and
                 not as a bigger dot. Six colour-blind-safe pixels of green in a
@@ -368,7 +460,28 @@ export function ScatterKey({ className }: { className?: string }) {
         <li className="flex items-center gap-1.5">
           <MedianSwatch />as medianas da divisão
         </li>
+        <li className="flex items-center gap-1.5">
+          <TrailSwatch />o rastro das últimas {TRAIL_ROUNDS} rodadas
+        </li>
       </ul>
+
+      {/* **The two things the rastro is not.** Both belong here rather than in
+          either figcaption, for this block's own reason: they are true of both
+          drawings, and a caption is one club's reading.
+
+          The first is a property of the source and not a simplification — the
+          caRtola snapshot is weekly, so a rodada's own figures do not exist and
+          the line is a running average, which moves less than a form chart a
+          reader may be expecting. The second is what makes the movement mean
+          anything: the frame and the corner names are computed from the
+          division **as it stands now**, so an older point says where the club
+          would fall on today's drawing, not where it stood at the time. Say
+          that, or a reader reasonably reads a rastro crossing a median as a
+          club that changed corner that week. */}
+      <p className="mt-1">
+        O rastro é a média acumulada até cada rodada, não os números da rodada — a
+        fonte é semanal. O quadro e os nomes dos cantos são os da divisão hoje.
+      </p>
     </div>
   );
 }
@@ -422,6 +535,30 @@ function MarkSwatch({ kind }: { kind: "subject" | "other" }) {
 }
 
 /** The median guide, dashed as the drawing dashes it. */
+/**
+ * The rastro's swatch: a short line at the newest segment's own opacity.
+ *
+ * At the ramp's *mean* it would be a paler line than anything on the drawing,
+ * and a key whose mark is fainter than the mark it names is a key a reader
+ * checks twice. `aria-hidden` and no `role`, like its two neighbours.
+ */
+function TrailSwatch() {
+  return (
+    <svg viewBox="0 0 12 2" aria-hidden="true" className="h-px w-3 shrink-0">
+      <line
+        x1={0}
+        y1={1}
+        x2={12}
+        y2={1}
+        className="stroke-primary"
+        strokeOpacity={TRAIL.to}
+        strokeWidth={2}
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
 function MedianSwatch() {
   return (
     <svg viewBox="0 0 12 2" aria-hidden="true" className="h-px w-3 shrink-0">

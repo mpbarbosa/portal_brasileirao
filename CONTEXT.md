@@ -186,6 +186,26 @@ aproveitamento**, **aproveitamento sem volume** and **nem volume nem
 aproveitamento** — descriptive like the first pairing's, and the rule bites
 harder here because conversão sounds like a virtue and "melhor ataque" is one
 word away.
+On both drawings the club of the painel also carries its **rastro**: a faint
+line from where it sat eight rodadas ago to where it sits now, fading in from
+the oldest segment so the direction of travel needs no seta. Only this club has
+one — twenty rastros is a novelo, and the question a **Painel** asks is about
+one side. Two things about it are said in the legenda rather than left for a
+reader to assume, because both change what the line means. It is a **média
+acumulada até cada rodada** and never a rodada's own figures: the source is
+weekly, so a rodada's numbers do not exist to be plotted, and the line therefore
+moves less than a gráfico de forma would. And the **quadro é o da divisão hoje**
+— the frame and the corner names come from where the twenty clubs stand now — so
+an older point says where the club would fall on today's drawing rather than
+where it stood at the time. Frozen deliberately: a frame recomputed each rodada
+would move under the mark, and a club could cross a mediana without having
+changed.
+_Avoid_: "trilha" (a path someone follows; a rastro is what a club left behind),
+"evolução" on its own (the **Campanha** already owns that word for positions),
+"forma"/"momento" as a name for the line (both promise a rodada-by-rodada
+reading this cannot give), and any wording implying the corner names describe
+the rodada an older point was taken in.
+
 The x axis is shared with the drawing above on purpose: finalizações is the
 volume every other rate is spent on, so reading it against two different y axes
 is the point rather than a repetition.

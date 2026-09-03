@@ -57,7 +57,7 @@ import path from "node:path";
 import { lastRoundWithResult } from "@/rank-history-core";
 import { CLUBS } from "@/src/data/clubs";
 import { SEED_MATCHES, SNAPSHOT_DATE } from "@/src/data/matches";
-import type { ClubScouts } from "@/src/types";
+import type { ClubScouts, ScoutHistoryEntry } from "@/src/types";
 
 const ROOT = process.cwd();
 const RAW = "https://raw.githubusercontent.com/henriquepgomide/caRtola/master/data/01_raw";
@@ -129,9 +129,9 @@ async function main(): Promise<void> {
   const snapshots = await readSeason();
   console.log(`Read ${snapshots.length} snapshots for ${season} (rodada 1..${snapshots.length}).`);
 
-  const scouts = accumulate(snapshots);
-  validate(scouts, snapshots.length);
-  write(scouts, snapshots.length);
+  const { totals, history } = accumulate(snapshots);
+  validate(totals, history, snapshots.length);
+  write(totals, history, snapshots.length);
 }
 
 /* ------------------------------------------------------------------ reading */
@@ -252,9 +252,29 @@ function count(record: Record<string, string> | undefined, column: string): numb
   return Number.isFinite(value) ? value : 0;
 }
 
-/** Season totals per club, by differencing consecutive snapshots. */
-function accumulate(snapshots: Snapshot[]): Map<string, ClubScouts> {
+/**
+ * Season totals per club, by differencing consecutive snapshots — and the same
+ * totals **as they stood after each one**, which is the rastro the Perfil
+ * scatters draw.
+ *
+ * The history costs one extra pass over twenty clubs per snapshot and no extra
+ * request: this loop already walks every snapshot in order and already holds the
+ * running totals, and until now it threw away every state but the last.
+ *
+ * **The counters must be COPIED at capture, and a reference is the bug to look
+ * for.** `totals` holds mutated objects — `entry[field] += delta` writes through
+ * the same reference every round — so pushing `entry` itself stores an alias and
+ * every round of every club ends up holding the *final* totals. The output is a
+ * perfectly flat rastro, which reads as a club with no form rather than as a
+ * defect, and nothing else in this file would refuse it. `validate` asserts a
+ * strict increase somewhere for exactly that reason.
+ */
+function accumulate(snapshots: Snapshot[]): {
+  totals: Map<string, ClubScouts>;
+  history: Map<string, ScoutHistoryEntry[]>;
+} {
   const totals = new Map<string, ClubScouts>();
+  const history = new Map<string, ScoutHistoryEntry[]>(CLUBS.map((club) => [club.code, []]));
 
   const blank = (clubCode: string): ClubScouts => ({
     clubCode,
@@ -301,16 +321,37 @@ function accumulate(snapshots: Snapshot[]): Map<string, ClubScouts> {
 
       totals.set(club.code, entry);
     }
+
+    // Every club, not only the ones `totals` has seen. In practice caRtola lists
+    // all twenty from rodada 1, so this is defensive — but a club-round missing
+    // from the middle of a history is a hole the drawing would have to guess
+    // about, where a row of zeros is a club that has done nothing yet.
+    const round = index + 1;
+    for (const club of CLUBS) {
+      const entry = totals.get(club.code);
+      history.get(club.code)?.push([
+        playedThrough(club.code, round),
+        entry?.goals ?? 0,
+        entry?.shotsSaved ?? 0,
+        entry?.shotsOff ?? 0,
+        entry?.shotsWoodwork ?? 0,
+        entry?.saves ?? 0,
+      ]);
+    }
   });
 
   // The denominator comes from **our own** fixture list, not from the source.
   // caRtola carries no fixtures at all, and a match count inferred from
   // appearances cannot separate a window holding two rounds from one holding a
   // heavily-rotated eleven.
+  //
+  // `playedThrough` takes the round, so the capture above asks it per rodada and
+  // this asks it once for the last — one function answering the denominator
+  // rather than two that can come to disagree about what rodada 12 was.
   for (const [code, entry] of totals) {
     entry.matches = playedThrough(code, snapshots.length);
   }
-  return totals;
+  return { totals, history };
 }
 
 /** Finished matches this club has played in rounds 1..`round`, from the seed. */
@@ -337,7 +378,11 @@ function playedThrough(clubCode: string, round: number): number {
  * undercounts by the own goals it files elsewhere and by players who have left
  * the division, which measured 7% across the 2026 season.
  */
-function validate(totals: Map<string, ClubScouts>, rounds: number): void {
+function validate(
+  totals: Map<string, ClubScouts>,
+  history: Map<string, ScoutHistoryEntry[]>,
+  rounds: number,
+): void {
   // **The seed must reach at least as far as caRtola does, and this is the one
   // refusal the goals band cannot stand in for.**
   //
@@ -414,6 +459,96 @@ function validate(totals: Map<string, ClubScouts>, rounds: number): void {
         `Either the snapshots are misaligned with the seed or a column moved.`,
     );
   }
+
+  validateHistory(totals, history, rounds);
+}
+
+/**
+ * The rastro's own checks, and the first of them is the one that matters.
+ *
+ * **A history whose last rodada does not reproduce the aggregate is not a
+ * history of this season**, and that single assertion catches every failure this
+ * file can produce on its own: the aliasing bug in `accumulate` (which yields a
+ * flat rastro whose last row *does* match, and is caught by the strict-increase
+ * check below instead), a denominator taken from the wrong round, and a club
+ * whose rows were built from a different snapshot walk.
+ *
+ * Cumulative therefore means **non-decreasing**, which is not a tidiness check:
+ * only positive deltas are counted upstream, so a counter that falls means the
+ * walk lost its place. And **strictly increasing somewhere** is the aliasing
+ * guard — twenty-five identical rows satisfy non-decreasing perfectly.
+ */
+function validateHistory(
+  totals: Map<string, ClubScouts>,
+  history: Map<string, ScoutHistoryEntry[]>,
+  rounds: number,
+): void {
+  for (const club of CLUBS) {
+    const name = club.shortName;
+    const rows = history.get(club.code);
+    if (!rows || rows.length !== rounds) {
+      throw new Error(
+        `${name} has ${rows?.length ?? 0} history rows for ${rounds} rodadas.`,
+      );
+    }
+
+    let moved = false;
+    for (let round = 0; round < rows.length; round += 1) {
+      const row = rows[round];
+      const before = round > 0 ? rows[round - 1] : undefined;
+      if (!row) throw new Error(`${name} has no history row for rodada ${round + 1}.`);
+
+      for (let field = 0; field < row.length; field += 1) {
+        const value = row[field] ?? -1;
+        if (!Number.isInteger(value) || value < 0) {
+          throw new Error(
+            `${name} rodada ${round + 1} field ${field} is ${value}, which is not a count.`,
+          );
+        }
+        const previous = before?.[field] ?? 0;
+        if (value < previous) {
+          throw new Error(
+            `${name} field ${field} falls from ${previous} to ${value} at rodada ` +
+              `${round + 1}. These counters are cumulative; a fall means the ` +
+              `snapshot walk lost its place.`,
+          );
+        }
+        // Field 0 is `matches`, which `playedThrough` recomputes per round and
+        // which therefore advances even when the counters are aliased. Only a
+        // counter moving is evidence the capture copied anything.
+        if (field > 0 && value > previous) moved = true;
+      }
+    }
+
+    if (!moved && rounds > 1) {
+      throw new Error(
+        `${name}'s counters never change across ${rounds} rodadas. That is what ` +
+          `pushing the running total by reference produces — copy the counters ` +
+          `at capture in \`accumulate\`.`,
+      );
+    }
+
+    const last = rows[rows.length - 1];
+    const total = totals.get(club.code);
+    if (!last || !total) throw new Error(`${name} has no last history row or no total.`);
+    const expected: ScoutHistoryEntry = [
+      total.matches,
+      total.goals,
+      total.shotsSaved,
+      total.shotsOff,
+      total.shotsWoodwork,
+      total.saves,
+    ];
+    for (let field = 0; field < expected.length; field += 1) {
+      if (last[field] !== expected[field]) {
+        throw new Error(
+          `${name}'s rodada ${rounds} history row is [${last.join(", ")}] but the ` +
+            `season aggregate is [${expected.join(", ")}]. The two files would ` +
+            `describe different seasons.`,
+        );
+      }
+    }
+  }
 }
 
 function goalsForThrough(clubCode: string, round: number): number {
@@ -429,7 +564,11 @@ function goalsForThrough(clubCode: string, round: number): number {
 
 /* ------------------------------------------------------------------ writing */
 
-function write(totals: Map<string, ClubScouts>, rounds: number): void {
+function write(
+  totals: Map<string, ClubScouts>,
+  history: Map<string, ScoutHistoryEntry[]>,
+  rounds: number,
+): void {
   const ordered = [...totals.values()].sort((a, b) => {
     const left = CLUBS.find((club) => club.code === a.clubCode)?.shortName ?? a.clubCode;
     const right = CLUBS.find((club) => club.code === b.clubCode)?.shortName ?? b.clubCode;
@@ -488,7 +627,81 @@ export const CLUB_SCOUTS_THROUGH_ROUND = ${rounds};
     `Wrote src/data/club-scouts.ts — ${ordered.length} clubs through rodada ${rounds}.`,
   );
 
+  writeHistory(history, rounds, generatedOn);
+
   remindAboutTheLog(rounds, previousRound);
+}
+
+/**
+ * The rastro's data file, written by the same run and never on its own.
+ *
+ * **Two files, one write, and that is what stops them describing different
+ * seasons.** `CLUB_SCOUTS_HISTORY_THROUGH_ROUND` comes from the same `rounds`
+ * variable as `CLUB_SCOUTS_THROUGH_ROUND` a few lines up, so the pair cannot
+ * drift the way `rank-history.ts` can drift from `matches.ts` — which needs two
+ * commands run in the right order and a paragraph in `CLAUDE.md` asking for it.
+ *
+ * **One line per club and no whitespace inside a row**, which is the opposite of
+ * every other generated file here and is deliberate: this is 760 rows nobody
+ * reads, and the pretty form costs 64 kB of source and 3.6 kB gzipped on the
+ * client bundle for a legibility no reader wants. The club's name is a comment
+ * above its line, because `1769` cannot be checked by reading and `Palmeiras`
+ * can — `CLUB_BY_ABBREVIATION`'s rule one file over.
+ */
+function writeHistory(
+  history: Map<string, ScoutHistoryEntry[]>,
+  rounds: number,
+  generatedOn: string,
+): void {
+  const body = [...CLUBS]
+    .sort((a, b) => a.shortName.localeCompare(b.shortName, "pt-BR"))
+    .map((club) => {
+      const rows = history.get(club.code) ?? [];
+      const packed = rows.map((row) => `[${row.join(",")}]`).join(",");
+      return `  // ${club.shortName}\n  ${JSON.stringify(club.code)}: [${packed}],`;
+    })
+    .join("\n");
+
+  writeFileSync(
+    path.join(ROOT, "src/data/club-scouts-history.ts"),
+    `import type { ClubCode, ScoutHistoryEntry } from "@/src/types";
+
+/**
+ * GENERATED by \`npx tsx scripts/sync-cartola-scouts.ts\` — do not hand-edit.
+ *
+ * Season ${season}, rodadas 1..${rounds}, written ${generatedOn} against the seed
+ * snapshot ${SNAPSHOT_DATE}. Same run, same source and same snapshots as
+ * \`club-scouts.ts\`; the last rodada here reproduces that file exactly, and the
+ * sync refuses to write when it does not.
+ *
+ * **Each row is CUMULATIVE through its rodada, not that rodada's own figures.**
+ * caRtola publishes weekly and a midweek round falls between two snapshots, so a
+ * single round's actions can land in a neighbouring window — measured across the
+ * ${season} season to rodada 24: of 470 club-rounds, 441 windows held exactly one
+ * match, 19 held none and 10 held two. That is fatal to a per-rodada figure,
+ * where a club that played would read as a club that did not, and survivable
+ * cumulatively: the error is at most one match's worth and the next snapshot
+ * absorbs it.
+ *
+ * The rodada is the **array index** — index 0 is rodada 1 — and the tuple is
+ * \`[matches, goals, shotsSaved, shotsOff, shotsWoodwork, saves]\`, which
+ * \`ScoutHistoryEntry\` states and \`tsc\` holds. Only the counters the Perfil
+ * scatters draw are carried; see that type for why.
+ *
+ * Stale by construction, like \`club-scouts.ts\` beside it.
+ */
+export const CLUB_SCOUTS_HISTORY: Record<ClubCode, ScoutHistoryEntry[]> = {
+${body}
+};
+
+/** The last rodada this history covers. Always \`CLUB_SCOUTS_THROUGH_ROUND\`. */
+export const CLUB_SCOUTS_HISTORY_THROUGH_ROUND = ${rounds};
+`,
+  );
+
+  console.log(
+    `Wrote src/data/club-scouts-history.ts — ${CLUBS.length} clubs × ${rounds} rodadas.`,
+  );
 }
 
 /**
