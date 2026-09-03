@@ -205,6 +205,151 @@ The only provider confirmed to carry broadcast data: a `tv-stations` endpoint, a
 `tvStations` include on any fixture, broadcaster logos, and a `countries` include
 for filtering to Brazil. Not adopted on cost grounds.
 
+**"It" is broadcast data and nothing else** — that was the only question asked
+of this source in August, exactly as with API Futebol above. A second question
+was put to it on 2026-09-03 (does it carry xG and xPts?) and it has a second
+answer, including the only **xPTS field** found anywhere in this file and a
+contradiction about whether the Brasileirão is covered at all. See **Expected
+goals (xG) and expected points (xPts)** below.
+
+### Expected goals (xG) and expected points (xPts) — nothing reachable today, and one vendor contradicts itself
+
+Written 2026-09-03, prompted by a reader's question rather than by a feature:
+*can this app separate desempenho subjacente from resultado convertido* — compare
+each club's xPts against its real points, so a club converting above what it
+creates is distinguishable from one converting below. That is the one question
+the app's data cannot answer at all, in any degraded form.
+
+**Start with the negative, because it is total.** No source this app currently
+reads carries xG at any tier — not football-data (the field list at the top of
+this file is the evidence), not CBF's match API, not API Futebol, not caRtola.
+The nearest thing already shipping is caRtola's shot counters in
+`src/data/club-scouts.ts` — `shotsSaved`, `shotsOff`, `shotsWoodwork` — and they
+are **volume, not quality**, which is precisely the distinction xG exists to
+draw. A club taking twenty shots from thirty metres and one taking eight from
+the six-yard box are indistinguishable in those three numbers. Do not read the
+scouts as a poor man's xG; they are a different measurement.
+
+Adopting any source below would make it the **third upstream** after
+football-data and Open-Meteo, so it inherits that precedent whole: its own kill
+switch (`DISABLE_WEATHER`'s argument — two feeds fail independently and one flag
+covering both takes the table off the page to silence a card), its own
+`ApiEnvelope` `source`, its own cache entry.
+
+#### Measured here, by curl, on 2026-09-03
+
+**FootyStats is the only candidate whose API I could exercise without paying**,
+because it publishes a working `example` key, and it is consequently the only
+entry below whose fields are stated rather than relayed.
+
+- `GET https://api.football-data-api.com/league-list?key=example` → **200**,
+  1735 leagues, `Brazil | Serie A` present with season ids through **16544 for
+  2026**. Rate limit reported in the payload's own `metadata`: 1800 requests an
+  hour, refreshed hourly.
+- `GET .../league-teams?key=example&season_id=16544` → **HTTP 417**, *"League is
+  not chosen by the user … League may not exist, or is not available to this
+  user."* That is a **subscription gate, not an absence of data**, and the two
+  are indistinguishable from the status code alone — which is worth stating
+  because reading 417 as "no Brasileirão here" would reject the best-fitting
+  candidate in the file.
+- Against the demo season it *can* read (EPL 2024/25, id 12325), a **fixture**
+  carries `team_a_xg`, `team_b_xg`, `total_xg` and a `_prematch` variant of each;
+  a **team** carries `xg_for_avg_{overall,home,away}` and `xg_against_avg_*`.
+- **It does not carry xPts.** All 1065 team stat keys were swept for `xpts` and
+  `expected`: **zero matches**. FootyStats publishes an xPts table on its
+  *website* (`/brazil/serie-a/xpts`) and does not expose it on the API. Anybody
+  who reads the site and assumes the API matches finds out after paying.
+- `league-table` is **404**; the table comes from `league-teams`.
+
+**So xPts would have to be computed here**, from per-match xG, and that is a
+`*-core.ts` module rather than a field: Poisson over the two fixture xG totals →
+win/draw/loss probabilities → expected points. It works and it is an
+**approximation of an approximation** — the honest calculation runs over the
+shot-level xG distribution, and a match total loses the shape of it. If that
+ever ships, the page says so, for the reason `live-core.ts` refuses to print a
+match minute: a precise-looking number the data does not support is worse than
+an absent one.
+
+#### Sportmonks says two different things about the Brasileirão
+
+This is the finding most likely to cost somebody money, and both halves were
+read on the same day:
+
+- The **marketing page** for the Brasileirão states *"Our xG Data add-on covers
+  the Brasileirão and 40+ other leagues"*, and illustrates it with Brasileirão
+  fixtures and their xG values.
+- The **coverage list in their own documentation**
+  (`docs.sportmonks.com/v3/tutorials-and-guides/tutorials/expected/coverage`)
+  does **not** include it. Copa Libertadores and Liga MX are the Americas
+  entries; there is no Brazilian competition on the list. Data is stated as
+  available from 2024/25 onward.
+
+One of the two is wrong. Ask before subscribing. Sportmonks is nonetheless the
+**only** provider surveyed that ships **xPTS as a field** rather than leaving it
+to be derived — alongside npxG, xGoT, xGA, xG difference and eight more, per
+team and (for three of them) per player. Note this widens the entry above, which
+answers only *does it carry broadcast data* and was written in August with no
+other question in mind — the same scope trap the API Futebol entry opens with.
+
+#### Read but not verified — the hosts refuse automated requests
+
+`www.api-football.com`, `footystats.org`, `fbref.com` and `footballxg.com` all
+sit behind Cloudflare and returned **403 to curl** and a bot-verification
+interstitial to a real browser engine. No attempt was made to get past it. So
+everything in this subsection is **relayed from search results rather than read
+off the vendor's page**, and the pricing figures below carry that provenance:
+
+- **API-Football / api-sports.io** — covers the Brasileirão (league 71) and is
+  the cheapest candidate by some distance (free tier of 100 requests a day; paid
+  plans around €19–39 a month). `fixtures/statistics` is understood to return an
+  `expected_goals` type, **unverified for this league**. This is the one worth
+  ten minutes with a free key, and it is a task rather than a finding.
+- **TheStatsAPI** — lists Brazil Série A in default coverage and says xG is
+  available "for the majority of top-tier competitions", without confirming per
+  league.
+- **football-xg-statistics** on RapidAPI (the API behind `oRastor/xgclient`) —
+  **event-level** xG across 80+ leagues, which would be the right input for a
+  real xPts calculation. Brazilian coverage unconfirmed.
+- Relayed pricing, for scale rather than for quoting: FootyStats from about
+  £30/month for 40 leagues of your own choosing; Sportmonks' xG add-on from
+  €15–19/month on top of a base plan from €29.
+
+#### Sources with the data and no API
+
+- **FBref** (`/en/comps/24/`) has xG for the Campeonato Brasileiro Série A, and
+  the advanced data there is **Opta's**. Free to read, no API, and the host
+  refuses automated requests.
+- **xgscore.io** publishes a Brasileirão table with `xG`, `xGC`, `PTS` and
+  **`xPTS` side by side** — the exact comparison this section is about. Read
+  directly (200, 25 rodadas). No API.
+- **footballxg.com** publishes xG league tables comparing xPts against actual
+  points across 50+ leagues, behind membership tiers. 403 here.
+- **Sofascore** and **FotMob** both carry Brasileirão xG and neither has a public
+  API; `CLAUDE.md` already records Sofascore answering 403 to every scripted
+  request, `api.sofascore.com` included.
+
+**And one negative worth writing down because it is the first name anyone
+reaches for: Understat does not cover the Brasileirão.** Six European leagues
+only. Every "xG API" search surfaces it first.
+
+#### What the public data already says, since it bears on why anyone would build this
+
+From xgscore's table at rodada 25, read on 2026-09-03:
+
+    Palmeiras     52 PTS   35.8 xPTS   +16.2
+    Flamengo      51 PTS   44.0 xPTS    +7.0
+    Atlético-PR   45 PTS   39.1 xPTS    +5.9
+    Coritiba      37 PTS   25.7 xPTS   +11.3
+
+The intuition that sends people to xPts — *one of the two leaders must be
+converting below what it creates* — is **not what the data shows**. Both are
+converting above; the Palmeiras is doing so by more than twice the Flamengo's
+margin, and most of the gap between them at the top is that excess rather than
+anything either created. One model's numbers, not a fact about the season: a
+different xG model would move these, though not plausibly reverse a +16.2. Worth
+recording because it is the case *against* assuming the feature would confirm
+the story somebody expects it to.
+
 ### caRtola — player scouts only, no fixtures, and a week behind
 
 > **Taken up for the scouts, and still rejected for fixtures.** Everything below
