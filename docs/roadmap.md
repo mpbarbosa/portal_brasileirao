@@ -374,13 +374,38 @@ provider than it needed to build:
   out-of-sample score over held-out rounds — **RPS**, the standard rule for 1X2,
   with the current no-decay model as the baseline it has to beat.
 
-  **And that is where it may be blocked, so check this first.** The repo holds
-  **one season**: `src/data/matches.ts` is 2026 only, and `football-data-core.ts`
-  never sends a `season` parameter — it reads whatever the competition is
-  currently serving. Whether the free tier serves previous Série A seasons is
-  **unverified**; nobody here has asked it. If it does not, this needs an offline
-  dataset before it needs a line of model code, and the decay question is a data
-  question wearing a modelling hat.
+  **This entry said the backtest might be blocked on data. It is not — measured
+  2026-09-03 with the project's own token.** `/v4/competitions/BSA/matches?season=`
+  answers **200 with all 380 fixtures, all FINISHED, all carrying a full-time
+  score** for **2023, 2024 and 2025**, and **403 `restricted … check your
+  subscription`** for 2022 and every year before it, back to the oldest the
+  metadata names. So three complete past seasons — **1,140 finished matches** —
+  are reachable on the free tier beside the current one.
+
+  **Check the seasons themselves, never the `seasons` field, and this is the trap
+  worth carrying rather than the number.** `/v4/competitions/BSA` declares a
+  `seasons` array of **10** entries going back to 2017 — and **seven of those ten
+  are 403**. A listing present while the data behind it is gated is the same shape
+  `docs/data-sources.md` records for FootyStats, and reading the metadata alone
+  would have answered this question wrongly in the *optimistic* direction.
+
+  **What one reading cannot settle: whether that window rolls.** 2023–2025 on
+  2026-09-03 fits "the current season plus three" and fits "a cutoff pinned at
+  2023" equally, and nothing in the response distinguishes them. It matters — under
+  the rolling reading 2023 leaves the window when 2027 opens, so anything that
+  depends on those matches should **vendor them** rather than re-fetch. Re-measure
+  before relying on the range, and do not cite the table above as a standing
+  property.
+
+  **The clubs turn over, which the backtest design has to hold.** Each season is
+  20 clubs and rodadas 1–38 complete; **16 clubs carry over** between consecutive
+  seasons and the three name **27 distinct clubs**. A club's attack and defence are
+  therefore per-season parameters, not one series running across three years.
+
+  **And the code change is one query parameter.** `football-data-core.ts` never
+  sends `season` — it reads whatever the competition is currently serving. The
+  historical payload is otherwise the shape `mapMatch` already reads: `lastUpdated`,
+  `matchday`, a non-null `tla` on all twenty clubs, and `score.fullTime`.
 
   **Related but independent: `docs/data-sources.md`'s xG survey** (PR #337, open
   at the time of writing). xG is a different *input*; decay is a weighting of
