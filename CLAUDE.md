@@ -309,6 +309,51 @@ what makes the logic testable without mocking HTTP.
   exactly that: a defence beaten often in front of a beaten goleiro reads lower
   than the pressure on it was. It is a proxy, and the honest way to ship one is
   to name what it counts — `providerLabel`'s rule.
+  **`scatterTrail` is the rastro, and it takes the built `ProfileScatter`
+  rather than the division.** That is the decision the whole mark rests on: the
+  axes come from the scatter, so the frame is frozen at the current rodada *by
+  construction* and the function has no domain of its own to get wrong.
+  Recomputing the domain per rodada would move the frame and the mark together,
+  and a club could climb the drawing while standing still. It reads its rates
+  through `rawValue`, the same switch the dots use, so the rule that
+  finalizações add four counters and the rule that conversão at zero shots is an
+  absence cannot be written twice and drift — which is why `rawValue` now takes
+  a structural `ScoutCounters` whose four undrawn fields are **optional**: a
+  history row genuinely has no desarmes, and an optional field makes that a
+  `null` rate the strip already drops, where filling it with 0 would report a
+  club that tackles nobody.
+  **It plots the last EIGHT rodadas and not the season, and that was measured
+  rather than chosen.** A whole-season rastro puts **34% of its points outside
+  the frame, overshooting by up to 1.40 of the box**; windowed to eight, the same
+  points fall outside 12% of the time and overshoot by at most **0.14**. The
+  first design blamed early-season noise and put a floor on matches, which does
+  not work: raising it from 5 to 15 throws away half the trail to reach 17%. The
+  cause is not noise but **convergence** — the league mean is flat across the
+  season (10.0 to 9.7 finalizações a game, 3.0 to 3.0 defesas) while the spread
+  narrows from 5.3–16.3 at rodada 3 to 7.9–11.7 at rodada 25, and a frame padded
+  6% around where twenty clubs *ended* cannot hold where they began. Widening the
+  frame to fit was measured too (×1.26 median, ×2.40 worst) and rejected on a
+  second ground: the domain would then depend on whose painel you are on, so two
+  clubs' drawings stop being comparable — the property `RankCandles` uses the
+  whole division to protect. `MIN_TRAIL_MATCHES` survives beneath the window for
+  the opening of a season, where eight rodadas reaches back to rodada 1.
+  **The points are clamped into the frame, and the clamp is not decoration**: at
+  12% of points it is what stops the line painting outside the box, which is the
+  failure `tests/e2e/painel.spec.ts` measures. A clamped point reads as *at or
+  beyond the edge of today's division*, which is the honest answer.
+  **Segments, not one `<polyline>`.** A single line cannot fade along its length
+  without an SVG gradient — a `<defs>`, an id unique across two figures on one
+  page, and a colour that stops being a theme token. Seven `<line>`s ramp from
+  0.15 to 0.55 and carry the direction of travel with no seta and no legend
+  entry beyond the swatch. Watch the two-point case: there is one segment and no
+  ramp to sit on, and the obvious `Math.max(1, length - 2)` guard paints that
+  lone segment at the *oldest* opacity, which is the faintest thing on the
+  drawing.
+  **The two caveats live in `ScatterKey`, not in either figcaption**, because
+  they are true of both drawings where a caption is one club's reading: the line
+  is a **média acumulada** and not a rodada's own figures, and the frame and
+  corner names are **today's** division. Without the second, a rastro crossing a
+  mediana reads as a club that changed corner that week.
   **The scatter scales uniformly and is capped in width**, unlike the candles.
   `preserveAspectRatio="none"` is available to `RankCandles` because its marks
   are filled rects; a circle under it becomes an ellipse whose eccentricity is a
@@ -2213,6 +2258,25 @@ Deleting the guard fails **1** (2 since case 8 gained its message check): the 11
 is what happens when the guard **fires everywhere**, which is not a mutation
 anybody applied — it is the CI failure itself. The number was right about a
 condition nobody had run and wrong about the one it named.
+
+`src/data/club-scouts-history.ts` is written by the **same** `npm run
+sync-cartola-scouts` run that writes `club-scouts.ts`, from the same snapshots
+and one set of requests — the arrangement `sync-goals.ts` uses for `goals.ts`
+and `escalacoes.ts`, and for the same reason: two files that cannot disagree
+about which rodadas they cover. It holds every club's counters **cumulative
+through each rodada**, for the Perfil scatters' rastro. The sync **refuses to
+write** unless the last rodada of every club's history reproduces that club's
+aggregate field for field, and unless some counter strictly increases across the
+season — the second is the aliasing guard, because `accumulate` mutates one
+object per club and pushing it by reference yields twenty-five identical rows
+that satisfy every other check.
+**It is tuple-encoded and it is the only curated file here that is**, which is a
+measurement rather than a taste: on a real `vite build`, one object per rodada
+costs **+9.3 kB gzip** on the client bundle against **+5.7 kB** for tuples, for
+760 rows nobody reads. `ScoutHistoryEntry` states the field order and `tsc`
+holds the arity. **The rodada is the array index**, never a stored field.
+**It carries only the counters the scatters draw** — no desarmes, faltas or
+cartões — so a third pairing on one of those is a generator edit and a resync.
 
 `src/data/rank-history.ts` is generated by `npm run sync-rank-history`, which fetches
 nothing — it derives the campanha from the seed fixtures already on disk. It is therefore
