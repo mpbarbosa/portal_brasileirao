@@ -401,6 +401,13 @@ test.describe("Painel do clube", () => {
     await expect(jogo).toBeVisible();
     await expect(volume).toBeVisible();
 
+    // Each drawing names itself. Before this the topmost line was the y axis,
+    // so a reader had to infer the pairing from its two ends — and the two
+    // stacked figures share an x axis, which makes the title the only thing
+    // telling them apart at a glance.
+    await expect(jogo.getByRole("heading", { name: "Ataque × defesa" })).toBeVisible();
+    await expect(volume.getByRole("heading", { name: "Volume × conversão" })).toBeVisible();
+
     // Same x, different y — read off the rendered captions rather than the
     // props, so a component that ignored its `pair` fails here.
     await expect(jogo).toContainText("Defesas do goleiro por jogo");

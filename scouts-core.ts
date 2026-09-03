@@ -293,6 +293,8 @@ export interface ScatterPoint {
 
 export interface ProfileScatter {
   pair: ScatterPairId;
+  /** The pairing's name, ready to render. */
+  title: string;
   x: ScatterAxis;
   y: ScatterAxis;
   points: ScatterPoint[];
@@ -371,6 +373,16 @@ export interface ScatterPair {
   id: ScatterPairId;
   x: ScoutMetricId;
   y: ScoutMetricId;
+  /**
+   * What the drawing is called — `CONTEXT.md`'s own name for the pairing.
+   *
+   * **It belongs here rather than at the call site** for the reason the corner
+   * phrases do: two pairings share one component, and a title passed in as a
+   * prop is a second place a pairing gets named, free to drift from the
+   * glossary. The two names existed in `CONTEXT.md` before the page rendered
+   * either of them.
+   */
+  title: string;
   xLabel: string;
   yLabel: string;
   /** Named for the axes a club is above the median on, never for a rank. */
@@ -382,6 +394,7 @@ export type ScatterPairId = "ataque-defesa" | "volume-conversao";
 export const SCATTER_PAIRS: Record<ScatterPairId, ScatterPair> = {
   "ataque-defesa": {
     id: "ataque-defesa",
+    title: "Ataque × defesa",
     x: "finishes",
     y: "saves",
     xLabel: "Finalizações",
@@ -395,6 +408,7 @@ export const SCATTER_PAIRS: Record<ScatterPairId, ScatterPair> = {
   },
   "volume-conversao": {
     id: "volume-conversao",
+    title: "Volume × conversão",
     x: "finishes",
     y: "conversion",
     xLabel: "Finalizações",
@@ -446,7 +460,7 @@ export function profileScatter(
   if (points.length < 3) return null;
   if (!points.some((point) => point.subject)) return null;
 
-  return { pair: pair.id, x, y, points };
+  return { pair: pair.id, title: pair.title, x, y, points };
 }
 
 /**
