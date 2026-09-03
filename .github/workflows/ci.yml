@@ -186,7 +186,15 @@ jobs:
       # rate (measured at 4.3-4.5% per club), and the only thing standing
       # between that and a commit is the sequence in this script. It needs no
       # network: `curl`, `npx` and `npm` are stubbed while the seed and the
-      # counters are read by real node against this checkout.
+      # counters are read by real node.
+      #
+      # It drives the script against a CONSTRUCTED checkout — symlinks to the real
+      # top level plus a `.env` of its own — and stubs two `git rev-parse` queries,
+      # because two of the script's refusals are about WHERE it runs: it demands a
+      # linked worktree and a FOOTBALL_DATA_TOKEN. This runner is a plain clone
+      # with neither, so before that it failed 11 of 19 assertions here while
+      # passing 19 of 19 on a workstation. Reproduce the runner's shape in a plain
+      # `git clone` before trusting a green local run; CLAUDE.md has the recipe.
       - name: Rehearse the sync schedule (scripts/sync-schedule.sh)
         run: ./scripts/rehearse-sync-schedule.sh
 
