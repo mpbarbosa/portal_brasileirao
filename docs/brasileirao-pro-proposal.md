@@ -385,9 +385,18 @@ something: the finding is only ever as wide as the search behind it.
 ### 2. Relatórios VIP — title probability, Z4 risk, xG
 
 Three problems, any one sufficient. The numbers require a season simulation the app has no
-model for. The xG figures require data no reachable provider supplies. And the "PRO
-EDITION" badge gates a paywall onto a companion app that has none — this is a product
-decision smuggled in as a component.
+model for. And the "PRO EDITION" badge gates a paywall onto a companion app that has none —
+this is a product decision smuggled in as a component.
+
+**The third problem used to be xG, and it has expired — which is the sentence above this
+heading collecting its own debt.** This paragraph read *"The xG figures require data no
+reachable provider supplies"*, and a survey on 2026-09-03 found several that do: FootyStats
+carries per-match xG for Série A (confirmed against its own API with the public example
+key), Sportmonks ships xPTS as a field, and API-Football is plausible and cheap and
+unverified. `docs/data-sources.md` has the whole of it. The rejection stands on the two
+reasons left — a season simulation that does not exist, and a paywall nobody decided on —
+and it no longer stands on availability. Nothing here produced work while it was true,
+which is why it went stale unnoticed.
 
 A **título/rebaixamento projection** computed from an explicit, documented Monte Carlo over
 remaining fixtures would be a legitimate future feature and a genuinely good one. It is not
