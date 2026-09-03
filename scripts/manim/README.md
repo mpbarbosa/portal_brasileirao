@@ -1,8 +1,16 @@
 # Animações em Manim
 
-Uma cena: **`campanhas.py`**, a campanha de dois clubes rodada a rodada — a
-posição desenhada como linha sobre a divisão inteira, e ao lado o jogo daquela
-rodada com o resultado.
+Duas cenas, duas leituras da mesma campanha:
+
+- **`campanhas.py`** — dois clubes rodada a rodada, a **posição** desenhada como
+  linha sobre a divisão inteira, e ao lado o jogo daquela rodada com o
+  resultado.
+- **`pontos.py`** — os **20 clubes** rodada a rodada, os **pontos** no eixo y e a
+  rodada no eixo x, com a classificação ao lado se reordenando a cada rodada.
+
+Nenhuma das duas recalcula classificação: as duas leem `rank-history.ts`, que já
+carrega posição *e* pontos por rodada. Um número errado aqui está errado no site
+também.
 
 ## Como gerar
 
@@ -20,30 +28,37 @@ Os dados saem do próprio seed do app, nunca digitados à mão:
 ```sh
 npx tsx scripts/manim/export-campanhas.ts > scripts/manim/campanhas.json
 ./.venv-manim/bin/manim -qh scripts/manim/campanhas.py Campanhas
+
+npx tsx scripts/manim/export-pontos.ts > scripts/manim/pontos.json
+./.venv-manim/bin/manim -qh scripts/manim/pontos.py Pontos
 ```
+
+`export-pontos.ts` não aceita argumento: a cena é a divisão inteira, e escolher
+um subconjunto dos 20 seria outro desenho.
 
 `export-campanhas.ts` aceita dois códigos de clube (`1769` Palmeiras, `1783`
 Flamengo são o padrão) — são os **códigos numéricos do provedor**, nunca a
 `tla`, pela razão que o CLAUDE.md registra: Corinthians e Coritiba compartilham
 `COR`.
 
-O vídeo sai em `media/videos/campanhas/1080p60/Campanhas.mp4`. `-ql` (480p15)
+Os vídeos saem em `media/videos/<cena>/1080p60/<Cena>.mp4`. `-ql` (480p15)
 renderiza em segundos e serve para conferir o enquadramento.
 
-## O render commitado
+## Os renders commitados
 
-**`docs/videos/campanhas-palmeiras-flamengo.mp4`** — 1920×1080, 60fps, 23s,
-3,3 MB — é o vídeo pronto, versionado junto do resto do projeto como os slides
+**`docs/videos/campanhas-palmeiras-flamengo.mp4`** (23s, 3,3 MB) e
+**`docs/videos/pontos-20-clubes.mp4`** (21s, 4,4 MB) — ambos 1920×1080, 60fps —
+são os vídeos prontos, versionado junto do resto do projeto como os slides
 em `docs/carrossel/` e as capturas em `docs/screenshots/`.
 
-Ele é **regenerável** pelos dois comandos acima, e mesmo assim está commitado
+Eles são **regeneráveis** pelos comandos acima, e mesmo assim está commitado
 pela razão que o `og-default.png` já registra: um artefato de divulgação precisa
 existir para quem clona o repositório sem instalar o Manim. `media/` continua
 ignorado — é a árvore de trabalho do Manim, cujo caminho muda com a flag de
 qualidade; o entregável tem nome e lugar próprios.
 
-**Regerar é um commit deliberado.** Nada compara os bytes: o vídeo não passa por
-nenhum gate, e o `docs/screenshots` guard não olha para ele. Se os dados
+**Regerar é um commit deliberado.** Nada compara os bytes: os vídeos não passam
+por nenhum gate, e o `docs/screenshots` guard não olha para eles. Se os dados
 mudarem — um `sync-seed-data` seguido de `sync-rank-history` — o mp4 commitado
 descreve a temporada anterior e continua verde. O subtítulo do próprio vídeo diz
 até que data os dados vão, que é a única defesa que ele tem.
@@ -74,3 +89,35 @@ até que data os dados vão, que é a única defesa que ele tem.
 - **O resumo final fica dentro da área vazia do gráfico**, não ao fim de cada
   linha: em 1º e 2º as duas linhas terminam a poucos pixels uma da outra, e uma
   etiqueta ao lado de cada uma se sobrepõe à vizinha e à coluna de cards.
+
+### `pontos.py`
+
+- **A classificação ao lado é a legenda, e uma etiqueta no fim da linha não
+  seria.** Vinte linhas precisam de uma chave que funcione *durante* o vídeo; um
+  rótulo no fim de cada curva só existe no último segundo, e até lá o desenho é
+  vinte curvas anônimas. A tabela reordenando também é a comparação que o
+  gráfico não faz: os pontos dizem a distância, a ordem diz quem está na frente.
+- **A coluna de posições é fixa e as LINHAS é que se movem por ela.** Desenhar
+  `1º…20º` dentro de cada linha animaria vinte ordinais a cada rodada para
+  soletrar as mesmas vinte palavras.
+- **O eixo y começa no zero e o x na rodada 0.** Pontos são cumulativos, então
+  todo clube parte da mesma origem e o desenho é um leque abrindo de um ponto só
+  — que é a forma de uma temporada. Um eixo cortado em 14–52 faria o lanterna
+  parecer não ter nada, que é a regra do zero que o `sparklineBars` já registra
+  no `CLAUDE.md`.
+- **A paleta é distinguível primeiro e fiel ao clube em segundo.** Cinco clubes
+  desta divisão vestem vermelho, quatro vestem preto e branco, três vestem azul:
+  uma paleta fiel às camisas desenha quatro linhas indistinguíveis e chama isso
+  de precisão. Cada clube fica com o tom livre mais próximo do seu — o Mirassol
+  mantém o amarelo, o Palmeiras o verde, o Flamengo o vermelho, o Fluminense o
+  grená — e quem chegou depois anda na roda. Os alvinegros ficam com os cinzas,
+  que é o mais perto que um fundo escuro permite: o preto é o fundo.
+- **O resumo final vai no canto de CIMA à esquerda**, não embaixo à direita, que
+  é onde ele parece pertencer. Pontos só sobem, então a região vazia do desenho
+  é a de *cima*: na rodada 5 ninguém tem 45 pontos e ninguém nunca terá. O canto
+  de baixo à direita parece vazio e não está — toda linha passa por ali saindo
+  da rodada 1.
+- **O número de jogos entra no resumo.** Dois clubes na mesma rodada podem ter
+  jogado quantidades diferentes de partidas, e uma diferença de pontos lida sem
+  isso é uma leitura errada — a mesma armadilha que o `live-core.ts` recusa para
+  o minuto da partida.
