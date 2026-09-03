@@ -1,6 +1,5 @@
-import { test as base } from "@playwright/test";
-
 import { SNAPSHOT_DATE } from "@/src/data/matches";
+import { test as offline } from "@/tests/e2e/fixtures";
 
 /**
  * The instant every end-to-end test runs at.
@@ -41,7 +40,7 @@ export const E2E_NOW = new Date(`${SNAPSHOT_DATE}T12:00:00.000Z`);
  * quiet, the suite still said `690 passed`, and the only trace was a `4 skipped`
  * line nobody reads.
  */
-export const test = base.extend({
+export const test = offline.extend({
   page: async ({ page }, use) => {
     // Before any navigation: an init script installed after `goto` reaches the
     // next document, not the one under test.
@@ -50,4 +49,6 @@ export const test = base.extend({
   },
 });
 
-export { expect, type Page, type Locator } from "@playwright/test";
+/** Re-exported from the base fixture, so no spec has a reason to reach for
+ *  `@playwright/test` directly — see `tests/e2e-fixture.test.ts`. */
+export { expect, type Page, type Locator } from "@/tests/e2e/fixtures";

@@ -1,4 +1,4 @@
-import { test, expect, type Page } from "@playwright/test";
+import { expect, test, type Page } from "@/tests/e2e/fixtures";
 
 import { SEED_MATCHES, SNAPSHOT_DATE } from "@/src/data/matches";
 import type { Match } from "@/src/types";
