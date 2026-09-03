@@ -237,9 +237,32 @@ export function valueLabel(row: Pick<ProfileRow, "unit" | "value">): string {
  * a claim about what the figure counts.
  */
 export function axisPhrase(axis: ScatterAxis, value: number): string {
+  const { figure, noun } = axisFigure(axis, value);
+  return `${figure} ${noun}`;
+}
+
+/**
+ * The same reading with the number kept apart from the words around it, so a
+ * caption can set a figure at one weight and its unit at another.
+ *
+ * **`axisPhrase` composes from this and not the other way round.** The caption
+ * needs the two halves separately, and recovering them by splitting the
+ * finished sentence on its first space is how "3,1 defesas do goleiro por jogo"
+ * comes to render `3,1 defesas` as the figure. One function decides how a
+ * reading is worded, so what a caption prints and what a `<title>` states
+ * cannot drift.
+ *
+ * `noun` carries the unit's own preposition — "de conversão" against
+ * "finalizações por jogo" — for `axisPhrase`'s reason: the unit decides the
+ * sentence, not just the number.
+ */
+export function axisFigure(
+  axis: ScatterAxis,
+  value: number,
+): { figure: string; noun: string } {
   const figure = valueLabel({ unit: axis.unit, value });
   const noun = axis.label.toLowerCase();
-  return axis.unit === "porcento" ? `${figure} de ${noun}` : `${figure} ${noun} por jogo`;
+  return { figure, noun: axis.unit === "porcento" ? `de ${noun}` : `${noun} por jogo` };
 }
 
 /** The axis itself in words, for the label printed beside the drawing. */
@@ -369,6 +392,27 @@ function axis(
  * conversão sounds like a virtue, so "melhor ataque" is one word away and is a
  * verdict two rates cannot support.
  */
+/**
+ * A corner in two pieces: what it is called, and what it means on these axes.
+ *
+ * **Two fields rather than one sentence**, because the page gives them
+ * different weight — the term is the reading a scanning eye should land on and
+ * the gloss is the sentence that explains it. Stored apart rather than split at
+ * the call site: a component recovering them from `"jogo aberto: finaliza
+ * muito"` by cutting at the colon is one editorial comma away from printing
+ * half a phrase as a heading.
+ *
+ * Both stay **descriptive rather than appraising**, which is `ScatterPair`'s
+ * rule for the whole set and bites hardest on the term, since a two-word name
+ * set in the page's own ink is exactly where a verdict would look at home.
+ */
+export interface QuadrantPhrase {
+  /** The corner's name — "jogo aberto". Lowercase: it is read mid-sentence too. */
+  term: string;
+  /** What it means here — "finaliza muito e o goleiro trabalha muito". */
+  gloss: string;
+}
+
 export interface ScatterPair {
   id: ScatterPairId;
   x: ScoutMetricId;
@@ -386,7 +430,12 @@ export interface ScatterPair {
   xLabel: string;
   yLabel: string;
   /** Named for the axes a club is above the median on, never for a rank. */
-  corners: { both: string; xOnly: string; yOnly: string; neither: string };
+  corners: {
+    both: QuadrantPhrase;
+    xOnly: QuadrantPhrase;
+    yOnly: QuadrantPhrase;
+    neither: QuadrantPhrase;
+  };
 }
 
 export type ScatterPairId = "ataque-defesa" | "volume-conversao";
@@ -400,10 +449,16 @@ export const SCATTER_PAIRS: Record<ScatterPairId, ScatterPair> = {
     xLabel: "Finalizações",
     yLabel: "Defesas do goleiro",
     corners: {
-      both: "jogo aberto: finaliza muito e o goleiro trabalha muito",
-      xOnly: "jogo controlado: finaliza muito e o goleiro trabalha pouco",
-      yOnly: "jogo recuado: finaliza pouco e o goleiro trabalha muito",
-      neither: "jogo fechado: finaliza pouco e o goleiro trabalha pouco",
+      both: { term: "jogo aberto", gloss: "finaliza muito e o goleiro trabalha muito" },
+      xOnly: {
+        term: "jogo controlado",
+        gloss: "finaliza muito e o goleiro trabalha pouco",
+      },
+      yOnly: { term: "jogo recuado", gloss: "finaliza pouco e o goleiro trabalha muito" },
+      neither: {
+        term: "jogo fechado",
+        gloss: "finaliza pouco e o goleiro trabalha pouco",
+      },
     },
   },
   "volume-conversao": {
@@ -414,10 +469,22 @@ export const SCATTER_PAIRS: Record<ScatterPairId, ScatterPair> = {
     xLabel: "Finalizações",
     yLabel: "Conversão",
     corners: {
-      both: "volume e aproveitamento: finaliza muito e converte muito",
-      xOnly: "volume sem aproveitamento: finaliza muito e converte pouco",
-      yOnly: "aproveitamento sem volume: finaliza pouco e converte muito",
-      neither: "nem volume nem aproveitamento: finaliza pouco e converte pouco",
+      both: {
+        term: "volume e aproveitamento",
+        gloss: "finaliza muito e converte muito",
+      },
+      xOnly: {
+        term: "volume sem aproveitamento",
+        gloss: "finaliza muito e converte pouco",
+      },
+      yOnly: {
+        term: "aproveitamento sem volume",
+        gloss: "finaliza pouco e converte muito",
+      },
+      neither: {
+        term: "nem volume nem aproveitamento",
+        gloss: "finaliza pouco e converte pouco",
+      },
     },
   },
 };
@@ -474,8 +541,24 @@ export function profileScatter(
  * "melhor ataque" would be a verdict the two numbers do not support.
  */
 export function quadrantLabel(scatter: ProfileScatter): string {
+  const phrase = quadrantParts(scatter);
+  return phrase ? `${phrase.term}: ${phrase.gloss}` : "";
+}
+
+/**
+ * The same corner as its two pieces, for the caption that renders them at
+ * different weights.
+ *
+ * **This is where the corner is chosen and `quadrantLabel` composes from it**,
+ * rather than both comparing the medians themselves. Two copies of that
+ * comparison is how the sentence a screen reader hears comes to name a
+ * different corner than the one printed beside the drawing — and the two would
+ * disagree only for a club sitting exactly on a median, which is the case
+ * nobody looks at.
+ */
+export function quadrantParts(scatter: ProfileScatter): QuadrantPhrase | null {
   const point = scatter.points.find((entry) => entry.subject);
-  if (!point) return "";
+  if (!point) return null;
 
   const { corners } = SCATTER_PAIRS[scatter.pair];
   const aboveX = point.x >= scatter.x.median;

@@ -9,9 +9,11 @@ import {
   markerFraction,
   medianFraction,
   axisCaption,
+  axisFigure,
   axisPhrase,
   profileScatter,
   quadrantLabel,
+  quadrantParts,
   SCATTER_PAIRS,
   rankLabel,
   valueLabel,
@@ -276,12 +278,78 @@ test("no two pairings share a title, and none is empty", () => {
   for (const title of titles) assert.ok(title.trim().length > 0);
 });
 
-test("every pairing offers four distinct corners", () => {
+test("every pairing offers four distinct corners, named and glossed", () => {
   for (const pair of Object.values(SCATTER_PAIRS)) {
     const phrases = Object.values(pair.corners);
-    assert.equal(new Set(phrases).size, 4, `${pair.id} repeats a corner`);
-    for (const phrase of phrases) assert.ok(phrase.length > 0);
+    // Both halves, separately. A `Set` of the four *objects* has four members
+    // whatever they contain, so the shape that replaced four strings here would
+    // pass a distinctness check on the values and prove nothing — which is the
+    // direction this file's own comments warn a test must never fail in.
+    assert.equal(
+      new Set(phrases.map((phrase) => phrase.term)).size,
+      4,
+      `${pair.id} repeats a term`,
+    );
+    assert.equal(
+      new Set(phrases.map((phrase) => phrase.gloss)).size,
+      4,
+      `${pair.id} repeats a gloss`,
+    );
+    for (const phrase of phrases) {
+      assert.ok(phrase.term.length > 0);
+      assert.ok(phrase.gloss.length > 0);
+      // The term is what the caption sets in the page's own ink, on one line.
+      // A gloss that has crept into it is a sentence rendered as a heading.
+      assert.doesNotMatch(phrase.term, /:/);
+    }
   }
+});
+
+test("the corner's two halves are the label a screen reader hears", () => {
+  // `quadrantLabel` composes from `quadrantParts` rather than comparing the
+  // medians a second time, so the sentence in the drawing's `aria-label` and
+  // the two pieces printed beside it cannot name different corners.
+  //
+  // Read what this does and does not hold: it catches a second comparison that
+  // picks a *different* corner — a swapped `xOnly`/`yOnly`, a `>` where the
+  // other says `>=` — for any club these fixtures place off a median. It
+  // cannot catch a duplicate that happens to agree, which is why the
+  // composition lives in the module rather than being asserted here.
+  for (const code of ["AAA", "BBB", "CCC", "DDD"]) {
+    const scatter = profileScatter(spread(), code);
+    assert.ok(scatter);
+    const parts = quadrantParts(scatter);
+    assert.ok(parts);
+    assert.equal(quadrantLabel(scatter), `${parts.term}: ${parts.gloss}`);
+  }
+});
+
+test("a reading's number and its unit compose back into the phrase", () => {
+  // The caption sets the figure and the unit at different weights, so it takes
+  // them apart — and `axisPhrase` is built from the same two pieces. The
+  // failure this refuses is the split drifting from the sentence: a caption
+  // reading "3,1 defesas" beside a `<title>` reading "3,1 defesas do goleiro
+  // por jogo", where the shorter one looks like a deliberate abbreviation.
+  const scatter = profileScatter(spread(), "AAA", SCATTER_PAIRS["volume-conversao"]);
+  assert.ok(scatter);
+
+  for (const [axis, value] of [
+    [scatter.x, 10.4],
+    [scatter.y, 17.8],
+  ] as const) {
+    const { figure, noun } = axisFigure(axis, value);
+    assert.equal(`${figure} ${noun}`, axisPhrase(axis, value));
+    // The figure is the number alone: everything a caption renders quietly is
+    // in `noun`, including the unit's own preposition.
+    assert.doesNotMatch(figure, /[a-zç]/i);
+    assert.ok(noun.length > 0);
+  }
+
+  // And the percentage axis still never says "por jogo" — the bug that reads
+  // as a typo and is a claim about what the figure counts, now checkable on
+  // the half a caption prints beside the number.
+  assert.equal(axisFigure(scatter.y, 17.8).noun, "de conversão");
+  assert.equal(axisFigure(scatter.x, 10.4).noun, "finalizações por jogo");
 });
 
 test("a percentage axis is never captioned 'por jogo'", () => {
