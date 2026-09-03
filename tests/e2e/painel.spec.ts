@@ -95,7 +95,15 @@ test.describe("Painel do clube", () => {
     await openPanel(page);
 
     // Shape, never a value: the snapshot ages and the table reorders.
-    const ends = page.locator("main svg[role='img']:not([data-candles]) ~ p span");
+    //
+    // Excluding the scatter as well as the candles. It went red here the moment
+    // the scatter's x axis moved into the drawing's own grid column — its two
+    // end labels are a `p` following an `svg[role='img']` too — which is the
+    // narrowing the sibling spec above already does and the reason both drawings
+    // carry a `data-` name.
+    const ends = page.locator(
+      "main svg[role='img']:not([data-candles]):not([data-scatter-svg]) ~ p span",
+    );
 
     await expect(ends).toHaveCount(2);
     await expect(ends.first()).toHaveText(/^\d+º · 1ª rodada$/);
@@ -113,7 +121,7 @@ test.describe("Painel do clube", () => {
       await page.locator("main p", { hasText: /^\d+º$/ }).first().innerText()
     ).trim();
     const endLabel = await page
-      .locator("main svg[role='img']:not([data-candles]) ~ p span")
+      .locator("main svg[role='img']:not([data-candles]):not([data-scatter-svg]) ~ p span")
       .last()
       .innerText();
 
@@ -354,7 +362,12 @@ test.describe("Painel do clube", () => {
 
     const scatter = page.locator('main figure[data-scatter-pair="ataque-defesa"]');
     await expect(scatter).toBeVisible();
-    await expect(scatter.locator("circle")).toHaveCount(20);
+    // Scoped to the drawing, not to the figure: the caption beneath carries a
+    // swatch of this club's own mark — a real `circle`, and the point of it is
+    // that it is the same mark — so a figure-wide count reads 21 and a spec
+    // written against the figure would have to be loosened every time the key
+    // gains a swatch.
+    await expect(scatter.locator("svg[data-scatter-svg] circle")).toHaveCount(20);
     // Exactly one, which is what the drawing is for: placing *this* club among
     // the rest rather than being a table of twenty.
     await expect(scatter.locator("[data-scatter-point='subject']")).toHaveCount(1);
@@ -372,7 +385,7 @@ test.describe("Painel do clube", () => {
     // `toMatch(undefined)` throws rather than failing an assertion, which reads
     // as a broken spec instead of a missing title.
     const titles = await page
-      .locator('main figure[data-scatter-pair="ataque-defesa"] circle title')
+      .locator('main figure[data-scatter-pair="ataque-defesa"] svg[data-scatter-svg] circle title')
       .allTextContents();
     expect(titles.length).toBe(20);
     for (const title of titles) {
@@ -432,7 +445,9 @@ test.describe("Painel do clube", () => {
     // strip's marker, this one *can* be checked by containment — the assertion
     // runs over all twenty dots, so it reaches the extremes whichever club's
     // panel is open, which is the trap the marker spec fell into.
-    const svg = page.locator('main figure[data-scatter-pair="ataque-defesa"] svg');
+    const svg = page.locator(
+      'main figure[data-scatter-pair="ataque-defesa"] svg[data-scatter-svg]',
+    );
     const box = await svg.boundingBox();
     expect(box).not.toBeNull();
     if (!box) return;

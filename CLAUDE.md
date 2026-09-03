@@ -317,13 +317,57 @@ what makes the logic testable without mocking HTTP.
   card is wide — one chart taller than the whole strip above it — and flattening
   the box instead would compress the y axis and misreport the distance between
   two clubs, which is the one thing the drawing is for.
+  **What is general and what is about this club are two blocks, not one
+  paragraph**, and the caption shipped as the second before it was the first.
+  It read *"Cada ponto é um clube; o cheio é o Palmeiras, com 10,4 finalizações
+  por jogo e 3,1 defesas do goleiro por jogo — jogo aberto: finaliza muito e o
+  goleiro trabalha muito. As linhas tracejadas são as medianas da divisão."* —
+  one run of prose in one weight, in which a reader after this club's reading
+  steps over how the drawing works to reach it, and does so **twice**, since
+  the page carries two scatters and each said the general half again.
+  How the marks work is now `ScatterKey`, stated **once for the section**
+  beside the strip's own key, the recency and the credit — the arrangement the
+  campanha's plot toggle already takes on the Partida page, and for the same
+  reason: two figures sharing a vocabulary entirely make a reader check whether
+  two statements of it agree. What is left in each `figcaption` is one club's
+  reading, marked as such by a rule in `primary` down its left — the colour of
+  the mark it describes, which is what ties four lines of text to one dot
+  without naming the club's dot in prose under both drawings.
+  `axisFigure` and `quadrantParts` exist because that block sets a figure and
+  its unit, and a corner's name and its gloss, at **different weights** — and
+  both are the source the one-sentence forms compose *from*, never a split of
+  them. Recovering "10,4" from `axisPhrase` by cutting at the first space is how
+  a caption comes to print `3,1 defesas` as the figure; recovering "jogo aberto"
+  by cutting `quadrantLabel` at its colon is one editorial comma away from
+  rendering half a sentence as a heading. So `corners` holds `{ term, gloss }`
+  rather than four strings, and `tests/scouts-core.test.ts` checks the two
+  halves **separately** — a `Set` of four *objects* has four members whatever
+  they contain, so the distinctness case that survived the change would have
+  passed against anything.
+  **The x axis's labels live in the drawing's own grid column**, which is what
+  the complaint that started this was actually about. In the flex row they had,
+  the label row spanned the y gutter as well, so "menos finalizações" sat
+  directly beneath the y axis's "menos" — two axes' labels stacked into what
+  reads as one broken sentence. `col-start-2` in a
+  `grid-cols-[auto_minmax(0,1fr)]` puts them under the box and needs no spacer
+  cell, and it is font-independent where a hand-tuned indent is not. Note the
+  svg's `w-full` became correct in the same move: inside a grid track it is
+  100% of the track, where in the flex row it was 100% of the container rather
+  than of what the gutter left — `RankCandles`' painting-outside-the-card bug,
+  which is why that class carried a comment forbidding it.
   **The Painel now carries three `role="img"` drawings and two `<figure>`s.** A
   spec written when it had one of each resolves to all of them, which is why the
   scatter's `<svg>` takes `data-scatter-svg` and its figure `data-scatter` —
-  `data-candles`' device, one mark later. Three specs across
-  `painel.spec.ts` and `standings.spec.ts` had to narrow, and they went red
+  `data-candles`' device, one mark later. Specs across `painel.spec.ts` and
+  `standings.spec.ts` have had to narrow twice now — count the
+  `data-scatter-svg` lookups rather than this sentence — and they went red
   rather than quiet, which is the whole reason those lookups are written
-  negatively.
+  negatively. The second round is worth reading before adding a mark: a
+  `figure`-wide `circle` count went to 21 the moment the caption carried a
+  **swatch of the mark itself**, and `figure svg` became two svgs, which is a
+  strict-mode violation rather than a wrong answer. Both now select through
+  `svg[data-scatter-svg]`, so a key may gain a swatch without loosening an
+  assertion about what the drawing plots.
 - `venue-core.ts` — the **Página do estádio**. `buildStadiums` groups fixtures into
   grounds, because **a stadium is not an entity in any payload**: football-data has no
   venue field at any tier, and CBF reports only a `Stadium - City - UF` string per match.

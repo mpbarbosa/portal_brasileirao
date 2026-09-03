@@ -9,7 +9,7 @@ import {
   type ProfileRow,
 } from "@/scouts-core";
 import { LINK_UNDERLINE } from "@/src/components/interaction";
-import { ProfileScatter } from "@/src/components/ProfileScatter";
+import { ProfileScatter, ScatterKey } from "@/src/components/ProfileScatter";
 import { Surface } from "@/src/components/Surface";
 import { CLUB_SCOUTS, CLUB_SCOUTS_THROUGH_ROUND } from "@/src/data/club-scouts";
 import type { ClubCode } from "@/src/types";
@@ -71,26 +71,38 @@ export function ClubProfile({ clubCode }: ClubProfileProps) {
           <ProfileScatter division={CLUB_SCOUTS} clubCode={clubCode} pair="volume-conversao" />
         </div>
 
-        {/* The key, the recency and the credit, in that order.
-            The key is not decoration: the tick is the division's median, and an
-            unexplained mark on a track is a mark a reader has to guess at.
+        {/* The keys, the recency and the credit, in that order — and **every
+            general sentence in this section is here**, which is what lets each
+            figure above say only what is true of its own club. The keys are not
+            decoration: the tick is the division's median and a dot is a whole
+            club, and an unexplained mark is a mark a reader has to guess at.
             The rodada is there for `StadiumWeather`'s reason — the source is a
             weekly snapshot, and a figure with no date reads as today's. The
             credit is there for the stadium photographs' reason: this is
-            somebody else's work. */}
-        <p className="mt-2 border-t border-outline-variant pt-2 text-body-small text-ink-faint">
-          Cada barra vai do menor ao maior da divisão, e o traço marca a mediana.
-          Médias por jogo até a {CLUB_SCOUTS_THROUGH_ROUND}ª rodada. Números de{" "}
-          <a
-            href="https://github.com/henriquepgomide/caRtola"
-            target="_blank"
-            rel="noopener noreferrer"
-            className={LINK_UNDERLINE}
-          >
-            caRtola
-          </a>
-          .
-        </p>
+            somebody else's work.
+
+            Three blocks rather than one paragraph. They answer three unrelated
+            questions — how to read the strip, how to read the drawings, how old
+            all of it is — and run together they were a wall a reader has to
+            parse to find the one line they wanted. The recency stays **last**,
+            both because it covers everything above it and because the Painel's
+            own spec reads it as this section's final paragraph. */}
+        <div className="mt-2 border-t border-outline-variant pt-2 text-body-small text-ink-faint">
+          <p>Cada barra vai do menor ao maior da divisão, e o traço marca a mediana.</p>
+          <ScatterKey className="mt-1.5" />
+          <p className="mt-1.5">
+            Médias por jogo até a {CLUB_SCOUTS_THROUGH_ROUND}ª rodada. Números de{" "}
+            <a
+              href="https://github.com/henriquepgomide/caRtola"
+              target="_blank"
+              rel="noopener noreferrer"
+              className={LINK_UNDERLINE}
+            >
+              caRtola
+            </a>
+            .
+          </p>
+        </div>
       </Surface>
     </section>
   );
