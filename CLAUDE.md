@@ -3914,6 +3914,38 @@ minute or the free-tier budget ran out. Keep it that way: do not add
 `FOOTBALL_DATA_TOKEN` as a repository secret to "test the live path". If the live
 mapping needs coverage, add a unit test with a captured payload.
 
+**That sentence was true of the API and false of the crest CDN for as long as it
+had been written**, and the gap is worth keeping because of how it presented.
+`DISABLE_FOOTBALL_DATA` takes the *API* out of the suite; it does nothing about
+`crests.football-data.org`, which all twenty clubs in `clubs.ts` hotlink and
+which nothing stubbed. Same third party, same bad minute, and no token involved
+— so the "no secrets" test that the paragraph rests on simply does not detect
+it.
+
+It fails in a shape that reads as a broken app rather than a slow network:
+`page.goto` waits for `load`, `load` waits for images, and twenty crests against
+a browser's ~6 connections per host exceeds the 30s test timeout, surfacing as
+**`net::ERR_ABORTED` on the navigation** — never a failed assertion. Measured
+2026-09-03 on an unmodified `main`: **85 failed / 765 passed**, clustered on
+exactly the club-list pages, while CI stayed green because its path to that host
+is not a workstation's.
+
+`tests/e2e/fixtures.ts` closes it, and **fulfils rather than aborts** because
+three existing assertions constrain the shape: `standings.spec.ts` reads the
+crest `referrerpolicy` off the DOM *and* the `Referer` off the wire, so the
+request must still be made and the `src` must stay the real external URL; a
+second case there drives a **503** to prove the letter fallback, which a global
+abort would raise on every page; and the images must load fast. Verified by
+counting: **20 requests issued and 0 served from the network** with the stub, 20
+of 20 from the network without it.
+
+**Every spec takes `test` from that fixture, and `tests/e2e-fixture.test.ts`
+refuses one that does not.** Three specs imported `test` from `@playwright/test`
+directly — each for its own reason and none wrong at the time, because there was
+nothing in the fixture to miss — and a fourth would have opted out of
+hermeticity silently. A grep rather than an ESLint rule, for
+`design-tokens-core.test.ts`' reason.
+
 ## The deploy pipeline
 
 `main` deploys itself. A push to `main` that passes `check` and `e2e` runs the
