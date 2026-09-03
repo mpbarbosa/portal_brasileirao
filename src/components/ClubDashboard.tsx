@@ -1,19 +1,20 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 
 import { clubKey, findClub, standingFor } from "@/club-core";
 import { candlesFor, computeRankCandles, summariseCandles } from "@/rank-candles-core";
 import { lastRecordedRound, lastRoundWithResult } from "@/rank-history-core";
 import { formatRoute } from "@/route-core";
 import type { CampaignPlotKind } from "@/campaign-plot-core";
+import { controlClasses } from "@/src/components/Button";
 import { CampaignPlotToggle } from "@/src/components/CampaignPlotToggle";
 import { ClubCrest } from "@/src/components/ClubCrest";
 import { ClubProfile } from "@/src/components/ClubProfile";
 import { StatTile } from "@/src/components/ClubView";
 import { BACK_LINK, LINK_UNDERLINE } from "@/src/components/interaction";
-import { RankCandles } from "@/src/components/RankCandles";
+import { CandlesKey, RankCandles } from "@/src/components/RankCandles";
 import { RankSparkline } from "@/src/components/RankSparkline";
 import { Surface } from "@/src/components/Surface";
-import type { Club, ClubRankHistory, Match, StandingsRow } from "@/src/types";
+import type { Club, ClubCode, ClubRankHistory, Match, StandingsRow } from "@/src/types";
 
 interface ClubDashboardProps {
   /** Slug or code, straight from the URL — the same key the club page takes. */
@@ -62,6 +63,12 @@ interface ClubDashboardProps {
  * club's position at an instant depends on what everyone else had done by then,
  * so twenty clubs cost what one does.
  *
+ * It also reads one club **against another**: `Comparar com` draws a second
+ * club's velas beneath these, on the same frame. That costs no computation at
+ * all — `computeRankCandles` already does the whole division, for the reason
+ * above — and no address, because the choice is component state rather than a
+ * route: a pairing per club would be 380 addresses for one page.
+ *
  * Not a nav destination, and it must not become one: it is reached from the
  * club page and from the sitemap, exactly as a stadium is reached from a
  * fixture. `NAV_ITEMS` is full at MD3's five.
@@ -93,10 +100,32 @@ export function ClubDashboard({
     [clubs, standings],
   );
 
-  const candles = useMemo(
-    () => (club ? candlesFor(computeRankCandles(division, matches), club.code) : []),
-    [division, matches, club],
-  );
+  // **The whole division in one memo, and both clubs are read off it.** That is
+  // not a refactor for tidiness: `computeRankCandles` already computes every
+  // club — a club's position at an instant depends on what everyone else had
+  // done by then — so a comparação costs exactly nothing beyond the second
+  // drawing. Keying the memo on the subject, as this did, would have thrown the
+  // other nineteen away on every navigation and recomputed them.
+  const allCandles = useMemo(() => computeRankCandles(division, matches), [division, matches]);
+
+  // Which club this painel is being read against, or null. **Component state
+  // and deliberately not the URL**: `pageStatus` refuses a third path segment,
+  // and a query would make 20 × 19 addresses of one page — an indexable
+  // duplicate for every pairing, which is exactly what the unknown-section
+  // rule exists to prevent. It is not persisted either, unlike the plot kind:
+  // ask which side *owns* a key, and a comparison is owned by the reading in
+  // front of you rather than by the reader. Opening any painel and finding a
+  // second club already drawn is an answer to a question nobody asked.
+  const [compareCode, setCompareCode] = useState<ClubCode | null>(null);
+  // Cleared when the painel changes club, by adjusting state during render
+  // rather than in an effect — the subject can become the comparison
+  // otherwise, and a club drawn against itself is two identical charts.
+  const [drawnFor, setDrawnFor] = useState<ClubCode | null>(null);
+
+  if (club && drawnFor !== club.code) {
+    setDrawnFor(club.code);
+    setCompareCode(null);
+  }
 
   if (!club) {
     return (
@@ -110,6 +139,27 @@ export function ClubDashboard({
       </>
     );
   }
+
+  const candles = candlesFor(allCandles, club.code);
+
+  // The club being compared against, resolved out of the division rather than
+  // trusted from state: a selection made before a payload landed can name a
+  // club the current one no longer holds, and the guard against the subject is
+  // what stops the reset above being the only thing between a reader and a
+  // club drawn against itself.
+  const opponent =
+    compareCode && compareCode !== club.code
+      ? (division.find((entry) => entry.code === compareCode) ?? null)
+      : null;
+  const opponentCandles = opponent ? candlesFor(allCandles, opponent.code) : [];
+
+  // Everyone but this club, in the reader's own collation — the order the
+  // Classificação is not in, deliberately: a list to *find a name in* is
+  // alphabetical, where a table is a ranking.
+  const comparable = division
+    .filter((entry) => entry.code !== club.code)
+    .slice()
+    .sort((a, b) => a.shortName.localeCompare(b.shortName, "pt-BR"));
 
   const row = standingFor(standings, club.code);
   const summary = summariseCandles(candles);
@@ -206,17 +256,93 @@ export function ClubDashboard({
         </section>
       )}
 
+      {/* The velas, and — when the reader asks for one — a second club's on the
+          same frame beneath them.
+
+          **Two drawings stacked, never one drawing overlaid**, and that is the
+          whole design. A vela already spends its colour on the club's own
+          result and its geometry on the direction it moved; a second club's
+          candles interleaved would halve the band a round gets and put two
+          clubs' greens beside each other with nothing to say whose is whose.
+          Stacking works here for a reason that is already built in: both
+          domains are the *division's* rather than either club's — `clubCount`
+          is twenty and `lastRound` is the season's — so the two drawings are
+          the same box at the same scale, and a reader can drop a vertical line
+          through both. That property is what the y domain being the whole
+          division was for; this section is the first thing to use it.
+
+          The control shares the heading's row for `CampaignPlotToggle`'s
+          reason one section up: it changes this section and nothing else, and
+          a full-width row of its own would read as a page-level setting. */}
       <section className="mt-6">
-        <h3 className="mb-2 text-body-medium font-medium text-ink-muted">
-          Campanha rodada a rodada
-        </h3>
+        <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+          <h3 className="text-body-medium font-medium text-ink-muted">
+            Campanha rodada a rodada
+          </h3>
+          {comparable.length > 0 && candles.length > 0 && lastRound > 0 && (
+            <div className="flex items-center gap-2">
+              <label htmlFor="comparar-clube" className="text-body-medium text-ink-muted">
+                Comparar com
+              </label>
+              {/* A native `<select>`, which is the rule this app already
+                  follows for the round picker: the platform control brings the
+                  mobile picker, the keyboard model and the accessibility tree
+                  for nothing, and a re-implementation owes focus management and
+                  dismissal for ever. `controlClasses` is what makes it look
+                  like the buttons elsewhere. */}
+              <select
+                id="comparar-clube"
+                className={controlClasses("xs", "bg-surface-container-low")}
+                value={opponent?.code ?? ""}
+                onChange={(event) => setCompareCode(event.target.value || null)}
+              >
+                {/* First and empty, because no comparison is the resting state
+                    and a reader must be able to get back to it. Named rather
+                    than blank: an empty option reads as a control that failed
+                    to load. */}
+                <option value="">Nenhum</option>
+                {comparable.map((entry) => (
+                  <option key={entry.code} value={entry.code}>
+                    {entry.shortName}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+        </div>
         <Surface filled className="px-3 py-3">
           {candles.length === 0 || lastRound === 0 ? (
             <p className="text-body-medium text-ink-muted">
               O campeonato ainda não teve resultados. O painel aparece a partir da 1ª rodada.
             </p>
           ) : (
-            <RankCandles candles={candles} clubCount={clubCount} lastRound={lastRound} />
+            <>
+              {/* Named only while there are two. On its own this drawing is
+                  what the page and the section heading have both just named,
+                  and a third statement of the club is noise. */}
+              <RankCandles
+                candles={candles}
+                clubCount={clubCount}
+                lastRound={lastRound}
+                name={opponent ? club.shortName : undefined}
+              />
+              {opponent && (
+                <div className="mt-4 border-t border-outline-variant pt-3">
+                  <RankCandles
+                    candles={opponentCandles}
+                    clubCount={clubCount}
+                    lastRound={lastRound}
+                    name={opponent.shortName}
+                  />
+                </div>
+              )}
+              {/* Once for the section, beneath everything it describes —
+                  `ScatterKey`'s arrangement, and the reason the key left the
+                  figure's own caption. With two drawings it would otherwise
+                  sit between the charts it explains and say the vocabulary
+                  twice. */}
+              <CandlesKey className="mt-3 border-t border-outline-variant pt-3" />
+            </>
           )}
         </Surface>
       </section>

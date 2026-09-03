@@ -172,6 +172,13 @@ docs/screenshots/local/
 # added under it would be unstageable with nothing going red.
 /data/
 
+# Manim (scripts/manim/README.md): the virtualenv and manim's own output tree.
+# The DELIVERABLE render is committed at docs/videos/ — this ignores the working
+# copy manim writes beside the scene, which is the same bytes under a name that
+# changes with the quality flag.
+.venv-manim/
+media/
+
 # Traffic snapshots. These are written on the HOST by
 # shell_scripts/12_traffic_report.sh, into $DEPLOY_DIR/traffic-reports, and the
 # app reads that directory directly — so the host is the source of truth and

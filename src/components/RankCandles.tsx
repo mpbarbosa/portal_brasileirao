@@ -73,6 +73,16 @@ interface RankCandlesProps {
   /** Last round any club has played — the x domain, shared with the campanha
    *  sparkline so the two drawings of one season line up. */
   lastRound: number;
+  /**
+   * The club this drawing is of, printed above it and folded into the chart's
+   * accessible name.
+   *
+   * **Omitted on a painel showing one club**, where the page heading and the
+   * section heading have both already said whose season this is and a third
+   * statement of it is noise. It is what a **comparação** needs: two drawings
+   * of the same shape, on the same frame, are told apart by nothing else.
+   */
+  name?: string;
 }
 
 /**
@@ -90,18 +100,24 @@ interface RankCandlesProps {
  * names the ends of its sparkline in text for the same reason; this is that
  * idea with a gutter, and it costs the chart nothing it would otherwise have.
  */
-export function RankCandles({ candles, clubCount, lastRound }: RankCandlesProps) {
+export function RankCandles({ candles, clubCount, lastRound, name }: RankCandlesProps) {
   const domain: CandleBox = { ...BOX, clubCount, lastRound };
   const shapes = candleShapes(candles, domain);
   const guides = zoneGuides(domain);
-  const label = describeCandles(candles);
+  const label = describeCandles(candles, name);
 
   if (shapes.length === 0) {
-    return <p className="text-body-medium text-ink-muted">Campanha ainda não disponível.</p>;
+    return <p className="text-body-medium text-ink-muted">{label}.</p>;
   }
 
   return (
-    <figure>
+    <figure data-candles-figure={name ?? ""}>
+      {/* The drawing's own name, which a painel of one club does not need and a
+          comparação cannot do without. An `h4` under the section's `h3` rather
+          than a styled paragraph, so the document outline and a screen
+          reader's heading list carry the pairing too — `ProfileScatter`'s
+          arrangement, one section down the same page. */}
+      {name && <h4 className="mb-1 text-body-small font-medium text-ink-muted">{name}</h4>}
       <div className="flex gap-2">
         {/* The y axis. A flex column stretched to the drawing's own height, so
             it stays aligned at every width without either side knowing what
@@ -139,6 +155,11 @@ export function RankCandles({ candles, clubCount, lastRound }: RankCandlesProps)
           role="img"
           aria-label={label}
           data-candles={shapes.length}
+          /* Which club this drawing is of, so a spec can address one of two.
+             `data-candles` alone counts rounds, and both drawings of one
+             season report the same number — the trap `data-scatter-pair` was
+             added for when the Perfil grew its second figure. */
+          data-candles-club={name ?? ""}
         >
           <title>{label}</title>
 
@@ -222,23 +243,44 @@ export function RankCandles({ candles, clubCount, lastRound }: RankCandlesProps)
         <span>{lastRound}ª rodada</span>
       </p>
 
-      <figcaption className="mt-3 space-y-1.5 text-body-small text-ink-muted">
-        <p className="flex flex-wrap items-center gap-x-3 gap-y-1">
-          <Swatch className="bg-positive">Vitória</Swatch>
-          <Swatch className="bg-ink-muted">Empate</Swatch>
-          <Swatch className="bg-negative">Derrota</Swatch>
-          {/* Hollow, exactly as the mark is — a key that fills this one in is a
-              key that describes a different drawing. */}
-          <Swatch className="border border-outline">Sem jogo</Swatch>
-        </p>
-        <p>
-          O corpo vai da posição em que a rodada começou até a do fim dela, e o traço
-          à esquerda marca o começo. A linha fina atravessa todas as posições que o
-          clube ocupou enquanto a rodada era disputada. As linhas tracejadas são o G4
-          e o Z4.
-        </p>
-      </figcaption>
     </figure>
+  );
+}
+
+/**
+ * What the marks mean, stated **once for the section** rather than under each
+ * drawing.
+ *
+ * It lived in this figure's own `figcaption` while the painel drew one club,
+ * which was right then and stops being right the moment a **comparação** puts
+ * a second drawing beneath the first: the key would then sit *between* the two
+ * charts it describes, and the paragraph explaining corpo and pavio would be
+ * printed twice for one vocabulary — which is a reader checking whether two
+ * statements of one thing agree. `ScatterKey` reached this same answer when
+ * the Perfil grew its second figure, and this is that arrangement.
+ *
+ * Nothing here is about a club, which is the line that decides what may move
+ * in: the axis ends stay in the figure because "1º … 20º" is that drawing's
+ * own scale, and every general sentence lands here.
+ */
+export function CandlesKey({ className }: { className?: string }) {
+  return (
+    <div data-candles-key="" className={`space-y-1.5 text-body-small text-ink-muted ${className ?? ""}`}>
+      <p className="flex flex-wrap items-center gap-x-3 gap-y-1">
+        <Swatch className="bg-positive">Vitória</Swatch>
+        <Swatch className="bg-ink-muted">Empate</Swatch>
+        <Swatch className="bg-negative">Derrota</Swatch>
+        {/* Hollow, exactly as the mark is — a key that fills this one in is a
+            key that describes a different drawing. */}
+        <Swatch className="border border-outline">Sem jogo</Swatch>
+      </p>
+      <p>
+        O corpo vai da posição em que a rodada começou até a do fim dela, e o traço
+        à esquerda marca o começo. A linha fina atravessa todas as posições que o
+        clube ocupou enquanto a rodada era disputada. As linhas tracejadas são o G4
+        e o Z4.
+      </p>
+    </div>
   );
 }
 

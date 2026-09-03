@@ -113,6 +113,8 @@ held at the *end* of each round, so a round is one point and its inside is
 invisible: a club that sat 4º on Saturday night and finished 9º because three
 rivals played on Sunday draws the same segment as one that walked calmly down.
 A **vela** keeps the two apart.
+It also reads one club against another: see **Comparação**, which draws a second
+club's velas beneath these on the same frame.
 Beneath the velas it carries the **Perfil**, which is the one thing on the page
 not derived from the campanha.
 _Avoid_: "dashboard" (English, and it promises a grid of panels this page is
@@ -142,6 +144,30 @@ of the picture is a trap for whoever reads the numbers next; the y axis here is
 inverted and the names say so), "sombra" for the pavio (it reads as a drop
 shadow), "abertura/fechamento" in user-facing copy (market words for a football
 page — the legend says "onde a rodada começou" instead).
+
+**Comparação** (of a **Painel**):
+A second club's **velas** drawn beneath this club's, on the same frame, chosen
+from `Comparar com` beside the section heading. The resting state is **Nenhum**
+— one club — and the choice is not remembered: it belongs to the reading in
+front of the reader, not to the reader, which is the opposite of the plot kind
+the **Campanha** carries.
+**Two drawings stacked, never one overlaid**, and the word means the stacking.
+A vela already spends its colour on the club's own **result** and its geometry
+on direction; a second club's candles interleaved would halve the band a rodada
+gets and put two greens side by side with nothing saying whose is whose. What
+makes stacked charts a comparison rather than two pictures is that both take
+the **division's** domains — twenty positions and the season's last rodada,
+never either club's own — so they are one box at one scale and a rodada sits at
+the same place in both. That property is what the y axis being the whole
+division was always for.
+It is **not an address**: no route, no query, nothing in the sitemap. A pairing
+per club would be 380 addresses for one page, which is the duplicate-page rule
+the unknown-**section** 404 already exists to hold.
+_Avoid_: "confronto" (that is two clubs *playing*, which is a **Partida** —
+these two need never have met), "versus"/"x" in the copy for the same reason
+(`Palmeiras x Flamengo` is a scoreline), "sobrepor"/"overlay" (it names the
+drawing this deliberately is not), "benchmark" (English, and it casts one club
+as the standard when neither is).
 
 **Perfil**:
 The section at the foot of the **Painel** saying what kind of side a club is:
