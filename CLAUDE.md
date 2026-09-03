@@ -355,12 +355,55 @@ what makes the logic testable without mocking HTTP.
   100% of the track, where in the flex row it was 100% of the container rather
   than of what the gutter left — `RankCandles`' painting-outside-the-card bug,
   which is why that class carried a comment forbidding it.
+  **The drawing names the reader's corner, on itself.** The four quadrants are
+  the whole point of the pairing, and until this landed nothing on the picture
+  said which one a club was in — the medians divide the box into four
+  equal-looking regions and the corner was stated only in prose beneath. So the
+  subject's quadrant is **tinted** and the corner's **term printed over it**, and
+  the dot carries a **ring**. `fill-surface-container` for the tint, one tonal
+  step up from the card: a *surface*, not an accent at low opacity, which would
+  be a state layer and MD3 spends those on interaction.
+  `subjectQuadrant` is what makes that safe. It returns `aboveX`/`aboveY`
+  **alongside** the phrase, and `quadrantParts` and `quadrantLabel` compose from
+  it, because the tint, the label and the sentence a screen reader hears are one
+  reading of one club. A component comparing the medians itself to place a tint
+  is how a drawing comes to shade one corner while the caption names another —
+  and the two would differ only for a club sitting on a median, which is the
+  case nobody looks at and nobody writes a fixture for.
+  **The label is HTML over the SVG, never `<text>` inside it** — `RankCandles`'
+  rule, the same one that already put the axes outside the drawing — and it sits
+  in the outer angle of its quadrant, the one region `PAD` guarantees is empty.
+  **A left-hand label drops a line, and that asymmetry is load-bearing.** The y
+  axis's own "mais"/"menos" live in the gutter at the box's top and bottom
+  edges, 8dp from the frame, so a label hugging a *left* corner lands on their
+  baseline and *"mais jogo recuado"* reads as one phrase — which is exactly the
+  run-on the previous pass had just removed from the x axis, reappearing one
+  axis over. A right-hand label keeps its corner, where there is nothing beside
+  it, and asserting that is what stops the fix being "generalised" to all four.
+  **No browser spec can reach three of those four cases**, which is why
+  `cornerPlacement` is exported and `tests/scatter-corner.test.ts` asserts the
+  class string — `tests/button-classes.test.ts`' precedent. `openPanel` opens
+  the table's **leader**, which on any plausible table is above the median on
+  finalizações, so every rendered assertion about this label is about a
+  right-hand one: the case that had the bug is the case the end-to-end suite
+  cannot see. That is the Perfil marker's trap again — an assertion that passes
+  for eighteen of twenty clubs passes against the bug it names.
+  **The ring's radius is bounded by `PAD`, not chosen by eye.** The padded
+  domain leaves the division's extreme club about 10.7 box units of clearance on
+  the short axis, so a wider ring paints outside the frame for whichever club is
+  that extreme — never the club whose panel is open while somebody picks a
+  radius, and `no dot is drawn outside the box it is plotted in` is what would
+  catch it, on a different club's page.
   **The Painel now carries three `role="img"` drawings and two `<figure>`s.** A
   spec written when it had one of each resolves to all of them, which is why the
   scatter's `<svg>` takes `data-scatter-svg` and its figure `data-scatter` —
   `data-candles`' device, one mark later. Specs across `painel.spec.ts` and
-  `standings.spec.ts` have had to narrow twice now — count the
-  `data-scatter-svg` lookups rather than this sentence — and they went red
+  `standings.spec.ts` have had to narrow repeatedly — count the
+  `data-scatter-svg` lookups rather than this sentence, and note the twenty-dot
+  count itself moved from `circle` to `circle[data-scatter-point]` when the
+  subject gained a ring: counting **elements** rather than marks-for-clubs is
+  what obliged that lookup to be loosened by one every time the drawing gained
+  a decoration — and they went red
   rather than quiet, which is the whole reason those lookups are written
   negatively. The second round is worth reading before adding a mark: a
   `figure`-wide `circle` count went to 21 the moment the caption carried a

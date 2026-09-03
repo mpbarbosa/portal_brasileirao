@@ -367,7 +367,14 @@ test.describe("Painel do clube", () => {
     // that it is the same mark — so a figure-wide count reads 21 and a spec
     // written against the figure would have to be loosened every time the key
     // gains a swatch.
-    await expect(scatter.locator("svg[data-scatter-svg] circle")).toHaveCount(20);
+    // `circle[data-scatter-point]` — the marks that stand for clubs, not every
+    // `circle` element. The subject now carries a ring as well as a dot, and a
+    // count of elements would have to be loosened by one every time the drawing
+    // gains a decoration, which is the brittleness that already moved this
+    // lookup once.
+    await expect(
+      scatter.locator("svg[data-scatter-svg] circle[data-scatter-point]"),
+    ).toHaveCount(20);
     // Exactly one, which is what the drawing is for: placing *this* club among
     // the rest rather than being a table of twenty.
     await expect(scatter.locator("[data-scatter-point='subject']")).toHaveCount(1);
@@ -435,6 +442,80 @@ test.describe("Painel do clube", () => {
     const caption = (await volume.locator("figcaption").innerText()).toLowerCase();
     expect(caption).toMatch(/\d+% de conversão/);
     expect(caption).not.toMatch(/% de conversão por jogo/);
+  });
+
+  test("the drawing tints the club's own quadrant and names it there", async ({
+    page,
+  }) => {
+    await openPanel(page);
+
+    for (const pair of ["ataque-defesa", "volume-conversao"]) {
+      const figure = page.locator(`main figure[data-scatter-pair="${pair}"]`);
+      const tint = figure.locator("svg[data-scatter-svg] [data-scatter-quadrant]");
+      await expect(tint).toHaveCount(1);
+
+      // **The invariant: the tint, the words and the dot are one reading.**
+      // `subjectQuadrant` exists so the component cannot compare the medians a
+      // second time to place the tint — and this is what would catch it if it
+      // did. A drawing that shades one corner while the caption names another
+      // is wrong in a way that looks deliberate, and it would differ only for a
+      // club sitting near a median, so no fixture-picked club would show it.
+      const box = (await tint.boundingBox())!;
+      const dot = (await figure.locator("[data-scatter-point='subject']").boundingBox())!;
+      const dotCentre = { x: dot.x + dot.width / 2, y: dot.y + dot.height / 2 };
+      expect(dotCentre.x).toBeGreaterThanOrEqual(box.x - 1);
+      expect(dotCentre.x).toBeLessThanOrEqual(box.x + box.width + 1);
+      expect(dotCentre.y).toBeGreaterThanOrEqual(box.y - 1);
+      expect(dotCentre.y).toBeLessThanOrEqual(box.y + box.height + 1);
+
+      // The corner is named on the drawing, and it is the same string the
+      // caption sets in the page's own ink. Not two spellings of one phrase:
+      // both come from `subjectQuadrant`.
+      const term = (await figure.locator("[data-scatter-corner]").innerText()).trim();
+      expect(term.length).toBeGreaterThan(0);
+      await expect(figure.locator("figcaption")).toContainText(term);
+
+      // Inside the box it labels, so it reads as that region's name rather than
+      // as a stray caption.
+      const label = (await figure.locator("[data-scatter-corner]").boundingBox())!;
+      const svg = (await figure.locator("svg[data-scatter-svg]").boundingBox())!;
+      expect(label.x).toBeGreaterThanOrEqual(svg.x - 1);
+      expect(label.x + label.width).toBeLessThanOrEqual(svg.x + svg.width + 1);
+
+      // And clear of the y axis's own words, which sit in the gutter at the
+      // box's top and bottom edges. A left-hand label on their baseline reads
+      // as one phrase — "mais jogo recuado" — which is the x axis's old run-on
+      // one axis over, and it shipped in the pass before this one.
+      for (const end of await figure.locator("[data-scatter-axis-end]").all()) {
+        const word = (await end.boundingBox())!;
+        const rowsOverlap =
+          label.y < word.y + word.height - 1 && word.y < label.y + label.height - 1;
+        const colsOverlap =
+          label.x < word.x + word.width + 8 && word.x < label.x + label.width + 8;
+        expect(rowsOverlap && colsOverlap).toBe(false);
+      }
+    }
+  });
+
+  test("the subject's dot carries a ring, and the ring is not a club", async ({
+    page,
+  }) => {
+    await openPanel(page);
+
+    const figure = page.locator('main figure[data-scatter-pair="ataque-defesa"]');
+    // One ring, and it is not counted among the twenty marks — the count spec
+    // above selects `circle[data-scatter-point]` for exactly this reason.
+    await expect(figure.locator("[data-scatter-ring]")).toHaveCount(1);
+    await expect(
+      figure.locator("svg[data-scatter-svg] circle[data-scatter-point]"),
+    ).toHaveCount(20);
+
+    // Concentric with the dot it marks, or it reads as a twenty-first club.
+    const ring = (await figure.locator("[data-scatter-ring]").boundingBox())!;
+    const dot = (await figure.locator("[data-scatter-point='subject']").boundingBox())!;
+    expect(Math.abs(ring.x + ring.width / 2 - (dot.x + dot.width / 2))).toBeLessThanOrEqual(1);
+    expect(Math.abs(ring.y + ring.height / 2 - (dot.y + dot.height / 2))).toBeLessThanOrEqual(1);
+    expect(ring.width).toBeGreaterThan(dot.width);
   });
 
   test("no dot is drawn outside the box it is plotted in", async ({ page }) => {

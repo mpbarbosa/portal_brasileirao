@@ -413,6 +413,20 @@ export interface QuadrantPhrase {
   gloss: string;
 }
 
+/**
+ * A corner as the drawing needs it: where it is, and what it is called.
+ *
+ * `aboveX`/`aboveY` are the club's side of each median — which is what places
+ * the tint and the label — and the phrase is what the words say. They travel
+ * together because they are one reading of one club, and splitting them across
+ * two functions is what would let the picture and the prose disagree.
+ */
+export interface Quadrant {
+  aboveX: boolean;
+  aboveY: boolean;
+  phrase: QuadrantPhrase;
+}
+
 export interface ScatterPair {
   id: ScatterPairId;
   x: ScoutMetricId;
@@ -557,6 +571,25 @@ export function quadrantLabel(scatter: ProfileScatter): string {
  * nobody looks at.
  */
 export function quadrantParts(scatter: ProfileScatter): QuadrantPhrase | null {
+  return subjectQuadrant(scatter)?.phrase ?? null;
+}
+
+/**
+ * Which corner the club is in — as a **place** as well as a phrase.
+ *
+ * The drawing now says the corner rather than only the caption: the subject's
+ * quadrant is tinted and its name printed over it. Both need to know which half
+ * of each axis the club sits in, and **the component must not work that out for
+ * itself**. Two comparisons of the same medians is how a drawing comes to tint
+ * one corner and name another — a disagreement that appears only for a club
+ * sitting exactly on a median, which is precisely the case nobody looks at and
+ * no test would be written for.
+ *
+ * So this is the single place the medians are read, `quadrantParts` and
+ * `quadrantLabel` compose from it, and the tint, the label and the sentence a
+ * screen reader hears are all the same decision.
+ */
+export function subjectQuadrant(scatter: ProfileScatter): Quadrant | null {
   const point = scatter.points.find((entry) => entry.subject);
   if (!point) return null;
 
@@ -564,8 +597,14 @@ export function quadrantParts(scatter: ProfileScatter): QuadrantPhrase | null {
   const aboveX = point.x >= scatter.x.median;
   const aboveY = point.y >= scatter.y.median;
 
-  if (aboveX && aboveY) return corners.both;
-  if (aboveX) return corners.xOnly;
-  if (aboveY) return corners.yOnly;
-  return corners.neither;
+  const phrase =
+    aboveX && aboveY
+      ? corners.both
+      : aboveX
+        ? corners.xOnly
+        : aboveY
+          ? corners.yOnly
+          : corners.neither;
+
+  return { aboveX, aboveY, phrase };
 }
