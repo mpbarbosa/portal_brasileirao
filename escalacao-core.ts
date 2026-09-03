@@ -210,9 +210,35 @@ export const attachSubstitutions = (
 ): Lineup[] | null => {
   // The súmula prints `Palmeiras/SP`; the match API says `Palmeiras`. Compare on
   // what precedes the final slash rather than trying to normalise a UF.
+  //
+  // **Punctuation is set aside before the second attempt, and the corporate
+  // vocabulary is still not enumerated.** `Coritiba S.a.f./PR` against an API
+  // saying `Coritiba SAF` is one club spelled two ways by one provider, and the
+  // difference is two full stops — so the fallback asks whether the API's name
+  // is how the súmula's *begins* once non-alphanumerics are dropped, which also
+  // covers `Cruzeiro Saf/MG` against a bare `Cruzeiro`. It deliberately does NOT
+  // strip a list of `SAF`/`S.A.F.`/`Ltda`: that is guessing at a vocabulary CBF
+  // has never published, and the next suffix would be a silent miss rather than
+  // a visible one.
+  //
+  // **A prefix that fits both sides resolves nothing**, and returning null there
+  // is what keeps this additive: the shirt structure below still gets its turn,
+  // and an ambiguous row still refuses the fixture rather than picking a side.
+  const bare = (value: string) =>
+    value.normalize("NFD").replace(/\p{M}+/gu, "").toLowerCase().replace(/[^a-z0-9]+/gu, "");
+
   const codeForTeam = (team: string): ClubCode | null => {
     const name = team.replace(/\s*\/\s*[A-Z]{2}\s*$/, "").trim().toLowerCase();
-    return teams.find((t) => t.cbfName.trim().toLowerCase() === name)?.code ?? null;
+    const exact = teams.find((t) => t.cbfName.trim().toLowerCase() === name);
+    if (exact) return exact.code;
+
+    const sumula = bare(name);
+    if (sumula === "") return null;
+    const prefixed = teams.filter((t) => {
+      const api = bare(t.cbfName);
+      return api !== "" && (sumula.startsWith(api) || api.startsWith(sumula));
+    });
+    return prefixed.length === 1 ? prefixed[0].code : null;
   };
 
   /**

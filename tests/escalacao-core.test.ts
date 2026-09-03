@@ -235,13 +235,18 @@ test("both sources must agree on HOW MANY before either is believed", () => {
 });
 
 
-test("a súmula name the match API does not use still resolves, by the shirts", () => {
+test("a corporate suffix the match API does not print still resolves, by the name", () => {
   // Real strings, from CBF for Atlético-MG x Palmeiras on 2026-01-28: the
   // súmula writes the corporate name and the match API the popular one. This
   // cost 8 matches and 16 sides of the season backfill — the parse was perfect
   // and the join was not, and because this function is all-or-nothing it took
   // the Palmeiras side down with it.
-  // Distinct numbers per side, so the shirts genuinely identify one of them.
+  //
+  // Note which branch answers now. This used to reach the shirt fallback, and
+  // with the name compared on its punctuation-stripped prefix it resolves one
+  // step earlier — the shirts would still answer, so the widening only ever
+  // moves the resolution forward. The test below is the one that keeps the
+  // fallback itself covered.
   const lineups = lineupsFromAtletas(side("1"), side("2", 50), SIDES);
   const attached = attachSubstitutions(
     lineups,
@@ -252,8 +257,68 @@ test("a súmula name the match API does not use still resolves, by the shirts", 
     ],
     { PAL: 1, VAS: 0 },
   );
-  assert.ok(attached, "the shirts name the side the string does not");
+  assert.ok(attached, "the name resolves once the suffix is set aside");
   assert.equal(attached.find((l) => l.clubCode === "PAL")?.subs?.length, 1);
+});
+
+test("two spellings of one abbreviation are one club", () => {
+  // 554753, Cruzeiro x Coritiba on 2026-02-05, and the pair that made the season
+  // refuse it: the súmula writes `Coritiba S.a.f./PR` where the match API says
+  // `Coritiba SAF`. Three spellings of `SAF` across two endpoints of one
+  // provider, and the difference here is two full stops.
+  //
+  // The fixture is SYMMETRIC on purpose — both sides wear the same numbers, so
+  // the shirt fallback cannot answer and the name is the only thing that can.
+  // That is 554753's real shape: 8 of its 10 rows were unambiguous on shirts and
+  // 2 were not, which is all it takes when the rule is all-or-nothing.
+  const lineups = lineupsFromAtletas(side("1"), side("2"), SIDES);
+  const attached = attachSubstitutions(
+    lineups,
+    [sub({ team: "Coritiba S.a.f./PR", onShirt: "20", offShirt: "1" })],
+    [
+      { code: "PAL" as const, cbfName: "Cruzeiro" },
+      { code: "VAS" as const, cbfName: "Coritiba SAF" },
+    ],
+    { PAL: 0, VAS: 1 },
+  );
+  assert.ok(attached, "S.a.f. and SAF are the same three letters");
+  assert.equal(attached.find((l) => l.clubCode === "VAS")?.subs?.length, 1);
+});
+
+test("a name that resolves neither way still falls through to the shirts", () => {
+  // The fallback has to stay reachable, or widening the name quietly strands it.
+  // Nothing here shares a prefix with either club, and the sides wear distinct
+  // numbers, so only the structure can place the row.
+  const lineups = lineupsFromAtletas(side("1"), side("2", 50), SIDES);
+  const attached = attachSubstitutions(
+    lineups,
+    [sub({ team: "Grêmio Foot-Ball Porto Alegrense/RS", onShirt: "70", offShirt: "51" })],
+    TEAMS,
+    { PAL: 0, VAS: 1 },
+  );
+  assert.ok(attached, "the shirts name the side the string does not");
+  assert.equal(attached.find((l) => l.clubCode === "VAS")?.subs?.length, 1);
+});
+
+test("a prefix that fits BOTH sides is not a resolution", () => {
+  // The widening must not become the guess the exact match never was. With one
+  // club's name a prefix of the other's, the súmula string genuinely does not
+  // say which side changed — and these two sheets wear the same numbers, so the
+  // structure cannot break the tie either. Picking the first match would be a
+  // coin flip recorded as a fact.
+  const lineups = lineupsFromAtletas(side("1"), side("2"), SIDES);
+  assert.equal(
+    attachSubstitutions(
+      lineups,
+      [sub({ team: "Atlético Mineiro Saf/MG", onShirt: "20", offShirt: "1" })],
+      [
+        { code: "PAL" as const, cbfName: "Atlético" },
+        { code: "VAS" as const, cbfName: "Atlético Mineiro" },
+      ],
+      { PAL: 1, VAS: 0 },
+    ),
+    null,
+  );
 });
 
 test("shirts shared by both sides are ambiguous, so the fixture still refuses", () => {
