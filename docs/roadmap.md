@@ -347,6 +347,51 @@ provider than it needed to build:
   entries, and the one exception is an **upstream error**: a French official
   recorded against Coritiba × Chapecoense in round 22. So the field offers one
   word repeated on every page, plus one that is wrong.
+- **The projection weighs rodada 1 exactly as it weighs rodada 30 — there is no
+  time decay, and Dixon–Coles has one.** `buildStrengthModel` in
+  `season-sim-core.ts` derives a club's attack and defence from
+  `row.goalsFor / row.played`, season totals off the standings row, so every
+  finished match contributes equally however long ago it was played. Dixon & Coles
+  (1997) carry an exponential φ(t) in the pseudo-likelihood for precisely this;
+  this module implements their τ correction and not their weighting. **The
+  shrinkage already in the file is not a substitute and must not be read as one**:
+  `DEFAULT_PRIOR_WEIGHT = 1.5` pseudo-matches pull a club toward the league
+  baseline, which is about the opening rounds rather than about recency — at 30
+  played a club is 30/31.5 ≈ **95%** its own record, so by the point anybody reads
+  a projection nothing prefers recent form at all.
+
+  **The site already draws the phenomenon it ignores here**, which is what makes
+  this worth an entry rather than a footnote. The **Painel**'s velas exist because
+  a club's level moves *within* a season and a season-long average hides it; a
+  club that changed level in the July window, or after a troca de técnico, is
+  projected from a mean across both levels on the same site that photographs the
+  change one page over.
+
+  **Not a change to make by picking a half-life.** That is a free parameter, and
+  choosing one by eye is this file's own *a plausible number is indistinguishable
+  from a correct one* — the trap `stadiums.ts` records about capacity and
+  `check-stadium-coordinates` about a coordinate. Choosing it honestly means an
+  out-of-sample score over held-out rounds — **RPS**, the standard rule for 1X2,
+  with the current no-decay model as the baseline it has to beat.
+
+  **And that is where it may be blocked, so check this first.** The repo holds
+  **one season**: `src/data/matches.ts` is 2026 only, and `football-data-core.ts`
+  never sends a `season` parameter — it reads whatever the competition is
+  currently serving. Whether the free tier serves previous Série A seasons is
+  **unverified**; nobody here has asked it. If it does not, this needs an offline
+  dataset before it needs a line of model code, and the decay question is a data
+  question wearing a modelling hat.
+
+  **Related but independent: `docs/data-sources.md`'s xG survey** (PR #337, open
+  at the time of writing). xG is a different *input*; decay is a weighting of
+  whatever input is used, so the two compose rather than substitute — and if xG
+  ever lands, this entry applies to it unchanged.
+
+  **Nothing user-facing is blocked on it.** The **Projeção** copy is already
+  **simulado** rather than a forecast, which is the framing `CONTEXT.md` requires
+  and it stays true either way. Fixing this would move every published
+  percentage, which is a reason to have a score before touching it rather than a
+  reason not to.
 
 ### Node: one major, and a date it has to move
 
