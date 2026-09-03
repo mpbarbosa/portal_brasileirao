@@ -48,6 +48,34 @@ mudarem — um `sync-seed-data` seguido de `sync-rank-history` — o mp4 commita
 descreve a temporada anterior e continua verde. O subtítulo do próprio vídeo diz
 até que data os dados vão, que é a única defesa que ele tem.
 
+## As miniaturas
+
+**`docs/videos/campanhas-palmeiras-flamengo-miniatura.png`** e
+**`-miniatura-11-ao-1.png`** — 1280×720, as capas que o YouTube mostra no lugar
+de um frame qualquer da animação (os primeiros segundos são um gráfico vazio).
+Uma nomeia o confronto, a outra a história; a segunda envelhece mal de
+propósito, porque `1º` é uma afirmação sobre a rodada 25 em tipo de 96px.
+
+```sh
+npx tsx scripts/manim/thumbnail.ts                     # as duas
+npx tsx scripts/manim/thumbnail.ts --variant fixture   # só uma
+```
+
+**Não precisa do Manim** — só do Chromium que o Playwright já traz — e é por
+isso que este script pode viver no `package.json` do projeto onde a cena não
+pode. Ele lê o **mesmo `campanhas.json`**, então as linhas, as posições da
+manchete, a contagem de rodadas e os chips saem todos dos dados: uma reexportação
+move a capa e o vídeo juntos. O nome do arquivo da segunda é construído a partir
+dos próprios números que ela imprime, de modo que não pode se chamar `11-ao-1` e
+dizer outra coisa.
+
+**A paleta é lida de `campanhas.py`**, como `generate-og-image.ts` lê a sua de
+`src/index.css` — uma segunda cópia de uma cor à mão é como a capa acaba um tom
+fora do vídeo que ela anuncia. Uma constante renomeada quebra o run em vez de
+desenhar em preto.
+
+Regerar é um commit deliberado, como o mp4: nada compara os bytes.
+
 ## O que é decisão e o que é mecânica
 
 - **O JSON é gerado, não editado.** `rank-history.ts` e `matches.ts` são a
