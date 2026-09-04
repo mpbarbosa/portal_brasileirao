@@ -127,9 +127,28 @@ propósito** na próxima sincronização:
   artefatos que ninguém redesenhou. Pega o esquecimento, que é a falha que
   acontece; não pega a mentira, e nenhum teste deste lado do render pegaria.
 
-A regeneração inteira, na ordem:
+A regeneração inteira, na ordem — **incluindo os pré-requisitos**, que não são
+opcionais e não estão num checkout novo. Esta lista já falhou nos três degraus:
 
 ```sh
+# 0. De onde rodar. NÃO é o checkout raiz: ele fica atrás do `origin/main` (22
+#    commits, na vez em que isso mordeu) e uma regeneração escreve arquivos
+#    gerados, que é a colisão que a regra do worktree existe para evitar. Um
+#    `export-pontos.ts` que "não existe" quase sempre é esta linha.
+git worktree add .claude/worktrees/<nome> -b worktree-<nome> origin/main
+cd .claude/worktrees/<nome>
+cp ../../../.env .env
+
+# 1. O tsx. Sem isto o `npx` baixa uma cópia solta em ~/.npm/_npx e o stack
+#    trace vem de lá, o que esconde o degrau que falhou.
+npm ci
+
+# 2. O Manim, que NÃO é dependência deste repositório — vive num virtualenv à
+#    parte, ~460 MB, alguns minutos. `media/` é ignorado; é a árvore de trabalho
+#    dele, e o entregável tem nome e lugar próprios em docs/videos/.
+python3 -m venv .venv-manim && ./.venv-manim/bin/pip install -q manim
+
+# 3. Só agora a cadeia.
 npx tsx scripts/manim/export-campanhas.ts > scripts/manim/campanhas.json
 npx tsx scripts/manim/export-pontos.ts    > scripts/manim/pontos.json
 ./.venv-manim/bin/manim -qh scripts/manim/campanhas.py Campanhas
@@ -139,6 +158,12 @@ cp media/videos/pontos/1080p60/Pontos.mp4       docs/videos/pontos-20-clubes.mp4
 npx tsx scripts/manim/thumbnail.ts
 npx tsx scripts/manim/thumbnail-pontos.ts
 ```
+
+**Antes de tudo isso, pergunte se há o que regerar:** `./scripts/sync-schedule.sh
+--check`. Se nada estiver devido, a cadeia redesenha a mesma temporada e o mp4
+volta com bytes diferentes só pelo encoder — churn, exatamente o re-shoot
+desnecessário que o `Screenshots-unaffected:` existe para evitar. O que obriga a
+regerar é `tests/manim-renders.test.ts` ficar vermelho, e ele só fica num sync.
 
 Depois **edite `docs/videos/RENDERED`** com o novo `SNAPSHOT_DATE`, no mesmo
 commit. E confira os nomes: a capa da história de cada vídeo é nomeada pelos
