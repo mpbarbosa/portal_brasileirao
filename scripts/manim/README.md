@@ -1,16 +1,26 @@
 # Animações em Manim
 
-Duas cenas, duas leituras da mesma campanha:
+Três cenas, três leituras da mesma campanha:
 
 - **`campanhas.py`** — dois clubes rodada a rodada, a **posição** desenhada como
   linha sobre a divisão inteira, e ao lado o jogo daquela rodada com o
   resultado.
 - **`pontos.py`** — os **20 clubes** rodada a rodada, os **pontos** no eixo y e a
   rodada no eixo x, com a classificação ao lado se reordenando a cada rodada.
+- **`velas.py`** — **um** clube rodada a rodada em **velas**: o corpo vai da
+  posição de abertura à de fechamento, o pavio cobre a melhor e a pior posição
+  ocupada *durante* a rodada, e embaixo, no mesmo eixo x, a barra de **pontos
+  acumulados** com o ganho da rodada na tampa.
 
-Nenhuma das duas recalcula classificação: as duas leem `rank-history.ts`, que já
-carrega posição *e* pontos por rodada. Um número errado aqui está errado no site
-também.
+Nenhuma das três recalcula classificação. As duas primeiras leem
+`rank-history.ts`, que já carrega posição *e* pontos por rodada; a terceira lê
+`computeRankCandles`, que é a mesma função que o Painel do site serve. Um número
+errado aqui está errado no site também.
+
+**A vela responde o que a linha não responde**, e é o argumento do
+`rank-candles-core.ts`, não um novo: a linha liga a posição do *fim* de cada
+rodada, então quem sentou em 4º no sábado e terminou em 9º porque três rivais
+jogaram no domingo desenha o mesmo segmento de quem desceu andando.
 
 ## Como gerar
 
@@ -31,7 +41,14 @@ npx tsx scripts/manim/export-campanhas.ts > scripts/manim/campanhas.json
 
 npx tsx scripts/manim/export-pontos.ts > scripts/manim/pontos.json
 ./.venv-manim/bin/manim -qh scripts/manim/pontos.py Pontos
+
+npx tsx scripts/manim/export-velas.ts > scripts/manim/velas.json
+./.venv-manim/bin/manim -qh scripts/manim/velas.py Velas
 ```
+
+`export-velas.ts` aceita **um** código de clube (`1765` Fluminense é o padrão) —
+uma vela por rodada só cabe para um clube: duas séries sobrepostas na mesma
+faixa de posições ficariam ilegíveis, que é a razão oposta à do `pontos.py`.
 
 `export-pontos.ts` não aceita argumento: a cena é a divisão inteira, e escolher
 um subconjunto dos 20 seria outro desenho.
@@ -46,10 +63,17 @@ renderiza em segundos e serve para conferir o enquadramento.
 
 ## Os renders commitados
 
-**`docs/videos/campanhas-palmeiras-flamengo.mp4`** (23s, 3,3 MB) e
-**`docs/videos/pontos-20-clubes.mp4`** (21s, 4,4 MB) — ambos 1920×1080, 60fps —
-são os vídeos prontos, versionado junto do resto do projeto como os slides
+**`docs/videos/campanhas-palmeiras-flamengo.mp4`** (23s, 3,3 MB),
+**`docs/videos/pontos-20-clubes.mp4`** (21s, 4,4 MB) e
+**`docs/videos/velas-fluminense.mp4`** (21s, 3,5 MB) — todos 1920×1080, 60fps —
+são os vídeos prontos, versionados junto do resto do projeto como os slides
 em `docs/carrossel/` e as capturas em `docs/screenshots/`.
+
+**O `velas-fluminense.mp4` não tem miniatura**, e isso é uma decisão e não uma
+pendência: as capas existem porque os primeiros segundos daqueles dois vídeos são
+um gráfico vazio, e uma capa é um segundo artefato para manter atualizado. Quando
+este vídeo for para o YouTube, `capa-core.ts` é o que os dois scripts de
+miniatura já dividem — o desenho é que seria novo.
 
 Eles são **regeneráveis** pelos comandos acima, e mesmo assim está commitado
 pela razão que o `og-default.png` já registra: um artefato de divulgação precisa
@@ -106,8 +130,8 @@ Regerar é um commit deliberado, como o mp4: nada compara os bytes.
 
 ## Quando regerar, e o que obriga a isso
 
-Os seis artefatos de `docs/videos/` — dois mp4 e quatro capas — são **velhos por
-construção**. São desenhados do seed e commitados (como o `og-default.png`, para
+Os artefatos de `docs/videos/` — três mp4 e quatro capas; conte o diretório, não
+esta frase — são **velhos por construção**. São desenhados do seed e commitados (como o `og-default.png`, para
 que quem clona o repositório os tenha sem instalar o Manim), e descrevem uma
 temporada congelada para sempre. Um `sync-seed-data` move a temporada debaixo
 deles com **todos** os gates do repositório continuando verdes: o guard do
@@ -151,10 +175,13 @@ python3 -m venv .venv-manim && ./.venv-manim/bin/pip install -q manim
 # 3. Só agora a cadeia.
 npx tsx scripts/manim/export-campanhas.ts > scripts/manim/campanhas.json
 npx tsx scripts/manim/export-pontos.ts    > scripts/manim/pontos.json
+npx tsx scripts/manim/export-velas.ts     > scripts/manim/velas.json
 ./.venv-manim/bin/manim -qh scripts/manim/campanhas.py Campanhas
 ./.venv-manim/bin/manim -qh scripts/manim/pontos.py    Pontos
+./.venv-manim/bin/manim -qh scripts/manim/velas.py     Velas
 cp media/videos/campanhas/1080p60/Campanhas.mp4 docs/videos/campanhas-palmeiras-flamengo.mp4
 cp media/videos/pontos/1080p60/Pontos.mp4       docs/videos/pontos-20-clubes.mp4
+cp media/videos/velas/1080p60/Velas.mp4         docs/videos/velas-fluminense.mp4
 npx tsx scripts/manim/thumbnail.ts
 npx tsx scripts/manim/thumbnail-pontos.ts
 ```
@@ -252,3 +279,34 @@ viram outros arquivos quando a temporada anda — o antigo tem que sair do
   jogado quantidades diferentes de partidas, e uma diferença de pontos lida sem
   isso é uma leitura errada — a mesma armadilha que o `live-core.ts` recusa para
   o minuto da partida.
+
+### `velas.py`
+
+- **A cor carrega o RESULTADO e a geometria carrega a DIREÇÃO**, e não são o
+  mesmo canal de propósito: as rodadas que valem a pena olhar são aquelas em que
+  os dois discordam, e vencer e mesmo assim cair uma posição é um domingo comum.
+  É por isso que o corpo precisa de uma terceira marca dizendo por qual ponta
+  abriu — o toco à esquerda. Vinte e cinco tocos traçam a mesma linha que o
+  `campanhas.py` desenha, porque cada rodada abre onde a anterior fechou.
+- **O pavio da rodada 1 é largo, e não é defeito.** Antes do primeiro jogo os
+  clubes empatados em nada são ordenados por nome — a tabela mostrou o clube ali
+  de verdade. Um caso especial aqui esconderia uma rodada de dado real. Ele é
+  também o vizinho da esquerda do painel de resumo, que é o que decide a largura
+  daquele painel.
+- **A barra de pontos é o TOTAL e a tampa clara é o ganho.** Pontos são
+  cumulativos, então o eixo começa no zero e a altura é a temporada inteira. Uma
+  derrota não acrescenta nada e a barra não cresce — leitura honesta, e é
+  exatamente o que a vela ao lado mostra pelo outro canal.
+- **Nenhum dos dois painéis tem legenda de eixo dentro dele.** A primeira versão
+  escrevia "posição" no canto superior esquerdo da caixa e a palavra caía em cima
+  do pavio da rodada 1; acima da caixa não há espaço, porque ali está o subtítulo.
+  O eixo de posições não precisa de legenda — `1º … 20º` já diz —, e a unidade do
+  outro anda no tique de cima (`50 pts`).
+- **As etiquetas do G4 e do Z4 ficam FORA da moldura**, na margem entre o gráfico
+  e a coluna de cards. Dentro dela não existe canto seguro: o `campanhas.py` põe
+  a do G4 rente à borda de baixo da faixa, e para um clube que termina em 4º as
+  últimas velas passam por cima dela.
+- **A chave da vela não é opcional.** Corpo, pavio e toco são marcas que quem lê
+  uma tabela de futebol não encontra em outro lugar; sem a chave o desenho é
+  bonito e ilegível. Ela fica embaixo dos dois painéis e fora deles, pela mesma
+  razão que a chave de zonas da Classificação fica fora da `Surface` que rola.

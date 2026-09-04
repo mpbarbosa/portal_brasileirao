@@ -81,7 +81,7 @@ test("the exported payloads the scenes read were taken from the same seed", () =
   // the halfway state a person lands in mid-regeneration. Checking it here
   // rather than only in RENDERED means the message names the step that is
   // missing rather than the whole chain.
-  for (const name of ["pontos.json", "campanhas.json"]) {
+  for (const name of ["pontos.json", "campanhas.json", "velas.json"]) {
     const payload = JSON.parse(
       readFileSync(path.resolve(HERE, "../scripts/manim", name), "utf8"),
     ) as { snapshot: string };
