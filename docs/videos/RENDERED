@@ -1,0 +1,21 @@
+# Which snapshot of the season each artefact in this directory was drawn from.
+#
+# `docs/screenshots/CAPTURED` for the manim renders, and the same trust model:
+# a person's assertion standing in a diff, not something a check can verify.
+# What `tests/manim-renders.test.ts` CAN verify is that these dates agree with
+# `SNAPSHOT_DATE` in `src/data/matches.ts`, that every artefact here is listed,
+# and that every line names a file that exists.
+#
+# **Update it in the same commit that re-renders, never before.** Writing a new
+# date over artefacts nobody redrew is the one move that turns this file from a
+# record into a lie, and the test cannot tell the difference — it reads the
+# claim, not the bytes.
+#
+# The regeneration is four commands and is written out in scripts/manim/README.md.
+
+campanhas-palmeiras-flamengo.mp4                    2026-09-02
+campanhas-palmeiras-flamengo-miniatura.png          2026-09-02
+campanhas-palmeiras-flamengo-miniatura-11-ao-1.png  2026-09-02
+pontos-20-clubes.mp4                                2026-09-02
+pontos-20-clubes-miniatura.png                      2026-09-02
+pontos-20-clubes-miniatura-38-pontos.png            2026-09-02
