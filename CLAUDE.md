@@ -4096,24 +4096,37 @@ green on its own pull request. Same lesson as `src/data` one paragraph up, one
 directory further out: the list described where the *markup* lives, and the
 thing that decides the drawing lives somewhere else.
 
-**It covers that one module and NOT the twenty-five the UI imports**, which is
-the part to know before reading the gate as complete. Every root-level
-`*-core.ts` a component imports can move a rendered pixel — `club-core` decides
-the names, `standings-core` the table, `live-core` the Ao vivo wording,
-`health-core` the rodapé band in two full-page captures — and all of them are
-still outside. Count them off the imports rather than trusting this sentence:
+**The list now carries every root-level `*-core.ts` the client imports — 27 of
+the 42 — and `tests/appearance-paths.test.ts` is what keeps it that way.** The
+one-file fix closed one instance and left the mechanism intact: nothing stopped
+the next module arriving unwatched exactly as this one had. So the rule is
+stated as a property instead — *every root core module `src/` imports is a
+watched path* — and a new one fails on the commit that introduces it rather than
+years later when somebody measures a frame by hand. The second test runs the
+other way, so the list cannot accumulate entries for modules nothing imports any
+more.
 
-```sh
-for f in *-core.ts; do
-  grep -rl "@/${f%.ts}\"" src/components src/App.tsx >/dev/null 2>&1 && echo "$f"
-done | wc -l
-```
+**Do not hand-maintain the list against a number in prose.** The first pass
+counted imports in `src/components` and `src/App.tsx` and got **25**; the real
+figure is **27**, because `page-meta-core` and `seo-core` arrive through
+`src/usePageMeta.ts`, a hook in neither place. That is this file's own recurring
+failure — a count nobody recomputes — reached while writing the paragraph that
+warns about it. The test computes it; no number here needs to stay true.
 
-Widening to all of them is **a decision about how much noise the gate should
-make, not an oversight to tidy up** — most core edits cannot reach a capture,
-and the `src/data` paragraph above is what that costs when it is wrong in the
-generous direction. It was left at one on purpose, and the asymmetry is
-deliberate rather than forgotten.
+**The rule is "imported by `src/`", deliberately, and not "renders
+something".** Those same two modules write the document head and cannot move a
+captured pixel, so watching them over-reports — the direction `src/data`
+already fails in for the seed snapshot, and the price of a rule with no
+carve-out list. A carve-out is precisely the shape this file warns about
+elsewhere: a claim that produces no work while it holds, so nothing
+distinguishes *still true* from *quietly false*.
+
+**A glob was the other candidate and is worse in both directions.** Bare
+`*-core.ts` reaches `scripts/manim/capa-core.ts`, which draws thumbnails and no
+page; `:(glob)*-core.ts` stays at the root but admits all 42, including
+`oauth-core`, `session-core` and `rate-limit-core`, which no capture can
+contain. Enumeration plus a completeness test costs one file and describes what
+it watches.
 
 **A curated file can also move without reaching a capture, and that case is
 easy to mis-call in the alarming direction.** `cfa01d5` gave five fixtures their
