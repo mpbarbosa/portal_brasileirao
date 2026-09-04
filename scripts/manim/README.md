@@ -221,6 +221,38 @@ viram outros arquivos quando a temporada anda — o antigo tem que sair do
   pontos aqui: os critérios de desempate da CBF é que decidem um lugar, e uma
   segunda implementação deles é como a capa passa a discordar do próprio vídeo.
 
+## Duas regras que valem para as três cenas
+
+- **As três carregam o endereço do site**, do começo ao fim: um quadro recortado
+  por alguém tem de dizer de onde veio. Sem o `https://`, que é como se lê e se
+  digita um endereço, e escrito em cada cena porque o `APP_URL` mora no `.env`
+  do host — gitignored, ausente da estação onde a cena é desenhada. Fica no
+  único retângulo grande e vazio de cada quadro, que é embaixo da coluna da
+  direita nas três.
+
+- **`INK_FAINT` é RÉGUA e nunca TEXTO, e isso foi medido nos pixels do mp4.**
+  A paleta destas cenas é escrita à mão, então o `npm run test:tokens` nunca
+  olhou para ela e nada acusou. O que estava em texto, antes:
+
+  | | medido | onde |
+  |---|---|---|
+  | `velas.py` — tiques de pontos e de rodada | **3,2:1** | 18px, sobre o fundo |
+  | `velas.py` — chaves dos cards | **2,9:1** | sobre o card |
+  | `pontos.py` — **a coluna da classificação** (`1º … 20º`) | **3,1:1** | a legenda do vídeo inteiro |
+  | `campanhas.py` — tiques de rodada e `… pts · … jogos` | mesmo tom, mesmo fundo | |
+  | comparação: tiques de posição, que já eram `INK_SOFT` | **7,5:1** | |
+
+  O piso deste projeto para texto é 4,5. A do `pontos.py` é a pior das três
+  porque não é um tique de eixo: é a chave que faz vinte linhas serem legíveis, e
+  o próprio README argumenta que ela precisa funcionar *durante* o vídeo. Duas
+  coisas que só a medição no quadro mostra — um glifo estreito perde as hastes na
+  compressão, então o `0` sozinho cai para **2,96** contra 3,36 do `50 pts`, e um
+  quadro de 1080p num celular põe esses 18px em cerca de 2 mm.
+
+  Agora todo rótulo é `INK_SOFT` (7,2 a 7,8:1 remedidos) e `INK_FAINT` ficou com
+  grade, moldura e filete. A única exceção é o **ponto de origem** do `pontos.py`,
+  que é marca e não texto: 3,2:1 passa o piso de 3 que objetos gráficos têm.
+
 ## O que é decisão e o que é mecânica
 
 - **O JSON é gerado, não editado.** `rank-history.ts` e `matches.ts` são a
@@ -316,13 +348,6 @@ viram outros arquivos quando a temporada anda — o antigo tem que sair do
   estreito perde as hastes na compressão, então a etiqueta mais curta é a mais
   frágil. **A paleta desta cena é escrita à mão** — o `test:tokens` do projeto
   não olha para ela, e é por isso que nada acusou.
-
-- **O vídeo carrega o endereço do site**, embaixo da coluna de cards, do começo
-  ao fim: um quadro recortado por alguém tem de dizer de onde veio. Sem o
-  `https://`, que é como se lê e se digita um endereço, e escrito na cena porque
-  o `APP_URL` mora no `.env` do host — gitignored, e ausente da estação onde a
-  cena é desenhada. **O `campanhas.py` e o `pontos.py` ainda não têm crédito
-  nenhum**, e ganhar um custa a eles um re-render dos dois mp4.
 
 - **A chave da vela não é opcional.** Corpo, pavio e toco são marcas que quem lê
   uma tabela de futebol não encontra em outro lugar; sem a chave o desenho é

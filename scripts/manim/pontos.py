@@ -68,6 +68,12 @@ TYPE_OVERSAMPLE = 4
 
 INK = "#E6EAE8"
 INK_SOFT = "#9AA5A0"
+# **`INK_FAINT` é para RÉGUA, nunca para TEXTO.** Medido nos pixels do próprio
+# mp4, não deduzido da paleta: sobre o `SURFACE` este tom entrega 3,2:1 e sobre o
+# `CARD` 2,9:1, abaixo do piso de 4,5 que este projeto exige de texto, em tipo de
+# 18px que num celular vira cerca de 2 mm. A paleta destas cenas é escrita à mão,
+# então o `test:tokens` nunca olhou para ela e nada acusou. Grade, moldura e
+# filete continuam aqui, que é o que este tom serve para fazer.
 INK_FAINT = "#5C6763"
 SURFACE = "#0B100E"
 CARD = "#161F1B"
@@ -123,6 +129,10 @@ PTS_X = 6.92  # right edge of the points
 
 POINTS_STEP = 10
 
+# O endereço do site. Escrito à mão porque o `APP_URL` mora no `.env` do host,
+# que é gitignored e não existe na estação onde a cena é desenhada.
+SITE = "brasileirao.mpbarbosa.com"
+
 
 def label(text: str, size: float, colour: str, weight: str = "NORMAL") -> Text:
     """A line of type, drawn oversized and scaled down. See the module docstring."""
@@ -173,7 +183,13 @@ class Pontos(Scene):
         slots = self.build_slots()
         row_group, rows = self.build_rows(clubs)
         round_heading = self.round_heading(1)
-        self.play(FadeIn(slots), FadeIn(row_group), FadeIn(round_heading), run_time=0.8)
+        self.play(
+            FadeIn(slots),
+            FadeIn(row_group),
+            FadeIn(round_heading),
+            FadeIn(self.build_credit()),
+            run_time=0.8,
+        )
 
         marker = Line(
             self.at(1, 0),
@@ -281,13 +297,13 @@ class Pontos(Scene):
                 )
             )
         for round_number in [1] + list(range(5, self.last_round + 1, 5)):
-            tick = label(str(round_number), 13, INK_FAINT)
+            tick = label(str(round_number), 14, INK_SOFT)
             tick.next_to(self.at(round_number, 0), DOWN, buff=0.14)
             ticks.add(tick)
 
-        axis_x = label("rodada", 14, INK_FAINT)
+        axis_x = label("rodada", 14, INK_SOFT)
         axis_x.move_to([PLOT_RIGHT - axis_x.width / 2, PLOT_BOTTOM - 0.58, 0])
-        axis_y = label("pontos", 14, INK_FAINT)
+        axis_y = label("pontos", 14, INK_SOFT)
         axis_y.move_to([PLOT_LEFT - 0.06 - axis_y.width / 2, PLOT_TOP + 0.26, 0])
         ticks.add(axis_x, axis_y)
 
@@ -299,7 +315,7 @@ class Pontos(Scene):
         """The position column, painted once. See the module docstring."""
         slots = VGroup()
         for position in range(1, CLUBS_IN_DIVISION + 1):
-            tag = label(ordinal(position), 13, INK_FAINT)
+            tag = label(ordinal(position), 14, INK_SOFT)
             tag.move_to([POS_X - tag.width / 2, self.slot_y(position), 0])
             slots.add(tag)
         return slots
@@ -354,6 +370,17 @@ class Pontos(Scene):
             # took a point.
             animations.append(Transform(row["points"], self.points_label(entry["points"], y)))
         return animations
+
+    def build_credit(self) -> Text:
+        """De onde o vídeo veio.
+
+        Um vídeo de divulgação é visto fora daqui — recortado, reencaminhado,
+        sem a descrição junto —, então o endereço fica no quadro do começo ao
+        fim. Sem o `https://`, que é como se lê e se digita um endereço.
+        """
+        credit = label(SITE, 17, INK_SOFT)
+        credit.move_to([(POS_X + PTS_X) / 2, -3.62, 0])
+        return credit
 
     def round_heading(self, round_number: int) -> Text:
         heading = label(f"Rodada {round_number}", 22, INK, "BOLD")
