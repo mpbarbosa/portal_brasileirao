@@ -239,7 +239,26 @@ export const candleShapes = (candles: RoundCandle[], box: CandleBox): CandleShap
   const bodyWidth = Math.max(1, band * 0.62);
   const wickWidth = Math.max(0.75, band * 0.16);
   const tickWidth = Math.max(0.75, band * 0.19);
-  const tickHeight = Math.max(0.75, Math.min(2, row * 0.25));
+  // **The stub's height is a quarter of a position band, and the cap is a guard
+  // rather than the value.** It read `min(2, …)` and that inverted the two: at
+  // any division a league actually has, `row * 0.25` exceeds 2 — 3.75 units at
+  // twenty clubs, and still 3.13 at twenty-four — so the cap was the operative
+  // rule and the ratio beside it was unreachable. The stub then rendered
+  // **1.90px on desktop and 1.71px at 375dp**, measured on production rather
+  // than derived, and it read as a smudge instead of a mark at both.
+  //
+  // It is deliberately NOT a mobile fix. The cap does not scale with the
+  // viewport, so the stub was equally light on a desktop; only at forty clubs
+  // does the ratio fall below 2 and the cap stop binding. Raising it to 4 hands
+  // the decision back to the ratio for every real division and leaves the cap
+  // doing what a cap is for — a four-club division has 75-unit bands, where a
+  // quarter of one is a slab rather than a stub.
+  //
+  // **The width is already at its maximum and must not be raised with it.** The
+  // stub is drawn in the gutter to the left of the body, and that gutter is
+  // exactly `(band - bodyWidth) / 2` = 5.38 units, which `band * 0.19` = 5.38
+  // already fills. A wider stub collides with the previous candle.
+  const tickHeight = Math.max(0.75, Math.min(4, row * 0.25));
 
   const top = (position: number): number => round2((position - 1) * row);
   const bottom = (position: number): number => round2(position * row);

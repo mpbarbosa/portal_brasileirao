@@ -337,6 +337,61 @@ test("the stub sits inside the band the round opened in, and to the left of the 
   assert.equal(shape.openTick.x + shape.openTick.width, shape.body.x);
 });
 
+/**
+ * **The cap must never become the value.** It read `min(2, …)` against a ratio
+ * of `row * 0.25`, which is 3.75 units at twenty clubs and 3.13 at
+ * twenty-four — so for every division a league actually has, the cap decided
+ * and the ratio beside it was unreachable. The stub rendered 1.90px on a
+ * desktop and 1.71px at 375dp.
+ *
+ * Nothing caught it: the only assertion on this mark was the 0.75 floor, which
+ * 2 satisfies. This is the case that would go red.
+ */
+test("at a real division the ratio decides the stub, not the cap", () => {
+  const [shape] = candleShapes([candle({ open: 12, close: 12, best: 12, worst: 12 })], BOX);
+  const row = 300 / 20;
+
+  assert.equal(shape.openTick.height, row * 0.25);
+});
+
+/**
+ * And the cap still has to guard the case it was written for. A four-club
+ * division has 75-unit bands, where an unbounded quarter is a slab.
+ */
+test("the cap still bounds a division small enough to need it", () => {
+  const small = { ...BOX, clubCount: 4 };
+  const [shape] = candleShapes([candle({ open: 2, close: 2, best: 2, worst: 2 })], small);
+  const row = 300 / 4;
+
+  assert.ok(shape.openTick.height < row * 0.25, "the cap binds where the band is huge");
+  assert.ok(shape.openTick.height >= 0.75, "…and never below the floor");
+});
+
+/**
+ * The bound that stops the next person raising it too far: the stub marks the
+ * band the round OPENED in, so leaving that band would have it point at a
+ * position the club never held.
+ */
+test("the stub never leaves the band it marks", () => {
+  for (const clubCount of [4, 10, 20, 24, 40]) {
+    const box = { ...BOX, clubCount };
+    const row = 300 / clubCount;
+
+    for (const open of [1, Math.ceil(clubCount / 2), clubCount]) {
+      const [shape] = candleShapes([candle({ open, close: open, best: open, worst: open })], box);
+
+      assert.ok(
+        shape.openTick.y >= (open - 1) * row - 0.01,
+        `${clubCount} clubs, ${open}º: the stub starts inside its own band`,
+      );
+      assert.ok(
+        shape.openTick.y + shape.openTick.height <= open * row + 0.01,
+        `${clubCount} clubs, ${open}º: …and ends inside it`,
+      );
+    }
+  }
+});
+
 test("rounds are laid out left to right, one band each", () => {
   const shapes = candleShapes(
     [candle({ round: 1 }), candle({ round: 2 }), candle({ round: 38 })],
