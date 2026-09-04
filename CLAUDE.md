@@ -4086,6 +4086,48 @@ edit is caught, one that a seed sync is listed and cleared by a trailer. The
 second replaced a test asserting the opposite, whose reasoning was correct about
 the seed and wrong about the file it generalised from.
 
+**`rank-candles-core.ts` is on the list too, and it is the first entry that is
+neither markup nor data.** It holds the geometry that places every candle rect
+on the Painel — the band arithmetic, the zone guides, `tickHeight` — and
+`RankCandles.tsx` renders what it returns and decides nothing itself. So #351
+took the vela's opening stub from **1.90px to 3.56px**, moving pixels inside
+`painel-palmeiras-{light,dark}`, while *"README screenshots are current"* passed
+green on its own pull request. Same lesson as `src/data` one paragraph up, one
+directory further out: the list described where the *markup* lives, and the
+thing that decides the drawing lives somewhere else.
+
+**The list now carries every root-level `*-core.ts` the client imports — 27 of
+the 42 — and `tests/appearance-paths.test.ts` is what keeps it that way.** The
+one-file fix closed one instance and left the mechanism intact: nothing stopped
+the next module arriving unwatched exactly as this one had. So the rule is
+stated as a property instead — *every root core module `src/` imports is a
+watched path* — and a new one fails on the commit that introduces it rather than
+years later when somebody measures a frame by hand. The second test runs the
+other way, so the list cannot accumulate entries for modules nothing imports any
+more.
+
+**Do not hand-maintain the list against a number in prose.** The first pass
+counted imports in `src/components` and `src/App.tsx` and got **25**; the real
+figure is **27**, because `page-meta-core` and `seo-core` arrive through
+`src/usePageMeta.ts`, a hook in neither place. That is this file's own recurring
+failure — a count nobody recomputes — reached while writing the paragraph that
+warns about it. The test computes it; no number here needs to stay true.
+
+**The rule is "imported by `src/`", deliberately, and not "renders
+something".** Those same two modules write the document head and cannot move a
+captured pixel, so watching them over-reports — the direction `src/data`
+already fails in for the seed snapshot, and the price of a rule with no
+carve-out list. A carve-out is precisely the shape this file warns about
+elsewhere: a claim that produces no work while it holds, so nothing
+distinguishes *still true* from *quietly false*.
+
+**A glob was the other candidate and is worse in both directions.** Bare
+`*-core.ts` reaches `scripts/manim/capa-core.ts`, which draws thumbnails and no
+page; `:(glob)*-core.ts` stays at the root but admits all 42, including
+`oauth-core`, `session-core` and `rate-limit-core`, which no capture can
+contain. Enumeration plus a completeness test costs one file and describes what
+it watches.
+
 **A curated file can also move without reaching a capture, and that case is
 easy to mis-call in the alarming direction.** `cfa01d5` gave five fixtures their
 substitutions — `554740`, `554741`, `554744`, `554752`, `554762` — and the
