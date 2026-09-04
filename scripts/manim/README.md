@@ -65,7 +65,7 @@ renderiza em segundos e serve para conferir o enquadramento.
 
 **`docs/videos/campanhas-palmeiras-flamengo.mp4`** (23s, 3,3 MB),
 **`docs/videos/pontos-20-clubes.mp4`** (21s, 4,4 MB) e
-**`docs/videos/velas-fluminense.mp4`** (21s, 3,5 MB) — todos 1920×1080, 60fps —
+**`docs/videos/velas-fluminense.mp4`** (21s, 3,7 MB) — todos 1920×1080, 60fps —
 são os vídeos prontos, versionados junto do resto do projeto como os slides
 em `docs/carrossel/` e as capturas em `docs/screenshots/`.
 
@@ -306,6 +306,17 @@ viram outros arquivos quando a temporada anda — o antigo tem que sair do
   e a coluna de cards. Dentro dela não existe canto seguro: o `campanhas.py` põe
   a do G4 rente à borda de baixo da faixa, e para um clube que termina em 4º as
   últimas velas passam por cima dela.
+- **`INK_FAINT` é régua e nunca texto, e isso foi MEDIDO no quadro codificado.**
+  Os tiques do painel de pontos e das rodadas nasceram nesse tom e entregavam
+  **3,2:1** sobre o fundo, num tipo de 18px; as chaves dos cards, **2,9:1**
+  sobre o card. Os `1º … 20º` logo acima deles são `INK_SOFT` a **7,5:1** — o
+  mesmo papel em dois tokens, e o mais apagado justamente no eixo cujos números
+  não se explicam sozinhos (`0 … 50` não é `4º`). A medida saiu de amostrar os
+  pixels do mp4, não da paleta: o `0` sozinho cai para **2,96** porque um glifo
+  estreito perde as hastes na compressão, então a etiqueta mais curta é a mais
+  frágil. **A paleta desta cena é escrita à mão** — o `test:tokens` do projeto
+  não olha para ela, e é por isso que nada acusou.
+
 - **A chave da vela não é opcional.** Corpo, pavio e toco são marcas que quem lê
   uma tabela de futebol não encontra em outro lugar; sem a chave o desenho é
   bonito e ilegível. Ela fica embaixo dos dois painéis e fora deles, pela mesma

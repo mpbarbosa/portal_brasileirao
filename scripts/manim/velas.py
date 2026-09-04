@@ -81,6 +81,13 @@ TYPE_OVERSAMPLE = 4
 
 INK = "#E6EAE8"
 INK_SOFT = "#9AA5A0"
+# **`INK_FAINT` é para RÉGUA, nunca para TEXTO**, e isso foi medido no quadro
+# codificado e não deduzido da paleta. Sobre o `SURFACE` ele entrega 3,2:1 e
+# sobre o `CARD` 2,9:1 — abaixo do piso de 4,5 que este projeto exige de texto,
+# e num tipo de 18px que um leitor vê num celular. Os tiques do painel de baixo
+# nasceram assim e ficavam visivelmente mais apagados que os `1º … 20º` logo
+# acima deles, que são `INK_SOFT`: o mesmo papel, dois tokens. Régua e grade
+# continuam aqui, que é o que este tom serve para fazer.
 INK_FAINT = "#5C6763"
 SURFACE = "#0B100E"
 CARD = "#161F1B"
@@ -293,15 +300,17 @@ class Velas(Scene):
             # version put "posição" straight through round 1's pavio, which is
             # the widest one in the drawing — and neither box has room above it.
             # The position axis needs no caption at all: "1º … 20º" says it.
-            tick = label(f"{points} pts" if points == self.points_ceiling else str(points), 13, INK_FAINT)
+            tick = label(
+                f"{points} pts" if points == self.points_ceiling else str(points), 14, INK_SOFT
+            )
             tick.next_to(self.at_pts(0.5, points), LEFT, buff=0.16)
             labels.add(tick)
         for round_number in [1] + list(range(5, self.last_round + 1, 5)):
-            tick = label(str(round_number), 13, INK_FAINT)
+            tick = label(str(round_number), 14, INK_SOFT)
             tick.move_to([self.x_of(round_number), PTS_BOTTOM - 0.24, 0])
             labels.add(tick)
 
-        rodada = label("rodada", 13, INK_FAINT)
+        rodada = label("rodada", 13, INK_SOFT)
         rodada.move_to([PLOT_RIGHT + 0.38, PTS_BOTTOM - 0.24, 0])
         labels.add(rodada)
 
@@ -484,13 +493,13 @@ class Velas(Scene):
         top = frame.get_top()[1] - 0.30
         bottom = frame.get_bottom()[1] + 0.30
 
-        heading = label("O jogo", 15, INK_FAINT)
+        heading = label("O jogo", 15, INK_SOFT)
         heading.move_to([left + heading.width / 2, top, 0])
         body = VGroup(frame, heading)
 
         match = entry["match"]
         if match is None:
-            note = label("sem jogo nesta rodada", 19, INK_FAINT)
+            note = label("sem jogo nesta rodada", 19, INK_SOFT)
             note.move_to([frame.get_center()[0], frame.get_center()[1] - 0.08, 0])
             body.add(note)
             return body
@@ -533,7 +542,7 @@ class Velas(Scene):
         right = frame.get_right()[0] - 0.28
         top = frame.get_top()[1] - 0.30
 
-        heading = label("A vela", 15, INK_FAINT)
+        heading = label("A vela", 15, INK_SOFT)
         heading.move_to([left + heading.width / 2, top, 0])
 
         moved = entry["moved"]
@@ -555,7 +564,7 @@ class Velas(Scene):
         body = VGroup(frame, heading)
         y = top - 0.42
         for caption, value, value_colour in rows:
-            key_text = label(caption, 16, INK_FAINT)
+            key_text = label(caption, 16, INK_SOFT)
             key_text.move_to([left + key_text.width / 2, y, 0])
             value_text = label(value, 18, value_colour, "BOLD")
             value_text.move_to([right - value_text.width / 2, y, 0])
