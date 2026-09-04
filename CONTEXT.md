@@ -568,6 +568,38 @@ channel, YouTube's own mark (that names the host, not the hymn), an embedded
 player on the club page (a hymn that can start playing is a hymn nobody asked
 for).
 
+**Vídeos do clube**:
+A rail of curated videos about a club, on its own page between the **Artilheiros
+do clube** and **Jogos disputados**. Each entry is a thumbnail, a title and the
+uploading channel, and opens on YouTube in a new tab. No provider carries a
+video at any tier, so `src/data/club-videos.ts` is hand-curated and keyed by
+club code — and unlike every other curated club file the value is a **list**,
+and **the same video may be listed under more than one club**: a comparação
+naming two sides belongs on both pages, so the id repeating is the mapping
+working rather than a duplicate to normalise away. Stored as the **video id
+alone**, as **Hino do clube** is, with `videoWatchUrl` and `videoThumbnailUrl`
+deriving both addresses from `youtubeVideoId` — the one parser the hymn now
+shares, so the two files cannot come to disagree about what a `youtu.be` link
+means. `title` and `channel` are both **required**: the title is the only thing
+telling two entries apart and is the one place in the app where a video title is
+the link text, and the channel is what stops this app's own render being read as
+a broadcaster's package. Confirm every id through YouTube's oEmbed endpoint
+before writing it down, the way the hymns were. The thumbnail is **hotlinked**
+from YouTube's own CDN rather than vendored — the argument that vendored the
+stadium and player photographs is a volunteer host's 429 over somebody's
+copyrighted work, and neither half holds for the platform's own artwork served
+for exactly this — so `img.youtube.com` joins the crest CDN in the end-to-end
+suite's `OFFLINE_HOSTS`.
+_Avoid_: "Redes sociais" (the name **Onde acompanhar** already rejects, and this
+is one platform rather than a reader's several), an **embedded player** (the
+reason **Hino do clube** gives, harder: a rail of iframes would be the first
+third-party script this app ships), keying on **tla**, storing the full URL,
+printing the id as the link text, `maxresdefault` (it 404s for anything uploaded
+below that resolution, which renders as a broken image), a heading over a club
+with no entries, and inventing entries to fill the other eighteen clubs — the
+sibling repo's social view runs on fabricated `SEED_POSTS` and that half does not
+travel here.
+
 **Wikipédia**:
 The club's encyclopedia article, linked from its page as a fourth external link
 beside the **Site oficial**, the **Instagram do clube** and the **Hino do

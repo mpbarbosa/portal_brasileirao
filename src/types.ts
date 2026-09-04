@@ -86,6 +86,24 @@ export interface Highlight {
   channel: string;
 }
 
+/**
+ * A video about a club, curated in `src/data/club-videos.ts`.
+ *
+ * Every field is required, which is the opposite of most curated shapes here
+ * and is deliberate: a video with no title is indistinguishable from the one
+ * beside it, and a video with no channel is one whose provenance the page
+ * cannot state — see that file for why both matter.
+ */
+export interface ClubVideo {
+  /** YouTube video id alone (11 chars). `videoWatchUrl` derives the address, so
+   *  a pasted link's `&list=…` does not persist — `Club.hymn`'s rule. */
+  id: string;
+  /** The video's own title, as the uploader wrote it. The link's text. */
+  title: string;
+  /** The uploading channel, shown beneath the title. */
+  channel: string;
+}
+
 /** Where a match is played. Not from the data provider — merged from the CBF
  *  sync, which reports it as "Stadium - City - UF". */
 export interface Venue {

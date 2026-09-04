@@ -65,7 +65,11 @@ test.describe("Clube", () => {
     // neither. `title` was the whole of its naming and is not reliably
     // announced, so the list read as "V", "E", "D" — a spelling test rather
     // than a form guide.
-    const pills = page.locator("main ul[aria-label] > li").filter({ hasText: /^[VED]/ });
+    // `[data-form-guide]` for the reason given at line 106 below. This one
+    // passed the day the club page grew a second labelled list, and only
+    // because `hasText` happened to exclude the new items — a filter written
+    // about the pills' *content* was doing the work of identifying the list.
+    const pills = page.locator("main ul[data-form-guide] > li").filter({ hasText: /^[VED]/ });
 
     await expect(pills).toHaveCount(5);
     for (const pill of await pills.all()) {
@@ -84,7 +88,11 @@ test.describe("Clube", () => {
     // which end is now is the whole of what a form guide is read for. A
     // sighted reader infers it from the fixture list below; nothing carried
     // it in text.
-    const list = page.locator("main ul[aria-label]").filter({ has: page.locator("li") }).first();
+    // Likewise — and this one was the luckiest of the three: `.first()` in DOM
+    // order happens to be the form guide only because **Vídeos do clube**
+    // renders below it. Move either section and this silently measures the
+    // wrong list, then fails on an aria-label that was never its own.
+    const list = page.locator("main ul[data-form-guide]");
 
     await expect(list).toHaveAttribute("aria-label", /do mais antigo para o mais recente/);
   });
@@ -103,7 +111,14 @@ test.describe("Clube", () => {
     // it passed. Under that mutation the pill still measured 28x28 while
     // `scrollWidth` was 40 and the word's own box 43x16.
     const geometry = await page
-      .locator("main ul[aria-label] > li")
+      // **`[data-form-guide]`, not `ul[aria-label]`.** This read the latter
+      // until the club page grew a second labelled list — the **Vídeos do
+      // clube** rail — and then resolved six elements and asserted five. The
+      // pills are what this measures, so it names them; a spec that identifies
+      // its subject by a property every sibling could also have is one that
+      // goes red on an unrelated section. Same correction `standings.spec.ts`
+      // made when the Painel gained a second `role="img"` drawing.
+      .locator("main ul[data-form-guide] > li")
       .evaluateAll((els) =>
         els.map((el) => {
           const word = el.querySelector("span.sr-only");

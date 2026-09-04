@@ -41,9 +41,23 @@ const PIXEL = Buffer.from(
   "base64",
 );
 
-/** Every host this suite must not reach. One entry today; a list because the
- *  next vendored-or-not decision should be a line here rather than a rewrite. */
-const OFFLINE_HOSTS = [/crests\.football-data\.org/];
+/**
+ * Every host this suite must not reach.
+ *
+ * The comment here used to say "one entry today; a list because the next
+ * vendored-or-not decision should be a line here rather than a rewrite". That
+ * decision has arrived and it was a line: **Vídeos do clube** hotlinks
+ * YouTube's own thumbnail for each curated video, for the reasons
+ * `videoThumbnailUrl` gives, so the club page now reaches a second image host.
+ *
+ * Note the two are *not* equally dangerous today and the list does not care.
+ * Twenty crests block `load` on every page carrying the table; a rail's
+ * thumbnails are `loading="lazy"` and sit below the fold on two club pages. But
+ * "how bad would it be" is a property of this week's layout, and hermeticity is
+ * the property being defended — the crest host was not dangerous either, until
+ * the day it answered in 2.9s and took 85 specs down on an unmodified `main`.
+ */
+const OFFLINE_HOSTS = [/crests\.football-data\.org/, /img\.youtube\.com/];
 
 export const test = base.extend({
   page: async ({ page }, use) => {
