@@ -82,6 +82,12 @@ FONT = "Inter"
 # from `index.css`, because a video is not a page and nothing regenerates these.
 INK = "#E6EAE8"
 INK_SOFT = "#9AA5A0"
+# **`INK_FAINT` é para RÉGUA, nunca para TEXTO.** Medido nos pixels do próprio
+# mp4, não deduzido da paleta: sobre o `SURFACE` este tom entrega 3,2:1 e sobre o
+# `CARD` 2,9:1, abaixo do piso de 4,5 que este projeto exige de texto, em tipo de
+# 18px que num celular vira cerca de 2 mm. A paleta destas cenas é escrita à mão,
+# então o `test:tokens` nunca olhou para ela e nada acusou. Grade, moldura e
+# filete continuam aqui, que é o que este tom serve para fazer.
 INK_FAINT = "#5C6763"
 SURFACE = "#0B100E"
 CARD = "#161F1B"
@@ -107,6 +113,10 @@ PLOT_TOP, PLOT_BOTTOM = 2.42, -2.62
 
 CARD_X = 4.42
 CARD_WIDTH = 5.05
+
+# O endereço do site. Escrito à mão porque o `APP_URL` mora no `.env` do host,
+# que é gitignored e não existe na estação onde a cena é desenhada.
+SITE = "brasileirao.mpbarbosa.com"
 
 
 def ordinal(position: int) -> str:
@@ -143,7 +153,7 @@ class Campanhas(Scene):
         self.play(FadeIn(bands), FadeIn(band_captions), run_time=0.5)
 
         legend = self.build_legend(clubs)
-        self.play(FadeIn(legend), run_time=0.45)
+        self.play(FadeIn(legend), FadeIn(self.build_credit()), run_time=0.45)
 
         round_label = self.round_label(clubs[0]["rounds"][0]["round"])
         cards = VGroup()
@@ -260,11 +270,11 @@ class Campanhas(Scene):
             tick.next_to(self.at(0.5, position), LEFT, buff=0.16)
             labels.add(tick)
         for round_number in [1] + list(range(5, self.last_round + 1, 5)):
-            tick = label(str(round_number), 14, INK_FAINT)
+            tick = label(str(round_number), 14, INK_SOFT)
             tick.next_to(self.at(round_number, CLUBS_IN_DIVISION + 0.5), DOWN, buff=0.15)
             labels.add(tick)
 
-        caption = label("rodada", 14, INK_FAINT)
+        caption = label("rodada", 14, INK_SOFT)
         caption.move_to([PLOT_RIGHT + 0.42, PLOT_BOTTOM - 0.3, 0])
         labels.add(caption)
 
@@ -352,6 +362,17 @@ class Campanhas(Scene):
         entries.move_to([(PLOT_LEFT + PLOT_RIGHT) / 2, PLOT_BOTTOM - 0.72, 0])
         return entries
 
+    def build_credit(self) -> Text:
+        """De onde o vídeo veio.
+
+        Um vídeo de divulgação é visto fora daqui — recortado, reencaminhado,
+        sem a descrição junto —, então o endereço fica no quadro do começo ao
+        fim. Sem o `https://`, que é como se lê e se digita um endereço.
+        """
+        credit = label(SITE, 17, INK_SOFT)
+        credit.move_to([CARD_X, -3.30, 0])
+        return credit
+
     def round_label(self, round_number: int) -> Text:
         heading = label(f"Rodada {round_number}", 25, INK, "BOLD")
         heading.move_to([CARD_X, 2.66, 0])
@@ -392,9 +413,9 @@ class Campanhas(Scene):
 
         match = entry["match"]
         if match is None:
-            note = label("sem jogo nesta rodada", 18, INK_FAINT)
+            note = label("sem jogo nesta rodada", 18, INK_SOFT)
             note.move_to([frame.get_center()[0], frame.get_center()[1] - 0.05, 0])
-            tally = label(f"{entry['points']} pts · {entry['played']} jogos", 16, INK_FAINT)
+            tally = label(f"{entry['points']} pts · {entry['played']} jogos", 16, INK_SOFT)
             tally.move_to([right - tally.width / 2, bottom, 0])
             body.add(note, tally)
             return body
@@ -413,7 +434,7 @@ class Campanhas(Scene):
         )
         verdict.move_to([left + verdict.width / 2, bottom, 0])
 
-        tally = label(f"{entry['points']} pts · {entry['played']} jogos", 16, INK_FAINT)
+        tally = label(f"{entry['points']} pts · {entry['played']} jogos", 16, INK_SOFT)
         tally.move_to([right - tally.width / 2, bottom, 0])
 
         body.add(scoreline, verdict, tally)
