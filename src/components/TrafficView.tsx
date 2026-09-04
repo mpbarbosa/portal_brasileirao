@@ -170,14 +170,21 @@ function TimeLine({ points, label }: { points: { x: number; y: number }[]; label
     // and a floor at the minimum makes a flat week look like a cliff.
     const spanX = maxX - minX || 1;
     const spanY = maxY || 1;
+    const at = (p: { x: number; y: number }) => ({
+      x: pad + ((p.x - minX) / spanX) * (box.width - pad * 2),
+      y: box.height - pad - (p.y / spanY) * (box.height - pad * 2),
+    });
     return {
       maxY,
       first: new Date(minX),
       last: new Date(maxX),
+      // One snapshot and many snapshots are the same instant on the timeline,
+      // so the two endpoints collapse and one label is the honest caption.
+      single: points.length === 1,
+      last_: at(points[points.length - 1]),
       d: points
         .map((p, i) => {
-          const x = pad + ((p.x - minX) / spanX) * (box.width - pad * 2);
-          const y = box.height - pad - (p.y / spanY) * (box.height - pad * 2);
+          const { x, y } = at(p);
           return `${i === 0 ? "M" : "L"}${x.toFixed(1)} ${y.toFixed(1)}`;
         })
         .join(" "),
@@ -225,11 +232,21 @@ function TimeLine({ points, label }: { points: { x: number; y: number }[]; label
             // line thins horizontally and thickens vertically.
             vectorEffect="non-scaling-stroke"
           />
+          {/* Where the series stands now — and **the entire mark when there is
+              only one snapshot**, since a one-point path is a bare moveto and
+              draws nothing at all. `RankSparkline` carries this exact circle for
+              this exact reason, and leaving it out here shipped a panel that was
+              an empty box with axis labels on the day the timer was installed:
+              `getTotalLength()` measured 0 in the live page. The radius is in
+              user units under `preserveAspectRatio="none"`, so it is an ellipse
+              at most widths; that is a mark, not a measurement, and matching the
+              line's own non-uniform scaling is what keeps it on the line. */}
+          <circle cx={drawn.last_.x} cy={drawn.last_.y} r={3} fill="currentColor" />
         </svg>
       </div>
       <figcaption className="mt-1 flex justify-between text-label-small text-ink-faint">
         <span>{day(drawn.first)}</span>
-        <span>{day(drawn.last)}</span>
+        {drawn.single ? null : <span>{day(drawn.last)}</span>}
       </figcaption>
     </figure>
   );
