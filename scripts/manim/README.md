@@ -65,7 +65,7 @@ renderiza em segundos e serve para conferir o enquadramento.
 
 **`docs/videos/campanhas-palmeiras-flamengo.mp4`** (23s, 3,3 MB),
 **`docs/videos/pontos-20-clubes.mp4`** (21s, 4,4 MB) e
-**`docs/videos/velas-fluminense.mp4`** (21s, 3,7 MB) — todos 1920×1080, 60fps —
+**`docs/videos/velas-fluminense.mp4`** (21s, 3,8 MB) — todos 1920×1080, 60fps —
 são os vídeos prontos, versionados junto do resto do projeto como os slides
 em `docs/carrossel/` e as capturas em `docs/screenshots/`.
 
@@ -316,6 +316,13 @@ viram outros arquivos quando a temporada anda — o antigo tem que sair do
   estreito perde as hastes na compressão, então a etiqueta mais curta é a mais
   frágil. **A paleta desta cena é escrita à mão** — o `test:tokens` do projeto
   não olha para ela, e é por isso que nada acusou.
+
+- **O vídeo carrega o endereço do site**, embaixo da coluna de cards, do começo
+  ao fim: um quadro recortado por alguém tem de dizer de onde veio. Sem o
+  `https://`, que é como se lê e se digita um endereço, e escrito na cena porque
+  o `APP_URL` mora no `.env` do host — gitignored, e ausente da estação onde a
+  cena é desenhada. **O `campanhas.py` e o `pontos.py` ainda não têm crédito
+  nenhum**, e ganhar um custa a eles um re-render dos dois mp4.
 
 - **A chave da vela não é opcional.** Corpo, pavio e toco são marcas que quem lê
   uma tabela de futebol não encontra em outro lugar; sem a chave o desenho é

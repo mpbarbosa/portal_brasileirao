@@ -132,6 +132,13 @@ MIN_BODY = 0.035
 CARD_X = 4.52
 CARD_WIDTH = 5.05
 
+# O endereço do site, para um vídeo que sai daqui e é visto em outro lugar.
+# Escrito sem o esquema porque é assim que se lê e se digita um endereço, e
+# escrito à mão porque o `APP_URL` mora no `.env` do host — que é gitignored e
+# não existe na estação onde a cena é desenhada. Uma origem errada aqui é uma
+# origem errada em todo lugar, então ela é a mesma que o `docs/` já publica.
+SITE = "brasileirao.mpbarbosa.com"
+
 
 def label(text: str, size: float, colour: str, weight: str = "NORMAL") -> Text:
     """Uma linha de tipo, desenhada grande e reduzida. Ver o docstring do módulo."""
@@ -178,7 +185,9 @@ class Velas(Scene):
         self.play(FadeIn(bands), FadeIn(band_captions), run_time=0.45)
 
         key = self.build_key()
-        self.play(FadeIn(key), run_time=0.45)
+        # O crédito entra junto com a chave e fica o vídeo inteiro: um quadro
+        # qualquer que alguém recorte tem de carregar de onde ele veio.
+        self.play(FadeIn(key), FadeIn(self.build_credit()), run_time=0.45)
 
         marker = Line(
             [self.at_pos(1, 0.5)[0], POS_TOP, 0],
@@ -464,6 +473,17 @@ class Velas(Scene):
         )
         key.move_to([(PLOT_LEFT + PLOT_RIGHT) / 2, PTS_BOTTOM - 0.98, 0])
         return key
+
+    def build_credit(self) -> Text:
+        """De onde o vídeo veio, embaixo da coluna de cards.
+
+        Ali é o único retângulo grande e vazio do quadro: os cards param em
+        -2,25 e a chave da vela ocupa a metade esquerda, então o crédito não
+        divide espaço com marca nenhuma.
+        """
+        credit = label(SITE, 17, INK_SOFT)
+        credit.move_to([CARD_X, -3.24, 0])
+        return credit
 
     # ---- os cards da rodada -------------------------------------------------
 
