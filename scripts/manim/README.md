@@ -104,6 +104,48 @@ que o `thumbnail.ts` traça quando recusa um terceiro clube.
 
 Regerar é um commit deliberado, como o mp4: nada compara os bytes.
 
+## Quando regerar, e o que obriga a isso
+
+Os seis artefatos de `docs/videos/` — dois mp4 e quatro capas — são **velhos por
+construção**. São desenhados do seed e commitados (como o `og-default.png`, para
+que quem clona o repositório os tenha sem instalar o Manim), e descrevem uma
+temporada congelada para sempre. Um `sync-seed-data` move a temporada debaixo
+deles com **todos** os gates do repositório continuando verdes: o guard do
+`docs/screenshots` não olha para este diretório, o CI nunca abre um mp4, e os
+bytes não são comparados por nada.
+
+`tests/manim-renders.test.ts` é o que fecha isso, e ele fica vermelho **de
+propósito** na próxima sincronização:
+
+- `SNAPSHOT_DATE` só se move num `sync-seed-data` e em mais nada, que é a
+  propriedade que o `tests/player-core.test.ts` tem — não dá para ficar vermelho
+  no commit não relacionado de outra pessoa, e quem ele interrompe é justamente
+  quem pode agir.
+- `docs/videos/RENDERED` guarda de qual snapshot cada artefato foi desenhado. É o
+  mesmo dispositivo do `docs/screenshots/CAPTURED` **e o mesmo limite**: ele lê a
+  afirmação de uma pessoa, não os bytes. Nada impede escrever uma data nova sobre
+  artefatos que ninguém redesenhou. Pega o esquecimento, que é a falha que
+  acontece; não pega a mentira, e nenhum teste deste lado do render pegaria.
+
+A regeneração inteira, na ordem:
+
+```sh
+npx tsx scripts/manim/export-campanhas.ts > scripts/manim/campanhas.json
+npx tsx scripts/manim/export-pontos.ts    > scripts/manim/pontos.json
+./.venv-manim/bin/manim -qh scripts/manim/campanhas.py Campanhas
+./.venv-manim/bin/manim -qh scripts/manim/pontos.py    Pontos
+cp media/videos/campanhas/1080p60/Campanhas.mp4 docs/videos/campanhas-palmeiras-flamengo.mp4
+cp media/videos/pontos/1080p60/Pontos.mp4       docs/videos/pontos-20-clubes.mp4
+npx tsx scripts/manim/thumbnail.ts
+npx tsx scripts/manim/thumbnail-pontos.ts
+```
+
+Depois **edite `docs/videos/RENDERED`** com o novo `SNAPSHOT_DATE`, no mesmo
+commit. E confira os nomes: a capa da história de cada vídeo é nomeada pelos
+números que imprime, então `-miniatura-11-ao-1.png` e `-miniatura-38-pontos.png`
+viram outros arquivos quando a temporada anda — o antigo tem que sair do
+`git`, e o `RENDERED` tem que nomear o novo, senão o segundo teste acusa.
+
 ### O que o `thumbnail-pontos.ts` registra
 
 - **O que liga uma chip a uma linha é a POSIÇÃO, e a cor só confirma.** Isso saiu
