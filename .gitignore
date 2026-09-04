@@ -178,6 +178,9 @@ docs/screenshots/local/
 # changes with the quality flag.
 .venv-manim/
 media/
+# And the bytecode cache Python writes beside a scene the first time it is
+# imported — a build artefact of running the tool, like `media/`.
+__pycache__/
 
 # Traffic snapshots. These are written on the HOST by
 # shell_scripts/12_traffic_report.sh, into $DEPLOY_DIR/traffic-reports, and the
