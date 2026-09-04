@@ -4086,6 +4086,35 @@ edit is caught, one that a seed sync is listed and cleared by a trailer. The
 second replaced a test asserting the opposite, whose reasoning was correct about
 the seed and wrong about the file it generalised from.
 
+**`rank-candles-core.ts` is on the list too, and it is the first entry that is
+neither markup nor data.** It holds the geometry that places every candle rect
+on the Painel — the band arithmetic, the zone guides, `tickHeight` — and
+`RankCandles.tsx` renders what it returns and decides nothing itself. So #351
+took the vela's opening stub from **1.90px to 3.56px**, moving pixels inside
+`painel-palmeiras-{light,dark}`, while *"README screenshots are current"* passed
+green on its own pull request. Same lesson as `src/data` one paragraph up, one
+directory further out: the list described where the *markup* lives, and the
+thing that decides the drawing lives somewhere else.
+
+**It covers that one module and NOT the twenty-five the UI imports**, which is
+the part to know before reading the gate as complete. Every root-level
+`*-core.ts` a component imports can move a rendered pixel — `club-core` decides
+the names, `standings-core` the table, `live-core` the Ao vivo wording,
+`health-core` the rodapé band in two full-page captures — and all of them are
+still outside. Count them off the imports rather than trusting this sentence:
+
+```sh
+for f in *-core.ts; do
+  grep -rl "@/${f%.ts}\"" src/components src/App.tsx >/dev/null 2>&1 && echo "$f"
+done | wc -l
+```
+
+Widening to all of them is **a decision about how much noise the gate should
+make, not an oversight to tidy up** — most core edits cannot reach a capture,
+and the `src/data` paragraph above is what that costs when it is wrong in the
+generous direction. It was left at one on purpose, and the asymmetry is
+deliberate rather than forgotten.
+
 **A curated file can also move without reaching a capture, and that case is
 easy to mis-call in the alarming direction.** `cfa01d5` gave five fixtures their
 substitutions — `554740`, `554741`, `554744`, `554752`, `554762` — and the

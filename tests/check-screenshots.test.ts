@@ -49,6 +49,7 @@ class Sandbox {
     this.write("index.html", "html\n");
     this.write("src/components/Table.tsx", "table\n");
     this.write("src/data/venues.ts", "venues\n");
+    this.write("rank-candles-core.ts", "candles\n");
     this.commit("Seed the tree");
   }
 
@@ -152,6 +153,35 @@ test("a curated data change is an appearance change", () => {
     repo.shoot();
     repo.write("src/data/broadcasts.ts", "export const BROADCASTS = { \"1\": [\"ge\"] };\n");
     repo.commit("Sync the broadcast channels");
+
+    assert.equal(repo.run().ok, false);
+  });
+});
+
+/**
+ * **A root-level `*-core.ts` can move a captured pixel, and for a long time the
+ * gate could not see one.** `rank-candles-core.ts` holds the geometry that
+ * places every candle rect on the Painel — `tickHeight`, the band arithmetic,
+ * the zone guides — and `RankCandles.tsx` only renders what it returns. So #351
+ * changed the opening stub from 1.90px to 3.56px, genuinely moving pixels
+ * inside `painel-palmeiras-{light,dark}`, while "README screenshots are
+ * current" passed green on its own pull request.
+ *
+ * It is the `src/data` lesson one directory up: the watched list described
+ * where *markup* lives, and the thing that decides the drawing lives somewhere
+ * else.
+ *
+ * **This covers that one module and not the twenty-five the UI imports** —
+ * `club-core`, `standings-core`, `live-core` and the rest are all still
+ * outside, and each of them can move a rendered pixel too. Read the count off
+ * the imports rather than this comment; widening further is a decision about
+ * how much noise the gate should make, not an oversight to tidy up.
+ */
+test("a root-level core module that draws is an appearance change", () => {
+  withSandbox((repo) => {
+    repo.shoot();
+    repo.write("rank-candles-core.ts", "candles\nconst tickHeight = 4;\n");
+    repo.commit("Make the vela's opening stub heavier");
 
     assert.equal(repo.run().ok, false);
   });
