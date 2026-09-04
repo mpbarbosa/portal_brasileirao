@@ -212,6 +212,15 @@ export const pageMeta = (
         image: site,
       };
 
+    case "trafego":
+      return {
+        // Same reasoning as `conta`: `noindex`, never shared, never unfurled.
+        // What it needs is a browser tab a reader can find among twenty.
+        title: suffix("Tráfego"),
+        description: "O log de acesso desta instância, lido em gráficos.",
+        image: site,
+      };
+
     case "entrar":
       return {
         title: suffix("Entrar"),

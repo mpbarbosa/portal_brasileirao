@@ -121,6 +121,49 @@ AWS_PROFILE=mpb aws cloudwatch describe-alarms --region sa-east-1 \
     --query 'MetricAlarms[].{Name:AlarmName,State:StateValue}' --output table
 ```
 
+## Traffic snapshots — currently OFF
+
+Nothing reads the access log until the timer is installed. It is not part of a
+deploy: the report script ships inside every release tarball, and installing the
+timer is one-time provisioning like `01`, `03` and `11`.
+
+```sh
+./shell_scripts/13_install_traffic_timer.sh    # hourly, :07 past, keeps a month
+```
+
+The snapshots land in `/var/www/portal_brasileirao/traffic-reports/` and the app
+reads that directory directly — nothing is committed and nothing is copied. Then
+`/trafego` on the live site draws them, and `npm run traffic-dashboard -- --url
+https://brasileirao.mpbarbosa.com` draws the same payload in a local window.
+
+**Verify it by hand once, before trusting the timer.** The report has to read a
+root-owned log under `/var/log/nginx`, and the installer's answer is to put the
+running user in the `adm` group rather than to add a sudoers rule — narrower,
+but a group change only applies to **new logins**, so the first timed run can
+still fall back to an interactive `sudo` that has no terminal to prompt at and
+will simply hang.
+
+```sh
+sudo systemctl start portal-brasileirao-traffic.service
+journalctl -u portal-brasileirao-traffic.service -n 30 --no-pager
+ls -1 /var/www/portal_brasileirao/traffic-reports | tail -3
+```
+
+Optional, and only worth it if you want the country and city sections — the
+lookups are entirely local, so no visitor address leaves the host:
+
+```sh
+sudo apt-get install -y mmdb-bin
+# then place GeoLite2-City.mmdb in /var/lib/GeoIP/ (free MaxMind account),
+# or point GEO_DB at it. A Country database works and yields no cities.
+```
+
+To turn it off again:
+
+```sh
+sudo systemctl disable --now portal-brasileirao-traffic.timer
+```
+
 ## Recovering a broken service
 
 On the host:

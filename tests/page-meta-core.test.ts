@@ -413,3 +413,9 @@ test("the jogadores page names itself rather than falling back to the site title
   assert.equal(meta.image?.url, "https://exemplo.test/og-default.png");
   assert.equal(meta.image?.shape, "wide");
 });
+
+test("/trafego has a title a reader can find among twenty tabs", () => {
+  const meta = pageMeta({ section: "trafego" }, {});
+  assert.match(meta.title, /Tráfego/);
+  assert.ok(meta.description.length > 0);
+});

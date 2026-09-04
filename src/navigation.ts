@@ -49,7 +49,15 @@ export type SectionId =
    */
   | "conta"
   | "entrar"
-  | "privacidade";
+  | "privacidade"
+  /**
+   * **Tráfego** — the deployment's own access log. Absent from NAV_ITEMS for a
+   * reason neither of the two groups above gives: it is not a drill-down into
+   * anything a reader chose, and it is not the reader's own account either. It
+   * is about the server, for whoever runs it. Unlisted, `noindex`, and reached
+   * only by typing the address.
+   */
+  | "trafego";
 
 export interface NavItem {
   id: SectionId;

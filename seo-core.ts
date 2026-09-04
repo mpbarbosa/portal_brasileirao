@@ -36,6 +36,7 @@ const SECTIONS = new Set([
   "conta",
   "entrar",
   "privacidade",
+  "trafego",
 ]);
 
 /**
@@ -252,6 +253,14 @@ export const pageStatus = (pathname: string, context: MetaContext = {}): PageSta
     case "privacidade":
       return second === undefined ? FOUND : missing("unknown-section");
 
+    case "trafego":
+    // Beside `conta` and `entrar` rather than left to `default`, for the same
+    // reason and one more. Those two are per-requester; this one is the same
+    // for everybody and still must not be indexed — a search result for this
+    // site's own request log is a page nobody searched for, offered to
+    // somebody it does not concern. `SECTIONS` is a plain Set, so no compiler
+    // reaches this switch: without the case above and this one, `/trafego`
+    // would be a 200, indexable, in the sitemap, and nothing would go red.
     case "conta":
     case "entrar":
       // Explicit rather than left to the `default` below, which would answer
@@ -310,6 +319,10 @@ export const robotsTxt = (origin: string): string => {
     // personal page to one.
     "Disallow: /conta",
     "Disallow: /entrar",
+    // Not per-requester like the two above, but noindex all the same: it is
+    // about the server rather than the championship, and a crawler holding it
+    // is a crawler offering it.
+    "Disallow: /trafego",
     "",
   ];
   if (origin) lines.push(`Sitemap: ${origin}/sitemap.xml`, "");

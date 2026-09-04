@@ -718,6 +718,49 @@ what makes the logic testable without mocking HTTP.
   **no circuit breaker**: one upstream's outage must not open the other's, and
   the cache already caps what a hard-down Open-Meteo costs.
 
+- `traffic-report-core.ts` — the **Tráfego** page: this deployment's own nginx
+  access log, read back as charts. Ported from `agora_na_copa_2026`, which is
+  where the whole shape came from; what follows is what had to change and why.
+  It is the **second** core module whose subject is this deployment rather than
+  the championship — `health-core.ts` was the first — and it takes the same
+  consequence: the payload is stale by construction, so it prints the instant
+  the reading was taken instead of implying live numbers, which is
+  `StadiumWeather`'s rule.
+  **No visitor address ever reaches it.** The host aggregates before it writes —
+  it resolves each unique IP to a country once and emits counts — so an address
+  is not dropped in this module, it never arrives. That is a property of the
+  shell script and this module cannot restore it if somebody widens the script,
+  which is why `tests/traffic-report-core.test.ts` asserts an IP-shaped string
+  in a summary does not survive into the payload. Read that as a floor and not
+  a guarantee.
+  **The counts are cumulative over nginx's whole log window and not per hour**,
+  because each snapshot re-reads the entire log. So `requests` rises between
+  snapshots, and a **rate** is the difference between two of them, derived here
+  rather than written by the script — only a reader holding two snapshots can
+  compute one. The rate is **clamped at zero**: logrotate drops the oldest
+  lines, so a cumulative total legitimately falls across a rotation and the
+  honest answer is "no measurable rate" rather than a negative one. The first
+  snapshot's rate is **null**, which is not zero — "not measurable yet" and "an
+  hour that served nobody" are different readings and the chart draws them
+  differently. Every optional numeric goes through an explicit null check for
+  the same reason: `Number(null)` is `0`, so a truthiness test would report a
+  genuinely quiet hour as missing data — `countsTowardStandings`' 0-0 trap.
+  **`/api/health` is dropped from the top paths and from nothing else.** It is
+  machine polling by construction — `reconcile.yml` reads it every fifteen
+  minutes and the deploy job asserts the live commit through it — so left in it
+  crowds a real content route out of a twenty-row chart. It stays in `requests`,
+  the status codes and the hour buckets, because those answer *what did this
+  server do* rather than *what did people read*, and filtering there would make
+  the totals disagree with the log. The count is carried as `monitorHits` so
+  the exclusion is visible rather than silent. **The sibling filters its own
+  poller out of the log before every tally, and that is right there and wrong
+  here**: its self-client was 85-90% of all lines and swamped the totals, where
+  this is a few hundred a day against a real audience.
+  A **label is everything after the count**, not the next whitespace field: a
+  city reads `São Paulo, Brazil` and a referrer carries a URL with spaces in it
+  often enough to matter, and splitting on whitespace files every such row
+  under its first word and silently merges unrelated buckets.
+
 - `health-core.ts` — the **Saúde do serviço** the **Rodapé** carries. It is the
   only core module whose input is *this app's own* API rather than a provider's,
   and it exists for the reason an adapter usually does: `/api/health` is the one
@@ -985,6 +1028,125 @@ carries a coach),
 note its `currentTeam` is often a national team, which is why the card prefers the
 club the page already knew),
 `/api/matches` (optional `?round=` — a non-integer or `< 1` is a 400).
+`/api/traffic-dashboard` (the traffic snapshots on this host, parsed — see
+**Tráfego** below; `Disallow`ed in `robots.txt` and cached 5 minutes, because
+the timer that writes its input runs hourly).
+
+### Tráfego — the access log, and the two windows onto it
+
+Ported from `agora_na_copa_2026`, which had the whole idea first. Four pieces:
+
+- `shell_scripts/12_traffic_report.sh` — runs **on the host**, summarises nginx's
+  access log into one `summary-<stamp>.txt`. coreutils and awk only, so it works
+  on a bare host; a GeoLite2 database and `mmdblookup` are optional and add the
+  country and city sections.
+- `shell_scripts/13_install_traffic_timer.sh` — one-time provisioning, like 01,
+  03 and 11. Installs the hourly timer and prunes to a month of snapshots.
+- `/api/traffic-dashboard` and `/trafego` — the deployed page.
+- `scripts/traffic-dashboard.ts` — a **local** window (`npm run traffic-dashboard`,
+  `localhost:4317`).
+
+**The report scripts live in `shell_scripts/` and not in `scripts/`, and that is
+the delivery path rather than a filing preference.** CI packages
+`dist package.json package-lock.json shell_scripts` and nothing else, so a report
+script under `scripts/` is a script the host has never seen. The sibling keeps
+its copy in `scripts/` and gets away with it because **its** host carries a git
+checkout, and its scheduled wrapper runs `git pull` before every report — a
+wrapper this repo therefore does not need and does not have. Ours is better on
+its own terms: the report script always matches the release that shipped it,
+which is the property `shell_scripts/` exists for.
+
+**Nothing is committed, and the sibling commits everything.** Its snapshots are
+tracked files; here the app reads `$DEPLOY_DIR/traffic-reports/` directly, so
+the host is the source of truth and there is no copy in git to drift from it.
+The directory is inside `DEPLOY_DIR` and outside `dist/` for exactly
+`accounts.db`'s two reasons — `ProtectSystem=strict` with
+`ReadWritePaths=${DEPLOY_DIR}` makes anywhere else read-only, and both rsyncs
+delete `dist/` with `--delete` while `express.static` serves it over HTTP.
+`/traffic-reports/` is gitignored, with the leading slash `/data/` carries.
+
+**THE LOG FORMAT IS THE TRAP, and it fails silently in both directions.**
+`04_setup_nginx.sh` writes no `log_format`, so nginx uses stock **combined**:
+
+    $remote_addr - $remote_user [$time_local] "$request" $status $body_bytes_sent
+      "$http_referer" "$http_user_agent"
+
+The sibling parses its own `agora_timed` format, which **drops `$remote_user`**,
+so every awk field index there is one lower than the index here. Porting its
+awks unchanged does not error — measured against a fixture log, `$6`/`$8`/`$3`
+report **one path `"GET`, one status `HTTP/1.1"`, and every request in hour
+`-`**. Plausible-looking nonsense, twenty rows of it, and nothing anywhere goes
+red. If this repo ever adds a `log_format`, the field map at the top of
+`12_traffic_report.sh` is what has to change with it. The referrer is taken by
+regex rather than as a field index, because it is quoted and routinely contains
+spaces.
+
+Two things carried over from the sibling verbatim because they were paid for
+there:
+
+- **Ranked sections end in `awk 'NR <= n'`, never `head -n`.** `head` closes the
+  pipe, the upstream `sort` dies of EPIPE, and under `set -euo pipefail` that
+  aborts the whole script after the first section — which truncated every one of
+  the sibling's reports on a large log, silently, for weeks.
+- **Geo lookups run once per UNIQUE address**, not per line, and `mmdblookup`
+  is allowed to fail: it exits non-zero when a path is absent from a record,
+  which is routine for `city`, and on `set -e` that aborts the run.
+
+**The page is unlisted, which is not private, and the distinction is its whole
+security story.** `/trafego` is absent from `NAV_ITEMS`, `noindex`, `Disallow`ed
+and out of the sitemap — but the address works for anybody who has it. That is
+acceptable only because the payload is aggregates with no visitor address in it;
+if that stops being true, the page needs a session before the data does. It is
+not a nav destination for a reason `conta` and `entrar` only half share: the bar
+is **full** at MD3's five, and this would not belong in it at six either.
+
+**Deleting `case "trafego":` from `pageStatus` is the silent failure**, and it
+was confirmed by mutation rather than reasoned about: without it the page is a
+200 a crawler may index, one test in `tests/seo-core.test.ts` goes red and
+nothing else does. The neighbouring 404-on-an-extra-segment case is held by
+`default` and passes either way — worth knowing before reading it as coverage.
+
+**Every mark on the page is one tone, and the status classes are the single
+exception.** The first version gave each panel its own role, and two things
+were wrong. On the light palette `secondary` (#4d6357) and `tertiary` (#3d6473)
+are two desaturated darks indistinguishable in a 6px bar — `RankCandles`' two
+greys again, measured in the page rather than guessed. The one that matters is
+that **the colour encoded nothing**: every bar list is a single series, so a hue
+per panel invites a reader to think blue means something green does not. It
+matters most where the two panels sit side by side — "Países por endereço" and
+"Países por volume" are read *against* each other, same quantity and two
+questions, so painting them alike is what says so.
+
+**The local window imports the same core, and the sibling's does not.** Its
+dashboard is a standalone `.mjs` carrying its own copy of the parsing, which was
+later extracted into a core module precisely because two copies is where drift
+starts — the `commons-core.ts` / `scripts/commons-api.ts` line. Being a `.ts`
+run through tsx is what buys one parser; nothing about the page needs it.
+
+**`--url` is the half the sibling has no need of**, and on this workstation it is
+the only way that window gets real data: the snapshots live on the host, and
+this machine has no SSH, no SSM and no S3 access to fetch them with.
+
+```sh
+npm run traffic-dashboard                       # a local ./traffic-reports
+npm run traffic-dashboard -- --url https://brasileirao.mpbarbosa.com
+```
+
+**Two things are unexercised and the first real run is still a first.** Nothing
+in CI runs `12_traffic_report.sh` against a real nginx log, and nothing has run
+`13_install_traffic_timer.sh` on the host at all — so the `adm` group membership
+it relies on (systemd has no terminal for `sudo` to prompt at) is a designed
+answer rather than a verified one. Run the service by hand once after installing
+the timer; that is the only thing that proves the report can read the log. The
+parsing half **is** exercised: `tests/traffic-report-core.test.ts` runs in
+`test:unit`, and its fixture is the output of a real run of the script rather
+than a summary composed to match the parser.
+
+**A snapshot name has one-second resolution**, so two runs inside the same
+second overwrite rather than accumulate. Harmless under an hourly timer and not
+harmless when generating a series by hand — it is the sibling's backup-rehearsal
+trap in another costume, where several cases backing up in one second made
+"newest" undefined between them.
 
 ### Contas
 
@@ -1201,6 +1363,21 @@ as a floor rather than a promise: **only `structured-data-core` says in its own 
 that the exhaustiveness is deliberate.** The other two happen to be exhaustive today,
 nothing declares that they must stay so, and a `default` branch added to either for
 tidiness would remove the check with no test going red.
+
+**Adding `trafego` exercised that, and the count held with one correction to
+where the third error LANDS.** Measured by adding the `Route` variant and then
+deleting the four downstream cases: `tsc` reported exactly three files —
+
+    page-meta-core.ts(156,4)       Function lacks ending return statement
+    structured-data-core.ts(254,56) Function lacks ending return statement
+    src/App.tsx(425,9)             Type '…| "trafego"' is not assignable to 'SectionId'
+
+— and said nothing whatever about `seo-core.ts`. So three and not four, as the
+paragraph above predicts. But the `SectionId` failure surfaces at
+**`src/App.tsx`**, the consuming site, not at `src/navigation.ts` where the type
+is declared: the union there is a *widening*, which is legal on its own and only
+fails where something narrow is expected. A session grepping the named file for
+an error will not find one.
 
 **`seo-core.ts` is the file that fails silently, and it is the one that matters.** Both
 its rules fall through to defaults: the page is absent from the sitemap, and —
@@ -1555,6 +1732,14 @@ for why) and the production bundle.
 
 Unrecognised paths and nonsense rounds resolve to something useful rather than 404 — a
 stale link should still land somewhere.
+
+`/trafego` is the third address with **no inbound link anywhere in the app** —
+`conta` and `entrar` at least have the top app bar's account control, and this
+has nothing. It is reached by typing it. See **Tráfego** above for why that is
+the arrangement rather than a nav entry, and for what "unlisted, not private"
+does and does not buy. It is the one section deliberately **absent from the
+sitemap** as well: `noindex` and a sitemap entry together would be the sitemap
+inviting a crawl the page's own tag then refuses.
 
 Stadium URLs use the same **slug** mechanism (`/estadio/maracana`), derived from CBF's
 venue string. `findStadium` re-slugs the segment before comparing, so a hand-typed

@@ -129,3 +129,12 @@ test("jogadores is a section that takes no argument", () => {
   // An argument under it addresses nothing, so it is not a deeper page.
   assert.deepEqual(parseRoute("/jogadores/flamengo"), { section: "jogadores" });
 });
+
+test("/trafego parses and formats round-trip", () => {
+  assert.deepEqual(parseRoute("/trafego"), { section: "trafego" });
+  assert.equal(formatRoute({ section: "trafego" }), "/trafego");
+  // Takes no argument. The extra segment is ignored here and 404s in
+  // `pageStatus` — the router's job is to land somewhere useful, and the
+  // crawler's answer is that module's.
+  assert.deepEqual(parseRoute("/trafego/qualquer-coisa"), { section: "trafego" });
+});
