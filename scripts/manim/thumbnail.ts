@@ -22,7 +22,8 @@
  * `generate-og-image.ts` reads its tokens out of `src/index.css`. A second
  * hand-kept copy of a colour is how the capa comes to be a shade off the video
  * it advertises; a constant renamed away fails this run rather than drawing in
- * black.
+ * black. That reader and the Chromium capture live in `capa-core.ts`, shared
+ * with `thumbnail-pontos.ts`; the LAYOUT below is this capa's own.
  *
  * Drawn with the headless Chromium `screenshot.ts` already uses, so this adds
  * no dependency — and unlike the render itself it needs **no Manim**, which is
@@ -41,7 +42,7 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { chromium } from "@playwright/test";
+import { capture, fail, readClubColours, readColours, readInk, shown as shownIn } from "./capa-core";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(HERE, "../..");
@@ -59,17 +60,7 @@ const HEIGHT = 720;
 /** The whole division, always — `rank-candles-core.ts`'s rule, and the scene's. */
 const CLUBS_IN_DIVISION = 20;
 
-/** A path to print. `path.relative` escapes the repo as `../../..`, which is unreadable
- *  in an error message — a payload named through `CAMPANHAS_JSON` may sit anywhere. */
-const shown = (target: string) => {
-  const relative = path.relative(ROOT, target);
-  return relative.startsWith("..") ? target : relative;
-};
-
-const fail = (message: string): never => {
-  console.error(`Error: ${message}`);
-  process.exit(1);
-};
+const shown = (target: string) => shownIn(ROOT, target);
 
 type Club = {
   name: string;
@@ -87,25 +78,9 @@ const INK_NAMES = ["INK", "INK_SOFT", "INK_FAINT", "SURFACE", "CARD", "POSITIVE"
 type InkName = (typeof INK_NAMES)[number];
 
 const readPalette = (): { ink: Record<InkName, string>; clubColour: (code: string, index: number) => string } => {
-  const source = readFileSync(SCENE_PATH, "utf8");
-
-  const ink = {} as Record<InkName, string>;
-  for (const name of INK_NAMES) {
-    const found = source.match(new RegExp(`^${name}\\s*=\\s*"(#[0-9A-Fa-f]{6})"`, "m"));
-    if (!found) fail(`${name} is not defined in ${shown(SCENE_PATH)}`);
-    ink[name] = found![1];
-  }
-
-  const block = source.match(/CLUB_COLOURS\s*=\s*\{([\s\S]*?)\}/);
-  if (!block) fail(`no CLUB_COLOURS map in ${shown(SCENE_PATH)}`);
-  const byCode = new Map<string, string>();
-  for (const [, code, colour] of block![1].matchAll(/"(\d+)":\s*"(#[0-9A-Fa-f]{6})"/g)) {
-    byCode.set(code, colour);
-  }
-
-  const fallbacks = [...source.matchAll(/FALLBACK_COLOURS\s*=\s*\[([\s\S]*?)\]/g)]
-    .flatMap(([, list]) => [...list.matchAll(/"(#[0-9A-Fa-f]{6})"/g)].map(([, c]) => c));
-  if (fallbacks.length === 0) fail(`no FALLBACK_COLOURS in ${shown(SCENE_PATH)}`);
+  const ink = readInk(ROOT, SCENE_PATH, INK_NAMES);
+  const byCode = readClubColours(ROOT, SCENE_PATH);
+  const fallbacks = readColours(ROOT, SCENE_PATH, "FALLBACK_COLOURS");
 
   // The scene's own rule: a club with no colour of its own takes one by its
   // position in the payload. Restating it differently here is how a capa comes
@@ -282,21 +257,13 @@ const main = async () => {
 
   if (variants.length === 0) fail(`unknown --variant; expected "fixture" or "story"`);
 
-  const browser = await chromium.launch();
-  try {
-    const tab = await browser.newPage({ viewport: { width: WIDTH, height: HEIGHT }, deviceScaleFactor: 1 });
-    for (const variant of variants) {
-      await tab.setContent(variant.html, { waitUntil: "load" });
-      // Inter is a system font here rather than a webfont, but the wait is what
-      // stops a capture landing while the fallback face is still measured.
-      await tab.evaluate(() => document.fonts.ready);
-      const out = path.join(OUT_DIR, variant.file);
-      await tab.screenshot({ path: out });
-      console.log(`${path.relative(ROOT, out)}  (${variant.name}, dados até ${payload.snapshot})`);
-    }
-  } finally {
-    await browser.close();
-  }
+  await capture(variants, {
+    root: ROOT,
+    outDir: OUT_DIR,
+    width: WIDTH,
+    height: HEIGHT,
+    note: `dados até ${payload.snapshot}`,
+  });
 };
 
 main().catch((error) => fail(error instanceof Error ? error.message : String(error)));

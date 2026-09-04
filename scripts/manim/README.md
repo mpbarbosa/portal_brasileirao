@@ -71,9 +71,16 @@ de um frame qualquer da animação (os primeiros segundos são um gráfico vazio
 Uma nomeia o confronto, a outra a história; a segunda envelhece mal de
 propósito, porque `1º` é uma afirmação sobre a rodada 25 em tipo de 96px.
 
+**`docs/videos/pontos-20-clubes-miniatura.png`** e
+**`-miniatura-38-pontos.png`** são as capas do outro vídeo, pelas mesmas regras:
+uma nomeia a divisão, a outra a distância entre o 1º e o 20º, e o nome do
+arquivo da segunda sai do número que ela imprime.
+
 ```sh
-npx tsx scripts/manim/thumbnail.ts                     # as duas
-npx tsx scripts/manim/thumbnail.ts --variant fixture   # só uma
+npx tsx scripts/manim/thumbnail.ts                       # as duas do campanhas
+npx tsx scripts/manim/thumbnail.ts --variant fixture     # só uma
+npx tsx scripts/manim/thumbnail-pontos.ts                # as duas do pontos
+npx tsx scripts/manim/thumbnail-pontos.ts --variant divisao
 ```
 
 **Não precisa do Manim** — só do Chromium que o Playwright já traz — e é por
@@ -84,12 +91,41 @@ move a capa e o vídeo juntos. O nome do arquivo da segunda é construído a par
 dos próprios números que ela imprime, de modo que não pode se chamar `11-ao-1` e
 dizer outra coisa.
 
-**A paleta é lida de `campanhas.py`**, como `generate-og-image.ts` lê a sua de
+**A paleta é lida da própria cena**, como `generate-og-image.ts` lê a sua de
 `src/index.css` — uma segunda cópia de uma cor à mão é como a capa acaba um tom
 fora do vídeo que ela anuncia. Uma constante renomeada quebra o run em vez de
 desenhar em preto.
 
+**`capa-core.ts` é o que os dois scripts dividem**: a leitura da paleta e a
+captura no Chromium. O que ele deliberadamente **não** tem é o desenho — um `×`
+entre dois nomes e um leque de vinte são dois layouts, e juntá-los num
+renderizador parametrizado seria um design fingindo ser um laço. É a mesma linha
+que o `thumbnail.ts` traça quando recusa um terceiro clube.
+
 Regerar é um commit deliberado, como o mp4: nada compara os bytes.
+
+### O que o `thumbnail-pontos.ts` registra
+
+- **O que liga uma chip a uma linha é a POSIÇÃO, e a cor só confirma.** Isso saiu
+  de olhar o quadro, não de raciocinar: a capa da história marca o 1º e o 20º, e
+  esta paleta desenha o Palmeiras em `#1FBF6B` contra a Chapecoense em `#2FD0A8`
+  — um verde e um verde-azulado, distantes o bastante numa coluna de vinte linhas
+  e nada distantes quando são as duas únicas marcas do desenho. Num gráfico de
+  pontos o ordinal é inequívoco por construção: o 1º **é** a linha de cima e o
+  20º **é** a de baixo. Consertar na paleta da cena era o outro caminho e é pior
+  — mexeria numa cor de um vídeo já renderizado e commitado para comprar uma
+  distinção que um dado já no payload dá de graça.
+- **As chips são uma coluna, e foi um guarda que decidiu isso.** Três lado a lado
+  chegavam a 788px contra um gráfico que começa em 690 — legíveis, e por cima do
+  leque. O `check` de cada variante mede a caixa renderizada e **recusa**: as
+  falhas de uma capa são geométricas, e nem o `tsc` nem o tipo do payload nem
+  ninguém que não abra o arquivo consegue vê-las. Ele acusou na primeira execução.
+- **Todos os 20 são desenhados, e os que as chips nomeiam ficam em cheio.** A
+  divisão é o assunto, então nenhuma linha some; sem o destaque, porém, quem lê
+  tem vinte curvas anônimas e três números sem nada ligando os dois.
+- **A ordem vem da classificação que o payload carrega**, nunca de reordenar por
+  pontos aqui: os critérios de desempate da CBF é que decidem um lugar, e uma
+  segunda implementação deles é como a capa passa a discordar do próprio vídeo.
 
 ## O que é decisão e o que é mecânica
 
