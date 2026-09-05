@@ -7,7 +7,7 @@ import { test } from "node:test";
 import { SNAPSHOT_DATE } from "@/src/data/matches";
 
 /**
- * The manim artefacts in `docs/videos/` are STALE BY CONSTRUCTION and nothing
+ * The manim artefacts in `docs/medias/` are STALE BY CONSTRUCTION and nothing
  * else here can see it.
  *
  * Two videos and four capas are drawn from the seed and committed, the way
@@ -30,9 +30,9 @@ import { SNAPSHOT_DATE } from "@/src/data/matches";
  * happens; it cannot catch lying, and no check on this side of the render can.
  */
 const HERE = path.dirname(fileURLToPath(import.meta.url));
-const VIDEOS = path.resolve(HERE, "../docs/videos");
+const MEDIAS = path.resolve(HERE, "../docs/medias");
 const SCENES = path.resolve(HERE, "../scripts/manim");
-const RENDERED = path.join(VIDEOS, "RENDERED");
+const RENDERED = path.join(MEDIAS, "RENDERED");
 
 /** `# comments` and blank lines out, `<file>  <date>` in. */
 const readRendered = (): Map<string, string> => {
@@ -47,16 +47,16 @@ const readRendered = (): Map<string, string> => {
 };
 
 /** Everything in the directory except the record itself. */
-const artefacts = () => readdirSync(VIDEOS).filter((name) => name !== "RENDERED").sort();
+const artefacts = () => readdirSync(MEDIAS).filter((name) => name !== "RENDERED").sort();
 
 test("every committed render was drawn from the season the seed now describes", () => {
   for (const [file, snapshot] of readRendered()) {
     assert.equal(
       snapshot,
       SNAPSHOT_DATE,
-      `docs/videos/${file} was drawn from ${snapshot} and the seed is now ${SNAPSHOT_DATE}.\n` +
+      `docs/medias/${file} was drawn from ${snapshot} and the seed is now ${SNAPSHOT_DATE}.\n` +
         `    Re-export, re-render and re-draw the capas — scripts/manim/README.md has the four\n` +
-        `    commands — then write the new date into docs/videos/RENDERED in the same commit.`,
+        `    commands — then write the new date into docs/medias/RENDERED in the same commit.`,
     );
   }
 });
@@ -70,10 +70,10 @@ test("the record and the directory name the same artefacts", () => {
   // artefact that is PRESENT and unlisted is the quiet one — it is simply
   // exempt from the staleness check above, for ever, and nothing says so.
   for (const file of rows.keys()) {
-    assert.ok(files.includes(file), `docs/videos/RENDERED names ${file}, which is not there`);
+    assert.ok(files.includes(file), `docs/medias/RENDERED names ${file}, which is not there`);
   }
   for (const file of files) {
-    assert.ok(rows.has(file), `docs/videos/${file} is not in RENDERED, so nothing checks whether it is stale`);
+    assert.ok(rows.has(file), `docs/medias/${file} is not in RENDERED, so nothing checks whether it is stale`);
   }
 });
 

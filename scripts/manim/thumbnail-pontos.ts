@@ -8,8 +8,8 @@
  *
  * Two images, from one payload:
  *
- *   docs/videos/pontos-20-clubes-miniatura.png              the division
- *   docs/videos/pontos-20-clubes-miniatura-38-pontos.png    the story
+ *   docs/medias/pontos-20-clubes-miniatura.png              the division
+ *   docs/medias/pontos-20-clubes-miniatura-38-pontos.png    the story
  *
  * The sibling `thumbnail.ts` advertises the two-club campanha; this advertises
  * the whole division's points. They share the palette reader and the capture in
@@ -45,7 +45,7 @@ const SCENE_PATH = path.join(HERE, "pontos.py");
 
 /** The video these advertise. The capas are named after it, so `ls` files them together. */
 const VIDEO_BASENAME = "pontos-20-clubes";
-const OUT_DIR = path.join(ROOT, "docs/videos");
+const OUT_DIR = path.join(ROOT, "docs/medias");
 
 const WIDTH = 1280;
 const HEIGHT = 720;

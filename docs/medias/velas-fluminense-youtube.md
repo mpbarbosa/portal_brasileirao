@@ -106,7 +106,7 @@ qualquer: os primeiros segundos são um gráfico vazio, e é só no fim que o pa
 de resumo diz `4º · 42 pts em 25 jogos`.
 
 ```sh
-ffmpeg -ss 20.6 -i docs/videos/velas-fluminense.mp4 -frames:v 1 -vf scale=1280:720 capa.png
+ffmpeg -ss 20.6 -i docs/medias/velas-fluminense.mp4 -frames:v 1 -vf scale=1280:720 capa.png
 ```
 
 ## Título do arquivo

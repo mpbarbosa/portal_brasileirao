@@ -173,7 +173,7 @@ docs/screenshots/local/
 /data/
 
 # Manim (scripts/manim/README.md): the virtualenv and manim's own output tree.
-# The DELIVERABLE render is committed at docs/videos/ — this ignores the working
+# The DELIVERABLE render is committed at docs/medias/ — this ignores the working
 # copy manim writes beside the scene, which is the same bytes under a name that
 # changes with the quality flag.
 .venv-manim/
