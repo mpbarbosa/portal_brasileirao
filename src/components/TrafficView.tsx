@@ -2,7 +2,12 @@ import { useEffect, useMemo, useState } from "react";
 
 import { BACK_LINK } from "@/src/components/interaction";
 import { Surface } from "@/src/components/Surface";
-import type { TrafficCountRow, TrafficDashboard, TrafficSnapshot } from "@/src/types";
+import type {
+  TrafficCountRow,
+  TrafficDashboard,
+  TrafficSnapshot,
+  TrafficTimelinePoint,
+} from "@/src/types";
 
 /**
  * `/trafego` — this deployment's own nginx access log, read back as charts.
@@ -58,6 +63,47 @@ const fmt = (n: number | null | undefined): string => (n == null ? "—" : NUMBE
  * categorical, and it stays.
  */
 const TONE = "text-primary";
+
+/** The rate chart's two series, named once so the key, the `aria-label` and the
+ *  `<title>` cannot come to disagree — `StatusChip`'s rule for a lookup table
+ *  that had been written out twice. */
+const LABEL_READ = "Leitura: requisições por minuto, sem /api/health";
+const LABEL_TOTAL = "Total: tudo que o servidor serviu, monitoramento incluído";
+
+/**
+ * The rate chart's key.
+ *
+ * It exists because the pair is separated by **dash and weight rather than by
+ * hue** — see `TimeLine`'s `context` — and a difference in stroke carries no
+ * meaning a reader can guess. Stated once beside the figure, in `ScatterKey`'s
+ * arrangement and for its reason: two marks sharing one vocabulary make a
+ * reader check whether two statements of it agree.
+ *
+ * The swatches are `<svg>` and not a border-styled `<span>`, so the sample is
+ * drawn by the same stroke properties as the line it names.
+ */
+function LineKey({ entries }: { entries: { label: string; dashed?: boolean }[] }) {
+  return (
+    <ul className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-label-small text-ink-muted">
+      {entries.map((entry) => (
+        <li key={entry.label} className="flex items-center gap-1.5">
+          <svg viewBox="0 0 24 8" className={`h-2 w-6 shrink-0 ${TONE}`} aria-hidden="true">
+            <path
+              d="M1 4 H23"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={entry.dashed ? 1.5 : 2}
+              strokeDasharray={entry.dashed ? "5 4" : undefined}
+              strokeOpacity={entry.dashed ? 0.45 : 1}
+              strokeLinecap="round"
+            />
+          </svg>
+          <span>{entry.label}</span>
+        </li>
+      ))}
+    </ul>
+  );
+}
 
 // ── Building blocks ─────────────────────────────────────────────────────────
 
@@ -155,17 +201,50 @@ function Bars({ rows, max = 12 }: { rows: TrafficCountRow[]; max?: number }) {
  * container scales its type with it, so a label sized for a desktop is six
  * pixels tall on a phone.
  */
-function TimeLine({ points, label }: { points: { x: number; y: number }[]; label: string }) {
+function TimeLine({
+  points,
+  label,
+  context,
+  empty,
+}: {
+  points: { x: number; y: number }[];
+  label: string;
+  /**
+   * A second series drawn behind the first, on the **same axes**, for reading
+   * the claim against its own context — here, everything the server served
+   * behind what a person read.
+   *
+   * It is separated by **weight and dash, never by hue**. Every mark on this
+   * page is one tone deliberately: on the light palette `secondary` and
+   * `tertiary` are two desaturated darks indistinguishable in a thin stroke,
+   * and more to the point a second colour invites a reader to think it encodes
+   * something a first colour does not. `RankCandles` draws an absent round
+   * hollow for the same reason, and `scatterTrail` ramps opacity rather than
+   * reaching for a second token.
+   */
+  context?: { points: { x: number; y: number }[]; label: string };
+  /** What to say when there is nothing to draw. The default answers "too few
+   *  snapshots"; a filtered series has a different reason and must give it. */
+  empty?: string;
+}) {
   const box = { width: 720, height: 200 };
   const pad = 6;
 
   const drawn = useMemo(() => {
     if (points.length === 0) return null;
-    const xs = points.map((p) => p.x);
-    const ys = points.map((p) => p.y);
-    const minX = Math.min(...xs);
-    const maxX = Math.max(...xs);
-    const maxY = Math.max(...ys);
+    // **Both series share one scale, computed over the union of both — on both
+    // axes.** On y, scaling each to its own maximum would draw the smaller as
+    // tall as the larger and reverse the one comparison the pair exists to
+    // make. On x it is not a matter of reading but of painting: the two series
+    // need not cover the same snapshots, since `readRatePerMin` is null
+    // wherever a summary carries no monitor figure and `ratePerMin` is not. A
+    // domain taken from the primary alone therefore maps an earlier context
+    // point to a negative x, and it paints **outside the card** — `RankCandles`'
+    // own bug, which every assertion about it passed.
+    const all = [...points, ...(context?.points ?? [])];
+    const minX = Math.min(...all.map((p) => p.x));
+    const maxX = Math.max(...all.map((p) => p.x));
+    const maxY = Math.max(...all.map((p) => p.y));
     // The y axis starts at zero rather than at the minimum: these are counts,
     // and a floor at the minimum makes a flat week look like a cliff.
     const spanX = maxX - minX || 1;
@@ -174,27 +253,32 @@ function TimeLine({ points, label }: { points: { x: number; y: number }[]; label
       x: pad + ((p.x - minX) / spanX) * (box.width - pad * 2),
       y: box.height - pad - (p.y / spanY) * (box.height - pad * 2),
     });
+    const path = (series: { x: number; y: number }[]) =>
+      series
+        .map((p, i) => {
+          const { x, y } = at(p);
+          return `${i === 0 ? "M" : "L"}${x.toFixed(1)} ${y.toFixed(1)}`;
+        })
+        .join(" ");
     return {
       maxY,
       first: new Date(minX),
       last: new Date(maxX),
       // One snapshot and many snapshots are the same instant on the timeline,
       // so the two endpoints collapse and one label is the honest caption.
-      single: points.length === 1,
+      // Read off the shared domain rather than off `points.length`, or a lone
+      // primary point beside a long context prints one date for a span.
+      single: minX === maxX,
       last_: at(points[points.length - 1]),
-      d: points
-        .map((p, i) => {
-          const { x, y } = at(p);
-          return `${i === 0 ? "M" : "L"}${x.toFixed(1)} ${y.toFixed(1)}`;
-        })
-        .join(" "),
+      d: path(points),
+      contextD: context && context.points.length > 0 ? path(context.points) : null,
     };
-  }, [points]);
+  }, [points, context]);
 
   if (!drawn) {
     return (
       <p className="py-8 text-center text-body-small text-ink-faint">
-        Ainda não há instantâneos suficientes para desenhar uma linha.
+        {empty ?? "Ainda não há instantâneos suficientes para desenhar uma linha."}
       </p>
     );
   }
@@ -218,9 +302,24 @@ function TimeLine({ points, label }: { points: { x: number; y: number }[]; label
           className={`h-40 grow min-w-0 ${TONE}`}
           preserveAspectRatio="none"
           role="img"
-          aria-label={label}
+          aria-label={context ? `${label}; ${context.label}` : label}
         >
-          <title>{label}</title>
+          <title>{context ? `${label}; ${context.label}` : label}</title>
+          {/* Behind the primary, so the claim is never occluded by its own
+              context where the two coincide. */}
+          {drawn.contextD ? (
+            <path
+              d={drawn.contextD}
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={1.5}
+              strokeDasharray="5 4"
+              strokeOpacity={0.45}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              vectorEffect="non-scaling-stroke"
+            />
+          ) : null}
           <path
             d={drawn.d}
             fill="none"
@@ -402,18 +501,45 @@ export function TrafficView({ onBack }: { onBack: () => void }) {
   const timeline = payload?.data.timeline ?? [];
 
   /**
-   * The rate series: total requests/min per snapshot, or one country's, derived
-   * from its cumulative count the same way the total is.
+   * The rate chart's series.
+   *
+   * **Unfiltered it is a pair, and that is the whole point of this panel.**
+   * One line was `ratePerMin`, which counts `/api/health` — 55% of the log
+   * when measured on production 2026-09-05 — while the "Páginas mais pedidas"
+   * panel directly beneath had already taken the same traffic out of its
+   * ranking. One page, two answers to *how much of this was people*.
+   *
+   * `Leitura` is the claim and `Total` is the context it is read against, and
+   * **the gap between the two strokes is the only per-hour statement of the
+   * monitor share this page has ever been able to make**: `monitorHits` is a
+   * cumulative figure over a twelve-day window, so it can say the monitor is
+   * about half of everything and can say nothing whatever about a given
+   * hour — including the two peaks of 2026-09-05.
+   *
+   * **A country gets one line and not a pair**, because the report's geo
+   * sections tally every line by address, monitoring included — there is no
+   * per-country monitor figure to subtract, and inventing the pair by
+   * subtracting the *global* one would attribute every poll to whichever
+   * country was selected. The key says which quantity is on screen.
    *
    * A country absent from a snapshot's top-20 is **skipped rather than counted
    * as zero** — the report ranks and truncates, so "not in the top twenty" is
-   * not "no traffic", and drawing it as a zero would invent a collapse.
+   * not "no traffic", and drawing it as a zero would invent a collapse. Same
+   * rule for a snapshot with no monitor figure, which is one written before
+   * `12_traffic_report.sh` counted them.
    */
-  const ratePoints = useMemo(() => {
+  const rate = useMemo(() => {
     if (!country) {
-      return timeline
-        .filter((p) => p.ratePerMin != null)
-        .map((p) => ({ x: p.t, y: p.ratePerMin as number }));
+      const series = (pick: (p: TrafficTimelinePoint) => number | null) =>
+        timeline.filter((p) => pick(p) != null).map((p) => ({ x: p.t, y: pick(p) as number }));
+      const read = series((p) => p.readRatePerMin);
+      const total = series((p) => p.ratePerMin);
+      // Where no snapshot carries a monitor figure there is no pair to draw,
+      // and the total is then the only honest single line — labelled as the
+      // total, never relabelled "Leitura" to fill the slot.
+      return read.length > 0
+        ? { primary: read, context: { points: total, label: LABEL_TOTAL }, filtered: false }
+        : { primary: total, context: undefined, filtered: false };
     }
     const points: { x: number; y: number }[] = [];
     for (let i = 1; i < timeline.length; i++) {
@@ -424,7 +550,7 @@ export function TrafficView({ onBack }: { onBack: () => void }) {
       if (minutes <= 0) continue;
       points.push({ x: timeline[i].t, y: Math.max(0, Math.round((after - before) / minutes)) });
     }
-    return points;
+    return { primary: points, context: undefined, filtered: true };
   }, [timeline, country]);
 
   const heading = (
@@ -544,7 +670,11 @@ export function TrafficView({ onBack }: { onBack: () => void }) {
 
         <Panel
           title="Ritmo de requisições"
-          caption="A diferença entre instantâneos consecutivos, dividida pelo tempo entre eles. É o que responde “quanto movimento agora”."
+          caption={
+            rate.filtered
+              ? "A diferença entre instantâneos consecutivos, dividida pelo tempo entre eles. Por país é o total, com monitoramento: o relatório conta cada linha por endereço e não separa /api/health."
+              : "A diferença entre instantâneos consecutivos, dividida pelo tempo entre eles. É o que responde “quanto movimento agora” — e a distância entre as duas linhas é o monitoramento."
+          }
           action={
             latest.countriesByVolume.length > 0 ? (
               <label className="flex items-center gap-2 text-body-small text-ink-muted">
@@ -566,8 +696,29 @@ export function TrafficView({ onBack }: { onBack: () => void }) {
           }
         >
           <TimeLine
-            points={ratePoints}
-            label={`Requisições por minuto${country ? ` — ${country}` : ""}`}
+            points={rate.primary}
+            context={rate.context}
+            label={rate.filtered ? `${LABEL_TOTAL} — ${country}` : LABEL_READ}
+            // A country with no pair of snapshots naming it is not "too few
+            // snapshots", which is what the default says and what the page said
+            // for every country on the day the geo database was installed:
+            // 41 of 42 summaries predated it, so every selection drew an empty
+            // box blaming the timer. The series fills in as snapshots accrue,
+            // and until it does the page owes the reason rather than a shrug.
+            empty={
+              rate.filtered
+                ? `Nenhum par de instantâneos consecutivos nomeia ${country}. Um país fora das vinte primeiras linhas de um instantâneo é omitido — e um instantâneo anterior à base de geolocalização não nomeia país nenhum.`
+                : undefined
+            }
+          />
+          <LineKey
+            entries={
+              rate.filtered
+                ? [{ label: `Total — ${country}, monitoramento incluído` }]
+                : rate.context
+                  ? [{ label: "Leitura, sem /api/health" }, { label: "Total", dashed: true }]
+                  : [{ label: "Total, monitoramento incluído" }]
+            }
           />
         </Panel>
 
