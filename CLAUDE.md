@@ -824,17 +824,39 @@ what makes the logic testable without mocking HTTP.
   differently. Every optional numeric goes through an explicit null check for
   the same reason: `Number(null)` is `0`, so a truthiness test would report a
   genuinely quiet hour as missing data — `countsTowardStandings`' 0-0 trap.
-  **`/api/health` is dropped from the top paths and from nothing else.** It is
-  machine polling by construction — `reconcile.yml` reads it every fifteen
-  minutes and the deploy job asserts the live commit through it — so left in it
-  crowds a real content route out of a twenty-row chart. It stays in `requests`,
-  the status codes and the hour buckets, because those answer *what did this
-  server do* rather than *what did people read*, and filtering there would make
-  the totals disagree with the log. The count is carried as `monitorHits` so
-  the exclusion is visible rather than silent. **The sibling filters its own
-  poller out of the log before every tally, and that is right there and wrong
-  here**: its self-client was 85-90% of all lines and swamped the totals, where
-  this is a few hundred a day against a real audience.
+  **`/api/health` is dropped from the top paths, and subtracted for
+  `readRatePerMin`. It is in every other total.** It is machine polling by
+  construction — `reconcile.yml` reads it every fifteen minutes and the deploy
+  job asserts the live commit through it — so left in it crowds a real content
+  route out of a twenty-row chart. It stays in `requests`, the status codes and
+  the hour buckets, because those answer *what did this server do* rather than
+  *what did people read*, and filtering there would make the totals disagree
+  with the log. The count is carried as `monitorHits` so the exclusion is
+  visible rather than silent.
+  **The sibling filters its own poller out of the log before every tally, and
+  the reason given here for not copying it has not survived measurement.** That
+  reason was: its self-client was 85-90% of all lines and swamped the totals,
+  "where this is a few hundred a day against a real audience". Measured on
+  production 2026-09-05, `monitorHits` was **26,899 of 48,513 — 55.4%**. So the
+  monitor is the larger half of this log too.
+  **Read that 55% as a window figure and not as today's rate**, which is the
+  correction that matters more than the number: `byDay` puts **46% of all lines
+  on 24/Aug alone**, so the share is dominated by one day. Bounding the rest —
+  if every line of 24/Aug were monitoring, the other 11.8 days carry 15.7/h,
+  and the arithmetic upper bound of 95/h is refused by the timeline itself,
+  which runs at 59.5/h over its 40.2-hour span. The current share is therefore
+  somewhere between about a quarter and all of it, and **no field in this
+  payload can narrow that**: `monitorHits` is cumulative, and one number over
+  twelve days cannot say what a given hour was.
+  The conclusion still holds and only the reason changed, which is why the
+  filter did not move. What changed is the **rate chart**: its one line mixed
+  the two populations while the panel directly beneath had already taken the
+  monitor out of its ranking — one page, two answers to *how much of this was
+  people*. `readRatePerMin` is the split, drawn **beside** the total rather
+  than replacing it, so the gap between the two strokes is the per-hour monitor
+  share that nothing here could previously report. Both series share one scale
+  and one tone; they are separated by **dash and weight, never by hue**, per
+  the one-tone rule below.
   A **label is everything after the count**, not the next whitespace field: a
   city reads `São Paulo, Brazil` and a referrer carries a URL with spaces in it
   often enough to matter, and splitting on whitespace files every such row
@@ -1241,6 +1263,20 @@ per panel invites a reader to think blue means something green does not. It
 matters most where the two panels sit side by side — "Países por endereço" and
 "Países por volume" are read *against* each other, same quantity and two
 questions, so painting them alike is what says so.
+
+**The rate chart is the one place two series share a panel, and it holds that
+rule rather than being an exception to it.** `Leitura` and `Total` are the same
+tone and are told apart by **dash and weight** — 2px solid against 1.5px dashed
+at 45% — because the argument above applies with more force to two strokes than
+to two panels: a second hue on a line beside a first is read as encoding a
+second *kind* of thing, where these are one quantity measured two ways. It is
+`RankCandles` drawing an unplayed round hollow and `scatterTrail` ramping
+opacity, one drawing further on. Two consequences follow. **Both series are
+scaled over the union of their values**, since scaling each to its own maximum
+would draw the smaller as tall as the larger and reverse the only comparison
+the pair exists to make. And **a stroke difference carries no meaning a reader
+can guess**, so the panel owes a key — `LineKey`, stated once beside the
+figure, in `ScatterKey`'s arrangement.
 
 **The local window imports the same core, and the sibling's does not.** Its
 dashboard is a standalone `.mjs` carrying its own copy of the parsing, which was
