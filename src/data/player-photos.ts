@@ -509,6 +509,13 @@ export const PLAYER_PHOTOS: Record<string, PlayerPhoto> = {
     license: "CC BY-SA 4.0",
     licenseUrl: "https://creativecommons.org/licenses/by-sa/4.0/",
   }, // Joaquín Piquerez
+  "170698": {
+    file: "Jose Manuel Lopez Argentina v Spain 19 July 2026-272 (cropped).jpg",
+    alt: "Retrato com o colete amarelo de aquecimento da seleção argentina, em 2026",
+    credit: "Bryan Berlin",
+    license: "CC BY-SA 4.0",
+    licenseUrl: "https://creativecommons.org/licenses/by-sa/4.0/",
+  }, // José Manuel López
   "115559": {
     file: "Khellven-Palmeiras-Jacuipense-abr26.jpg",
     alt: "Em treino do Palmeiras, de colete laranja",
