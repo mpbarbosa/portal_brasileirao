@@ -137,7 +137,8 @@ técnica: as animações vão para o Reddit, onde o gif toca sozinho no feed e s
 a subs que aceitam imagem e recusam vídeo. A ressalva vale dita: o Reddit reconverte o gif
 em vídeo de qualquer jeito, então lá dentro a paleta abaixo não compra quase
 nada e o mp4 subiria com melhor qualidade. O que o formato compra é todo o resto
-— comentário, README, issue, chat — com um arquivo só.
+— comentário, README, issue, chat — com um arquivo só. O plano inteiro, com o
+rascunho de cada post e as regras de cada sub, está em `docs/post-reddit.md`.
 
 ```sh
 # Um por vez, e NUNCA os quatro num laço com uma /tmp/palette.png só: a paleta
