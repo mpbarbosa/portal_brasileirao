@@ -546,6 +546,7 @@ export function App() {
               onNavigate={(path) => navigate(parseRoute(path))}
               plotKind={plotKind}
               onTogglePlotKind={togglePlotKind}
+              onSelectPlayer={(player) => setOpenPlayer({ player })}
             />
           )}
 

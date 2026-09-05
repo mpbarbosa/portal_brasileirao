@@ -5,7 +5,7 @@ import {
   hasHighlights,
   refereeRoleLabel,
 } from "@/match-core";
-import { goalLabel, goalsBySide } from "@/goals-core";
+import { goalLabel, goalsBySide, scorerClubCode } from "@/goals-core";
 import { bySection, lineupFor } from "@/escalacao-core";
 import { stadiumMapUrl, stadiumSlug, venueName } from "@/venue-core";
 import { STADIUMS } from "@/src/data/stadiums";
@@ -22,7 +22,15 @@ import { RankSparkline } from "@/src/components/RankSparkline";
 import { formatRoute } from "@/route-core";
 import { StatusChip } from "@/src/components/StatusChip";
 import { Surface } from "@/src/components/Surface";
-import type { Club, ClubRankHistory, Goal, Lineup, Match, RankAtRound } from "@/src/types";
+import type {
+  Club,
+  ClubRankHistory,
+  Goal,
+  Lineup,
+  Match,
+  Player,
+  RankAtRound,
+} from "@/src/types";
 
 interface MatchPageProps {
   match: Match | null;
@@ -41,6 +49,13 @@ interface MatchPageProps {
    */
   plotKind?: CampaignPlotKind;
   onTogglePlotKind?: () => void;
+  /**
+   * Open the player card on a scorer. Omit and the names render as the plain
+   * text they were — the same shape `ScorersTable` takes, and for the same
+   * reason: the column stands on its own, and a component that always needed a
+   * handler could not be rendered anywhere the card is not wired up.
+   */
+  onSelectPlayer?: (player: Player) => void;
 }
 
 const kickoffLabel = (kickoff: string): string => {
@@ -243,11 +258,14 @@ function GoalColumn({
   club,
   code,
   side,
+  onSelect,
 }: {
   goals: Goal[];
   club: Club | null;
   code: string;
   side: "home" | "away";
+  /** Called with a goal whose scorer resolved to a player. */
+  onSelect?: (goal: Goal) => void;
 }) {
   // Still a column, so the two sides stay under the two crests rather than one
   // sliding across to fill the row. `data-goals` rides on the wrapper either
@@ -260,7 +278,27 @@ function GoalColumn({
       <ul className="space-y-0.5 text-center text-body-small text-ink-muted">
         {goals.map((goal, index) => (
           <li key={`${goal.scorer}-${index}`} data-goal className="truncate">
-            {goalLabel(goal)}
+            {/* A scorer the elencos could place opens the same card the
+                Artilharia and Jogadores open; one they could not stays the
+                text it always was. The two therefore sit side by side in one
+                column, which is why the control takes `LINK_UNDERLINE` and no
+                container of its own — an outlined button beside a bare name
+                would read as two kinds of scorer rather than as one kind with
+                a door on it. `data-scorer` marks the linked ones so a spec can
+                count them without asserting *which* names resolved, the rule
+                every curated table here follows. */}
+            {goal.playerId && onSelect ? (
+              <button
+                type="button"
+                data-scorer={goal.playerId}
+                onClick={() => onSelect(goal)}
+                className={`rounded-x-small ${LINK_UNDERLINE}`}
+              >
+                {goalLabel(goal)}
+              </button>
+            ) : (
+              goalLabel(goal)
+            )}
             {/* The minute sits *after* the name and a space, in a fainter ink,
                 because the scorer is what a reader is looking for and the
                 minute is what they read next. `tabular-nums` so a column of
@@ -294,6 +332,7 @@ export function MatchPage({
   rankHistory,
   plotKind = "line",
   onTogglePlotKind,
+  onSelectPlayer,
 }: MatchPageProps) {
   if (!match) {
     return (
@@ -356,6 +395,27 @@ export function MatchPage({
   // so a page never shows one team sheet next to an empty column.
   const homeLineup = lineupFor(match, match.homeCode);
   const awayLineup = lineupFor(match, match.awayCode);
+
+  /**
+   * Open the card on whoever scored.
+   *
+   * The club is **the scorer's**, which for an own goal is not the side the
+   * goal counted for — `scorerClubCode` is the same rule `withGoals` used to
+   * resolve the id, so the card cannot name a club the resolver disagreed
+   * with. It is passed rather than left to the enrichment because the card
+   * prefers what the page knows: `/api/players/:id` reports a player's
+   * `currentTeam`, which for an international is frequently a national side.
+   *
+   * The name is CBF's, the one the reader just clicked. `mergePlayer` keeps
+   * it, so the card's heading is the name on the page rather than a fuller one
+   * the reader has no reason to expect.
+   */
+  const openScorer = (goal: Goal) => {
+    if (!goal.playerId || !onSelectPlayer) return;
+    const code = scorerClubCode(goal, match.homeCode, match.awayCode);
+    const club = code === match.homeCode ? home : away;
+    onSelectPlayer({ id: goal.playerId, name: goal.scorer, club: club ?? undefined });
+  };
 
   return (
     <>
@@ -420,8 +480,20 @@ export function MatchPage({
             them would read as a separate topic. */}
         {hasScorers && (
           <div className="mt-4 grid grid-cols-2 gap-3 border-t border-outline-variant pt-3">
-            <GoalColumn goals={scorers.home} club={home} code={match.homeCode} side="home" />
-            <GoalColumn goals={scorers.away} club={away} code={match.awayCode} side="away" />
+            <GoalColumn
+              goals={scorers.home}
+              club={home}
+              code={match.homeCode}
+              side="home"
+              onSelect={openScorer}
+            />
+            <GoalColumn
+              goals={scorers.away}
+              club={away}
+              code={match.awayCode}
+              side="away"
+              onSelect={openScorer}
+            />
           </div>
         )}
       </Surface>

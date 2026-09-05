@@ -535,6 +535,49 @@ what makes the logic testable without mocking HTTP.
   and a field nothing dereferences is upkeep for no reader's benefit — the rule
   `Club.coach` already states.
 
+  **A scorer opens the app's own player card, and `Goal.playerId` is how — a
+  field that is DERIVED at serve time and never stored.** `src/data/goals.ts`
+  records what CBF reported; `withGoals` reads each `scorer` against the
+  elencos and attaches an id where the name can only be one player. Doing it
+  in the merge rather than in the sync is the rule `withGoals`' reconciliation
+  already follows: a squad correction reaches every past goal with no
+  regeneration, and a wrong id cannot be committed.
+
+  **The join is `matchPlayerByName`, and it refuses far more readily than it
+  guesses.** Two providers name one footballer differently and neither carries
+  the other's id — CBF prints what a scoreboard prints ("Lopez") where
+  football-data lists "José Manuel López" — so it compares names with accents,
+  case and punctuation folded, then reads every word of the short name as
+  appearing among the long one's. **Exactly one candidate, or nothing.** That
+  is not caution: an id opens a card carrying somebody's photograph,
+  nationality and Wikipédia article, so being wrong prints a different
+  footballer's life under the name of the one who scored, plausibly. One club
+  lists three players called Arthur and another four called Lucas; picking the
+  first would be right about a third of the time.
+  It is deliberately **not** a prefix test — "Ander" would then match
+  "Anderson", and the short name is the commoner input here.
+
+  **Coverage is 532 of 643 goals (82.7%, measured 2026-09-05) and the rest
+  render as the plain text they always were.** A scorer who has left the
+  division is unresolvable by construction, which is honest rather than a gap:
+  the app holds no record of them either. Do not read a partial column as a
+  bug — 554977's own Facundo is absent from Vasco's frozen elenco, which is why
+  `tests/e2e/goals.spec.ts` asserts *at least one* link rather than five, and
+  never asserts which.
+
+  **The lookup goes through `scorerClubCode`, not `clubCode`, and that is the
+  trap.** `Goal.clubCode` is the club a goal counts *for*, so an own-goal
+  scorer is in the **other** squad. Measured: of the season's 20 own goals, 13
+  resolve with the flip and **0** without — and without it nothing goes red,
+  because a name looked up in the wrong squad simply finds nobody and costs a
+  link. The match page names the same club on the card it opens, from the same
+  function, or it would open the right player under the wrong crest.
+
+  **The elencos are `SEED_SQUADS`, not the live payload**, in both cache
+  branches. `/api/squads` is a separate upstream request and `/api/matches`
+  must not acquire a dependency on it to print a name; the ids are the same
+  provider's either way.
+
 - `escalacao-core.ts` — the **escalação**: who each club started, and who sat
   on the bench. Same source and same rules as `goals-core.ts` — CBF's
   `/api/cbf/jogos/{id}`, read on a workstation, never by the running app —

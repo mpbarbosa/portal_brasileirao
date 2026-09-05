@@ -1179,7 +1179,8 @@ the request settles, leaving the line up after a failure, spinners (the wait is
 one request and a line of text says more).
 
 **Cartão do jogador**:
-The overlay opened by choosing a player in **Artilharia** or in an **Elenco**. It
+The overlay opened by choosing a player in **Artilharia**, in an **Elenco**, or
+by choosing whoever scored on a **Partida** page. It
 renders immediately from the row it was opened from (name, club, season figures),
 then fills in shirt number, position, nationality and birth date from
 `/api/players/:id`. That request is an *enrichment*, not a dependency — when it
@@ -1193,10 +1194,21 @@ size and the accent; words are read once and sit quietly beneath them.
 **The club is whichever the *page* knew**, not the one the enrichment reports:
 `currentTeam` is often a player's national team, which had Memphis Depay's card
 reading "Netherlands" under his name and again as his nationality.
+**From a gol it opens only where the name can only be one player.** The scorers
+under a scoreline are CBF's — a popular name with no id attached — so
+`withGoals` reads each against the elencos and attaches one where exactly one
+player answers to it. Roughly four in five do; the rest stay the plain text
+they were, beside the ones that link. That is deliberate and is the **Fonte dos
+dados** rule applied to a name: an id opens a card carrying somebody's
+photograph and article, so an ambiguous name earns no door rather than a
+plausible wrong one. The club named on the card is the club the scorer *plays
+for*, which for a gol contra is not the side the goal counted for.
 _Avoid_: blocking the card on the fetch, rendering an empty label for a detail
 the provider did not supply, giving it a URL, setting words at the same size as
 figures (the card was a wall of equal-looking values before the two were split),
-and letting `currentTeam` overwrite a club the page already knew.
+letting `currentTeam` overwrite a club the page already knew, and rendering a
+control for a scorer with no id — a dead button looks exactly like a live one
+until it is pressed.
 
 **Ficha**:
 One labelled number on the **Cartão do jogador** — *Camisa*, *Idade*, and a
