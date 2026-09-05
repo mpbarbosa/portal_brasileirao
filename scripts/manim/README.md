@@ -117,23 +117,44 @@ até que data os dados vão, que é a única defesa que ele tem.
 
 ## O gif
 
-**`docs/medias/velas-athletico-pr.gif`** — 960×540, 15fps, 317 quadros, 5,2 MB.
-Ele é **derivado do mp4 commitado**, não um segundo render: sai do arquivo que
-está ao lado dele por dois passos de `ffmpeg`, então não tem como descrever uma
+**Os quatro mp4 têm gif, todos 960×540 e 15fps** — conte o diretório, não esta
+frase:
+
+| gif | quadros | gif | mp4 |
+|---|---|---|---|
+| `campanhas-palmeiras-flamengo.gif` | 343 | 5,3 MB | 3,7 MB |
+| `pontos-20-clubes.gif` | 309 | 5,7 MB | 4,6 MB |
+| `velas-athletico-pr.gif` | 317 | 5,2 MB | 3,8 MB |
+| `velas-fluminense.gif` | 317 | 5,1 MB | 4,0 MB |
+
+Cada um é **derivado do mp4 commitado ao lado dele**, não um segundo render: sai
+daquele arquivo por dois passos de `ffmpeg`, então não tem como descrever uma
 temporada diferente da que o vídeo descreve. Um `-qh` a mais só gastaria dez
 minutos para produzir os mesmos quadros.
 
+**Os três últimos nasceram de uma decisão de divulgação**, não de uma pendência
+técnica: as animações vão para o Reddit, onde o gif toca sozinho no feed e serve
+a subs que aceitam imagem e recusam vídeo. A ressalva vale dita: o Reddit reconverte o gif
+em vídeo de qualquer jeito, então lá dentro a paleta abaixo não compra quase
+nada e o mp4 subiria com melhor qualidade. O que o formato compra é todo o resto
+— comentário, README, issue, chat — com um arquivo só.
+
 ```sh
-ffmpeg -y -i docs/medias/velas-athletico-pr.mp4 \
+# Um por vez, e NUNCA os quatro num laço com uma /tmp/palette.png só: a paleta
+# é tirada do vídeo que ela vai colorir, e reaproveitar a de outro desenha um
+# clube com as cores do vizinho sem nada acusar.
+V=velas-athletico-pr
+ffmpeg -y -i docs/medias/$V.mp4 \
   -vf "fps=15,scale=960:-1:flags=lanczos,palettegen=max_colors=192:stats_mode=diff" \
-  /tmp/palette.png
-ffmpeg -y -i docs/medias/velas-athletico-pr.mp4 -i /tmp/palette.png \
+  /tmp/palette-$V.png
+ffmpeg -y -i docs/medias/$V.mp4 -i /tmp/palette-$V.png \
   -lavfi "fps=15,scale=960:-1:flags=lanczos[x];[x][1:v]paletteuse=dither=none:diff_mode=rectangle" \
-  docs/medias/velas-athletico-pr.gif
+  docs/medias/$V.gif
 ```
 
-**O gif é MAIOR que o mp4 que o gerou** — 5,2 MB contra 3,8 — com metade da
-resolução e um quarto dos quadros. Não é parâmetro mal escolhido: o formato tem
+**O gif é MAIOR que o mp4 que o gerou, nos quatro** — 5,2 MB contra 3,8 no
+`velas-athletico-pr`, e a tabela acima diz o mesmo dos outros três — com metade
+da resolução e um quarto dos quadros. Não é parâmetro mal escolhido: o formato tem
 256 cores por quadro e nada que se compare à compressão entre quadros do h.264.
 Ele existe pelo que o mp4 não faz — tocar sozinho, mudo e em laço, dentro de um
 README, de uma issue ou de um chat que não abre player — e é por isso que ele
@@ -150,6 +171,14 @@ gráfico: as chaves dele são tipo de 16px na cena, e abaixo dessa largura elas
 embolam. A régua é abrir um quadro do gif e ler `melhor · pior na rodada`, do
 mesmo jeito que a capa se confere olhando para ela — o tamanho do arquivo não
 diz nada sobre isso.
+
+**Os 960 foram medidos contra o card do `velas`, e valem para as outras duas
+cenas — verificado abrindo um quadro de cada gif, não deduzido da resolução.**
+O caso apertado não é o `campanhas`, cujos dois cards de placar são tipo grande:
+é a coluna `1º … 20º` do `pontos`, que é a legenda do vídeo inteiro e o menor
+tipo dos três desenhos. Ela está legível a 960 com clube e pontos. Se algum dia
+uma cena nova não passar nessa régua, o que sobe é a largura dela e não o piso
+das outras — um gif por cena, cada um no seu tamanho.
 
 ## As miniaturas
 
@@ -194,7 +223,7 @@ Regerar é um commit deliberado, como o mp4: nada compara os bytes.
 
 ## Quando regerar, e o que obriga a isso
 
-Os artefatos de `docs/medias/` — quatro mp4, um gif e quatro capas; conte o
+Os artefatos de `docs/medias/` — quatro mp4, quatro gifs, quatro capas e dois `-youtube.md`; conte o
 diretório, não esta frase — são **velhos por construção**. São desenhados do seed e commitados (como o `og-default.png`, para
 que quem clona o repositório os tenha sem instalar o Manim), e descrevem uma
 temporada congelada para sempre. Um `sync-seed-data` move a temporada debaixo
@@ -256,7 +285,7 @@ VELAS_JSON=$PWD/scripts/manim/velas-athletico-pr.json \
   ./.venv-manim/bin/manim -qh scripts/manim/velas.py Velas
 cp media/videos/velas/1080p60/Velas.mp4 docs/medias/velas-athletico-pr.mp4
 
-# 3c. O gif, do mp4 já copiado e nunca de media/. Os dois comandos estão na
+# 3c. Os QUATRO gifs, dos mp4 já copiados e nunca de media/. Os comandos estão na
 #     seção "O gif", com o porquê de cada parâmetro.
 
 npx tsx scripts/manim/thumbnail.ts
