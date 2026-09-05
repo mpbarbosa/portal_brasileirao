@@ -38,13 +38,32 @@ import type { ClubCode, ClubVideo } from "@/src/types";
  *
  *   curl -s "https://www.youtube.com/oembed?url=https%3A//www.youtube.com/watch%3Fv%3D<id>&format=json"
  *
- * The two entries here were confirmed that way on 2026-09-03, and the title and
- * channel below are oEmbed's own strings rather than anything retyped.
+ * The Palmeiras × Flamengo entries were confirmed that way on 2026-09-03 and the
+ * Fluminense one on 2026-09-05; every title and channel below is oEmbed's own
+ * string rather than anything retyped.
+ *
+ * **A video that is not public yet answers 403, not 404**, which is worth
+ * knowing because it is the state a freshly uploaded render sits in: the
+ * Fluminense entry could not be written on the day it was rendered, and the
+ * check that would have "confirmed" it — pasting the id from the upload page —
+ * is exactly the one this file refuses. Wait for the 200.
  *
  * Coverage is **partial and grows by hand**, like every curated file here. A
  * club with no entry renders no section at all rather than an empty heading.
  */
 export const CLUB_VIDEOS: Record<ClubCode, ClubVideo[]> = {
+  // Fluminense. Unlike the comparação below, this one is about a single club:
+  // the campanha read as velas, which is what `scripts/manim/velas.py` draws
+  // and what the Painel already shows this club on its own page. So it appears
+  // under one code, and that is the file working as much as the repetition is.
+  "1765": [
+    {
+      id: "doMq2ELvtrc",
+      title: "Fluminense em velas: a campanha rodada a rodada do Brasileirão 2026 (até a 25ª)",
+      channel: "Marcelo Barbosa",
+    },
+  ],
+
   // Palmeiras. The campanha render is a comparação, so it sits here and under
   // Flamengo below — see the note on repetition above.
   "1769": [
