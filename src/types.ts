@@ -1033,8 +1033,27 @@ export interface TrafficTimelinePoint {
    * which is not zero — an hour that genuinely served nobody is a 0.
    */
   ratePerMin: number | null;
+  /**
+   * The same rate with `/api/health` taken out — what people read, as against
+   * what the server served. The two are far apart: measured on production
+   * 2026-09-05, monitoring was **55% of the whole log** (26,899 of 48,513).
+   * That is a window figure and not an hourly one — 46% of the log's lines
+   * fall on a single day — and the per-hour share is exactly what nothing
+   * reported until this field, `monitorHits` being cumulative.
+   *
+   * Null wherever either endpoint of the pair carries no monitor figure, which
+   * is a summary written before `12_traffic_report.sh` counted them. Null is
+   * "not measurable", never zero, and never a silent fallback to
+   * `ratePerMin` — that would put two different quantities on one line.
+   */
+  readRatePerMin: number | null;
   /** Cumulative requests per country at this snapshot, so the page can derive
-   *  a per-country rate the same way. Empty with no geo database. */
+   *  a per-country rate the same way. Empty with no geo database.
+   *
+   *  **These counts include monitoring**, because the report's geo sections
+   *  tally every line by address. So a per-country rate is comparable with
+   *  `ratePerMin` and not with `readRatePerMin`, and the page says so rather
+   *  than drawing the read line beside a country. */
   countries: Record<string, number>;
 }
 
