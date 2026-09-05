@@ -641,8 +641,16 @@ export function TrafficView({ onBack }: { onBack: () => void }) {
       <p className="mt-4 text-body-small text-ink-faint">
         {latest.geoSource
           ? `Geolocalização por base local (${latest.geoSource}) — nenhum endereço sai do servidor.`
-          : "Sem base GeoLite2 no servidor, então não há seções de país nem de cidade — instale o mmdblookup e ponha GeoLite2-City.mmdb em /var/lib/GeoIP/ para tê-las."}{" "}
+          : "Sem base de geolocalização no servidor, então não há seções de país nem de cidade — rode shell_scripts/14_install_geoip.sh no host para tê-las."}{" "}
         Instantâneo {latest.file}, de {fmt(latest.logLines)} linhas de log.
+        {/* The credit is a condition of the licence, not a courtesy: DB-IP's
+            Lite editions are CC BY 4.0 and permit this use only while it is
+            shown. It is rendered verbatim from what the report read out of the
+            database in use — this component neither composes it nor knows which
+            vendor it is crediting, which is what stops the page naming the
+            wrong one after somebody swaps the file. If the credit goes, the
+            country sections have to go with it. */}
+        {latest.geoAttribution ? ` ${latest.geoAttribution}.` : ""}
       </p>
     </section>
   );

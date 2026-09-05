@@ -25,6 +25,7 @@ const BASE: TrafficSnapshot = {
   uniqueIps: 48,
   dateRange: "01/Sep/2026:00:02:08  ->  05/Sep/2026:23:55:48",
   geoSource: null,
+  geoAttribution: null,
   topPaths: [{ label: "/", count: 187 }],
   statusCodes: [{ label: "200", count: 1200 }],
   referrers: [{ label: "https://brasileirao.mpbarbosa.com/", count: 411 }],
@@ -42,7 +43,8 @@ const BASE: TrafficSnapshot = {
 /** A host carrying a GeoLite2 **City** database: countries *and* cities. */
 const WITH_GEO: TrafficSnapshot = {
   ...BASE,
-  geoSource: "/var/lib/GeoIP/GeoLite2-City.mmdb",
+  geoSource: "/var/lib/GeoIP/dbip-city-lite.mmdb",
+  geoAttribution: "IP Geolocation by DB-IP (https://db-ip.com), CC BY 4.0",
   countriesByVisitor: [
     { label: "Brazil", count: 40 },
     { label: "United States", count: 5 },
@@ -102,7 +104,7 @@ const serve = async (page: Page, latest: TrafficSnapshot) => {
  * unrelated section had no rows, and one that counts them would pass against a
  * single card carrying it.
  */
-test("without a GeoLite2 database the page carries no country or city panels", async ({
+test("without a geolocation database the page carries no country or city panels", async ({
   page,
 }) => {
   await serve(page, BASE);
@@ -113,7 +115,10 @@ test("without a GeoLite2 database the page carries no country or city panels", a
   await expect(page.getByRole("heading", { name: /^Países por/ })).toHaveCount(0);
   await expect(page.getByRole("heading", { name: /^Cidades por/ })).toHaveCount(0);
 
-  await expect(page.getByText(/Sem base GeoLite2 no servidor/)).toBeVisible();
+  // Matched on the stable half of the sentence rather than on all of it: the
+  // wording names the script an operator runs, and pinning that would make a
+  // renamed script a red spec about copy.
+  await expect(page.getByText(/Sem base de geolocalização no servidor/)).toBeVisible();
 });
 
 test("with a City database both the country and the city panels render their rows", async ({
@@ -133,6 +138,34 @@ test("with a City database both the country and the city panels render their row
   // rows as invisible while they are on screen.
   const porEndereco = page.locator("li", { hasText: "Brazil" });
   await expect(porEndereco.first()).toBeVisible();
+  await expect(page.getByText(/Geolocalização por base local/)).toBeVisible();
+});
+
+/**
+ * The credit is what the licence charges for the data, so it is asserted like
+ * the stadium photographs' is: present whenever the rows it belongs to are.
+ * A page that dropped it while still drawing the countries would be using
+ * DB-IP's database outside the terms it is offered under.
+ */
+test("the geo credit renders beside the sections it pays for", async ({ page }) => {
+  await serve(page, WITH_GEO);
+  await page.goto("/trafego");
+
+  await expect(page.getByRole("heading", { name: "Países por endereço" })).toBeVisible();
+  await expect(page.getByText(/IP Geolocation by DB-IP/)).toBeVisible();
+});
+
+/**
+ * A database whose terms the report does not recognise gets no credit line, and
+ * that is not the same as "no credit is owed" — it is the report declining to
+ * state terms it does not know. The sections still draw; nothing is invented.
+ */
+test("an unrecognised database draws its rows and invents no credit", async ({ page }) => {
+  await serve(page, { ...WITH_GEO, geoAttribution: null });
+  await page.goto("/trafego");
+
+  await expect(page.getByRole("heading", { name: "Países por endereço" })).toBeVisible();
+  await expect(page.getByText(/IP Geolocation by DB-IP/)).toHaveCount(0);
   await expect(page.getByText(/Geolocalização por base local/)).toBeVisible();
 });
 

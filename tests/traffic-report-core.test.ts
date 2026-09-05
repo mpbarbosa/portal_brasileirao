@@ -134,6 +134,36 @@ test("the two geo readings are kept apart", () => {
   ]);
 });
 
+test("the geo credit is read from the report, and its absence is not a blank one", () => {
+  // The credit is what DB-IP's CC BY 4.0 licence charges for the data, so it
+  // travels with the rows rather than being written into the component — a page
+  // that composed it would credit the wrong vendor the moment the host's
+  // database changed underneath it.
+  //
+  // Copied from a real run against dbip-city-lite 2026-09, not composed.
+  const credited = summary().replace(
+    "Geo source: /var/lib/GeoIP/GeoLite2-City.mmdb",
+    `Geo source: /var/lib/GeoIP/dbip-city-lite.mmdb
+Geo attribution: IP Geolocation by DB-IP (https://db-ip.com), CC BY 4.0`,
+  );
+  const snap = parseSummary(credited, "s.txt");
+  assert.ok(snap);
+  assert.equal(snap.geoAttribution, "IP Geolocation by DB-IP (https://db-ip.com), CC BY 4.0");
+  // The attribution line must not be mistaken for the source line, and the
+  // rows beneath it must survive the extra line — a parser matching
+  // /Geo source:/ first would swallow neither, but one matching a looser
+  // /Geo/ would take the credit as the path.
+  assert.equal(snap.geoSource, "/var/lib/GeoIP/dbip-city-lite.mmdb");
+  assert.ok(snap.countriesByVisitor.length > 0);
+
+  // A database whose terms the report does not know emits no such line, and
+  // null is the honest answer: an empty string would render as a credit that
+  // credits nobody.
+  const uncredited = parseSummary(summary(), "s.txt");
+  assert.ok(uncredited);
+  assert.equal(uncredited.geoAttribution, null);
+});
+
 test("a host with no geo database yields empty geo, not a chart of one bar", () => {
   // Copied from a real run of the script with mmdblookup off PATH, not
   // composed: the first version of this fixture only deleted the `Geo source:`
