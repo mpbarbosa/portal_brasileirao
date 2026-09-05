@@ -477,6 +477,20 @@ export function TrafficView({ onBack }: { onBack: () => void }) {
 
   const read = new Date(latest.generated);
   const botShare = latest.requests && latest.bots != null ? (latest.bots / latest.requests) * 100 : null;
+  // Both geo blocks are conditional, and the country one has to be for the same
+  // reason the city one already was: without a GeoLite2 database on the host
+  // there is nothing to draw, and two cards reading "Sem dados." side by side
+  // report an absence of *visitors* where the truth is an absence of a
+  // *lookup table*. The rodapé below says exactly that, and until this gate
+  // existed it said it while both cards were on the page — the sentence "não há
+  // seções de país nem de cidade" is written for a page where they are hidden.
+  //
+  // Gated on the rows rather than on `geoSource`, mirroring the cities: a
+  // country-level database answers the country sections and not the city ones,
+  // so `geoSource` is set while `citiesBy*` is empty, and one rule that reads
+  // "draw a panel when it has rows" covers both without a second condition to
+  // keep true.
+  const hasCountries = latest.countriesByVisitor.length > 0 || latest.countriesByVolume.length > 0;
   const hasCities = latest.citiesByVisitor.length > 0 || latest.citiesByVolume.length > 0;
 
   return (
@@ -573,20 +587,22 @@ export function TrafficView({ onBack }: { onBack: () => void }) {
           <Statuses statusCodes={latest.statusCodes} />
         </Panel>
 
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-          <Panel
-            title="Países por endereço"
-            caption="Quantos endereços distintos vieram de cada país."
-          >
-            <Bars rows={latest.countriesByVisitor} max={10} />
-          </Panel>
-          <Panel
-            title="Países por volume"
-            caption="Quantas requisições. Difere do cartão ao lado onde poucos leem muito."
-          >
-            <Bars rows={latest.countriesByVolume} max={10} />
-          </Panel>
-        </div>
+        {hasCountries ? (
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+            <Panel
+              title="Países por endereço"
+              caption="Quantos endereços distintos vieram de cada país."
+            >
+              <Bars rows={latest.countriesByVisitor} max={10} />
+            </Panel>
+            <Panel
+              title="Países por volume"
+              caption="Quantas requisições. Difere do cartão ao lado onde poucos leem muito."
+            >
+              <Bars rows={latest.countriesByVolume} max={10} />
+            </Panel>
+          </div>
+        ) : null}
 
         {hasCities ? (
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
@@ -625,7 +641,7 @@ export function TrafficView({ onBack }: { onBack: () => void }) {
       <p className="mt-4 text-body-small text-ink-faint">
         {latest.geoSource
           ? `Geolocalização por base local (${latest.geoSource}) — nenhum endereço sai do servidor.`
-          : "Sem base GeoLite2 no servidor, então não há seções de país nem de cidade."}{" "}
+          : "Sem base GeoLite2 no servidor, então não há seções de país nem de cidade — instale o mmdblookup e ponha GeoLite2-City.mmdb em /var/lib/GeoIP/ para tê-las."}{" "}
         Instantâneo {latest.file}, de {fmt(latest.logLines)} linhas de log.
       </p>
     </section>
