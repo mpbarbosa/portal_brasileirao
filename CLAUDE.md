@@ -565,6 +565,42 @@ what makes the logic testable without mocking HTTP.
   `tests/e2e/goals.spec.ts` asserts *at least one* link rather than five, and
   never asserts which.
 
+  **The gap cannot be closed by adding the missing players to the seed, and
+  that was measured rather than assumed** — it is the obvious next request, so
+  the answer is written down here to stop it being re-investigated. Two
+  independent reasons, either of which is sufficient:
+
+  - **`squads.ts` is generated**, so a hand-edit is overwritten by the next
+    `sync-seed-data` without a word. That is the rule `player-overrides.ts`
+    already exists for, and overrides *correct* a value rather than adding a
+    player.
+  - **The provider does not have them.** Measured 2026-09-05 against a live
+    `/competitions/BSA/teams`: **948 players, the seed's count exactly**, and
+    every missing scorer checked is absent upstream too — Coutinho and Facundo
+    not in Vasco's 49, Hulk not in Atlético-MG's 46, Erick Pulga and Kike
+    Olivera not in Bahia's 51, Lorran not in Flamengo's 49. A resync adds
+    nothing.
+
+  **The artilharia is not a second source of ids either**, which is worth
+  recording because it is the promising-looking idea: `/competitions/BSA/scorers`
+  does carry football-data ids, and at `limit=100` **13 of 14** sampled missing
+  scorers are simply not in it. The one that is, is the instructive case rather
+  than the useful one — `Hulk` comes back on **Fluminense** while the goal is
+  filed under Atlético-MG. That is a **transfer**, and it is the shape of much
+  of this gap: a player scores for one club and is later listed at another, or
+  leaves the division. Joining on the name across two sources would have put
+  him on the wrong club's card, which is the orthography-matching this file
+  refuses everywhere else.
+
+  **The 111 unresolved goals split three ways**, and only the third could ever
+  be data: **31 ambiguous** at their own club, **10 now listed at another**,
+  **70 absent from the division entirely**. The ambiguous 31 are unresolvable
+  by *any* name rule — Bahia lists two players called Erick and Athletico-PR
+  two called Dudu — and the thing that would separate them is a shirt number,
+  which the competition's team payload carries for nobody. `escalacoes.ts` does
+  carry shirt numbers, and still cannot bridge: its names are CBF's, so it
+  yields the scorer's shirt and no football-data id to attach it to.
+
   **The lookup goes through `scorerClubCode`, not `clubCode`, and that is the
   trap.** `Goal.clubCode` is the club a goal counts *for*, so an own-goal
   scorer is in the **other** squad. Measured: of the season's 20 own goals, 13
