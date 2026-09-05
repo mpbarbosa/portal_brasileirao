@@ -9,11 +9,12 @@ import {
   goalsFromRegistros,
   goalsReconcile,
   isKnownGoalResult,
+  scorerClubCode,
   tidyScorerName,
   withGoals,
 } from "@/goals-core";
 import type { CbfRegistro, SideMap } from "@/goals-core";
-import type { Goal, Match } from "@/src/types";
+import type { Goal, Match, Squad } from "@/src/types";
 
 const SIDES: SideMap = {
   homeCbfId: "20002",
@@ -30,6 +31,19 @@ const registro = (overrides: Partial<CbfRegistro> = {}): CbfRegistro => ({
   atleta_apelido: "Lopez",
   atleta_camisa: "42",
   ...overrides,
+});
+
+/**
+ * The elencos a scorer is read against. `withGoals` needs them for the id it
+ * resolves and for nothing else, so most cases here pass none — an empty list
+ * exercises the state a departed player produces, which is the one the page
+ * has to keep rendering.
+ */
+const NO_SQUADS: Squad[] = [];
+
+const squad = (code: string, players: [string, string][]): Squad => ({
+  club: { code, name: `Club ${code}`, shortName: `Club ${code}` },
+  players: players.map(([id, name]) => ({ id, name })),
 });
 
 const match = (overrides: Partial<Match> = {}): Match => ({
@@ -226,6 +240,7 @@ test("withGoals attaches only where there are goals", () => {
       match({ id: "554979", homeGoals: 0, awayGoals: 0 }),
     ],
     { "554977": [{ clubCode: "1769", scorer: "Lopez" }] },
+    NO_SQUADS,
   );
 
   assert.equal(attached.goals?.length, 1);
@@ -238,7 +253,7 @@ test("withGoals attaches a list that reconciles on both sides", () => {
       { clubCode: "1769", scorer: "Lopez" },
       { clubCode: "1780", scorer: "Payet" },
     ],
-  });
+  }, NO_SQUADS);
 
   assert.equal(only.goals?.length, 2);
 });
@@ -256,6 +271,7 @@ test("withGoals drops a list from a fixture that has no score yet", () => {
         { clubCode: "1780", scorer: "Payet" },
       ],
     },
+    NO_SQUADS,
   );
 
   assert.equal(only.goals, undefined);
@@ -266,7 +282,7 @@ test("withGoals drops a list the scoreline no longer accounts for", () => {
   // has since corrected, leaving the curated list one short.
   const [only] = withGoals([match({ homeGoals: 4, awayGoals: 1 })], {
     "554977": [{ clubCode: "1769", scorer: "Lopez" }],
-  });
+  }, NO_SQUADS);
 
   assert.equal(only.goals, undefined);
 });
@@ -280,14 +296,108 @@ test("withGoals drops a list that totals correctly but splits wrong", () => {
       { clubCode: "1769", scorer: "Lopez" },
       { clubCode: "1769", scorer: "Mauricio" },
     ],
-  });
+  }, NO_SQUADS);
 
   assert.equal(only.goals, undefined);
 });
 
 test("withGoals leaves an empty list off rather than attaching one", () => {
-  const [only] = withGoals([match()], { "554977": [] });
+  const [only] = withGoals([match()], { "554977": [] }, NO_SQUADS);
   assert.equal(only.goals, undefined);
+});
+
+// ---------------------------------------------------------------------------
+// Resolving a scorer to a player
+// ---------------------------------------------------------------------------
+
+test("scorerClubCode names the club a goal counts for, for an ordinary goal", () => {
+  const goal: Goal = { clubCode: "1769", scorer: "Lopez" };
+  assert.equal(scorerClubCode(goal, "1769", "1780"), "1769");
+  // And from the away side, so the function is not merely returning `homeCode`.
+  assert.equal(scorerClubCode({ clubCode: "1780", scorer: "Payet" }, "1769", "1780"), "1780");
+});
+
+test("scorerClubCode names the OTHER club for an own goal", () => {
+  // The Camutanga case: CBF files the goal under the player who scored it,
+  // `goalsFromRegistros` flips it to the side it counts for, and looking the
+  // player up means flipping back. Asserted from both sides, because a rule
+  // that always answered "away" would pass a single-sided test.
+  assert.equal(
+    scorerClubCode({ clubCode: "1769", scorer: "Camutanga", kind: "own" }, "1769", "1780"),
+    "1780",
+  );
+  assert.equal(
+    scorerClubCode({ clubCode: "1780", scorer: "Camutanga", kind: "own" }, "1769", "1780"),
+    "1769",
+  );
+});
+
+test("withGoals resolves a scorer to the player id of their own club", () => {
+  const [only] = withGoals(
+    [match({ homeGoals: 1, awayGoals: 0 })],
+    { "554977": [{ clubCode: "1769", scorer: "Lopez" }] },
+    [
+      squad("1769", [["99", "José Manuel López"]]),
+      // A namesake at the other club, to show the lookup is scoped to a squad
+      // rather than to the division.
+      squad("1780", [["1", "Bruno López"]]),
+    ],
+  );
+
+  assert.equal(only.goals?.[0].playerId, "99");
+});
+
+test("withGoals resolves an own goal against the scorer's own squad", () => {
+  // The goal counts for 1769 and the scorer plays for 1780. Reading it against
+  // `clubCode` finds nobody; reading it against the flipped side finds him.
+  const [only] = withGoals(
+    [match({ homeGoals: 1, awayGoals: 0 })],
+    { "554977": [{ clubCode: "1769", scorer: "Camutanga", kind: "own" }] },
+    [squad("1769", [["99", "José Manuel López"]]), squad("1780", [["7", "Camutanga"]])],
+  );
+
+  assert.equal(only.goals?.[0].playerId, "7");
+});
+
+test("withGoals leaves a scorer the squad cannot place without an id", () => {
+  // A player who has left the division, or a spelling nothing reads. The goal
+  // is still attached — only the door on it is missing.
+  const [only] = withGoals(
+    [match({ homeGoals: 1, awayGoals: 0 })],
+    { "554977": [{ clubCode: "1769", scorer: "Someone Else" }] },
+    [squad("1769", [["99", "José Manuel López"]])],
+  );
+
+  assert.equal(only.goals?.length, 1);
+  assert.equal(only.goals?.[0].playerId, undefined);
+});
+
+test("withGoals refuses an id where the name fits two players", () => {
+  // One club really does list several players called Arthur. Half the goals
+  // would be filed under the wrong man, and the card would look right.
+  const [only] = withGoals(
+    [match({ homeGoals: 1, awayGoals: 0 })],
+    { "554977": [{ clubCode: "1769", scorer: "Arthur" }] },
+    [squad("1769", [["1", "Arthur Cabral"], ["2", "Arthur Alves"]])],
+  );
+
+  assert.equal(only.goals?.[0].playerId, undefined);
+});
+
+test("withGoals keeps everything else about a goal it resolved", () => {
+  const [only] = withGoals(
+    [match({ homeGoals: 1, awayGoals: 0 })],
+    { "554977": [{ clubCode: "1769", scorer: "Lopez", kind: "penalty", minute: "50'" }] },
+    [squad("1769", [["99", "José Manuel López"]])],
+  );
+
+  assert.deepEqual(only.goals?.[0], {
+    clubCode: "1769",
+    scorer: "Lopez",
+    kind: "penalty",
+    minute: "50'",
+    playerId: "99",
+  });
 });
 
 test("goalsBySide splits by club and keeps an empty side", () => {

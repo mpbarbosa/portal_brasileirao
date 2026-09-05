@@ -286,6 +286,86 @@ export const withScorerNames = (
  * URL still yields the handle rather than something that renders as a broken
  * link.
  */
+/**
+ * A player's name reduced to what two providers can be expected to agree on:
+ * lower case, no accents, no punctuation, single spaces.
+ *
+ * CBF omits accents on some entries and not others ("Renê" against "Rene"),
+ * and football-data spells the same player with them, so a comparison that
+ * keeps them answers "different person" for a difference in typing. Nothing
+ * here folds one *name* into another — only how the same name may be written.
+ */
+const comparableName = (name: string): string =>
+  name
+    .normalize("NFD")
+    .replace(/\p{Diacritic}/gu, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9 ]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+/**
+ * The one player in `players` that `name` can only be, or **null**.
+ *
+ * This exists because two providers name the same footballer differently and
+ * neither carries the other's id: CBF reports the popular name a scoreboard
+ * would print ("Lopez", "De Arrascaeta") while football-data lists the fuller
+ * one ("José Manuel López", "Giorgian De Arrascaeta"). Nothing anywhere joins
+ * them, so a match page holding CBF's goals cannot open the app's own player
+ * card without a rule for reading one as the other.
+ *
+ * **The rule refuses far more readily than it guesses, and that asymmetry is
+ * the whole design.** A resolved id is not a label — it opens a card carrying
+ * that person's photograph, nationality and Wikipédia article — so being wrong
+ * here prints a different footballer's life under the name of the one who
+ * scored, and does it plausibly. An unresolved scorer merely renders as text,
+ * which is what the page did before and what `Goal.minute` and `Club.coach`
+ * already do with an absence.
+ *
+ * Two passes, and **each requires exactly one candidate**:
+ *
+ * 1. The whole name, compared as above. "Vitor Roque" is "Vitor Roque".
+ * 2. Every word of the query appearing among the candidate's words — which is
+ *    what reads "Lopez" as "José Manuel López" without reading it as any other
+ *    López. Deliberately **not** a prefix or substring test: "Ander" would
+ *    then match "Anderson", and a shorter name is the commoner input here.
+ *
+ * Several candidates is **null**, not the first of them. That is the case the
+ * squads actually contain — one club lists three players called Arthur and
+ * another four called Lucas — and picking one would be right about a third of
+ * the time while looking identical to being right.
+ *
+ * The players are passed in rather than imported, like every other table in
+ * this module, so a caller decides which squad a name is being read against.
+ */
+export const matchPlayerByName = (
+  name: string,
+  players: Player[],
+): Player | null => {
+  const wanted = comparableName(name);
+  if (!wanted) return null;
+
+  const candidates = players.map((player) => ({
+    player,
+    comparable: comparableName(player.name),
+  }));
+
+  const exact = candidates.filter((entry) => entry.comparable === wanted);
+  if (exact.length === 1) return exact[0].player;
+  // Several exact matches is a genuine ambiguity — two players of one name at
+  // one club — and the word pass below cannot resolve what the whole name
+  // could not, so stop here rather than widening into it.
+  if (exact.length > 1) return null;
+
+  const words = wanted.split(" ");
+  const byWord = candidates.filter((entry) => {
+    const theirs = entry.comparable.split(" ");
+    return words.every((word) => theirs.includes(word));
+  });
+
+  return byWord.length === 1 ? byWord[0].player : null;
+};
+
 export const playerInstagram = (
   id: string,
   handles: Record<string, string>,

@@ -433,6 +433,24 @@ export interface Goal {
    * managers.
    */
   minute?: string;
+  /**
+   * The scorer as one of **our** player ids, where the name can only be one
+   * player. Absent otherwise, and absent is the common enough case to design
+   * around: the match page links a scorer whose id resolved and prints the
+   * rest as plain text.
+   *
+   * **Derived at serve time, never stored.** `src/data/goals.ts` records what
+   * CBF reported and nothing else; this is `withGoals` reading that name
+   * against the elencos, so a correction to a squad reaches every past goal
+   * without regenerating a file, and a wrong resolution cannot be committed.
+   * The judgement is `matchPlayerByName`, which refuses an ambiguous name
+   * rather than choosing among the candidates — an id here opens a card with
+   * somebody's photograph and Wikipédia article on it.
+   *
+   * Note it is resolved against the club the scorer **plays for**, which for
+   * an own goal is not `clubCode`. See `scorerClubCode`.
+   */
+  playerId?: string;
 }
 
 /**

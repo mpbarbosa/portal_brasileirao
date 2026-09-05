@@ -22,6 +22,7 @@ import {
   withPlayerOverrides,
   withScorerNames,
   withSquadOverrides,
+  matchPlayerByName,
 } from "@/player-core";
 import { PLAYER_OVERRIDES } from "@/src/data/player-overrides";
 import { SEED_SQUADS } from "@/src/data/squads";
@@ -520,4 +521,65 @@ test("every corrected nationality is one the label table knows", () => {
     .map(([id, n]) => `${id}: ${n}`);
 
   assert.deepEqual(unmapped, []);
+});
+
+// ---------------------------------------------------------------------------
+// Reading one provider's name as another's player
+// ---------------------------------------------------------------------------
+
+const roster = (...names: string[]): Player[] =>
+  names.map((name, index) => ({ id: String(index + 1), name }));
+
+test("an exact name resolves", () => {
+  const players = roster("Vitor Roque", "Raphael Veiga");
+  assert.equal(matchPlayerByName("Vitor Roque", players)?.id, "1");
+});
+
+test("a name resolves across accents and case", () => {
+  // CBF omits accents on some entries and not others. "Renê" and "Rene" are one
+  // player written two ways, which is the only difference this folds.
+  assert.equal(matchPlayerByName("rene", roster("Carlos Renê"))?.id, "1");
+  assert.equal(matchPlayerByName("JAJÁ", roster("Jája Silva"))?.id, "1");
+});
+
+test("a short name resolves to the one fuller name containing it", () => {
+  // The case that makes the whole thing worth doing: CBF prints the name a
+  // scoreboard prints, football-data the fuller one.
+  const players = roster("José Manuel López", "Giorgian De Arrascaeta", "Raphael Veiga");
+  assert.equal(matchPlayerByName("Lopez", players)?.id, "1");
+  assert.equal(matchPlayerByName("De Arrascaeta", players)?.id, "2");
+});
+
+test("a short name shared by two players resolves to neither", () => {
+  // Right about a third of the time and indistinguishable from being right,
+  // which is why this is null rather than the first of them.
+  const players = roster("Arthur Cabral", "Arthur Alves", "Arthur Izaque");
+  assert.equal(matchPlayerByName("Arthur", players), null);
+});
+
+test("a whole name shared by two players resolves to neither", () => {
+  // Two players of one name at one club — Athletico really does list two Dudus.
+  // The word pass cannot resolve what the whole name could not, so it must not
+  // be reached and quietly answer the first.
+  assert.equal(matchPlayerByName("Dudu", roster("Dudu", "Dudu")), null);
+});
+
+test("a name nobody in the squad carries resolves to nothing", () => {
+  assert.equal(matchPlayerByName("Camutanga", roster("José Manuel López")), null);
+});
+
+test("a name is read as whole words, never as a prefix", () => {
+  // "Ander" is not Anderson. A substring test would say it is, and a shorter
+  // name is the commoner input here, so the wrong answer would be the usual one.
+  assert.equal(matchPlayerByName("Ander", roster("Anderson Silva")), null);
+  assert.equal(matchPlayerByName("Anderson", roster("Anderson Silva"))?.id, "1");
+});
+
+test("an empty or blank name resolves to nothing", () => {
+  assert.equal(matchPlayerByName("", roster("Anderson Silva")), null);
+  assert.equal(matchPlayerByName("   ", roster("Anderson Silva")), null);
+});
+
+test("an empty squad resolves to nothing rather than throwing", () => {
+  assert.equal(matchPlayerByName("Lopez", []), null);
 });

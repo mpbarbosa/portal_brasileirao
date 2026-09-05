@@ -14,7 +14,8 @@
  * without a network, which is the split `commons-core.ts` draws against
  * `scripts/commons-api.ts`.
  */
-import type { ClubCode, Goal, GoalKind, Match } from "@/src/types";
+import { matchPlayerByName } from "@/player-core";
+import type { ClubCode, Goal, GoalKind, Match, Player, Squad } from "@/src/types";
 
 /**
  * One row of CBF's `registros` array, which carries **goals and cards in the
@@ -257,12 +258,31 @@ export const goalsReconcile = (
  * covers what a status check cannot see — a curated list left behind by a score
  * the provider has since corrected. And it self-clears rather than needing a
  * sync: the moment the two agree again, the goals reappear.
+ *
+ * **It also resolves each scorer to a player id where the name can only be one
+ * player**, which is what lets the match page open the app's own card on a
+ * scorer instead of printing a bare surname. That is done here rather than
+ * written into `src/data/goals.ts` for the reason the reconciliation above is
+ * repeated here: the two sides move independently, and a resolution recomputed
+ * from the elencos on every fill follows a squad correction without a
+ * regeneration and cannot commit a wrong id. It costs one pass over the
+ * squads, built once for the whole list rather than per goal.
+ *
+ * A scorer the elencos cannot place — a departed player, an unresolvable
+ * spelling, two players of one name — simply carries no id, and the page
+ * renders the name it always did. See `matchPlayerByName` for why that refusal
+ * is preferred to a guess.
  */
 export const withGoals = (
   matches: Match[],
   goals: Record<string, Goal[]>,
-): Match[] =>
-  matches.map((match) => {
+  squads: Squad[],
+): Match[] => {
+  const byClub = new Map<string, Player[]>(
+    squads.map((squad) => [squad.club.code, squad.players]),
+  );
+
+  return matches.map((match) => {
     const scored = goals[match.id];
     if (!scored || scored.length === 0) return match;
     if (match.homeGoals === null || match.awayGoals === null) return match;
@@ -273,8 +293,50 @@ export const withGoals = (
       match.homeGoals,
       match.awayGoals,
     );
-    return agrees ? { ...match, goals: scored } : match;
+    if (!agrees) return match;
+
+    return {
+      ...match,
+      goals: scored.map((goal) => {
+        const club = scorerClubCode(goal, match.homeCode, match.awayCode);
+        const player = matchPlayerByName(goal.scorer, byClub.get(club) ?? []);
+        return player ? { ...goal, playerId: player.id } : goal;
+      }),
+    };
   });
+};
+
+/**
+ * The club the scorer **plays for** — which is `clubCode` for every goal but an
+ * own one, where it is the other side.
+ *
+ * `Goal.clubCode` is the club a goal *counts for*, and that is the right thing
+ * for it to be: the scoreboard is built by adding goals up. It is the wrong
+ * thing to look a player up in. CBF files an own goal under the player who
+ * scored it, `goalsFromRegistros` flips it to the side it counts for, and this
+ * flips back the one question that has to be asked of the original side.
+ *
+ * **Measured rather than reasoned out**, and the second figure is the one that
+ * makes it a rule instead of a preference: across the played season's 20 own
+ * goals, 13 resolve to a player with the flip and **0** without it (a reading
+ * on 2026-09-05, not a constant — what it is here for is that the two numbers
+ * are not close). Read against `clubCode` an own goal is a name looked up in
+ * the squad of the club the scorer does not play for, so it fails silently and
+ * costs only a missing link — which is why nothing would have reported it.
+ *
+ * One rule in one place because two readers need it and would otherwise each
+ * write their own. `withGoals` resolves the id against this club's squad, and
+ * the match page names this club on the card it opens; a page that disagreed
+ * with the resolver would open the right player under the wrong crest.
+ */
+export const scorerClubCode = (
+  goal: Goal,
+  homeCode: ClubCode,
+  awayCode: ClubCode,
+): ClubCode => {
+  if (goal.kind !== "own") return goal.clubCode;
+  return goal.clubCode === homeCode ? awayCode : homeCode;
+};
 
 /**
  * The goals of one match split by side, for a page that draws them in two

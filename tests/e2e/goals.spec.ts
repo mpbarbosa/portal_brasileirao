@@ -238,3 +238,62 @@ test("a goal with no minute prints no placeholder", async ({ page }) => {
     expect(line).not.toMatch(/'/);
   }
 });
+
+/**
+ * The scorer opens the player card.
+ *
+ * **Asserted as "at least one" rather than by name**, and that is the rule
+ * every curated table here follows rather than caution: which scorers resolve
+ * to a player is a property of `src/data/squads.ts`, which `sync-seed-data`
+ * regenerates. 554977's own Facundo does not resolve — Vasco's frozen elenco
+ * does not list him — so pinning a name would tie this spec to a squad list
+ * that moves in every transfer window, and pinning *five* links would fail on
+ * the state the page is designed for.
+ */
+test("a scorer the elencos can place opens the player card", async ({ page }) => {
+  await page.goto(`/partida/${MATCH}`);
+
+  const linked = page.locator("main article [data-goal] [data-scorer]");
+  await expect(linked.first()).toBeVisible();
+
+  const name = await linked.first().innerText();
+  await linked.first().click();
+
+  const card = page.locator("dialog[open]");
+  await expect(card).toBeVisible();
+  // The name the reader clicked, not a fuller one the enrichment reports —
+  // `mergePlayer` keeps the base name for exactly this.
+  await expect(card).toContainText(name);
+});
+
+/**
+ * A scorer nobody could place stays plain text, and the two live in one column.
+ *
+ * The important half is the *absence* of a control: an unresolved scorer must
+ * not render a dead button, which is the shape a `?? ""` id would produce and
+ * which looks identical until it is pressed. Produced rather than found, like
+ * `withoutGoals` and `withoutMinutes` above — a spec that hunted the season for
+ * an unresolvable scorer would be asserting how much data exists.
+ */
+test("a scorer the elencos cannot place renders no control", async ({ page }) => {
+  const response = await page.request.get("/api/matches");
+  const body = await response.json();
+  body.data.matches = body.data.matches.map((match: Record<string, unknown>) => ({
+    ...match,
+    goals: Array.isArray(match.goals)
+      ? match.goals.map(({ playerId: _dropped, ...goal }: Record<string, unknown>) => goal)
+      : match.goals,
+  }));
+  await page.route("**/api/matches*", (route) =>
+    route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(body) }),
+  );
+
+  await page.goto(`/partida/${MATCH}`);
+  const scorers = page.locator("main article [data-goal]");
+  await expect(scorers.first()).toBeVisible();
+
+  // Every name still renders — the goal is attached either way, only the door
+  // on it is missing.
+  await expect(scorers).toHaveCount(5);
+  await expect(page.locator("main article [data-goal] button")).toHaveCount(0);
+});

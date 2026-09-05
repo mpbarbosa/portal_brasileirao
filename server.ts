@@ -342,6 +342,12 @@ const seedMatchesPayload = (): MatchesPayload => ({
         HIGHLIGHTS,
       ),
       GOALS,
+      // The elencos the scorers are read against — the frozen list rather than
+      // the live one, deliberately. `/api/squads` is a separate upstream request
+      // and this route must not acquire a dependency on it to print a name; the
+      // ids are the same provider's either way, and a scorer the seed cannot
+      // place renders as the text it always did.
+      SEED_SQUADS,
     ),
     ESCALACOES,
   ),
@@ -454,6 +460,9 @@ const loadMatches = async (): Promise<ApiEnvelope<MatchesPayload>> => {
             HIGHLIGHTS,
           ),
           GOALS,
+          // The frozen elencos, as in the seed branch above — this route does
+          // not acquire a dependency on `/api/squads` to print a scorer.
+          SEED_SQUADS,
         ),
         ESCALACOES,
       ),
