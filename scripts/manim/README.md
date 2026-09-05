@@ -62,6 +62,9 @@ VELAS_JSON=$PWD/scripts/manim/velas-athletico-pr.json \
   ./.venv-manim/bin/manim -qh scripts/manim/velas.py Velas
 ```
 
+Hoje são três: `1765` Fluminense em `velas.json`, `1768` Athletico-PR e `1777`
+Bahia nos seus próprios arquivos — conte os `velas*.json`, não esta frase.
+
 **E a paleta precisa conhecer o clube antes.** `CLUB_COLOURS` no `velas.py`
 mapeia código → tom, e quem não está lá cai no `FALLBACK_COLOUR` — um cinza que
 é ausência visível e não erro, mas também não é a cor de ninguém. O tom vem do
@@ -85,18 +88,19 @@ renderiza em segundos e serve para conferir o enquadramento.
 **`docs/medias/campanhas-palmeiras-flamengo.mp4`** (23s, 3,3 MB),
 **`docs/medias/pontos-20-clubes.mp4`** (21s, 4,4 MB),
 **`docs/medias/velas-fluminense.mp4`** (21s, 3,8 MB) e
-**`docs/medias/velas-athletico-pr.mp4`** (21s, 3,8 MB) — todos 1920×1080, 60fps —
+**`docs/medias/velas-athletico-pr.mp4`** (21s, 3,9 MB) e
+**`docs/medias/velas-bahia.mp4`** (21s, 3,8 MB) — todos 1920×1080, 60fps —
 são os vídeos prontos, versionados junto do resto do projeto como os slides
 em `docs/carrossel/` e as capturas em `docs/screenshots/`.
 
-**Dois clubes na mesma cena são dois artefatos, e esse é o preço do `velas.py`.**
+**Cada clube é um artefato a mais, e esse é o preço do `velas.py`.**
 Ele desenha um clube por run, então cada clube que valha um vídeo acrescenta um
 mp4, um payload, uma linha no `RENDERED` e mais um degrau na cadeia de
 regeneração — e a cadeia é justamente onde um clube esquecido não aparece, porque
 o `RENDERED` recebe a data nova de qualquer jeito. As outras duas cenas não têm
 esse custo: uma fixa dois clubes e a outra é a divisão inteira.
 
-**Nenhum dos dois `velas-*.mp4` tem miniatura**, e isso é uma decisão e não uma
+**Nenhum dos `velas-*.mp4` tem miniatura**, e isso é uma decisão e não uma
 pendência: as capas existem porque os primeiros segundos daqueles outros dois
 vídeos são um gráfico vazio, e uma capa é um segundo artefato para manter
 atualizado. Quando um destes for para o YouTube, `capa-core.ts` é o que os dois
@@ -117,15 +121,16 @@ até que data os dados vão, que é a única defesa que ele tem.
 
 ## O gif
 
-**Os quatro mp4 têm gif, todos 960×540 e 15fps** — conte o diretório, não esta
+**Todo mp4 aqui tem gif, todos 960×540 e 15fps** — conte o diretório, não esta
 frase:
 
 | gif | quadros | gif | mp4 |
 |---|---|---|---|
 | `campanhas-palmeiras-flamengo.gif` | 343 | 5,3 MB | 3,7 MB |
 | `pontos-20-clubes.gif` | 309 | 5,7 MB | 4,6 MB |
-| `velas-athletico-pr.gif` | 317 | 5,2 MB | 3,8 MB |
-| `velas-fluminense.gif` | 317 | 5,1 MB | 4,0 MB |
+| `velas-athletico-pr.gif` | 317 | 5,2 MB | 3,9 MB |
+| `velas-bahia.gif` | 317 | 5,1 MB | 3,8 MB |
+| `velas-fluminense.gif` | 317 | 5,1 MB | 3,9 MB |
 
 Cada um é **derivado do mp4 commitado ao lado dele**, não um segundo render: sai
 daquele arquivo por dois passos de `ffmpeg`, então não tem como descrever uma
@@ -141,7 +146,7 @@ nada e o mp4 subiria com melhor qualidade. O que o formato compra é todo o rest
 rascunho de cada post e as regras de cada sub, está em `docs/post-reddit.md`.
 
 ```sh
-# Um por vez, e NUNCA os quatro num laço com uma /tmp/palette.png só: a paleta
+# Um por vez, e NUNCA todos num laço com uma /tmp/palette.png só: a paleta
 # é tirada do vídeo que ela vai colorir, e reaproveitar a de outro desenha um
 # clube com as cores do vizinho sem nada acusar.
 V=velas-athletico-pr
@@ -153,8 +158,8 @@ ffmpeg -y -i docs/medias/$V.mp4 -i /tmp/palette-$V.png \
   docs/medias/$V.gif
 ```
 
-**O gif é MAIOR que o mp4 que o gerou, nos quatro** — 5,2 MB contra 3,8 no
-`velas-athletico-pr`, e a tabela acima diz o mesmo dos outros três — com metade
+**O gif é MAIOR que o mp4 que o gerou, em todos** — 5,2 MB contra 3,9 no
+`velas-athletico-pr`, e a tabela acima diz o mesmo dos demais — com metade
 da resolução e um quarto dos quadros. Não é parâmetro mal escolhido: o formato tem
 256 cores por quadro e nada que se compare à compressão entre quadros do h.264.
 Ele existe pelo que o mp4 não faz — tocar sozinho, mudo e em laço, dentro de um
@@ -224,8 +229,9 @@ Regerar é um commit deliberado, como o mp4: nada compara os bytes.
 
 ## Quando regerar, e o que obriga a isso
 
-Os artefatos de `docs/medias/` — quatro mp4, quatro gifs, quatro capas e dois `-youtube.md`; conte o
-diretório, não esta frase — são **velhos por construção**. São desenhados do seed e commitados (como o `og-default.png`, para
+Os artefatos de `docs/medias/` — um mp4 e um gif por cena renderizada, mais as
+capas e os `-youtube.md`; conte o diretório, não esta frase — são **velhos por
+construção**. São desenhados do seed e commitados (como o `og-default.png`, para
 que quem clona o repositório os tenha sem instalar o Manim), e descrevem uma
 temporada congelada para sempre. Um `sync-seed-data` move a temporada debaixo
 deles com **todos** os gates do repositório continuando verdes: o guard do
@@ -271,22 +277,26 @@ npx tsx scripts/manim/export-campanhas.ts  > scripts/manim/campanhas.json
 npx tsx scripts/manim/export-pontos.ts     > scripts/manim/pontos.json
 npx tsx scripts/manim/export-velas.ts      > scripts/manim/velas.json
 npx tsx scripts/manim/export-velas.ts 1768 > scripts/manim/velas-athletico-pr.json
+npx tsx scripts/manim/export-velas.ts 1777 > scripts/manim/velas-bahia.json
 ./.venv-manim/bin/manim -qh scripts/manim/campanhas.py Campanhas
 ./.venv-manim/bin/manim -qh scripts/manim/pontos.py    Pontos
 cp media/videos/campanhas/1080p60/Campanhas.mp4 docs/medias/campanhas-palmeiras-flamengo.mp4
 cp media/videos/pontos/1080p60/Pontos.mp4       docs/medias/pontos-20-clubes.mp4
 
-# 3b. As DUAS velas escrevem no MESMO media/videos/velas/1080p60/Velas.mp4: o
+# 3b. TODAS as velas escrevem no MESMO media/videos/velas/1080p60/Velas.mp4: o
 #     arquivo tem o nome da CENA, não o do clube. Copie uma antes de renderizar
-#     a outra — juntar os dois `manim` e depois os dois `cp` faz sair o mesmo
-#     clube nos dois arquivos, com os dois nomes certos e nada acusando.
+#     a próxima — juntar os `manim` e depois os `cp` faz sair o mesmo clube em
+#     todos os arquivos, com todos os nomes certos e nada acusando.
 ./.venv-manim/bin/manim -qh scripts/manim/velas.py Velas
 cp media/videos/velas/1080p60/Velas.mp4 docs/medias/velas-fluminense.mp4
 VELAS_JSON=$PWD/scripts/manim/velas-athletico-pr.json \
   ./.venv-manim/bin/manim -qh scripts/manim/velas.py Velas
 cp media/videos/velas/1080p60/Velas.mp4 docs/medias/velas-athletico-pr.mp4
+VELAS_JSON=$PWD/scripts/manim/velas-bahia.json \
+  ./.venv-manim/bin/manim -qh scripts/manim/velas.py Velas
+cp media/videos/velas/1080p60/Velas.mp4 docs/medias/velas-bahia.mp4
 
-# 3c. Os QUATRO gifs, dos mp4 já copiados e nunca de media/. Os comandos estão na
+# 3c. Um gif por mp4, dos mp4 já copiados e nunca de media/. Os comandos estão na
 #     seção "O gif", com o porquê de cada parâmetro.
 
 npx tsx scripts/manim/thumbnail.ts

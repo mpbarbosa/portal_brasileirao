@@ -117,6 +117,7 @@ CLUB_COLOURS = {
     "1769": "#1FBF6B",  # Palmeiras     verde
     "1783": "#E5453A",  # Flamengo      vermelho
     "1779": "#D7DDE0",  # Corinthians   cinza-claro
+    "1777": "#35BCD6",  # Bahia         ciano
 }
 FALLBACK_COLOUR = "#9AA5A0"
 
