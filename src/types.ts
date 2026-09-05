@@ -980,8 +980,19 @@ export interface TrafficSnapshot {
   uniqueIps: number | null;
   /** First and last timestamp in the window, as the report printed them. */
   dateRange: string | null;
-  /** Which GeoLite2 database resolved the countries, or null when none did. */
+  /** Which database resolved the countries, or null when none did. */
   geoSource: string | null;
+  /**
+   * The credit that database's licence requires, read out of the file itself by
+   * `12_traffic_report.sh` rather than inferred from its path — DB-IP's Lite
+   * editions are CC BY 4.0 and may be used only while the credit is displayed,
+   * which is the same bargain `StadiumPhoto.credit` strikes.
+   *
+   * Null for a database whose terms the report does not know, and that is
+   * deliberately not the same as "no attribution required": nothing may invent
+   * a credit, so an unrecognised database gets none rather than a guessed one.
+   */
+  geoAttribution: string | null;
   topPaths: TrafficCountRow[];
   statusCodes: TrafficCountRow[];
   referrers: TrafficCountRow[];

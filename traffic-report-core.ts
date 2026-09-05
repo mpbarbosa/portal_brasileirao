@@ -75,6 +75,7 @@ const parseCountRows = (lines: string[] | undefined): TrafficCountRow[] => {
 
 interface GeoSection {
   geoSource: string | null;
+  geoAttribution: string | null;
   byVisitor: TrafficCountRow[];
   byVolume: TrafficCountRow[];
 }
@@ -98,9 +99,15 @@ const parseGeoSection = (lines: string[] | undefined): GeoSection => {
   const byVolume: TrafficCountRow[] = [];
   let bucket: TrafficCountRow[] | null = null;
   let geoSource: string | null = null;
+  let geoAttribution: string | null = null;
 
   for (const line of lines ?? []) {
-    if (/Geo source:/.test(line)) geoSource = line.replace(/.*Geo source:\s*/, "").trim();
+    // Attribution before source: "Geo attribution:" contains neither "Geo
+    // source:" nor a leading count, but testing the narrower string first is
+    // what keeps that true of a future line rather than of today's wording.
+    if (/Geo attribution:/.test(line))
+      geoAttribution = line.replace(/.*Geo attribution:\s*/, "").trim() || null;
+    else if (/Geo source:/.test(line)) geoSource = line.replace(/.*Geo source:\s*/, "").trim();
     else if (/by unique visitor/.test(line)) bucket = byVisitor;
     else if (/by request volume/.test(line)) bucket = byVolume;
     else {
@@ -108,7 +115,7 @@ const parseGeoSection = (lines: string[] | undefined): GeoSection => {
       if (m && bucket) bucket.push({ label: m[2], count: Number(m[1]) });
     }
   }
-  return { geoSource, byVisitor, byVolume };
+  return { geoSource, geoAttribution, byVisitor, byVolume };
 };
 
 /** A parsed snapshot plus the sort key the timeline needs. */
@@ -171,6 +178,7 @@ export const parseSummary = (text: string, file: string): ParsedSnapshot | null 
     uniqueIps: num(grab(/Unique IPs:\s*(\d+)/, totals)),
     dateRange: grab(/Date range:\s*(.+)/, totals),
     geoSource: countries.geoSource ?? cities.geoSource,
+    geoAttribution: countries.geoAttribution ?? cities.geoAttribution,
     topPaths: parseCountRows(sections["Top 20 requested paths"]),
     statusCodes: parseCountRows(sections["HTTP status codes"]),
     referrers: parseCountRows(sections["Top 20 referrers"]),

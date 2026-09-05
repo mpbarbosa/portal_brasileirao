@@ -1081,10 +1081,13 @@ Ported from `agora_na_copa_2026`, which had the whole idea first. Four pieces:
 
 - `shell_scripts/12_traffic_report.sh` — runs **on the host**, summarises nginx's
   access log into one `summary-<stamp>.txt`. coreutils and awk only, so it works
-  on a bare host; a GeoLite2 database and `mmdblookup` are optional and add the
-  country and city sections.
+  on a bare host; a `.mmdb` geolocation database and `mmdblookup` are optional
+  and add the country and city sections — `14_install_geoip.sh` puts one there.
 - `shell_scripts/13_install_traffic_timer.sh` — one-time provisioning, like 01,
   03 and 11. Installs the hourly timer and prunes to a month of snapshots.
+- `shell_scripts/14_install_geoip.sh` — one-time provisioning too, and the only
+  way the country and city sections ever have anything in them. See **The geo
+  sections are opt-in, and were empty on the host for weeks** below.
 - `/api/traffic-dashboard` and `/trafego` — the deployed page.
 - `scripts/traffic-dashboard.ts` — a **local** window (`npm run traffic-dashboard`,
   `localhost:4317`).
@@ -1123,6 +1126,49 @@ red. If this repo ever adds a `log_format`, the field map at the top of
 `12_traffic_report.sh` is what has to change with it. The referrer is taken by
 regex rather than as a field index, because it is quoted and routinely contains
 spaces.
+
+**The geo sections are opt-in, and were empty on the host for weeks.** The
+report treats geolocation as optional and prints a note when it finds no
+database — which is right, and is also why nobody noticed: `/trafego` served
+"Países por endereço" and "Países por volume" side by side, each reading
+"Sem dados.", **while the rodapé beneath them said "não há seções de país nem
+de cidade"**. The page contradicted itself and no gate could see it, because
+the city panels were conditional and the country ones were not. Both are gated
+now, on their **rows** rather than on `geoSource`: a country-level database
+answers the country sections and not the city ones, so one rule — draw a panel
+when it has rows — covers both without a second condition to keep true.
+`tests/e2e/trafego.spec.ts` is the first spec this page has ever had.
+
+**The default database is DB-IP's City Lite, not GeoLite2, and the reason is
+the signup rather than the data.** GeoLite2 has needed a MaxMind account and a
+licence key since 2019, so a script defaulting to it cannot run on a fresh
+host — the property `FOOTBALL_DATA_TOKEN` and Open-Meteo are both arranged to
+avoid. DB-IP publish a City Lite build monthly in the same `.mmdb` format over
+plain HTTPS with no key. Measured before choosing it rather than assumed: the
+2026-09 build reports `Type: DBIP-City-Lite`, answers both `country names` and
+`city names`, and satisfies the report's existing City detection unchanged, so
+the keyless path is not a degraded one. `GEO_VENDOR=maxmind` is still there for
+an operator who already has a key.
+
+**The credit is a condition of use and travels with the database, never with
+the page.** DB-IP's Lite editions are CC BY 4.0 — usable commercially only
+while the attribution is displayed, which is exactly the bargain
+`src/data/stadiums.ts` strikes for the Commons photographs. So
+`12_traffic_report.sh` reads the `Type` out of the file **it actually used** and
+prints a `Geo attribution:` line from it; `parseSummary` carries it as
+`geoAttribution` and the page renders it verbatim. A component that composed
+the credit from a filename would credit the wrong vendor the first time
+somebody swapped the database underneath it. An unrecognised `Type` gets **no**
+credit line, and that is deliberately not the same as "no credit is owed" —
+nothing here may invent an attribution, and a database whose terms the report
+does not know is one whose terms it must not state.
+
+**The database is installed under its own vendor's filename**, so the probe
+list carries `dbip-city-lite.mmdb` and `dbip-country-lite.mmdb` beside the two
+GeoLite2 names. Writing DB-IP's bytes as `GeoLite2-City.mmdb` would make every
+later reading of that host wrong about what it is running — the report's own
+comment already says to ask a database what it is rather than to read its name,
+and this is the other half of that rule.
 
 Two things carried over from the sibling verbatim because they were paid for
 there:

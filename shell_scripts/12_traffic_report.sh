@@ -126,9 +126,16 @@ GEO_HAS_CITY=0
 if [[ "${DISABLE_GEO:-}" == "true" ]]; then
     GEO_DB=""
 else
+# City editions first in each directory, then country: a City database also
+# answers the country question, so preferring it loses nothing and adds the city
+# sections. DB-IP sits beside GeoLite2 rather than replacing it — the two are the
+# same format and 14_install_geoip.sh writes each under its own vendor's name, so
+# a host carrying either is read without configuration.
 for candidate in "$GEO_DB" \
-    /var/lib/GeoIP/GeoLite2-City.mmdb /var/lib/GeoIP/GeoLite2-Country.mmdb \
-    /usr/share/GeoIP/GeoLite2-City.mmdb /usr/share/GeoIP/GeoLite2-Country.mmdb; do
+    /var/lib/GeoIP/GeoLite2-City.mmdb /var/lib/GeoIP/dbip-city-lite.mmdb \
+    /var/lib/GeoIP/GeoLite2-Country.mmdb /var/lib/GeoIP/dbip-country-lite.mmdb \
+    /usr/share/GeoIP/GeoLite2-City.mmdb /usr/share/GeoIP/dbip-city-lite.mmdb \
+    /usr/share/GeoIP/GeoLite2-Country.mmdb /usr/share/GeoIP/dbip-country-lite.mmdb; do
     if [[ -n "$candidate" && -r "$candidate" ]]; then
         GEO_DB="$candidate"
         break
@@ -140,11 +147,26 @@ fi
 # pointing at a renamed City database is still detected as one. 8.8.8.8 is just
 # a well-formed address to satisfy the required --ip; the Type line does not
 # depend on it.
+#
+# The same Type also decides the ATTRIBUTION, which is why it is captured rather
+# than only matched. DB-IP's Lite databases are CC BY 4.0 — usable only while
+# the credit is shown — and reading the credit out of the file actually in use
+# is what stops a page crediting the wrong vendor for a database somebody swapped
+# underneath it. An unrecognised Type gets no credit line rather than a guessed
+# one: nothing here may invent an attribution, and a database this script does
+# not know the terms of is one whose terms it must not state.
+GEO_TYPE=""
+GEO_ATTRIBUTION=""
 if [[ -n "$GEO_DB" ]] && command -v mmdblookup > /dev/null 2>&1; then
-    if mmdblookup --file "$GEO_DB" --ip 8.8.8.8 --verbose 2> /dev/null \
-        | grep -iE '^[[:space:]]*Type:' | grep -qi 'city'; then
+    GEO_TYPE="$(mmdblookup --file "$GEO_DB" --ip 8.8.8.8 --verbose 2> /dev/null \
+        | grep -iE '^[[:space:]]*Type:' | head -1 | sed 's/.*Type:[[:space:]]*//' || true)"
+    if printf '%s' "$GEO_TYPE" | grep -qi 'city'; then
         GEO_HAS_CITY=1
     fi
+    case "$(printf '%s' "$GEO_TYPE" | tr '[:upper:]' '[:lower:]')" in
+        *dbip*) GEO_ATTRIBUTION="IP Geolocation by DB-IP (https://db-ip.com), CC BY 4.0" ;;
+        *geolite2* | *geoip2*) GEO_ATTRIBUTION="GeoLite2 data created by MaxMind (https://www.maxmind.com)" ;;
+    esac
 fi
 
 # One lookup per UNIQUE address rather than per line, which is what keeps this
@@ -251,6 +273,15 @@ top() { awk -v n="$TOP_N" 'NR <= n'; }
     echo "== Top countries =="
     if [[ -n "$GEO_MAP" ]]; then
         echo "Geo source: $GEO_DB"
+        # An `if` and not `[[ … ]] && echo`: that form is exempt from `set -e`
+        # only while it is not the last command in its group, which is a
+        # property of the lines around it rather than of itself. This script has
+        # been stopped mid-stream twice by a command returning 1 where nothing
+        # was wrong, so the shape that cannot be broken by a later reorder is
+        # the one worth spending three lines on.
+        if [[ -n "$GEO_ATTRIBUTION" ]]; then
+            echo "Geo attribution: $GEO_ATTRIBUTION"
+        fi
         echo "-- by unique visitor (top $TOP_N) --"
         cut -f2 "$GEO_MAP" | sort | uniq -c | sort -rn | top
         echo "-- by request volume (top $TOP_N) --"
