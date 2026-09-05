@@ -8,8 +8,8 @@
  *
  * Two images, from one payload:
  *
- *   docs/videos/campanhas-palmeiras-flamengo-miniatura.png          the fixture
- *   docs/videos/campanhas-palmeiras-flamengo-miniatura-11-ao-1.png  the story
+ *   docs/medias/campanhas-palmeiras-flamengo-miniatura.png          the fixture
+ *   docs/medias/campanhas-palmeiras-flamengo-miniatura-11-ao-1.png  the story
  *
  * **Everything on them is derived, nothing is typed in.** The lines, the
  * headline's two positions, the rodada count and the chips all come out of
@@ -52,7 +52,7 @@ const SCENE_PATH = path.join(HERE, "campanhas.py");
 
 /** The video these advertise. The capas are named after it, so `ls` files them together. */
 const VIDEO_BASENAME = "campanhas-palmeiras-flamengo";
-const OUT_DIR = path.join(ROOT, "docs/videos");
+const OUT_DIR = path.join(ROOT, "docs/medias");
 
 const WIDTH = 1280;
 const HEIGHT = 720;

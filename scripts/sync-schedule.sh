@@ -176,11 +176,11 @@ case "$mode" in
      data); club-scouts.ts does render, in the Painel's Perfil, which sits below
      the crop. Re-measure rather than quoting a number from a previous commit.
 
-  4. Re-render docs/videos/ — the two mp4s and the four capas are drawn from the
+  4. Re-render docs/medias/ — the two mp4s and the four capas are drawn from the
      seed and committed, so they now describe LAST season and no gate but one
      can see it. tests/manim-renders.test.ts is that gate and step 1 has already
      gone red on it. scripts/manim/README.md has the commands; write the new
-     SNAPSHOT_DATE into docs/videos/RENDERED in the same commit that redraws
+     SNAPSHOT_DATE into docs/medias/RENDERED in the same commit that redraws
      them, never before.
 NEXT
     ;;

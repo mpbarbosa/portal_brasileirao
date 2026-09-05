@@ -82,10 +82,10 @@ renderiza em segundos e serve para conferir o enquadramento.
 
 ## Os renders commitados
 
-**`docs/videos/campanhas-palmeiras-flamengo.mp4`** (23s, 3,3 MB),
-**`docs/videos/pontos-20-clubes.mp4`** (21s, 4,4 MB),
-**`docs/videos/velas-fluminense.mp4`** (21s, 3,8 MB) e
-**`docs/videos/velas-athletico-pr.mp4`** (21s, 3,8 MB) — todos 1920×1080, 60fps —
+**`docs/medias/campanhas-palmeiras-flamengo.mp4`** (23s, 3,3 MB),
+**`docs/medias/pontos-20-clubes.mp4`** (21s, 4,4 MB),
+**`docs/medias/velas-fluminense.mp4`** (21s, 3,8 MB) e
+**`docs/medias/velas-athletico-pr.mp4`** (21s, 3,8 MB) — todos 1920×1080, 60fps —
 são os vídeos prontos, versionados junto do resto do projeto como os slides
 em `docs/carrossel/` e as capturas em `docs/screenshots/`.
 
@@ -117,19 +117,19 @@ até que data os dados vão, que é a única defesa que ele tem.
 
 ## O gif
 
-**`docs/videos/velas-athletico-pr.gif`** — 960×540, 15fps, 317 quadros, 5,2 MB.
+**`docs/medias/velas-athletico-pr.gif`** — 960×540, 15fps, 317 quadros, 5,2 MB.
 Ele é **derivado do mp4 commitado**, não um segundo render: sai do arquivo que
 está ao lado dele por dois passos de `ffmpeg`, então não tem como descrever uma
 temporada diferente da que o vídeo descreve. Um `-qh` a mais só gastaria dez
 minutos para produzir os mesmos quadros.
 
 ```sh
-ffmpeg -y -i docs/videos/velas-athletico-pr.mp4 \
+ffmpeg -y -i docs/medias/velas-athletico-pr.mp4 \
   -vf "fps=15,scale=960:-1:flags=lanczos,palettegen=max_colors=192:stats_mode=diff" \
   /tmp/palette.png
-ffmpeg -y -i docs/videos/velas-athletico-pr.mp4 -i /tmp/palette.png \
+ffmpeg -y -i docs/medias/velas-athletico-pr.mp4 -i /tmp/palette.png \
   -lavfi "fps=15,scale=960:-1:flags=lanczos[x];[x][1:v]paletteuse=dither=none:diff_mode=rectangle" \
-  docs/videos/velas-athletico-pr.gif
+  docs/medias/velas-athletico-pr.gif
 ```
 
 **O gif é MAIOR que o mp4 que o gerou** — 5,2 MB contra 3,8 — com metade da
@@ -153,13 +153,13 @@ diz nada sobre isso.
 
 ## As miniaturas
 
-**`docs/videos/campanhas-palmeiras-flamengo-miniatura.png`** e
+**`docs/medias/campanhas-palmeiras-flamengo-miniatura.png`** e
 **`-miniatura-11-ao-1.png`** — 1280×720, as capas que o YouTube mostra no lugar
 de um frame qualquer da animação (os primeiros segundos são um gráfico vazio).
 Uma nomeia o confronto, a outra a história; a segunda envelhece mal de
 propósito, porque `1º` é uma afirmação sobre a rodada 25 em tipo de 96px.
 
-**`docs/videos/pontos-20-clubes-miniatura.png`** e
+**`docs/medias/pontos-20-clubes-miniatura.png`** e
 **`-miniatura-38-pontos.png`** são as capas do outro vídeo, pelas mesmas regras:
 uma nomeia a divisão, a outra a distância entre o 1º e o 20º, e o nome do
 arquivo da segunda sai do número que ela imprime.
@@ -194,7 +194,7 @@ Regerar é um commit deliberado, como o mp4: nada compara os bytes.
 
 ## Quando regerar, e o que obriga a isso
 
-Os artefatos de `docs/videos/` — quatro mp4, um gif e quatro capas; conte o
+Os artefatos de `docs/medias/` — quatro mp4, um gif e quatro capas; conte o
 diretório, não esta frase — são **velhos por construção**. São desenhados do seed e commitados (como o `og-default.png`, para
 que quem clona o repositório os tenha sem instalar o Manim), e descrevem uma
 temporada congelada para sempre. Um `sync-seed-data` move a temporada debaixo
@@ -209,7 +209,7 @@ propósito** na próxima sincronização:
   propriedade que o `tests/player-core.test.ts` tem — não dá para ficar vermelho
   no commit não relacionado de outra pessoa, e quem ele interrompe é justamente
   quem pode agir.
-- `docs/videos/RENDERED` guarda de qual snapshot cada artefato foi desenhado. É o
+- `docs/medias/RENDERED` guarda de qual snapshot cada artefato foi desenhado. É o
   mesmo dispositivo do `docs/screenshots/CAPTURED` **e o mesmo limite**: ele lê a
   afirmação de uma pessoa, não os bytes. Nada impede escrever uma data nova sobre
   artefatos que ninguém redesenhou. Pega o esquecimento, que é a falha que
@@ -233,7 +233,7 @@ npm ci
 
 # 2. O Manim, que NÃO é dependência deste repositório — vive num virtualenv à
 #    parte, ~460 MB, alguns minutos. `media/` é ignorado; é a árvore de trabalho
-#    dele, e o entregável tem nome e lugar próprios em docs/videos/.
+#    dele, e o entregável tem nome e lugar próprios em docs/medias/.
 python3 -m venv .venv-manim && ./.venv-manim/bin/pip install -q manim
 
 # 3. Só agora a cadeia.
@@ -243,18 +243,18 @@ npx tsx scripts/manim/export-velas.ts      > scripts/manim/velas.json
 npx tsx scripts/manim/export-velas.ts 1768 > scripts/manim/velas-athletico-pr.json
 ./.venv-manim/bin/manim -qh scripts/manim/campanhas.py Campanhas
 ./.venv-manim/bin/manim -qh scripts/manim/pontos.py    Pontos
-cp media/videos/campanhas/1080p60/Campanhas.mp4 docs/videos/campanhas-palmeiras-flamengo.mp4
-cp media/videos/pontos/1080p60/Pontos.mp4       docs/videos/pontos-20-clubes.mp4
+cp media/videos/campanhas/1080p60/Campanhas.mp4 docs/medias/campanhas-palmeiras-flamengo.mp4
+cp media/videos/pontos/1080p60/Pontos.mp4       docs/medias/pontos-20-clubes.mp4
 
 # 3b. As DUAS velas escrevem no MESMO media/videos/velas/1080p60/Velas.mp4: o
 #     arquivo tem o nome da CENA, não o do clube. Copie uma antes de renderizar
 #     a outra — juntar os dois `manim` e depois os dois `cp` faz sair o mesmo
 #     clube nos dois arquivos, com os dois nomes certos e nada acusando.
 ./.venv-manim/bin/manim -qh scripts/manim/velas.py Velas
-cp media/videos/velas/1080p60/Velas.mp4 docs/videos/velas-fluminense.mp4
+cp media/videos/velas/1080p60/Velas.mp4 docs/medias/velas-fluminense.mp4
 VELAS_JSON=$PWD/scripts/manim/velas-athletico-pr.json \
   ./.venv-manim/bin/manim -qh scripts/manim/velas.py Velas
-cp media/videos/velas/1080p60/Velas.mp4 docs/videos/velas-athletico-pr.mp4
+cp media/videos/velas/1080p60/Velas.mp4 docs/medias/velas-athletico-pr.mp4
 
 # 3c. O gif, do mp4 já copiado e nunca de media/. Os dois comandos estão na
 #     seção "O gif", com o porquê de cada parâmetro.
@@ -269,7 +269,7 @@ volta com bytes diferentes só pelo encoder — churn, exatamente o re-shoot
 desnecessário que o `Screenshots-unaffected:` existe para evitar. O que obriga a
 regerar é `tests/manim-renders.test.ts` ficar vermelho, e ele só fica num sync.
 
-Depois **edite `docs/videos/RENDERED`** com o novo `SNAPSHOT_DATE`, no mesmo
+Depois **edite `docs/medias/RENDERED`** com o novo `SNAPSHOT_DATE`, no mesmo
 commit. E confira os nomes: a capa da história de cada vídeo é nomeada pelos
 números que imprime, então `-miniatura-11-ao-1.png` e `-miniatura-38-pontos.png`
 viram outros arquivos quando a temporada anda — o antigo tem que sair do
