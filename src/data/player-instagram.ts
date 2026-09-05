@@ -36,8 +36,9 @@
  * handle below was confirmed against a search result carrying the profile's own
  * title and follower count — "Nome (@handle) • Instagram photos and videos" —
  * and, where the bio was visible, against a bio naming the player's club. Of 70
- * candidates that check rejected or corrected **13**, which is why the file is
- * 38 entries and not 70:
+ * candidates that check rejected or corrected **13** — count the entries below
+ * rather than a number written here, which has no gate on it and goes stale the
+ * first time anybody adds a handle:
  *
  * - Six were simply the **wrong handle**. Ramón Sosa was given as `sosa`, which
  *   belongs to somebody else; he is `ramon.sosa17`. Nicolás De La Cruz was given
@@ -56,6 +57,30 @@
  * candidates was wrong, and every one of them looked entirely reasonable in the
  * source. A wrong handle is indistinguishable from a right one to everyone
  * except the person who opens it.
+ *
+ * ## A stronger join than the date, where the curated files already agree
+ *
+ * `flacolopez_10` was added after that survey, and the identity did not rest on
+ * the date of birth alone. The Wikidata item reached by the `2000-12-06` join
+ * carries **`P12302` = `1094179`** and a **`ptwiki` sitelink of `Flaco López`**
+ * — byte-identical to what `player-sofascore.ts` and `player-wikipedia.ts`
+ * already record for `170698`, each established through its own join and, for
+ * the Wikipedia half, verified by `check-player-wikipedia` against the
+ * article's own stated birth date. So three curated files agree on one item
+ * rather than one file trusting one date.
+ *
+ * Prefer that check where it is available. This division carries **two**
+ * Lópezes — Renzo López is `44093` at Vitória, born 1994-04-16 — and the
+ * general failure is already recorded above: exact name plus exact date is not
+ * a unique key here, since `179144` and `13421` are two different Carlos
+ * Eduardos both born 1996-10-10. An agreeing third-party id is a question about
+ * the *set* of curated files, which is the kind of question a per-row check
+ * cannot ask.
+ *
+ * The profile was still opened, because none of that says the handle is live: a
+ * deactivated account is what the Ayrton Lucas entry above records, and no id
+ * anywhere reports it. Title, follower count and a bio naming **@palmeiras**,
+ * read in a browser.
  */
 export const PLAYER_INSTAGRAM: Record<string, string> = {
   "1182": "7_dudu",              // Dudu · Atlético-MG
@@ -90,6 +115,7 @@ export const PLAYER_INSTAGRAM: Record<string, string> = {
   "1129": "alerrandro_souza00",  // Alerrandro · Internacional
   "115222": "bruno_fuchs",       // Bruno Fuchs · Palmeiras
   "28740": "joacopiquerez",      // Joaquín Piquerez · Palmeiras
+  "170698": "flacolopez_10",     // José Manuel López · Palmeiras
   "115559": "khellvensilva",     // Khellven · Palmeiras
   "140647": "ramon.sosa17",      // Ramón Sosa · Palmeiras
   "181439": "vitor_roque9",      // Vítor Roque · Palmeiras
