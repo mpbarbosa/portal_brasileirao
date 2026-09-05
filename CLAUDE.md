@@ -1132,12 +1132,47 @@ npm run traffic-dashboard                       # a local ./traffic-reports
 npm run traffic-dashboard -- --url https://brasileirao.mpbarbosa.com
 ```
 
-**Two things are unexercised and the first real run is still a first.** Nothing
-in CI runs `12_traffic_report.sh` against a real nginx log, and nothing has run
-`13_install_traffic_timer.sh` on the host at all — so the `adm` group membership
+**The first real run found two bugs, and both were invisible to every gate that
+existed.** It is worth reading before adding a section to that script, because
+neither is about traffic:
+
+- **The date range ran BACKWARDS**, and went straight onto the page:
+  `04/Sep/2026:00:07:19 -> 26/Aug/2026:23:41:49`. `zcat -f "$ACCESS_LOG"*`
+  concatenates in the shell's **lexical** glob order — `access.log`, `.1`,
+  `.10.gz`, `.11.gz`, `.2.gz` — so the buffer is neither chronological nor
+  reverse-chronological, and reading line 1 and the last line reports two
+  arbitrary interior stamps. It now scans for the true min and max. Sorting the
+  glob would fix the endpoints and leave the middle interleaved, which is why
+  the scan is the honest fix rather than the tidy one.
+- **An empty log truncated the report to four of eleven sections and exited 1.**
+  `grep` exits 1 when nothing matches, `pipefail` propagates it, `set -e` kills
+  the brace group mid-stream — and a *partial* summary is still written, so the
+  file exists and simply stops. This is the `head`/EPIPE trap the script already
+  carried a paragraph about, in a second costume, three sections further down.
+  A freshly rotated log at midnight reaches it, and so does one holding only
+  malformed probe traffic.
+
+**`scripts/rehearse-traffic-report.sh` is the coverage that now exists, and CI
+runs it.** It drives the real script against real fixture logs — including
+rotations whose glob order is not chronological, which is what reproduces the
+first bug. Two of its assertions are worth keeping when it is extended: it
+counts **section headings**, because "exited 0" and "a summary exists" both pass
+against a truncated report and only the count says the run finished; and it
+takes `DISABLE_GEO=true`, because this repo's own workstation carries a
+GeoLite2 database while CI does not, so without the switch the geo assertion
+answers differently on the two machines — `rehearse-sync-schedule.sh`'s
+environment-inheriting failure, caught this time before it merged rather than
+fifty minutes after.
+
+**`DISABLE_GEO` is a real operator knob and not a test hook**, in
+`DISABLE_FOOTBALL_DATA`'s idiom: one lookup per unique address is by far the
+slowest part of a run on a large log.
+
+**One thing stays unexercised.** Nothing has run
+`13_install_traffic_timer.sh` in CI — so the `adm` group membership
 it relies on (systemd has no terminal for `sudo` to prompt at) is a designed
 answer rather than a verified one. Run the service by hand once after installing
-the timer; that is the only thing that proves the report can read the log. The
+the timer. The
 parsing half **is** exercised: `tests/traffic-report-core.test.ts` runs in
 `test:unit`, and its fixture is the output of a real run of the script rather
 than a summary composed to match the parser.

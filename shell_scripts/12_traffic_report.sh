@@ -16,6 +16,8 @@
 #   DEPLOY_DIR  Where the app runs from. Default: /var/www/portal_brasileirao.
 #               Only used to place OUT_DIR when one is not given.
 #   GEO_DB      A GeoLite2 .mmdb to resolve countries with. Default: probed.
+#   DISABLE_GEO Set to "true" to skip geolocation entirely. Every other
+#               section still works; the geo ones print a note.
 #   TOP_N       Rows per ranked section. Default: 20.
 #
 # Exit codes:
@@ -112,8 +114,18 @@ TOTAL="$(wc -l < "$TMP_LOG")"
 # leaves this host**, which is the only reason geo is here at all. City is
 # preferred over Country when both exist — a City database also answers the
 # country question, so choosing it loses nothing and adds the city sections.
+# DISABLE_GEO=true skips the lookup entirely — the kill-switch idiom
+# DISABLE_FOOTBALL_DATA and DISABLE_WEATHER already use. Two callers want it: an
+# operator on a large log, where one lookup per unique address is the slowest
+# part of the run by far, and scripts/rehearse-traffic-report.sh, which
+# otherwise gives a different answer on a machine that happens to carry a
+# GeoLite2 database than on one that does not — the environment-inheriting
+# failure rehearse-sync-schedule.sh was red on `main` for.
 GEO_DB="${GEO_DB:-}"
 GEO_HAS_CITY=0
+if [[ "${DISABLE_GEO:-}" == "true" ]]; then
+    GEO_DB=""
+else
 for candidate in "$GEO_DB" \
     /var/lib/GeoIP/GeoLite2-City.mmdb /var/lib/GeoIP/GeoLite2-Country.mmdb \
     /usr/share/GeoIP/GeoLite2-City.mmdb /usr/share/GeoIP/GeoLite2-Country.mmdb; do
@@ -122,6 +134,7 @@ for candidate in "$GEO_DB" \
         break
     fi
 done
+fi
 
 # Ask the database what it is rather than reading its filename, so a GEO_DB
 # pointing at a renamed City database is still detected as one. 8.8.8.8 is just
@@ -176,9 +189,39 @@ top() { awk -v n="$TOP_N" 'NR <= n'; }
     echo "== Totals =="
     printf "Requests:       %s\n" "$TOTAL"
     printf "Unique IPs:     %s\n" "$(awk '{ print $1 }' "$TMP_LOG" | sort -u | wc -l)"
-    printf "Date range:     %s  ->  %s\n" \
-        "$(sed -n '1p' "$TMP_LOG" | awk '{ print $4 }' | tr -d '[')" \
-        "$(tail -n1 "$TMP_LOG" | awk '{ print $4 }' | tr -d '[')"
+    # The oldest and newest stamps ANYWHERE in the window, scanned — deliberately
+    # not the first and last lines of the file.
+    #
+    # `zcat -f "$ACCESS_LOG"*` concatenates in the shell's glob order, which is
+    # lexical: access.log, .1, .10.gz, .11.gz, .2.gz, .3.gz … So the buffer is
+    # neither chronological nor reverse-chronological, and taking line 1 and the
+    # last line reported a range that ran BACKWARDS on the first real run —
+    # `04/Sep/2026:00:07:19 -> 26/Aug/2026:23:41:49`, printed straight onto the
+    # page. Sorting the glob would fix the endpoints and still leave the middle
+    # interleaved, so the scan is the honest fix.
+    #
+    # The key is a sortable YYYYMMDD HH:MM:SS built from nginx's own
+    # dd/Mon/yyyy:HH:MM:SS; the month name is looked up rather than parsed, and a
+    # line whose month is not one of the twelve is skipped rather than sorted as
+    # month zero. Malformed lines are real here — the log carries probe traffic
+    # that shifts every field.
+    awk '
+        $4 ~ /^\[[0-9][0-9]\/[A-Za-z][a-z][a-z]\/[0-9][0-9][0-9][0-9]:/ {
+            stamp = substr($4, 2)
+            split(stamp, part, ":")
+            split(part[1], ymd, "/")
+            pos = index("JanFebMarAprMayJunJulAugSepOctNovDec", ymd[2])
+            if (pos == 0) next
+            key = sprintf("%s%02d%s %s:%s:%s", ymd[3], (pos + 2) / 3, ymd[1],
+                          part[2], part[3], part[4])
+            if (oldest == "" || key < oldest) { oldest = key; first = stamp }
+            if (key > newest)                 { newest = key; last  = stamp }
+        }
+        END {
+            if (first == "") print "Date range:     (no parseable timestamps)"
+            else printf "Date range:     %s  ->  %s\n", first, last
+        }
+    ' "$TMP_LOG"
     echo
 
     # $7 is the path — see the field map at the top of this file.
@@ -193,7 +236,14 @@ top() { awk -v n="$TOP_N" 'NR <= n'; }
     # Taken by regex rather than as $11: the referrer is quoted and routinely
     # contains spaces, and a field index truncates it at the first one.
     echo "== Top $TOP_N referrers =="
-    grep -aoE '"[^"]*" "[^"]*"$' "$TMP_LOG" \
+    # `|| true` is load-bearing, and its absence truncated the report exactly as
+    # `head` did: grep exits 1 when NOTHING matches, `pipefail` propagates that,
+    # and `set -e` then kills the whole brace group mid-stream — so the summary
+    # simply STOPPED after this section, with four of ten headings and exit 1.
+    # An empty log does it (a freshly rotated one at midnight), and so does a log
+    # holding only malformed probe lines. Same family as the `head` EPIPE trap
+    # above: a routine non-match ending the run, silently, partway through.
+    { grep -aoE '"[^"]*" "[^"]*"$' "$TMP_LOG" || true; } \
         | sed 's/" "[^"]*"$/"/' \
         | sort | uniq -c | sort -rn | top
     echo

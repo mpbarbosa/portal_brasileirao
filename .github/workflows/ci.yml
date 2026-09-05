@@ -198,6 +198,19 @@ jobs:
       - name: Rehearse the sync schedule (scripts/sync-schedule.sh)
         run: ./scripts/rehearse-sync-schedule.sh
 
+      # The only behavioural coverage 12_traffic_report.sh has. Shellcheck above
+      # proves it parses; this proves it reads a log. It is here rather than
+      # merely shellchecked because the script travels inside the release
+      # tarball, so a broken one ships with the release that carries it — the
+      # same argument the flip-back and backup rehearsals make.
+      #
+      # Both bugs it was written after were invisible to every other gate: a date
+      # range that ran backwards because logrotate's glob order is lexical, and a
+      # report that stopped four sections into eleven because an unmatched grep
+      # exits 1 under `set -e`. The first shipped to production and onto the page.
+      - name: Rehearse the traffic report (shell_scripts/12)
+        run: ./scripts/rehearse-traffic-report.sh
+
 
       # Everything above has passed, so THIS dist/ is the one that type-checked,
       # passed the unit suite, booted as a bundle and served three endpoints.
