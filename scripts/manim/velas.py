@@ -1,7 +1,10 @@
 """
-Uma campanha lida como VELA: o Fluminense, rodada a rodada.
+Uma campanha lida como VELA: UM clube, rodada a rodada.
 
     manim -qh scripts/manim/velas.py Velas
+
+    VELAS_JSON=$PWD/scripts/manim/velas-athletico-pr.json \
+      manim -qh scripts/manim/velas.py Velas
 
 As duas cenas irmãs desenham a campanha como **linha** — `campanhas.py` a
 posição de dois clubes, `pontos.py` os pontos dos vinte. Uma linha liga a
@@ -11,9 +14,17 @@ três rivais jogaram no domingo desenha o mesmo segmento de quem desceu andando.
 A vela separa os dois fatos, e é o argumento do `rank-candles-core.ts` — não um
 novo.
 
-O JSON é `scripts/manim/velas.json`, escrito por `export-velas.ts`. **Nada aqui
-calcula uma vela**: `computeRankCandles` é a única implementação, a mesma que o
-Painel do site serve. Um número errado neste vídeo está errado no site também.
+O JSON é `scripts/manim/velas.json`, escrito por `export-velas.ts`, e
+`VELAS_JSON` aponta para outro. **Um clube por run é a cena inteira**: quem ela
+desenha, como ela se chama e de que temporada ela fala saem todos do payload —
+o único acoplamento no sentido contrário é o `CLUB_COLOURS` abaixo, que é uma
+tabela e não um caso especial. Um segundo clube é um segundo payload ao lado do
+primeiro, nunca um `velas.json` sobrescrito: o `velas.json` é a fonte de um mp4
+já commitado.
+
+**Nada aqui calcula uma vela**: `computeRankCandles` é a única implementação, a
+mesma que o Painel do site serve. Um número errado neste vídeo está errado no
+site também.
 
 O que vale a pena saber antes de mexer:
 
@@ -101,10 +112,11 @@ NEGATIVE = "#E5533D"
 # cor de um clube. Um clube sem entrada cai no cinza, que é uma ausência
 # visível e não um chute.
 CLUB_COLOURS = {
-    "1765": "#B0455F",  # Fluminense  grená
-    "1769": "#1FBF6B",  # Palmeiras   verde
-    "1783": "#E5453A",  # Flamengo    vermelho
-    "1779": "#D7DDE0",  # Corinthians cinza-claro
+    "1765": "#B0455F",  # Fluminense    grená
+    "1768": "#FF9C3D",  # Athletico-PR  laranja
+    "1769": "#1FBF6B",  # Palmeiras     verde
+    "1783": "#E5453A",  # Flamengo      vermelho
+    "1779": "#D7DDE0",  # Corinthians   cinza-claro
 }
 FALLBACK_COLOUR = "#9AA5A0"
 

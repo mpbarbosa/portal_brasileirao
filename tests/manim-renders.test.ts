@@ -31,6 +31,7 @@ import { SNAPSHOT_DATE } from "@/src/data/matches";
  */
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const VIDEOS = path.resolve(HERE, "../docs/videos");
+const SCENES = path.resolve(HERE, "../scripts/manim");
 const RENDERED = path.join(VIDEOS, "RENDERED");
 
 /** `# comments` and blank lines out, `<file>  <date>` in. */
@@ -81,9 +82,15 @@ test("the exported payloads the scenes read were taken from the same seed", () =
   // the halfway state a person lands in mid-regeneration. Checking it here
   // rather than only in RENDERED means the message names the step that is
   // missing rather than the whole chain.
-  for (const name of ["pontos.json", "campanhas.json", "velas.json"]) {
+  //
+  // Read the DIRECTORY, not a list written here — the same move the artefact
+  // check above makes, for the same reason: a payload that is present and
+  // unlisted is exempt from this check for ever and nothing says so. That is
+  // not hypothetical for this scene, because `velas.py` draws one club per
+  // run, so a second club is a second payload beside the first.
+  for (const name of readdirSync(SCENES).filter((file) => file.endsWith(".json"))) {
     const payload = JSON.parse(
-      readFileSync(path.resolve(HERE, "../scripts/manim", name), "utf8"),
+      readFileSync(path.join(SCENES, name), "utf8"),
     ) as { snapshot: string };
     assert.equal(
       payload.snapshot,
