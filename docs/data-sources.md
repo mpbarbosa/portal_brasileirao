@@ -212,7 +212,14 @@ answer, including the only **xPTS field** found anywhere in this file and a
 contradiction about whether the Brasileirão is covered at all. See **Expected
 goals (xG) and expected points (xPts)** below.
 
-### Expected goals (xG) and expected points (xPts) — nothing reachable today, and one vendor contradicts itself
+### Expected goals (xG) and expected points (xPts) — one provider measured, one contradicting itself
+
+**The heading said "nothing reachable today" until 2026-09-05, and that was a
+survey's conclusion rather than a fact.** A free API-Football key settled the
+one candidate the survey had left unverified: it **does** carry
+`expected_goals` for the Brasileirão, and *"nothing reachable"* was true only of
+what this app already reads. Corrected here rather than beneath, because a
+heading is what most readers take away.
 
 Written 2026-09-03, prompted by a reader's question rather than by a feature:
 *can this app separate desempenho subjacente from resultado convertido* — compare
@@ -331,6 +338,64 @@ team and (for three of them) per player. Note this widens the entry above, which
 answers only *does it carry broadcast data* and was written in August with no
 other question in mind — the same scope trap the API Futebol entry opens with.
 
+#### API-Football carries it, and this one is measured
+
+**Verified 2026-09-05 against `v3.football.api-sports.io` with a free key**, which
+is what promotes it out of the relayed subsection below. The docs host is still
+Cloudflared and still unreadable from here; **the API host is not**, and answers
+a clean JSON error to an unauthenticated request. That distinction is the whole
+reason this could be settled without reading a page.
+
+`GET /fixtures/statistics?fixture=<id>` returns, per team, on both sides, for
+league **71**:
+
+```
+expected_goals   "1.89"      goals_prevented   "0.11"
+```
+
+Eighteen statistic types in all, the other sixteen being possession, shots
+(total, on, off, blocked, inside/outside box), corners, offsides, fouls, cards,
+passes and goalkeeper saves. **None of them is xPts** — same shape as FootyStats,
+so xPts is derived here or it is Sportmonks.
+
+- **Coverage is complete on the sample: 12 of 12** fixtures spread across the
+  2024 season, April to December, every one carrying xG for both sides.
+- **The value is a string**, not a number. `"1.89"`, quoted.
+
+**Three refusals from the free plan, and the first two are diagnostic traps
+rather than limits.** They matter more than the finding, because each one
+reports as an absence of data:
+
+- **`last` is a paid parameter.** `fixtures?league=71&season=2024&status=FT&last=1`
+  answers `{"plan": "Free plans do not have access to the Last parameter."}` with
+  `results: 0` and an empty `response`. The first run here used `last=1` and read
+  as *this league has no finished fixtures*. It has 380.
+- **The rate limit is 10 requests per MINUTE**, and a throttled request answers
+  `{"rateLimit": "Too many requests…"}` — again `results: 0`, again an empty
+  `response`. Twelve requests fired back to back returned **six apparent
+  "no statistics"**, and the tell that they were not real was chronological
+  rather than structural: 8 December had xG and 28 July did not, which is not a
+  shape a cutoff makes. Re-run with 7s between them, all six carried xG.
+  **A parser that does not read `errors` reports a quota as missing data** —
+  which is the FootyStats 417 one entry up, in another costume, and this time it
+  caught the person writing that sentence.
+- **The free tier cannot reach 2026**: `{"plan": "Free plans do not have access
+  to this season, try from 2022 to 2024."}`. So the field is confirmed for the
+  right league on a season that is **not the current one**. That is strong
+  evidence and it is not proof about 2026; only a paid plan settles that.
+
+Observation rather than rule, measured once: `/status` counted **15** requests
+against a daily 100 after a good many more had been sent, so throttled requests
+appear not to debit the quota.
+
+**What this changes about the recommendation.** API-Football is the cheapest
+candidate carrying xG for this competition — free at 100/day and 10/minute for
+2022–2024, paid plans in the €19–39 range for the current season — and the
+only one whose field list here was read off the wire rather than off a
+marketing page. Sportmonks remains the only source shipping **xPTS** as a
+field, and still contradicts itself about whether it covers the Brasileirão at
+all.
+
 #### Read but not verified — the hosts refuse automated requests
 
 `www.api-football.com`, `footystats.org`, `fbref.com` and `footballxg.com` all
@@ -339,11 +404,12 @@ interstitial to a real browser engine. No attempt was made to get past it. So
 everything in this subsection is **relayed from search results rather than read
 off the vendor's page**, and the pricing figures below carry that provenance:
 
-- **API-Football / api-sports.io** — covers the Brasileirão (league 71) and is
-  the cheapest candidate by some distance (free tier of 100 requests a day; paid
-  plans around €19–39 a month). `fixtures/statistics` is understood to return an
-  `expected_goals` type, **unverified for this league**. This is the one worth
-  ten minutes with a free key, and it is a task rather than a finding.
+- **API-Football / api-sports.io** — **no longer in this list; see the
+  subsection above.** It sat here as *"understood to return an `expected_goals`
+  type, unverified for this league"*, and a free key settled it in about ten
+  minutes. Left as a pointer rather than deleted, because the paragraph above
+  reads as an original finding otherwise, and what it actually is, is a relayed
+  claim that got checked.
 - **TheStatsAPI** — lists Brazil Série A in default coverage and says xG is
   available "for the majority of top-tier competitions", without confirming per
   league.
