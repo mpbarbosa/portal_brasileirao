@@ -1014,10 +1014,33 @@ export interface TrafficSnapshot {
   /** Hits whose user-agent names a crawler. A share, not a filter: they are
    *  counted in `requests` like everything else. */
   bots: number | null;
-  /** `/api/health` hits — the reconciler, the deploy's live-commit assertion,
-   *  and any uptime monitor. Excluded from `topPaths` and from nothing else,
-   *  so the figure is what the chart set aside rather than a hidden filter. */
+  /**
+   * `/api/health` hits. Excluded from `topPaths` and from nothing else, so the
+   * figure is what the chart set aside rather than a hidden filter.
+   *
+   * **Not the machine's share.** `App.tsx` fetches it for the Rodapé on every
+   * page view, so readers are in here too — measured on the host's log for
+   * 2026-09-05, 76 of 427 carried this site's own Referer. Use `visitorHits`
+   * for the split; subtracting this one is what #375 got wrong.
+   */
   monitorHits: number | null;
+  /**
+   * Requests a **browser on this site** caused: the Referer names our own
+   * origin, and the user-agent does not self-declare as a crawler.
+   *
+   * Positive evidence rather than the absence of a blocklist entry, and the
+   * user-agent may only **disqualify**: a rendering crawler sends our Referer
+   * for its sub-resources exactly as a browser does, while a scanner spoofing
+   * `Claude-User` gains nothing by it. The 02:00Z sweep of 2026-09-05 spoofed
+   * four AI-crawler agents from one address; of its 643 requests, 631 carried
+   * no Referer and 12 named this host's raw IP.
+   *
+   * **It undercounts by the page navigation itself** — a visit's first request
+   * is the HTML document, which carries no Referer or an external one — so it
+   * measures browser-caused *traffic* and is deliberately not a visit count.
+   * Null for a summary written before the report counted it.
+   */
+  visitorHits: number | null;
 }
 
 /** One snapshot's position on the cross-snapshot timeline. */
@@ -1034,19 +1057,22 @@ export interface TrafficTimelinePoint {
    */
   ratePerMin: number | null;
   /**
-   * The same rate with `/api/health` taken out — what people read, as against
-   * what the server served. The two are far apart: measured on production
-   * 2026-09-05, monitoring was **55% of the whole log** (26,899 of 48,513).
-   * That is a window figure and not an hourly one — 46% of the log's lines
-   * fall on a single day — and the per-hour share is exactly what nothing
-   * reported until this field, `monitorHits` being cumulative.
+   * The rate of `visitorHits` — **real visitor traffic**, against `ratePerMin`
+   * as the physical traffic the server actually served. The page draws both.
    *
-   * Null wherever either endpoint of the pair carries no monitor figure, which
+   * This replaces #375's `readRatePerMin`, which was `ratePerMin` minus
+   * `monitorHits` and wrong in two directions at once: it subtracted readers
+   * (the Rodapé's own health fetch) and it counted crawlers and scanners as
+   * reading. The 02:00Z hour of 2026-09-05 is the demonstration — 673 requests,
+   * of which **22** were browser-caused, while the old definition drew that
+   * hour at roughly 10/min as though people had been reading.
+   *
+   * Null wherever either endpoint of the pair carries no visitor figure, which
    * is a summary written before `12_traffic_report.sh` counted them. Null is
-   * "not measurable", never zero, and never a silent fallback to
-   * `ratePerMin` — that would put two different quantities on one line.
+   * "not measurable", never zero, and never a silent fallback to `ratePerMin` —
+   * that would put two different quantities on one line.
    */
-  readRatePerMin: number | null;
+  visitorRatePerMin: number | null;
   /** Cumulative requests per country at this snapshot, so the page can derive
    *  a per-country rate the same way. Empty with no geo database.
    *

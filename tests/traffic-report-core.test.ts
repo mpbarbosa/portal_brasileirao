@@ -10,7 +10,12 @@ import { buildTrafficDashboard, parseSummary } from "@/traffic-report-core";
  * parser matches itself.
  */
 const summary = (
-  overrides: { generated?: string; requests?: number; monitor?: number | null } = {},
+  overrides: {
+    generated?: string;
+    requests?: number;
+    monitor?: number | null;
+    visitors?: number | null;
+  } = {},
 ): string =>
   `Portal Brasileirão — traffic snapshot
 Generated: ${overrides.generated ?? "2026-09-03T14:07:02+00:00"}
@@ -73,6 +78,15 @@ ${
     : `== Monitoring (/api/health) ==
 Monitor hits:   ${overrides.monitor ?? 2} of 8
 `
+}${
+  // `visitors: null` drops the section entirely — a summary from before the
+  // report counted them, which is every snapshot already on the host.
+  overrides.visitors === null
+    ? ""
+    : `
+== Visitors (browser-caused) ==
+Visitor hits:   ${overrides.visitors ?? 3} of 8
+`
 }`;
 
 // ------------------------------------------------------------------ parsing
@@ -88,6 +102,7 @@ test("every section of a full summary is read", () => {
   assert.equal(snap.geoSource, "/var/lib/GeoIP/GeoLite2-City.mmdb");
   assert.equal(snap.bots, 1);
   assert.equal(snap.monitorHits, 2);
+  assert.equal(snap.visitorHits, 3);
   assert.deepEqual(snap.statusCodes, [
     { label: "200", count: 7 },
     { label: "404", count: 1 },
@@ -293,72 +308,113 @@ test("the first snapshot has no rate, and the second's is the difference", () =>
   assert.equal(built.data.windowRatePerMin, 10);
 });
 
-test("the read rate is the total with /api/health taken out", () => {
-  // The split this panel exists for. Measured on production 2026-09-05, the
-  // monitor was 26,899 of 48,513 requests — 55% — so one line drawn from
-  // `requests` was mostly machine while the panel beneath it had already
-  // filtered the same traffic out of its ranking.
+test("the visitor rate is browser-caused traffic, not the total minus monitoring", () => {
+  // The two views this panel exists for: physical and real.
+  //
+  // **It is a rate of its own counter, never a subtraction.** #375 drew the
+  // second line as `requests` minus `monitorHits`, which was wrong twice over —
+  // `App.tsx` fetches /api/health for the Rodapé on every page view, so that
+  // subtracted readers; and it counted crawlers and scanners as reading. The
+  // numbers below are the 02:00Z hour of 2026-09-05 off the host's own log:
+  // 673 requests, 22 of them browser-caused, 643 from one scanner.
   const built = buildTrafficDashboard(
     [
       {
         file: "a.txt",
-        text: summary({ generated: "2026-09-03T14:00:00+00:00", requests: 100, monitor: 10 }),
+        text: summary({ generated: "2026-09-03T14:00:00+00:00", requests: 100, visitors: 50 }),
       },
       {
         file: "b.txt",
-        text: summary({ generated: "2026-09-03T15:00:00+00:00", requests: 700, monitor: 430 }),
+        text: summary({ generated: "2026-09-03T15:00:00+00:00", requests: 773, visitors: 72 }),
       },
     ],
     "2026-09-03T15:30:00Z",
   );
-  // 600 requests in 60 minutes is 10/min; 420 of them were /api/health, so the
-  // 180 that were not are 3/min.
-  assert.equal(built.data.timeline[1].ratePerMin, 10);
-  assert.equal(built.data.timeline[1].readRatePerMin, 3);
+  // 673 requests in 60 minutes is 11/min physical; 22 of them were caused by a
+  // browser, so the visitor rate is 0/min — an hour with a spike and no people.
+  assert.equal(built.data.timeline[1].ratePerMin, 11);
+  assert.equal(built.data.timeline[1].visitorRatePerMin, 0);
   // The first snapshot has nothing to difference against, in either series.
-  assert.equal(built.data.timeline[0].readRatePerMin, null);
+  assert.equal(built.data.timeline[0].visitorRatePerMin, null);
 });
 
-test("a snapshot with no monitor figure yields a null read rate, never the total", () => {
-  // A summary written before `12_traffic_report.sh` counted them has no answer,
-  // and falling back to `ratePerMin` would put two different quantities on one
-  // line — the confusion the second series exists to end. Asserted against the
-  // total explicitly, because `null` and `10` are both "not the read rate" and
-  // only one of them is the bug.
+test("the visitor rate is NOT the total minus the monitor figure", () => {
+  // Guards the specific regression this replaced. Monitoring is deliberately
+  // large and the visitor count deliberately unrelated to it: under the old
+  // definition this hour reads 10/min, under the new one 1/min. A single
+  // assertion on the new value would pass against both if the fixture let the
+  // two definitions coincide, so they are pulled apart on purpose.
   const built = buildTrafficDashboard(
     [
       {
         file: "a.txt",
-        text: summary({ generated: "2026-09-03T14:00:00+00:00", requests: 100, monitor: null }),
+        text: summary({
+          generated: "2026-09-03T14:00:00+00:00",
+          requests: 100,
+          monitor: 10,
+          visitors: 10,
+        }),
       },
       {
         file: "b.txt",
-        text: summary({ generated: "2026-09-03T15:00:00+00:00", requests: 700, monitor: 430 }),
+        text: summary({
+          generated: "2026-09-03T15:00:00+00:00",
+          requests: 700,
+          monitor: 430,
+          visitors: 70,
+        }),
       },
     ],
     "2026-09-03T15:30:00Z",
   );
   assert.equal(built.data.timeline[1].ratePerMin, 10);
-  assert.equal(built.data.timeline[1].readRatePerMin, null);
+  assert.equal(built.data.timeline[1].visitorRatePerMin, 1);
+  assert.notEqual(built.data.timeline[1].visitorRatePerMin, 3); // the old rule's answer
 });
 
-test("a rotation clamps the read rate at zero as well as the total", () => {
+test("a snapshot with no visitor figure yields a null visitor rate, never the total", () => {
+  // **This is the path every snapshot already on the host takes**, so it is not
+  // a hypothetical: the 42 summaries the timer has written carry no Visitors
+  // section, so the visitor line is absent until new ones accrue and then fills
+  // in hourly — the geo bootstrap of #370 again.
+  //
+  // Falling back to `ratePerMin` would put two different quantities on one line.
+  // Asserted against the total explicitly, because `null` and `10` are both
+  // "not the visitor rate" and only one of them is the bug.
+  const built = buildTrafficDashboard(
+    [
+      {
+        file: "a.txt",
+        text: summary({ generated: "2026-09-03T14:00:00+00:00", requests: 100, visitors: null }),
+      },
+      {
+        file: "b.txt",
+        text: summary({ generated: "2026-09-03T15:00:00+00:00", requests: 700, visitors: 70 }),
+      },
+    ],
+    "2026-09-03T15:30:00Z",
+  );
+  assert.equal(built.data.timeline[1].ratePerMin, 10);
+  assert.equal(built.data.timeline[1].visitorRatePerMin, null);
+});
+
+test("a rotation clamps the visitor rate at zero as well as the total", () => {
   // Both series difference a cumulative counter, so both meet the rotation.
   const built = buildTrafficDashboard(
     [
       {
         file: "a.txt",
-        text: summary({ generated: "2026-09-03T14:00:00+00:00", requests: 9000, monitor: 5000 }),
+        text: summary({ generated: "2026-09-03T14:00:00+00:00", requests: 9000, visitors: 5000 }),
       },
       {
         file: "b.txt",
-        text: summary({ generated: "2026-09-03T15:00:00+00:00", requests: 300, monitor: 120 }),
+        text: summary({ generated: "2026-09-03T15:00:00+00:00", requests: 300, visitors: 120 }),
       },
     ],
     "2026-09-03T15:30:00Z",
   );
   assert.equal(built.data.timeline[1].ratePerMin, 0);
-  assert.equal(built.data.timeline[1].readRatePerMin, 0);
+  assert.equal(built.data.timeline[1].visitorRatePerMin, 0);
 });
 
 test("a rotation that shrinks the cumulative total reports no rate, never a negative one", () => {

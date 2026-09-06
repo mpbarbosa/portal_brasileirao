@@ -67,8 +67,8 @@ const TONE = "text-primary";
 /** The rate chart's two series, named once so the key, the `aria-label` and the
  *  `<title>` cannot come to disagree — `StatusChip`'s rule for a lookup table
  *  that had been written out twice. */
-const LABEL_READ = "Leitura: requisições por minuto, sem /api/health";
-const LABEL_TOTAL = "Total: tudo que o servidor serviu, monitoramento incluído";
+const LABEL_VISITOR = "Visitantes: requisições por minuto causadas por um navegador neste site";
+const LABEL_PHYSICAL = "Físico: todos os acessos que o servidor serviu, robôs e monitoramento incluídos";
 
 /**
  * The rate chart's key.
@@ -503,18 +503,20 @@ export function TrafficView({ onBack }: { onBack: () => void }) {
   /**
    * The rate chart's series.
    *
-   * **Unfiltered it is a pair, and that is the whole point of this panel.**
-   * One line was `ratePerMin`, which counts `/api/health` — 55% of the log
-   * when measured on production 2026-09-05 — while the "Páginas mais pedidas"
-   * panel directly beneath had already taken the same traffic out of its
-   * ranking. One page, two answers to *how much of this was people*.
+   * **Two views of the same hour: physical and real.** `Físico` is every access
+   * the server served — robots, scanners, monitoring and people. `Visitantes`
+   * is the traffic a browser on this site caused. The gap between the strokes
+   * is everything that was not a person.
    *
-   * `Leitura` is the claim and `Total` is the context it is read against, and
-   * **the gap between the two strokes is the only per-hour statement of the
-   * monitor share this page has ever been able to make**: `monitorHits` is a
-   * cumulative figure over a twelve-day window, so it can say the monitor is
-   * about half of everything and can say nothing whatever about a given
-   * hour — including the two peaks of 2026-09-05.
+   * **`Visitantes` is not `Físico` minus `monitorHits`, which is what #375
+   * shipped and what the host's own log refuted.** That definition was wrong
+   * in both directions at once: it subtracted readers, because `App.tsx`
+   * fetches `/api/health` for the Rodapé on every page view, and it counted
+   * crawlers and scanners as reading. The 02:00Z hour of 2026-09-05 is the
+   * demonstration — **673 requests, 22 of them browser-caused**, drawn by the
+   * old definition at about 10/min as though people had been there. 643 of
+   * that hour came from one address probing `/wp-config.php.bak`, `/aws/*` and
+   * Vite's `/@fs/`, spoofing four AI-crawler user agents.
    *
    * **A country gets one line and not a pair**, because the report's geo
    * sections tally every line by address, monitoring included — there is no
@@ -532,14 +534,18 @@ export function TrafficView({ onBack }: { onBack: () => void }) {
     if (!country) {
       const series = (pick: (p: TrafficTimelinePoint) => number | null) =>
         timeline.filter((p) => pick(p) != null).map((p) => ({ x: p.t, y: pick(p) as number }));
-      const read = series((p) => p.readRatePerMin);
-      const total = series((p) => p.ratePerMin);
-      // Where no snapshot carries a monitor figure there is no pair to draw,
-      // and the total is then the only honest single line — labelled as the
-      // total, never relabelled "Leitura" to fill the slot.
-      return read.length > 0
-        ? { primary: read, context: { points: total, label: LABEL_TOTAL }, filtered: false }
-        : { primary: total, context: undefined, filtered: false };
+      const visitors = series((p) => p.visitorRatePerMin);
+      const physical = series((p) => p.ratePerMin);
+      // Where no snapshot carries a visitor figure there is no pair to draw,
+      // and the physical line is then the only honest single one — labelled as
+      // physical, never relabelled "Visitantes" to fill the slot.
+      return visitors.length > 0
+        ? {
+            primary: visitors,
+            context: { points: physical, label: LABEL_PHYSICAL },
+            filtered: false,
+          }
+        : { primary: physical, context: undefined, filtered: false };
     }
     const points: { x: number; y: number }[] = [];
     for (let i = 1; i < timeline.length; i++) {
@@ -651,9 +657,9 @@ export function TrafficView({ onBack }: { onBack: () => void }) {
           hint={`${fmt(latest.bots)} de ${fmt(latest.requests)}`}
         />
         <Kpi
-          label="Monitoramento"
-          value={fmt(latest.monitorHits)}
-          hint="/api/health, fora do ranking"
+          label="Visitantes"
+          value={fmt(latest.visitorHits)}
+          hint="acessos causados por um navegador"
         />
       </div>
 
@@ -672,8 +678,8 @@ export function TrafficView({ onBack }: { onBack: () => void }) {
           title="Ritmo de requisições"
           caption={
             rate.filtered
-              ? "A diferença entre instantâneos consecutivos, dividida pelo tempo entre eles. Por país é o total, com monitoramento: o relatório conta cada linha por endereço e não separa /api/health."
-              : "A diferença entre instantâneos consecutivos, dividida pelo tempo entre eles. É o que responde “quanto movimento agora” — e a distância entre as duas linhas é o monitoramento."
+              ? "A diferença entre instantâneos consecutivos, dividida pelo tempo entre eles. Por país é o tráfego físico: o relatório conta cada linha por endereço e não separa robô de pessoa."
+              : "A diferença entre instantâneos consecutivos, dividida pelo tempo entre eles. Duas leituras da mesma hora: tudo que o servidor serviu, e o que um navegador neste site causou. A distância entre as linhas é o que não era gente."
           }
           action={
             latest.countriesByVolume.length > 0 ? (
@@ -698,7 +704,7 @@ export function TrafficView({ onBack }: { onBack: () => void }) {
           <TimeLine
             points={rate.primary}
             context={rate.context}
-            label={rate.filtered ? `${LABEL_TOTAL} — ${country}` : LABEL_READ}
+            label={rate.filtered ? `${LABEL_PHYSICAL} — ${country}` : LABEL_VISITOR}
             // A country with no pair of snapshots naming it is not "too few
             // snapshots", which is what the default says and what the page said
             // for every country on the day the geo database was installed:
@@ -714,10 +720,13 @@ export function TrafficView({ onBack }: { onBack: () => void }) {
           <LineKey
             entries={
               rate.filtered
-                ? [{ label: `Total — ${country}, monitoramento incluído` }]
+                ? [{ label: `Físico — ${country}, robôs e monitoramento incluídos` }]
                 : rate.context
-                  ? [{ label: "Leitura, sem /api/health" }, { label: "Total", dashed: true }]
-                  : [{ label: "Total, monitoramento incluído" }]
+                  ? [
+                      { label: "Visitantes reais" },
+                      { label: "Físico (todos os acessos)", dashed: true },
+                    ]
+                  : [{ label: "Físico (todos os acessos)" }]
             }
           />
         </Panel>

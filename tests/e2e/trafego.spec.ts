@@ -38,6 +38,7 @@ const BASE: TrafficSnapshot = {
   uniqueIpsByDay: [{ label: "01/Sep/2026", count: 48 }],
   bots: 0,
   monitorHits: 180,
+  visitorHits: 700,
 };
 
 /** A host carrying a GeoLite2 **City** database: countries *and* cities. */
@@ -77,7 +78,7 @@ const dashboard = (latest: TrafficSnapshot): TrafficDashboard => {
         requests: 600,
         uniqueIps: 30,
         ratePerMin: null,
-        readRatePerMin: null,
+        visitorRatePerMin: null,
         countries: {},
       },
       {
@@ -85,10 +86,10 @@ const dashboard = (latest: TrafficSnapshot): TrafficDashboard => {
         requests: latest.requests ?? 0,
         uniqueIps: latest.uniqueIps ?? 0,
         ratePerMin: 10,
-        // Deliberately below the total: the gap between the two lines is the
-        // monitoring, and equal values would draw one line over the other and
-        // pass every assertion about "two paths exist".
-        readRatePerMin: 7,
+        // Deliberately below the physical rate: the gap between the two lines
+        // is everything that was not a person, and equal values would draw one
+        // line over the other and pass every assertion about "two paths exist".
+        visitorRatePerMin: 7,
         countries,
       },
     ],
@@ -235,12 +236,12 @@ test("unfiltered, the rate chart names both the read series and the total", asyn
   await page.goto("/trafego");
 
   const panel = page.locator("section").filter({ hasText: "Ritmo de requisições" }).last();
-  await expect(panel.getByText("Leitura, sem /api/health")).toBeVisible();
-  await expect(panel.getByText("Total", { exact: true })).toBeVisible();
+  await expect(panel.getByText("Visitantes reais")).toBeVisible();
+  await expect(panel.getByText("Físico (todos os acessos)")).toBeVisible();
 
   // The caption has to say what the gap between the strokes means, or a dashed
   // line is a second stroke with no stated meaning.
-  await expect(panel.getByText(/distância entre as duas linhas é o monitoramento/)).toBeVisible();
+  await expect(panel.getByText(/distância entre as linhas é o que não era gente/)).toBeVisible();
 });
 
 /**
@@ -268,9 +269,9 @@ test("a country draws one line and says it still counts monitoring", async ({ pa
   const panel = page.locator("section").filter({ hasText: "Ritmo de requisições" }).last();
   await panel.getByLabel("País").selectOption("Brazil");
 
-  await expect(panel.getByText("Total — Brazil, monitoramento incluído")).toBeVisible();
-  await expect(panel.getByText("Leitura, sem /api/health")).toHaveCount(0);
-  await expect(panel.getByText(/não separa \/api\/health/)).toBeVisible();
+  await expect(panel.getByText("Físico — Brazil, robôs e monitoramento incluídos")).toBeVisible();
+  await expect(panel.getByText("Visitantes reais")).toHaveCount(0);
+  await expect(panel.getByText(/não separa robô de pessoa/)).toBeVisible();
 });
 
 /**
@@ -304,8 +305,9 @@ test("a country no pair of snapshots names explains itself, and does not blame t
  * **The two series need not cover the same snapshots, and the x domain has to
  * be the union of both.**
  *
- * `readRatePerMin` is null wherever a summary carries no monitor figure and
- * `ratePerMin` is not, so the read line can begin *later* than the total. A
+ * `visitorRatePerMin` is null wherever a summary carries no visitor figure and
+ * `ratePerMin` is not, so the visitor line can begin *later* than the physical
+ * one. A
  * domain taken from the primary alone then maps the total's earlier points to
  * a large negative x.
  *
@@ -331,9 +333,9 @@ test("with the two series over different spans, both stay inside the viewBox", a
     ...data,
     timeline: [
       // Two early points the total covers and the read series cannot.
-      { t: t - 7_200_000, requests: 300, uniqueIps: 20, ratePerMin: null, readRatePerMin: null, countries: {} },
-      { t: t - 3_600_000, requests: 900, uniqueIps: 30, ratePerMin: 10, readRatePerMin: null, countries: {} },
-      { t, requests: 1200, uniqueIps: 48, ratePerMin: 5, readRatePerMin: 4, countries: {} },
+      { t: t - 7_200_000, requests: 300, uniqueIps: 20, ratePerMin: null, visitorRatePerMin: null, countries: {} },
+      { t: t - 3_600_000, requests: 900, uniqueIps: 30, ratePerMin: 10, visitorRatePerMin: null, countries: {} },
+      { t, requests: 1200, uniqueIps: 48, ratePerMin: 5, visitorRatePerMin: 4, countries: {} },
     ],
   }));
   await page.goto("/trafego");

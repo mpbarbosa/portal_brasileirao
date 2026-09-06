@@ -193,59 +193,34 @@ export const parseSummary = (text: string, file: string): ParsedSnapshot | null 
     monitorHits: num(
       grab(/Monitor hits:\s*(\d+)/, (sections["Monitoring (/api/health)"] ?? []).join("\n")),
     ),
+    visitorHits: num(
+      grab(/Visitor hits:\s*(\d+)/, (sections["Visitors (browser-caused)"] ?? []).join("\n")),
+    ),
   };
 };
 
 // ── Public projection ────────────────────────────────────────────────────────
 
 /**
- * `/api/health` is excluded from the **top paths**, and — since the rate chart
- * gained a second series — subtracted for `readRatePerMin`. It is in every
- * other total.
+ * `/api/health` is excluded from the **top paths** and from nothing else.
  *
- * It is machine polling by construction and carries no reader: `reconcile.yml`
- * reads it every fifteen minutes, the deploy job asserts the live commit
- * through it, and any uptime monitor pointed at this host will use it too. Left
- * in, it sits near the top of a twenty-row chart and pushes out a content route
- * that a person actually opened — which is the whole question that chart is
- * asked.
+ * It is polling for the most part — `reconcile.yml` reads it every fifteen
+ * minutes, the deploy job asserts the live commit through it, and an uptime
+ * monitor would too — so left in it crowds a real content route out of a
+ * twenty-row chart. It stays in `requests`, in the status codes and in the hour
+ * buckets, because those answer *what did this server do* rather than *what did
+ * people read*, and filtering there would make the totals disagree with the log.
  *
- * It stays in `requests`, in the status codes and in the hour buckets, because
- * those answer *what did this server do* rather than *what did people read*,
- * and a filter there would make the totals disagree with the log. The count is
- * carried separately as `monitorHits` so the exclusion is visible rather than
- * silent — the report says how much it set aside.
+ * **`monitorHits` is NOT the machine's share, and reading it as one is the
+ * mistake #375 shipped.** `App.tsx` fetches `/api/health` for the **Rodapé** on
+ * every page view, so a real reader contributes one hit per visit. Measured on
+ * the host's own log for 2026-09-05: 427 hits, of which **327 curl** (the
+ * reconciler and CI), **24 node**, and **76 a browser carrying this site's own
+ * Referer** — so 17.8% of "monitoring" was readers, and the first version of
+ * the rate chart subtracted them from the very line meant to count them.
  *
- * The sibling this was ported from filters its own poller out of the log
- * **before** every tally. That is right there and was argued to be wrong here
- * on the grounds that its self-client was 85-90% of all lines and swamped the
- * totals, "where this is a few hundred a day against a real audience".
- *
- * **That second half was measured on production and does not hold.** On
- * 2026-09-05 `/api/traffic-dashboard` reported `monitorHits` 26,899 of 48,513
- * — **55.4% of the log**, where the sentence claims a couple of per cent.
- *
- * Read that share carefully, because the window is not uniform: `byDay` puts
- * **46% of all lines on 24/Aug alone**, so 55% is a whole-window figure and
- * not today's rate. Bounding what is left — if every one of 24/Aug's lines
- * were monitoring, the other 11.8 days carry 15.7/h; the arithmetic upper
- * bound of 95/h is refused by the timeline itself, which runs at 59.5/h over
- * its 40.2-hour span. So the current share sits somewhere between about a
- * quarter and all of it, and **nothing in this payload could narrow that** —
- * `monitorHits` is cumulative, and one number over a twelve-day window cannot
- * say what any single hour was.
- *
- * That gap is the argument for the second series rather than a caveat on it.
- *
- * The conclusion still holds and the reason changed, which is why the filter
- * did not move: subtracting it from `requests` would make the totals disagree
- * with the log, and `byHour` and the status codes answer *what did this server
- * do*. What changes is the **rate chart**, whose one line mixed the two
- * populations while the panel directly beneath it had already taken the
- * monitor out of its ranking — one page giving two answers to *how much of
- * this was people*. `readRatePerMin` is that split, and it is drawn **beside**
- * the total rather than replacing it: the difference between the two lines is
- * the per-hour monitor share, which is the quantity no field here could report.
+ * Which is why the second series is no longer *total minus monitor*. See
+ * `visitorHits`.
  */
 const MONITOR_PATH = /^\/api\/health(?![\w-])/;
 
@@ -302,7 +277,7 @@ export const buildTrafficDashboard = (
     // rather than zero — "not measurable yet" and "no traffic" are different
     // readings and the chart draws them differently.
     let ratePerMin: number | null = null;
-    let readRatePerMin: number | null = null;
+    let visitorRatePerMin: number | null = null;
     if (i > 0) {
       const previous = snaps[i - 1];
       const minutes = (snap.generatedMs - previous.generatedMs) / 60000;
@@ -313,16 +288,16 @@ export const buildTrafficDashboard = (
         // answer is "no measurable rate", never a negative one.
         ratePerMin = Math.max(0, Math.round(delta / minutes));
 
-        // The same difference over what is left once `/api/health` is taken
-        // out. Both endpoints must carry a monitor figure or this is **null**
-        // rather than a fallback to the total: a summary written before the
-        // report counted them has no answer, and quietly drawing the total in
-        // its place puts two different quantities in one line — which is the
-        // very confusion this series exists to end. Same rule `countries`
-        // follows one field down, for the same reason.
-        if (snap.monitorHits != null && previous.monitorHits != null) {
-          const readDelta = delta - (snap.monitorHits - previous.monitorHits);
-          readRatePerMin = Math.max(0, Math.round(readDelta / minutes));
+        // The same difference over the requests a browser on this site caused.
+        // Both endpoints must carry a visitor figure or this is **null** rather
+        // than a fallback to the total: a summary written before the report
+        // counted them has no answer, and quietly drawing the total in its
+        // place puts two different quantities in one line — which is the very
+        // confusion this series exists to end. Same rule `countries` follows
+        // one field down, for the same reason.
+        if (snap.visitorHits != null && previous.visitorHits != null) {
+          const visitorDelta = (snap.visitorHits ?? 0) - (previous.visitorHits ?? 0);
+          visitorRatePerMin = Math.max(0, Math.round(visitorDelta / minutes));
         }
       }
     }
@@ -335,7 +310,7 @@ export const buildTrafficDashboard = (
       requests: snap.requests ?? 0,
       uniqueIps: snap.uniqueIps ?? 0,
       ratePerMin,
-      readRatePerMin,
+      visitorRatePerMin,
       countries,
     };
   });

@@ -824,39 +824,65 @@ what makes the logic testable without mocking HTTP.
   differently. Every optional numeric goes through an explicit null check for
   the same reason: `Number(null)` is `0`, so a truthiness test would report a
   genuinely quiet hour as missing data — `countsTowardStandings`' 0-0 trap.
-  **`/api/health` is dropped from the top paths, and subtracted for
-  `readRatePerMin`. It is in every other total.** It is machine polling by
-  construction — `reconcile.yml` reads it every fifteen minutes and the deploy
-  job asserts the live commit through it — so left in it crowds a real content
-  route out of a twenty-row chart. It stays in `requests`, the status codes and
-  the hour buckets, because those answer *what did this server do* rather than
-  *what did people read*, and filtering there would make the totals disagree
-  with the log. The count is carried as `monitorHits` so the exclusion is
-  visible rather than silent.
-  **The sibling filters its own poller out of the log before every tally, and
-  the reason given here for not copying it has not survived measurement.** That
-  reason was: its self-client was 85-90% of all lines and swamped the totals,
-  "where this is a few hundred a day against a real audience". Measured on
-  production 2026-09-05, `monitorHits` was **26,899 of 48,513 — 55.4%**. So the
-  monitor is the larger half of this log too.
-  **Read that 55% as a window figure and not as today's rate**, which is the
-  correction that matters more than the number: `byDay` puts **46% of all lines
-  on 24/Aug alone**, so the share is dominated by one day. Bounding the rest —
-  if every line of 24/Aug were monitoring, the other 11.8 days carry 15.7/h,
-  and the arithmetic upper bound of 95/h is refused by the timeline itself,
-  which runs at 59.5/h over its 40.2-hour span. The current share is therefore
-  somewhere between about a quarter and all of it, and **no field in this
-  payload can narrow that**: `monitorHits` is cumulative, and one number over
-  twelve days cannot say what a given hour was.
-  The conclusion still holds and only the reason changed, which is why the
-  filter did not move. What changed is the **rate chart**: its one line mixed
-  the two populations while the panel directly beneath had already taken the
-  monitor out of its ranking — one page, two answers to *how much of this was
-  people*. `readRatePerMin` is the split, drawn **beside** the total rather
-  than replacing it, so the gap between the two strokes is the per-hour monitor
-  share that nothing here could previously report. Both series share one scale
-  and one tone; they are separated by **dash and weight, never by hue**, per
-  the one-tone rule below.
+  **`/api/health` is dropped from the top paths and from nothing else.** It is
+  polling for the most part — `reconcile.yml` reads it every fifteen minutes and
+  the deploy job asserts the live commit through it — so left in it crowds a real
+  content route out of a twenty-row chart. It stays in `requests`, the status
+  codes and the hour buckets, because those answer *what did this server do*
+  rather than *what did people read*, and filtering there would make the totals
+  disagree with the log.
+  **`monitorHits` is NOT the machine's share, and #375 shipped a rate chart that
+  read it as one.** `App.tsx` fetches `/api/health` for the **Rodapé** on every
+  page view, so a reader contributes one hit per visit. Measured on the host's
+  own log for 2026-09-05: 427 hits — **327 curl** (reconciler and CI), **24
+  node**, **76 a browser carrying this site's own Referer**. So 17.8% of
+  "monitoring" was readers, and the second series subtracted them from the very
+  line meant to count them.
+  **The page therefore draws two views: `Físico` and `Visitantes`** —
+  `ratePerMin` and `visitorRatePerMin`. The first is every access the server
+  served; the second is traffic a browser on this site caused, and it is a rate
+  of **its own counter**, never a subtraction.
+  **`visitorHits` is positive evidence, and the user-agent may only
+  DISQUALIFY.** A request counts when its Referer names our own origin — what a
+  browser sends for every sub-resource of a page it renders — minus anything
+  self-declaring as a crawler, because a rendering crawler (Googlebot,
+  OAI-SearchBot, meta-externalagent) loads sub-resources exactly as a browser
+  does; 70 such lines in the day measured. Read the asymmetry as the security
+  property it is: **a scanner spoofing `Claude-User` gains nothing.**
+  **The 02:00Z hour of 2026-09-05 is why the definition had to change**, and it
+  is the clearest thing in the log: **673 requests, 22 of them browser-caused**.
+  643 came from one address probing `/wp-config.php.bak`, `/aws/*`,
+  `/.github/workflows/*` and Vite's `/@fs/`, spoofing Perplexity, ChatGPT,
+  Claude-User, OAI-SearchBot and TelegramBot in a single hour, and taking 635
+  404s. Under `total − monitor` that hour drew at about 10/min as though people
+  had been reading; under the visitor counter it draws **flat at zero** beneath
+  a physical spike. Nothing leaked — every probe 404'd, `/@fs/` included, because
+  production serves `dist/` statically and has no Vite.
+  **Anchored on the origin, which is not pedantry**: 631 of those 643 carried no
+  Referer and **12 named `https://54.232.242.45:443`**, this host's own IP. A
+  rule of *has any Referer* counts those. And the anchor is a **prefix** —
+  `index($4, o) == 1` — because our origin inside somebody else's query string
+  is not our page; the rehearsal carries a case for each, and both go red when
+  the anchor is loosened.
+  **What it undercounts, stated rather than hidden:** the page navigation
+  itself. A visit's first request is the HTML document, which carries no Referer
+  or an external one, so it is uncounted while the five-or-so sub-requests it
+  causes are counted. It measures browser-caused *traffic* and is deliberately
+  not a visit count — `providerLabel`'s rule of naming what a proxy actually
+  counts.
+  **One dependency nothing here can test: no `Referrer-Policy` header is
+  served** (checked against the live site), so browsers use their default and
+  send the full URL same-origin. Hardening that to `no-referrer` would silently
+  reclassify every reader as automated. The header is nginx's to set and this is
+  a log, so the note lives at the awk that depends on it.
+  **The bot share reads the USER-AGENT field, not the whole line**, and the old
+  rule's false positives are worth keeping because they show the shape: over the
+  real log it counted 62 hits on `/robots.txt`, a reader opening
+  **`/clube/botafogo`** — a club in this division is named Botafogo — and an
+  asset named `index-ChBoTmtl.css`, a **Vite content hash** that happens to
+  contain `bot`. That last one is random per build, so the error changed size
+  every time the bundle did.
+  The old rule reported 2963 where the field rule reports 2887.
   A **label is everything after the count**, not the next whitespace field: a
   city reads `São Paulo, Brazil` and a referrer carries a URL with spaces in it
   often enough to matter, and splitting on whitespace files every such row
@@ -1265,11 +1291,11 @@ matters most where the two panels sit side by side — "Países por endereço" a
 questions, so painting them alike is what says so.
 
 **The rate chart is the one place two series share a panel, and it holds that
-rule rather than being an exception to it.** `Leitura` and `Total` are the same
+rule rather than being an exception to it.** `Visitantes` and `Físico` are the same
 tone and are told apart by **dash and weight** — 2px solid against 1.5px dashed
 at 45% — because the argument above applies with more force to two strokes than
 to two panels: a second hue on a line beside a first is read as encoding a
-second *kind* of thing, where these are one quantity measured two ways. It is
+second *kind* of thing, where these are one quantity over two populations. It is
 `RankCandles` drawing an unplayed round hollow and `scatterTrail` ramping
 opacity, one drawing further on. Two consequences follow. **Both series are
 scaled over the union of their values**, since scaling each to its own maximum
