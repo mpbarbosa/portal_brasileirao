@@ -105,12 +105,26 @@ regeneração — e a cadeia é justamente onde um clube esquecido não aparece,
 o `RENDERED` recebe a data nova de qualquer jeito. As outras duas cenas não têm
 esse custo: uma fixa dois clubes e a outra é a divisão inteira.
 
-**Nenhum dos `velas-*.mp4` tem miniatura**, e isso é uma decisão e não uma
-pendência: as capas existem porque os primeiros segundos daqueles outros dois
-vídeos são um gráfico vazio, e uma capa é um segundo artefato para manter
-atualizado. Quando um destes for para o YouTube, `capa-core.ts` é o que os dois
-scripts de miniatura já dividem — o desenho é que seria novo, e seria **um por
-clube**, pela mesma razão que o vídeo é.
+**Os três `velas-*.mp4` têm capa agora, e é a decisão anterior cumprindo o que
+ela própria previa** — não uma reversão. Este parágrafo dizia que nenhum tinha,
+que isso era decisão e não pendência, e que *"quando um destes for para o
+YouTube… seria **um por clube**, pela mesma razão que o vídeo é"*. Os três foram
+para o YouTube, e são três capas: `velas-athletico-pr-miniatura.png`,
+`velas-bahia-miniatura.png` e `velas-fluminense-miniatura.png`, 1280×720 como as
+outras quatro.
+
+**Elas não são o desenho das outras duas cenas.** As capas do `campanhas` e do
+`pontos` são um layout próprio — manchete à esquerda, gráfico à direita — porque
+os primeiros segundos daqueles vídeos são um gráfico vazio. Estas são o **quadro
+final da própria cena** com o painel de resumo por cima: uma vela cheia já é a
+temporada inteira, então não há nada que um segundo layout diga melhor. É por
+isso que `capa-core.ts` não aparece aqui — o que aquele módulo divide é a leitura
+da paleta e a captura no Chromium, e nenhuma das duas é usada por uma capa que
+sai do próprio render.
+
+O preço que a decisão anterior nomeava continua de pé e agora é devido: **cada
+clube é mais uma capa**, mais uma linha no `RENDERED` e mais um degrau na cadeia
+de regeneração. Um quarto clube de velas deve três artefatos, não dois.
 
 Eles são **regeneráveis** pelos comandos acima, e mesmo assim está commitado
 pela razão que o `og-default.png` já registra: um artefato de divulgação precisa
