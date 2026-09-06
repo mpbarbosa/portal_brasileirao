@@ -94,7 +94,7 @@ Coritiba both report `COR`.
 ```bash
 npx tsx scripts/manim/export-velas.ts 1777 > scripts/manim/velas-bahia.json
 VELAS_JSON=$PWD/scripts/manim/velas-bahia.json ./.venv-manim/bin/manim -qh scripts/manim/velas.py Velas
-cp media/videos/velas/1080p60/Velas.mp4 docs/medias/velas-bahia.mp4
+cp media/videos/velas/1080p60/Velas.mp4 docs/medias/bahia/velas-bahia.mp4
 ```
 
 Every velas run writes the same `media/videos/velas/1080p60/Velas.mp4`, because
