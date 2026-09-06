@@ -90,30 +90,49 @@ renderiza em segundos e serve para conferir o enquadramento.
 
 ## Os renders commitados
 
-**`docs/medias/campanhas-palmeiras-flamengo.mp4`** (23s, 3,3 MB),
-**`docs/medias/pontos-20-clubes.mp4`** (21s, 4,4 MB),
-**`docs/medias/velas-fluminense.mp4`** (21s, 3,8 MB) e
-**`docs/medias/velas-athletico-pr.mp4`** (21s, 3,9 MB) e
-**`docs/medias/velas-bahia.mp4`** (21s, 3,8 MB),
-**`docs/medias/cruzeiro/velas-cruzeiro.mp4`** (21s, 4,0 MB) e
-**`docs/medias/palmeiras/velas-palmeiras.mp4`** (21s, 3,9 MB) — todos
-1920×1080, 60fps — são os vídeos prontos, versionados junto do resto do projeto
-como os slides em `docs/carrossel/` e as capturas em `docs/screenshots/`.
+**A regra é uma só: um vídeo de UM clube mora em `docs/medias/<clube>/`; um
+vídeo que não é de um clube só fica no nível de cima.** Não há mais exceção
+nenhuma, e essa frase custou três correções para poder ser escrita assim.
 
-**Os dois últimos moram numa PASTA POR CLUBE e os quatro primeiros não**, o que
-é um estado intermediário e não um descuido: `docs/medias/cruzeiro/` e
-`docs/medias/palmeiras/` foram criadas quando esses dois vídeos foram feitos, e
-os que já existiam ficaram onde estavam em vez de serem movidos junto. Conte o
-diretório antes de assumir uma convenção — `docs/medias/RENDERED` lista cada
-artefato pelo caminho relativo a `docs/medias/`, e é ele que diz onde cada um
-está.
+Soltas ficam as duas cenas que não são de um clube:
+**`campanhas-palmeiras-flamengo.mp4`** (23s, 3,3 MB) e
+**`pontos-20-clubes.mp4`** (21s, 4,4 MB). Em pasta fica **um `<clube>/` para cada
+clube que tem vídeo**, com o seu `velas-<clube>.mp4` de 21,1s, o gif, a capa e o
+`-youtube.md`. Quantos são e quais são, `ls docs/medias/` responde — esta frase
+de propósito não responde, e o parágrafo abaixo diz por quê. Todos os vídeos são
+1920×1080 60fps, versionados junto do resto do projeto como os slides em
+`docs/carrossel/` e as capturas em `docs/screenshots/`.
 
-**`palmeiras/` também carrega LINKS SIMBÓLICOS para o
+**Conte o diretório antes de assumir uma convenção**, porque esta seção já errou
+a contagem duas vezes seguidas e as duas passaram batido: dizia *"os dois
+últimos moram numa pasta por clube e os quatro primeiros não"* enquanto
+`flamengo/` e `corinthians/` já existiam e não apareciam na lista, e depois
+*"sobram DOIS clubes soltos"* enquanto eles eram movidos. Uma contagem escrita em
+prosa não tem portão nenhum em cima dela — e note que o erro não foi de
+desatenção nas duas vezes: uma contagem envelhece sozinha, sem ninguém tocar na
+frase. Quem tem portão é `docs/medias/RENDERED`, que lista cada artefato pelo
+caminho relativo a `docs/medias/` e que `tests/manim-renders.test.ts` confere nos
+dois sentidos. Se precisar do número, leia o `RENDERED`; se precisar do tamanho,
+leia o disco.
+
+**Foram TRÊS, e a terceira é a mais instrutiva porque quase passou.** O commit
+que fechou esta convenção trazia, aqui mesmo, *"em pasta ficam os sete velas"*
+seguido dos sete nomes — escrito e conferido enquanto eram mesmo sete. Entre
+abrir a PR e mergear, o São Paulo entrou pela #401 e viraram oito. Só a
+reconferência no instante do merge pegou; a PR estava verde, e o
+`tests/manim-renders.test.ts` estava verde também, porque nada nele lê prosa. Ou
+seja: quem escreveu a regra "não conte aqui" errou a contagem no mesmo commit em
+que a escreveu, e o que salvou não foi cuidado, foi reler antes de mergear em vez
+de confiar na leitura de vinte minutos antes. Por isso o parágrafo acima manda no
+`ls` em vez de listar.
+
+**`palmeiras/` e `flamengo/` carregam LINKS SIMBÓLICOS para o
 `campanhas-palmeiras-flamengo.*`**, que é um vídeo de dois clubes: ele pertence
 ao Palmeiras e ao Flamengo ao mesmo tempo, então arquivá-lo dentro da pasta de
 um dos dois afirmaria que é sobre aquele. Os bytes ficam soltos em
-`docs/medias/`, onde os dois clubes alcançam, e o link é o que faz a pasta do
-Palmeiras completa. `tests/manim-renders.test.ts` **ignora links** de propósito:
+`docs/medias/`, onde os dois clubes alcançam, e o link é o que faz cada uma das
+duas pastas completa — os dois lados, porque um só seria a afirmação que o
+parágrafo acaba de recusar. `tests/manim-renders.test.ts` **ignora links** de propósito:
 um alias não é um artefato, e uma segunda linha no `RENDERED` para os mesmos
 bytes seria uma segunda alegação sobre uma coisa só, capaz de discordar da
 primeira.
@@ -125,13 +144,13 @@ regeneração — e a cadeia é justamente onde um clube esquecido não aparece,
 o `RENDERED` recebe a data nova de qualquer jeito. As outras duas cenas não têm
 esse custo: uma fixa dois clubes e a outra é a divisão inteira.
 
-**Os três `velas-*.mp4` têm capa agora, e é a decisão anterior cumprindo o que
-ela própria previa** — não uma reversão. Este parágrafo dizia que nenhum tinha,
-que isso era decisão e não pendência, e que *"quando um destes for para o
-YouTube… seria **um por clube**, pela mesma razão que o vídeo é"*. Os três foram
-para o YouTube, e são três capas: `velas-athletico-pr-miniatura.png`,
-`velas-bahia-miniatura.png` e `velas-fluminense-miniatura.png`, 1280×720 como as
-outras quatro.
+**Todo `velas-*.mp4` tem capa, e é a decisão anterior cumprindo o que ela
+própria previa** — não uma reversão. Este parágrafo dizia que nenhum tinha, que
+isso era decisão e não pendência, e que *"quando um destes for para o YouTube…
+seria **um por clube**, pela mesma razão que o vídeo é"*. É o que aconteceu:
+cada `<clube>/velas-<clube>-miniatura.png` tem 1280×720 como as outras, e a
+regra vale para o próximo clube sem ninguém reescrever esta frase — que é
+exatamente o que a contagem anterior aqui ("são três capas") não fazia.
 
 **Elas não são o desenho das outras duas cenas.** As capas do `campanhas` e do
 `pontos` são um layout próprio — manchete à esquerda, gráfico à direita — porque
@@ -167,9 +186,9 @@ frase:
 |---|---|---|---|
 | `campanhas-palmeiras-flamengo.gif` | 343 | 5,3 MB | 3,7 MB |
 | `pontos-20-clubes.gif` | 309 | 5,7 MB | 4,6 MB |
-| `velas-athletico-pr.gif` | 317 | 5,2 MB | 3,9 MB |
-| `velas-bahia.gif` | 317 | 5,1 MB | 3,8 MB |
-| `velas-fluminense.gif` | 317 | 5,1 MB | 3,9 MB |
+| `athletico-pr/velas-athletico-pr.gif` | 317 | 5,2 MB | 3,9 MB |
+| `bahia/velas-bahia.gif` | 317 | 5,1 MB | 3,8 MB |
+| `fluminense/velas-fluminense.gif` | 317 | 5,1 MB | 3,9 MB |
 | `cruzeiro/velas-cruzeiro.gif` | 317 | 5,3 MB | 4,0 MB |
 | `palmeiras/velas-palmeiras.gif` | 317 | 5,4 MB | 3,9 MB |
 
@@ -190,13 +209,18 @@ rascunho de cada post e as regras de cada sub, está em `docs/post-reddit.md`.
 # Um por vez, e NUNCA todos num laço com uma /tmp/palette.png só: a paleta
 # é tirada do vídeo que ela vai colorir, e reaproveitar a de outro desenha um
 # clube com as cores do vizinho sem nada acusar.
-V=velas-athletico-pr
-ffmpeg -y -i docs/medias/$V.mp4 \
+# O clube e o nome são DUAS variáveis de propósito: o vídeo mora numa pasta e
+# a paleta vai para /tmp, que não tem essa pasta. Um $V só, valendo
+# "athletico-pr/velas-athletico-pr", escreveria /tmp/palette-athletico-pr/... e
+# o ffmpeg pararia no segundo comando, depois de já ter gasto o primeiro.
+C=athletico-pr
+V=velas-$C
+ffmpeg -y -i docs/medias/$C/$V.mp4 \
   -vf "fps=15,scale=960:-1:flags=lanczos,palettegen=max_colors=192:stats_mode=diff" \
   /tmp/palette-$V.png
-ffmpeg -y -i docs/medias/$V.mp4 -i /tmp/palette-$V.png \
+ffmpeg -y -i docs/medias/$C/$V.mp4 -i /tmp/palette-$V.png \
   -lavfi "fps=15,scale=960:-1:flags=lanczos[x];[x][1:v]paletteuse=dither=none:diff_mode=rectangle" \
-  docs/medias/$V.gif
+  docs/medias/$C/$V.gif
 ```
 
 **O gif é MAIOR que o mp4 que o gerou, em todos** — 5,2 MB contra 3,9 no
@@ -329,13 +353,13 @@ cp media/videos/pontos/1080p60/Pontos.mp4       docs/medias/pontos-20-clubes.mp4
 #     a próxima — juntar os `manim` e depois os `cp` faz sair o mesmo clube em
 #     todos os arquivos, com todos os nomes certos e nada acusando.
 ./.venv-manim/bin/manim -qh scripts/manim/velas.py Velas
-cp media/videos/velas/1080p60/Velas.mp4 docs/medias/velas-fluminense.mp4
+cp media/videos/velas/1080p60/Velas.mp4 docs/medias/fluminense/velas-fluminense.mp4
 VELAS_JSON=$PWD/scripts/manim/velas-athletico-pr.json \
   ./.venv-manim/bin/manim -qh scripts/manim/velas.py Velas
-cp media/videos/velas/1080p60/Velas.mp4 docs/medias/velas-athletico-pr.mp4
+cp media/videos/velas/1080p60/Velas.mp4 docs/medias/athletico-pr/velas-athletico-pr.mp4
 VELAS_JSON=$PWD/scripts/manim/velas-bahia.json \
   ./.venv-manim/bin/manim -qh scripts/manim/velas.py Velas
-cp media/videos/velas/1080p60/Velas.mp4 docs/medias/velas-bahia.mp4
+cp media/videos/velas/1080p60/Velas.mp4 docs/medias/bahia/velas-bahia.mp4
 VELAS_JSON=$PWD/scripts/manim/velas-cruzeiro.json \
   ./.venv-manim/bin/manim -qh scripts/manim/velas.py Velas
 cp media/videos/velas/1080p60/Velas.mp4 docs/medias/cruzeiro/velas-cruzeiro.mp4
