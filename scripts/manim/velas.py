@@ -118,6 +118,7 @@ CLUB_COLOURS = {
     "1783": "#E5453A",  # Flamengo      vermelho
     "1779": "#D7DDE0",  # Corinthians   cinza-claro
     "1777": "#35BCD6",  # Bahia         ciano
+    "1771": "#4C7DF0",  # Cruzeiro      azul
 }
 FALLBACK_COLOUR = "#9AA5A0"
 
@@ -657,8 +658,81 @@ class Velas(Scene):
         ).move_to(rows.get_center())
 
         summary = VGroup(panel, rows)
-        # Dentro da área vazia do gráfico de posições — que existe justamente
-        # porque o eixo é a divisão inteira. Encostado nem no pavio da rodada 1
-        # nem na etiqueta do Z4, que são os dois vizinhos dessa região.
-        summary.move_to(self.at_pos(self.last_round * 0.52, 13.5))
+        summary.move_to(self.summary_anchor(rounds, panel.width, panel.height))
         return summary
+
+    def summary_anchor(self, rounds, width: float, height: float):
+        """O lugar vazio do gráfico de posições, LIDO das velas e não fixado.
+
+        Este painel morava num ponto fixo — rodada 13, 13,5º — e o comentário
+        ali dizia que aquilo era "a área vazia do gráfico de posições, que
+        existe justamente porque o eixo é a divisão inteira". Era verdade para
+        os três clubes desenhados antes do Cruzeiro, e pelo mesmo motivo: os
+        três passaram a temporada no terço de cima, então o meio de um eixo que
+        é a divisão inteira sobrava. **Isso é propriedade dos clubes, não do
+        desenho.** O Cruzeiro abre a temporada em 20º e fecha em 6º, então a
+        campanha dele atravessa exatamente aquela faixa, e o painel fixo tapava
+        a subida que é o assunto do vídeo.
+
+        Então o lugar sai das velas. O ponto antigo é testado primeiro e é
+        mantido sempre que estiver livre, o que é de propósito: um re-render
+        dos clubes já publicados não pode mexer o painel deles por causa desta
+        mudança. Só quando ele encosta em alguma vela é que a grade é varrida,
+        e vence o centro que deixa a maior folga.
+        """
+        # Cada vela ocupa o corpo mais o toco à esquerda, e vai do melhor ao
+        # pior do pavio — que é o que precisa ficar visível.
+        boxes = []
+        for entry in rounds:
+            x = self.x_of(entry["round"])
+            top = self.at_pos(entry["round"], entry["best"])[1]
+            bottom = self.at_pos(entry["round"], entry["worst"])[1]
+            boxes.append((x - BODY_WIDTH / 2 - 0.085, x + BODY_WIDTH / 2, bottom, top))
+
+        half_w, half_h = width / 2, height / 2
+
+        def clearance(centre) -> float:
+            """A menor separação entre o painel e uma vela. Negativa se cruzam.
+
+            Separação de retângulos: em cada eixo, o quanto um está fora do
+            outro; o MAIOR dos dois é a distância real, porque dois retângulos
+            só se cruzam quando se sobrepõem nos dois eixos ao mesmo tempo.
+            """
+            cx, cy = centre[0], centre[1]
+            worst = float("inf")
+            for x0, x1, y0, y1 in boxes:
+                dx = max(x0 - (cx + half_w), (cx - half_w) - x1)
+                dy = max(y0 - (cy + half_h), (cy - half_h) - y1)
+                worst = min(worst, max(dx, dy))
+            return worst
+
+        # O ponto antigo é mantido sempre que NÃO CRUZAR uma vela, e o limiar é
+        # zero de propósito: com 0,10 o Athletico-PR saía do lugar por uma folga
+        # de 0,049 — apertada, e apertada não é defeito. Mover o painel de um
+        # vídeo já publicado por causa disso seria esta mudança inventando
+        # trabalho onde não havia problema.
+        default = self.at_pos(self.last_round * 0.52, 13.5)
+        if clearance(default) >= 0:
+            return default
+
+        # A margem mantém o painel dentro da moldura e longe das etiquetas do
+        # G4 e do Z4, que moram logo fora da borda direita.
+        margin = 0.12
+        left, right = PLOT_LEFT + half_w + margin, PLOT_RIGHT - half_w - margin
+        top, bottom = POS_TOP - half_h - margin, POS_BOTTOM + half_h + margin
+        if right < left or top < bottom:
+            return default
+
+        best, best_score = default, clearance(default)
+        steps = 24
+        for i in range(steps + 1):
+            for j in range(steps + 1):
+                centre = [
+                    left + (right - left) * i / steps,
+                    bottom + (top - bottom) * j / steps,
+                    0,
+                ]
+                score = clearance(centre)
+                if score > best_score:
+                    best, best_score = centre, score
+        return best
