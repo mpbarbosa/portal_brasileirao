@@ -419,8 +419,9 @@ export function AccountView({
       <div className="mt-8 border-t border-outline-variant pt-4">
         <h3 className="text-body-medium font-semibold">Apagar a conta</h3>
         <p className="mt-1 max-w-prose text-body-small text-ink-muted">
-          A conta e todas as sessões são apagadas na hora. Não há como desfazer,
-          e não guardamos uma cópia.
+          A conta e todas as sessões são apagadas na hora, e o time que você
+          segue sai deste aparelho junto. Não há como desfazer, e não guardamos
+          uma cópia.
         </p>
         <Button
           onClick={() => dialogRef.current?.showModal()}

@@ -175,6 +175,22 @@ test.describe("Meu time com conta", () => {
     await page.locator("[data-confirm-delete]").click();
     await expect(page.locator("[data-account]")).toHaveAttribute("data-account", "signed-out");
 
+    // The device copy goes too, and this line is the one that can actually
+    // fail. `/privacidade` promises deletion takes "o time que você segue"
+    // with it, and the club is the one thing this app planted on the reader's
+    // own machine — so unlike a sign-out, which keeps it deliberately (the
+    // spec directly above), deleting has to drop it.
+    //
+    // Asserted here rather than only through the account below because this is
+    // the half that is **deterministic**. The poll at the end passes on the
+    // first null it sees, so with the device copy left in place it is a race
+    // against `planSync` seeding the new account — which the poll wins alone
+    // and loses under a full run. That is exactly how this shipped: green in
+    // isolation, red at 923 specs, and green again on a re-run.
+    await expect
+      .poll(() => page.evaluate(() => localStorage.getItem("portal-brasileirao:preferences")))
+      .toBeNull();
+
     // Signing in again as the same person is a new account with nothing in it.
     await devLogin(page, "sub-delete");
     await page.goto("/");

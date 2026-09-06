@@ -57,10 +57,11 @@ export function App() {
   // and reconciles with it once one is — see `planSync`; signed out, that is
   // exactly Phase 0. The Página inicial lives only in the account, arrives with
   // one and leaves with it.
-  const { preferences, syncedAccountId, toggleClub, chooseLanding } = usePreferences({
-    id: accountState.status === "signed-in" ? accountState.account.id : null,
-    preferences: accountState.status === "signed-in" ? accountState.account.preferences : null,
-  });
+  const { preferences, syncedAccountId, toggleClub, chooseLanding, forgetEverything } =
+    usePreferences({
+      id: accountState.status === "signed-in" ? accountState.account.id : null,
+      preferences: accountState.status === "signed-in" ? accountState.account.preferences : null,
+    });
   const [standings, setStandings] = useState<StandingsRow[]>([]);
   const [matches, setMatches] = useState<MatchesPayload | null>(null);
   const [scorers, setScorers] = useState<Scorer[]>([]);
@@ -595,7 +596,21 @@ export function App() {
                 void signOut(everywhere).then(() => navigate({ section: "classificacao" }));
               }}
               onDelete={() => {
-                void deleteAccount().then(() => navigate({ section: "classificacao" }));
+                void deleteAccount().then((deleted) => {
+                  // Only once the row is actually gone: a failed DELETE leaves
+                  // the account standing, and wiping the device copy then would
+                  // lose a club for nothing.
+                  //
+                  // The device copy is dropped here and not on sign-out, which
+                  // is the deliberate contrast the two specs beside each other
+                  // assert. Without it the club survives on this machine and
+                  // `planSync` seeds it straight back into whatever account the
+                  // next sign-in creates — so a reader who asked for erasure
+                  // gets the club they deleted recreated server-side, from a
+                  // copy this app planted.
+                  if (deleted) forgetEverything();
+                  navigate({ section: "classificacao" });
+                });
               }}
               onBack={() => navigate({ section: "classificacao" })}
             />

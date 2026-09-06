@@ -1437,6 +1437,25 @@ decisions rather than mechanics:
   rule is owed only where both sides can hold a value.** `landing` is account-only — no
   `localStorage` copy exists, by construction — so there is nothing to reconcile and no
   clock to buy. Ask which side *owns* a key before asking how to reconcile it.
+- **Deleting the account drops the device copy; signing out keeps it.** That asymmetry
+  is the one place `planSync`'s seeding rule had to be qualified, and it shipped
+  unqualified: the club survived on the machine, so the next sign-in seeded it straight
+  back into the freshly created account and a reader who asked for erasure got the club
+  they deleted recreated server-side, from a copy this app planted. `/privacidade` had
+  been promising the opposite in as many words — *"a conta, as sessões, o time que você
+  segue e a sua página inicial, tudo de uma vez"*. The erase is pushed in from `App`'s
+  `onDelete` rather than observed by the hook, because the hook sees only `account.id`
+  going null and a **sign-out does that too**; and it clears React state as well as the
+  key, since the reconcile effect seeds from state, so a copy wiped on disk and left in
+  memory uploads exactly as before.
+  **`tests/e2e/contas-preferencias.spec.ts` asserted this from the day it was written and
+  could not fail on it**, which is the half worth carrying away. Its only check was
+  `expect.poll(…).toBeNull()` on the account — and a poll passes on the **first** null it
+  sees, so it was racing the seeding upload rather than testing anything: green alone,
+  green on a re-run, red at 923 specs, and red in whichever project happened to lose. A
+  poll for an *absence* is a race dressed as an assertion wherever the thing polled for
+  arrives late. The spec now asserts the `localStorage` key is gone directly, which fails
+  deterministically in isolation and was confirmed red against the unfixed code.
 - **The upload is fire-and-forget**, so the page is usable before it lands. That is right
   for a reader and a trap for a test: a spec that follows a club and immediately asks the
   API what the account holds is racing it. Poll, or assert through the browser.

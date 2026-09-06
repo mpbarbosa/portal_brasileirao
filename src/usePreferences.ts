@@ -43,6 +43,22 @@ const upload = (preferences: Preferences): void => {
   }).catch(() => undefined);
 };
 
+/**
+ * Drop the device's whole copy, key and all.
+ *
+ * Only `onDelete` calls this, and the asymmetry with sign-out is the point:
+ * `forgetAccountPreferences` keeps the club because signing out had nothing to
+ * do with it, while deleting the account is an erasure and the club is the one
+ * thing this app planted on the reader's machine.
+ */
+const erase = (): void => {
+  try {
+    localStorage.removeItem(PREFERENCES_STORAGE_KEY);
+  } catch {
+    /* the state below is cleared either way, so this session forgets it */
+  }
+};
+
 const read = (): Preferences => {
   try {
     return parsePreferences(localStorage.getItem(PREFERENCES_STORAGE_KEY));
@@ -98,6 +114,19 @@ export function usePreferences(account: {
   toggleClub: (code: ClubCode) => void;
   /** Choose where the app opens. A no-op signed out — see below. */
   chooseLanding: (landing: LandingId | null) => void;
+  /**
+   * Forget everything this device holds. For account **deletion** and nothing
+   * else.
+   *
+   * It has to be pushed in rather than observed, because the effect below sees
+   * only `account.id` going null — which a sign-out does too, and a sign-out
+   * must keep the club. Deleting is the one case where it must not.
+   *
+   * The `localStorage` key alone would not be enough: the reconcile effect
+   * seeds from **state**, so a device copy cleared on disk but left in memory
+   * is uploaded to the next account exactly as before.
+   */
+  forgetEverything: () => void;
 } {
   const [preferences, setPreferences] = useState<Preferences>(read);
   const [syncedAccountId, setSyncedAccountId] = useState<string | null>(null);
@@ -174,5 +203,10 @@ export function usePreferences(account: {
     [account.id],
   );
 
-  return { preferences, syncedAccountId, toggleClub, chooseLanding };
+  const forgetEverything = useCallback(() => {
+    erase();
+    setPreferences(NO_PREFERENCES);
+  }, []);
+
+  return { preferences, syncedAccountId, toggleClub, chooseLanding, forgetEverything };
 }
