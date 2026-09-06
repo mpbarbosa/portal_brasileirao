@@ -215,6 +215,55 @@ camera: the only club page in `docs/screenshots/` is Palmeiras', so an entry
 under another code cannot move a pixel — and a `Screenshots-unaffected:` trailer
 naming that, in the message's last paragraph beside `Co-Authored-By:`, clears it.
 
+### 9b. Recovering the id of a video somebody else uploaded
+
+You will usually not have the link: the render happens in one session and the
+upload in another, and **nothing in the repository records the id** — the
+`-youtube.md` holds the copy and stops there. Ask the channel instead of asking
+the person, because the channel answers in two commands, needs no API key and
+cannot misremember.
+
+Start from a video you already have. Any entry in `club-videos.ts` gives you the
+channel through oEmbed, and the channel page gives you its id:
+
+```bash
+curl -s "https://www.youtube.com/oembed?url=https%3A//www.youtube.com/watch%3Fv%3DdoMq2ELvtrc&format=json" \
+  | python3 -c 'import json,sys; print(json.load(sys.stdin)["author_url"])'
+# https://www.youtube.com/@MarceloBarbosa1971
+
+curl -sL -A "Mozilla/5.0" "https://www.youtube.com/@MarceloBarbosa1971" \
+  | grep -o '"browseId":"UC[A-Za-z0-9_-]\{22\}"' | head -1
+```
+
+Then read the channel's public feed, which is plain XML — id, title and
+publication date per upload, with no JavaScript and no key:
+
+```bash
+curl -s "https://www.youtube.com/feeds/videos.xml?channel_id=<UC…>"
+```
+
+**`WebFetch` cannot do this and returns a page with no videos in it**, because
+the channel listing is rendered by JavaScript; the fetch succeeds and the answer
+is empty, which reads as an empty channel. `curl` with a browser User-Agent gets
+the real HTML, and the feed avoids the question entirely.
+
+**What absence in that feed means, exactly.** The feed lists **public** uploads
+and only the most recent ones. So a title that is not there is *not public* —
+which is a different claim from *never uploaded*: an unlisted or scheduled video
+is missing from the feed too. Measured here: a **scheduled** one answers 403 at
+oEmbed, so the two states are distinguishable once you hold the id — and for an
+**unlisted** one, ask oEmbed rather than assuming either way, since that is the
+only thing that says whether a club page could embed it. Say which of the three
+you established. Measured 2026-09-06: the
+channel's feed held three entries, the two velas videos for Athletico-PR and
+Bahia were absent from it, and the copy for both had been committed two days
+earlier — so the artefacts were finished and the upload had not happened.
+
+**And an unlisted video on a club page is a decision, not a detail.** Embedding
+one publishes it to every reader of that page, which is what "unlisted" was
+chosen to avoid. A 200 from oEmbed says the embed would work; it does not say
+anybody wanted it. Ask.
+
 ## What verification is worth here
 
 Ranked by what has actually caught something in this pipeline:
@@ -239,17 +288,19 @@ not a claim about the video.
 - [ ] every new artefact listed in `docs/medias/RENDERED`
 - [ ] `node --import tsx --test tests/manim-renders.test.ts` green, and `npm run test:unit`
 - [ ] published → oEmbed answers 200 → `club-videos.ts` entry, with the trailer
-- [ ] the loop closed. Measured 2026-09-05: `velas-athletico-pr` and `velas-bahia`
-      have copy written and **no `club-videos.ts` entry**, and nothing in the
-      repository can tell you whether that is "not published yet" or "published
-      and never registered" — which is the whole reason this line is a checkbox
+- [ ] the loop closed — and step 9b is how you find out, in two commands,
+      rather than guessing. Measured 2026-09-06: `velas-athletico-pr` and
+      `velas-bahia` have copy committed, no `club-videos.ts` entry, and **no
+      upload** — absent from the channel's own feed, which held three entries
 
 ## The open edges, so nobody rediscovers them
 
 - **Nothing links a `-youtube.md` to the video it was written for.** The id lives
-  in `club-videos.ts`, and only once the video reached a club page — so "was this
-  one published?" has no answer inside the repository. Grep that file for the
-  club's code, and if there is no entry, ask the person who uploaded it.
+  in `club-videos.ts`, and only once the video reached a club page — so *inside*
+  the repository the question has no answer: grep that file for the club's code
+  and an absent entry tells you nothing about why. The channel's own feed does
+  answer it, which is step 9b, and it is cheap enough that it belongs in the
+  checklist rather than in a note.
 - **Every club is another artefact.** One mp4, one gif, one payload, one copy
   document, several `RENDERED` lines and one more step in the regeneration chain
   — and the chain is where a forgotten club goes unnoticed, because `RENDERED`
