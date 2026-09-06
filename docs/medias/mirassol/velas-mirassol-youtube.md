@@ -51,11 +51,14 @@ começando onde a anterior parou.
 ## Treze rodadas seguidas fechando dentro do Z4
 
 Da **8ª à 20ª rodada**, sem exceção, o Mirassol terminou o dia dentro da zona de
-rebaixamento. **Treze seguidas — a mais longa das dezoito campanhas já
-desenhadas** nesta série; a seguinte é a do Cruzeiro, com onze.
+rebaixamento. **Treze seguidas**, e somando a 23ª e a 24ª são **quinze
+fechamentos no Z4** no total.
 
-Somando as rodadas 23 e 24, são **quinze fechamentos no Z4**, também o recorde da
-série. No desenho isso é a faixa vermelha do pé do eixo com quase metade da
+> **Esses dois números foram recorde da série por menos de uma hora**, e o
+> registro fica aqui em vez de a frase ficar errada: o **Clube do Remo**, o vídeo
+> seguinte, fechou **23 rodadas** dentro da zona, **21 delas seguidas**. Entre os
+> dezoito clubes desenhados antes dele o Mirassol era o primeiro, com o Cruzeiro
+> em segundo (onze seguidas). No desenho isso é a faixa vermelha do pé do eixo com quase metade da
 campanha dentro dela.
 
 ## A saída, e uma vela que vale por cinco
@@ -114,7 +117,7 @@ Na 2ª rodada o Mirassol tocou o 2º LUGAR, a posição mais alta do ano, durant
 
 SEIS DERROTAS SEGUIDAS, TODAS POR UM GOL — quatro delas por 0 a 1. Nove rodadas depois de estar em segundo, o clube era o último colocado.
 
-Da 8ª à 20ª rodada, sem exceção, ele terminou o dia dentro do Z4: TREZE RODADAS SEGUIDAS, a sequência mais longa das dezoito campanhas já desenhadas nesta série — a seguinte é a do Cruzeiro, com onze. Somando a 23ª e a 24ª são quinze fechamentos na zona, também o recorde da série.
+Da 8ª à 20ª rodada, sem exceção, ele terminou o dia dentro do Z4: TREZE RODADAS SEGUIDAS, e somando a 23ª e a 24ª são quinze fechamentos na zona. Entre os dezoito clubes desenhados até aquele momento era a sequência mais longa, com o Cruzeiro em segundo (onze) — o Clube do Remo, desenhado logo depois, fechou 23 rodadas na zona, 21 delas seguidas.
 
 A saída veio na 21ª: vitória por 2 a 1 sobre o Remo em casa e cinco posições de uma vez, do 19º ao 14º. É a vela verde alta do fim do desenho e a primeira vez desde a 7ª rodada que o clube fechou fora da zona. Caiu de novo na 23ª, 1 a 5 para o Flamengo em casa, e fechou o recorte em 16º empatando por 1 a 1 com o Palmeiras.
 
