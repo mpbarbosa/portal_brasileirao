@@ -125,6 +125,7 @@ CLUB_COLOURS = {
     "4286": "#E058B8",  # Bragantino    magenta
     "4241": "#8BD94F",  # Coritiba      verde-claro
     "1767": "#7C8FF5",  # Grêmio        azul-claro
+    "1780": "#F0748F",  # Vasco da Gama rosa
 }
 FALLBACK_COLOUR = "#9AA5A0"
 
@@ -537,8 +538,24 @@ class Velas(Scene):
             # etiqueta do G4 rente à borda de baixo da faixa e, para um clube que
             # termina em 4º, as últimas velas passam exatamente por cima dela.
             # Aqui a marca nunca encosta em vela nenhuma, para clube nenhum.
-            tag = label(caption, 13, colour)
-            tag.set_opacity(0.8)
+            # **O véu de 0,8 entra na COR e não no objeto, porque medido no
+            # quadro codificado ele derrubava o `Z4` abaixo do piso de texto.**
+            # `set_opacity(0.8)` compõe na hora de desenhar, então nada aqui
+            # via a cor que o leitor recebe: o `NEGATIVE` velado é `#B94634`,
+            # que dá **3,64** sobre o `SURFACE` calculado e **3,30** medido no
+            # mp4 — type abaixo de 4,5, que é exatamente a falha que o
+            # `README.md` cataloga sobre o `INK_FAINT`. Compondo o véu aqui, o
+            # `lift_to_floor` volta a enxergar a cor final e sobe só o que
+            # precisa: o `G4` fica IGUAL (`#27A65D`, 6,12) e o `Z4` vai de
+            # `#B94634` a `#E35640` (5,18). Medido em 2026-09-06; para
+            # reconferir, é a mesma linha do tom do clube.
+            tag = label(
+                caption,
+                13,
+                lift_to_floor(
+                    _over(colour, 0.8, SURFACE), SURFACE, TEXT_FLOOR * ENCODED_MARGIN
+                ),
+            )
             tag.move_to([PLOT_RIGHT + 0.34, self.at_pos(1, (low + high) / 2)[1], 0])
             captions.add(tag)
         return bands, captions
