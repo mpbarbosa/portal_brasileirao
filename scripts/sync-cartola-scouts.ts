@@ -391,7 +391,7 @@ function accumulate(snapshots: Snapshot[]): {
   // known (`goals.ts` covers 23 of its 25 and the two it misses are both 0-0),
   // and the 4-goal gap is precisely round 5's 4-1. So 219 finalizações were
   // divided by 25 where the counted matches give 23: **8,8 a game reported
-  // against 9,5, which is 17º de 20 against 12º** — on a card whose whole
+  // against 9,5, which is 17º de 20 against 14º** — on a card whose whole
   // purpose is reading one club against the division. 20 club-matches are
   // uncovered across the division, which together with the own goals accounts
   // for essentially all of the goals band's 6.8%.
@@ -708,7 +708,7 @@ function write(
  * always record a match at all. 13 of the 20 clubs are short in 2026, Botafogo
  * by three. Dividing by what was played rather than by what was counted put
  * Athletico-PR at 8,8 finalizações a game (17º de 20) where the covered matches
- * give 9,5 (12º). A club well short of its fixtures is described on a smaller
+ * give 9,5 (14º). A club well short of its fixtures is described on a smaller
  * sample than the division around it — the rate is right, the sample is thinner.
  *
  * Stale by construction, like \`rank-history.ts\`. Regenerate after a

@@ -22,7 +22,7 @@ import type { ClubScouts } from "@/src/types";
  * always record a match at all. 13 of the 20 clubs are short in 2026, Botafogo
  * by three. Dividing by what was played rather than by what was counted put
  * Athletico-PR at 8,8 finalizações a game (17º de 20) where the covered matches
- * give 9,5 (12º). A club well short of its fixtures is described on a smaller
+ * give 9,5 (14º). A club well short of its fixtures is described on a smaller
  * sample than the division around it — the rate is right, the sample is thinner.
  *
  * Stale by construction, like `rank-history.ts`. Regenerate after a

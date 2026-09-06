@@ -2661,8 +2661,20 @@ the club's scout goals are 33 against 37 in the seed, its own goals in favour ar
 0 and fully known (`goals.ts` covers 23 of its 25 and the two it misses are both
 0-0), and the 4-goal gap is precisely round 5's 4-1. So 219 finalizações were
 divided by 25 where the counted matches give 23 — **8,8 a game reported against
-9,5, which is 17º de 20 against 12º**, on a card whose whole purpose is reading
-one club against the division. 13 of the 20 clubs are short, Botafogo by three,
+9,5, which is 17º de 20 against 14º**, on a card whose whole purpose is reading
+one club against the division.
+
+**That rank shipped as 12º first, and the way it was wrong is this file's own
+recurring failure.** It was computed by correcting *Athletico's* denominator
+while leaving the other nineteen clubs on their old ones — a corrected club
+measured against an uncorrected division, which is the mixed reading the
+stale-tree paragraphs warn about, reached through arithmetic instead of a ref.
+The fix raises thirteen clubs' rates, so the club climbs three places and not
+five. The commit that introduced it had already written down the risk — *the
+rank table holds the other 19 clubs fixed* — and published the number anyway,
+which is what a claim with no gate on it costs. 14º was read back off the
+**bytes production serves**: 219/23 = 9,5217, thirteen clubs strictly above, and
+an exact tie with Chapecoense, which is also 219/23. 13 of the 20 clubs are short, Botafogo by three,
 and the 20 uncovered club-matches together with the own goals account for
 essentially all of the goals band's 6.8%.
 
