@@ -323,6 +323,38 @@ const fullPage = !mobile && route === "/";
  * re-read the alt text of any capture whose height moves — either way, per the
  * paragraph above.
  *
+ * **1170 rather than 1080, and the 90px is the club page's Vídeos do clube.**
+ * #418 widened the video card from 176px to 416, which made it taller, which
+ * pushed that section's bottom past the old line — so the crop fell back to
+ * Artilheiros and `clube-palmeiras` shrank 1574 -> 1236, losing the section
+ * entirely. That is the shrinking-capture failure the first paragraph describes,
+ * arriving again from a commit that had no reason to open this comment.
+ *
+ * **The band was measured against production on 2026-09-06, and it is a reading
+ * rather than a constant.** The floor is the club's Vídeos section, whose bottom
+ * is 1146; the ceiling is the estádio page's next fixture card at 1190, above
+ * which that capture gains a row and changes what its caption has to say. So the
+ * safe band was [1146, 1189] and 1170 sits near its middle — 24px of headroom
+ * over the section this exists to include, 20px below the first thing it must
+ * not reach. Both endpoints move with live data, so re-derive them rather than
+ * trusting these two numbers; the command is in the paragraph above, and the
+ * per-route boundaries come from the same `main` children plus `li` set that
+ * `cropHeight` walks.
+ *
+ * **Six of the eight crop-bound routes moved with it, and none crossed into a
+ * new section.** ao-vivo 970 -> 1108, jogos 1024 -> 1124, jogadores 1070 ->
+ * 1155, 554951 1076 -> 1150, 554977 1082 -> 1156 all simply show one or two more
+ * list items inside a section they already showed; `painel` (1095) and `estadio`
+ * (1068) did not move at all. Every one of those still owed its alt text a
+ * re-read, per the paragraph above, and the club pair owed a rewrite.
+ *
+ * **Nothing here can go red when this value is wrong, which is why the re-shoot
+ * must ship in the same commit.** `scripts/` is not in `scripts/appearance-paths.txt`
+ * — deliberately, since the file lists what *renders* — so the screenshots gate
+ * cannot see a change to this number at all. Raise it without re-shooting and
+ * the committed images keep the old crop, the gate stays green, and the only
+ * record that anything happened is this comment.
+ *
  * **The cropped viewport height below is NOT equal to this, and cannot be.**
  * This comment used to say "keep this equal", and the arithmetic never allowed
  * it: `cropHeight` returns `cut + pad` where only `cut` is tested against the
@@ -333,7 +365,7 @@ const fullPage = !mobile && route === "/";
  * taller than the viewport clips content that was never scrolled into view, and
  * the crests and broadcaster marks are lazy. Watch the margin, not the equality.
  */
-const MAX_HEIGHT = 1080;
+const MAX_HEIGHT = 1170;
 
 mkdirSync(outDir, { recursive: true });
 
