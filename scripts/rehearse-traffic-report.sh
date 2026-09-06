@@ -51,6 +51,10 @@ contains() {
     fi
 }
 
+# The origin the visitor rule anchors on. Passed to the script explicitly so the
+# rehearsal does not depend on the production default.
+ORIGIN="https://brasileirao.mpbarbosa.com"
+
 line() {
     # ip, timestamp, path, status
     echo "203.0.113.$1 - - [$2 +0000] \"GET $3 HTTP/1.1\" $4 100 \"$5\" \"$6\""
@@ -100,10 +104,10 @@ check "the date range runs oldest -> newest across unordered rotations" \
 # request that reached the server, so it is counted — only the timestamp scan
 # skips it.
 # A count, not just an exit code. The truncation this file was written after
-# ended the report FOUR sections into eleven and still wrote a file — so "it exited 0"
+# ended the report FOUR sections into twelve and still wrote a file — so "it exited 0"
 # and "a summary exists" both pass against it, and only counting the headings
 # says the report finished.
-check "the summary carries every section" "11" "$(grep -c '^== ' "$SUMMARY")"
+check "the summary carries every section" "12" "$(grep -c '^== ' "$SUMMARY")"
 
 check "every line is counted, malformed ones included" "7" "$(field 'Requests')"
 check "unique addresses are counted, not requests" "6" "$(field 'Unique IPs')"
@@ -138,10 +142,86 @@ if [[ -n "$EMPTY_SUMMARY" ]]; then
         "no parseable timestamps" "$EMPTY_SUMMARY"
     # The regression itself: grep exits 1 on an empty log, pipefail propagates
     # it, set -e kills the brace group, and the report stopped at four of ten.
-    check "an empty log still produces a COMPLETE summary" "11" \
+    check "an empty log still produces a COMPLETE summary" "12" \
         "$(grep -c '^== ' "$EMPTY_SUMMARY")"
 else
     echo "NOT OK — an empty log wrote no summary at all"
+    bad=$((bad + 1))
+fi
+
+# ── Visitors: browser-caused traffic, on a log built to separate the cases ───
+#
+# Its own log rather than lines added to the one above, so the existing counts
+# ("Monitor hits: 3 of 7") keep meaning what they say.
+#
+# The rule is a Referer naming OUR origin, minus anything self-declaring as a
+# crawler, and each line below is one case that rule has to get right. Three of
+# them were found in the host's real log rather than imagined.
+VLOG="$WORK/visitors.log"
+{
+    # A visit: the document carries no Referer, its sub-resources carry ours.
+    line 1 "04/Sep/2026:10:00:00" "/" 200 "-" "Mozilla/5.0 Chrome/131"
+    line 1 "04/Sep/2026:10:00:01" "/assets/index.css" 200 "$ORIGIN/" "Mozilla/5.0 Chrome/131"
+    line 1 "04/Sep/2026:10:00:01" "/api/standings" 200 "$ORIGIN/" "Mozilla/5.0 Chrome/131"
+    # The Rodapé's own health fetch — a READER, and what #375 subtracted.
+    line 1 "04/Sep/2026:10:00:02" "/api/health" 200 "$ORIGIN/" "Mozilla/5.0 Chrome/131"
+    # A rendering crawler sends our Referer exactly as a browser does. The UA is
+    # allowed to disqualify it; 70 such lines were in the day measured.
+    line 2 "04/Sep/2026:10:05:00" "/assets/index.css" 200 "$ORIGIN/jogos" "Googlebot/2.1"
+    # A scanner: no Referer at all, which is 631 of the 02:00Z sweep's 643.
+    line 3 "04/Sep/2026:10:06:00" "/wp-config.php.bak" 404 "-" "Mozilla/5.0 Chrome/131"
+    # And the 12 that DID carry one — this host's raw IP, not its name. What
+    # this case refuses is the rule "has any Referer at all".
+    line 3 "04/Sep/2026:10:06:01" "/@fs/proc/self/environ" 404 "https://54.232.242.45:443" "Mozilla/5.0 Chrome/131"
+    # Our origin appearing INSIDE somebody else's URL. This is what the `index(
+    # $4, o) == 1` anchor is for, and the raw-IP line above does not test it:
+    # an unanchored substring match counts this one, a prefix match does not.
+    line 5 "04/Sep/2026:10:06:02" "/" 200 "https://exemplo.com/?u=$ORIGIN/jogos" "Mozilla/5.0 Chrome/131"
+    # A foreign referer: arriving from a search engine is a real visit, but the
+    # request itself is not evidence a browser on THIS site made it.
+    line 4 "04/Sep/2026:10:07:00" "/" 200 "https://www.google.com/" "Mozilla/5.0 Chrome/131"
+} > "$VLOG"
+
+DEPLOY_DIR="$WORK" DISABLE_GEO=true SITE_ORIGIN="$ORIGIN" \
+    bash "$REPORT" "$VLOG" "$WORK/v-out" > "$WORK/v-stdout.txt" 2>&1
+VSUMMARY="$(find "$WORK/v-out" -name 'summary-*.txt' | head -1)"
+if [[ -n "$VSUMMARY" ]]; then
+    # Three of the nine: the css, the standings call and the Rodapé's health
+    # fetch. Not the document, not Googlebot, not either scanner line, not the
+    # one arriving from Google, and not the one with our origin in a query
+    # string.
+    contains "only browser-caused requests count as visitors" \
+        "Visitor hits:   3 of 9" "$VSUMMARY"
+    # One crawler in this log. The case for reading the UA field rather than the
+    # whole line is the next log, which has no crawler in it at all.
+    contains "the bot share counts the crawler" "Bot-ish hits:   1 of 9" "$VSUMMARY"
+else
+    echo "NOT OK — the visitor log wrote no summary"
+    bad=$((bad + 1))
+fi
+
+# ── The bot rule reads the USER-AGENT field, not the whole line ──────────────
+#
+# The rule was `grep -aiE` over the raw line, so it also matched the PATH. Found
+# in the real log: 62 hits on /robots.txt, a Vite asset whose content hash was
+# `index-ChBoTmtl.css`, and a reader opening `/clube/botafogo` — a club in this
+# division is named Botafogo, so a content page was filed as a crawler. The hash
+# case is the sharpest: it is random, so the error changed on every build.
+BLOG="$WORK/bot-words.log"
+{
+    line 1 "04/Sep/2026:11:00:00" "/clube/botafogo" 200 "-" "Mozilla/5.0 Chrome/131"
+    line 1 "04/Sep/2026:11:00:01" "/assets/index-ChBoTmtl.css" 200 "-" "Mozilla/5.0 Chrome/131"
+    line 2 "04/Sep/2026:11:00:02" "/robots.txt" 200 "-" "Mozilla/5.0 Chrome/131"
+} > "$BLOG"
+DEPLOY_DIR="$WORK" DISABLE_GEO=true bash "$REPORT" "$BLOG" "$WORK/b-out" \
+    > "$WORK/b-stdout.txt" 2>&1
+BSUMMARY="$(find "$WORK/b-out" -name 'summary-*.txt' | head -1)"
+if [[ -n "$BSUMMARY" ]]; then
+    # Zero. The whole-line rule answers 3 — every one of them.
+    contains "a path containing a bot word is not a bot hit" \
+        "Bot-ish hits:   0 of 3" "$BSUMMARY"
+else
+    echo "NOT OK — the bot-words log wrote no summary"
     bad=$((bad + 1))
 fi
 

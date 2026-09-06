@@ -74,6 +74,14 @@ set -euo pipefail
 
 DEPLOY_DIR="${DEPLOY_DIR:-/var/www/portal_brasileirao}"
 ACCESS_LOG="${1:-/var/log/nginx/portal-brasileirao.access.log}"
+# The origin a request must name as its Referer to count as browser-caused. See
+# the "Visitors" section below for why this is anchored and why it is an origin
+# rather than a hostname.
+SITE_ORIGIN="${SITE_ORIGIN:-https://brasileirao.mpbarbosa.com}"
+# Self-declared crawlers, lower-case. Used in two places and defined once: the
+# bot share counts them, and the visitor count removes them. Two copies is how
+# the two sections come to disagree about what a crawler is.
+BOT_UA="${BOT_UA:-bot|crawl|spider|slurp|bytespider|facebookexternalhit|whatsapp}"
 OUT_DIR="${2:-$DEPLOY_DIR/traffic-reports}"
 TOP_N="${TOP_N:-20}"
 STAMP="$(date +%Y%m%d-%H%M%S)"
@@ -333,9 +341,62 @@ top() { awk -v n="$TOP_N" 'NR <= n'; }
         | sort -u | cut -f1 | sort | uniq -c
     echo
 
+    # **Matched against the USER-AGENT FIELD, not the whole line.** The rule was
+    # `grep -aiE` over the raw line, which also matches the *path*: measured on
+    # one day of the real log, that counted 35 hits on `/robots.txt` and — the
+    # one that gives the game away — a reader opening **`/clube/botafogo`**. A
+    # club in this division is named Botafogo, so a content page was filed as a
+    # crawler. The whole-line rule reported 737 where the field reports 735; the
+    # gap is small and the mechanism is wrong in a way that grows with the
+    # vocabulary.
     echo "== Bot / crawler share =="
     printf "Bot-ish hits:   %s of %s\n" \
-        "$(grep -aiEc 'bot|crawl|spider|slurp|bytespider|facebookexternalhit|WhatsApp' "$TMP_LOG" || true)" \
+        "$(awk -F'"' '{ print $6 }' "$TMP_LOG" | grep -aiEc "$BOT_UA" || true)" \
+        "$TOTAL"
+    echo
+
+    # ── Visitors, and why this is a Referer test rather than a bot blocklist ──
+    #
+    # The page draws two series: everything the server served, and what a
+    # browser on this site caused. This is the second.
+    #
+    # **It is positive evidence, not the absence of a blocklist entry.** A
+    # request counts when it names *our own origin* as its Referer — which is
+    # what a browser sends for every sub-resource of a page it is rendering: the
+    # CSS, the bundle, the API calls, the crests. A crawler fetching a URL sends
+    # none, and a scanner probing /wp-config.php sends none.
+    #
+    # **The user-agent may only DISQUALIFY, never qualify.** Anything
+    # self-declaring as a crawler is removed even when it does send our Referer,
+    # because a rendering crawler (Googlebot, OAI-SearchBot, meta-externalagent)
+    # loads sub-resources exactly as a browser does — 70 such lines in the day
+    # measured. Read the asymmetry as the security property it is: a scanner
+    # that spoofs `Claude-User` gains nothing here, and the 02:00Z sweep of
+    # 2026-09-05 spoofed four AI crawler agents from one address.
+    #
+    # **Anchored on the origin, and that is not pedantry.** Of that sweep's 643
+    # requests, 631 carried no Referer and **12 named `https://54.232.242.45:443`**
+    # — this host's own IP, not its name. An unanchored or hostname-less match
+    # would have counted them.
+    #
+    # **What it undercounts, stated rather than hidden:** the page navigation
+    # itself. A visit's first request is the HTML document, which carries no
+    # Referer (or an external one, arriving from a search engine), so it is not
+    # counted while the five-or-so sub-requests it causes are. This is a measure
+    # of *browser-caused traffic*, which is what a rate chart is for, and
+    # deliberately not a visit count — `uniqueIps` is as close to that as this
+    # report honestly gets.
+    #
+    # **One dependency worth knowing: nothing serves a `Referrer-Policy` header**
+    # (checked against the live site), so browsers use their default and send
+    # the full URL for same-origin requests. Hardening that to `no-referrer`
+    # would silently reclassify every reader as automated, and no test here can
+    # see it — the header is nginx's to set, and this is a log.
+    echo "== Visitors (browser-caused) =="
+    printf "Visitor hits:   %s of %s\n" \
+        "$(awk -F'"' -v o="$SITE_ORIGIN" -v b="$BOT_UA" \
+             'index($4, o) == 1 && tolower($6) !~ tolower(b) { n++ } END { print n + 0 }' \
+             "$TMP_LOG")" \
         "$TOTAL"
     echo
 
