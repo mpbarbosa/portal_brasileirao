@@ -13,7 +13,7 @@ import type { Lineup } from "@/src/types";
  * anything less, so an absent match means "not synced or not published", never
  * "no lineup".
  *
- * Generated 2026-09-03.
+ * Generated 2026-09-06.
  */
 export const ESCALACOES: Record<string, Lineup[]> = {
   "554740": [
@@ -2375,6 +2375,78 @@ export const ESCALACOES: Record<string, Lineup[]> = {
         { on: "Allan", off: "Vitinho", minute: "66'" },
         { on: "Rodrigo Garro", off: "Charles", minute: "66'" },
         { on: "Memphis Depay", off: "Pedro Raul", minute: "77'" },
+      ],
+    },
+  ],
+  "554775": [
+    {
+      clubCode: "1783",
+      players: [
+        { name: "Rossi", shirt: "1", keeper: true, starter: true },
+        { name: "Varela", shirt: "2", starter: true },
+        { name: "Léo Ortiz", shirt: "3", starter: true },
+        { name: "Leo Pereira", shirt: "4", starter: true },
+        { name: "Erick Pulgar", shirt: "5", starter: true },
+        { name: "Ayrton Lucas", shirt: "6", starter: true },
+        { name: "Luiz", shirt: "7" },
+        { name: "Saul", shirt: "8" },
+        { name: "Pedro", shirt: "9", starter: true },
+        { name: "De Arrascaeta", shirt: "10" },
+        { name: "Everton", shirt: "11" },
+        { name: "Danilo", shirt: "13" },
+        { name: "Carrascal", shirt: "15", starter: true },
+        { name: "Samuel Lino", shirt: "16", starter: true },
+        { name: "Lucas Paquetá", shirt: "20", starter: true },
+        { name: "Jorge", shirt: "21", starter: true },
+        { name: "Emerson", shirt: "22" },
+        { name: "Bruno Henrique", shirt: "27" },
+        { name: "Andrew", shirt: "42", keeper: true },
+        { name: "Dyogo", shirt: "49" },
+        { name: "Evertton", shirt: "52" },
+        { name: "Johnny", shirt: "77" },
+        { name: "Lorran", shirt: "99" },
+      ],
+      subs: [
+        { on: "Evertton", off: "Erick Pulgar", minute: "30'" },
+        { on: "De Arrascaeta", off: "Evertton", minute: "Intervalo" },
+        { on: "Saul", off: "Carrascal", minute: "72'" },
+        { on: "Bruno Henrique", off: "Pedro", minute: "72'" },
+        { on: "Everton", off: "Samuel Lino", minute: "81'" },
+      ],
+    },
+    {
+      clubCode: "4364",
+      players: [
+        { name: "Lucas Oliveira", shirt: "2" },
+        { name: "Willian Machado", shirt: "3", starter: true },
+        { name: "Japa", shirt: "5" },
+        { name: "Reinaldo", shirt: "6", starter: true },
+        { name: "Shaylon", shirt: "7" },
+        { name: "Andre Luis", shirt: "9", starter: true },
+        { name: "Chico", shirt: "10" },
+        { name: "Victor", shirt: "12" },
+        { name: "Fernandinho", shirt: "17", starter: true },
+        { name: "Elias", shirt: "18" },
+        { name: "Mosquito", shirt: "19" },
+        { name: "Daniel Borges", shirt: "20" },
+        { name: "Walter", shirt: "22", keeper: true, starter: true },
+        { name: "Alex Muralha", shirt: "23", keeper: true },
+        { name: "Denilson", shirt: "27", starter: true },
+        { name: "Bruno Santos", shirt: "30" },
+        { name: "Igor", shirt: "32", starter: true },
+        { name: "Carroll", shirt: "34", starter: true },
+        { name: "Gabriel", shirt: "44", starter: true },
+        { name: "Gustavo", shirt: "55", starter: true },
+        { name: "Alesson", shirt: "77" },
+        { name: "Wallisson", shirt: "80" },
+        { name: "Carlos Eduardo", shirt: "96", starter: true },
+      ],
+      subs: [
+        { on: "Alex Muralha", off: "Walter", minute: "Intervalo" },
+        { on: "Shaylon", off: "Carlos Eduardo", minute: "Intervalo" },
+        { on: "Elias", off: "Igor", minute: "65'" },
+        { on: "Bruno Santos", off: "Andre Luis", minute: "78'" },
+        { on: "Chico", off: "Gustavo", minute: "78'" },
       ],
     },
   ],

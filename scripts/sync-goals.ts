@@ -17,9 +17,14 @@
  *   npx tsx scripts/sync-goals.ts 2026-08-23 2026-08-24   # a date range
  *   npx tsx scripts/sync-goals.ts 2026-08-23              # one day
  *   npx tsx scripts/sync-goals.ts --replace 2026-03-01 2026-08-31
+ *   npx tsx scripts/sync-goals.ts --fixture=554775:831919   # not in the listing
  *
  * Existing entries are kept unless --replace is passed, so a narrow range tops
  * the file up instead of wiping the season.
+ *
+ * `--fixture=<ourId>:<cbfId>` reaches a match the Onde Assistir listing does
+ * not carry — a rescheduled fixture can be missing from it entirely. See the
+ * flag's own comment for what that does and does not bypass.
  *
  * **This is a slow script on purpose.** CBF throttles at the socket — see
  * `scripts/cbf-api.ts` — so it paces itself at roughly one match a second and a
@@ -187,6 +192,43 @@ const args = process.argv.slice(2);
 const replace = args.includes("--replace");
 const dates = args.filter((arg) => !arg.startsWith("--"));
 
+/**
+ * `--fixture <ourId>:<cbfId>` — a fixture the Onde Assistir listing does not
+ * carry, named directly.
+ *
+ * **A rescheduled match can be absent from that listing entirely**, and the
+ * listing is the only route this script has to a `id_jogo`. Measured on
+ * `554775` (Flamengo x Mirassol, rodada 4, played 2026-09-02 after being
+ * postponed): swept 2026-08-20..2026-09-30, 219 fixtures over 15 pages, **zero**
+ * rows naming those two clubs — while `/api/cbf/jogos/831919` serves the match
+ * in full, team sheets and all. So the data was reachable and the join was not,
+ * and without this flag such a fixture can never be synced.
+ *
+ * **It bypasses the join, not the checking.** The scoreline check further down
+ * — CBF's own score against ours — is what proves an id names the fixture it
+ * claims to, and it is untouched: a wrong id is refused there exactly as a
+ * mis-joined one is. That check is the whole reason naming an id by hand is
+ * safe, so do not "simplify" it away for forced fixtures.
+ */
+const forced = args
+  .filter((arg) => arg.startsWith("--fixture="))
+  .map((arg) => arg.slice("--fixture=".length));
+
+const forcedPairs = forced.map((pair) => {
+  const match = /^(\d+):(\d+)$/.exec(pair);
+  if (!match) {
+    console.error(`Error: expected --fixture=<ourId>:<cbfId>, got "${pair}"`);
+    process.exit(1);
+  }
+  return { ourId: match[1], cbfId: match[2] };
+});
+
+/**
+ * With `--fixture` and no dates there is nothing to walk, and walking anyway
+ * would spend a page request on today's listing to ignore every row in it.
+ */
+const listingWanted = forcedPairs.length === 0 || dates.length > 0;
+
 for (const date of dates) {
   if (!isDate(date)) {
     console.error(`Error: expected YYYY-MM-DD, got "${date}"`);
@@ -234,13 +276,13 @@ console.log(`    ${ourMatches.length} fixtures, ${ourClubs.length} clubs`);
 
 const agent = await buildAgent();
 
-console.log(`==> Fetching CBF fixtures for ${from} .. ${to}`);
+if (listingWanted) console.log(`==> Fetching CBF fixtures for ${from} .. ${to}`);
 
 const MAX_PAGES = 60;
 const jogos: CbfJogo[] = [];
 let page = 1;
 let lastPage = 1;
-do {
+while (listingWanted) {
   const url =
     `https://${CBF_HOST}/api/cbf/onde-assistir/jogos` +
     `?dataInicio=${from}&dataTermino=${to}&page=${page}`;
@@ -249,7 +291,8 @@ do {
   lastPage = Number(body.meta?.last_page ?? 1);
   page += 1;
   if (page <= lastPage) await sleep(600);
-} while (page <= lastPage && page <= MAX_PAGES);
+  if (!(page <= lastPage && page <= MAX_PAGES)) break;
+}
 
 if (lastPage > MAX_PAGES) {
   // Never truncate quietly: a short read is indistinguishable from a quiet
@@ -262,7 +305,26 @@ if (lastPage > MAX_PAGES) {
 }
 
 const serieA = jogos.filter((jogo) => jogo.competicao?.categoria_id === SERIE_A_CATEGORIA_ID);
-console.log(`    ${jogos.length} fixtures across ${lastPage} page(s), ${serieA.length} in Série A`);
+if (listingWanted) {
+  console.log(`    ${jogos.length} fixtures across ${lastPage} page(s), ${serieA.length} in Série A`);
+}
+
+/**
+ * One list for the loop, so a fixture named with `--fixture` runs through
+ * exactly the same body — the vocabulary check, both reconciliations, the
+ * súmula, the substitutions. A second loop for forced fixtures is how the two
+ * paths come to apply different rules.
+ *
+ * `ourId` is set only for a forced fixture; where it is absent the join runs as
+ * it always has.
+ */
+const targets: { jogo: CbfJogo; ourId?: string }[] = [
+  ...serieA.map((jogo) => ({ jogo }) as { jogo: CbfJogo; ourId?: string }),
+  ...forcedPairs.map(({ ourId, cbfId }) => ({ jogo: { id_jogo: cbfId } as CbfJogo, ourId })),
+];
+if (forcedPairs.length > 0) {
+  console.log(`    ${forcedPairs.length} fixture(s) named directly with --fixture`);
+}
 
 // ---------------------------------------------------------------------------
 // The goals
@@ -316,9 +378,13 @@ const unreconciled: string[] = [];
 let written = 0;
 let goalless = 0;
 
-for (const jogo of serieA) {
-  const id = joinMatch(ourMatches, ourClubs, jogo);
-  const label = `${jogo.data} ${jogo.hora} ${jogo.mandante?.nome} x ${jogo.visitante?.nome}`;
+for (const { jogo, ourId } of targets) {
+  const id = ourId ?? joinMatch(ourMatches, ourClubs, jogo);
+  // A forced fixture has no listing row to name itself with, so it borrows our
+  // own record — which is also the only description of it that exists here.
+  const label = ourId
+    ? `--fixture ${ourId}:${jogo.id_jogo}`
+    : `${jogo.data} ${jogo.hora} ${jogo.mandante?.nome} x ${jogo.visitante?.nome}`;
 
   if (!id || !jogo.id_jogo) {
     unjoined.push(label);
@@ -512,7 +578,7 @@ for (const jogo of serieA) {
     : scored;
   written += 1;
   console.log(
-    `    ${id}  ${jogo.mandante?.nome} x ${jogo.visitante?.nome}  ->  ` +
+    `    ${id}  ${detail.mandante?.nome ?? "?"} x ${detail.visitante?.nome ?? "?"}  ->  ` +
       goals[id]
         .map(
           (goal) =>
