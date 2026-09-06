@@ -38,9 +38,9 @@ import type { ClubCode, ClubVideo } from "@/src/types";
  *
  *   curl -s "https://www.youtube.com/oembed?url=https%3A//www.youtube.com/watch%3Fv%3D<id>&format=json"
  *
- * The Palmeiras × Flamengo entries were confirmed that way on 2026-09-03 and the
- * Fluminense one on 2026-09-05; every title and channel below is oEmbed's own
- * string rather than anything retyped.
+ * The Palmeiras × Flamengo entries were confirmed that way on 2026-09-03, the
+ * Fluminense one on 2026-09-05 and the Palmeiras velas on 2026-09-06; every
+ * title and channel below is oEmbed's own string rather than anything retyped.
  *
  * **A video that is not public yet answers 403, not 404**, which is worth
  * knowing because it is the state a freshly uploaded render sits in: the
@@ -64,9 +64,22 @@ export const CLUB_VIDEOS: Record<ClubCode, ClubVideo[]> = {
     },
   ],
 
-  // Palmeiras. The campanha render is a comparação, so it sits here and under
-  // Flamengo below — see the note on repetition above.
+  // Palmeiras, and the one club carrying two entries. They are not a duplicate
+  // of each other: the velas is about this club and appears under this code
+  // alone, while the campanha render is a comparação and sits here *and* under
+  // Flamengo below — see the note on repetition above. The velas leads because
+  // it is the club's own season; the comparação is about a pair this club
+  // happens to be half of.
+  //
+  // The velas was rendered on 2026-09-02 (#386) and could not be listed then:
+  // it answered 403 until it went public at 2026-09-06T17:33:20Z, which is the
+  // 403-not-404 state the note above describes, met in the wild.
   "1769": [
+    {
+      id: "xc8kDALBFnM",
+      title: "Palmeiras em velas: a campanha rodada a rodada do Brasileirão 2026 (até a 25ª)",
+      channel: "Marcelo Barbosa",
+    },
     {
       id: "8Kr9MLphoEc",
       title: "Palmeiras × Flamengo: a campanha rodada a rodada do Brasileirão 2026 (até a 25ª)",
