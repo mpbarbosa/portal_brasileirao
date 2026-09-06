@@ -22,6 +22,11 @@ errado aqui está errado no site também.
 rodada, então quem sentou em 4º no sábado e terminou em 9º porque três rivais
 jogaram no domingo desenha o mesmo segmento de quem desceu andando.
 
+**O procedimento está em `.claude/skills/campanha-video/SKILL.md`** — a ordem
+dos passos, o que a falha de cada um parece e quais conferências pegam alguma
+coisa. Este arquivo é a referência do *porquê*: leia-o antes de mexer numa cena.
+A divisão é a mesma que o `find-highlights` já faz com o `highlights.ts`.
+
 ## Como gerar
 
 O Manim **não** é dependência deste repositório e não entra no `package.json`.
