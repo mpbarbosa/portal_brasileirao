@@ -68,6 +68,7 @@ import os
 from pathlib import Path
 
 from manim import (
+    config,
     DOWN,
     LEFT,
     RIGHT,
@@ -86,6 +87,31 @@ from manim import (
 )
 
 DATA = Path(os.environ.get("VELAS_JSON", Path(__file__).with_name("velas.json")))
+
+# ---- o formato do quadro -------------------------------------------------
+#
+# `VELAS_ASPECT=4:5` desenha o corte VERTICAL, para o feed do Instagram; sem
+# ela, nada muda. O caminho 16:9 é o de sempre, byte por byte, e essa é a
+# condição de o interruptor existir em vez de uma segunda cena: uma cópia do
+# `velas.py` é onde a divergência começa, que é o argumento que o
+# `commons-core.ts` já faz sobre `scripts/commons-api.ts`.
+#
+# **`frame_width` e `frame_height` são os dois escritos à mão, e isso foi
+# MEDIDO em vez de deduzido.** A documentação de vários lugares diz que o manim
+# deriva um do outro pela razão dos pixels; no 0.21.0 instalado aqui ele NÃO
+# deriva — pedir `-r 1080,1350` deixa o quadro em 14,22 × 8,0 e a cena inteira
+# sai pela borda, sem erro nenhum. Os dois valores são 1080/135 e 1350/135:
+#
+# **135 px por unidade é a coisa que este bloco existe para preservar.** É a
+# densidade do 16:9 (1920/14,222 = 1080/8 = 135), então um `label(…, 16, …)`
+# rende exatamente os mesmos pixels de altura nos dois formatos. O corte
+# vertical não encolhe tipo nenhum — ele reempilha duas colunas em uma, e é por
+# isso que ele cabe: 1080×1350 e 1920×1080 são a MESMA área em pixels menos
+# 30%, e a coluna da direita some inteira do lado.
+VERTICAL = os.environ.get("VELAS_ASPECT", "16:9") == "4:5"
+if VERTICAL:
+    config.pixel_width, config.pixel_height = 1080, 1350
+    config.frame_width, config.frame_height = 8.0, 10.0
 
 FONT = "Inter"
 TYPE_OVERSAMPLE = 4
@@ -304,20 +330,44 @@ NAMED_POSITIONS = (1, 4, 8, 12, 16, 20)
 # As duas caixas, em unidades de cena. Tudo dentro delas passa por `at_pos()` e
 # `at_pts()`; elas compartilham o eixo x de propósito, porque as duas leituras
 # são da mesma rodada e ler uma contra a outra é metade do desenho.
-PLOT_LEFT, PLOT_RIGHT = -6.30, 1.30
-POS_TOP, POS_BOTTOM = 2.86, -0.30
-PTS_TOP, PTS_BOTTOM = -0.95, -2.35
+if VERTICAL:
+    # No 4:5 as duas caixas são as MESMAS duas caixas — só que a coluna dos
+    # cards saiu do lado e foi para baixo, então elas ficam mais estreitas e o
+    # que sobra de altura vira o card da rodada. A largura do desenho cai de
+    # 7,6 para 5,85 unidades (25 rodadas a 31,6 px em vez de 41), o que é o
+    # aperto que o corpo da vela absorve; a ALTURA da caixa de posições cai
+    # menos, porque ela é o eixo da divisão inteira e vinte bandas em pouco
+    # espaço deixam de ser uma escala.
+    PLOT_LEFT, PLOT_RIGHT = -2.85, 3.00
+    POS_TOP, POS_BOTTOM = 3.46, 0.95
+    PTS_TOP, PTS_BOTTOM = 0.61, -0.53
+else:
+    PLOT_LEFT, PLOT_RIGHT = -6.30, 1.30
+    POS_TOP, POS_BOTTOM = 2.86, -0.30
+    PTS_TOP, PTS_BOTTOM = -0.95, -2.35
 
-BODY_WIDTH = 0.19
-BAR_WIDTH = 0.19
+# O corpo acompanha o passo do eixo x: 0,19 sobre 7,6 unidades e 0,145 sobre
+# 5,85 é a mesma fração da rodada, então a folga entre duas velas vizinhas é a
+# mesma nos dois formatos. Escrito como fração e não como dois números soltos
+# porque é isso que ele é.
+BODY_WIDTH = 0.145 if VERTICAL else 0.19
+BAR_WIDTH = BODY_WIDTH
 # Um corpo de altura zero — abriu e fechou no mesmo lugar — ainda é uma rodada
 # que aconteceu, então ele vira um traço em vez de sumir. O mesmo raciocínio da
 # barra de última colocação no `sparklineBars`: nada se lê como falha de
 # renderização, não como o fato.
 MIN_BODY = 0.035
 
-CARD_X = 4.52
-CARD_WIDTH = 5.05
+if VERTICAL:
+    # Centrado e largo: no vertical o card não divide a linha com nada, então
+    # ele toma a coluna inteira. E é essa largura que paga a fusão dos dois
+    # cards em um — 7,3 unidades cabem duas colunas de linhas onde 5,05 cabia
+    # uma, que é o que faz cinco linhas virarem três sem tirar nenhuma.
+    CARD_X = 0.0
+    CARD_WIDTH = 7.30
+else:
+    CARD_X = 4.52
+    CARD_WIDTH = 5.05
 
 # O endereço do site, para um vídeo que sai daqui e é visto em outro lugar.
 # Escrito sem o esquema porque é assim que se lê e se digita um endereço, e
@@ -361,14 +411,28 @@ class Velas(Scene):
         # temporada desenha barras saindo pela borda de cima.
         self.points_ceiling = max(10, ((rounds[-1]["totalPoints"] // 10) + 1) * 10)
 
-        title = label(club["name"], 40, INK, "BOLD").move_to([-2.6, 3.62, 0])
-        subtitle = label(
-            "campanha rodada a rodada, em velas · Brasileirão Série A · "
-            f"dados até {payload['snapshot']}",
-            16,
-            INK_SOFT,
-        )
-        subtitle.next_to(title, DOWN, buff=0.15)
+        if VERTICAL:
+            # A mesma frase em duas linhas, porque ela mede 8,60 unidades e o
+            # quadro tem 8,0 — medido, não estimado. A quebra é no primeiro
+            # `·`, que é onde ela já se divide em duas afirmações: o que o
+            # desenho é, e de que temporada ele fala.
+            title = label(club["name"], 40, INK, "BOLD").move_to([0, 4.52, 0])
+            subtitle = VGroup(
+                label("campanha rodada a rodada, em velas", 16, INK_SOFT),
+                label(
+                    f"Brasileirão Série A · dados até {payload['snapshot']}", 16, INK_SOFT
+                ),
+            ).arrange(DOWN, buff=0.10)
+            subtitle.next_to(title, DOWN, buff=0.13)
+        else:
+            title = label(club["name"], 40, INK, "BOLD").move_to([-2.6, 3.62, 0])
+            subtitle = label(
+                "campanha rodada a rodada, em velas · Brasileirão Série A · "
+                f"dados até {payload['snapshot']}",
+                16,
+                INK_SOFT,
+            )
+            subtitle.next_to(title, DOWN, buff=0.15)
         self.play(FadeIn(title, shift=DOWN * 0.18), FadeIn(subtitle), run_time=0.9)
 
         frames, grid, labels = self.build_frames()
@@ -392,9 +456,7 @@ class Velas(Scene):
 
         # Rodada a rodada. Cada rodada é um compasso: a vela nasce, a barra de
         # pontos cresce e os dois cards são trocados pela rodada que descrevem.
-        heading = None
-        match_card = None
-        reading_card = None
+        panels = None
         previous_total = 0
 
         for index, entry in enumerate(rounds):
@@ -404,22 +466,20 @@ class Velas(Scene):
             animations.append(Create(candle))
             animations.append(GrowFromEdge(self.build_bar(entry, previous_total), DOWN))
 
-            new_heading = self.round_heading(entry["round"])
-            new_match = self.build_match_card(entry)
-            new_reading = self.build_reading_card(entry)
+            new_panels = self.build_round_panels(entry)
 
-            if heading is None:
-                animations += [FadeIn(new_heading), FadeIn(new_match), FadeIn(new_reading)]
+            if panels is None:
+                animations += [FadeIn(panel) for panel in new_panels]
             else:
                 # Sequenciado, nunca simultâneo: `self.play(..., run_time=…)`
                 # estica TODA animação que recebe até o fim do compasso, então um
                 # FadeOut e um FadeIn passados lado a lado se sobrepõem o tempo
                 # inteiro e os dois placares ficam legíveis ao mesmo tempo.
-                for old, new in ((heading, new_heading), (match_card, new_match), (reading_card, new_reading)):
+                for old, new in zip(panels, new_panels):
                     animations.append(
                         Succession(FadeOut(old, run_time=0.18), FadeIn(new, run_time=0.34))
                     )
-            heading, match_card, reading_card = new_heading, new_match, new_reading
+            panels = new_panels
 
             animations.append(marker.animate.move_to(self.marker_position(entry["round"])))
 
@@ -684,6 +744,27 @@ class Velas(Scene):
             13,
             INK_SOFT,
         )
+        if VERTICAL:
+            # Medido: a legenda inteira numa linha mede 7,278 unidades e o
+            # quadro tem 8,0, então ela não cabe com o desenho ao lado. Ela se
+            # parte nas suas duas metades — corpo e pavio — que ficam EMPILHADAS
+            # ao lado do desenho: as duas somam 0,49 de altura contra os 0,52 do
+            # desenho, então a fileira não fica mais alta do que já era.
+            #
+            # As amostras V/E/D não vêm: ver `build_round_card`, que nomeia o
+            # resultado na cor dele a cada rodada.
+            captions = VGroup(
+                label("corpo: abertura → fechamento da rodada", 13, INK_SOFT),
+                label("pavio: melhor e pior posição durante ela", 13, INK_SOFT),
+            ).arrange(DOWN, buff=0.14, aligned_edge=LEFT)
+            key = VGroup(drawing, captions).arrange(RIGHT, buff=0.30)
+            key.add(
+                label("toco à esquerda: a posição de abertura", 13, INK_SOFT)
+                .next_to(key, DOWN, buff=0.16)
+            )
+            key.move_to([(PLOT_LEFT + PLOT_RIGHT) / 2, -1.55, 0])
+            return key
+
         second = VGroup(label("toco à esquerda: a posição de abertura", 13, INK_SOFT))
         for code in ("V", "E", "D"):
             swatch = Rectangle(
@@ -711,10 +792,132 @@ class Velas(Scene):
         divide espaço com marca nenhuma.
         """
         credit = label(SITE, 17, INK_SOFT)
-        credit.move_to([CARD_X, -3.24, 0])
+        credit.move_to([CARD_X, -4.76 if VERTICAL else -3.24, 0])
         return credit
 
     # ---- os cards da rodada -------------------------------------------------
+
+    def build_round_panels(self, entry) -> list[VGroup]:
+        """O que troca a cada rodada, em UMA lista em vez de três variáveis.
+
+        No 16:9 são três painéis — o título da rodada, o card do jogo e o da
+        vela — e no 4:5 é **um só**, porque lá não existe coluna da direita
+        para eles dividirem: eles descem para baixo dos gráficos, onde a altura
+        é o recurso escasso. A lista é o que deixa o compasso do laço ser o
+        mesmo nos dois casos sem um `if` dentro dele, e a ordem dela é a ordem
+        do `zip` que faz a troca — um painel a mais no fim de uma das listas
+        seria trocado por nada, em silêncio, então elas têm de casar.
+        """
+        if VERTICAL:
+            return [self.build_round_card(entry)]
+        return [
+            self.round_heading(entry["round"]),
+            self.build_match_card(entry),
+            self.build_reading_card(entry),
+        ]
+
+    def build_round_card(self, entry) -> VGroup:
+        """Os dois cards e o título da rodada, fundidos num só — o corte 4:5.
+
+        **Isto não é o card do 16:9 mais estreito; é a mesma leitura em duas
+        colunas.** O card lá tem 5,05 unidades e uma linha por fato; aqui tem
+        7,30, que é largura para duas — e é ela que paga a fusão, porque quatro
+        linhas em duas colunas ocupam a altura de duas. A altura é o que falta
+        no vertical e a largura é o que sobra, então a troca é essa.
+
+        **DUAS coisas saem, e as duas por serem ditas em outro lugar do mesmo
+        quadro** — não por caberem menos:
+
+        - `pontos na temporada` sai porque o gráfico de pontos está logo acima
+          com o eixo rotulado, e o painel do fecho diz o total por extenso. Era
+          o único fato do card repetido duas vezes na mesma tela.
+        - A fileira de amostras V/E/D da chave sai porque **este card nomeia o
+          resultado na cor do resultado, vinte e cinco vezes seguidas**. Uma
+          legenda que ensina o que o desenho demonstra a cada compasso é a que
+          se pode gastar quando 0,40 unidade decide se o resto cabe.
+
+        O que NÃO sai é `melhor · pior na rodada`: ela nomeia o pavio, que é a
+        marca que separa esta cena das duas irmãs, e o `rank-candles-core.ts`
+        já registra que o dentro da rodada é o assunto.
+        """
+        frame = self.card_frame(2.32).move_to([CARD_X, -3.33, 0])
+        left = frame.get_left()[0] + 0.30
+        right = frame.get_right()[0] - 0.30
+        top = frame.get_top()[1] - 0.32
+
+        heading = label(f"Rodada {entry['round']}", 21, INK, "BOLD")
+        heading.move_to([left + heading.width / 2, top, 0])
+        body = VGroup(frame, heading)
+
+        match = entry["match"]
+        y = top - 0.50
+        if match is None:
+            note = label("sem jogo nesta rodada", 19, INK_SOFT)
+            note.move_to([left + note.width / 2, y, 0])
+            body.add(note)
+        else:
+            score = label(f"{match['goalsFor']} × {match['goalsAgainst']}", 30, INK, "BOLD")
+            versus = label(
+                f"{match['opponent']} ({'casa' if match['home'] else 'fora'})", 18, INK_SOFT
+            )
+            scoreline = VGroup(score, versus).arrange(RIGHT, buff=0.24)
+            scoreline.move_to([left + scoreline.width / 2, y, 0])
+
+            gained = entry["points"]
+            tally = label(
+                "—" if gained is None else f"+{gained} pt" + ("s" if gained != 1 else ""),
+                18,
+                INK,
+                "BOLD",
+            )
+            tally.move_to([right - tally.width / 2, y, 0])
+            verdict = label(
+                RESULT_WORD.get(match["result"], "—"),
+                18,
+                RESULT_COLOUR.get(match["result"], INK_SOFT),
+                "BOLD",
+            )
+            verdict.move_to([tally.get_left()[0] - 0.34 - verdict.width / 2, y, 0])
+            body.add(scoreline, verdict, tally)
+
+        rule_y = y - 0.40
+        body.add(
+            Line([left, rule_y, 0], [right, rule_y, 0], stroke_color=INK_FAINT, stroke_width=1)
+            .set_opacity(0.35)
+        )
+
+        moved = entry["moved"]
+        if moved > 0:
+            movement, colour = f"subiu {moved} posiç" + ("ão" if moved == 1 else "ões"), POSITIVE
+        elif moved < 0:
+            movement, colour = f"caiu {-moved} posiç" + ("ão" if moved == -1 else "ões"), NEGATIVE
+        else:
+            movement, colour = "manteve a posição", INK_SOFT
+
+        # As colunas são DESIGUAIS de propósito, e a medida manda: a da esquerda
+        # carrega "abriu 1º" e a da direita "no movimento · manteve a posição",
+        # que sozinha mede 3,69 unidades. Partir 6,70 ao meio estoura a direita
+        # e deixa a esquerda com o dobro do que ela usa.
+        split = left + 2.62
+        columns = (
+            (left, split - 0.16, (("abriu", ordinal(entry["open"]), INK_SOFT),
+                                  ("fechou", ordinal(entry["close"]), INK))),
+            (split + 0.16, right, ((
+                "melhor · pior na rodada",
+                f"{ordinal(entry['best'])} · {ordinal(entry['worst'])}",
+                INK_SOFT,
+            ), ("no movimento", movement, colour))),
+        )
+        for col_left, col_right, rows in columns:
+            row_y = rule_y - 0.36
+            for caption, value, value_colour in rows:
+                key_text = label(caption, 16, INK_SOFT)
+                key_text.move_to([col_left + key_text.width / 2, row_y, 0])
+                value_text = label(value, 18, value_colour, "BOLD")
+                value_text.move_to([col_right - value_text.width / 2, row_y, 0])
+                body.add(key_text, value_text)
+                row_y -= 0.40
+        return body
 
     def round_heading(self, round_number: int) -> Text:
         heading = label(f"Rodada {round_number}", 26, INK, "BOLD")
@@ -844,12 +1047,33 @@ class Velas(Scene):
         best = min(entry["best"] for entry in rounds)
         worst = max(entry["worst"] for entry in rounds)
 
-        headline = label(
-            f"{ordinal(final['close'])} · {final['totalPoints']} pts em {final['played']} jogos",
-            26,
-            INK,
-            "BOLD",
+        # **O painel encolhe no vertical, e é a ÚNICA tipografia que encolhe.**
+        # Ele não é lido de longe como o resto: ele tem de CABER na área vazia do
+        # gráfico de posições, e essa área perdeu 23% da largura junto com o
+        # gráfico. Medido: a 26 o painel mede 4,54 unidades num gráfico de 5,85,
+        # o que deixa `summary_anchor` com 1,07 de liberdade em x contra os 3,06
+        # do 16:9 — e a liberdade é o que faz o painel achar o vazio em vez de
+        # tapar a campanha. Um clube que atravessa a divisão, como o Cruzeiro,
+        # é onde isso deixa de ser folga e vira a subida coberta.
+        # **No vertical a manchete quebra em duas linhas, e a razão é a LARGURA
+        # do painel e não o comprimento da frase.** Numa linha ela é a linha
+        # mais larga do painel — 3,49 unidades a 22 — e o painel inteiro passa a
+        # medir 4,19 num gráfico de 5,85, o que não deixa `summary_anchor` sair
+        # do lugar. Quebrada, a linha mais larga vira `oscilou entre…` a 2,46 e o
+        # painel mede 3,16, que é 54% do gráfico contra os 60% que ele já ocupa
+        # no 16:9. Medido no Botafogo, que é a campanha de maior amplitude da
+        # temporada (1º a 18º): numa linha o painel cobria a descida inteira,
+        # que é o assunto do vídeo dele.
+        headline_text = (
+            f"{ordinal(final['close'])} · {final['totalPoints']} pts",
+            f"em {final['played']} jogos",
         )
+        if VERTICAL:
+            headline = VGroup(
+                *(label(line, 22, INK, "BOLD") for line in headline_text)
+            ).arrange(DOWN, buff=0.12, aligned_edge=LEFT)
+        else:
+            headline = label(" ".join(headline_text), 26, INK, "BOLD")
         # `self.ink` e não `self.colour`: isto é TEXTO, piso 4,5, e o tom cru do
         # Fluminense entrega 3,13 sobre este painel.
         #
@@ -869,10 +1093,10 @@ class Velas(Scene):
         # 5,24 e o corrigido 5,47, e os dois passariam. Dizer que sem a subida
         # a etiqueta ficaria ilegível seria mais forte do que a medida sustenta.
         record = label(
-            f"{tally['V']}V · {tally['E']}E · {tally['D']}D", 19, self.ink, "BOLD"
+            f"{tally['V']}V · {tally['E']}E · {tally['D']}D", 17 if VERTICAL else 19, self.ink, "BOLD"
         )
         extremes = label(
-            f"oscilou entre o {ordinal(best)} e o {ordinal(worst)}", 17, INK_SOFT
+            f"oscilou entre o {ordinal(best)} e o {ordinal(worst)}", 14 if VERTICAL else 17, INK_SOFT
         )
         # Three lines rather than two: the panel has to fit between round 1's
         # pavio on the left — the widest in the drawing, for the reason the

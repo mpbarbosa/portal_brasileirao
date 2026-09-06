@@ -86,7 +86,75 @@ Flamengo são o padrão) — são os **códigos numéricos do provedor**, nunca 
 `COR`.
 
 Os vídeos saem em `media/videos/<cena>/1080p60/<Cena>.mp4`. `-ql` (480p15)
-renderiza em segundos e serve para conferir o enquadramento.
+renderiza em segundos e serve para conferir o enquadramento — e para conferir
+LAYOUT sem esperar o vídeo inteiro, `-s` desenha só o último quadro, que é o que
+carrega os dois gráficos cheios, os dois cards e o painel do fecho ao mesmo
+tempo.
+
+## O corte 4:5, para o feed do Instagram
+
+`VELAS_ASPECT=4:5` desenha o `velas.py` em **1080×1350**. Sem a variável nada
+muda: o caminho 16:9 é o de sempre.
+
+```sh
+VELAS_ASPECT=4:5 VELAS_JSON=$PWD/scripts/manim/velas-palmeiras.json \
+  ./.venv-manim/bin/manim -qh scripts/manim/velas.py Velas
+```
+
+**Que ele é o de sempre foi MEDIDO e não deduzido**, porque é a única coisa que
+justifica um interruptor em vez de uma segunda cena: renderizado o `-ql` inteiro
+a partir do `velas.py` do `origin/main` e a partir deste, os dois mp4 saem
+**byte a byte iguais** — conferido em dois clubes, Palmeiras e Botafogo, porque
+o texto do painel do fecho difere entre eles e um deles sozinho não exercita o
+ramo novo. Refaça isso antes de acreditar em qualquer mudança aqui:
+
+```sh
+git show origin/main:scripts/manim/velas.py > scripts/manim/velas_orig.py
+for f in velas_orig velas; do VELAS_JSON=$PWD/scripts/manim/velas-botafogo.json \
+  ./.venv-manim/bin/manim -ql -o chk_$f scripts/manim/$f.py Velas; done
+md5sum media/videos/velas*/480p15/chk_*.mp4   # têm de bater
+rm scripts/manim/velas_orig.py
+```
+
+**4:5 e não 9:16, e a razão é a UI e não o formato.** O feed não sobrepõe nada
+sobre a mídia; o Reels cobre cerca de 250px no topo, 480px embaixo e 140px na
+trilha direita. Medido contra uma maquete das duas colunas empilhadas: ela
+termina em y=1808 de 1920 e o card da rodada inteiro cai debaixo da faixa de
+baixo, junto com o crédito, enquanto a trilha da direita come as etiquetas do G4
+e do Z4. Um 9:16 é possível e é **outro** recorte de conteúdo, não este.
+
+**Nenhum tipo encolhe, e é isso que o corte compra.** 1080×1350 e 1920×1080 têm
+a mesma densidade se `frame_width`/`frame_height` forem escritos à mão como
+1080/135 e 1350/135 — 135 px por unidade nos dois. O que muda é que a coluna da
+direita desce para baixo dos gráficos em vez de dividir a linha com eles.
+
+⚠️ **O manim 0.21.0 NÃO deriva `frame_width` da razão dos pixels.** Pedir
+`-r 1080,1350` sozinho deixa o quadro em 14,22 × 8,0 e a cena inteira sai pela
+borda **sem erro nenhum**. Os dois valores são escritos no `velas.py`; se alguém
+"simplificar" um deles, é assim que falha.
+
+**Duas coisas saem do quadro no 4:5, e as duas por serem ditas em outro lugar
+da mesma tela** — o raciocínio inteiro está no docstring do `build_round_card`.
+Em resumo: `pontos na temporada` sai porque o gráfico de pontos está logo acima
+com o eixo rotulado, e a fileira de amostras V/E/D da chave sai porque o card
+nomeia o resultado na cor dele vinte e cinco vezes seguidas. Os dois cards e o
+título da rodada viram **um** card de duas colunas — é a largura que paga a
+altura, e a altura é o que falta.
+
+**O painel do fecho é a única tipografia que encolhe**, e a manchete dele quebra
+em duas linhas. Ele não é lido de longe como o resto: ele tem de caber no vazio
+do gráfico de posições, e esse vazio perdeu 23% da largura. Numa linha o painel
+mede 4,19 unidades num gráfico de 5,85 e `summary_anchor` não tem para onde ir —
+medido no **Botafogo**, a campanha de maior amplitude da temporada (1º a 18º),
+onde ele cobria a descida inteira, que é o assunto do vídeo dele. Quebrado, mede
+3,16 (54% do gráfico, contra 60% que ele já ocupa no 16:9) e a descida aparece.
+Renderize o Botafogo, não o Palmeiras, ao mexer nisso: o Palmeiras passou a
+temporada no terço de cima e o painel nunca teve de desviar de nada.
+
+**Não há gif e não há capa.** O Instagram não aceita gif, e num post de feed ele
+escolhe a capa de dentro do próprio vídeo — a `-miniatura.png` ao lado é 16:9 e
+é do YouTube. O vídeo é mudo, o que o Instagram trata como *áudio original* e
+alcança menos; isso é uma escolha de publicação, não uma propriedade da cena.
 
 ## Os renders commitados
 
@@ -99,8 +167,10 @@ Soltas ficam as duas cenas que não são de um clube:
 **`pontos-20-clubes.mp4`** (21s, 4,4 MB). Em pasta fica **um `<clube>/` para cada
 clube que tem vídeo**, com o seu `velas-<clube>.mp4` de 21,1s, o gif, a capa e o
 `-youtube.md`. Quantos são e quais são, `ls docs/medias/` responde — esta frase
-de propósito não responde, e o parágrafo abaixo diz por quê. Todos os vídeos são
-1920×1080 60fps, versionados junto do resto do projeto como os slides em
+de propósito não responde, e o parágrafo abaixo diz por quê. Os vídeos são
+1920×1080 60fps **com uma exceção**, o `-45.mp4` do corte 4:5 para o feed do
+Instagram, que é 1080×1350 — leia o sufixo, ou pergunte ao `ffprobe`, em vez de
+supor pela pasta. Todos são versionados junto do resto do projeto como os slides em
 `docs/carrossel/` e as capturas em `docs/screenshots/`.
 
 **Conte o diretório antes de assumir uma convenção**, porque esta seção já errou
@@ -179,7 +249,9 @@ até que data os dados vão, que é a única defesa que ele tem.
 
 ## O gif
 
-**Todo mp4 aqui tem gif, todos 960×540 e 15fps** — conte o diretório, não esta
+**Todo mp4 aqui tem gif MENOS o `-45.mp4`** — o corte 4:5 vai para o Instagram,
+que não aceita gif, e um gif que nenhuma plataforma-alvo lê é peso commitado
+para ninguém. Todos os que existem são 960×540 e 15fps — conte o diretório, não esta
 frase:
 
 | gif | quadros | gif | mp4 |
