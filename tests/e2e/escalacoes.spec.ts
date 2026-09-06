@@ -188,4 +188,72 @@ test.describe("Escalações", () => {
     expect(new Set(rows.map((row) => row.nameLeft)).size).toBe(1);
   });
 
+  test("two players of one name are told apart by their shirts, and nobody else is", async ({
+    page,
+  }) => {
+    /**
+     * `Substitution` prints names, which identify a player right up until the
+     * elenco holds two of them — and five in this division do. Athletico-PR's
+     * r19/554928 read **"Gilberto por Gilberto"** at 82', a true fact about
+     * camisa 12 leaving for camisa 2 that renders as a bug.
+     *
+     * **Produced, never hunted for.** Which fixtures carry namesakes is exactly
+     * the "how much curated data exists" this file's header refuses to depend
+     * on: it is 9 rows of 2328 today and every `sync-goals` moves it. Two of
+     * this sheet's own players are renamed to one made-up name instead, so the
+     * spec depends on no real name and on no club's squad.
+     *
+     * The shirts are **stripped** as well, so what is exercised is
+     * `subShirtLabels`' narrowing — the branch that carries every fixture
+     * committed before `Substitution.onShirt` existed. A resync would fill that
+     * field in and silently retire this assertion otherwise.
+     */
+    const response = await page.request.get("/api/matches");
+    const body = await response.json();
+
+    let onShirt = "";
+    let offShirt = "";
+    for (const match of body.data.matches) {
+      if (match.id !== MATCH) continue;
+      for (const lineup of match.lineups ?? []) {
+        if (!lineup.subs?.length || onShirt) continue;
+        const [first] = lineup.subs;
+        const entering = lineup.players.find((p: { name: string }) => p.name === first.on);
+        const leaving = lineup.players.find((p: { name: string }) => p.name === first.off);
+        if (!entering || !leaving) continue;
+        onShirt = entering.shirt;
+        offShirt = leaving.shirt;
+        entering.name = "Homônimo";
+        leaving.name = "Homônimo";
+        lineup.subs = [{ on: "Homônimo", off: "Homônimo", minute: first.minute }];
+      }
+    }
+    expect(onShirt, "the fixture should carry a substitution to rewrite").not.toBe("");
+
+    await page.route("**/api/matches*", (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify(body),
+      }),
+    );
+
+    await page.goto(`/partida/${MATCH}`);
+    await page.getByRole("heading", { name: "Escalações" }).click();
+
+    // Both numbers, and in the order the row is said: who came on, then who
+    // came off. Without them the row reads "Homônimo por Homônimo".
+    const row = page.locator("[data-subs] li", { hasText: "Homônimo" }).first();
+    await expect(row).toBeVisible();
+    await expect(row).toHaveText(new RegExp(`${onShirt}\\s+Homônimo por ${offShirt}\\s+Homônimo`));
+
+    // …and the other side's rows, whose names identify perfectly well, carry no
+    // number at all. A shirt on all 2328 rows would cost the minute column the
+    // room `Intervalo` needs and tell a reader nothing the sheet above has not.
+    const others = page.locator("[data-subs] li").filter({ hasNotText: "Homônimo" });
+    for (const other of await others.all()) {
+      await expect(other).not.toHaveText(/^(\d{1,3}(\+\d{1,2})?'|Intervalo)\s*\d+\s/);
+    }
+  });
+
 });

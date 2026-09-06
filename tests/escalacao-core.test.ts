@@ -10,6 +10,7 @@ import {
   lineupsFromAtletas,
   lineupsReconcile,
   startedFor,
+  subShirtLabels,
   tidyLineupName,
   withLineups,
 } from "@/escalacao-core";
@@ -190,7 +191,11 @@ test("a substitution resolves both shirts against that side's own sheet", () => 
   const attached = attachSubstitutions(lineups, [sub()], TEAMS, { PAL: 1, VAS: 0 });
   assert.ok(attached);
   const pal = attached.find((l) => l.clubCode === "PAL");
-  assert.deepEqual(pal?.subs, [{ on: "Reserva1", off: "Titular1", minute: "70'" }]);
+  // The shirts ride along: they are the join, and `subShirtLabels` needs them
+  // to tell two players of one name apart on the page.
+  assert.deepEqual(pal?.subs, [
+    { on: "Reserva1", off: "Titular1", onShirt: "20", offShirt: "1", minute: "70'" },
+  ]);
   // The other side made none, so it carries no key rather than an empty list.
   assert.equal(attached.find((l) => l.clubCode === "VAS")?.subs, undefined);
 });
@@ -334,4 +339,102 @@ test("shirts shared by both sides are ambiguous, so the fixture still refuses", 
     ),
     null,
   );
+});
+
+
+// ---------------------------------------------------------------------------
+// subShirtLabels — the number appears only where the name stops identifying
+// ---------------------------------------------------------------------------
+
+/** A sheet with two Gilbertos, exactly as Athletico-PR's r19/554928 is. */
+const namesakes = (subs: Lineup["subs"]): Lineup => ({
+  clubCode: "PAL",
+  players: [
+    { name: "Gilberto", shirt: "12", starter: true },
+    { name: "Titular", shirt: "5", starter: true },
+    { name: "Gilberto", shirt: "2" },
+    { name: "Reserva", shirt: "23" },
+  ],
+  subs,
+});
+
+test("no number is printed where every name on the sheet identifies somebody", () => {
+  const lineup: Lineup = {
+    clubCode: "PAL",
+    players: [
+      { name: "Titular", shirt: "5", starter: true },
+      { name: "Reserva", shirt: "23" },
+    ],
+    subs: [{ on: "Reserva", off: "Titular", minute: "70'" }],
+  };
+  // 2317 of the season's 2328 rows are this case, and a number on each would
+  // cost the minute column its room for `Intervalo` to say nothing.
+  assert.deepEqual(subShirtLabels(lineup), [{ on: null, off: null }]);
+});
+
+test("two namesakes swapping resolve to their two shirts rather than to one name twice", () => {
+  // The row this exists for: the page printed `Gilberto por Gilberto`, which
+  // reads as a bug where the truth — 12 off, 2 on — does not.
+  const labels = subShirtLabels(namesakes([{ on: "Gilberto", off: "Gilberto", minute: "82'" }]));
+  assert.deepEqual(labels, [{ on: "2", off: "12" }]);
+});
+
+test("only the shared name takes a number, not the whole row", () => {
+  const labels = subShirtLabels(namesakes([{ on: "Gilberto", off: "Titular", minute: "60'" }]));
+  assert.deepEqual(labels, [{ on: "2", off: null }]);
+});
+
+test("two namesakes both on the bench are left unnumbered rather than guessed at", () => {
+  // Mirassol's r19/554927 and r20/554939, the two rows the narrowing cannot
+  // answer. No law of the game separates them, and a specific wrong number is
+  // worse than a missing one — this must stay `null` rather than pick the first.
+  const lineup: Lineup = {
+    clubCode: "PAL",
+    players: [
+      { name: "Titular", shirt: "5", starter: true },
+      { name: "Carlos Eduardo", shirt: "90" },
+      { name: "Carlos Eduardo", shirt: "96" },
+    ],
+    subs: [{ on: "Carlos Eduardo", off: "Titular", minute: "71'" }],
+  };
+  assert.deepEqual(subShirtLabels(lineup), [{ on: null, off: null }]);
+});
+
+test("a stored shirt answers the case the narrowing cannot", () => {
+  // Which is the whole reason `attachSubstitutions` carries it: after a resync
+  // these rows stop depending on what the sheet can be made to admit.
+  const lineup: Lineup = {
+    clubCode: "PAL",
+    players: [
+      { name: "Titular", shirt: "5", starter: true },
+      { name: "Carlos Eduardo", shirt: "90" },
+      { name: "Carlos Eduardo", shirt: "96" },
+    ],
+    subs: [
+      { on: "Carlos Eduardo", off: "Titular", onShirt: "96", offShirt: "5", minute: "71'" },
+    ],
+  };
+  assert.deepEqual(subShirtLabels(lineup), [{ on: "96", off: null }]);
+});
+
+test("a substitute substituted again is resolved, because this tracks the pitch and not `starter`", () => {
+  // The asymmetry `sideForRow` records: `off` is a starter only for a side's
+  // FIRST change. Testing `starter` here would leave the second row unnumbered.
+  const labels = subShirtLabels(
+    namesakes([
+      { on: "Gilberto", off: "Titular", minute: "40'" },
+      { on: "Reserva", off: "Gilberto", minute: "80'" },
+    ]),
+  );
+  // The 12 is still on the pitch at 80', so `off` is ambiguous between 12 and
+  // the 2 that came on at 40' — and both really are playing, so neither the
+  // law nor this function can separate them.
+  assert.deepEqual(labels[0], { on: "2", off: null });
+  // A rule written as `!p.starter` would answer "12" here, confidently and
+  // without grounds, which is what makes this the case that pins the pitch.
+  assert.deepEqual(labels[1], { on: null, off: null });
+});
+
+test("a lineup with no substitutions yields no labels rather than throwing", () => {
+  assert.deepEqual(subShirtLabels(namesakes(undefined)), []);
 });
