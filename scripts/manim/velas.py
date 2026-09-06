@@ -122,6 +122,126 @@ CLUB_COLOURS = {
 }
 FALLBACK_COLOUR = "#9AA5A0"
 
+
+# O tom de um clube não pode virar tinta sem passar por aqui, e isto é a lição do
+# `INK_FAINT` logo acima repetida um tom adiante: sobre este fundo quase preto o
+# grená do Fluminense entrega **3,13:1 como TEXTO** no painel de resumo, contra o
+# piso de 4,5 do projeto. Nada nesta cena mede isso sozinho — a paleta é escrita
+# à mão e o `test:tokens` não olha para ela —, então a medida vira código.
+#
+# **A subida é de VALOR, nunca uma lavagem no branco.** Multiplicar os três
+# canais até o maior chegar a 255 preserva matiz e saturação EXATAMENTE; clarear
+# em direção ao branco dessatura, e um grená dessaturado deixa de ser a cor do
+# clube — que é justamente o que o `CLUB_COLOURS` acima existe para não deixar
+# acontecer. Por isso o valor vem primeiro e o branco só entra quando o valor
+# esgota.
+#
+# **Ela sobe só até o piso que a aperta**, então quase todo mundo passa intacto:
+# medido sobre a paleta inteira do `pontos.py` e não sobre os seis daqui, no
+# contorno **19 dos 20 não mudam nada** e no texto do painel **12 dos 20**.
+# O `CLUB_COLOURS` continua sendo a fonte: nada aqui reescreve a paleta, então o
+# `pontos.py` não é tocado e os vídeos já publicados continuam concordando com
+# esta cena sobre a cor de cada clube.
+def _channels(colour: str) -> tuple[float, float, float]:
+    value = colour.lstrip("#")
+    return tuple(int(value[i : i + 2], 16) for i in (0, 2, 4))
+
+
+def _hex(channels) -> str:
+    return "#" + "".join(f"{max(0, min(255, round(v))):02X}" for v in channels)
+
+
+def _luminance(channels) -> float:
+    total = 0.0
+    for value, weight in zip(channels, (0.2126, 0.7152, 0.0722)):
+        c = value / 255.0
+        total += weight * (c / 12.92 if c <= 0.04045 else ((c + 0.055) / 1.055) ** 2.4)
+    return total
+
+
+def _contrast(a, b) -> float:
+    la, lb = _luminance(a), _luminance(b)
+    return (max(la, lb) + 0.05) / (min(la, lb) + 0.05)
+
+
+def _over(colour: str, opacity: float, ground: str) -> str:
+    """O que o olho recebe quando `colour` é pintado com alfa sobre `ground`."""
+    return _hex(
+        opacity * a + (1 - opacity) * b
+        for a, b in zip(_channels(colour), _channels(ground))
+    )
+
+
+def lift_to_floor(colour: str, ground: str, floor: float) -> str:
+    """O mesmo tom, subido só até passar de `floor` sobre `ground`.
+
+    Valor primeiro, branco só se o valor não bastar. A ordem é a decisão: subir
+    o valor preserva matiz e saturação EXATAMENTE, e lavar no branco dessatura —
+    então a lavagem é o último recurso e não o primeiro. Medido sobre os vinte
+    do `pontos.py` no piso de TEXTO: oito sobem, e só Cruzeiro, Flamengo e Remo
+    chegam a precisar de lavagem — de poucos por cento. No piso de MARCA, que é
+    mais baixo, sobe só o Fluminense e ninguém lava.
+    """
+    ground_channels = _channels(ground)
+    channels = _channels(colour)
+    if _contrast(channels, ground_channels) >= floor:
+        return colour
+
+    ceiling = 255.0 / max(max(channels), 1)
+    if _contrast(tuple(v * ceiling for v in channels), ground_channels) >= floor:
+        low, high = 1.0, ceiling
+        for _ in range(40):
+            middle = (low + high) / 2
+            if _contrast(tuple(v * middle for v in channels), ground_channels) >= floor:
+                high = middle
+            else:
+                low = middle
+        return _hex(v * high for v in channels)
+
+    # O valor esgotou. Devolver o tom CRU aqui seria jogar fora a subida que já
+    # se conseguiu — pior que lavar, e não mais honesto —, então a lavagem entra.
+    channels = tuple(v * ceiling for v in channels)
+    low, high = 0.0, 1.0
+    for _ in range(40):
+        middle = (low + high) / 2
+        washed = tuple(middle * 255 + (1 - middle) * v for v in channels)
+        if _contrast(washed, ground_channels) >= floor:
+            high = middle
+        else:
+            low = middle
+    return _hex(high * 255 + (1 - high) * v for v in channels)
+
+
+# O fundo real do texto do painel de resumo, que não é o `CARD` nem o `SURFACE`:
+# o painel é o `CARD` a 94% sobre o fundo da cena. Medir contra o `CARD` puro
+# daria um número otimista sobre uma cor que não existe em pixel nenhum.
+SUMMARY_GROUND = _over(CARD, 0.94, SURFACE)
+
+# **O alvo não é o piso, e a diferença foi MEDIDA e não estimada.** Entre o tom
+# que o manim escreve e o pixel que o leitor baixa há duas perdas: o tipo é
+# desenhado a 4× e reduzido, então nenhum pixel de um glifo de 19px chega à cor
+# cheia, e o h.264 come o resto — a mesma mordida que o README já registra, onde
+# um `0` sozinho caiu para 2,96 enquanto `50 pts` no mesmo tom deu 3,36.
+#
+# Medido no quadro codificado, no `11V · 9E · 5D` do Fluminense, subindo o alvo
+# até passar: modelado 3,13 entregou 2,74 · 4,50 entregou 3,84 · 5,41 entregou
+# 4,43 · **5,85 entregou 4,81**. Um alvo de 4,50 REPROVA, que é o motivo de a
+# margem existir; 1,30 é essa perda (~18%) arredondada para cima. Ela é um ponto
+# de partida e nunca a prova — o valor entregue é reconferido no quadro depois
+# de cada render, e a marca perde menos que o texto por ser mais grossa.
+#
+# **Cada marca sobe até o piso QUE VALE PARA ELA, sobre o fundo em que ELA se
+# apoia**, e é isso que mantém a subida honesta em vez de uniforme. Texto na
+# cena tem piso 4,5 e o do painel se apoia no `SUMMARY_GROUND`; uma marca
+# gráfica tem piso 3 e o contorno da barra se apoia no `SURFACE`, que é mais
+# escuro. Subir o contorno até o piso de TEXTO — que é o que a primeira versão
+# desta correção fez — dava ao Fluminense uma borda `#FB6287`, um rosa que não é
+# mais o grená do clube e que rouba a leitura do painel de cima. Pelo piso certo
+# a borda vira `#BB4965`, e **dezenove dos vinte clubes não mudam nada**.
+TEXT_FLOOR = 4.5
+MARK_FLOOR = 3.0
+ENCODED_MARGIN = 1.30
+
 RESULT_WORD = {"V": "Vitória", "E": "Empate", "D": "Derrota"}
 RESULT_COLOUR = {"V": POSITIVE, "E": WARNING, "D": NEGATIVE}
 
@@ -177,6 +297,11 @@ class Velas(Scene):
         club = payload["club"]
         rounds = payload["rounds"]
         self.colour = CLUB_COLOURS.get(club["code"], FALLBACK_COLOUR)
+        # Duas derivações porque são dois pisos sobre dois fundos, não porque a
+        # cena queira duas cores. A massa da barra continua no tom CRU: é a área
+        # grande, e é onde a cor registrada do clube tem que aparecer.
+        self.mark = lift_to_floor(self.colour, SURFACE, MARK_FLOOR * ENCODED_MARGIN)
+        self.ink = lift_to_floor(self.colour, SUMMARY_GROUND, TEXT_FLOOR * ENCODED_MARGIN)
         self.last_round = max(entry["round"] for entry in rounds)
         # O teto do eixo de pontos é o próximo múltiplo de dez acima do total —
         # calculado, nunca escrito à mão, senão uma reexportação mais adiante na
@@ -426,7 +551,28 @@ class Velas(Scene):
                 Rectangle(
                     width=BAR_WIDTH,
                     height=top - base,
-                    stroke_width=0,
+                    # **O contorno é o que faz a altura ser legível, e o
+                    # `fill_opacity` continua em 0,55 de propósito.** O corpo
+                    # sozinho entrega 1,83:1 para o Fluminense sobre o fundo,
+                    # contra o piso de 3 de uma marca gráfica — e são DEZ dos
+                    # vinte clubes abaixo do piso, não um caso isolado. Subir a
+                    # opacidade fecharia esse número em 0,90 e abriria um buraco
+                    # pior: a tampa some dentro do corpo. Em 22 pares
+                    # clube×resultado a separação corpo/tampa cai de 1,67–2,73
+                    # para 1,01–1,26, e o vermelho do Flamengo (`#E5453A`) contra
+                    # o da derrota (`#E5533D`) — como o verde do Palmeiras contra
+                    # o da vitória — viram a mesma cor. **O 0,55 é quem separa a
+                    # cor do clube da cor do resultado quando os dois coincidem**,
+                    # que é exatamente o par que a tampa precisa distinguir.
+                    #
+                    # O `self.mark` e não o tom cru, e a diferença é de margem e
+                    # não de piso: cru, o contorno entrega **3,26** no quadro
+                    # codificado para o Fluminense, que passa o piso de 3 por
+                    # 0,26 — margem nenhuma, no pior clube da divisão. Só o
+                    # Fluminense muda; os outros dezenove recebem o tom cru de
+                    # volta, porque `lift_to_floor` não sobe quem já passa.
+                    stroke_color=self.mark,
+                    stroke_width=1.4,
                     fill_color=self.colour,
                     fill_opacity=0.55,
                 ).move_to([x, (base + top) / 2, 0])
@@ -635,8 +781,11 @@ class Velas(Scene):
             INK,
             "BOLD",
         )
+        # `self.ink` e não `self.colour`: isto é TEXTO, piso 4,5, e o tom cru do
+        # Fluminense entrega 3,13 sobre este painel. Quatro clubes da divisão
+        # sobem aqui e os outros dezesseis passam intactos.
         record = label(
-            f"{tally['V']}V · {tally['E']}E · {tally['D']}D", 19, self.colour, "BOLD"
+            f"{tally['V']}V · {tally['E']}E · {tally['D']}D", 19, self.ink, "BOLD"
         )
         extremes = label(
             f"oscilou entre o {ordinal(best)} e o {ordinal(worst)}", 17, INK_SOFT

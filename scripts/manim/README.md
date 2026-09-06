@@ -493,6 +493,66 @@ viram outros arquivos quando a temporada anda — o antigo tem que sair do
   cumulativos, então o eixo começa no zero e a altura é a temporada inteira. Uma
   derrota não acrescenta nada e a barra não cresce — leitura honesta, e é
   exatamente o que a vela ao lado mostra pelo outro canal.
+
+- **A barra tem CONTORNO, e o `fill_opacity=0,55` do corpo não pode subir.** O
+  corpo sozinho entregava **1,83:1** para o Fluminense sobre o fundo, contra o
+  piso de 3 de uma marca gráfica — e **dez dos vinte clubes** do `pontos.py`
+  ficavam abaixo dele em 0,55 (Fluminense 1,83 · Vitória 2,04 · Flamengo 2,16 ·
+  Cruzeiro 2,30 · Atlético-MG 2,35 · Remo 2,40 · Bragantino 2,46 · Grêmio 2,74 ·
+  Internacional 2,76 · Vasco 2,83). Não é o tom de um clube, é a classe inteira.
+
+  **Subir a opacidade fecha esse número e abre um buraco pior.** Em `a=0,90`
+  nenhum clube fica abaixo de 3 — e a tampa some dentro do corpo: em 22 pares
+  clube×resultado a separação corpo/tampa cai de 1,67–2,73 para **1,01–1,26**. O
+  vermelho do Flamengo (`#E5453A`) e o da derrota (`#E5533D`) são a mesma cor, e
+  o verde do Palmeiras (`#1FBF6B`) e o da vitória (`#2ECC71`) também. **O 0,55 é
+  quem separa a cor do clube da cor do resultado quando as duas coincidem** —
+  ele é load-bearing, e é o oposto do que "a barra está apagada" sugere fazer.
+
+  Clarear os tons no `CLUB_COLOURS` foi a outra opção descartada: a paleta é
+  compartilhada com o `pontos.py`, onde a regra é distinguível primeiro, e um
+  grená clareado o bastante encosta no rosa do Vasco e no magenta do Bragantino.
+  O contorno fecha a classe **sem tocar na paleta**, então os vídeos já
+  publicados continuam concordando sobre a cor de cada clube.
+
+- **Dois pisos, dois fundos, e a subida é de VALOR.** `lift_to_floor` sobe um tom
+  só até passar do piso que vale para aquela marca, sobre o fundo em que ela se
+  apoia: o contorno é marca (piso 3) sobre o `SURFACE`, o `11V · 9E · 5D` do
+  painel é **texto** (piso 4,5) sobre o `CARD` a 94%. Multiplicar os canais até o
+  maior chegar a 255 preserva matiz e saturação exatamente; lavar no branco
+  dessatura, então a lavagem é o último recurso — e no piso de texto só Cruzeiro,
+  Flamengo e Remo chegam a precisar dela. **Dezenove dos vinte clubes não mudam
+  nada no contorno** (só o Fluminense, de `#B0455F` para `#BB4965`) e doze dos
+  vinte não mudam no texto do painel.
+
+  Subir o contorno até o piso de TEXTO foi a primeira versão desta correção e
+  está errado: dava ao Fluminense uma borda `#FB6287`, um rosa que não é mais o
+  grená do clube e que faz o painel de baixo competir com o de cima. **A marca
+  não deve passar do piso que a aperta.**
+
+- **O `11V · 9E · 5D` era TEXTO na cor do clube, e entregava 2,74.** Achado ao
+  consertar a barra, e pior que ela: o piso de texto é 4,5. É o
+  `INK_FAINT é régua e nunca texto` outra vez, um tom adiante — o tom de um clube
+  virou tinta sem ninguém medir, porque a paleta desta cena é escrita à mão e o
+  `test:tokens` não olha para ela.
+
+- **O alvo não é o piso: há uma perda de ~18% entre o tom escrito e o pixel
+  entregue, e ela foi MEDIDA.** O tipo é desenhado a 4× e reduzido, então nenhum
+  pixel de um glifo de 19px chega à cor cheia, e o h.264 come o resto. Três
+  leituras do mesmo texto, no quadro codificado:
+
+  | modelado | entregue |
+  |---|---|
+  | 3,13 | 2,74 |
+  | 4,50 | 3,84 |
+  | 5,41 | 4,43 |
+  | 5,85 | **4,81** |
+
+  Um alvo de 4,50 entrega 3,84 e **reprova**. Daí o `ENCODED_MARGIN = 1,30`, que
+  é essa perda arredondada para cima — e daí, também, que ela seja um ponto de
+  partida e nunca a prova: o valor entregue é reconferido no quadro depois de
+  cada render. A marca perde menos que o texto (é mais grossa), o que é a mesma
+  lição que o `0` sozinho contra `50 pts` logo abaixo já registra.
 - **Nenhum dos dois painéis tem legenda de eixo dentro dele.** A primeira versão
   escrevia "posição" no canto superior esquerdo da caixa e a palavra caía em cima
   do pavio da rodada 1; acima da caixa não há espaço, porque ali está o subtítulo.
