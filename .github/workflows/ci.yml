@@ -211,6 +211,16 @@ jobs:
       - name: Rehearse the traffic report (shell_scripts/12)
         run: ./scripts/rehearse-traffic-report.sh
 
+      # 15 writes nginx config on the host and travels in this same payload, so
+      # a broken one ships with the release that carries it and is run against a
+      # live server. Its failure mode is the site going off the air — `deny
+      # 0.0.0.0/0;` is valid nginx — which is why the script is four refusals
+      # around a one-line `tee`, and why they are exercised rather than read.
+      # Hermetic: nginx, systemctl and sudo are stubs, the config goes to a temp
+      # directory, no network and no root.
+      - name: Rehearse the nginx blocklist (shell_scripts/15)
+        run: ./scripts/rehearse-blocklist.sh
+
 
       # Everything above has passed, so THIS dist/ is the one that type-checked,
       # passed the unit suite, booted as a bundle and served three endpoints.

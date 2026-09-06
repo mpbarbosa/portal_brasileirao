@@ -1473,6 +1473,76 @@ it is signed in. It is still fine for *establishing* a session, because the `Set
 receives lands in the context's jar and the browser is what later sends it. Read and write
 account state with `page.evaluate(fetch)`.
 
+### Refusing an address
+
+`shell_scripts/blocklist.txt` is the list; `15_install_blocklist.sh` renders it
+into `/etc/nginx/conf.d/blocklist.conf` and reloads. One-time provisioning like
+11, 13 and 14 — **a deploy does not run it**, so changing the list is a merge
+*and* a manual run.
+
+**In `conf.d/` and not in the site file**, because certbot rewrites
+`sites-available/<site>` in place and `04_setup_nginx.sh` overwrites it
+outright: a `deny` put there is lost without a word. At `http` level it is
+inherited by every server block rather than needing a copy per site.
+
+**The list is in the repository and the host's copy is generated**, which is the
+half worth arguing for. It began as a file somebody wrote on the host by hand:
+nothing reproduced it, nothing reviewed it, and a rebuilt host silently started
+empty — the shape this file keeps naming, where *a claim that produces no work
+while it holds is never exercised*. In git, an address is a reviewed one-line
+diff with a reason and a date attached, and `shell_scripts/` is what CI packages,
+so the list matches the release that shipped it. An address added by hand on the
+host is **overwritten on the next run**.
+
+**Four refusals, and every one of them is a way the site goes off the air or an
+operator gets locked out:**
+
+- **A malformed entry**, named by line. nginx rejects `deny not-an-ip;` at
+  config test, so without this the failure arrives as a rolled-back reload
+  rather than as a sentence naming the bad line.
+- **A `/0` catch-all.** `deny 0.0.0.0/0;` is perfectly valid nginx and takes the
+  whole site down; a config test cannot object to it.
+- **The address you are connected from**, read from `$SSH_CLIENT`. This one is
+  paid for: proving a deny worked by temporarily blocking this workstation
+  locked it out of the site, and the cleanup command — a `pkill -f` whose
+  pattern matched **its own ssh session's command line** — killed the shell
+  before it could undo it, returning no output at all. `ALLOW_SELF_BLOCK=true`
+  is the deliberate override.
+- **nginx rejecting the render**, which restores the previous file, re-tests it,
+  and exits **2** rather than 1 — "the blocklist did not install" and "the site
+  is down" need different responses, the same split `06_redeploy.sh` draws.
+
+**An empty list is valid and writes a file with no denies.** That is how you
+unblock everybody and it has to keep working — `tests` for it live in the
+rehearsal, because the obvious implementation refuses an empty list as an error.
+
+**A graceful reload keeps old workers alive**, so the first request or two after
+a deny lands can still be served under the previous config. Measured on the
+host: immediately after loading a rule, `/` answered **200** while `/api/health`
+answered **403** — same client, same second — which reads exactly like *the deny
+only half applies* and is nothing of the kind. Seconds later all four paths
+tested were 403. Re-test before concluding anything about a deny's scope.
+
+**ufw is inactive on this host and must stay that way unless somebody plans it.**
+Its default incoming policy would cut SSH and the site; the real perimeter is
+the AWS security group, which is allow-only and cannot express a deny at all.
+
+`scripts/rehearse-blocklist.sh` is the only behavioural coverage, and `check`
+runs it — the script ships **inside the release tarball**, so a broken one
+arrives on the host with the release that carries it. It stubs `nginx`,
+`systemctl` and `sudo`, writes into a temp directory, and each of the four
+refusals was confirmed by deleting it and watching the named case go red.
+
+The first entry is `35.234.190.67` — 643 requests in one hour on 2026-09-05,
+660 distinct paths, 635 of them 404, hunting `/wp-config.php.bak`, `/aws/*`,
+`/.github/workflows/*` and Vite's `/@fs/`, rotating five spoofed AI-crawler user
+agents from one address. Its rDNS is `…bc.googleusercontent.com`, an **ephemeral
+GCP VM**, so it has probably been gone since and the address may already belong
+to somebody unrelated. **Blocking buys quiet, not protection** — every one of
+those probes already 404'd — which is why `blocklist.txt` asks for a date and a
+reason beside each address: an entry nobody can date is one nobody will dare
+remove.
+
 ### Backing the accounts database up
 
 `09_backup_accounts.sh` snapshots it to S3 nightly; `10_restore_accounts.sh` puts one
