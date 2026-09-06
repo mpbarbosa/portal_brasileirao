@@ -129,6 +129,7 @@ CLUB_COLOURS = {
     "6685": "#C9A227",  # Santos        ocre
     "6684": "#FF6B3D",  # Internacional laranja-vermelho
     "1782": "#8C6E5A",  # Vitória       marrom
+    "4364": "#F2CE3A",  # Mirassol      amarelo
 }
 FALLBACK_COLOUR = "#9AA5A0"
 
