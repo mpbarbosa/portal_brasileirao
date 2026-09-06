@@ -78,6 +78,15 @@ and negative in seven, reaching −0,26 (Mirassol) and −0,25 (Internacional).
 **Grêmio** (0,63 against 0,48), which is also the club with the widest volume
 split in the league at +1,81 pts/jogo.
 
+> **Added 2026-09-06, after the Grêmio reading — not a correction.** Everything
+> in this section is a correct report of *uncontrolled* correlations. But the
+> Grêmio exception turns out to be a **venue confound**, and testing it obliged
+> the same control across all twenty. Within venue, volume's already-weak signal
+> goes to **−0,038, positive in 9 of 20**, while conversão is unmoved at
+> **0,559, positive in 20 of 20**. The volume column below should therefore be
+> read as partly measuring home advantage; the conversão column should not.
+> See [`gremio-scouts-vs-resultados.md`](gremio-scouts-vs-resultados.md).
+
 The median splits say it more plainly than the correlations do:
 
 | | positive | ≥ +0,5 pts/jogo | negative |
