@@ -189,8 +189,14 @@ function LineupColumn({ lineup, name }: { lineup: Lineup; name: string }) {
       <span className="w-6 shrink-0 text-right tabular-nums text-ink-faint">{player.shirt}</span>
       <span className="truncate">
         {player.name}
-        {/* The keeper is the one position a team sheet always marks, and it is
-            the only one CBF reports. Naming the rest would mean guessing. */}
+        {/* The one position CBF reports at all — naming the rest would mean
+            guessing. It is NOT one a team sheet always marks, which this
+            comment claimed until it was measured: 4 of the season's 486 sides
+            name no goalkeeper among their eleven, because CBF flagged the
+            reserve and not the starter. So this renders nothing rather than a
+            placeholder, and `sidesWithoutStartingKeeper` reports it at sync
+            time. Do not reach for "shirt 1 is the keeper" — see that
+            function for why a wrong (GOL) is worse than an absent one. */}
         {player.keeper && <span className="ml-1 text-ink-faint">(GOL)</span>}
       </span>
     </li>
