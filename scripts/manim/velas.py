@@ -122,6 +122,7 @@ CLUB_COLOURS = {
     "1776": "#FFC4B0",  # São Paulo     salmão
     "1766": "#6E8894",  # Atlético-MG   cinza-azul
     "1770": "#98A3A8",  # Botafogo      cinza
+    "4286": "#E058B8",  # Bragantino    magenta
 }
 FALLBACK_COLOUR = "#9AA5A0"
 
@@ -817,8 +818,23 @@ class Velas(Scene):
             "BOLD",
         )
         # `self.ink` e não `self.colour`: isto é TEXTO, piso 4,5, e o tom cru do
-        # Fluminense entrega 3,13 sobre este painel. Quatro clubes da divisão
-        # sobem aqui e os outros dezesseis passam intactos.
+        # Fluminense entrega 3,13 sobre este painel.
+        #
+        # **Quantos clubes sobem aqui é uma MEDIDA e não uma constante**, então
+        # não há número nesta linha: ele depende do `ENCODED_MARGIN`, que já se
+        # moveu uma vez, e da paleta dos vinte, que cresce. Esta frase dizia
+        # "quatro clubes" e a varredura sobre os vinte tons do `pontos.py` dá
+        # SETE (2026-09-06) — uma contagem em prosa sem portão nenhum em cima,
+        # que é a falha que o `CLAUDE.md` cataloga. Para recontar:
+        #
+        #     lift_to_floor(tom, SUMMARY_GROUND, TEXT_FLOOR * ENCODED_MARGIN) != tom
+        #
+        # E leia a margem pelo que ela é. O Bragantino entra em 5,08 contra o
+        # ALVO de 5,17 — ou seja, acima do piso de 4,5 do projeto e abaixo da
+        # folga de 15% que a codificação pede. A correção existe para a folga,
+        # não para uma reprovação: medido no quadro codificado, o tom cru dá
+        # 5,24 e o corrigido 5,47, e os dois passariam. Dizer que sem a subida
+        # a etiqueta ficaria ilegível seria mais forte do que a medida sustenta.
         record = label(
             f"{tally['V']}V · {tally['E']}E · {tally['D']}D", 19, self.ink, "BOLD"
         )
