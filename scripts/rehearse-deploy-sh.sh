@@ -137,7 +137,11 @@ make_checkout() {   # <GOOD|BAD> <sha>
     rm -rf "$SRC"
     mkdir -p "$SRC/scripts" "$SRC/dist" "$SRC/shell_scripts"
     cp "$REPO/scripts/deploy.sh" "$SRC/scripts/"
-    cp "$REPO/shell_scripts"/*.sh "$SRC/shell_scripts/"
+    # Everything in shell_scripts/, not only *.sh: CI tars the whole directory
+    # and `15_install_blocklist.sh` reads `blocklist.txt` from beside itself. A
+    # fixture holding only the scripts cannot contain the bug where the data
+    # file never reaches the host — which is exactly the bug this fixture missed.
+    cp "$REPO/shell_scripts"/* "$SRC/shell_scripts/"
     # Differ in size and mtime: `rsync -a`'s quick-check compares those rather
     # than bytes, so same-size fixtures written in one second are silently
     # skipped and the install reads as a no-op. The flip-back rehearsal records
@@ -254,6 +258,10 @@ check "health reports the new sha" bbbb2222 "$(health_sha)"
 check "the OLD release was retained" "sha=aaaa1111" "$(grep -o 'sha=[a-z0-9]*' "$DEPLOY_DIR/previous/dist/server.cjs" | head -1)"
 check "retained its package.json too" present "$(exists "$DEPLOY_DIR/previous/package.json")"
 check "shipped the scripts with it" present "$(exists "$DEPLOY_DIR/shell_scripts/06_redeploy.sh")"
+# The DATA files too, not only the executables. `15_install_blocklist.sh` reads
+# `blocklist.txt` from beside itself and exits 1 without it, so a release that
+# ships the script and not the list makes the documented unblock impossible.
+check "shipped the blocklist with them" present "$(exists "$DEPLOY_DIR/shell_scripts/blocklist.txt")"
 check "a staging directory was used" yes "$(staged)"
 check "staging cleaned up" absent "$(exists "$(staging_dir)")"
 stop_env
