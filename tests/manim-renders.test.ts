@@ -46,8 +46,37 @@ const readRendered = (): Map<string, string> => {
   return rows;
 };
 
-/** Everything in the directory except the record itself. */
-const artefacts = () => readdirSync(MEDIAS).filter((name) => name !== "RENDERED").sort();
+/**
+ * Every artefact under the directory, as a path relative to it — so a video in
+ * `cruzeiro/` is listed as `cruzeiro/velas-cruzeiro.mp4` and is covered by the
+ * staleness check above exactly as a flat one is.
+ *
+ * **It recurses, and that is load-bearing rather than tidy.** The per-club
+ * folders arrived after this file did, and the flat `readdirSync` it replaced
+ * would have reported the directory ENTRY `cruzeiro` as one unlisted artefact
+ * while the three real files inside it became invisible — silently exempt from
+ * the staleness check for ever, which is the precise failure the both-directions
+ * test below exists to refuse, reached from the one angle it could not see.
+ *
+ * **A SYMLINK is an alias and never an artefact.** `palmeiras/` links the
+ * two-club `campanhas-palmeiras-flamengo.*` beside its own velas, because that
+ * video belongs to Palmeiras and to Flamengo at once and filing it under either
+ * would assert it is about one of them. The bytes are listed once, under the
+ * real path; giving the alias its own `RENDERED` line would be a second claim
+ * about one file, and the two could then disagree about which snapshot drew it.
+ * `readdirSync` does not follow links, so `isSymbolicLink()` is asked of the
+ * entry rather than of its target.
+ */
+const artefacts = (): string[] => {
+  const walk = (dir: string, prefix: string): string[] =>
+    readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
+      const rel = prefix ? `${prefix}/${entry.name}` : entry.name;
+      if (entry.isSymbolicLink()) return [];
+      if (entry.isDirectory()) return walk(path.join(dir, entry.name), rel);
+      return rel === "RENDERED" ? [] : [rel];
+    });
+  return walk(MEDIAS, "").sort();
+};
 
 test("every committed render was drawn from the season the seed now describes", () => {
   for (const [file, snapshot] of readRendered()) {
