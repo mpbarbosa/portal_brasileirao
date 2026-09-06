@@ -90,11 +90,17 @@ DATA = Path(os.environ.get("VELAS_JSON", Path(__file__).with_name("velas.json"))
 
 # ---- o formato do quadro -------------------------------------------------
 #
-# `VELAS_ASPECT=4:5` desenha o corte VERTICAL, para o feed do Instagram; sem
-# ela, nada muda. O caminho 16:9 é o de sempre, byte por byte, e essa é a
-# condição de o interruptor existir em vez de uma segunda cena: uma cópia do
-# `velas.py` é onde a divergência começa, que é o argumento que o
-# `commons-core.ts` já faz sobre `scripts/commons-api.ts`.
+# `VELAS_ASPECT` escolhe o quadro: `16:9` (o padrão, o de sempre), `4:5` para o
+# FEED do Instagram e `9:16` para os REELS. Sem a variável nada muda — o
+# caminho 16:9 é o de sempre byte por byte, e essa é a condição de o
+# interruptor existir em vez de uma segunda cena: uma cópia do `velas.py` é
+# onde a divergência começa, que é o argumento que o `commons-core.ts` já faz
+# sobre `scripts/commons-api.ts`.
+#
+# **O vocabulário é fechado e um valor desconhecido ABORTA**, em vez de cair no
+# 16:9 — a regra do `isKnownGoalResult`, pela mesma razão: um `VELAS_ASPECT=9x16`
+# digitado errado que renderizasse 1920×1080 em silêncio custaria os vinte
+# minutos do render e só apareceria ao abrir o arquivo.
 #
 # **`frame_width` e `frame_height` são os dois escritos à mão, e isso foi
 # MEDIDO em vez de deduzido.** A documentação de vários lugares diz que o manim
@@ -108,10 +114,21 @@ DATA = Path(os.environ.get("VELAS_JSON", Path(__file__).with_name("velas.json"))
 # vertical não encolhe tipo nenhum — ele reempilha duas colunas em uma, e é por
 # isso que ele cabe: 1080×1350 e 1920×1080 são a MESMA área em pixels menos
 # 30%, e a coluna da direita some inteira do lado.
-VERTICAL = os.environ.get("VELAS_ASPECT", "16:9") == "4:5"
+ASPECT = os.environ.get("VELAS_ASPECT", "16:9")
+if ASPECT not in ("16:9", "4:5", "9:16"):
+    raise SystemExit(f"VELAS_ASPECT={ASPECT!r}: use 16:9, 4:5 ou 9:16.")
+
+# Os dois cortes verticais dividem TODO o desenho — a coluna única, o card
+# fundido, a chave em duas linhas ao lado do desenho, a manchete do painel
+# quebrada. `REELS` só move geometria; ele não acrescenta nem tira conteúdo
+# nenhum em relação ao 4:5.
+VERTICAL = ASPECT in ("4:5", "9:16")
+REELS = ASPECT == "9:16"
 if VERTICAL:
-    config.pixel_width, config.pixel_height = 1080, 1350
-    config.frame_width, config.frame_height = 8.0, 10.0
+    config.pixel_width = 1080
+    config.pixel_height = 1920 if REELS else 1350
+    config.frame_width = 8.0
+    config.frame_height = 14.2222222 if REELS else 10.0
 
 FONT = "Inter"
 TYPE_OVERSAMPLE = 4
@@ -338,9 +355,37 @@ if VERTICAL:
     # aperto que o corpo da vela absorve; a ALTURA da caixa de posições cai
     # menos, porque ela é o eixo da divisão inteira e vinte bandas em pouco
     # espaço deixam de ser uma escala.
-    PLOT_LEFT, PLOT_RIGHT = -2.85, 3.00
-    POS_TOP, POS_BOTTOM = 3.46, 0.95
-    PTS_TOP, PTS_BOTTOM = 0.61, -0.53
+    if REELS:
+        # **A TRILHA DE AÇÃO da direita é o que estreita isto, não a altura.**
+        # Curtir/comentar/enviar ocupam ~140px na borda direita, que em unidades
+        # é tudo à direita de x=2,96. Medido sobre o render com as zonas
+        # sobrepostas: com a caixa do 4:5 ficavam 5.084 px de conteúdo debaixo
+        # dela — as etiquetas do G4 e do Z4, o rótulo `rodada` e, o que importa,
+        # a COLUNA DE VALORES do card. Um `1º · 1º` coberto pelo botão de
+        # comentar é o card mentindo, não uma borda feia.
+        #
+        # A coluna inteira anda para a esquerda junto: `CENTRE_X`. O limite da
+        # esquerda é o rótulo `60 pts`, que mora fora da caixa e é o texto mais
+        # largo do eixo — por isso os dois lados não são simétricos.
+        PLOT_LEFT, PLOT_RIGHT = -3.10, 2.25
+    else:
+        PLOT_LEFT, PLOT_RIGHT = -2.85, 3.00
+    if REELS:
+        # **A ZONA SEGURA é o que dita estes números, não a altura do quadro.**
+        # O 9:16 tem 4,22 unidades A MAIS que o 4:5 e mesmo assim é o corte
+        # apertado, porque a UI do Reels come as pontas: ~250px no topo, ~480px
+        # embaixo para a legenda, o @ e o áudio. Sobram 1190px — 8,81 unidades
+        # contra as 10,0 inteiras do feed, que não sobrepõe nada.
+        #
+        # Então os gráficos vivem na faixa segura e ficam MAIORES que no 4:5
+        # (2,75 contra 2,51 de posições), e o que desce para a faixa de baixo é
+        # a chave e o crédito — nessa ordem, porque são as duas coisas que a
+        # legenda do post pode repetir. Ver o README para o que isso concede.
+        POS_TOP, POS_BOTTOM = 3.78, 1.03
+        PTS_TOP, PTS_BOTTOM = 0.69, -0.66
+    else:
+        POS_TOP, POS_BOTTOM = 3.46, 0.95
+        PTS_TOP, PTS_BOTTOM = 0.61, -0.53
 else:
     PLOT_LEFT, PLOT_RIGHT = -6.30, 1.30
     POS_TOP, POS_BOTTOM = 2.86, -0.30
@@ -350,7 +395,7 @@ else:
 # 5,85 é a mesma fração da rodada, então a folga entre duas velas vizinhas é a
 # mesma nos dois formatos. Escrito como fração e não como dois números soltos
 # porque é isso que ele é.
-BODY_WIDTH = 0.145 if VERTICAL else 0.19
+BODY_WIDTH = (0.134 if REELS else 0.145) if VERTICAL else 0.19
 BAR_WIDTH = BODY_WIDTH
 # Um corpo de altura zero — abriu e fechou no mesmo lugar — ainda é uma rodada
 # que aconteceu, então ele vira um traço em vez de sumir. O mesmo raciocínio da
@@ -358,13 +403,19 @@ BAR_WIDTH = BODY_WIDTH
 # renderização, não como o fato.
 MIN_BODY = 0.035
 
+# O eixo da coluna. Zero em toda parte menos no Reels, onde ela anda para a
+# esquerda para sair de debaixo da trilha de ação — ver o comentário na caixa
+# do gráfico. Tudo que é centrado na coluna lê daqui, e não de `0`, senão
+# metade do desenho anda e a outra metade fica.
+CENTRE_X = -0.50 if REELS else 0.0
+
 if VERTICAL:
     # Centrado e largo: no vertical o card não divide a linha com nada, então
     # ele toma a coluna inteira. E é essa largura que paga a fusão dos dois
     # cards em um — 7,3 unidades cabem duas colunas de linhas onde 5,05 cabia
     # uma, que é o que faz cinco linhas virarem três sem tirar nenhuma.
-    CARD_X = 0.0
-    CARD_WIDTH = 7.30
+    CARD_X = CENTRE_X
+    CARD_WIDTH = 6.70 if REELS else 7.30
 else:
     CARD_X = 4.52
     CARD_WIDTH = 5.05
@@ -416,7 +467,9 @@ class Velas(Scene):
             # quadro tem 8,0 — medido, não estimado. A quebra é no primeiro
             # `·`, que é onde ela já se divide em duas afirmações: o que o
             # desenho é, e de que temporada ele fala.
-            title = label(club["name"], 40, INK, "BOLD").move_to([0, 4.52, 0])
+            title = label(club["name"], 40, INK, "BOLD").move_to(
+                [CENTRE_X, 4.88 if REELS else 4.52, 0]
+            )
             subtitle = VGroup(
                 label("campanha rodada a rodada, em velas", 16, INK_SOFT),
                 label(
@@ -762,7 +815,7 @@ class Velas(Scene):
                 label("toco à esquerda: a posição de abertura", 13, INK_SOFT)
                 .next_to(key, DOWN, buff=0.16)
             )
-            key.move_to([(PLOT_LEFT + PLOT_RIGHT) / 2, -1.55, 0])
+            key.move_to([(PLOT_LEFT + PLOT_RIGHT) / 2, -4.25 if REELS else -1.55, 0])
             return key
 
         second = VGroup(label("toco à esquerda: a posição de abertura", 13, INK_SOFT))
@@ -792,7 +845,7 @@ class Velas(Scene):
         divide espaço com marca nenhuma.
         """
         credit = label(SITE, 17, INK_SOFT)
-        credit.move_to([CARD_X, -4.76 if VERTICAL else -3.24, 0])
+        credit.move_to([CARD_X, (-5.05 if REELS else -4.76) if VERTICAL else -3.24, 0])
         return credit
 
     # ---- os cards da rodada -------------------------------------------------
@@ -840,7 +893,7 @@ class Velas(Scene):
         marca que separa esta cena das duas irmãs, e o `rank-candles-core.ts`
         já registra que o dentro da rodada é o assunto.
         """
-        frame = self.card_frame(2.32).move_to([CARD_X, -3.33, 0])
+        frame = self.card_frame(2.32).move_to([CARD_X, -2.44 if REELS else -3.33, 0])
         left = frame.get_left()[0] + 0.30
         right = frame.get_right()[0] - 0.30
         top = frame.get_top()[1] - 0.32
@@ -898,7 +951,13 @@ class Velas(Scene):
         # carrega "abriu 1º" e a da direita "no movimento · manteve a posição",
         # que sozinha mede 3,69 unidades. Partir 6,70 ao meio estoura a direita
         # e deixa a esquerda com o dobro do que ela usa.
-        split = left + 2.62
+        # Derivado da DIREITA e não da esquerda, porque o que é fixo aqui é a
+        # largura de que a coluna B precisa — 3,92 unidades, que é
+        # `no movimento` + `manteve a posição` medido — e não a da A, que
+        # carrega `abriu 1º` e sobra. Escrito da esquerda, um card mais estreito
+        # (o do Reels) espreme exatamente a coluna que não pode encolher.
+        # Em 7,30 os dois cálculos dão o mesmo ponto, então o 4:5 não se move.
+        split = right - 4.08
         columns = (
             (left, split - 0.16, (("abriu", ordinal(entry["open"]), INK_SOFT),
                                   ("fechou", ordinal(entry["close"]), INK))),

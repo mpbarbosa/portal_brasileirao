@@ -91,15 +91,22 @@ LAYOUT sem esperar o vídeo inteiro, `-s` desenha só o último quadro, que é o
 carrega os dois gráficos cheios, os dois cards e o painel do fecho ao mesmo
 tempo.
 
-## O corte 4:5, para o feed do Instagram
+## Os cortes verticais, para o Instagram
 
-`VELAS_ASPECT=4:5` desenha o `velas.py` em **1080×1350**. Sem a variável nada
-muda: o caminho 16:9 é o de sempre.
+`VELAS_ASPECT` escolhe o quadro: **`4:5`** (1080×1350) para o **feed** e
+**`9:16`** (1080×1920) para os **Reels**. Sem a variável nada muda; um valor
+que não seja um dos três **aborta** em vez de cair no 16:9 em silêncio.
 
 ```sh
-VELAS_ASPECT=4:5 VELAS_JSON=$PWD/scripts/manim/velas-palmeiras.json \
+VELAS_ASPECT=4:5  VELAS_JSON=$PWD/scripts/manim/velas-palmeiras.json \
+  ./.venv-manim/bin/manim -qh scripts/manim/velas.py Velas
+VELAS_ASPECT=9:16 VELAS_JSON=$PWD/scripts/manim/velas-palmeiras.json \
   ./.venv-manim/bin/manim -qh scripts/manim/velas.py Velas
 ```
+
+Os dois compartilham **todo** o conteúdo — a coluna única, o card fundido, a
+chave em duas linhas ao lado do desenho, a manchete do painel quebrada. O
+`9:16` só move geometria em cima disso.
 
 **Que ele é o de sempre foi MEDIDO e não deduzido**, porque é a única coisa que
 justifica um interruptor em vez de uma segunda cena: renderizado o `-ql` inteiro
@@ -116,12 +123,48 @@ md5sum media/videos/velas*/480p15/chk_*.mp4   # têm de bater
 rm scripts/manim/velas_orig.py
 ```
 
-**4:5 e não 9:16, e a razão é a UI e não o formato.** O feed não sobrepõe nada
-sobre a mídia; o Reels cobre cerca de 250px no topo, 480px embaixo e 140px na
-trilha direita. Medido contra uma maquete das duas colunas empilhadas: ela
-termina em y=1808 de 1920 e o card da rodada inteiro cai debaixo da faixa de
-baixo, junto com o crédito, enquanto a trilha da direita come as etiquetas do G4
-e do Z4. Um 9:16 é possível e é **outro** recorte de conteúdo, não este.
+**E confira o 4:5 contra o `HEAD` do mesmo jeito ao mexer no vertical**, porque
+foi assim que este arquivo pegou uma regressão que nenhum olho pegaria: um
+refactor que centralizou coisas em `CENTRE_X` moveu a chave **10px**, porque ela
+nunca foi centrada no QUADRO — ela é centrada no GRÁFICO,
+`(PLOT_LEFT + PLOT_RIGHT) / 2`, que no 4:5 vale 0,075 e não 0. O md5 do vídeo
+já commitado é o que disse isso; o quadro parecia igual.
+
+```sh
+git show HEAD:scripts/manim/velas.py > scripts/manim/velas_head.py
+for f in velas_head velas; do VELAS_ASPECT=4:5 \
+  VELAS_JSON=$PWD/scripts/manim/velas-botafogo.json \
+  ./.venv-manim/bin/manim -ql -o s45_$f scripts/manim/$f.py Velas; done
+find media/videos -name 's45_*.mp4' -exec md5sum {} \;
+rm scripts/manim/velas_head.py
+```
+
+**O 9:16 tem 4,22 unidades A MAIS que o 4:5 e é o corte APERTADO.** Isso é a
+coisa a entender antes de mexer nele: o feed não sobrepõe nada sobre a mídia,
+enquanto o Reels come ~250px no topo, ~480px embaixo (legenda, @, áudio) e
+~140px na trilha de ação da direita. Sobram **1190px — 8,81 unidades contra as
+10,0 inteiras do feed.**
+
+Daí as três diferenças, e nenhuma delas é estética:
+
+- **A coluna anda para a esquerda** (`CENTRE_X`) e estreita, para sair de
+  debaixo da trilha. Medido sobre o render com as zonas sobrepostas: com a
+  caixa do 4:5 ficavam **5.084 px** de conteúdo debaixo dela — as etiquetas do
+  G4 e do Z4, o rótulo `rodada` e, o que importa, a **coluna de valores do
+  card**. Um `1º · 1º` coberto pelo botão de comentar é o card mentindo. Depois
+  do ajuste são **0 px** ali e **0 px** na faixa do topo.
+- **Os gráficos ficam MAIORES que no 4:5** — 2,75 unidades de posições contra
+  2,51 — porque a chave e o crédito desceram e liberaram a faixa segura.
+- **A chave e o crédito ficam ABAIXO da linha segura**, nessa ordem e de
+  propósito: são as duas coisas que a legenda do post pode repetir. **A legenda
+  precisa repetir a chave**; sem isso o corte 9:16 publica uma vela sem dizer o
+  que é o corpo e o que é o pavio, que é exatamente o que o `build_key` recusa.
+
+**Os números da UI são estimativas de terceiros, não medidas nossas** — o
+Instagram não publica um contrato — e a escolha aqui é conservadora nos dois
+eixos. Se a trilha for mais estreita do que 140px, o custo é uma faixa de fundo
+vazia à direita, que ninguém vê; se for mais larga, o custo seria um valor
+coberto. Errar para o lado barato é deliberado.
 
 **Nenhum tipo encolhe, e é isso que o corte compra.** 1080×1350 e 1920×1080 têm
 a mesma densidade se `frame_width`/`frame_height` forem escritos à mão como
@@ -168,9 +211,9 @@ Soltas ficam as duas cenas que não são de um clube:
 clube que tem vídeo**, com o seu `velas-<clube>.mp4` de 21,1s, o gif, a capa e o
 `-youtube.md`. Quantos são e quais são, `ls docs/medias/` responde — esta frase
 de propósito não responde, e o parágrafo abaixo diz por quê. Os vídeos são
-1920×1080 60fps **com uma exceção**, o `-45.mp4` do corte 4:5 para o feed do
-Instagram, que é 1080×1350 — leia o sufixo, ou pergunte ao `ffprobe`, em vez de
-supor pela pasta. Todos são versionados junto do resto do projeto como os slides em
+1920×1080 60fps **menos os cortes verticais**: o `-45.mp4` do feed do Instagram
+é 1080×1350 e o `-916.mp4` dos Reels é 1080×1920 — leia o sufixo, ou pergunte ao
+`ffprobe`, em vez de supor pela pasta. Todos são versionados junto do resto do projeto como os slides em
 `docs/carrossel/` e as capturas em `docs/screenshots/`.
 
 **Conte o diretório antes de assumir uma convenção**, porque esta seção já errou
@@ -249,8 +292,8 @@ até que data os dados vão, que é a única defesa que ele tem.
 
 ## O gif
 
-**Todo mp4 aqui tem gif MENOS o `-45.mp4`** — o corte 4:5 vai para o Instagram,
-que não aceita gif, e um gif que nenhuma plataforma-alvo lê é peso commitado
+**Todo mp4 aqui tem gif MENOS os cortes verticais** (`-45.mp4`, `-916.mp4`) — os
+dois vão para o Instagram, que não aceita gif, e um gif que nenhuma plataforma-alvo lê é peso commitado
 para ninguém. Todos os que existem são 960×540 e 15fps — conte o diretório, não esta
 frase:
 
