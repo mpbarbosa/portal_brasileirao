@@ -667,7 +667,11 @@ export interface ClubCandles {
 export interface ClubScouts {
   clubCode: ClubCode;
   /**
-   * Matches these counters cover. Never `StandingsRow.played` — see above.
+   * Matches these counters cover, from the source's own `jogos_num`. Never
+   * `StandingsRow.played` — see above — and not the fixture count either: the
+   * source does not always record a match, and 13 of 20 clubs are short in
+   * 2026. The rate is right about what it covers; the sample may be thinner
+   * than the division's.
    */
   matches: number;
   /** Goals scored by this club's players. Own goals are the other club's. */
@@ -726,7 +730,10 @@ export interface ClubScouts {
  * disagree about what rodada 12 was.
  */
 export type ScoutHistoryEntry = readonly [
-  /** Finished matches this club had played in rounds 1..this one. */
+  /**
+   * Finished matches these counters **cover** through this rodada — not what
+   * the fixture list says was played, so it does not always step by one.
+   */
   matches: number,
   /** Goals scored by this club's players. */
   goals: number,

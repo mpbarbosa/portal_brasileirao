@@ -112,6 +112,15 @@ const COUNTERS = {
 
 type CounterField = (typeof COUNTERS)[keyof typeof COUNTERS];
 
+/**
+ * The source's own per-player match count — the **denominator's** source, and
+ * deliberately not one of `COUNTERS`.
+ *
+ * It is read for one question the scout columns cannot answer: how many matches
+ * a club's counters actually cover. See `accumulate`.
+ */
+const GAMES = "atletas.jogos_num";
+
 const season = seasonArgument();
 const CLUB_BY_SLUG = new Map(CLUBS.map((club) => [club.slug, club]));
 let previousRound: number | null = null;
@@ -187,6 +196,12 @@ function parseCsv(text: string): Snapshot {
   const clubIndex = header.indexOf("atletas.clube.id.full.name");
   if (idIndex < 0 || clubIndex < 0) {
     throw new Error("CSV is missing atletas.atleta_id or atletas.clube.id.full.name.");
+  }
+  // The denominator's source, so an absence is an error rather than a zero: a
+  // missing column would silently make every club cover no matches at all.
+  // Present in every season back to 2023, checked before relying on it.
+  if (header.indexOf(GAMES) < 0) {
+    throw new Error(`CSV is missing ${GAMES}, which the denominator is read from.`);
   }
 
   const out: Snapshot = new Map();
@@ -275,6 +290,9 @@ function accumulate(snapshots: Snapshot[]): {
 } {
   const totals = new Map<string, ClubScouts>();
   const history = new Map<string, ScoutHistoryEntry[]>(CLUBS.map((club) => [club.code, []]));
+  // Matches each club's counters actually cover, cumulative. See the block above
+  // `entry.matches` below for why this is not `playedThrough`.
+  const covered = new Map<string, number>(CLUBS.map((club) => [club.code, 0]));
 
   const blank = (clubCode: string): ClubScouts => ({
     clubCode,
@@ -292,6 +310,9 @@ function accumulate(snapshots: Snapshot[]): {
 
   snapshots.forEach((snapshot, index) => {
     const previous = index > 0 ? snapshots[index - 1] : undefined;
+    // Matches counted in THIS window, per club: the largest step any one of its
+    // players took in `jogos_num`.
+    const stepped = new Map<string, number>();
 
     for (const [playerId, record] of snapshot) {
       const abbreviation = record["atletas.clube.id.full.name"] ?? "";
@@ -319,6 +340,19 @@ function accumulate(snapshots: Snapshot[]): {
         if (delta > 0) entry[field] += delta;
       }
 
+      // **Only a player present in BOTH snapshots has a measurable step.**
+      // Reading an absent player's cumulative total as one imports his whole
+      // season: unfiltered, Botafogo came to 29 matches covered against 24
+      // played and São Paulo to 32, off single windows reporting steps of 7 and
+      // 9. Filtered, no window in 2026 steps by more than 1 and no club's
+      // coverage exceeds its fixtures — the direction that has to hold, since
+      // the counters cannot cover a match nobody played. `validate` refuses the
+      // other direction rather than trusting this comment.
+      if (index === 0 || before) {
+        const step = count(record, GAMES) - count(before, GAMES);
+        if (step > 0) stepped.set(club.code, Math.max(stepped.get(club.code) ?? 0, step));
+      }
+
       totals.set(club.code, entry);
     }
 
@@ -326,11 +360,15 @@ function accumulate(snapshots: Snapshot[]): {
     // all twenty from rodada 1, so this is defensive — but a club-round missing
     // from the middle of a history is a hole the drawing would have to guess
     // about, where a row of zeros is a club that has done nothing yet.
-    const round = index + 1;
     for (const club of CLUBS) {
+      // Carried forward before the row is pushed, so a rodada's row states the
+      // coverage that rodada reached rather than the one before it.
+      const total = (covered.get(club.code) ?? 0) + (stepped.get(club.code) ?? 0);
+      covered.set(club.code, total);
+
       const entry = totals.get(club.code);
       history.get(club.code)?.push([
-        playedThrough(club.code, round),
+        total,
         entry?.goals ?? 0,
         entry?.shotsSaved ?? 0,
         entry?.shotsOff ?? 0,
@@ -340,16 +378,35 @@ function accumulate(snapshots: Snapshot[]): {
     }
   });
 
-  // The denominator comes from **our own** fixture list, not from the source.
-  // caRtola carries no fixtures at all, and a match count inferred from
-  // appearances cannot separate a window holding two rounds from one holding a
-  // heavily-rotated eleven.
+  // **The denominator is what the COUNTERS cover, and not what the fixture list
+  // says was played.** Those differ, because caRtola does not always record a
+  // match at all — and the gap is silent, since the rates it produces are
+  // twenty plausible numbers in the right order.
   //
-  // `playedThrough` takes the round, so the capture above asks it per rodada and
-  // this asks it once for the last — one function answering the denominator
-  // rather than two that can come to disagree about what rodada 12 was.
+  // Measured on 2026: Athletico-PR's windows 2 and 5 are zero across all five
+  // counters, and they are exactly its two fixtures played out of round order
+  // (r2 on 19/02, after r3; r5 on 29/03, after r6-r8). The actions are **lost
+  // rather than shifted** into a neighbouring window — the club's scout goals
+  // are 33 against 37 in the seed, its own goals in favour are 0 and fully
+  // known (`goals.ts` covers 23 of its 25 and the two it misses are both 0-0),
+  // and the 4-goal gap is precisely round 5's 4-1. So 219 finalizações were
+  // divided by 25 where the counted matches give 23: **8,8 a game reported
+  // against 9,5, which is 17º de 20 against 12º** — on a card whose whole
+  // purpose is reading one club against the division. 20 club-matches are
+  // uncovered across the division, which together with the own goals accounts
+  // for essentially all of the goals band's 6.8%.
+  //
+  // `jogos_num` is the source's own per-player match count, so the matches a
+  // club had counted in a window is the largest step any of its players took
+  // across it. That is the appearance count the comment this replaces
+  // rejected, and the objection was right about a different statistic: a *sum*
+  // over players cannot separate a window holding two rounds from one holding a
+  // heavily-rotated eleven, and a *maximum* is not being asked to — eleven
+  // players start, so one of them stepped by exactly the number played.
+  //
+  // `playedThrough` survives, in `validate`, as the bound this must not exceed.
   for (const [code, entry] of totals) {
-    entry.matches = playedThrough(code, snapshots.length);
+    entry.matches = covered.get(code) ?? 0;
   }
   return { totals, history };
 }
@@ -375,8 +432,14 @@ function playedThrough(clubCode: string, round: number): number {
  * `lineupsReconcile`: there is no scoreline for these counters to agree with,
  * so the checks are structural. The goals band is the one real cross-check —
  * against the seed's own goals-for, loose because the source genuinely
- * undercounts by the own goals it files elsewhere and by players who have left
- * the division, which measured 7% across the 2026 season.
+ * undercounts by the own goals it files elsewhere and by the matches it never
+ * records at all, which measured 6.8% across the 2026 season.
+ *
+ * **The band is division-wide, and that is a bound on what it can see rather
+ * than a flaw in it.** Athletico-PR losing two whole matches is 0.6% of a total
+ * already expected to run ~7% short, and its own 10.8% would sit inside the
+ * band even applied per club. The evidence for a lost match is in the *window*,
+ * which is why the coverage check above looks there instead.
  */
 function validate(
   totals: Map<string, ClubScouts>,
@@ -421,6 +484,7 @@ function validate(
 
   let scoutGoals = 0;
   let seedGoals = 0;
+  const short: string[] = [];
 
   for (const entry of totals.values()) {
     const club = CLUBS.find((candidate) => candidate.code === entry.clubCode);
@@ -429,6 +493,26 @@ function validate(
     if (entry.matches <= 0) {
       throw new Error(`${name} has no finished match in rounds 1..${rounds}.`);
     }
+
+    // **The seed is the BOUND on the denominator, no longer its value.** The
+    // counters cannot cover a match nobody played, so exceeding this means
+    // either the seed is behind the source or the `jogos_num` step rule has let
+    // a transfer through — and both inflate every rate for this club, which is
+    // the direction that reads as form rather than as a defect.
+    //
+    // Falling short is NOT refused: it is caRtola not recording a fixture, and
+    // the rates are now right about it because the denominator followed. It is
+    // reported instead, because a club described on fewer matches than it
+    // played is worth knowing about and may be recoverable on a later sync.
+    const played = playedThrough(entry.clubCode, rounds);
+    if (entry.matches > played) {
+      throw new Error(
+        `${name}'s counters cover ${entry.matches} matches but the seed records only ` +
+          `${played} played in rounds 1..${rounds}. Sync the seed first, or a transfer ` +
+          `has been read as a step in jogos_num.`,
+      );
+    }
+    if (entry.matches < played) short.push(`${name} ${entry.matches}/${played}`);
     for (const field of Object.values(COUNTERS)) {
       const value = entry[field];
       if (!Number.isInteger(value) || value < 0) {
@@ -448,10 +532,18 @@ function validate(
     seedGoals += goalsForThrough(entry.clubCode, rounds);
   }
 
+  console.log(
+    short.length === 0
+      ? `Coverage: every club's counters cover all ${rounds} rodadas.`
+      : `Coverage: ${short.length} club(s) short of the fixture list — ${short.join(", ")}. ` +
+          `Rates divide by what is covered, so they are right; the source has not ` +
+          `recorded those matches.`,
+  );
+
   const shortfall = seedGoals === 0 ? 0 : (seedGoals - scoutGoals) / seedGoals;
   console.log(
     `Goals: ${scoutGoals} counted against ${seedGoals} in the seed ` +
-      `(${(100 * shortfall).toFixed(1)}% short — own goals and departed players).`,
+      `(${(100 * shortfall).toFixed(1)}% short — own goals, and matches the source never recorded).`,
   );
   if (shortfall < -0.02 || shortfall > 0.15) {
     throw new Error(
@@ -606,10 +698,18 @@ function write(
  * workstation and committed; production never fetches caRtola, exactly as it
  * never fetches CBF.
  *
- * \`matches\` is the number of finished matches these counters cover, and is
- * **not** a club's \`played\` in the live table: the source is weekly, so by
- * Saturday the table holds a round these figures do not. Dividing by the live
- * count understates every rate by exactly the amount that reads as a form dip.
+ * \`matches\` is the number of finished matches these counters actually cover,
+ * read from the source's own per-player \`jogos_num\`. It is **not** a club's
+ * \`played\` in the live table — the source is weekly, so by Saturday the table
+ * holds a round these figures do not, and dividing by the live count
+ * understates every rate by the amount that reads as a form dip.
+ *
+ * It is **not the fixture list either, and may sit below it**: caRtola does not
+ * always record a match at all. 13 of the 20 clubs are short in 2026, Botafogo
+ * by three. Dividing by what was played rather than by what was counted put
+ * Athletico-PR at 8,8 finalizações a game (17º de 20) where the covered matches
+ * give 9,5 (12º). A club well short of its fixtures is described on a smaller
+ * sample than the division around it — the rate is right, the sample is thinner.
  *
  * Stale by construction, like \`rank-history.ts\`. Regenerate after a
  * \`sync-seed-data\` run, or when caRtola publishes a further rodada.
@@ -684,7 +784,9 @@ function writeHistory(
  * absorbs it.
  *
  * The rodada is the **array index** — index 0 is rodada 1 — and the tuple is
- * \`[matches, goals, shotsSaved, shotsOff, shotsWoodwork, saves]\`, which
+ * \`[matches, goals, shotsSaved, shotsOff, shotsWoodwork, saves]\`, where
+ * \`matches\` is what the counters **cover** through that rodada rather than what
+ * the fixture list says was played, and so does not always step by one. Which
  * \`ScoutHistoryEntry\` states and \`tsc\` holds. Only the counters the Perfil
  * scatters draw are carried; see that type for why.
  *

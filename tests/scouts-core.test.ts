@@ -475,16 +475,31 @@ test("the counters never reach further than the seed that measured them", () => 
   );
 });
 
-test("each club's match count is the seed's own, at the round the counters cover", () => {
-  // The other direction, and the one the gate above cannot see: the seed moves
-  // on and nobody re-runs the sync. `rank-history.ts` states that rule in prose
-  // for itself; this is the same rule with something behind it.
+test("no club's match count exceeds the seed's own, at the round the counters cover", () => {
+  // **This was an EQUALITY, and what it gave up is worth naming rather than
+  // quietly relaxing.** `matches` is now what the counters *cover*, read from
+  // caRtola's own `jogos_num`, because the source does not always record a
+  // match at all — 13 of the 20 clubs are short in 2026, Botafogo by three — so
+  // equality is no longer the correct state and asserting it fails on correct
+  // data.
   //
-  // Note it does NOT cover the sync-against-a-lagging-seed case, because there
-  // both sides read the same lagging seed and agree with each other. That is
-  // what the test above and the script's own refusal are for. Saying so here
-  // because two data tests in one file read as belt and braces, and these two
-  // catch opposite faults.
+  // Still caught: coverage ABOVE the fixture list. That is a stale seed, or a
+  // transfer read as an appearance, and it inflates every rate for the club —
+  // the direction that reads as form rather than as a defect.
+  //
+  // No longer caught: the seed moving on while nobody re-runs the sync — a
+  // fixture inside rounds 1..N that was POSTPONED when the counters were read
+  // and has since been played, which used to break the equality. That costs
+  // less than it did. Under the old derivation the denominator counted a match
+  // the numerators did not, so every rate was wrong; now both sides are behind
+  // together and the file is merely stale, which its own header already
+  // declares it to be.
+  //
+  // The sync refuses the same direction at write time, and
+  // `tests/club-scouts-history.test.ts` asserts this bound per rodada as well
+  // as the invariant that caught the original fault — a rodada counting a match
+  // with no action behind it. Saying so because three data gates across two
+  // files read as belt and braces, and they catch different faults.
   for (const entry of CLUB_SCOUTS) {
     const played = SEED_MATCHES.filter(
       (match) =>
@@ -494,7 +509,10 @@ test("each club's match count is the seed's own, at the round the counters cover
         match.awayGoals !== null &&
         (match.homeCode === entry.clubCode || match.awayCode === entry.clubCode),
     ).length;
-    assert.equal(entry.matches, played, `${entry.clubCode} counts ${entry.matches}, seed says ${played}`);
+    assert.ok(
+      entry.matches <= played,
+      `${entry.clubCode} counts ${entry.matches}, seed says only ${played} were played`,
+    );
   }
 });
 
