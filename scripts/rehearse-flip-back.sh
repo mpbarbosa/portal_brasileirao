@@ -154,7 +154,10 @@ make_release() {   # <dir> <GOOD|BAD> <sha> [npm-fails]
     echo "asset-$sha" > "$dir/dist/index.html"
     printf '{"name":"portal","sha":"%s","npmFails": %s}\n' "$sha" "$npmfails" > "$dir/package.json"
     printf '{"lockfileVersion":3,"sha":"%s"}\n' "$sha" > "$dir/package-lock.json"
-    cp "$REPO/shell_scripts"/*.sh "$dir/shell_scripts/"
+    # The whole directory, as CI tars it — `blocklist.txt` rides beside the
+    # scripts, and a fixture of executables only cannot see a release that
+    # drops the data files.
+    cp "$REPO/shell_scripts"/* "$dir/shell_scripts/"
     find "$dir" -exec touch -d "2026-08-27 12:00:$(printf '%02d' $((RELEASE_SEQ % 60)))" {} +
 }
 

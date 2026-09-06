@@ -106,7 +106,13 @@ cp "$STAGING/package.json" "$STAGING/package-lock.json" "$DEPLOY_DIR/"
 # Ship the scripts with the release so the host always runs the version that
 # matches the payload it just received.
 mkdir -p "$DEPLOY_DIR/shell_scripts"
-cp "$STAGING"/shell_scripts/*.sh "$DEPLOY_DIR/shell_scripts/"
+# Everything CI packaged, not only *.sh. The directory carries DATA as well as
+# executables — `blocklist.txt`, which `15_install_blocklist.sh` reads from
+# beside itself and refuses to run without. Installing the script and not its
+# list left that script unrunnable on the host while its own Prerequisites said
+# the list "travels inside the release tarball", which was true of the tarball
+# and false of this copy. chmod stays on *.sh: a data file is not executable.
+cp "$STAGING"/shell_scripts/* "$DEPLOY_DIR/shell_scripts/"
 chmod +x "$DEPLOY_DIR"/shell_scripts/*.sh
 
 # A first-ever deploy legitimately has no service unit:
