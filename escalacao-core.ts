@@ -182,6 +182,78 @@ export const bySection = (lineup: Lineup): { starters: LineupPlayer[]; bench: Li
 };
 
 /**
+ * Which shirt to print beside each half of a substitution row — `null` where
+ * the name already identifies somebody and a number would be noise.
+ *
+ * **The rule is "print the number only where the name is shared", and it is
+ * conditional for the reason `playerPositionLabel` returns null under a heading
+ * that has already said the position.** 2328 substitution rows are recorded and
+ * **11** name a player with a namesake on his own sheet; putting a number on the
+ * other 2317 costs the tight minute column its room to say `Intervalo` and tells
+ * a reader nothing the sheet above has not.
+ *
+ * **The stored shirt wins, and the narrowing below only answers in its
+ * absence.** These are not two answers competing: `Substitution.onShirt` is what
+ * the súmula was joined on and is authoritative, while this reads the sheet to
+ * recover what a pre-`onShirt` sync discarded. Once `src/data/escalacoes.ts` is
+ * regenerated the fallback stops being reachable for those fixtures, and it may
+ * be deleted the day no committed row lacks the field.
+ *
+ * **The narrowing is a law of the game, not a heuristic** — the same one
+ * `sideForRow` already uses to separate two sides fielding one pair of numbers.
+ * A player coming on cannot have been on the pitch, so among namesakes the one
+ * entering is whoever is not currently playing; a player going off must be. Note
+ * the asymmetry, which is the trap: `off` is a *starter* only for a side's first
+ * change, since a substitute can himself be substituted, so this tracks who is on
+ * the pitch rather than testing `starter`.
+ *
+ * **It is deliberately incomplete, and measured rather than assumed: it answers
+ * 9 of those 11 rows and cannot answer 2.** Both are Mirassol bringing on a
+ * Carlos Eduardo while the *other* Carlos Eduardo is also on the bench — two
+ * candidates, no law to separate them, and guessing would print a specific wrong
+ * number where a missing one is merely silent. Those two rows keep rendering
+ * exactly as they do now, which is legible and only ambiguous; the row this was
+ * written for — Athletico-PR's `Gilberto por Gilberto`, one namesake starting and
+ * one on the bench — resolves.
+ */
+export const subShirtLabels = (
+  lineup: Lineup,
+): { on: string | null; off: string | null }[] => {
+  const namesakes = new Map<string, number>();
+  for (const player of lineup.players) {
+    namesakes.set(player.name, (namesakes.get(player.name) ?? 0) + 1);
+  }
+  const shared = (name: string) => (namesakes.get(name) ?? 0) > 1;
+  const only = (players: LineupPlayer[]) => (players.length === 1 ? players[0].shirt : null);
+
+  const onPitch = new Set(lineup.players.filter((p) => p.starter).map((p) => p.shirt));
+  const alreadyOn = new Set<string>();
+
+  return (lineup.subs ?? []).map((sub) => {
+    const onShirt =
+      sub.onShirt ??
+      only(
+        lineup.players.filter(
+          (p) => p.name === sub.on && !onPitch.has(p.shirt) && !alreadyOn.has(p.shirt),
+        ),
+      );
+    const offShirt =
+      sub.offShirt ?? only(lineup.players.filter((p) => p.name === sub.off && onPitch.has(p.shirt)));
+
+    if (offShirt) onPitch.delete(offShirt);
+    if (onShirt) {
+      onPitch.add(onShirt);
+      alreadyOn.add(onShirt);
+    }
+
+    return {
+      on: shared(sub.on) ? onShirt : null,
+      off: shared(sub.off) ? offShirt : null,
+    };
+  });
+};
+
+/**
  * Attach the súmula's substitutions to the lineups they belong to.
  *
  * **Two sources, joined on the shirt number, and neither alone would do.** The
@@ -308,7 +380,16 @@ export const attachSubstitutions = (
     if (!on || !off) return null;
 
     const list = placed.get(code) ?? [];
-    list.push({ on, off, minute: sumulaSubstitutionLabel(sub) });
+    // The shirts are carried through rather than dropped. They are how this row
+    // was joined in the first place — unique on a sheet where the name is not —
+    // and `subShirtLabels` needs them to tell two namesakes apart on the page.
+    list.push({
+      on,
+      off,
+      onShirt: sub.onShirt,
+      offShirt: sub.offShirt,
+      minute: sumulaSubstitutionLabel(sub),
+    });
     placed.set(code, list);
   }
 

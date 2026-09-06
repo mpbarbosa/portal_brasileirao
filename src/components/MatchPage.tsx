@@ -6,7 +6,7 @@ import {
   refereeRoleLabel,
 } from "@/match-core";
 import { goalLabel, goalsBySide, scorerClubCode } from "@/goals-core";
-import { bySection, lineupFor } from "@/escalacao-core";
+import { bySection, lineupFor, subShirtLabels } from "@/escalacao-core";
 import { stadiumMapUrl, stadiumSlug, venueName } from "@/venue-core";
 import { STADIUMS } from "@/src/data/stadiums";
 import { BroadcasterMark } from "@/src/components/BroadcasterMark";
@@ -181,6 +181,9 @@ function Side({ club, code, onNavigate }: { club: Club | null; code: string; onN
  */
 function LineupColumn({ lineup, name }: { lineup: Lineup; name: string }) {
   const { starters, bench } = bySection(lineup);
+  // Only ever non-null where the elenco has two players of one name, so this is
+  // an empty answer on all but 11 of the season's 2328 rows. See its own note.
+  const shirts = subShirtLabels(lineup);
   const row = (player: { name: string; shirt: string; keeper?: true }) => (
     <li key={`${player.shirt}-${player.name}`} className="flex gap-2">
       <span className="w-6 shrink-0 text-right tabular-nums text-ink-faint">{player.shirt}</span>
@@ -242,7 +245,19 @@ function LineupColumn({ lineup, name }: { lineup: Lineup; name: string }) {
               >
                 <span className="text-right tabular-nums text-ink-faint">{sub.minute}</span>
                 <span className="truncate">
-                  {sub.on} <span className="text-ink-faint">por {sub.off}</span>
+                  {/* The number goes INSIDE the truncating span rather than in a
+                      column of its own: it appears on 11 rows of 2328, and a
+                      third grid track would indent every other row to reserve
+                      room for a mark that is not there. It reads as the sheet
+                      above reads — number, then name. */}
+                  {shirts[index]?.on && (
+                    <span className="tabular-nums text-ink-faint">{shirts[index].on} </span>
+                  )}
+                  {sub.on}{" "}
+                  <span className="text-ink-faint">
+                    por {shirts[index]?.off && <span className="tabular-nums">{shirts[index].off} </span>}
+                    {sub.off}
+                  </span>
                 </span>
               </li>
             ))}

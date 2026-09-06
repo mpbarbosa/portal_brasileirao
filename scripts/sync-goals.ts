@@ -724,7 +724,18 @@ ${lineupIds
                 lineup.subs
                   .map(
                     (sub) =>
-                      `        { on: ${JSON.stringify(sub.on)}, off: ${JSON.stringify(sub.off)}, ` +
+                      // The shirts are written where `attachSubstitutions` resolved
+                      // them, and omitted where it could not — the rule the players
+                      // above follow for `keeper`/`starter`. Enumerating the fields
+                      // here is why this line had to change at all: adding
+                      // `onShirt` to the type left the writer emitting the three it
+                      // already knew, so a resync would have produced a file
+                      // identical to the one it replaced and the new field would
+                      // have looked broken rather than unwritten.
+                      `        { on: ${JSON.stringify(sub.on)}, ` +
+                      (sub.onShirt ? `onShirt: ${JSON.stringify(sub.onShirt)}, ` : "") +
+                      `off: ${JSON.stringify(sub.off)}, ` +
+                      (sub.offShirt ? `offShirt: ${JSON.stringify(sub.offShirt)}, ` : "") +
                       `minute: ${JSON.stringify(sub.minute)} },`,
                   )
                   .join("\n") +

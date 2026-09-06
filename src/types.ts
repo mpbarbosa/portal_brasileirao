@@ -363,10 +363,28 @@ export interface LineupPlayer {
  * reason `Goal.minute` is one: CBF's clock conventions, including that a
  * half-time substitution has no minute at all, belong in `sumula-core.ts` and
  * nowhere else.
+ *
+ * **`onShirt`/`offShirt` are the join, kept rather than discarded, and the
+ * paragraph above is why they had to be added back.** Names alone are what a
+ * reader wants *while the name identifies somebody*, and in five of this
+ * division's elencos it does not: Athletico-PR fields two Gilbertos, Mirassol
+ * two Carlos Eduardos, Cruzeiro two Williams, Botafogo two Arthurs and once
+ * three. So `attachSubstitutions` resolved r19/554928's 82nd minute correctly —
+ * camisa 12 off, camisa 2 on — and then printed **"Gilberto por Gilberto"**,
+ * which reads as a bug in a way the true fact does not.
+ *
+ * Optional because `src/data/escalacoes.ts` is **generated**: every one of the
+ * 243 fixtures committed before this field existed carries neither number, and
+ * a resync is 243 CBF requests at roughly one a second. `subShirtLabels` in
+ * `escalacao-core.ts` is what stands in meanwhile — read its own note for what
+ * that narrowing can and cannot answer, because the answer is *not* "all of
+ * it".
  */
 export interface Substitution {
   on: string;
   off: string;
+  onShirt?: string;
+  offShirt?: string;
   minute: string;
 }
 
