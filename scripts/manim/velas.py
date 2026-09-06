@@ -123,6 +123,7 @@ CLUB_COLOURS = {
     "1766": "#6E8894",  # Atlético-MG   cinza-azul
     "1770": "#98A3A8",  # Botafogo      cinza
     "4286": "#E058B8",  # Bragantino    magenta
+    "4241": "#8BD94F",  # Coritiba      verde-claro
 }
 FALLBACK_COLOUR = "#9AA5A0"
 
