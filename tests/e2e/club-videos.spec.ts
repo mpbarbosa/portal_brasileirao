@@ -84,12 +84,125 @@ test.describe("Vídeos do clube", () => {
     const thumb = page.locator("[data-club-video] img").first();
     const id = CLUB_VIDEOS[PALMEIRAS][0].id;
 
-    await expect(thumb).toHaveAttribute("src", `https://img.youtube.com/vi/${id}/hqdefault.jpg`);
+    // **`maxresdefault`, which is the one the rail asks for first** — 1280×720
+    // and native 16:9, where the `hqdefault` beneath it is 480×360 with the
+    // picture letterboxed. The card is capped at 416 CSS px, so this is about
+    // the reader's device pixels rather than the layout: a 3× phone is asking
+    // for nearly 1000 of them behind a card the fallback has 480 for.
+    await expect(thumb).toHaveAttribute(
+      "src",
+      `https://img.youtube.com/vi/${id}/maxresdefault.jpg`,
+    );
     // Below the fold on a club page, and `load` waits for eager images — the
     // failure mode the crest CDN produced across seven spec files.
     await expect(thumb).toHaveAttribute("loading", "lazy");
     // The link's text already names the video; an alt would read it twice.
     await expect(thumb).toHaveAttribute("alt", "");
+  });
+
+  test("a video with no HD thumbnail falls back rather than drawing a hole", async ({ page }) => {
+    // **This is the branch the suite's own stub hides.** `OFFLINE_HOSTS` in
+    // `tests/e2e/fixtures.ts` fulfils every `img.youtube.com` request with a
+    // 200 pixel, so `maxresdefault` never fails and the fallback never runs —
+    // the shape `CLAUDE.md` records for the `page.route` stub that passed
+    // against the bug it named. The 404 has to be routed deliberately, exactly
+    // as `crest-fallback.spec.ts` drives a 503 to reach the monogram.
+    //
+    // Registered after the fixture's route and therefore winning: Playwright
+    // matches handlers in reverse order of registration.
+    await page.route(/maxresdefault\.jpg/, (route) => route.fulfill({ status: 404 }));
+
+    await page.goto("/clube/palmeiras");
+
+    const thumb = page.locator("[data-club-video] img").first();
+    const id = CLUB_VIDEOS[PALMEIRAS][0].id;
+
+    // Not merely "some src": the fallback has to be *this video's* other size.
+    // A swap that lost the id would render a different video's picture under
+    // this one's title, which is the failure that looks like data rather than
+    // like a broken image.
+    await expect(thumb).toHaveAttribute(
+      "src",
+      `https://img.youtube.com/vi/${id}/hqdefault.jpg`,
+    );
+    // And the card is still a card — the frame keeps its box, so the fallback
+    // is a different picture rather than a collapsed row.
+    const box = await thumb.boundingBox();
+    expect(box).not.toBeNull();
+    expect(box!.height).toBeGreaterThan(50);
+  });
+
+  test("the card fills the column on a phone and is capped on a desktop", async ({ page }) => {
+    // **The cap is the half that is a decision.** Uncapped, the card is the
+    // full 736px content column, the thumbnail is 414px tall, and the card
+    // grows by about 320px — enough to push a section out of the Painel's
+    // 1080px screenshot crop. At 26rem it grows by about 135 and the page is
+    // the same page.
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await page.goto("/clube/palmeiras");
+
+    const card = page.locator("[data-club-video]").first();
+    await expect(card).toBeVisible();
+
+    const wide = await card.boundingBox();
+    expect(wide).not.toBeNull();
+    // 26rem at the default root size. Asserted as a ceiling rather than an
+    // equality, since what matters is that the column's surplus does not reach
+    // the card — the rule `CAMPAIGN_COLUMN` states one table over.
+    expect(wide!.width).toBeLessThanOrEqual(416 + 1);
+    // And it is not the 176 it was: a cap that happened to bind at the old
+    // width would pass the line above and change nothing.
+    expect(wide!.width).toBeGreaterThan(300);
+
+    // On a phone the cap never binds and the card is the column. Measured
+    // against the rail's own content box rather than the viewport, because the
+    // `ul` carries `-mx-1 px-1` and a viewport comparison would be asserting
+    // that arithmetic rather than the width.
+    await page.setViewportSize({ width: 360, height: 800 });
+    const narrow = await card.boundingBox();
+    const railWidth = await page
+      .getByRole("list", { name: /Vídeos sobre/ })
+      .evaluate((el) => el.clientWidth - parseFloat(getComputedStyle(el).paddingLeft) * 2);
+    expect(narrow).not.toBeNull();
+    expect(Math.abs(narrow!.width - railWidth)).toBeLessThanOrEqual(1);
+  });
+
+  test("the play badge keeps its share of the card as the card grows", async ({ page }) => {
+    // **This is the failure that already happened once, written down as a
+    // gate.** The card went from 176px to 416 and the badge stayed at 36 — it
+    // filled a fifth of the old card and a twelfth of the new one, and nothing
+    // anywhere went red, because a mark's size is not something a stylesheet
+    // can be wrong about. The badge is the whole affordance here: it is what
+    // says "video" without a word of copy, so a card that outgrows it is a card
+    // that has quietly stopped saying so.
+    //
+    // A **proportion** rather than a pixel count, because it is the ratio that
+    // rotted and the pixel count that was innocent. Asserted at the widest the
+    // card is ever drawn, which is where the ratio is smallest.
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await page.goto("/clube/palmeiras");
+
+    const card = page.locator("[data-club-video]").first();
+    await expect(card).toBeVisible();
+    // The disc, not the frame or the veil: it is the innermost span, and the
+    // one carrying the brand colour.
+    const badge = page.locator("[data-club-video] span span span").first();
+
+    const cardBox = await card.boundingBox();
+    const badgeBox = await badge.boundingBox();
+    expect(cardBox).not.toBeNull();
+    expect(badgeBox).not.toBeNull();
+
+    // 11.5% today. The floor is what a later widening has to clear, and it is
+    // set below the current value rather than at it so that a few pixels of
+    // layout drift is not a failure — what this refuses is a card that grows
+    // while the badge stands still.
+    const share = badgeBox!.width / cardBox!.width;
+    expect(share).toBeGreaterThan(0.1);
+    // Square, and actually drawn. A disc collapsed to nothing would satisfy a
+    // ratio test against a card that had collapsed with it.
+    expect(badgeBox!.width).toBeGreaterThanOrEqual(40);
+    expect(Math.abs(badgeBox!.width - badgeBox!.height)).toBeLessThanOrEqual(1);
   });
 
   test("a club with no curated video shows no heading at all", async ({ page }) => {

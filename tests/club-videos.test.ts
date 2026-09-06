@@ -1,7 +1,13 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { videoThumbnailUrl, videosFor, videoWatchUrl, youtubeVideoId } from "@/club-core";
+import {
+  videoThumbnailHdUrl,
+  videoThumbnailUrl,
+  videosFor,
+  videoWatchUrl,
+  youtubeVideoId,
+} from "@/club-core";
 import { CLUBS_BY_CODE } from "@/src/data/clubs";
 import { CLUB_VIDEOS } from "@/src/data/club-videos";
 
@@ -138,11 +144,33 @@ test("the watch and thumbnail addresses are built from the id alone", () => {
     videoThumbnailUrl("8Kr9MLphoEc"),
     "https://img.youtube.com/vi/8Kr9MLphoEc/hqdefault.jpg",
   );
-  // `maxresdefault` does not exist for every upload; `hqdefault` does. A rail
-  // drawing the first would show a broken image for whichever entry was shot
-  // below that resolution.
+  // **`videoThumbnailUrl` is the FALLBACK and its whole job is existing.**
+  // `maxresdefault` is not generated for every upload and 404s where it is
+  // absent, so this address has to stay the one YouTube makes for every video
+  // — the rail tries the HD one first and swaps back to this on `error`, which
+  // only works while this size is the safe one. Changing it to a larger size to
+  // "sharpen the fallback" removes the floor and leaves nothing beneath.
   assert.match(videoThumbnailUrl("8Kr9MLphoEc") ?? "", /hqdefault\.jpg$/);
   assert.equal(videoThumbnailUrl(undefined), null);
+
+  // The HD address, which the rail asks for first. Same id, same host, one
+  // path segment apart — asserted whole rather than by suffix, because the two
+  // functions differing anywhere *but* that segment would mean a card falling
+  // back to a different video's picture.
+  assert.equal(
+    videoThumbnailHdUrl("8Kr9MLphoEc"),
+    "https://img.youtube.com/vi/8Kr9MLphoEc/maxresdefault.jpg",
+  );
+  // Both sizes read the id through the same parser, so a pasted watch URL
+  // reaches both — the fallback swap happens on an `error` from a live CDN,
+  // where one of the pair having failed to parse would render as a card with no
+  // picture and no way back.
+  assert.equal(
+    videoThumbnailHdUrl("https://youtu.be/8Kr9MLphoEc?si=sZ_0UxqbDDeYER0a"),
+    "https://img.youtube.com/vi/8Kr9MLphoEc/maxresdefault.jpg",
+  );
+  assert.equal(videoThumbnailHdUrl(undefined), null);
+  assert.equal(videoThumbnailHdUrl("curto"), null);
   // **"not-a-video" is a well-formed YouTube id** — eleven characters, all of
   // them in the URL-safe alphabet — and it was this file's first attempt at an
   // invalid one. A fixture that looks wrong to a person and is right to the
