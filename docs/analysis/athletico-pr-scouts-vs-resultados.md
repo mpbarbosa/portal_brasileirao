@@ -177,9 +177,9 @@ Unbeaten at home; all five defeats away, on 40% less volume.
 ## Reading it
 
 This is consistent with the club's own Perfil identity — **below-median volume,
-top-five conversão** (17º/4º de 20 as shipped at the data named above; 12º/4º
-once [#390](https://github.com/mpbarbosa/portal_brasileirao/pull/390) lands, for
-the denominator reason below) — and gives it a direction: **a side whose season
+top-five conversão** (17º/4º de 20 in the data named
+above; 12º/4º since [#390](https://github.com/mpbarbosa/portal_brasileirao/pull/390)
+merged as `132fce2`, for the denominator reason below) — and gives it a direction: **a side whose season
 turns on the finishing rather than on chance creation, and which drops points
 precisely in the matches it dominates.** The volume rank moves with that fix and
 the argument does not: every per-match figure here is a counter difference, and
@@ -218,8 +218,10 @@ matches give 23 — **8,8 a game reported against 9,5, and 17º de 20 against 12
 — with 13 of the 20 clubs affected.
 
 Filed as [#385](https://github.com/mpbarbosa/portal_brasileirao/issues/385) and
-fixed in [#390](https://github.com/mpbarbosa/portal_brasileirao/pull/390), which
-reads the denominator from caRtola's own `jogos_num`. **This report's per-match
+fixed in [#390](https://github.com/mpbarbosa/portal_brasileirao/pull/390), merged
+as `132fce2` on 2026-09-06, which reads the denominator from caRtola's own
+`jogos_num`. **The data this report names predates that merge** — the provenance
+above is unchanged and deliberately so. **This report's per-match
 figures are unaffected by that fix** — they come from counter *differences* and
 never touch the denominator — and were re-derived identically before and after
 it. Only the card's own reading changes: 8,8 / 17º before, 9,5 / 12º after.
