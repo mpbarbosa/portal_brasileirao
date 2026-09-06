@@ -9,6 +9,18 @@ a day, not a claim about today — the same bargain `docs/perfil-ataque.md` make
 and for the same reason. Where this document and the page disagree, the page is
 right and this is older.
 
+> **Corrected 2026-09-06.** One figure here was wrong rather than overtaken, so
+> it was amended in place: the post-fix rank read **12º de 20** and is **14º**.
+> The frozen rule above governs readings the world has moved past — it is not a
+> licence to leave arithmetic that was never right. Nothing else changed; the
+> per-match table, the correlations and every rate are as first published.
+>
+> The error was a **mixed reading**: the new rank was computed with Athletico's
+> denominator corrected and the other nineteen clubs still on their old ones.
+> The fix raises thirteen clubs' rates, so the club climbs three places, not
+> five. 14º was read back off the bytes production serves — 219/23 = 9,5217,
+> thirteen clubs strictly above, an exact tie with Chapecoense on 219/23.
+
 ## The question
 
 The Perfil on the Painel reports six season rates for a club, read against the
@@ -178,7 +190,7 @@ Unbeaten at home; all five defeats away, on 40% less volume.
 
 This is consistent with the club's own Perfil identity — **below-median volume,
 top-five conversão** (17º/4º de 20 in the data named
-above; 12º/4º since [#390](https://github.com/mpbarbosa/portal_brasileirao/pull/390)
+above; 14º/4º since [#390](https://github.com/mpbarbosa/portal_brasileirao/pull/390)
 merged as `132fce2`, for the denominator reason below) — and gives it a direction: **a side whose season
 turns on the finishing rather than on chance creation, and which drops points
 precisely in the matches it dominates.** The volume rank moves with that fix and
@@ -214,7 +226,7 @@ front of a beaten goleiro reads *lower* than the pressure on it was — the cave
 Establishing the exclusion above surfaced a real defect: `ClubScouts.matches`
 was the **fixture count**, while the counters did not always cover those
 fixtures. Athletico-PR's 219 finalizações were divided by 25 where the covered
-matches give 23 — **8,8 a game reported against 9,5, and 17º de 20 against 12º**
+matches give 23 — **8,8 a game reported against 9,5, and 17º de 20 against 14º**
 — with 13 of the 20 clubs affected.
 
 Filed as [#385](https://github.com/mpbarbosa/portal_brasileirao/issues/385) and
@@ -224,7 +236,8 @@ as `132fce2` on 2026-09-06, which reads the denominator from caRtola's own
 above is unchanged and deliberately so. **This report's per-match
 figures are unaffected by that fix** — they come from counter *differences* and
 never touch the denominator — and were re-derived identically before and after
-it. Only the card's own reading changes: 8,8 / 17º before, 9,5 / 12º after.
+it. Only the card's own reading changes: 8,8 / 17º before, 9,5 / 14º after — and
+that second rank is corrected, per the note at the head of this document.
 
 ## Reproducing
 

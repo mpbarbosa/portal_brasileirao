@@ -111,7 +111,7 @@ test("the last rodada of the history reproduces the season aggregate", () => {
  * and both were confirmed RED against the file as it stood before the
  * derivation changed: Athletico-PR's rodadas 2 and 5 each counted a match with
  * no action whatever behind it, which is what put its finalizações at 8,8 a
- * game (17º de 20) where the covered matches give 9,5 (12º).
+ * game (17º de 20) where the covered matches give 9,5 (14º).
  */
 
 test("a rodada that counts another match shows that match's actions", () => {
