@@ -13,32 +13,44 @@
 #
 # The regeneration is four commands and is written out in scripts/manim/README.md.
 
-campanhas-palmeiras-flamengo.mp4                    2026-09-02
-campanhas-palmeiras-flamengo.gif                    2026-09-02
-campanhas-palmeiras-flamengo-miniatura.png          2026-09-02
-campanhas-palmeiras-flamengo-miniatura-11-ao-1.png  2026-09-02
-campanhas-palmeiras-flamengo-youtube.md             2026-09-02
-pontos-20-clubes.mp4                                2026-09-02
-pontos-20-clubes.gif                                2026-09-02
-pontos-20-clubes-miniatura.png                      2026-09-02
-pontos-20-clubes-miniatura-38-pontos.png            2026-09-02
-velas-bahia.mp4                                     2026-09-02
-velas-bahia.gif                                     2026-09-02
-velas-bahia-miniatura.png                           2026-09-02
-velas-bahia-youtube.md                              2026-09-02
-velas-athletico-pr.mp4                              2026-09-02
-velas-athletico-pr.gif                              2026-09-02
-velas-athletico-pr-miniatura.png                    2026-09-02
-velas-athletico-pr-youtube.md                       2026-09-02
-velas-fluminense.mp4                                2026-09-02
-velas-fluminense.gif                                2026-09-02
-velas-fluminense-miniatura.png                      2026-09-02
-velas-fluminense-youtube.md                         2026-09-02
-cruzeiro/velas-cruzeiro.mp4                         2026-09-02
-cruzeiro/velas-cruzeiro.gif                         2026-09-02
-cruzeiro/velas-cruzeiro-youtube.md                  2026-09-02
-cruzeiro/velas-cruzeiro-miniatura.png               2026-09-02
-palmeiras/velas-palmeiras.mp4                       2026-09-02
-palmeiras/velas-palmeiras.gif                       2026-09-02
-palmeiras/velas-palmeiras-miniatura.png             2026-09-02
-palmeiras/velas-palmeiras-youtube.md                2026-09-02
+# As duas linhas `-mao` sao ARQUIVO HISTORICO e nao podem ser redesenhadas. Sao
+# as capas desenhadas a mao que o `94c30b3` substituiu ao promover o gerador; a
+# diferenca e a faixa do G4, que estas pintam no verde do Palmeiras e as geradas
+# pintam no `POSITIVE` da cena — a faixa significa o G4, nao um dos dois clubes.
+# Ficam PLANAS como o resto do `campanhas`, que e de dois clubes; o `palmeiras/`
+# so faz alias do entregavel e um arquivo historico nao e entregavel.
+# O `thumbnail.ts` escreve os nomes SEM `-mao`, entao no proximo
+# `sync-seed-data` estas duas linhas ficam vermelhas e a saida honesta e APAGAR
+# os dois arquivos, nunca escrever uma data nova sobre elas.
+
+campanhas-palmeiras-flamengo.mp4                        2026-09-02
+campanhas-palmeiras-flamengo.gif                        2026-09-02
+campanhas-palmeiras-flamengo-miniatura.png              2026-09-02
+campanhas-palmeiras-flamengo-miniatura-mao.png          2026-09-02
+campanhas-palmeiras-flamengo-miniatura-11-ao-1.png      2026-09-02
+campanhas-palmeiras-flamengo-miniatura-11-ao-1-mao.png  2026-09-02
+campanhas-palmeiras-flamengo-youtube.md                 2026-09-02
+pontos-20-clubes.mp4                                    2026-09-02
+pontos-20-clubes.gif                                    2026-09-02
+pontos-20-clubes-miniatura.png                          2026-09-02
+pontos-20-clubes-miniatura-38-pontos.png                2026-09-02
+velas-bahia.mp4                                         2026-09-02
+velas-bahia.gif                                         2026-09-02
+velas-bahia-miniatura.png                               2026-09-02
+velas-bahia-youtube.md                                  2026-09-02
+velas-athletico-pr.mp4                                  2026-09-02
+velas-athletico-pr.gif                                  2026-09-02
+velas-athletico-pr-miniatura.png                        2026-09-02
+velas-athletico-pr-youtube.md                           2026-09-02
+velas-fluminense.mp4                                    2026-09-02
+velas-fluminense.gif                                    2026-09-02
+velas-fluminense-miniatura.png                          2026-09-02
+velas-fluminense-youtube.md                             2026-09-02
+cruzeiro/velas-cruzeiro.mp4                             2026-09-02
+cruzeiro/velas-cruzeiro.gif                             2026-09-02
+cruzeiro/velas-cruzeiro-youtube.md                      2026-09-02
+cruzeiro/velas-cruzeiro-miniatura.png                   2026-09-02
+palmeiras/velas-palmeiras.mp4                           2026-09-02
+palmeiras/velas-palmeiras.gif                           2026-09-02
+palmeiras/velas-palmeiras-miniatura.png                 2026-09-02
+palmeiras/velas-palmeiras-youtube.md                    2026-09-02
