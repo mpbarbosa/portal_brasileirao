@@ -119,6 +119,25 @@ export function ClubVideos({ videos, clubName }: { videos: ClubVideo[]; clubName
                       list's label already says where it goes, so an announced
                       mark would read the destination a third time.
 
+                      **The disc is 48px and that was read off the picture
+                      rather than derived.** It was 36 — right when the card was
+                      176 wide, where it filled a fifth of it, and adrift once
+                      the card became 416, where it filled a twelfth. Four
+                      sizes were drawn over the real thumbnail and looked at:
+                      36 reads as small, 56 covers the campanha's own line — it
+                      is a drawing under there, not a photograph, so a badge
+                      that overlaps it hides the thing the video is about — and
+                      48 sits in the gap between the wordmark and the chart at
+                      both widths, 11.5% of the desktop card and 14.6% of the
+                      phone's.
+
+                      **It is deliberately one size rather than a `sm:` pair.**
+                      The card reaches its 26rem cap at a viewport of about 448
+                      and the `sm` breakpoint is 640, so a responsive pair would
+                      draw the small badge on a card already at full width for
+                      almost 200px of viewport — the "wrong at every width
+                      between them" the card's own width note refuses.
+
                       **The veil does not change on hover, and that is the token
                       gate's doing rather than a preference.** Lightening it was
                       the first draft and `design-tokens-core.test.ts` refused
@@ -133,7 +152,7 @@ export function ClubVideos({ videos, clubName }: { videos: ClubVideo[]; clubName
                     aria-hidden="true"
                     className="absolute inset-0 flex items-center justify-center bg-scrim/25"
                   >
-                    <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[#ff0000] transition group-hover:scale-110">
+                    <span className="flex h-12 w-12 items-center justify-center rounded-full bg-[#ff0000] transition group-hover:scale-110">
                       {/* YouTube's own red is a brand colour and deliberately
                           not a token: it is not this app's palette speaking,
                           and putting it in `index.css` would offer it to
@@ -142,7 +161,7 @@ export function ClubVideos({ videos, clubName }: { videos: ClubVideo[]; clubName
                           `plate`. It sits on artwork rather than on a themed
                           surface, so no contrast pairing changes with the
                           theme. */}
-                      <svg viewBox="0 0 24 24" className="h-4 w-4 translate-x-px fill-white">
+                      <svg viewBox="0 0 24 24" className="h-5 w-5 translate-x-px fill-white">
                         <path d="M8 5v14l11-7z" />
                       </svg>
                     </span>

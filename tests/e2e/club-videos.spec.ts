@@ -167,6 +167,44 @@ test.describe("Vídeos do clube", () => {
     expect(Math.abs(narrow!.width - railWidth)).toBeLessThanOrEqual(1);
   });
 
+  test("the play badge keeps its share of the card as the card grows", async ({ page }) => {
+    // **This is the failure that already happened once, written down as a
+    // gate.** The card went from 176px to 416 and the badge stayed at 36 — it
+    // filled a fifth of the old card and a twelfth of the new one, and nothing
+    // anywhere went red, because a mark's size is not something a stylesheet
+    // can be wrong about. The badge is the whole affordance here: it is what
+    // says "video" without a word of copy, so a card that outgrows it is a card
+    // that has quietly stopped saying so.
+    //
+    // A **proportion** rather than a pixel count, because it is the ratio that
+    // rotted and the pixel count that was innocent. Asserted at the widest the
+    // card is ever drawn, which is where the ratio is smallest.
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await page.goto("/clube/palmeiras");
+
+    const card = page.locator("[data-club-video]").first();
+    await expect(card).toBeVisible();
+    // The disc, not the frame or the veil: it is the innermost span, and the
+    // one carrying the brand colour.
+    const badge = page.locator("[data-club-video] span span span").first();
+
+    const cardBox = await card.boundingBox();
+    const badgeBox = await badge.boundingBox();
+    expect(cardBox).not.toBeNull();
+    expect(badgeBox).not.toBeNull();
+
+    // 11.5% today. The floor is what a later widening has to clear, and it is
+    // set below the current value rather than at it so that a few pixels of
+    // layout drift is not a failure — what this refuses is a card that grows
+    // while the badge stands still.
+    const share = badgeBox!.width / cardBox!.width;
+    expect(share).toBeGreaterThan(0.1);
+    // Square, and actually drawn. A disc collapsed to nothing would satisfy a
+    // ratio test against a card that had collapsed with it.
+    expect(badgeBox!.width).toBeGreaterThanOrEqual(40);
+    expect(Math.abs(badgeBox!.width - badgeBox!.height)).toBeLessThanOrEqual(1);
+  });
+
   test("a club with no curated video shows no heading at all", async ({ page }) => {
     // Not an empty section: `CONTEXT.md` avoids "a heading over a club with no
     // entries" for this page the way **Onde acompanhar** avoids it on the card.
