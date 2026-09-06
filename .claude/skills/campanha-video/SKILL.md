@@ -45,7 +45,8 @@ A video is not one file. Every scene render owes:
 | Artefact | Obligatory? | Why |
 |---|---|---|
 | `docs/medias/<name>.mp4` | yes | 1920×1080 60fps, the deliverable |
-| `docs/medias/<name>.gif` | yes | 960×540 15fps, derived from the committed mp4 — plays by itself in a README, an issue, a chat or a Reddit feed that will not open a player |
+| `docs/medias/<name>-45.mp4` | only for Instagram | 1080×1350 60fps, `VELAS_ASPECT=4:5` on `velas.py` — a **second cut of the same scene**, not a second scene, and the 16:9 comes out byte-identical with the variable unset. Feed and not Reels: the feed overlays nothing on the media. See the README under **O corte 4:5** |
+| `docs/medias/<name>.gif` | yes, **except beside a `-45.mp4`** | 960×540 15fps, derived from the committed mp4 — plays by itself in a README, an issue, a chat or a Reddit feed that will not open a player |
 | `docs/medias/<name>-youtube.md` | before uploading | título, descrição and tags with their measured character counts; the copy existed only in a session transcript before this file did |
 | `docs/medias/RENDERED` line | yes, per artefact | `tests/manim-renders.test.ts` names each file in both directions |
 | a capa (`-miniatura*.png`) | only where the first seconds are empty | the two older videos have them; **the velas ones deliberately do not** — see the README |
