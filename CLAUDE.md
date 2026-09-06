@@ -4286,6 +4286,26 @@ Rules that follow from that:
 - `getByText("...")` is case-insensitive substring matching by default. A bare
   `getByText("Ao vivo")` also matches the banner's "…para dados ao vivo". Scope the
   locator and pass `exact: true`.
+- **`expect.poll(...).toBeNull()` cannot fail on a slow write, and cannot pass on a
+  fast one.** Polling returns the moment the matcher is satisfied, so polling for an
+  *absence* is satisfied by the **first** read — it asserts "I read before anything
+  arrived", which is a property of how busy the machine is. `contas-preferencias.spec.ts`
+  ended a test that way and it was **green in CI, red in a full local run, and green in
+  isolation on both** from the day it was written (`a9521f1`, 2026-08-27) until
+  2026-09-05. Measured with a probe, one run: the first read
+  answered `null`, the write it was racing landed **94 ms** later, and a read 1.5 s on
+  answered `"1769"`. Polling is right for waiting for a value to *appear* — the three
+  uses above it in that same file do exactly that and are sound. To assert one never
+  does, remove the writer instead of out-running it: that test now asks a **fresh
+  `browser.newContext()`**, a device holding no `localStorage` copy to seed from, where
+  `null` is a settled end state rather than an instant before a PUT. It also asserts no
+  PUT was issued, which is the half that makes the null mean something.
+  **The behaviour it was fighting was correct**, and that is the trap under the trap: an
+  account deletion leaves the device's own club alone (`docs/accounts.md` §3.15 — a club
+  id is cleared only when the reader clears it, `localStorage` copy included), so signing
+  back in re-seeds the new account through `planSync`, exactly as a first-ever sign-in
+  does. Read a spec that only fails under load as a question about **what the spec
+  claims**, not only about timing.
 - **`page.route` fulfilment completes Playwright's own request accounting, so a stub
   cannot reproduce a failure whose nature is that the accounting never completes.**
   `useAccount` returned on a 404 without reading the response body; Chromium held the

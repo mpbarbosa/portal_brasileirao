@@ -165,20 +165,69 @@ test.describe("Meu time com conta", () => {
     expect(calls).toEqual([]);
   });
 
-  test("deleting the account takes the stored club with it", async ({ page }) => {
+  test("deleting the account takes the stored club with it", async ({ page, browser }) => {
     await devLogin(page, "sub-delete");
     await page.goto("/clube/palmeiras");
     await followControl(page).click();
+
+    // The account really holds it, so that deleting it is deleting something.
+    // Without this the assertion at the foot of the test could pass over an
+    // account that was empty all along.
+    await expect.poll(() => me(page).then((it) => it?.preferences.club)).toBeTruthy();
 
     await page.goto("/conta");
     await page.locator("[data-delete-account]").click();
     await page.locator("[data-confirm-delete]").click();
     await expect(page.locator("[data-account]")).toHaveAttribute("data-account", "signed-out");
 
-    // Signing in again as the same person is a new account with nothing in it.
-    await devLogin(page, "sub-delete");
+    // The device keeps its own club, which is `docs/accounts.md` §3.15 — a club
+    // id is cleared only when the reader clears it, and that applies to the
+    // `localStorage` copy identically. Deleting an account is not that. Stated
+    // here rather than left implicit because it is the fact the rest of this
+    // test is arranged around.
     await page.goto("/");
-    await expect.poll(() => me(page).then((it) => it?.preferences.club ?? null)).toBeNull();
+    await expect(strip(page)).toContainText("Palmeiras");
+
+    // So: signing in again as the same person is a new account with nothing in
+    // it — and the question has to be asked from a device that has never
+    // chosen a club. **Never from `page`.** This browser still holds Palmeiras,
+    // so `planSync` seeds the fresh account from it within a few hundred
+    // milliseconds of the next load, and a read taken there measures whether it
+    // beat that upload rather than what the account contains. That is what this
+    // test used to do: `expect.poll(…).toBeNull()` returns on its first read,
+    // so it passed by reading early and failed whenever the machine was busy
+    // enough for the seed to land first — green on CI, red in a full local run,
+    // and green in isolation on both. Polling is the right idiom for waiting
+    // for a value to *appear*, as the three above do, and cannot assert that
+    // one never does.
+    const clean = await browser.newContext();
+    const cleanPage = await clean.newPage();
+
+    const uploads: string[] = [];
+    cleanPage.on("request", (request) => {
+      if (request.url().includes("/api/account/preferences") && request.method() === "PUT") {
+        uploads.push(request.method());
+      }
+    });
+
+    await clean.request.post("/api/auth/dev-login", {
+      data: { subject: `sub-delete-${test.info().project.name}`, name: "Ana" },
+    });
+    await cleanPage.goto("/");
+    // Read only once the client has the account, so this is the settled answer
+    // and not one taken before `usePreferences` had anything to reconcile.
+    await expect(cleanPage.locator("[data-account]")).toHaveAttribute(
+      "data-account",
+      "signed-in",
+    );
+
+    expect((await me(cleanPage))?.preferences.club ?? null).toBeNull();
+    // And nothing was uploaded, so that null is where this stops rather than a
+    // moment before a write — the difference the previous shape of this test
+    // could not see.
+    expect(uploads).toEqual([]);
+
+    await clean.close();
   });
 });
 
