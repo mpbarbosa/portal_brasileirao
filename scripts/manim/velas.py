@@ -124,6 +124,7 @@ CLUB_COLOURS = {
     "1770": "#98A3A8",  # Botafogo      cinza
     "4286": "#E058B8",  # Bragantino    magenta
     "4241": "#8BD94F",  # Coritiba      verde-claro
+    "1767": "#7C8FF5",  # Grêmio        azul-claro
 }
 FALLBACK_COLOUR = "#9AA5A0"
 
@@ -182,10 +183,21 @@ def lift_to_floor(colour: str, ground: str, floor: float) -> str:
 
     Valor primeiro, branco só se o valor não bastar. A ordem é a decisão: subir
     o valor preserva matiz e saturação EXATAMENTE, e lavar no branco dessatura —
-    então a lavagem é o último recurso e não o primeiro. Medido sobre os vinte
-    do `pontos.py` no piso de TEXTO: oito sobem, e só Cruzeiro, Flamengo e Remo
-    chegam a precisar de lavagem — de poucos por cento. No piso de MARCA, que é
-    mais baixo, sobe só o Fluminense e ninguém lava.
+    então a lavagem é o último recurso e não o primeiro.
+
+    **Quantos tons sobem é uma MEDIDA e não uma constante**, porque depende do
+    `ENCODED_MARGIN` e da paleta dos vinte, e as duas se mexem. Esta frase dizia
+    "oito sobem, e só Cruzeiro, Flamengo e Remo chegam a precisar de lavagem", e
+    dizia também que no piso de MARCA "sobe só o Fluminense" — as três contagens
+    são do tempo em que a margem era 1,30, e o commit que a levou a 1,15
+    (`37f540c`) as deixou para trás sem que nada aqui reclamasse, que é a falha
+    que o `CLAUDE.md` cataloga: uma contagem em prosa sem portão nenhum em cima.
+    Varrendo os vinte tons do `pontos.py` em 2026-09-06, com a margem em 1,15:
+    no piso de TEXTO sobem SETE e só o CRUZEIRO chega a precisar de lavagem; no
+    piso de MARCA não sobe NENHUM. Para recontar, em vez de acreditar:
+
+        lift_to_floor(tom, SUMMARY_GROUND, TEXT_FLOOR * ENCODED_MARGIN) != tom
+        lift_to_floor(tom, SURFACE,        MARK_FLOOR * ENCODED_MARGIN) != tom
     """
     ground_channels = _channels(ground)
     channels = _channels(colour)
