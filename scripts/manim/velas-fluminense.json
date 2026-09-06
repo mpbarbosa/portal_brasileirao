@@ -1,0 +1,485 @@
+{
+  "snapshot": "2026-09-02",
+  "club": {
+    "code": "1765",
+    "name": "Fluminense",
+    "tla": "FLU"
+  },
+  "rounds": [
+    {
+      "round": 1,
+      "open": 5,
+      "close": 5,
+      "best": 2,
+      "worst": 12,
+      "points": 3,
+      "totalPoints": 3,
+      "played": 1,
+      "result": "V",
+      "moved": 0,
+      "match": {
+        "opponent": "Grêmio",
+        "home": true,
+        "goalsFor": 2,
+        "goalsAgainst": 1,
+        "result": "V"
+      }
+    },
+    {
+      "round": 2,
+      "open": 5,
+      "close": 6,
+      "best": 5,
+      "worst": 9,
+      "points": 1,
+      "totalPoints": 4,
+      "played": 2,
+      "result": "E",
+      "moved": -1,
+      "match": {
+        "opponent": "Bahia",
+        "home": false,
+        "goalsFor": 1,
+        "goalsAgainst": 1,
+        "result": "E"
+      }
+    },
+    {
+      "round": 3,
+      "open": 6,
+      "close": 4,
+      "best": 3,
+      "worst": 8,
+      "points": 3,
+      "totalPoints": 7,
+      "played": 3,
+      "result": "V",
+      "moved": 2,
+      "match": {
+        "opponent": "Botafogo",
+        "home": true,
+        "goalsFor": 1,
+        "goalsAgainst": 0,
+        "result": "V"
+      }
+    },
+    {
+      "round": 4,
+      "open": 4,
+      "close": 5,
+      "best": 4,
+      "worst": 5,
+      "points": 0,
+      "totalPoints": 7,
+      "played": 4,
+      "result": "D",
+      "moved": -1,
+      "match": {
+        "opponent": "Palmeiras",
+        "home": false,
+        "goalsFor": 1,
+        "goalsAgainst": 2,
+        "result": "D"
+      }
+    },
+    {
+      "round": 5,
+      "open": 5,
+      "close": 5,
+      "best": 4,
+      "worst": 6,
+      "points": 3,
+      "totalPoints": 10,
+      "played": 5,
+      "result": "V",
+      "moved": 0,
+      "match": {
+        "opponent": "Clube do Remo",
+        "home": false,
+        "goalsFor": 2,
+        "goalsAgainst": 0,
+        "result": "V"
+      }
+    },
+    {
+      "round": 6,
+      "open": 5,
+      "close": 4,
+      "best": 3,
+      "worst": 6,
+      "points": 3,
+      "totalPoints": 13,
+      "played": 6,
+      "result": "V",
+      "moved": 1,
+      "match": {
+        "opponent": "Athletico-PR",
+        "home": true,
+        "goalsFor": 3,
+        "goalsAgainst": 2,
+        "result": "V"
+      }
+    },
+    {
+      "round": 7,
+      "open": 4,
+      "close": 6,
+      "best": 4,
+      "worst": 6,
+      "points": 0,
+      "totalPoints": 13,
+      "played": 7,
+      "result": "D",
+      "moved": -2,
+      "match": {
+        "opponent": "Vasco da Gama",
+        "home": false,
+        "goalsFor": 2,
+        "goalsAgainst": 3,
+        "result": "D"
+      }
+    },
+    {
+      "round": 8,
+      "open": 6,
+      "close": 5,
+      "best": 4,
+      "worst": 6,
+      "points": 3,
+      "totalPoints": 16,
+      "played": 8,
+      "result": "V",
+      "moved": 1,
+      "match": {
+        "opponent": "Atlético-MG",
+        "home": true,
+        "goalsFor": 1,
+        "goalsAgainst": 0,
+        "result": "V"
+      }
+    },
+    {
+      "round": 9,
+      "open": 5,
+      "close": 3,
+      "best": 3,
+      "worst": 5,
+      "points": 3,
+      "totalPoints": 19,
+      "played": 9,
+      "result": "V",
+      "moved": 2,
+      "match": {
+        "opponent": "Corinthians",
+        "home": true,
+        "goalsFor": 3,
+        "goalsAgainst": 1,
+        "result": "V"
+      }
+    },
+    {
+      "round": 10,
+      "open": 3,
+      "close": 3,
+      "best": 3,
+      "worst": 4,
+      "points": 1,
+      "totalPoints": 20,
+      "played": 10,
+      "result": "E",
+      "moved": 0,
+      "match": {
+        "opponent": "Coritiba",
+        "home": false,
+        "goalsFor": 1,
+        "goalsAgainst": 1,
+        "result": "E"
+      }
+    },
+    {
+      "round": 11,
+      "open": 3,
+      "close": 5,
+      "best": 2,
+      "worst": 5,
+      "points": 0,
+      "totalPoints": 20,
+      "played": 11,
+      "result": "D",
+      "moved": -2,
+      "match": {
+        "opponent": "Flamengo",
+        "home": true,
+        "goalsFor": 1,
+        "goalsAgainst": 2,
+        "result": "D"
+      }
+    },
+    {
+      "round": 12,
+      "open": 5,
+      "close": 3,
+      "best": 3,
+      "worst": 5,
+      "points": 3,
+      "totalPoints": 23,
+      "played": 12,
+      "result": "V",
+      "moved": 2,
+      "match": {
+        "opponent": "Santos",
+        "home": false,
+        "goalsFor": 3,
+        "goalsAgainst": 2,
+        "result": "V"
+      }
+    },
+    {
+      "round": 13,
+      "open": 3,
+      "close": 3,
+      "best": 3,
+      "worst": 4,
+      "points": 3,
+      "totalPoints": 26,
+      "played": 13,
+      "result": "V",
+      "moved": 0,
+      "match": {
+        "opponent": "Chapecoense",
+        "home": true,
+        "goalsFor": 2,
+        "goalsAgainst": 1,
+        "result": "V"
+      }
+    },
+    {
+      "round": 14,
+      "open": 3,
+      "close": 3,
+      "best": 3,
+      "worst": 3,
+      "points": 0,
+      "totalPoints": 26,
+      "played": 14,
+      "result": "D",
+      "moved": 0,
+      "match": {
+        "opponent": "Internacional",
+        "home": false,
+        "goalsFor": 0,
+        "goalsAgainst": 2,
+        "result": "D"
+      }
+    },
+    {
+      "round": 15,
+      "open": 3,
+      "close": 3,
+      "best": 3,
+      "worst": 3,
+      "points": 1,
+      "totalPoints": 27,
+      "played": 15,
+      "result": "E",
+      "moved": 0,
+      "match": {
+        "opponent": "Vitória",
+        "home": true,
+        "goalsFor": 2,
+        "goalsAgainst": 2,
+        "result": "E"
+      }
+    },
+    {
+      "round": 16,
+      "open": 3,
+      "close": 3,
+      "best": 3,
+      "worst": 3,
+      "points": 3,
+      "totalPoints": 30,
+      "played": 16,
+      "result": "V",
+      "moved": 0,
+      "match": {
+        "opponent": "São Paulo",
+        "home": true,
+        "goalsFor": 2,
+        "goalsAgainst": 1,
+        "result": "V"
+      }
+    },
+    {
+      "round": 17,
+      "open": 3,
+      "close": 3,
+      "best": 3,
+      "worst": 3,
+      "points": 0,
+      "totalPoints": 30,
+      "played": 17,
+      "result": "D",
+      "moved": 0,
+      "match": {
+        "opponent": "Mirassol",
+        "home": false,
+        "goalsFor": 0,
+        "goalsAgainst": 1,
+        "result": "D"
+      }
+    },
+    {
+      "round": 18,
+      "open": 3,
+      "close": 3,
+      "best": 3,
+      "worst": 4,
+      "points": 1,
+      "totalPoints": 31,
+      "played": 18,
+      "result": "E",
+      "moved": 0,
+      "match": {
+        "opponent": "Cruzeiro",
+        "home": false,
+        "goalsFor": 1,
+        "goalsAgainst": 1,
+        "result": "E"
+      }
+    },
+    {
+      "round": 19,
+      "open": 3,
+      "close": 4,
+      "best": 3,
+      "worst": 4,
+      "points": 1,
+      "totalPoints": 32,
+      "played": 19,
+      "result": "E",
+      "moved": -1,
+      "match": {
+        "opponent": "Bragantino",
+        "home": true,
+        "goalsFor": 1,
+        "goalsAgainst": 1,
+        "result": "E"
+      }
+    },
+    {
+      "round": 20,
+      "open": 4,
+      "close": 4,
+      "best": 4,
+      "worst": 4,
+      "points": 1,
+      "totalPoints": 33,
+      "played": 20,
+      "result": "E",
+      "moved": 0,
+      "match": {
+        "opponent": "Grêmio",
+        "home": false,
+        "goalsFor": 1,
+        "goalsAgainst": 1,
+        "result": "E"
+      }
+    },
+    {
+      "round": 21,
+      "open": 4,
+      "close": 4,
+      "best": 4,
+      "worst": 4,
+      "points": 1,
+      "totalPoints": 34,
+      "played": 21,
+      "result": "E",
+      "moved": 0,
+      "match": {
+        "opponent": "Bahia",
+        "home": true,
+        "goalsFor": 0,
+        "goalsAgainst": 0,
+        "result": "E"
+      }
+    },
+    {
+      "round": 22,
+      "open": 4,
+      "close": 4,
+      "best": 4,
+      "worst": 4,
+      "points": 1,
+      "totalPoints": 35,
+      "played": 22,
+      "result": "E",
+      "moved": 0,
+      "match": {
+        "opponent": "Botafogo",
+        "home": false,
+        "goalsFor": 1,
+        "goalsAgainst": 1,
+        "result": "E"
+      }
+    },
+    {
+      "round": 23,
+      "open": 4,
+      "close": 4,
+      "best": 4,
+      "worst": 4,
+      "points": 3,
+      "totalPoints": 38,
+      "played": 23,
+      "result": "V",
+      "moved": 0,
+      "match": {
+        "opponent": "Palmeiras",
+        "home": true,
+        "goalsFor": 3,
+        "goalsAgainst": 2,
+        "result": "V"
+      }
+    },
+    {
+      "round": 24,
+      "open": 4,
+      "close": 4,
+      "best": 4,
+      "worst": 4,
+      "points": 3,
+      "totalPoints": 41,
+      "played": 24,
+      "result": "V",
+      "moved": 0,
+      "match": {
+        "opponent": "Clube do Remo",
+        "home": true,
+        "goalsFor": 2,
+        "goalsAgainst": 1,
+        "result": "V"
+      }
+    },
+    {
+      "round": 25,
+      "open": 4,
+      "close": 4,
+      "best": 4,
+      "worst": 4,
+      "points": 1,
+      "totalPoints": 42,
+      "played": 25,
+      "result": "E",
+      "moved": 0,
+      "match": {
+        "opponent": "Athletico-PR",
+        "home": false,
+        "goalsFor": 3,
+        "goalsAgainst": 3,
+        "result": "E"
+      }
+    }
+  ]
+}
