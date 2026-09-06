@@ -135,7 +135,7 @@ qualquer: os primeiros segundos são um gráfico vazio, e é só no fim que o pa
 de resumo diz `3º · 45 pts em 25 jogos`.
 
 ```sh
-ffmpeg -ss 20.6 -i docs/medias/velas-athletico-pr.mp4 -frames:v 1 -vf scale=1280:720 capa.png
+ffmpeg -ss 20.6 -i docs/medias/athletico-pr/velas-athletico-pr.mp4 -frames:v 1 -vf scale=1280:720 capa.png
 ```
 
 O `-ss 20.6` num vídeo de 21,1s é estreito de propósito e **não** sobra para
