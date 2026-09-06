@@ -254,10 +254,19 @@ is missing from the feed too. Measured here: a **scheduled** one answers 403 at
 oEmbed, so the two states are distinguishable once you hold the id — and for an
 **unlisted** one, ask oEmbed rather than assuming either way, since that is the
 only thing that says whether a club page could embed it. Say which of the three
-you established. Measured 2026-09-06: the
-channel's feed held three entries, the two velas videos for Athletico-PR and
-Bahia were absent from it, and the copy for both had been committed two days
-earlier — so the artefacts were finished and the upload had not happened.
+you established.
+
+**Derive the answer from the feed; do not carry a number out of this file.** The
+list of clubs with artefacts is `ls docs/medias/`, the list of public videos is
+the feed, and what you want is the difference. Reading 2026-09-06T04:36Z: nine
+club folders, three entries in the feed, and **exactly one published velas** —
+Fluminense's. Every other club's velas had finished artefacts and no upload.
+
+**The trap in that subtraction, which cost two wrong counts in one session: the
+feed's two club entries are not two velas.** One of them is the `campanhas`
+Palmeiras × Flamengo, a comparação — so counting *club videos in the feed*
+overstates published *velas* by one, and the two clubs it names both still have
+an unpublished velas of their own. Match on the artefact, never on the club.
 
 **And an unlisted video on a club page is a decision, not a detail.** Embedding
 one publishes it to every reader of that page, which is what "unlisted" was
@@ -289,9 +298,12 @@ not a claim about the video.
 - [ ] `node --import tsx --test tests/manim-renders.test.ts` green, and `npm run test:unit`
 - [ ] published → oEmbed answers 200 → `club-videos.ts` entry, with the trailer
 - [ ] the loop closed — and step 9b is how you find out, in two commands,
-      rather than guessing. Measured 2026-09-06: `velas-athletico-pr` and
-      `velas-bahia` have copy committed, no `club-videos.ts` entry, and **no
-      upload** — absent from the channel's own feed, which held three entries
+      rather than guessing. **Run it; do not read a count out of this file.**
+      The gap between `ls docs/medias/` and the channel's feed is wide and
+      moves: on 2026-09-06 it was eight of nine velas unpublished, and the
+      previous version of this line said two. It did not rot — it was
+      *inherited* rather than re-derived, by me, in the same session that
+      widened it
 
 ## The open edges, so nobody rediscovers them
 
