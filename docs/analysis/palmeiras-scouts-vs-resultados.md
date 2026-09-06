@@ -143,16 +143,31 @@ fixture list rather than through a median cut.
 Two clubs agreeing is not a result, so the same per-club correlation was run
 across all twenty, on the same data and the same exclusion rule:
 
+> **Corrected 2026-09-06, after the Flamengo analysis.** The figures first
+> published in this section were computed with a **positional** join — the i-th
+> window to the i-th played match — which is wrong for the ten clubs that have an
+> unplayed round. See
+> [`flamengo-scouts-vs-resultados.md`](flamengo-scouts-vs-resultados.md) for the
+> defect, the tell that exposes it, and the fix.
+>
+> **This club's own analysis is unaffected**: Palmeiras played all 25 rounds, so
+> the two joins coincide exactly. Everything above and below this section stands.
+> Only the twenty-club table here was wrong, and the corrected numbers are
+> **stronger on every line**.
+
 | | finalizações | conversão |
 |---|---|---|
-| mean ρ against pontos | **0,108** | **0,461** |
-| positive in | 13 of 20 clubs | **19 of 20** |
-| higher than the other metric in | 2 of 20 | **18 of 20** |
+| mean ρ against pontos | **0,114** | **0,553** |
+| positive in | 13 of 20 clubs | **20 of 20** |
+| higher than the other metric in | 1 of 20 | **19 of 20** |
 
-So the shape is the division's, not this club's. The one club where volume
-out-predicts conversão by a wide margin is **Grêmio** (0,537 against 0,169), and
-the only negative conversão correlation in the league is **Flamengo**'s (−0,021,
-i.e. none).
+So the shape is the division's, not this club's — conversão out-predicts volume
+in **nineteen of the twenty clubs**, and is positive in all twenty.
+
+The sentence that stood here naming **Flamengo** as *"the only negative conversão
+correlation in the league"* is **withdrawn**. It was not an exception: it was the
+most broken join in the division (7 of 24 validating). Under the corrected join
+its conversão ρ is **0,683**, among the highest.
 
 **This does not remove the mechanical component** — conversão is gols/finalizações
 and gols decide results, so some of every one of those twenty numbers is
