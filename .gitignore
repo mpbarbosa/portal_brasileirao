@@ -174,10 +174,16 @@ docs/screenshots/local/
 
 # Manim (scripts/manim/README.md): the virtualenv and manim's own output tree.
 # The DELIVERABLE render is committed at docs/medias/ — this ignores the working
-# copy manim writes beside the scene, which is the same bytes under a name that
+# copy manim writes AT THE REPO ROOT, which is the same bytes under a name that
 # changes with the quality flag.
+#
+# The leading slash is load-bearing, for the reason `/data/` states forty lines
+# up: a bare `media/` has no internal slash and so matches a directory called
+# `media` at ANY depth. It swallowed `docs/media/` — 25 MB of capas and working
+# renders that never appeared in `git status`, and five files that existed
+# nowhere in git while everyone believed they were committed.
 .venv-manim/
-media/
+/media/
 # And the bytecode cache Python writes beside a scene the first time it is
 # imported — a build artefact of running the tool, like `media/`.
 __pycache__/
