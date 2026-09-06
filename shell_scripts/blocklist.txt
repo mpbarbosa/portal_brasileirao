@@ -1,0 +1,26 @@
+# Addresses nginx refuses on this deployment, one per line.
+#
+# Blank lines and `#` comments are ignored. Every other line must be a bare IPv4
+# or IPv6 address, or a CIDR — 15_install_blocklist.sh refuses anything else
+# rather than handing nginx a string it will reject.
+#
+# THIS FILE IS THE SOURCE OF TRUTH. The host's /etc/nginx/conf.d/blocklist.conf
+# is generated from it and is overwritten on every run, so an address added by
+# hand on the host is lost the next time the script runs. Add it here instead,
+# with a line saying what it did and when it was observed: a bare address nobody
+# can date is one nobody will ever dare remove.
+#
+# Blocking buys quiet, not protection. Everything below already got 404s.
+
+# 643 requests in one hour, 2026-09-05 02:09-02:24Z: 660 distinct paths, 635 of
+# them 404. Credential and secret hunting — /wp-config.php.bak, /aws/*,
+# /config/*, /.github/workflows/* — plus Vite path-traversal probes at /@fs/,
+# which production has no Vite to answer. Rotated five spoofed user agents in
+# the hour (Perplexity-User, ChatGPT-User, Claude-User, OAI-SearchBot,
+# TelegramBot) from this one address, which is why the Tráfego page's visitor
+# rule lets a user-agent disqualify and never qualify.
+#
+# rDNS 67.190.234.35.bc.googleusercontent.com — an EPHEMERAL GCP VM. It has not
+# been seen since, and the address may already belong to somebody unrelated, so
+# this entry is a candidate for removal rather than a permanent fixture.
+35.234.190.67
