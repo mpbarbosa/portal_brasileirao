@@ -126,6 +126,7 @@ CLUB_COLOURS = {
     "4241": "#8BD94F",  # Coritiba      verde-claro
     "1767": "#7C8FF5",  # Grêmio        azul-claro
     "1780": "#F0748F",  # Vasco da Gama rosa
+    "6685": "#C9A227",  # Santos        ocre
 }
 FALLBACK_COLOUR = "#9AA5A0"
 
