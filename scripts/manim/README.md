@@ -520,10 +520,18 @@ viram outros arquivos quando a temporada anda — o antigo tem que sair do
   apoia: o contorno é marca (piso 3) sobre o `SURFACE`, o `11V · 9E · 5D` do
   painel é **texto** (piso 4,5) sobre o `CARD` a 94%. Multiplicar os canais até o
   maior chegar a 255 preserva matiz e saturação exatamente; lavar no branco
-  dessatura, então a lavagem é o último recurso — e no piso de texto só Cruzeiro,
-  Flamengo e Remo chegam a precisar dela. **Dezenove dos vinte clubes não mudam
-  nada no contorno** (só o Fluminense, de `#B0455F` para `#BB4965`) e doze dos
-  vinte não mudam no texto do painel.
+  dessatura, então a lavagem é o último recurso — e com a margem recalibrada
+  (abaixo) **nenhum clube chega a precisar dela**: as três subidas que restam,
+  Fluminense, Cruzeiro e Flamengo, são de valor puro, com matiz e saturação
+  intactos.
+
+  **No contorno a subida não pega ninguém, e é um resultado e não um acaso.** O
+  tom cru do Fluminense — o pior dos vinte sobre o `SURFACE` — entrega 3,53
+  modelado, então qualquer margem abaixo de **1,177** deixa os vinte com o
+  contorno na cor registrada do clube. A margem é 1,15. O `MARK_FLOOR` fica de
+  pé como o piso que pegaria um clube mais escuro que o Fluminense; o que não é
+  exercitado hoje é a aplicação dele à marca, e vale saber disso antes de ler o
+  `self.mark` como código morto.
 
   Subir o contorno até o piso de TEXTO foi a primeira versão desta correção e
   está errado: dava ao Fluminense uma borda `#FB6287`, um rosa que não é mais o
@@ -536,23 +544,46 @@ viram outros arquivos quando a temporada anda — o antigo tem que sair do
   virou tinta sem ninguém medir, porque a paleta desta cena é escrita à mão e o
   `test:tokens` não olha para ela.
 
-- **O alvo não é o piso: há uma perda de ~18% entre o tom escrito e o pixel
-  entregue, e ela foi MEDIDA.** O tipo é desenhado a 4× e reduzido, então nenhum
-  pixel de um glifo de 19px chega à cor cheia, e o h.264 come o resto. Três
-  leituras do mesmo texto, no quadro codificado:
+- **O alvo não é o piso, e a primeira medição desta perda estava ERRADA por mira,
+  não por aritmética.** Ela dizia ~18% e valia `ENCODED_MARGIN = 1,30`. As quatro
+  leituras que a sustentavam saíram todas de **t=18s** — um segundo dentro do
+  fade com que o painel de resumo entra, que só assenta em **t=19**:
 
-  | modelado | entregue |
-  |---|---|
-  | 3,13 | 2,74 |
-  | 4,50 | 3,84 |
-  | 5,41 | 4,43 |
-  | 5,85 | **4,81** |
+  | t | 17 | 18 | 19 | 19,5 | 20 | 20,6 | 21 |
+  |---|---|---|---|---|---|---|---|
+  | texto do painel | sem tinta | 4,81 | **6,11** | 6,11 | 6,11 | 6,11 | 6,11 |
 
-  Um alvo de 4,50 entrega 3,84 e **reprova**. Daí o `ENCODED_MARGIN = 1,30`, que
-  é essa perda arredondada para cima — e daí, também, que ela seja um ponto de
-  partida e nunca a prova: o valor entregue é reconferido no quadro depois de
-  cada render. A marca perde menos que o texto (é mais grossa), o que é a mesma
-  lição que o `0` sozinho contra `50 pts` logo abaixo já registra.
+  Quase toda a "perda do encoder" era a opacidade da animação. **As barras não
+  têm fade**, e por isso os números de marca daquela leva estavam certos.
+
+  **O método que isola a perda de verdade não mede o mp4 contra um modelo — mede
+  o mp4 contra o PNG que o próprio manim escreveu.** `manim -qh -s` grava o
+  quadro final antes de qualquer compressão; ler as **mesmas coordenadas** nos
+  dois dá registro perfeito, dispensa qualquer mira e separa o h.264 do
+  antialiasing do tipo desenhado a 4×, que toda leitura anterior somava. Assim,
+  entregue/modelado:
+
+  | clube | texto | marca | | clube | texto | marca |
+  |---|---|---|---|---|---|---|
+  | Fluminense | 0,961 | 0,955 | | Cruzeiro | 0,976 | 0,954 |
+  | Athletico-PR | 0,957 | 0,964 | | Palmeiras | **0,898** | 0,905 |
+  | Bahia | 0,927 | 0,934 | | | | |
+
+  A pior perda é **10,2%**, e é do Palmeiras: o verde carrega 0,7152 da
+  luminância, então o subamostrado de croma do 4:2:0 bate onde mais dói. Entre os
+  clubes que a subida realmente **prende** no alvo a perda é menor (0,961 e
+  0,976), mas a margem é dimensionada pela pior de todas.
+
+  **1,15 cobre os 1,114 que a pior perda pede, e tem um segundo motivo que vale
+  mais que o primeiro** — é o maior valor que ainda deixa os vinte clubes com o
+  contorno na cor crua, conforme o parágrafo acima. Um alvo igual ao piso
+  reprova: 1,00 entrega 4,32 para o Fluminense contra um piso de 4,5.
+
+  A margem é um ponto de partida e nunca a prova: o valor entregue é reconferido
+  **em t≥19**, no `-ss 21` que a capa já usa. Medir um clube em t=18 pode
+  reprovar quem passa — o texto do Cruzeiro entrega 4,70 no quadro estável e 3,99
+  um segundo antes.
+
 - **Nenhum dos dois painéis tem legenda de eixo dentro dele.** A primeira versão
   escrevia "posição" no canto superior esquerdo da caixa e a palavra caía em cima
   do pavio da rodada 1; acima da caixa não há espaço, porque ali está o subtítulo.

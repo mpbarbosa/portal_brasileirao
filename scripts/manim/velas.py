@@ -217,30 +217,62 @@ def lift_to_floor(colour: str, ground: str, floor: float) -> str:
 # daria um número otimista sobre uma cor que não existe em pixel nenhum.
 SUMMARY_GROUND = _over(CARD, 0.94, SURFACE)
 
-# **O alvo não é o piso, e a diferença foi MEDIDA e não estimada.** Entre o tom
-# que o manim escreve e o pixel que o leitor baixa há duas perdas: o tipo é
-# desenhado a 4× e reduzido, então nenhum pixel de um glifo de 19px chega à cor
-# cheia, e o h.264 come o resto — a mesma mordida que o README já registra, onde
-# um `0` sozinho caiu para 2,96 enquanto `50 pts` no mesmo tom deu 3,36.
+# **O alvo não é o piso, porque o h.264 come um pouco do tom no caminho — e a
+# perda foi ISOLADA, não estimada de um quadro qualquer.**
 #
-# Medido no quadro codificado, no `11V · 9E · 5D` do Fluminense, subindo o alvo
-# até passar: modelado 3,13 entregou 2,74 · 4,50 entregou 3,84 · 5,41 entregou
-# 4,43 · **5,85 entregou 4,81**. Um alvo de 4,50 REPROVA, que é o motivo de a
-# margem existir; 1,30 é essa perda (~18%) arredondada para cima. Ela é um ponto
-# de partida e nunca a prova — o valor entregue é reconferido no quadro depois
-# de cada render, e a marca perde menos que o texto por ser mais grossa.
+# A versão anterior desta margem valia 1,30 e dizia "~18% de perda do tipo a 4×
+# mais h.264". **Estava errada, e o erro era de mira:** todas aquelas leituras
+# saíram de **t=18s**, um segundo dentro do fade com que o painel de resumo
+# entra. Ele só assenta em **t=19** e daí até o fim do vídeo é estático:
+#
+#     t=        17         18      19      19,5    20     20,6   21
+#     texto     sem tinta  4,81  **6,11**  6,11   6,11   6,11   6,11
+#
+# Ou seja o que foi medido como perda do encoder era, quase todo, a opacidade da
+# animação. **As BARRAS não têm fade** e por isso os números de marca do #384
+# estavam certos o tempo todo.
+#
+# **O método que isola a perda de verdade é comparar o PNG que o manim escreve
+# (`manim -qh -s`, antes de qualquer compressão) com o quadro do mp4 nas MESMAS
+# coordenadas.** Registro perfeito, nenhuma mira a errar, e separa o h.264 do
+# antialiasing do tipo desenhado a 4× — duas coisas que toda leitura anterior
+# aqui somava. Medido assim, no quadro final, entregue/modelado:
+#
+#     clube          texto   marca        clube          texto   marca
+#     Fluminense     0,961   0,955        Cruzeiro       0,976   0,954
+#     Athletico-PR   0,957   0,964        Palmeiras      0,898   0,905
+#     Bahia          0,927   0,934
+#
+# A pior perda é **10,2%** (Palmeiras), não 18% — e o verde perde mais que o
+# grená porque o canal verde carrega 0,7152 da luminância, então o subamostrado
+# de croma do 4:2:0 bate onde mais dói. Entre os clubes que a subida realmente
+# PRENDE no alvo a perda é menor ainda (0,961 e 0,976), mas a margem é dimensionada
+# pela pior de todas, que é a leitura conservadora.
+#
+# **1,15 cobre 1,114 com folga, e o número tem um segundo motivo que vale mais
+# que o primeiro: abaixo de 1,177 NENHUM clube da divisão precisa de subida na
+# MARCA.** O tom cru do Fluminense — o pior dos vinte sobre o `SURFACE` — entrega
+# 3,53 modelado, e 3,0 × 1,177 é exatamente onde ele deixaria de bastar. Então o
+# contorno da barra é sempre a cor registrada do clube, e a cena perde um tom
+# derivado inteiro em vez de carregar dois.
+#
+# O `MARK_FLOOR` fica: ele é o piso que pegaria um clube mais escuro que o
+# Fluminense, e `lift_to_floor` continua exercitada pelo caminho do TEXTO, que
+# prende sete dos vinte. O que não é exercitado hoje é a APLICAÇÃO dela à marca —
+# vale saber antes de ler o `self.mark` abaixo como código morto.
+#
+# **A margem é um ponto de partida e nunca a prova**: o valor entregue é
+# reconferido no quadro **t>=19** depois de cada render, com o `-ss 21` que a
+# capa já usa.
 #
 # **Cada marca sobe até o piso QUE VALE PARA ELA, sobre o fundo em que ELA se
-# apoia**, e é isso que mantém a subida honesta em vez de uniforme. Texto na
-# cena tem piso 4,5 e o do painel se apoia no `SUMMARY_GROUND`; uma marca
-# gráfica tem piso 3 e o contorno da barra se apoia no `SURFACE`, que é mais
-# escuro. Subir o contorno até o piso de TEXTO — que é o que a primeira versão
-# desta correção fez — dava ao Fluminense uma borda `#FB6287`, um rosa que não é
-# mais o grená do clube e que rouba a leitura do painel de cima. Pelo piso certo
-# a borda vira `#BB4965`, e **dezenove dos vinte clubes não mudam nada**.
+# apoia.** Texto na cena tem piso 4,5 e o do painel se apoia no `SUMMARY_GROUND`;
+# uma marca gráfica tem piso 3 e o contorno da barra se apoia no `SURFACE`, que é
+# mais escuro. Subir o contorno até o piso de TEXTO dava ao Fluminense uma borda
+# `#FB6287`, um rosa que não é mais o grená do clube.
 TEXT_FLOOR = 4.5
 MARK_FLOOR = 3.0
-ENCODED_MARGIN = 1.30
+ENCODED_MARGIN = 1.15
 
 RESULT_WORD = {"V": "Vitória", "E": "Empate", "D": "Derrota"}
 RESULT_COLOUR = {"V": POSITIVE, "E": WARNING, "D": NEGATIVE}
