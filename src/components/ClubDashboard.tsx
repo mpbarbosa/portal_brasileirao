@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 
-import { clubKey, findClub, standingFor } from "@/club-core";
+import { clubKey, findClub, standingFor, videosFor } from "@/club-core";
 import { candlesFor, computeRankCandles, summariseCandles } from "@/rank-candles-core";
 import { lastRecordedRound, lastRoundWithResult } from "@/rank-history-core";
 import { formatRoute } from "@/route-core";
@@ -9,6 +9,8 @@ import { controlClasses } from "@/src/components/Button";
 import { CampaignPlotToggle } from "@/src/components/CampaignPlotToggle";
 import { ClubCrest } from "@/src/components/ClubCrest";
 import { ClubProfile } from "@/src/components/ClubProfile";
+import { ClubVideos } from "@/src/components/ClubVideos";
+import { CLUB_VIDEOS } from "@/src/data/club-videos";
 import { StatTile } from "@/src/components/ClubView";
 import { BACK_LINK, LINK_UNDERLINE } from "@/src/components/interaction";
 import { CandlesKey, RankCandles } from "@/src/components/RankCandles";
@@ -181,6 +183,12 @@ export function ClubDashboard({
   // fixture list and keep the domain that computation used.
   const campaign = rankHistory?.find((entry) => entry.clubCode === club.code)?.entries ?? [];
   const campaignLastRound = lastRecordedRound(rankHistory ?? []);
+
+  // Curated, keyed by the provider's numeric code — never the `tla`, for the
+  // reason `club-videos.ts` gives: Corinthians and Coritiba both report `COR`.
+  // `videosFor` has already dropped anything whose id will not parse, so the
+  // rail below is handed a list it can draw in full.
+  const videos = videosFor(CLUB_VIDEOS, club.code);
 
   const href = formatRoute({ section: "clube", key: clubKey(club) });
 
@@ -388,6 +396,29 @@ export function ClubDashboard({
           `/api/matches`, so putting it first would leave a reader looking at a
           full section while the page's own subject was still loading. */}
       <ClubProfile clubCode={club.code} />
+
+      {/* The **same rail the club page carries**, on the page the videos are
+          actually about. A velas render is this drawing in motion — the corpo,
+          o pavio and the pontos beneath, rodada by rodada — so a reader who has
+          just read the candles is the one reader in the app for whom it is the
+          obvious next thing, and until now it was offered only one click back.
+          Two call sites of one component rather than a second rail: the
+          arrangement `useTheme` and `CampaignPlotToggle` already take, and the
+          reason is theirs — a rail written twice is two rails to keep saying the
+          same thing about what a video is and where it goes.
+
+          **Last, and below the Perfil, for the two reasons that section states
+          one line above.** It renders from a committed file while everything
+          above it comes from `/api/matches`, so placed higher it would sit
+          there complete while the page's own subject was still loading; and it
+          is an **exit** — every card here leaves for YouTube — which belongs
+          beside the other exit, the club-page link below, rather than between
+          the drawing and the numbers that describe it.
+
+          It draws **nothing** for a club with no entry, which is 17 of 20
+          today, so for those painéis this is not a decision a reader can
+          see. */}
+      <ClubVideos videos={videos} clubName={club.shortName} />
 
       {/* A real link, not only the back control above it. The breadcrumb says
           this page sits under the club's, and a crawler that is told so should
