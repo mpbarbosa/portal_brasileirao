@@ -94,9 +94,29 @@ renderiza em segundos e serve para conferir o enquadramento.
 **`docs/medias/pontos-20-clubes.mp4`** (21s, 4,4 MB),
 **`docs/medias/velas-fluminense.mp4`** (21s, 3,8 MB) e
 **`docs/medias/velas-athletico-pr.mp4`** (21s, 3,9 MB) e
-**`docs/medias/velas-bahia.mp4`** (21s, 3,8 MB) — todos 1920×1080, 60fps —
-são os vídeos prontos, versionados junto do resto do projeto como os slides
-em `docs/carrossel/` e as capturas em `docs/screenshots/`.
+**`docs/medias/velas-bahia.mp4`** (21s, 3,8 MB),
+**`docs/medias/cruzeiro/velas-cruzeiro.mp4`** (21s, 4,0 MB) e
+**`docs/medias/palmeiras/velas-palmeiras.mp4`** (21s, 3,9 MB) — todos
+1920×1080, 60fps — são os vídeos prontos, versionados junto do resto do projeto
+como os slides em `docs/carrossel/` e as capturas em `docs/screenshots/`.
+
+**Os dois últimos moram numa PASTA POR CLUBE e os quatro primeiros não**, o que
+é um estado intermediário e não um descuido: `docs/medias/cruzeiro/` e
+`docs/medias/palmeiras/` foram criadas quando esses dois vídeos foram feitos, e
+os que já existiam ficaram onde estavam em vez de serem movidos junto. Conte o
+diretório antes de assumir uma convenção — `docs/medias/RENDERED` lista cada
+artefato pelo caminho relativo a `docs/medias/`, e é ele que diz onde cada um
+está.
+
+**`palmeiras/` também carrega LINKS SIMBÓLICOS para o
+`campanhas-palmeiras-flamengo.*`**, que é um vídeo de dois clubes: ele pertence
+ao Palmeiras e ao Flamengo ao mesmo tempo, então arquivá-lo dentro da pasta de
+um dos dois afirmaria que é sobre aquele. Os bytes ficam soltos em
+`docs/medias/`, onde os dois clubes alcançam, e o link é o que faz a pasta do
+Palmeiras completa. `tests/manim-renders.test.ts` **ignora links** de propósito:
+um alias não é um artefato, e uma segunda linha no `RENDERED` para os mesmos
+bytes seria uma segunda alegação sobre uma coisa só, capaz de discordar da
+primeira.
 
 **Cada clube é um artefato a mais, e esse é o preço do `velas.py`.**
 Ele desenha um clube por run, então cada clube que valha um vídeo acrescenta um
@@ -150,6 +170,8 @@ frase:
 | `velas-athletico-pr.gif` | 317 | 5,2 MB | 3,9 MB |
 | `velas-bahia.gif` | 317 | 5,1 MB | 3,8 MB |
 | `velas-fluminense.gif` | 317 | 5,1 MB | 3,9 MB |
+| `cruzeiro/velas-cruzeiro.gif` | 317 | 5,3 MB | 4,0 MB |
+| `palmeiras/velas-palmeiras.gif` | 317 | 5,4 MB | 3,9 MB |
 
 Cada um é **derivado do mp4 commitado ao lado dele**, não um segundo render: sai
 daquele arquivo por dois passos de `ffmpeg`, então não tem como descrever uma
@@ -314,6 +336,12 @@ cp media/videos/velas/1080p60/Velas.mp4 docs/medias/velas-athletico-pr.mp4
 VELAS_JSON=$PWD/scripts/manim/velas-bahia.json \
   ./.venv-manim/bin/manim -qh scripts/manim/velas.py Velas
 cp media/videos/velas/1080p60/Velas.mp4 docs/medias/velas-bahia.mp4
+VELAS_JSON=$PWD/scripts/manim/velas-cruzeiro.json \
+  ./.venv-manim/bin/manim -qh scripts/manim/velas.py Velas
+cp media/videos/velas/1080p60/Velas.mp4 docs/medias/cruzeiro/velas-cruzeiro.mp4
+VELAS_JSON=$PWD/scripts/manim/velas-palmeiras.json \
+  ./.venv-manim/bin/manim -qh scripts/manim/velas.py Velas
+cp media/videos/velas/1080p60/Velas.mp4 docs/medias/palmeiras/velas-palmeiras.mp4
 
 # 3c. Um gif por mp4, dos mp4 já copiados e nunca de media/. Os comandos estão na
 #     seção "O gif", com o porquê de cada parâmetro.

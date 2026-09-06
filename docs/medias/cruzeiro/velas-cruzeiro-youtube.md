@@ -10,8 +10,8 @@ Texto que acompanha [`velas-cruzeiro.mp4`](velas-cruzeiro.mp4)
   exatamente como estão no bloco.
 - **Sem capítulos:** o YouTube exige pelo menos três, o primeiro em 00:00 e cada
   um com 10s. Um vídeo de 21s não comporta.
-- **Sem capa desenhada**, como nos outros vídeos de velas — o que existe é a
-  saída provisória descrita no fim desta página.
+- **Com capa:** `velas-cruzeiro-miniatura.png`, 1280×720, o quadro do fecho da
+  própria cena — a regra que o `scripts/manim/README.md` registra para as velas.
 
 > **Os números aqui saem de `scripts/manim/velas-cruzeiro.json`, rodada 25,
 > snapshot de 2026-09-02** — 6º com 39 pts, 11V 6E 8D, e a oscilação entre o 5º
@@ -165,18 +165,19 @@ que o torcedor digita, então ele fica. O que resolve é o título, que traz
 
 ## Miniatura
 
-**Não existe capa desenhada para os vídeos de velas**, ao contrário dos vídeos
-de campanhas e de pontos — e isso é decisão registrada em
-`scripts/manim/README.md`: uma capa é um segundo artefato para manter
-atualizado, e `capa-core.ts` só compartilha a leitura da paleta e a captura, não
-o desenho.
+`velas-cruzeiro-miniatura.png`, 1280×720, e ela **existe** — o parágrafo que
+esta linha substitui dizia que nenhum vídeo de velas tinha capa, e isso deixou de
+ser verdade em `2c95b73`, que deu uma a cada uma das três cenas então
+publicadas. Foi a decisão anterior cumprindo o que ela própria previa, não uma
+reversão.
 
-Enquanto ela não existe, o quadro do **fecho** é a melhor escolha, e não um
-qualquer: os primeiros segundos são um gráfico vazio, e é só no fim que o painel
-de resumo diz `6º · 39 pts em 25 jogos`.
+Ela é o **quadro do fecho da própria cena**, e não um layout à parte como as
+capas do `campanhas` e do `pontos`: os primeiros segundos são um gráfico vazio, e
+é só no fim que o painel de resumo diz `6º · 39 pts em 25 jogos`.
 
 ```sh
-ffmpeg -ss 20.6 -i docs/medias/velas-cruzeiro.mp4 -frames:v 1 -vf scale=1280:720 capa.png
+ffmpeg -ss 20.6 -i docs/medias/cruzeiro/velas-cruzeiro.mp4 -frames:v 1 -vf scale=1280:720 \
+  docs/medias/cruzeiro/velas-cruzeiro-miniatura.png
 ```
 
 O `-ss 20.6` num vídeo de 21,1s é estreito de propósito e **não** sobra para
