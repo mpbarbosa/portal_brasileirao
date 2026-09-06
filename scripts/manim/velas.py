@@ -129,6 +129,7 @@ CLUB_COLOURS = {
     "6685": "#C9A227",  # Santos        ocre
     "6684": "#FF6B3D",  # Internacional laranja-vermelho
     "1782": "#8C6E5A",  # Vitória       marrom
+    "4287": "#A66BE8",  # Clube do Remo roxo
 }
 FALLBACK_COLOUR = "#9AA5A0"
 
