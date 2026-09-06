@@ -144,6 +144,49 @@ export const lineupsReconcile = (lineups: Lineup[]): boolean => {
   );
 };
 
+/**
+ * The sides whose eleven names no goalkeeper — a **warning**, deliberately not
+ * a refusal, and the difference is the whole of this function.
+ *
+ * **What CBF's sheets actually do, measured over all 486 sides served:** 481
+ * mark exactly two goleiros, one starting and one on the bench, and five mark
+ * only one. Of those five, four leave the *starter* unmarked — r4/554773
+ * Coritiba, r5/554784 Cruzeiro, r8/554816 and r17/554901 Bahia — and one leaves
+ * the bench unmarked. So a missing flag is rare and real rather than a shape
+ * this module mishandles.
+ *
+ * **It is their data and not our parse, which was checked rather than assumed
+ * before this was written.** `isTrue` demands the exact string `"true"`, so the
+ * obvious suspicion is that CBF sometimes spells it otherwise and we drop it.
+ * Probed against the live `/api/cbf/jogos/{id}` for all four fixtures: every one
+ * of the 92 atletas carries `goleiro` as the string `"true"` or `"false"`, no
+ * other value and no other type, and in each the single `"true"` sits on a
+ * player whose `reserva` is `"true"`. CBF marked the backup and not the starter.
+ *
+ * **Why `lineupsReconcile` must not adopt this.** That gate refuses a fixture
+ * outright, and three of these four sides are otherwise perfect team sheets
+ * whose starting keeper is plainly in the eleven — Coritiba's 1 Pedro Morisco,
+ * Cruzeiro's 1 Cássio, Bahia's 1 Ronaldo Strada. Refusing them would throw away
+ * three complete escalações to punish one missing boolean, and what the reader
+ * loses is 46 names rather than one `(GOL)`. The all-or-nothing rule
+ * `attachSubstitutions` follows is about **plausible lies** — a list that reads
+ * as complete and is not. An absent `(GOL)` is a visible absence and lies to
+ * nobody.
+ *
+ * **And the fourth cannot be repaired at all, which is why nothing here
+ * guesses.** Bahia's r17/554901 sheet names 23 players, carries no shirt 1
+ * anywhere, and flags only 34 João Paulo on the bench — so the starting keeper
+ * is not merely unmarked, he is not on the sheet. The tempting rule is *shirt 1
+ * is the goalkeeper*, and it is the orthography-matching this repository
+ * refuses everywhere else: the number is a convention, not a law, and a wrong
+ * `(GOL)` is an assertion about a person. Absent is the honest answer, so the
+ * page prints nothing and this reports it to whoever runs the sync.
+ */
+export const sidesWithoutStartingKeeper = (lineups: Lineup[]): ClubCode[] =>
+  lineups
+    .filter((lineup) => !lineup.players.some((player) => player.starter && player.keeper))
+    .map((lineup) => lineup.clubCode);
+
 /** Attach synced lineups to the matches that have any. Mirrors `withGoals`. */
 export const withLineups = (
   matches: Match[],

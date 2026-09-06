@@ -49,6 +49,7 @@ import { buildAgent, CBF_HOST, getJson, sleep } from "@/scripts/cbf-api";
 import {
   type CbfAtleta,
   attachSubstitutions,
+  sidesWithoutStartingKeeper,
   lineupsFromAtletas,
   lineupsReconcile,
 } from "@/escalacao-core";
@@ -369,6 +370,7 @@ const escalacoes: Record<string, Lineup[]> = replace ? {} : await readExistingLi
 const lineupsBefore = Object.keys(escalacoes).length;
 const noLineup: string[] = [];
 const noSubs: string[] = [];
+const noKeeper: string[] = [];
 
 const unjoined: string[] = [];
 const unknownCodes = new Map<string, string>();
@@ -530,6 +532,13 @@ for (const { jogo, ourId } of targets) {
       noSubs.push(`${label} — súmula's Substituições did not line up with the match API`);
     } else if (!sumula) {
       noSubs.push(`${label} — no súmula to read substitutions from`);
+    }
+    // Recorded, never refused — see `sidesWithoutStartingKeeper`. Four sides of
+    // the season reach this, and three of them are perfect sheets whose keeper
+    // CBF simply did not flag.
+    const keeperless = sidesWithoutStartingKeeper(lineups);
+    if (keeperless.length > 0) {
+      noKeeper.push(`${label} — no goalkeeper among the eleven: ${keeperless.join(", ")}`);
     }
     escalacoes[id] = withSubs ?? lineups;
   } else if (lineups.length > 0 || (detail.mandante?.atletas?.length ?? 0) > 0) {
@@ -762,6 +771,17 @@ if (noSubs.length) {
   console.warn(
     `    Not a failure — the sheets are recorded and correct. A re-run picks the\n` +
       `    changes up once CBF publishes a súmula whose table agrees with the API.`,
+  );
+}
+
+if (noKeeper.length) {
+  console.warn(`\n    ${noKeeper.length} team sheet(s) whose eleven names NO goalkeeper:`);
+  for (const line of noKeeper) console.warn(`      ${line}`);
+  console.warn(
+    `    Not a failure, and not repairable here. CBF marks two goleiros a side and\n` +
+      `    occasionally flags only the reserve; the sheet is otherwise complete and the\n` +
+      `    page simply prints no (GOL). Do NOT infer the keeper from shirt 1 — it is a\n` +
+      `    convention rather than a law, and a wrong (GOL) is a claim about a person.`,
   );
 }
 

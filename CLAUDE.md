@@ -645,6 +645,42 @@ what makes the logic testable without mocking HTTP.
   refuse the string-boolean failure, which is the one that produces
   plausible-looking data.
 
+  **A goalkeeper is not among those guarantees, and `sidesWithoutStartingKeeper`
+  is a WARNING rather than a fifth clause of that gate.** Measured over all 486
+  sides served: 481 mark exactly two goleiros, one starting and one on the
+  bench, and five mark only one — of which four leave the *starter* unmarked
+  (r4/554773 Coritiba, r5/554784 Cruzeiro, r8/554816 and r17/554901 Bahia). So
+  the page prints no `(GOL)` for eleven players on four sides of the season.
+
+  **It is CBF's sheet and not our parse, probed rather than inferred.** `isTrue`
+  demands the exact string `"true"`, so the obvious suspicion is a second
+  spelling we drop — and the raw `/api/cbf/jogos/{id}` for all four fixtures
+  carries `goleiro` as `"true"` or `"false"` on every one of the 92 atletas,
+  with the single `"true"` sitting on a player whose `reserva` is `"true"`. CBF
+  marked the reserve and not the starter.
+
+  **Folding it into `lineupsReconcile` is the obvious fix and is wrong**, which
+  is why a test pins the acceptance rather than leaving it to be tidied away.
+  Three of the four are otherwise perfect sheets whose keeper is plainly in the
+  eleven — Coritiba's 1 Pedro Morisco, Cruzeiro's 1 Cássio, Bahia's 1 Ronaldo
+  Strada — so refusing costs a reader 46 names to punish one missing boolean.
+  The all-or-nothing rule one paragraph down is about **plausible lies**; an
+  absent `(GOL)` is a visible absence and lies to nobody.
+
+  **The fourth cannot be repaired at all, and "shirt 1 is the goalkeeper" is the
+  trap.** Bahia's r17/554901 names 23 players, flags only 34 João Paulo on the
+  bench, and carries **no shirt 1 anywhere** — the starting keeper is not
+  unmarked, he is not on the sheet. The number is a convention rather than a
+  law, and a wrong `(GOL)` is an assertion about a person, so nothing infers it;
+  `tests/e2e/escalacoes.spec.ts` goes red against exactly that mutation.
+
+  **The spec that should have caught this asserted it and could not fail.** Its
+  own name claimed each side *"names a goalkeeper"*, and it passed because 554977
+  — the one fixture it opens — happens to be flagged correctly. That is the
+  *which record happens to hold a value* trap this file already names for
+  `goals.spec.ts`, arriving as a test's own title. It is scoped to the fixture
+  now, and the general case is produced by stripping the flag from the payload.
+
   **Substitutions carry a minute, and it comes from a second source.** The
   match API knows *who* — `alteracoes`, ids that resolve against the roster —
   and cannot say *when*: `tempo_jogo` is `"25:00"` beside a `tempo_subs` of

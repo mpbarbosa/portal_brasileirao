@@ -9,6 +9,7 @@ import {
   lineupFor,
   lineupsFromAtletas,
   lineupsReconcile,
+  sidesWithoutStartingKeeper,
   startedFor,
   subShirtLabels,
   tidyLineupName,
@@ -438,3 +439,68 @@ test("a substitute substituted again is resolved, because this tracks the pitch 
 test("a lineup with no substitutions yields no labels rather than throwing", () => {
   assert.deepEqual(subShirtLabels(namesakes(undefined)), []);
 });
+
+// ---------------------------------------------------------------------------
+// sidesWithoutStartingKeeper — a warning, and deliberately not a refusal
+// ---------------------------------------------------------------------------
+
+/** A side of `n` players, the first eleven starting, with the keeper where told. */
+const sheet = (code: "PAL" | "VAS", keeper: "starter" | "bench" | "none"): Lineup => ({
+  clubCode: code,
+  players: Array.from({ length: 23 }, (_, i) => ({
+    name: `${code}${i + 1}`,
+    shirt: String(i + 1),
+    ...(i < 11 ? { starter: true as const } : {}),
+    ...((keeper === "starter" && i === 0) || (keeper === "bench" && i === 11)
+      ? { keeper: true as const }
+      : {}),
+  })),
+});
+
+test("a side whose eleven names no goalkeeper is reported", () => {
+  // CBF's four: the flag is on the reserve and the starter carries `"false"`.
+  assert.deepEqual(sidesWithoutStartingKeeper([sheet("PAL", "bench"), sheet("VAS", "starter")]), [
+    "PAL",
+  ]);
+});
+
+test("a side that marks no goalkeeper anywhere is reported too", () => {
+  assert.deepEqual(sidesWithoutStartingKeeper([sheet("PAL", "none"), sheet("VAS", "none")]), [
+    "PAL",
+    "VAS",
+  ]);
+});
+
+test("a keeper marked among the eleven is not reported, wherever the bench's is", () => {
+  assert.deepEqual(sidesWithoutStartingKeeper([sheet("PAL", "starter"), sheet("VAS", "starter")]), []);
+});
+
+test("lineupsReconcile ACCEPTS a sheet with no starting goalkeeper, on purpose", () => {
+  /**
+   * The decision this pins, so that "tighten the gate" is a deliberate change
+   * rather than a tidy-up: three of the four real cases are otherwise perfect
+   * team sheets whose keeper is plainly in the eleven — Coritiba's 1 Pedro
+   * Morisco, Cruzeiro's 1 Cássio, Bahia's 1 Ronaldo Strada. Refusing here
+   * would discard 46 names per fixture to punish one missing boolean, and an
+   * absent `(GOL)` is a visible absence rather than the plausible lie the
+   * all-or-nothing rule exists to refuse.
+   */
+  const lineups = [sheet("PAL", "bench"), sheet("VAS", "none")];
+  assert.equal(lineupsReconcile(lineups), true);
+  assert.deepEqual(sidesWithoutStartingKeeper(lineups), ["PAL", "VAS"]);
+});
+
+test("nothing here infers the keeper from shirt 1", () => {
+  // Bahia's r17/554901 names 23 players and no shirt 1 at all, so the rule
+  // would not even reach that case — and where it did reach one it would be an
+  // assertion about a person, from a convention rather than a law.
+  const noOne: Lineup = {
+    clubCode: "PAL",
+    players: Array.from({ length: 23 }, (_, i) => ({
+      name: `P${i}`,
+      shirt: String(i + 4),
+      ...(i < 11 ? { starter: true as const } : {}),
+    })),
+  };
+  assert.deepEqual(sidesWithoutStartingKeeper([noOne]), ["PAL"]);
+  assert.equal(noOne.players.some((p) => p.keeper), false);});

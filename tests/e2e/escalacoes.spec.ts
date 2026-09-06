@@ -38,7 +38,9 @@ test.describe("Escalações", () => {
     await expect(sheets.nth(1)).toBeVisible();
   });
 
-  test("each side lists exactly eleven starters, and names a goalkeeper", async ({ page }) => {
+  test("each side lists exactly eleven starters, and this fixture names a goalkeeper", async ({
+    page,
+  }) => {
     await page.goto(`/partida/${MATCH}`);
     await page.getByRole("heading", { name: "Escalações" }).click();
 
@@ -52,9 +54,70 @@ test.describe("Escalações", () => {
       // perfectly ordinary data all the way to the page.
       const starters = sheet.locator("ul").first().locator("li");
       await expect(starters).toHaveCount(11);
+      await expect(sheet.locator("[data-bench] li").first()).toBeVisible();
+      // **True of 554977, and NOT a property of a team sheet** — which is what
+      // this test asserted, and what its own name claimed, until it was
+      // measured: 4 of the season's 486 sides name no goalkeeper at all,
+      // because CBF flagged the reserve and left the starter as `"false"`.
+      // Scoped to the fixture on purpose; the general case is the test below.
       await expect(sheet.getByText("(GOL)").first()).toBeVisible();
+    }
+  });
+
+  test("a sheet whose keeper CBF never flagged still renders, without a (GOL)", async ({
+    page,
+  }) => {
+    /**
+     * The state is **produced**, not hunted for. Which fixtures lack the flag is
+     * exactly the "how much curated data exists" this file's header refuses to
+     * depend on — it is 4 sides of 486 today and any re-sync moves it.
+     *
+     * Verified against the raw provider rather than inferred: probing
+     * `/api/cbf/jogos/{id}` for all four, every atleta carries `goleiro` as the
+     * string `"true"` or `"false"` and the single `"true"` sits on a player
+     * whose `reserva` is `"true"`. So this is CBF's sheet, not our parse, and
+     * `isTrue` is not what dropped it.
+     *
+     * Nothing may be inferred to fill it — `shirt 1` is a convention rather than
+     * a law, and Bahia's r17/554901 carries no shirt 1 among its 23 at all. The
+     * page's contract is therefore the one it already keeps everywhere else: an
+     * absent value renders as nothing, never as a dash or a guess.
+     */
+    const response = await page.request.get("/api/matches");
+    const body = await response.json();
+    body.data.matches = body.data.matches.map((match: Record<string, unknown>) => ({
+      ...match,
+      lineups: Array.isArray(match.lineups)
+        ? match.lineups.map((lineup: Record<string, unknown>) => ({
+            ...lineup,
+            players: (lineup.players as Record<string, unknown>[]).map(
+              ({ keeper: _dropped, ...player }) => player,
+            ),
+          }))
+        : match.lineups,
+    }));
+    await page.route("**/api/matches*", (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify(body),
+      }),
+    );
+
+    await page.goto(`/partida/${MATCH}`);
+    await page.getByRole("heading", { name: "Escalações" }).click();
+
+    const sheets = page.locator("[data-lineup]");
+    await expect(sheets).toHaveCount(2);
+    for (const sheet of await sheets.all()) {
+      // The eleven are still eleven and still named: losing a boolean must not
+      // cost a single row, which is the failure that would matter.
+      await expect(sheet.locator("ul").first().locator("li")).toHaveCount(11);
       await expect(sheet.locator("[data-bench] li").first()).toBeVisible();
     }
+    // …and nothing stands in for the mark that is not there.
+    await expect(page.getByText("(GOL)")).toHaveCount(0);
+    await expect(page.getByText("—", { exact: true })).toHaveCount(0);
   });
 
   test("substitutions print a minute, a name and who they replaced", async ({ page }) => {
