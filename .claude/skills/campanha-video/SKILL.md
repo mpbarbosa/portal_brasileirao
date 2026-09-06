@@ -256,17 +256,33 @@ oEmbed, so the two states are distinguishable once you hold the id — and for a
 only thing that says whether a club page could embed it. Say which of the three
 you established.
 
-**Derive the answer from the feed; do not carry a number out of this file.** The
-list of clubs with artefacts is `ls docs/medias/`, the list of public videos is
-the feed, and what you want is the difference. Reading 2026-09-06T04:36Z: nine
-club folders, three entries in the feed, and **exactly one published velas** —
-Fluminense's. Every other club's velas had finished artefacts and no upload.
+**Derive the answer; this file deliberately states no total.** The list of clubs
+with artefacts is `ls docs/medias/`, the list of public videos is the feed, and
+what you want is the difference. The gap is wide — on 2026-09-06 all but one
+club's velas were unpublished — and the shape worth carrying is that it is
+**one published velas against however many folders exist**, not a number.
 
-**The trap in that subtraction, which cost two wrong counts in one session: the
-feed's two club entries are not two velas.** One of them is the `campanhas`
+**The reason there is no number here is that the number moved twice while this
+paragraph was being written.** The version this replaces said two clubs; the
+true figure was eight; and between opening that correction and merging it, a
+ninth and then a tenth club folder landed, so the corrected figure was stale
+inside the pull request whose subject was stale figures. Nothing was careless
+about any of the three readings — each was right when taken. Run the two
+commands.
+
+**The trap in the subtraction, which cost two wrong counts in one session: the
+feed's club entries are not all velas.** One of them is the `campanhas`
 Palmeiras × Flamengo, a comparação — so counting *club videos in the feed*
-overstates published *velas* by one, and the two clubs it names both still have
-an unpublished velas of their own. Match on the artefact, never on the club.
+overstates published *velas*, and the two clubs it names both still have an
+unpublished velas of their own. An entry in `club-videos.ts` does not mean that
+club's velas shipped. Match on the **artefact**, never on the club.
+
+**The feed 404s transiently, and a 404 is not an answer.** Measured
+2026-09-06T04:45Z: the same URL that had answered 200 twice returned 404 on
+three consecutive attempts, while oEmbed on a known video still answered 200 —
+so the channel was fine and the endpoint was not. Re-ask before concluding
+anything from it, and check oEmbed as the second opinion: *the feed is empty*
+and *the feed would not talk to me* look identical if you only look once.
 
 **And an unlisted video on a club page is a decision, not a detail.** Embedding
 one publishes it to every reader of that page, which is what "unlisted" was
@@ -300,10 +316,8 @@ not a claim about the video.
 - [ ] the loop closed — and step 9b is how you find out, in two commands,
       rather than guessing. **Run it; do not read a count out of this file.**
       The gap between `ls docs/medias/` and the channel's feed is wide and
-      moves: on 2026-09-06 it was eight of nine velas unpublished, and the
-      previous version of this line said two. It did not rot — it was
-      *inherited* rather than re-derived, by me, in the same session that
-      widened it
+      moves hourly — it changed twice while the correction to this very line
+      was in review. Any total written here is wrong by the time you read it
 
 ## The open edges, so nobody rediscovers them
 
