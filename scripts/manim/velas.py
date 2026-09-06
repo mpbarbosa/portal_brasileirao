@@ -121,6 +121,7 @@ CLUB_COLOURS = {
     "1771": "#4C7DF0",  # Cruzeiro      azul
     "1776": "#FFC4B0",  # São Paulo     salmão
     "1766": "#6E8894",  # Atlético-MG   cinza-azul
+    "1770": "#98A3A8",  # Botafogo      cinza
 }
 FALLBACK_COLOUR = "#9AA5A0"
 
