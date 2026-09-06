@@ -120,6 +120,7 @@ CLUB_COLOURS = {
     "1777": "#35BCD6",  # Bahia         ciano
     "1771": "#4C7DF0",  # Cruzeiro      azul
     "1776": "#FFC4B0",  # São Paulo     salmão
+    "1766": "#6E8894",  # Atlético-MG   cinza-azul
 }
 FALLBACK_COLOUR = "#9AA5A0"
 
