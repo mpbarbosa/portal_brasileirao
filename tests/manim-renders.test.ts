@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { execFileSync } from "node:child_process";
 import { readFileSync, readdirSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -64,14 +65,43 @@ const readRendered = (): Map<string, string> => {
  * would assert it is about one of them. The bytes are listed once, under the
  * real path; giving the alias its own `RENDERED` line would be a second claim
  * about one file, and the two could then disagree about which snapshot drew it.
- * `readdirSync` does not follow links, so `isSymbolicLink()` is asked of the
- * entry rather than of its target.
+ * **Asking the FILESYSTEM whether something is a link is not enough**, and that
+ * is a property of the checkout rather than of the repository. With
+ * `core.symlinks=false` — set globally on at least one machine this repo is
+ * developed on — git records mode `120000` faithfully and then materialises the
+ * entry as a REGULAR FILE containing the target path as text, 35 bytes of
+ * ASCII. `isSymbolicLink()` is then false for every one of them, and this test
+ * demands a `RENDERED` line for an alias. So the index is asked as well: a link
+ * is one the filesystem reports *or* one git records at mode `120000`, which
+ * covers a fresh checkout on either kind of machine and an untracked link a
+ * session has just created with `ln -s`.
  */
+/** Paths git records at mode `120000`, relative to `docs/medias`. */
+const gitLinkPaths = (): Set<string> => {
+  try {
+    const out = execFileSync("git", ["ls-files", "-s", "--", MEDIAS], {
+      cwd: path.resolve(HERE, ".."),
+      encoding: "utf8",
+    });
+    return new Set(
+      out
+        .split("\n")
+        .filter((line) => line.startsWith("120000 "))
+        .map((line) => path.relative(MEDIAS, path.resolve(HERE, "..", line.split("\t")[1]))),
+    );
+  } catch {
+    // No git, or not a checkout. The filesystem check above still holds where
+    // links are real, which is every machine with `core.symlinks` at its default.
+    return new Set<string>();
+  }
+};
+
 const artefacts = (): string[] => {
+  const linkPaths = gitLinkPaths();
   const walk = (dir: string, prefix: string): string[] =>
     readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
       const rel = prefix ? `${prefix}/${entry.name}` : entry.name;
-      if (entry.isSymbolicLink()) return [];
+      if (entry.isSymbolicLink() || linkPaths.has(rel)) return [];
       if (entry.isDirectory()) return walk(path.join(dir, entry.name), rel);
       return rel === "RENDERED" ? [] : [rel];
     });
