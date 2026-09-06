@@ -2631,8 +2631,41 @@ table. The source is weekly and the standings are live, so by Saturday the table
 holds a round these figures do not, and dividing by the live count understates
 every rate by exactly the amount that reads as a form dip.
 
-**The denominator comes from the seed, so the seed must reach at least as far as
-caRtola does — and that is a refusal in the sync rather than a note here.** The
+**It is not the fixture list either, and shipped as one for months.** The
+denominator is what the counters *cover*, read from caRtola's own per-player
+`jogos_num`, because **the source does not always record a match at all**.
+Measured on 2026: Athletico-PR's windows 2 and 5 are zero across all five
+counters, and they are exactly its two fixtures played out of round order — r2
+on 19/02 after r3, r5 on 29/03 after r6-r8. The actions are **lost rather than
+shifted** into a neighbouring window, which is the benign case one paragraph up:
+the club's scout goals are 33 against 37 in the seed, its own goals in favour are
+0 and fully known (`goals.ts` covers 23 of its 25 and the two it misses are both
+0-0), and the 4-goal gap is precisely round 5's 4-1. So 219 finalizações were
+divided by 25 where the counted matches give 23 — **8,8 a game reported against
+9,5, which is 17º de 20 against 12º**, on a card whose whole purpose is reading
+one club against the division. 13 of the 20 clubs are short, Botafogo by three,
+and the 20 uncovered club-matches together with the own goals account for
+essentially all of the goals band's 6.8%.
+
+**The maximum is the statistic, and the sum is the trap the superseded comment
+was right about.** A club's matches in a window is the largest step any one of
+its players took in `jogos_num` — eleven start, so one of them stepped by exactly
+the number played — where a *sum* over players cannot separate a window holding
+two rounds from one holding a heavily-rotated eleven. **Only players present in
+BOTH snapshots count**: reading an absent player's cumulative total as a step
+imports his whole season, and unfiltered that put Botafogo at 29 matches covered
+against 24 played and São Paulo at 32, off single windows reporting steps of 7
+and 9. Filtered, no window in the season steps by more than one.
+
+**The seed is now the BOUND rather than the value.** Coverage above it is a stale
+seed or a transfer read as an appearance, it inflates every rate, and the sync
+refuses it; falling short is not refused, because that is caRtola not recording a
+fixture and the rates are right about it now that the denominator follows. A club
+well short of its fixtures is described on a thinner sample than the division
+around it — the rate is right, the sample is not the same size.
+
+**The seed must still reach at least as far as caRtola does — and that is a
+refusal in the sync rather than a note here.** The
 numerators advance weekly and the seed advances whenever somebody runs
 `sync-seed-data`, so the order is `sync-seed-data` **then**
 `sync-cartola-scouts`, which is `rank-history.ts`' rule with something behind it.
@@ -2640,6 +2673,12 @@ Measured by reproducing the mismatch one round earlier against data already on
 disk — scouts through 24 over a seed through 23 — **every club's finalizações
 inflated, 4.3%–4.5%, mean 4.4%**, and nothing about the output looks wrong:
 twenty plausible rates, the right ranks, six rows.
+
+That measurement describes the **old** derivation, where the denominator *was*
+the seed. Under the coverage denominator a lagging seed no longer inflates a
+rate: `jogos_num` still reports 25 matches covered while the seed can only bound
+it at 23, so the coverage bound throws as well as the explicit refusal. Two
+gates on one fault, which is why neither was removed.
 
 **The goals band cannot stand in for it, and fails in the flattering
 direction.** Under exactly this fault the scout total rises while the seed total

@@ -14,6 +14,7 @@ import {
   CLUB_SCOUTS_HISTORY_THROUGH_ROUND,
 } from "@/src/data/club-scouts-history";
 import { CLUBS } from "@/src/data/clubs";
+import { SEED_MATCHES } from "@/src/data/matches";
 import type { ClubScouts, ScoutHistoryEntry } from "@/src/types";
 
 /*
@@ -98,6 +99,67 @@ test("the last rodada of the history reproduces the season aggregate", () => {
       ],
       `${entry.clubCode}'s last history row and its aggregate describe different seasons`,
     );
+  }
+});
+
+/*
+ * The denominator, in two directions. `matches` is what the counters COVER —
+ * read from caRtola's own `jogos_num` — and not what the fixture list says was
+ * played, because the source does not always record a match at all.
+ *
+ * Both cases below are about the shipped data rather than about `scouts-core`,
+ * and both were confirmed RED against the file as it stood before the
+ * derivation changed: Athletico-PR's rodadas 2 and 5 each counted a match with
+ * no action whatever behind it, which is what put its finalizações at 8,8 a
+ * game (17º de 20) where the covered matches give 9,5 (12º).
+ */
+
+test("a rodada that counts another match shows that match's actions", () => {
+  for (const club of CLUBS) {
+    const rows = CLUB_SCOUTS_HISTORY[club.code] ?? [];
+    rows.forEach((row, index) => {
+      const before: readonly number[] = index === 0 ? [0, 0, 0, 0, 0, 0] : rows[index - 1]!;
+      const step = row[0] - before[0]!;
+      if (step <= 0) return;
+
+      // The five counters this tuple carries, not the nine `ClubScouts` has —
+      // a match producing no goal, no finalização of any kind and no defesa is
+      // not a match anybody played, whatever `jogos_num` says about it.
+      const actions = row
+        .slice(1)
+        .reduce((total, value, field) => total + (value - before[field + 1]!), 0);
+      assert.ok(
+        actions > 0,
+        `${club.shortName} counts ${step} more match(es) at rodada ${index + 1} ` +
+          `with no goal, finalização or defesa behind them`,
+      );
+    });
+  }
+});
+
+test("the counters never cover more matches than the fixture list records", () => {
+  for (const club of CLUBS) {
+    const rows = CLUB_SCOUTS_HISTORY[club.code] ?? [];
+    rows.forEach((row, index) => {
+      const round = index + 1;
+      // The seed is the BOUND, never the value: falling short is caRtola not
+      // recording a fixture and is expected — 13 of 20 clubs are short in 2026.
+      // Exceeding it is a stale seed or a transfer read as an appearance, and
+      // it inflates every rate for the club, which reads as form.
+      const played = SEED_MATCHES.filter(
+        (match) =>
+          match.round <= round &&
+          match.status === "FINISHED" &&
+          match.homeGoals !== null &&
+          match.awayGoals !== null &&
+          (match.homeCode === club.code || match.awayCode === club.code),
+      ).length;
+      assert.ok(
+        row[0] <= played,
+        `${club.shortName} covers ${row[0]} matches through rodada ${round} ` +
+          `but the seed records only ${played} played`,
+      );
+    });
   }
 });
 
