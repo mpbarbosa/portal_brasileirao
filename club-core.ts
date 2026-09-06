@@ -393,12 +393,14 @@ export const videoWatchUrl = (raw: string | undefined): string | null => {
 };
 
 /**
- * YouTube's own thumbnail for a video, at the size the rail draws.
+ * YouTube's own thumbnail for a video, at the size that always exists.
  *
- * `hqdefault` is 480×360 and exists for every video — the higher `maxresdefault`
- * does **not**, and 404s for anything uploaded below that resolution, which
- * renders as a broken image on exactly the entries a curator is least likely to
- * re-check.
+ * `hqdefault` is 480×360 and is generated for every video — the higher
+ * `maxresdefault` is **not**, and 404s for anything uploaded below that
+ * resolution, which renders as a broken image on exactly the entries a curator
+ * is least likely to re-check. So this is the address the rail falls back to,
+ * and `videoThumbnailHdUrl` is the one it tries first; see that function for
+ * why the rail needs a second size at all.
  *
  * **Hotlinked rather than vendored, which is the opposite of the stadium and
  * player photographs and rests on a different argument.** Those are somebody's
@@ -415,6 +417,42 @@ export const videoWatchUrl = (raw: string | undefined): string | null => {
 export const videoThumbnailUrl = (raw: string | undefined): string | null => {
   const id = youtubeVideoId(raw);
   return id && `https://img.youtube.com/vi/${id}/hqdefault.jpg`;
+};
+
+/**
+ * The same thumbnail at 1280×720, which the rail asks for first.
+ *
+ * **It exists because of the reader's screen rather than the card's width.**
+ * The card is capped at 26rem, and `hqdefault` covers that at 1× — 480 CSS px
+ * of picture behind 416 of card. Every phone this app is read on is 2× or 3×,
+ * so a 328px card on a 360dp screen is asking for **984 device pixels** and
+ * `hqdefault` has 480 of them. These entries are Manim renders full of small
+ * type, which is the content that shows it first.
+ *
+ * **It is also the one that is not letterboxed.** `hqdefault` is 4:3 with the
+ * picture inside black bars, so the rail's `object-cover` is cropping them
+ * away; `maxresdefault` is native 16:9 and nothing is cropped. Two reasons, and
+ * the crop is the one that would be easy to read as a rendering bug rather than
+ * as the source.
+ *
+ * **This address may 404 and the caller must survive it**, which is the whole
+ * reason the two are separate functions rather than a size parameter with a
+ * default: a parameter reads as a preference, and this is a promise the
+ * platform does not make. `ClubVideos` swaps to `videoThumbnailUrl` on `error`,
+ * the way `ClubCrest` swaps to a monogram. Measured 2026-09-06 against the two
+ * ids in `club-videos.ts`: both answer 200 at 1280×720 — which is a reading of
+ * today's entries, not a property of the file, since a curator may add a video
+ * that was never uploaded above 480p.
+ *
+ * **Never let this one reach the e2e suite either.** It is the same host, so
+ * `img.youtube.com` in `OFFLINE_HOSTS` already covers it — and note what that
+ * stub does to the fallback: it fulfils **200**, so the `error` branch is
+ * unreachable by default and a spec asserting it has to route a 404 itself, as
+ * `crest-fallback.spec.ts` drives a 503.
+ */
+export const videoThumbnailHdUrl = (raw: string | undefined): string | null => {
+  const id = youtubeVideoId(raw);
+  return id && `https://img.youtube.com/vi/${id}/maxresdefault.jpg`;
 };
 
 /**
