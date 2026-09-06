@@ -128,6 +128,7 @@ CLUB_COLOURS = {
     "1780": "#F0748F",  # Vasco da Gama rosa
     "6685": "#C9A227",  # Santos        ocre
     "6684": "#FF6B3D",  # Internacional laranja-vermelho
+    "1782": "#8C6E5A",  # Vitória       marrom
 }
 FALLBACK_COLOUR = "#9AA5A0"
 
