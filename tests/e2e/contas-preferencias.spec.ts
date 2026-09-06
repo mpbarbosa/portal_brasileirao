@@ -170,6 +170,14 @@ test.describe("Meu time com conta", () => {
     await page.goto("/clube/palmeiras");
     await followControl(page).click();
 
+    // Prove the device copy is THERE before asserting it goes. That is what
+    // makes the poll below a removal rather than a race: its first read answers
+    // the old value, so it genuinely waits. `tests/e2e-poll.test.ts` enforces
+    // the pairing — delete this line and that poll goes red.
+    await expect
+      .poll(() => page.evaluate(() => localStorage.getItem("portal-brasileirao:preferences")))
+      .not.toBeNull();
+
     await page.goto("/conta");
     await page.locator("[data-delete-account]").click();
     await page.locator("[data-confirm-delete]").click();
@@ -194,7 +202,14 @@ test.describe("Meu time com conta", () => {
     // Signing in again as the same person is a new account with nothing in it.
     await devLogin(page, "sub-delete");
     await page.goto("/");
-    await expect.poll(() => me(page).then((it) => it?.preferences.club ?? null)).toBeNull();
+    // The account has to LOAD before its emptiness means anything, so poll for
+    // the payload ARRIVING — a positive — and then read once. Polling for the
+    // club to be absent returns on its first read and asserts only that this
+    // test got there before `planSync` would have written, which is a fact
+    // about how busy the machine is. That is the shape this spec shipped with,
+    // and why it was green alone and red at 923 specs.
+    await expect.poll(() => me(page)).not.toBeNull();
+    expect((await me(page))?.preferences.club ?? null).toBeNull();
   });
 });
 
