@@ -19,7 +19,7 @@ import type { Goal } from "@/src/types";
  * never "goalless": a real 0-0 is deliberately absent rather than an empty
  * array, since the two would be indistinguishable here.
  *
- * Last synced 2026-09-03.
+ * Last synced 2026-09-06.
  */
 export const GOALS: Record<string, Goal[]> = {
   "554740": [
@@ -185,6 +185,10 @@ export const GOALS: Record<string, Goal[]> = {
   "554774": [
     { clubCode: "1771", scorer: "Matheus Pereira", minute: "8'" },
     { clubCode: "1779", scorer: "Joao Pedro", minute: "81'" },
+  ],
+  "554775": [
+    { clubCode: "1783", scorer: "Carrascal", minute: "14'" },
+    { clubCode: "1783", scorer: "Lucas Paquetá", minute: "42'" },
   ],
   "554776": [
     { clubCode: "1767", scorer: "Erick Noriega", minute: "50'" },
