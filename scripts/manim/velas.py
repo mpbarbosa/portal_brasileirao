@@ -119,6 +119,7 @@ CLUB_COLOURS = {
     "1779": "#D7DDE0",  # Corinthians   cinza-claro
     "1777": "#35BCD6",  # Bahia         ciano
     "1771": "#4C7DF0",  # Cruzeiro      azul
+    "1776": "#FFC4B0",  # São Paulo     salmão
 }
 FALLBACK_COLOUR = "#9AA5A0"
 
