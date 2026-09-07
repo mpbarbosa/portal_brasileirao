@@ -148,18 +148,27 @@ test.describe("Onde assistir", () => {
     // defect fixed in `players.spec.ts`, which failed on the full local suite
     // at 7 workers while passing in isolation and in the slower CI.
     const marks = page.locator("dd img");
+
+    // Name the marks that exist, once. `toBeVisible()` above has already put at
+    // least the Premiere one in the DOM, so this cannot be empty.
+    const named = await marks.evaluateAll((all) => all.map((i) => i.getAttribute("alt")));
+    expect(named.length).toBeGreaterThan(0);
+
+    // Then wait for every one of them to have painted. Written as the set that
+    // HAS decoded reaching the set that exists, rather than as "nothing is
+    // undecoded": a poll for an absence returns on its first read, so
+    // `.toEqual([])` here would be satisfied by the marks not having rendered
+    // yet and would assert only that this test out-ran the browser.
+    // `tests/e2e-poll.test.ts` refuses that shape, and refused this one.
     await expect
       .poll(() =>
         marks.evaluateAll((all) =>
           all
-            .filter((i) => (i as HTMLImageElement).naturalWidth === 0)
+            .filter((i) => (i as HTMLImageElement).naturalWidth > 0)
             .map((i) => i.getAttribute("alt")),
         ),
       )
-      .toEqual([]);
-
-    // An empty page satisfies the poll vacuously, so say the marks are there.
-    expect(await marks.count()).toBeGreaterThan(0);
+      .toEqual(named);
   });
 
   test("a broadcaster with no mark still reads as its name", async ({ page }) => {
