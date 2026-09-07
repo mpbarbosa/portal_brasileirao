@@ -561,7 +561,38 @@ const cropHeight = async (): Promise<number> =>
     // it cuts above the overlay and omits the one thing worth photographing.
     // Measured on the player card: dialog bottom 640px, crop 109px.
     const dialogs = [...document.querySelectorAll("dialog[open]")];
-    const candidates = [...main.children, ...main.querySelectorAll("li"), ...dialogs];
+
+    // **A `<li>` inside a CLOSED `<details>` has a real rectangle, and every
+    // geometric test says it is visible.** Measured on `/partida/554951`, whose
+    // Escalações section is collapsed: `details.open` is false and its first
+    // `li` still reports a 344×16 rect, `display: flex`, `visibility: visible`,
+    // a non-null `offsetParent` and one entry in `getClientRects()`. Chrome
+    // lays that content out — so find-in-page and Ctrl+F can reach it — and
+    // simply does not paint it.
+    //
+    // The consequence was a crop decided by rows nobody can see: on both
+    // partida pages the cut landed on a lineup entry *inside* the collapsed
+    // section, which put it in the middle of the Campanha card below and sliced
+    // a sparkline in half — the "reads as a broken layout" failure this whole
+    // function exists to avoid.
+    //
+    // **`checkVisibility()` is the only one of the five that answers `false`**,
+    // which is why the obvious repairs are worse than no repair: a filter on
+    // `offsetParent`, on `rect.height` or on `getClientRects().length` compiles,
+    // reads as a fix, and removes nothing. Guarded with `typeof` so a runtime
+    // without it degrades to the old behaviour rather than throwing mid-capture.
+    //
+    // **Written inline rather than as a named helper, and that is not style.**
+    // This body is serialised and evaluated in the browser, while tsx compiles
+    // the file with esbuild's `keepNames`, which wraps a named function in a
+    // `__name(...)` call that exists only in the Node bundle. Hoisting this
+    // predicate to a `const` therefore threw `ReferenceError: __name is not
+    // defined` inside `page.evaluate` — on every cropped route, while the
+    // `fullPage` and mobile captures, which never reach this function, wrote
+    // normally. Anything lifted out of this callback has to survive that.
+    const candidates = [...main.children, ...main.querySelectorAll("li"), ...dialogs].filter(
+      (el) => typeof el.checkVisibility !== "function" || el.checkVisibility(),
+    );
     const edges = candidates.map((el) => {
       const rect = el.getBoundingClientRect();
       return { top: rect.top + window.scrollY, bottom: rect.bottom + window.scrollY };
