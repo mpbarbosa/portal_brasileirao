@@ -445,14 +445,19 @@ const loadMatches = async (): Promise<ApiEnvelope<MatchesPayload>> => {
     // and sometimes newer — so what this fill returned is not automatically
     // what we serve. `now` is what separates the second case from an honest
     // re-schedule. See `mergeByFreshness`.
-    // `withPlayedStatus` first: a record carrying a scoreline for a kickoff
-    // already past is repaired before anything compares it, so the merge and
-    // the state it persists both see a coherent record. Doing it after would
-    // remember the incoherent one — which is how the held copy was lost the
-    // first time. See that function for what production served.
-    const matches = mergeByFreshness(
-      freshestMatches,
-      withPlayedStatus(mapMatches(raw), now),
+    // `withPlayedStatus` wraps the merge's OUTPUT, and the order is the whole
+    // of what makes it work. Applied to the incoming records instead — which
+    // is how it shipped — it never reaches a record the merge decides on
+    // *stamp*: `mergeByFreshness` returns a strictly-newer held copy
+    // unmodified, and the host's held state was poisoned with the incoherent
+    // records before this shipped. Reproduced rather than reasoned about: with
+    // the repair before the merge that fixture stays SCHEDULED, and after it
+    // reads FINISHED, from one held record and one incoming record.
+    //
+    // Wrapping the output also un-poisons the state, because `rememberMatches`
+    // stores what this returns.
+    const matches = withPlayedStatus(
+      mergeByFreshness(freshestMatches, mapMatches(raw), now),
       now,
     );
     rememberMatches(matches);
