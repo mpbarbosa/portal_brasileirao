@@ -1,5 +1,5 @@
 {
-  "snapshot": "2026-09-02",
+  "snapshot": "2026-09-07",
   "club": {
     "code": "1772",
     "name": "Chapecoense",
@@ -104,14 +104,14 @@
     {
       "round": 6,
       "open": 13,
-      "close": 13,
-      "best": 13,
+      "close": 12,
+      "best": 12,
       "worst": 14,
       "points": 1,
       "totalPoints": 6,
       "played": 6,
       "result": "E",
-      "moved": 0,
+      "moved": 1,
       "match": {
         "opponent": "Grêmio",
         "home": true,
@@ -122,15 +122,15 @@
     },
     {
       "round": 7,
-      "open": 13,
+      "open": 12,
       "close": 14,
-      "best": 13,
-      "worst": 15,
+      "best": 12,
+      "worst": 14,
       "points": 1,
       "totalPoints": 7,
       "played": 7,
       "result": "E",
-      "moved": -1,
+      "moved": -2,
       "match": {
         "opponent": "Corinthians",
         "home": true,
@@ -473,6 +473,25 @@
         "goalsFor": 1,
         "goalsAgainst": 3,
         "result": "D"
+      }
+    },
+    {
+      "round": 26,
+      "open": 20,
+      "close": 20,
+      "best": 20,
+      "worst": 20,
+      "points": 3,
+      "totalPoints": 17,
+      "played": 25,
+      "result": "V",
+      "moved": 0,
+      "match": {
+        "opponent": "Corinthians",
+        "home": false,
+        "goalsFor": 2,
+        "goalsAgainst": 1,
+        "result": "V"
       }
     }
   ]

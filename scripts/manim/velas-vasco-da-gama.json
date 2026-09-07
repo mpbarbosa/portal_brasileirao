@@ -1,5 +1,5 @@
 {
-  "snapshot": "2026-09-02",
+  "snapshot": "2026-09-07",
   "club": {
     "code": "1780",
     "name": "Vasco da Gama",
@@ -473,6 +473,25 @@
         "goalsFor": 3,
         "goalsAgainst": 1,
         "result": "V"
+      }
+    },
+    {
+      "round": 26,
+      "open": 17,
+      "close": 17,
+      "best": 17,
+      "worst": 17,
+      "points": 0,
+      "totalPoints": 25,
+      "played": 25,
+      "result": "D",
+      "moved": 0,
+      "match": {
+        "opponent": "Fluminense",
+        "home": false,
+        "goalsFor": 0,
+        "goalsAgainst": 1,
+        "result": "D"
       }
     }
   ]

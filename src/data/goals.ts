@@ -19,7 +19,7 @@ import type { Goal } from "@/src/types";
  * never "goalless": a real 0-0 is deliberately absent rather than an empty
  * array, since the two would be indistinguishable here.
  *
- * Last synced 2026-09-06.
+ * Last synced 2026-09-07.
  */
 export const GOALS: Record<string, Goal[]> = {
   "554740": [
@@ -1126,5 +1126,45 @@ export const GOALS: Record<string, Goal[]> = {
     { clubCode: "1780", scorer: "Lucas", minute: "54'" },
     { clubCode: "1780", scorer: "David", minute: "90+4'" },
     { clubCode: "1771", scorer: "Felipe de Morais", minute: "90+1'" },
+  ],
+  "554991": [
+    { clubCode: "4286", scorer: "Lucas Barbosa", minute: "14'" },
+    { clubCode: "1777", scorer: "Luciano Juba", kind: "penalty", minute: "33'" },
+    { clubCode: "1777", scorer: "Alejo", minute: "38'" },
+    { clubCode: "4286", scorer: "Ramos Mingo", kind: "own", minute: "45+1'" },
+    { clubCode: "1777", scorer: "Erick", minute: "49'" },
+  ],
+  "554992": [
+    { clubCode: "1779", scorer: "Matheus Bidu", minute: "2'" },
+    { clubCode: "1772", scorer: "Marcinho", minute: "40'" },
+    { clubCode: "1772", scorer: "Marcinho", minute: "76'" },
+  ],
+  "554993": [
+    { clubCode: "4241", scorer: "Pedro Rocha", minute: "60'" },
+    { clubCode: "4364", scorer: "Mosquito", minute: "63'" },
+    { clubCode: "4364", scorer: "Bruno Santos", minute: "83'" },
+  ],
+  "554994": [
+    { clubCode: "1771", scorer: "Matheus Pereira", minute: "29'" },
+    { clubCode: "1768", scorer: "João Cruz", minute: "45+1'" },
+    { clubCode: "1771", scorer: "Lucas Romero", minute: "70'" },
+    { clubCode: "1771", scorer: "Kaio Jorge", kind: "penalty", minute: "81'" },
+  ],
+  "554995": [
+    { clubCode: "1765", scorer: "Lucho Acosta", minute: "60'" },
+  ],
+  "554996": [
+    { clubCode: "6685", scorer: "Gabriel Barbosa", minute: "7'" },
+    { clubCode: "6685", scorer: "Gabriel Barbosa", kind: "penalty", minute: "28'" },
+    { clubCode: "6685", scorer: "Oliva", minute: "38'" },
+    { clubCode: "6684", scorer: "Braian Aguirre", minute: "48'" },
+    { clubCode: "6684", scorer: "Bruno Henrique", kind: "penalty", minute: "90'" },
+  ],
+  "554997": [
+    { clubCode: "1783", scorer: "Samuel Lino", minute: "64'" },
+  ],
+  "554998": [
+    { clubCode: "1776", scorer: "Luciano", minute: "66'" },
+    { clubCode: "1776", scorer: "Iago", minute: "68'" },
   ],
 };

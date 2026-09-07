@@ -1,5 +1,5 @@
 {
-  "snapshot": "2026-09-02",
+  "snapshot": "2026-09-07",
   "club": {
     "code": "6684",
     "name": "Internacional",
@@ -476,6 +476,25 @@
       "match": {
         "opponent": "Bahia",
         "home": false,
+        "goalsFor": 2,
+        "goalsAgainst": 3,
+        "result": "D"
+      }
+    },
+    {
+      "round": 26,
+      "open": 18,
+      "close": 18,
+      "best": 18,
+      "worst": 18,
+      "points": 0,
+      "totalPoints": 25,
+      "played": 26,
+      "result": "D",
+      "moved": 0,
+      "match": {
+        "opponent": "Santos",
+        "home": true,
         "goalsFor": 2,
         "goalsAgainst": 3,
         "result": "D"

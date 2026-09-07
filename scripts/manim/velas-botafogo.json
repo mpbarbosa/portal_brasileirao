@@ -1,5 +1,5 @@
 {
-  "snapshot": "2026-09-02",
+  "snapshot": "2026-09-07",
   "club": {
     "code": "1770",
     "name": "Botafogo",
@@ -66,14 +66,14 @@
     {
       "round": 4,
       "open": 12,
-      "close": 11,
+      "close": 12,
       "best": 11,
       "worst": 14,
       "points": 1,
       "totalPoints": 4,
       "played": 4,
       "result": "E",
-      "moved": 1,
+      "moved": 0,
       "match": {
         "opponent": "Vitória",
         "home": true,
@@ -84,15 +84,15 @@
     },
     {
       "round": 5,
-      "open": 11,
+      "open": 12,
       "close": 16,
-      "best": 11,
+      "best": 12,
       "worst": 16,
       "points": 0,
       "totalPoints": 4,
       "played": 5,
       "result": "D",
-      "moved": -5,
+      "moved": -4,
       "match": {
         "opponent": "Athletico-PR",
         "home": false,
@@ -473,6 +473,25 @@
         "goalsFor": 0,
         "goalsAgainst": 3,
         "result": "D"
+      }
+    },
+    {
+      "round": 26,
+      "open": 12,
+      "close": 13,
+      "best": 12,
+      "worst": 13,
+      "points": 1,
+      "totalPoints": 31,
+      "played": 25,
+      "result": "E",
+      "moved": -1,
+      "match": {
+        "opponent": "Palmeiras",
+        "home": true,
+        "goalsFor": 0,
+        "goalsAgainst": 0,
+        "result": "E"
       }
     }
   ]

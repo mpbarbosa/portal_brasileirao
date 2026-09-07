@@ -5,7 +5,7 @@ import type { Club } from "@/src/types";
  * Regenerate with: npx tsx scripts/sync-seed-data.ts
  *
  * Source: football-data.org competition BSA, season
- * 2026-01-28 to 2026-12-02. Snapshot taken 2026-09-02.
+ * 2026-01-28 to 2026-12-02. Snapshot taken 2026-09-07.
  *
  * `code` is the upstream numeric id, not `tla`: the abbreviation is not unique
  * (Corinthians and Coritiba both report "COR").

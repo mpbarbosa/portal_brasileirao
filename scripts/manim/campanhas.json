@@ -1,5 +1,5 @@
 {
-  "snapshot": "2026-09-02",
+  "snapshot": "2026-09-07",
   "clubs": [
     {
       "code": "1769",
@@ -92,7 +92,7 @@
         },
         {
           "round": 7,
-          "position": 2,
+          "position": 3,
           "points": 16,
           "played": 7,
           "match": {
@@ -316,7 +316,7 @@
         },
         {
           "round": 23,
-          "position": 1,
+          "position": 2,
           "points": 48,
           "played": 23,
           "match": {
@@ -353,6 +353,20 @@
             "home": false,
             "goalsFor": 1,
             "goalsAgainst": 1,
+            "result": "E"
+          }
+        },
+        {
+          "round": 26,
+          "position": 2,
+          "points": 53,
+          "played": 26,
+          "match": {
+            "opponent": "Botafogo",
+            "opponentTla": "BOT",
+            "home": false,
+            "goalsFor": 0,
+            "goalsAgainst": 0,
             "result": "E"
           }
         }
@@ -407,16 +421,23 @@
         },
         {
           "round": 4,
-          "position": 12,
-          "points": 4,
-          "played": 3,
-          "match": null
+          "position": 4,
+          "points": 7,
+          "played": 4,
+          "match": {
+            "opponent": "Mirassol",
+            "opponentTla": "MIR",
+            "home": true,
+            "goalsFor": 2,
+            "goalsAgainst": 0,
+            "result": "V"
+          }
         },
         {
           "round": 5,
-          "position": 7,
-          "points": 7,
-          "played": 4,
+          "position": 5,
+          "points": 10,
+          "played": 5,
           "match": {
             "opponent": "Cruzeiro",
             "opponentTla": "CRU",
@@ -428,9 +449,9 @@
         },
         {
           "round": 6,
-          "position": 5,
-          "points": 10,
-          "played": 5,
+          "position": 4,
+          "points": 13,
+          "played": 6,
           "match": {
             "opponent": "Botafogo",
             "opponentTla": "BOT",
@@ -442,9 +463,9 @@
         },
         {
           "round": 7,
-          "position": 4,
-          "points": 13,
-          "played": 6,
+          "position": 2,
+          "points": 16,
+          "played": 7,
           "match": {
             "opponent": "Clube do Remo",
             "opponentTla": "CRE",
@@ -456,9 +477,9 @@
         },
         {
           "round": 8,
-          "position": 6,
-          "points": 14,
-          "played": 7,
+          "position": 2,
+          "points": 17,
+          "played": 8,
           "match": {
             "opponent": "Corinthians",
             "opponentTla": "COR",
@@ -470,9 +491,9 @@
         },
         {
           "round": 9,
-          "position": 6,
-          "points": 14,
-          "played": 8,
+          "position": 4,
+          "points": 17,
+          "played": 9,
           "match": {
             "opponent": "Bragantino",
             "opponentTla": "RBB",
@@ -484,9 +505,9 @@
         },
         {
           "round": 10,
-          "position": 5,
-          "points": 17,
-          "played": 9,
+          "position": 2,
+          "points": 20,
+          "played": 10,
           "match": {
             "opponent": "Santos",
             "opponentTla": "SAN",
@@ -498,9 +519,9 @@
         },
         {
           "round": 11,
-          "position": 3,
-          "points": 20,
-          "played": 10,
+          "position": 2,
+          "points": 23,
+          "played": 11,
           "match": {
             "opponent": "Fluminense",
             "opponentTla": "FLU",
@@ -513,8 +534,8 @@
         {
           "round": 12,
           "position": 2,
-          "points": 23,
-          "played": 11,
+          "points": 26,
+          "played": 12,
           "match": {
             "opponent": "Bahia",
             "opponentTla": "BAH",
@@ -527,8 +548,8 @@
         {
           "round": 13,
           "position": 2,
-          "points": 26,
-          "played": 12,
+          "points": 29,
+          "played": 13,
           "match": {
             "opponent": "Atlético-MG",
             "opponentTla": "CAM",
@@ -541,8 +562,8 @@
         {
           "round": 14,
           "position": 2,
-          "points": 27,
-          "played": 13,
+          "points": 30,
+          "played": 14,
           "match": {
             "opponent": "Vasco da Gama",
             "opponentTla": "VAS",
@@ -555,8 +576,8 @@
         {
           "round": 15,
           "position": 2,
-          "points": 30,
-          "played": 14,
+          "points": 33,
+          "played": 15,
           "match": {
             "opponent": "Grêmio",
             "opponentTla": "FBP",
@@ -569,8 +590,8 @@
         {
           "round": 16,
           "position": 2,
-          "points": 31,
-          "played": 15,
+          "points": 34,
+          "played": 16,
           "match": {
             "opponent": "Athletico-PR",
             "opponentTla": "CAP",
@@ -583,8 +604,8 @@
         {
           "round": 17,
           "position": 2,
-          "points": 31,
-          "played": 16,
+          "points": 34,
+          "played": 17,
           "match": {
             "opponent": "Palmeiras",
             "opponentTla": "PAL",
@@ -597,8 +618,8 @@
         {
           "round": 18,
           "position": 2,
-          "points": 34,
-          "played": 17,
+          "points": 37,
+          "played": 18,
           "match": {
             "opponent": "Coritiba",
             "opponentTla": "COR",
@@ -611,8 +632,8 @@
         {
           "round": 19,
           "position": 2,
-          "points": 37,
-          "played": 18,
+          "points": 40,
+          "played": 19,
           "match": {
             "opponent": "Chapecoense",
             "opponentTla": "CHA",
@@ -625,8 +646,8 @@
         {
           "round": 20,
           "position": 2,
-          "points": 38,
-          "played": 19,
+          "points": 41,
+          "played": 20,
           "match": {
             "opponent": "São Paulo",
             "opponentTla": "PAU",
@@ -639,8 +660,8 @@
         {
           "round": 21,
           "position": 2,
-          "points": 39,
-          "played": 20,
+          "points": 42,
+          "played": 21,
           "match": {
             "opponent": "Internacional",
             "opponentTla": "SCI",
@@ -653,8 +674,8 @@
         {
           "round": 22,
           "position": 2,
-          "points": 42,
-          "played": 21,
+          "points": 45,
+          "played": 22,
           "match": {
             "opponent": "Vitória",
             "opponentTla": "VIT",
@@ -666,9 +687,9 @@
         },
         {
           "round": 23,
-          "position": 2,
-          "points": 45,
-          "played": 22,
+          "position": 1,
+          "points": 48,
+          "played": 23,
           "match": {
             "opponent": "Mirassol",
             "opponentTla": "MIR",
@@ -681,8 +702,8 @@
         {
           "round": 24,
           "position": 2,
-          "points": 45,
-          "played": 23,
+          "points": 48,
+          "played": 24,
           "match": {
             "opponent": "Cruzeiro",
             "opponentTla": "CRU",
@@ -695,13 +716,27 @@
         {
           "round": 25,
           "position": 2,
-          "points": 48,
-          "played": 24,
+          "points": 51,
+          "played": 25,
           "match": {
             "opponent": "Botafogo",
             "opponentTla": "BOT",
             "home": true,
             "goalsFor": 3,
+            "goalsAgainst": 0,
+            "result": "V"
+          }
+        },
+        {
+          "round": 26,
+          "position": 1,
+          "points": 54,
+          "played": 26,
+          "match": {
+            "opponent": "Clube do Remo",
+            "opponentTla": "CRE",
+            "home": false,
+            "goalsFor": 1,
             "goalsAgainst": 0,
             "result": "V"
           }

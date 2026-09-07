@@ -1,5 +1,7 @@
 import { expect, test, type Page } from "@/tests/e2e/clock";
 import { SEED_MATCHES } from "@/src/data/matches";
+import { VENUES } from "@/src/data/venues";
+import { BROADCASTS } from "@/src/data/broadcasts";
 import { HIGHLIGHTS } from "@/src/data/highlights";
 import { youtubeVideoId } from "@/club-core";
 import { playsInPage } from "@/match-core";
@@ -35,6 +37,32 @@ const UPCOMING_ROUND = String(lastPlayed + 1);
  * goes red in November for being correct.
  */
 const noUpcomingRound = !SEED_MATCHES.some((match) => match.round === lastPlayed + 1);
+
+/**
+ * The upcoming fixture the four venue tests need — **derived, not assumed to be
+ * the round's first**.
+ *
+ * `venues.ts` and `broadcasts.ts` are curated a window at a time by
+ * `sync-broadcasts`, so the upcoming round is routinely only part-covered: 7 of
+ * 10 for rodada 27, and the three missing are exactly those whose CBF kickoff
+ * disagrees with the seed's placeholder `00:00Z`. "The round's first fixture"
+ * therefore stopped meaning "a fixture with a stadium" the moment the seed
+ * advanced past the broadcast window, and all four went red against a page that
+ * was rendering correctly — with no curated venue it omits Estádio and Onde
+ * assistir, which is the honest thing to do.
+ *
+ * The assertions below are unchanged. What is derived is WHICH fixture they are
+ * pointed at, so each tests the thing it is named for. Same rule as
+ * `UPCOMING_ROUND` above: a literal here is a claim that produces no work while
+ * it holds.
+ */
+const upcomingCurated = SEED_MATCHES.filter(
+  (match) =>
+    match.round === lastPlayed + 1 && VENUES[match.id] && (BROADCASTS[match.id]?.length ?? 0) > 0,
+).sort((a, b) => a.kickoff.localeCompare(b.kickoff))[0];
+
+/** No upcoming fixture is curated yet — the window simply has not been synced. */
+const noCuratedUpcoming = !upcomingCurated;
 
 /**
  * Open a finished fixture with the curated links stripped from the payload, so
@@ -222,8 +250,8 @@ test.describe("Página da partida", () => {
   });
 
   test("an upcoming match shows kickoff, stadium and where to watch", async ({ page }) => {
-    test.skip(noUpcomingRound, "the season has no round left to play");
-    await openFirstMatch(page, UPCOMING_ROUND);
+    test.skip(noCuratedUpcoming, "no upcoming fixture carries curated venue data yet");
+    await page.goto(`/partida/${upcomingCurated.id}`);
 
     await expect(page.getByText("Data e hora")).toBeVisible();
     await expect(page.getByText("Estádio")).toBeVisible();
@@ -231,7 +259,8 @@ test.describe("Página da partida", () => {
   });
 
   test("the venue reads as stadium, city and state", async ({ page }) => {
-    await openFirstMatch(page, UPCOMING_ROUND);
+    test.skip(noCuratedUpcoming, "no upcoming fixture carries curated venue data yet");
+    await page.goto(`/partida/${upcomingCurated.id}`);
 
     const venue = page.locator("dd").filter({ hasText: "·" }).first();
     await expect(venue).toContainText(/·/);
@@ -239,7 +268,8 @@ test.describe("Página da partida", () => {
   });
 
   test("the venue carries a pin to the ground on Google Maps", async ({ page }) => {
-    await openFirstMatch(page, UPCOMING_ROUND);
+    test.skip(noCuratedUpcoming, "no upcoming fixture carries curated venue data yet");
+    await page.goto(`/partida/${upcomingCurated.id}`);
 
     const pin = page.locator("[data-stadium-map]");
     await expect(pin).toBeVisible();
@@ -264,7 +294,8 @@ test.describe("Página da partida", () => {
   });
 
   test("the pin opens safely in a new tab", async ({ page }) => {
-    await openFirstMatch(page, UPCOMING_ROUND);
+    test.skip(noCuratedUpcoming, "no upcoming fixture carries curated venue data yet");
+    await page.goto(`/partida/${upcomingCurated.id}`);
 
     const pin = page.locator("[data-stadium-map]");
     await expect(pin).toHaveAttribute("target", "_blank");

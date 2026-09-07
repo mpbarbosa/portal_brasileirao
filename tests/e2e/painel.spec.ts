@@ -639,7 +639,15 @@ test.describe("Painel do clube", () => {
     // be right.
     const html = await (await page.request.get(path)).text();
 
-    expect(html).toContain(`<title>${name} — Painel do`.slice(0, 8));
+    // **Assert that the TITLE ELEMENT names the club**, not that the document
+    // begins with the club's first letter. The line here was
+    // `` `<title>${name} — Painel do`.slice(0, 8) ``, which is `<title>` plus one
+    // character — and it passed for eighteen months because the table's leader
+    // was **P**almeiras and the title reads "**P**ainel do …". Rodada 26 put
+    // Flamengo top and the coincidence ended. A spec that can only fail when a
+    // club whose name starts with a different letter reaches first place is not
+    // testing the thing it is named for.
+    expect(html).toMatch(new RegExp(`<title>[^<]*\\b${name}\\b[^<]*</title>`));
     expect(html).toMatch(new RegExp(`Painel do ${name}`));
     expect(html).toMatch(/rel="canonical" href="[^"]*\/painel\//);
     // Three deep: the painel hangs off the club's page, not off the table.

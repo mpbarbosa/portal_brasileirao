@@ -1,5 +1,5 @@
 {
-  "snapshot": "2026-09-02",
+  "snapshot": "2026-09-07",
   "club": {
     "code": "1779",
     "name": "Corinthians",
@@ -66,14 +66,14 @@
     {
       "round": 4,
       "open": 5,
-      "close": 4,
+      "close": 5,
       "best": 3,
       "worst": 7,
       "points": 1,
       "totalPoints": 7,
       "played": 4,
       "result": "E",
-      "moved": 1,
+      "moved": 0,
       "match": {
         "opponent": "Cruzeiro",
         "home": false,
@@ -84,15 +84,15 @@
     },
     {
       "round": 5,
-      "open": 4,
+      "open": 5,
       "close": 10,
-      "best": 4,
+      "best": 5,
       "worst": 10,
       "points": 0,
       "totalPoints": 7,
       "played": 5,
       "result": "D",
-      "moved": -6,
+      "moved": -5,
       "match": {
         "opponent": "Coritiba",
         "home": true,
@@ -478,6 +478,25 @@
         "home": true,
         "goalsFor": 0,
         "goalsAgainst": 1,
+        "result": "D"
+      }
+    },
+    {
+      "round": 26,
+      "open": 10,
+      "close": 11,
+      "best": 10,
+      "worst": 11,
+      "points": 0,
+      "totalPoints": 32,
+      "played": 26,
+      "result": "D",
+      "moved": -1,
+      "match": {
+        "opponent": "Chapecoense",
+        "home": true,
+        "goalsFor": 1,
+        "goalsAgainst": 2,
         "result": "D"
       }
     }

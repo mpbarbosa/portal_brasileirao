@@ -1,5 +1,5 @@
 {
-  "snapshot": "2026-09-02",
+  "snapshot": "2026-09-07",
   "club": {
     "code": "1769",
     "name": "Palmeiras",
@@ -106,7 +106,7 @@
       "open": 3,
       "close": 3,
       "best": 2,
-      "worst": 4,
+      "worst": 5,
       "points": 3,
       "totalPoints": 13,
       "played": 6,
@@ -123,14 +123,14 @@
     {
       "round": 7,
       "open": 3,
-      "close": 2,
+      "close": 3,
       "best": 2,
       "worst": 3,
       "points": 3,
       "totalPoints": 16,
       "played": 7,
       "result": "V",
-      "moved": 1,
+      "moved": 0,
       "match": {
         "opponent": "Botafogo",
         "home": true,
@@ -141,15 +141,15 @@
     },
     {
       "round": 8,
-      "open": 2,
+      "open": 3,
       "close": 1,
       "best": 1,
-      "worst": 2,
+      "worst": 3,
       "points": 3,
       "totalPoints": 19,
       "played": 8,
       "result": "V",
-      "moved": 1,
+      "moved": 2,
       "match": {
         "opponent": "São Paulo",
         "home": false,
@@ -427,14 +427,14 @@
     {
       "round": 23,
       "open": 1,
-      "close": 1,
+      "close": 2,
       "best": 1,
-      "worst": 1,
+      "worst": 2,
       "points": 0,
       "totalPoints": 48,
       "played": 23,
       "result": "D",
-      "moved": 0,
+      "moved": -1,
       "match": {
         "opponent": "Fluminense",
         "home": false,
@@ -445,15 +445,15 @@
     },
     {
       "round": 24,
-      "open": 1,
+      "open": 2,
       "close": 1,
       "best": 1,
-      "worst": 1,
+      "worst": 2,
       "points": 3,
       "totalPoints": 51,
       "played": 24,
       "result": "V",
-      "moved": 0,
+      "moved": 1,
       "match": {
         "opponent": "Vasco da Gama",
         "home": true,
@@ -467,7 +467,7 @@
       "open": 1,
       "close": 1,
       "best": 1,
-      "worst": 1,
+      "worst": 2,
       "points": 1,
       "totalPoints": 52,
       "played": 25,
@@ -478,6 +478,25 @@
         "home": false,
         "goalsFor": 1,
         "goalsAgainst": 1,
+        "result": "E"
+      }
+    },
+    {
+      "round": 26,
+      "open": 1,
+      "close": 2,
+      "best": 1,
+      "worst": 2,
+      "points": 1,
+      "totalPoints": 53,
+      "played": 26,
+      "result": "E",
+      "moved": -1,
+      "match": {
+        "opponent": "Botafogo",
+        "home": false,
+        "goalsFor": 0,
+        "goalsAgainst": 0,
         "result": "E"
       }
     }
