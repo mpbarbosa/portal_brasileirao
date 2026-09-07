@@ -11,7 +11,7 @@ import type { Venue } from "@/src/types";
  * `Sao Paulo` without the tilde) and correcting them would mean guessing at
  * proper names.
  *
- * Last synced 2026-08-30.
+ * Last synced 2026-09-07.
  */
 export const VENUES: Record<string, Venue> = {
   "554740": { stadium: "ARENA MRV", city: "Belo Horizonte", state: "MG" },
@@ -267,4 +267,11 @@ export const VENUES: Record<string, Venue> = {
   "554997": { stadium: "Mangueirão", city: "Belem", state: "PA" },
   "554998": { stadium: "Morumbi", city: "Sao Paulo", state: "SP" },
   "554999": { stadium: "Manoel Barradas", city: "Salvador", state: "BA" },
+  "555000": { stadium: "ARENA MRV", city: "Belo Horizonte", state: "MG" },
+  "555002": { stadium: "Nilton Santos", city: "Rio de Janeiro", state: "RJ" },
+  "555003": { stadium: "Arena Condá", city: "Chapeco", state: "SC" },
+  "555004": { stadium: "Couto Pereira", city: "Curitiba", state: "PR" },
+  "555006": { stadium: "Arena do Grêmio", city: "Porto Alegre", state: "RS" },
+  "555008": { stadium: "Nubank Parque", city: "Sao Paulo", state: "SP" },
+  "555009": { stadium: "Vila Belmiro", city: "Santos", state: "SP" },
 };
