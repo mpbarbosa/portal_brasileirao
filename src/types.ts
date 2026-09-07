@@ -30,6 +30,16 @@ export interface Club {
    * The address is derived by `instagramUrl`, so it is written once.
    */
   instagram?: string;
+  /**
+   * The club's subreddit, stored as the **name alone** ("CRFla") in the casing
+   * the community uses. The address is derived by `redditUrl`, so a pasted link
+   * loses its `?rdt=…` share suffix instead of persisting it.
+   *
+   * Unlike `instagram` and `website` this is **not an official channel** — a
+   * sub is run by supporters — which is what the link's screen-reader suffix
+   * says and why the club page does not file it as a third club-owned address.
+   */
+  reddit?: string;
   /** The club's official site, normalised to an HTTPS origin. */
   website?: string;
   /**

@@ -344,6 +344,49 @@ export const instagramUrl = (raw: string | null | undefined): string | null => {
 };
 
 /**
+ * The subreddit name alone, from whatever was written down.
+ *
+ * Accepts what a person is likely to paste — a bare name, `r/CRFla`, `/r/CRFla`
+ * or a full `reddit.com/r/CRFla/` link — because the list is hand-maintained and
+ * being strict about the input format buys nothing. `instagramHandle`'s rule,
+ * and this is deliberately the same shape rather than a second idea about how a
+ * social identifier is parsed.
+ *
+ * **The casing survives**, which is the one way this differs from its two
+ * neighbours. Reddit resolves a sub case-insensitively but prints one canonical
+ * form, so folding the value would reach the right page under a name the
+ * community does not use — and the name is what the link *says*, not merely
+ * where it goes.
+ *
+ * Returns null for anything that is not a plausible name — Reddit's own rule is
+ * letters, digits and underscores, 3 to 21 characters — which the UI renders as
+ * no link rather than a broken one.
+ */
+export const subredditName = (raw: string | null | undefined): string | null => {
+  const value = raw?.trim();
+  if (!value) return null;
+
+  // Take what follows the last `r/` in a URL or a prefixed name, or the value
+  // itself. A bare name is the common case; the rest is what a paste carries.
+  const afterHost = value.includes("reddit.com/")
+    ? (value.split("reddit.com/")[1] ?? "")
+    : value;
+  const name = afterHost.replace(/^\/?r\//, "").split(/[/?#]/)[0];
+
+  return /^[A-Za-z0-9_]{3,21}$/.test(name) ? name : null;
+};
+
+/**
+ * The address for a subreddit, built from the normalised name rather than from
+ * the raw value — so the link and the `r/name` printed beside it cannot come to
+ * disagree about which community they mean. `instagramUrl`'s rule.
+ */
+export const redditUrl = (raw: string | null | undefined): string | null => {
+  const name = subredditName(raw);
+  return name && `https://www.reddit.com/r/${name}/`;
+};
+
+/**
  * The video id inside whatever a person pasted.
  *
  * Accepts a bare id, a `watch?v=` link, a `youtu.be` short link or an `embed/`
@@ -573,6 +616,13 @@ export const withHymns = (clubs: Club[], hymns: Record<string, string>): Club[] 
     return hymn && !club.hymn ? { ...club, hymn } : club;
   });
 
+/** Attach curated subreddit names to a club list, keyed by code. */
+export const withReddit = (clubs: Club[], subs: Record<string, string>): Club[] =>
+  clubs.map((club) => {
+    const reddit = subs[club.code];
+    return reddit && !club.reddit ? { ...club, reddit } : club;
+  });
+
 /** Attach curated Wikipedia article titles to a club list, keyed by code. */
 export const withWikipedia = (clubs: Club[], articles: Record<string, string>): Club[] =>
   clubs.map((club) => {
@@ -686,9 +736,9 @@ export const clubMapUrl = (raw: string | null | undefined): string | null => {
  *
  * Club objects embedded in standings and fixtures carry only id, name, crest
  * and abbreviation — the website, the sede, the head coach and the home state
- * come from the teams endpoint, and the Instagram handle, the hymn and the
- * Wikipedia article from no endpoint at all. So the committed club list supplies
- * all seven at request time.
+ * come from the teams endpoint, and the Instagram handle, the subreddit, the
+ * hymn and the Wikipedia article from no endpoint at all. So the committed club
+ * list supplies all eight at request time.
  *
  * The coach is the one of the seven that goes stale between snapshots — a club
  * changes técnico far more often than it moves or renames itself — which is why
@@ -701,8 +751,12 @@ export const clubMapUrl = (raw: string | null | undefined): string | null => {
  * · RJ" — and every test in the suite runs against the frozen snapshot
  * (`DISABLE_FOOTBALL_DATA=true`), where the seed carries the field and the line
  * is therefore correct. The only build that rendered the bug was the one nothing
- * asserts against. Worth remembering before adding the eighth: this function is
+ * asserts against. Worth remembering before adding the ninth: this function is
  * the one place where "works in CI" and "works in production" genuinely differ.
+ * `reddit` was the eighth, and it was written here in the same commit as the
+ * field itself for exactly that reason — the seed branch every suite runs would
+ * have rendered the link while production, which builds its clubs from the live
+ * payload, quietly rendered nothing.
  */
 /**
  * Replace a club's técnico where the provider names the wrong person.
@@ -736,6 +790,7 @@ export const withClubDetails = (clubs: Club[], known: Club[]): Club[] => {
     const source = byCode.get(club.code);
     const website = club.website ?? source?.website;
     const instagram = club.instagram ?? source?.instagram;
+    const reddit = club.reddit ?? source?.reddit;
     const hymn = club.hymn ?? source?.hymn;
     const wikipedia = club.wikipedia ?? source?.wikipedia;
     const address = club.address ?? source?.address;
@@ -746,6 +801,7 @@ export const withClubDetails = (clubs: Club[], known: Club[]): Club[] => {
       ...club,
       ...(website ? { website } : {}),
       ...(instagram ? { instagram } : {}),
+      ...(reddit ? { reddit } : {}),
       ...(hymn ? { hymn } : {}),
       ...(wikipedia ? { wikipedia } : {}),
       ...(address ? { address } : {}),

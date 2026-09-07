@@ -6,6 +6,8 @@ import {
   findClub,
   nextFixture,
   hymnUrl,
+  redditUrl,
+  subredditName,
   recentForm,
   resultFor,
   scorersFor,
@@ -96,17 +98,17 @@ export function StatTile({ label, value }: { label: string; value: string }) {
  *
  * Drawn here rather than fetched, for the reason `CLAUDE.md` gives for the
  * broadcaster marks: no runtime dependency on a third party for an asset. These
- * three stay local because they have one call site each, the same way
+ * four stay local because they have one call site each, the same way
  * `MatchPage` keeps `Campaign` and `Side`. The Wikipédia mark left for
  * `ClubLinks` when the match page became its second caller, the Instagram mark
  * followed it when the player card did, and the **sede's pin** followed both the
  * day it became a link — that rule is what moved all three, and what keeps these
  * here.
  *
- * All three are monochrome outlines — a plain globe for the club's own site, a
- * pair of quavers for the hymn rather than YouTube's play button, three candles
- * for the **Painel**: each names the *thing* and not the host that happens to
- * keep it. Their shared attributes come from `GLYPH`, so a mark defined here
+ * All four are monochrome outlines — a plain globe for the club's own site, a
+ * pair of quavers for the hymn rather than YouTube's play button, a speech
+ * bubble for the subreddit rather than Snoo, three candles for the **Painel**:
+ * each names the *thing* and not the host that happens to keep it. Their shared attributes come from `GLYPH`, so a mark defined here
  * cannot drift from the one defined there.
  *
  * **The count in this paragraph is load-bearing and nothing checks it.** It read
@@ -115,7 +117,8 @@ export function StatTile({ label, value }: { label: string; value: string }) {
  * conflicting line — so both comments emerged from a clean textual merge
  * describing a file neither of them had seen. `PanelGlyph`'s own "like the three
  * above it" broke in the mirror direction at the same instant. Recount before
- * trusting either.
+ * trusting either — it went from "two" to "three" to **four** when the
+ * subreddit's bubble landed, and each time by hand.
  */
 
 /** A globe: the club's own site, as distinct from a profile it keeps elsewhere. */
@@ -141,9 +144,27 @@ function HymnGlyph() {
   );
 }
 
+/**
+ * A speech bubble: the club's subreddit — a conversation, which is what the
+ * link is for. Reddit's own Snoo is artwork with a fixed form and a fixed
+ * orange, so it cannot take `currentColor` and would sit cold beside links that
+ * warm on hover — the argument `InstagramGlyph` already makes about Meta's
+ * gradient, and the reason the hymn gets quavers rather than YouTube's play
+ * button. Local, like the marks around it, because it has one call site.
+ */
+function RedditGlyph() {
+  return (
+    <svg {...GLYPH}>
+      <path d="M20 12a8 7 0 1 0-13.4 5.1L5 21l4.3-1.4A9 9 0 0 0 12 19a8 7 0 0 0 8-7Z" />
+      <path d="M9 11.5h.01M15 11.5h.01" />
+      <path d="M9 14.5c.9.7 1.9 1 3 1s2.1-.3 3-1" />
+    </svg>
+  );
+}
+
 /** Three candles: the **Painel**. It draws the mark the page it opens is made
  *  of, rather than a generic chart glyph — the row's whole promise is that
- *  particular drawing. Local, like the two above it, because it has one call
+ *  particular drawing. Local, like the three above it, because it has one call
  *  site; the rule that moved the Wikipédia mark into `ClubLinks` is a second
  *  caller, not a hunch that there might be one. */
 function PanelGlyph() {
@@ -197,6 +218,11 @@ export function ClubView({
   const played = fixtures.filter((match) => resultFor(match, code) !== null).reverse();
   const clubScorers = scorersFor(scorers, code);
   const hymn = hymnUrl(club.hymn);
+  const sub = redditUrl(club.reddit);
+  // The printed name comes from the parser and not from the raw stored value,
+  // so the words on the page and the address behind them cannot come to name
+  // two different communities — `InstagramLink`'s rule for its `@handle`.
+  const subName = subredditName(club.reddit);
   const coach = coachOf(club, coaches);
   const mapUrl = clubMapUrl(club.address);
   const videos = videosFor(CLUB_VIDEOS, code);
@@ -289,6 +315,27 @@ export function ClubView({
               </a>
             )}
             <InstagramLink handle={club.instagram} subject="oficial do clube" />
+            {/* A sub is run by SUPPORTERS, so the suffix says "comunidade de
+                torcedores" rather than the "oficial do clube" the line above
+                it uses. The two sit together because both are places the club
+                is talked about; only one of them is the club talking, and a
+                screen reader is told which. */}
+            {sub && subName && (
+              <a
+                href={sub}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`truncate ${LINK_UNDERLINE}`}
+                data-reddit
+              >
+                <RedditGlyph />
+                r/{subName}
+                <span className="sr-only">
+                  {" "}
+                  — comunidade de torcedores no Reddit (abre em nova aba)
+                </span>
+              </a>
+            )}
             {/* Named for what it is rather than for its address: a video id is
                 nothing a reader recognises, unlike a host or a handle. The same
                 holds for an article title, below. */}

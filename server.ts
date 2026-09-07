@@ -48,6 +48,7 @@ import {
   withCoachOverrides,
   withHymns,
   withInstagram,
+  withReddit,
   withWikipedia,
 } from "@/club-core";
 import {
@@ -119,6 +120,7 @@ import { computeStandings } from "@/standings-core";
 import { CLUBS as SEED_CLUBS } from "@/src/data/clubs";
 import { CLUB_HYMNS } from "@/src/data/club-hymns";
 import { CLUB_INSTAGRAM } from "@/src/data/club-instagram";
+import { CLUB_REDDIT } from "@/src/data/club-reddit";
 import { CLUB_WIKIPEDIA } from "@/src/data/club-wikipedia";
 import { BROADCASTS } from "@/src/data/broadcasts";
 import { GOALS } from "@/src/data/goals";
@@ -206,8 +208,8 @@ const NOTE_FALLBACK =
 const cache = new TtlCache();
 const breaker = new CircuitBreaker();
 
-/** The committed club list, plus the handles, hymns and articles no provider
- *  supplies. Enriching once here means every payload built from CLUBS carries
+/** The committed club list, plus the handles, subreddits, hymns and articles no
+ *  provider supplies. Enriching once here means every payload built from CLUBS carries
  *  them.
  *
  *  `withCoachOverrides` is last and is a *correction* rather than an enrichment:
@@ -219,7 +221,7 @@ const breaker = new CircuitBreaker();
  *  makes that a rule rather than something to remember. */
 const CLUBS = withCoachOverrides(
   withWikipedia(
-    withHymns(withInstagram(SEED_CLUBS, CLUB_INSTAGRAM), CLUB_HYMNS),
+    withHymns(withReddit(withInstagram(SEED_CLUBS, CLUB_INSTAGRAM), CLUB_REDDIT), CLUB_HYMNS),
     CLUB_WIKIPEDIA,
   ),
   COACH_OVERRIDES,

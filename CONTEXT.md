@@ -544,6 +544,41 @@ nothing to confuse it with), filing it under **Pesquisar na web**, and writing
 down an id nobody has opened — the site answers every scripted request with 403,
 so unlike the verbete this cannot be checked by a script.
 
+**Subreddit do clube**:
+The club's community on Reddit, linked from its page beside the **Instagram do
+clube** and shown as a speech bubble followed by the bare name (`r/CRFla`). The
+mark is a conversation rather than Reddit's Snoo, for the reason the hymn gets
+quavers rather than YouTube's play button and the **Instagram do clube** gets an
+outline rather than Meta's gradient: artwork with a fixed form and a fixed
+orange cannot take `currentColor`, so it would sit cold beside links that warm
+on hover and would need a second copy per theme. Drawn inline in `ClubView`,
+`inline-block`, `aria-hidden` — the name beside it already says where the link
+goes. No provider carries a community forum at any tier, so
+`src/data/club-reddit.ts` is hand-curated and keyed by club code. Stored as the
+**name alone** in the casing the sub itself uses; `redditUrl` derives the
+address, so a pasted link loses its `?rdt=…` share suffix, and `subredditName`
+is what the page *prints*, so the words and the address cannot name two
+different communities.
+
+**It is the supporters' and not the club's**, which is the whole reason it is
+not a third official channel beside the **Site oficial** and the **Instagram do
+clube**: the screen-reader suffix reads "comunidade de torcedores", where
+Instagram's reads "oficial do clube". Coverage is deliberately partial and grows
+by hand, like the **Melhores momentos** — a club with no entry renders no link,
+because `r/<club name>` is exactly the address somebody would derive and mostly
+it is either a different community or nothing. Unlike the **Verbete do clube**
+this cannot be checked by a script: Reddit answers a scripted request with 403,
+`old.reddit.com` redirects, and the in-app browser refuses the domain by policy,
+so a sub is opened in a real browser before it is written down — the
+**Perfil no Sofascore** rule.
+_Avoid_: keying on **tla** (Corinthians and Coritiba share `COR`, so one club's
+supporters land in another's community), storing the full URL, showing the URL
+rather than the name, folding the casing (Reddit resolves case-insensitively but
+prints one canonical form, so `r/crfla` reaches the page under a name the
+community does not use), calling it official or filing it beside the club's own
+addresses, deriving a name from the club's name, `u/` (a person is not a
+community, and it is one keystroke away).
+
 **Hino do clube**:
 The club's hymn, linked from its page as a third external link beside the **Site
 oficial** and the **Instagram do clube**, under the same rules: a monochrome

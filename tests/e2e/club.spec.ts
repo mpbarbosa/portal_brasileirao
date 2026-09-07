@@ -245,14 +245,25 @@ test.describe("Clube", () => {
     await expect(page.locator("main > article")).toContainText(name);
   });
 
-  /* Selected by destination rather than position: the header now holds five
+  /* Selected by destination rather than position: the header now holds six
      external links, and picking one by index is what broke these specs when a
      name first became a control. The site link is the one defined by exclusion,
      so every link added beside it has to be excluded here too — the hymn was
      the first, and it matched as the site until it was; the sede's map link was
      the second, and it did exactly the same thing the day the pin stopped being
-     inert. Note the count above is not what caught either of them: the failure
-     is a locator resolving to two elements, not a number written in a comment. */
+     inert; the subreddit was the third. Note the count above is not what caught
+     any of them: the failure is a locator resolving to two elements, not a
+     number written in a comment.
+
+     The subreddit is the first exclusion here that is NOT on every club page,
+     coverage being curated and partial — and it bites TODAY only because
+     Flamengo happens to lead the frozen seed, so `openClubAt(page, 1)` opens
+     the one club that carries one. Measured rather than reasoned: deleting the
+     line fails both site-link specs with a locator resolving to two elements.
+     Read that as the "which record happens to hold a value" trap `goals.spec.ts`
+     records, not as coverage — the next `sync-seed-data` that moves Flamengo off
+     the top makes this exclusion silently unexercised while leaving it correct.
+     The specs below therefore navigate by SLUG rather than by position. */
   const siteLink = (page: Page) =>
     page.locator(
       [
@@ -261,11 +272,13 @@ test.describe("Clube", () => {
         ":not([href*='youtube.com'])",
         ":not([href*='wikipedia.org'])",
         ":not([href*='google.com/maps'])",
+        ":not([href*='reddit.com'])",
       ].join(""),
     );
   const instagramLink = (page: Page) => page.locator("main header a[href*='instagram.com']");
   const hymnLink = (page: Page) => page.locator("main header a[href*='youtube.com']");
   const wikipediaLink = (page: Page) => page.locator("main header a[href*='wikipedia.org']");
+  const redditLink = (page: Page) => page.locator("main header a[href*='reddit.com']");
 
   test("the club page links to its official site", async ({ page }) => {
     await openClubAt(page, 1);
@@ -305,6 +318,49 @@ test.describe("Clube", () => {
     const text = (await instagramLink(page).innerText()).trim();
     expect(text).toMatch(/^@[A-Za-z0-9._]+/);
     expect(text).not.toContain("instagram.com");
+  });
+
+  /* The subreddit is curated for a handful of clubs rather than all twenty, so
+     these navigate to Flamengo by address instead of opening whatever sits at a
+     standings position — `openClubAt(page, 1)` names a different club whenever
+     the table moves, and a spec that passes only while one club happens to lead
+     is the trap this file's neighbours already record. The slug is stable
+     where the position is not. */
+  test("a club with a curated subreddit links to it", async ({ page }) => {
+    await page.goto("/clube/flamengo");
+    await expect(pageHeading(page)).toContainText("Flamengo");
+
+    const sub = redditLink(page);
+    await expect(sub).toBeVisible();
+    await expect(sub).toHaveAttribute("href", /^https:\/\/www\.reddit\.com\/r\/[A-Za-z0-9_]{3,21}\/$/);
+    await expect(sub).toHaveAttribute("target", "_blank");
+    // A missing `rel` is a real defect that looks identical on the page.
+    await expect(sub).toHaveAttribute("rel", /noopener/);
+  });
+
+  test("the subreddit link reads as the name, in the sub's own casing", async ({ page }) => {
+    await page.goto("/clube/flamengo");
+    await expect(pageHeading(page)).toContainText("Flamengo");
+
+    // "r/CRFla" is what a reader recognises, and the casing is the community's
+    // own — Reddit resolves case-insensitively, so a folded name reaches the
+    // same page under a spelling nobody uses. The trailing screen-reader text
+    // is deliberate, so match the start rather than the whole string.
+    const text = (await redditLink(page).innerText()).trim();
+    expect(text).toMatch(/^r\/CRFla/);
+    expect(text).not.toContain("reddit.com");
+  });
+
+  test("a club with no curated subreddit renders no link rather than a broken one", async ({
+    page,
+  }) => {
+    // The absence is the point: `r/<club name>` is exactly the address somebody
+    // would be tempted to derive, and most of those are another community or
+    // nothing at all. Without this, emptying the curated file would leave every
+    // assertion above passing on the one club that still had an entry.
+    await page.goto("/clube/palmeiras");
+    await expect(pageHeading(page)).toContainText("Palmeiras");
+    await expect(redditLink(page)).toHaveCount(0);
   });
 
   test("the club page links to its hymn", async ({ page }) => {
