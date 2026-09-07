@@ -4610,6 +4610,37 @@ it: an unnecessary re-shoot passes the gate, costs an hour, and commits the
 per-deploy and per-minute noise of the six images that never come back
 byte-identical.
 
+**The same shape reached a RENDERING change, which is the harder half, and the
+wrong answer came from the commit's own author.** `b957cc9` adds the club's
+subreddit to the link row on the club page — markup and a component, not a
+fixture id — so *"this cannot reach a paint"* is plainly false as a statement
+about the app, and its message says in as many words that it moves pixels in
+`clube-*`. It moves them on **Flamengo's** page. `club-reddit.ts` holds one
+entry, `"1783"`, the anchor renders only under `sub && subName`, and the
+committed capture is `/clube/palmeiras`, code `1769` — so nothing in the set of
+twenty can change. The paragraph above generalises: *reaches paint* and
+*reaches a captured frame* are different questions, and only the second is the
+one the gate is asking.
+
+So the check is the same one command, pointed at the club the capture actually
+photographs rather than at the file:
+
+```sh
+git show <sha> -- src/data/club-reddit.ts | grep -c '"1769"'   # the CAPTURED club
+```
+
+**Which club that is has to be read, never assumed** — the captures name
+Palmeiras while the seed is led by Flamengo, so the club a spec opens with
+`openClubAt(page, 1)` and the club in `clube-palmeiras-*.png` are two different
+clubs, and a curated file covering only the first reaches no capture at all.
+That asymmetry is what made the author's reading wrong while every word of the
+reasoning around it was right.
+
+**A rendering change accounted for by a trailer is the rarer case and stays
+rare.** The bar is unchanged and is not *the diff looked small to me*: the
+render is genuinely unreachable from every committed frame, and it is
+established by naming the frame, not by reading the component.
+
 **Count the directory rather than this paragraph.** It said sixteen for as long as there
 were sixteen, `partida-554977-{light,dark}` made it eighteen without anything here
 noticing, and `painel-palmeiras-{light,dark}` has since made it twenty. A number in prose
