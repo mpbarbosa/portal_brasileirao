@@ -272,8 +272,21 @@ test.describe("Jogadores", () => {
     // a file, so a photograph in the data but never synced would still render
     // an <img> and still "load" as far as the DOM is concerned. Only the
     // decoded size tells the two apart.
-    const width = await photo.evaluate((img) => (img as HTMLImageElement).naturalWidth);
-    expect(width).toBeGreaterThan(0);
+    //
+    // Polled rather than read once, and that is not defensive padding: this
+    // element carries `size-16`, so it has its box before it has its pixels —
+    // `toBeVisible()` above resolves on the box and says nothing about the
+    // decode. Reading `naturalWidth` on the next line therefore raced the
+    // decode and reported 0 for a photograph that was being served perfectly.
+    // It failed only on a fast machine under load: reproducible on the full
+    // local suite at 7 workers with `retries: 0`, green in isolation and green
+    // in CI, whose e2e job is two and a half times slower and never reached
+    // the window. Do not weaken this to `toBeVisible()` to settle it — the box
+    // is exactly what a never-synced photograph also has, which is the whole
+    // reason the check is here. Make it wait instead.
+    await expect
+      .poll(() => photo.evaluate((img) => (img as HTMLImageElement).naturalWidth))
+      .toBeGreaterThan(0);
 
     // The alt says what the picture shows, never the player's name — the name
     // is already the heading beside it.
