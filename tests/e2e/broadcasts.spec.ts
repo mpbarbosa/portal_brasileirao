@@ -135,11 +135,31 @@ test.describe("Onde assistir", () => {
     await mark.scrollIntoViewIfNeeded();
     await expect(mark).toBeVisible();
 
-    const loaded = await page.locator("dd img").evaluateAll((all) =>
-      all.map((i) => ({ alt: i.getAttribute("alt"), ok: (i as HTMLImageElement).naturalWidth > 0 })),
-    );
-    expect(loaded.length).toBeGreaterThan(0);
-    expect(loaded.filter((m) => !m.ok)).toEqual([]);
+    // The SPA catch-all answers 200 with the HTML shell for a path that is not
+    // a file, so a mark named in the data but never vendored into
+    // `public/marks/` would still render an <img> and still "load" as far as
+    // the DOM is concerned. Only the decoded size tells the two apart.
+    //
+    // So this must be a poll rather than a single read. `toBeVisible()` above
+    // resolves as soon as an element has a box and says nothing about whether
+    // the bytes have decoded, and only the one mark above was ever waited on
+    // while this reads every `dd img` on the page — including lazy ones. Read
+    // once and `naturalWidth` is 0 for a mark being served perfectly: the same
+    // defect fixed in `players.spec.ts`, which failed on the full local suite
+    // at 7 workers while passing in isolation and in the slower CI.
+    const marks = page.locator("dd img");
+    await expect
+      .poll(() =>
+        marks.evaluateAll((all) =>
+          all
+            .filter((i) => (i as HTMLImageElement).naturalWidth === 0)
+            .map((i) => i.getAttribute("alt")),
+        ),
+      )
+      .toEqual([]);
+
+    // An empty page satisfies the poll vacuously, so say the marks are there.
+    expect(await marks.count()).toBeGreaterThan(0);
   });
 
   test("a broadcaster with no mark still reads as its name", async ({ page }) => {
