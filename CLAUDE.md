@@ -2839,8 +2839,11 @@ days on the one that finished just before a scheduled publish. The script adds
 output that the result is a floor rather than an appointment — run `--check`
 daily from it rather than once on it.
 
-**It refuses the shared root checkout**, since a sync writes six generated files
-and that is exactly the collision the worktree rule exists to prevent.
+**It refuses the shared root checkout**, since a sync rewrites every generated
+file the chain owns — the seed, the campanha and the scouts — and that is exactly
+the collision the worktree rule exists to prevent. That clause used to count them
+and said **six**, which was one short from the day it was written; the script's
+own comment records why naming the outputs is the fix and re-counting them is not.
 
 `scripts/rehearse-sync-schedule.sh` is its only behavioural coverage and `check`
 runs it: the seed and the counters are read by real node, while `curl`, `npx`,
