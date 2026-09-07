@@ -36,10 +36,17 @@ ROOT="$(git rev-parse --show-toplevel)" || die "not in a git checkout"
 cd "$ROOT" || die "cannot enter $ROOT"
 
 # **Refuse the shared root checkout.** CLAUDE.md's first rule: several sessions
-# share it and a branch switch carries uncommitted work across. A sync writes
-# six generated files, so running it here is exactly the collision that rule
-# exists to prevent. `--git-common-dir` differs from `--git-dir` only inside a
+# share it and a branch switch carries uncommitted work across. A sync rewrites
+# every generated file the chain owns under `src/data/` — the seed, the campanha
+# and the scouts — so running it here is exactly the collision that rule exists
+# to prevent. `--git-common-dir` differs from `--git-dir` only inside a
 # worktree, which is the cheapest way to tell them apart.
+#
+# The count that used to stand here said SIX and was one short from the day it
+# was written: `club-scouts-history.ts` landed in 9e6a26a, a few commits after
+# 61d00b7 wrote the comment, on the same afternoon. Naming the outputs instead
+# is what stops it going stale a second time — count the `writeFileSync` calls
+# across the three scripts if you need the number.
 if [ "$(git rev-parse --git-dir)" = "$(git rev-parse --git-common-dir)" ]; then
   die "refusing to run in the shared root checkout — take a worktree first:
     git worktree add .claude/worktrees/<name> -b worktree-<name> origin/main
