@@ -82,6 +82,48 @@ not as *is its session finished* — no command answers the second. It fails saf
 a worktree holding uncommitted work also reports "never held a commit", and that
 is a reason to leave it alone rather than a reason to doubt the test.
 
+**Both of those commands go silently wrong in a SHALLOW checkout, and this one
+was shallow.** A fetched merge commit can arrive with **no parents** — git
+records it in `.git/shallow` and treats everything above it as absent — which
+severs your branch from `origin/main` even while the merge that landed it sits
+on `main`. Measured during the teardown of #439:
+
+    git merge-base --is-ancestor <branch> origin/main   -> NO    (it HAD merged)
+    git rev-list --count origin/main..<branch>          -> 1046  (branch held 1 commit)
+    git rev-list --parents -n 1 <the merge>             -> the merge's own sha, alone
+
+**Do not write that down as a property of the repository, because it is not
+one.** The same checkout answered `true` twice — during that teardown and again
+at the next worktree's creation — and `false` at 2026-09-07T02:05:35Z, with
+`07cd04d` holding both parents again and the branch an ancestor once more.
+Somebody deepened it in between. A note reading *this repo is shallow* is stale
+within the hour; a note reading *test whether it is* cannot go stale. Two
+commands, and the second is a known-answer control in the same output:
+
+```sh
+git rev-parse --is-shallow-repository                 # true => the two tests above are void
+git merge-base --is-ancestor origin/main origin/main  # MUST print nothing and exit 0
+```
+
+**It fails safe and is still not harmless.** It reports *not merged*, so it
+refuses a deletion rather than causing one — but a session that obeys it leaves
+its branch and worktree standing for ever, and the next session inherits a
+directory nobody can attribute. That is this document's own opening failure
+arriving as a refusal instead of an all-clear, which is why it reads as
+diligence.
+
+**What settles it is outside git** — the same move `CLAUDE.md` prescribes for the
+reset-away and rebased branches, where the reflog cannot answer either:
+
+```sh
+gh pr list --head <branch> --state merged --json number,mergeCommit
+git merge-base --is-ancestor <mergeCommit> origin/main   # both below the graft, so both answerable
+git show "origin/main:<a file the branch changed>" | grep -c '<a string only the new version has>'
+```
+
+The last two are **content and state rather than graph topology**, which is why
+they survive a cut history. On a deployed change, `/api/health` is a fourth.
+
 ## Only yours — and the listings will not tell you
 
 `git worktree list`, `git branch -a`, `ss -ltnp` and the PR list all show the
@@ -163,6 +205,11 @@ the same turn as the deletion:
 ```sh
 git rev-list --count origin/main..<branch>    # 0 => landed
 ```
+
+**A nonzero count here is not proof it did not land** — that is exactly what a
+shallow checkout reports for a merged branch, per the block above. Check
+`git rev-parse --is-shallow-repository` before believing this refusal, and settle
+it against the merged PR rather than the graph.
 
 **Local and remote are two deletions, and the remote one may already be done.**
 `delete_branch_on_merge` is **false** on this repository — checked, and visible in
