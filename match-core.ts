@@ -2,6 +2,7 @@
  * Pure helpers for a single match page. No I/O (tests/match-core.test.ts).
  */
 import { countsTowardStandings } from "@/standings-core";
+import { slugify } from "@/club-core";
 import type { Club, Highlight, Match } from "@/src/types";
 
 export const findMatch = (matches: Match[], id: string): Match | null =>
@@ -61,6 +62,52 @@ export const withHighlights = (
     const valid = (videos[match.id] ?? []).filter((video) => isHighlightUrl(video.url));
     return valid.length > 0 ? { ...match, highlights: valid } : match;
   });
+
+/**
+ * Channels whose packages YouTube **refuses to play in an embed**, by slug.
+ *
+ * This is not a guess about a channel's taste: a rights holder can switch
+ * third-party playback off for its uploads, and YouTube then serves the frame
+ * *"This video is unavailable"* with a `Watch on YouTube` button — Error 150 /
+ * 153, decided when the player asks for the stream rather than when the page
+ * loads. So it cannot be read off the API and it cannot be checked by a script:
+ * `playableInEmbed` in the watch payload says **true** for a video the embed
+ * then refuses, and `oembed` answers 200 for it. Measured 2026-09-07.
+ *
+ * **Measured in the page, because every cheaper instrument answers wrongly.**
+ * An embed opened as a top-level document errors 153 for *everything*,
+ * `o-_hD5Q8f4Q` (ge tv, which plays perfectly inside the app) included — a
+ * probe with a known-good control that fails it is a probe measuring something
+ * else, which is what that control is for. Read inside a real Partida page at
+ * `/partida/…`, one channel at a time:
+ *
+ *     ge tv        o-_hD5Q8f4Q, 0ceAn6TLVtE      plays
+ *     UOL Esporte  ryRpY29ySvk                   plays
+ *     CazéTV       AgycMjd6b-I, nEknyMrCHuA,     refuses, all three
+ *                  lhEf7WoBd3k
+ *
+ * **The direction this fails in is what makes three samples enough.** Listed
+ * wrongly, a channel keeps the link-out this section shipped with and a reader
+ * loses nothing; missing from the list, a reader who picks it gets a dead
+ * frame. And it costs no coverage at all: of the 238 curated matches, **every
+ * one** carries a channel that is not on this list, so no match loses its
+ * player. If CazéTV switches embedding on, the repair is deleting a line —
+ * there is no gate that will tell you, which is why the samples and the date
+ * are written down rather than the conclusion alone.
+ */
+const EMBED_REFUSED_CHANNELS = new Set(["cazetv"]);
+
+/**
+ * Whether this package can be played **inside** the Partida page, as against
+ * opened on YouTube.
+ *
+ * Slugged through `club-core`'s `slugify` rather than lowercased here: it is
+ * the one normaliser in this app, it folds the accent in "CazéTV", and a second
+ * spelling of that fold is how a list of channel names comes to miss the
+ * channel it names — the rule `venue-core.ts` already reuses it under.
+ */
+export const playsInPage = (video: Highlight): boolean =>
+  !EMBED_REFUSED_CHANNELS.has(slugify(video.channel));
 
 /**
  * A YouTube **search** URL for a finished match's goals.

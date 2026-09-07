@@ -820,16 +820,35 @@ for the one that is not.
 The highlights section of a **Página da partida**, shown for **any** match that
 has finished with a score — a 0-0 included, since it still has chances and saves
 and broadcasters publish a package for it either way. When
-`src/data/highlights.ts` has entries it lists one link per broadcaster, labelled
-by channel; several publish their own package for the same match and the reader
-picks. With no entry it falls back to a YouTube *search* for "melhores
-momentos", and says so, because no provider we use exposes highlight links and
-guessing a video id would eventually point at the wrong match or a reupload.
+`src/data/highlights.ts` has entries, **the video itself is the section**: the
+preferred package plays in an `<iframe>` right there, and the other channels
+are text links under it that swap the frame. Several broadcasters publish their
+own package for the same match and the reader still picks; what changed is that
+picking no longer means leaving. With no entry it falls back to a YouTube
+*search* for "melhores momentos", and says so, because no provider we use
+exposes highlight links and guessing a video id would eventually point at the
+wrong match or a reupload.
+This is the **one** place in the app with an embedded player, and it is not a
+softening of the refusal **Hino do clube** and **Vídeos do clube** both state —
+those are about the *club* page, where a video is one of a dozen things offered.
+Two conditions carry it: nothing autoplays (`videoEmbedUrl` sets no `autoplay`,
+so what renders is a poster and YouTube's own play button — the "hino que
+ninguém pediu" objection in full), and the host is `youtube-nocookie.com`, so a
+reader who never presses play is not tracked. A channel YouTube **refuses to
+embed** keeps its plain link-out — `playsInPage` in `match-core.ts` holds that
+list, measured in the page because no API and no script can answer it — and the
+caption always carries a way to YouTube, since a frame can fail for reasons no
+list anticipates.
 _Avoid_: "Gols" anywhere in this section (that is the count, as in the artilharia
 column) or "gols" in the search query — it has to serve a goalless match;
 gating the section on goals scored; labelling several links with the same
-generic verb; presenting the search as an official video; offering either for a
-fixture that has not finished.
+generic verb; presenting the search as an official video (**embedding** the
+first result of one is the same mistake with a player attached); offering either
+for a fixture that has not finished; `autoplay` on the frame; a second frame so
+the other channels can play side by side (two things able to play at once);
+`www.youtube.com` as the embed host; a broadcaster **mark** standing in for a
+channel's name here (the marks went with the pills — an accessible name must not
+rest on a lazy cross-origin image).
 
 **Status da partida**:
 The five values of `MatchStatus`, shown as badges: `SCHEDULED` → "A realizar",
