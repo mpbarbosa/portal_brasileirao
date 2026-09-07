@@ -5,8 +5,8 @@ import type { Squad } from "@/src/types";
  * GENERATED FILE — do not edit by hand.
  * Regenerate with: npx tsx scripts/sync-seed-data.ts
  *
- * Frozen elencos (20 clubs, 948 players), taken
- * 2026-09-02 from football-data.org. The offline fallback behind
+ * Frozen elencos (20 clubs, 949 players), taken
+ * 2026-09-07 from football-data.org. The offline fallback behind
  * `/api/squads`, so it goes stale the moment a transfer window opens.
  *
  * Clubs are referenced through `CLUBS_BY_CODE` rather than restated, so this
@@ -28,7 +28,7 @@ export const SEED_SQUADS: Squad[] = [
     { id: "22673", name: "Alejandro García", position: "Defence", nationality: "Colombia", dateOfBirth: "2001-02-28" },
     { id: "249229", name: "Arthur Dias", position: "Defence", nationality: "Brazil", dateOfBirth: "2007-04-10" },
     { id: "291295", name: "Benjamín Brito", position: "Midfield", nationality: "Argentina", dateOfBirth: "2007-07-25" },
-    { id: "290568", name: "Bruno Ramos", position: "Defence", nationality: "Brazil", dateOfBirth: "2008-08-16" },
+    { id: "290568", name: "Bruno Ramos", position: "Offence", nationality: "Brazil", dateOfBirth: "2008-08-16" },
     { id: "131264", name: "Bruno Zapelli", position: "Midfield", nationality: "Argentina", dateOfBirth: "2002-05-17" },
     { id: "104494", name: "Carlos Terán", position: "Defence", nationality: "Colombia", dateOfBirth: "2000-09-24" },
     { id: "221387", name: "Chiqueti", position: "Midfield", nationality: "Brazil", dateOfBirth: "2005-02-09" },
@@ -441,6 +441,7 @@ export const SEED_SQUADS: Squad[] = [
     { id: "129391", name: "Fabinho", position: "Offence", nationality: "Brazil", dateOfBirth: "1999-11-18" },
     { id: "1706", name: "Felipe Jonatan", position: "Defence", nationality: "Brazil", dateOfBirth: "1998-02-15" },
     { id: "13851", name: "Fernando Sobral", position: "Midfield", nationality: "Brazil", dateOfBirth: "1994-12-17" },
+    { id: "300719", name: "Gabriel Ibson", nationality: "Brazil", dateOfBirth: "2008-03-25" },
     { id: "103606", name: "Gabriel Leite", position: "Goalkeeper", nationality: "Brazil", dateOfBirth: "1987-12-28" },
     { id: "290544", name: "Gustavo Oliveira", position: "Midfield", nationality: "Brazil", dateOfBirth: "2002-09-11" },
     { id: "249505", name: "Jacy Maranhão", position: "Defence", nationality: "Brazil", dateOfBirth: "1997-07-11" },

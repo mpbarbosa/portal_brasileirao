@@ -5,13 +5,13 @@ import type { Match } from "@/src/types";
  * Regenerate with: npx tsx scripts/sync-seed-data.ts
  *
  * A frozen snapshot of the 2026 season
- * (380 fixtures, played through round 25), taken
- * 2026-09-02 from football-data.org. This is the offline fallback the app
+ * (380 fixtures, played through round 26), taken
+ * 2026-09-07 from football-data.org. This is the offline fallback the app
  * serves when no token is configured or the upstream is unreachable — real
  * historical data rather than invented scorelines, but **frozen**: it does not
  * reflect anything that happened after the snapshot date.
  */
-export const SNAPSHOT_DATE = "2026-09-02";
+export const SNAPSHOT_DATE = "2026-09-07";
 
 export const SEED_MATCHES: Match[] = [
   { id: "554740", round: 1, kickoff: "2026-01-28T22:00:00Z", status: "FINISHED", homeCode: "1766", awayCode: "1769", homeGoals: 2, awayGoals: 2 },
@@ -214,7 +214,6 @@ export const SEED_MATCHES: Match[] = [
   { id: "554936", round: 20, kickoff: "2026-07-26T22:30:00Z", status: "FINISHED", homeCode: "1769", awayCode: "1766", homeGoals: 1, awayGoals: 2 },
   { id: "554937", round: 20, kickoff: "2026-07-26T22:30:00Z", status: "FINISHED", homeCode: "4287", awayCode: "1782", homeGoals: 2, awayGoals: 0 },
   { id: "554940", round: 21, kickoff: "2026-07-29T00:00:00Z", status: "POSTPONED", homeCode: "1766", awayCode: "4286", homeGoals: null, awayGoals: null },
-  { id: "554941", round: 21, kickoff: "2026-07-29T00:00:00Z", status: "POSTPONED", homeCode: "1770", awayCode: "1767", homeGoals: null, awayGoals: null },
   { id: "554942", round: 21, kickoff: "2026-07-29T00:00:00Z", status: "POSTPONED", homeCode: "1772", awayCode: "1780", homeGoals: null, awayGoals: null },
   { id: "554948", round: 21, kickoff: "2026-07-29T00:00:00Z", status: "POSTPONED", homeCode: "1776", awayCode: "6685", homeGoals: null, awayGoals: null },
   { id: "554946", round: 21, kickoff: "2026-07-29T22:30:00Z", status: "FINISHED", homeCode: "6684", awayCode: "1783", homeGoals: 1, awayGoals: 1 },
@@ -263,16 +262,16 @@ export const SEED_MATCHES: Match[] = [
   { id: "554986", round: 25, kickoff: "2026-08-30T21:30:00Z", status: "FINISHED", homeCode: "4364", awayCode: "1769", homeGoals: 1, awayGoals: 1 },
   { id: "554982", round: 25, kickoff: "2026-08-30T22:30:00Z", status: "FINISHED", homeCode: "1777", awayCode: "6684", homeGoals: 3, awayGoals: 2 },
   { id: "554987", round: 25, kickoff: "2026-08-31T23:00:00Z", status: "FINISHED", homeCode: "4287", awayCode: "4241", homeGoals: 2, awayGoals: 3 },
-  { id: "554775", round: 4, kickoff: "2026-09-02T22:30:00Z", status: "SCHEDULED", homeCode: "1783", awayCode: "4364", homeGoals: null, awayGoals: null },
-  { id: "554991", round: 26, kickoff: "2026-09-05T19:00:00Z", status: "SCHEDULED", homeCode: "4286", awayCode: "1777", homeGoals: null, awayGoals: null },
-  { id: "554998", round: 26, kickoff: "2026-09-05T21:30:00Z", status: "SCHEDULED", homeCode: "1776", awayCode: "1766", homeGoals: null, awayGoals: null },
-  { id: "554995", round: 26, kickoff: "2026-09-06T00:00:00Z", status: "SCHEDULED", homeCode: "1765", awayCode: "1780", homeGoals: null, awayGoals: null },
-  { id: "554993", round: 26, kickoff: "2026-09-06T14:00:00Z", status: "SCHEDULED", homeCode: "4241", awayCode: "4364", homeGoals: null, awayGoals: null },
-  { id: "554994", round: 26, kickoff: "2026-09-06T19:00:00Z", status: "SCHEDULED", homeCode: "1771", awayCode: "1768", homeGoals: null, awayGoals: null },
-  { id: "554996", round: 26, kickoff: "2026-09-06T19:00:00Z", status: "SCHEDULED", homeCode: "6684", awayCode: "6685", homeGoals: null, awayGoals: null },
-  { id: "554997", round: 26, kickoff: "2026-09-06T19:00:00Z", status: "SCHEDULED", homeCode: "4287", awayCode: "1783", homeGoals: null, awayGoals: null },
-  { id: "554990", round: 26, kickoff: "2026-09-06T21:30:00Z", status: "SCHEDULED", homeCode: "1770", awayCode: "1769", homeGoals: null, awayGoals: null },
-  { id: "554992", round: 26, kickoff: "2026-09-06T22:30:00Z", status: "SCHEDULED", homeCode: "1779", awayCode: "1772", homeGoals: null, awayGoals: null },
+  { id: "554775", round: 4, kickoff: "2026-09-02T22:30:00Z", status: "FINISHED", homeCode: "1783", awayCode: "4364", homeGoals: 2, awayGoals: 0 },
+  { id: "554991", round: 26, kickoff: "2026-09-05T19:00:00Z", status: "FINISHED", homeCode: "4286", awayCode: "1777", homeGoals: 2, awayGoals: 3 },
+  { id: "554998", round: 26, kickoff: "2026-09-05T21:30:00Z", status: "FINISHED", homeCode: "1776", awayCode: "1766", homeGoals: 2, awayGoals: 0 },
+  { id: "554995", round: 26, kickoff: "2026-09-06T00:00:00Z", status: "FINISHED", homeCode: "1765", awayCode: "1780", homeGoals: 1, awayGoals: 0 },
+  { id: "554993", round: 26, kickoff: "2026-09-06T14:00:00Z", status: "FINISHED", homeCode: "4241", awayCode: "4364", homeGoals: 1, awayGoals: 2 },
+  { id: "554994", round: 26, kickoff: "2026-09-06T19:00:00Z", status: "FINISHED", homeCode: "1771", awayCode: "1768", homeGoals: 3, awayGoals: 1 },
+  { id: "554996", round: 26, kickoff: "2026-09-06T19:00:00Z", status: "FINISHED", homeCode: "6684", awayCode: "6685", homeGoals: 2, awayGoals: 3 },
+  { id: "554997", round: 26, kickoff: "2026-09-06T19:00:00Z", status: "FINISHED", homeCode: "4287", awayCode: "1783", homeGoals: 0, awayGoals: 1 },
+  { id: "554990", round: 26, kickoff: "2026-09-06T21:30:00Z", status: "FINISHED", homeCode: "1770", awayCode: "1769", homeGoals: 0, awayGoals: 0 },
+  { id: "554992", round: 26, kickoff: "2026-09-06T22:30:00Z", status: "FINISHED", homeCode: "1779", awayCode: "1772", homeGoals: 1, awayGoals: 2 },
   { id: "554999", round: 26, kickoff: "2026-09-07T23:00:00Z", status: "SCHEDULED", homeCode: "1782", awayCode: "1767", homeGoals: null, awayGoals: null },
   { id: "555001", round: 27, kickoff: "2026-09-12T00:00:00Z", status: "SCHEDULED", homeCode: "1777", awayCode: "4287", homeGoals: null, awayGoals: null },
   { id: "555004", round: 27, kickoff: "2026-09-12T00:00:00Z", status: "SCHEDULED", homeCode: "4241", awayCode: "1768", homeGoals: null, awayGoals: null },
@@ -284,6 +283,7 @@ export const SEED_MATCHES: Match[] = [
   { id: "555008", round: 27, kickoff: "2026-09-12T21:30:00Z", status: "SCHEDULED", homeCode: "1769", awayCode: "1776", homeGoals: null, awayGoals: null },
   { id: "555002", round: 27, kickoff: "2026-09-12T23:30:00Z", status: "SCHEDULED", homeCode: "1770", awayCode: "4286", homeGoals: null, awayGoals: null },
   { id: "555009", round: 27, kickoff: "2026-09-13T00:00:00Z", status: "SCHEDULED", homeCode: "6685", awayCode: "1771", homeGoals: null, awayGoals: null },
+  { id: "554941", round: 21, kickoff: "2026-09-16T22:30:00Z", status: "SCHEDULED", homeCode: "1770", awayCode: "1767", homeGoals: null, awayGoals: null },
   { id: "555010", round: 28, kickoff: "2026-09-19T00:00:00Z", status: "SCHEDULED", homeCode: "1768", awayCode: "1777", homeGoals: null, awayGoals: null },
   { id: "555012", round: 28, kickoff: "2026-09-19T00:00:00Z", status: "SCHEDULED", homeCode: "1779", awayCode: "1765", homeGoals: null, awayGoals: null },
   { id: "555013", round: 28, kickoff: "2026-09-19T00:00:00Z", status: "SCHEDULED", homeCode: "1783", awayCode: "4286", homeGoals: null, awayGoals: null },

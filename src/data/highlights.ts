@@ -1298,4 +1298,51 @@ export const HIGHLIGHTS: Record<string, Highlight[]> = {
     { url: "https://www.youtube.com/watch?v=XnQG_bdRVFc", channel: "ge tv" },
     { url: "https://www.youtube.com/watch?v=LOGLtRZKQ2g", channel: "UOL Esporte" },
   ],
+  // Bragantino 2 x 3 Bahia, rodada 26.
+  "554991": [
+    { url: "https://www.youtube.com/watch?v=qIqeNXt0GqM", channel: "ge tv" },
+    { url: "https://www.youtube.com/watch?v=a2T_POLlFEE", channel: "UOL Esporte" },
+  ],
+  // São Paulo 2 x 0 Atlético-MG, rodada 26.
+  "554998": [
+    { url: "https://www.youtube.com/watch?v=-1htwornQ6Q", channel: "ge tv" },
+    { url: "https://www.youtube.com/watch?v=fFIieUDg6r8", channel: "UOL Esporte" },
+  ],
+  // Fluminense 1 x 0 Vasco da Gama, rodada 26.
+  "554995": [
+    { url: "https://www.youtube.com/watch?v=Aw7zUkaIHwE", channel: "ge tv" },
+    { url: "https://www.youtube.com/watch?v=6BTyVLoCxHc", channel: "CazéTV" },
+    { url: "https://www.youtube.com/watch?v=0dht9FEF9BI", channel: "UOL Esporte" },
+  ],
+  // Coritiba 1 x 2 Mirassol, rodada 26.
+  "554993": [
+    { url: "https://www.youtube.com/watch?v=NF7Z9UK9vKo", channel: "ge tv" },
+    { url: "https://www.youtube.com/watch?v=0mTHSeF8wt8", channel: "UOL Esporte" },
+  ],
+  // Cruzeiro 3 x 1 Athletico-PR, rodada 26.
+  "554994": [
+    { url: "https://www.youtube.com/watch?v=kxHL4dhw-CU", channel: "ge tv" },
+    { url: "https://www.youtube.com/watch?v=AUM5tsg_DD4", channel: "UOL Esporte" },
+  ],
+  // Internacional 2 x 3 Santos, rodada 26.
+  "554996": [
+    { url: "https://www.youtube.com/watch?v=vpweBaulap8", channel: "ge tv" },
+    { url: "https://www.youtube.com/watch?v=H1R6zMyQZKI", channel: "CazéTV" },
+    { url: "https://www.youtube.com/watch?v=opdCTkGfLWs", channel: "UOL Esporte" },
+  ],
+  // Clube do Remo 0 x 1 Flamengo, rodada 26.
+  "554997": [
+    { url: "https://www.youtube.com/watch?v=3WZDLtMGf9Q", channel: "ge tv" },
+    { url: "https://www.youtube.com/watch?v=X9LNuSjYucw", channel: "UOL Esporte" },
+  ],
+  // Botafogo 0 x 0 Palmeiras, rodada 26.
+  "554990": [
+    { url: "https://www.youtube.com/watch?v=kU6FJgs6VdU", channel: "ge tv" },
+    { url: "https://www.youtube.com/watch?v=ntHjooqZUxM", channel: "CazéTV" },
+  ],
+  // Corinthians 1 x 2 Chapecoense, rodada 26.
+  "554992": [
+    { url: "https://www.youtube.com/watch?v=73TuudPw_Wk", channel: "ge tv" },
+    { url: "https://www.youtube.com/watch?v=VIu4-IAjnzg", channel: "UOL Esporte" },
+  ],
 };
