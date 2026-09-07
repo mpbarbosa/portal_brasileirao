@@ -8,6 +8,7 @@ import {
   highlights,
   hasHighlights,
   isHighlightUrl,
+  playsInPage,
   refereeRoleLabel,
   withHighlights,
 } from "@/match-core";
@@ -99,6 +100,36 @@ test("anything not YouTube over HTTPS is rejected", () => {
   assert.equal(isHighlightUrl("https://vimeo.com/123"), false);
   assert.equal(isHighlightUrl("not a url"), false);
   assert.equal(isHighlightUrl(undefined), false);
+});
+
+/**
+ * Which packages the Partida page may put in a frame.
+ *
+ * The list this reads is a claim about a **third party's setting**, so there is
+ * no gate anywhere that can tell you it has gone stale — see `playsInPage` for
+ * what was measured, in the page, and why the standalone probes all answer
+ * wrongly. These cases pin the two properties the component depends on rather
+ * than the measurement itself.
+ */
+test("a channel YouTube refuses to embed does not play in the page", () => {
+  // Measured 2026-09-07: three CazéTV packages, three refusals, against ge tv
+  // and UOL Esporte playing. Listed wrongly this costs a link-out; missing it
+  // costs a reader a frame reading "This video is unavailable".
+  assert.equal(playsInPage({ url: YT2, channel: "CazéTV" }), false);
+  assert.equal(playsInPage({ url: YT, channel: "ge tv" }), true);
+  assert.equal(playsInPage({ url: YT, channel: "UOL Esporte" }), true);
+});
+
+test("the refusal is read through one normaliser, accents and case included", () => {
+  // `slugify` is what folds the accent, and a second fold written here is how
+  // a list of channel names comes to miss the channel it names. A curator who
+  // writes "Cazetv" or "CAZÉTV" must not silently re-enable the frame.
+  for (const channel of ["CazéTV", "Cazetv", "CAZÉTV", "cazetv"]) {
+    assert.equal(playsInPage({ url: YT2, channel }), false, channel);
+  }
+  // And it is not a substring test: a different channel that merely contains
+  // the name would otherwise lose its player.
+  assert.equal(playsInPage({ url: YT2, channel: "CazéTV Brasil" }), true);
 });
 
 test("a match carries every curated channel", () => {

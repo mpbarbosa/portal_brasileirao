@@ -2,6 +2,9 @@ import { expect, test, type Page } from "@/tests/e2e/clock";
 import { SEED_MATCHES } from "@/src/data/matches";
 import { VENUES } from "@/src/data/venues";
 import { BROADCASTS } from "@/src/data/broadcasts";
+import { HIGHLIGHTS } from "@/src/data/highlights";
+import { youtubeVideoId } from "@/club-core";
+import { playsInPage } from "@/match-core";
 
 /**
  * The two rounds these tests need, **derived from the committed data rather
@@ -482,5 +485,138 @@ test.describe("Página da partida", () => {
 
     await expect(page.getByRole("link", { name: /Procurar melhores momentos/ })).toHaveCount(0);
     await expect(page.getByText(/não é um vídeo oficial/)).toHaveCount(0);
+  });
+
+  /**
+   * The player, which is the half a browser is needed for: `videoEmbedUrl` is
+   * unit-tested and says nothing about *when* a frame exists.
+   *
+   * The expected addresses are **derived from `highlights.ts`** rather than
+   * written down — the file grows on every sync, and an id in a spec is the
+   * "which record happens to hold a value" trap `CLAUDE.md` names. The fixture
+   * ids stay literals, as their neighbours above do, because what each one is
+   * chosen for — two channels that embed, and a channel that does not — is the
+   * subject of the assertions.
+   */
+  test.describe("the player", () => {
+    /** Palmeiras 4 x 1 Vasco: ge tv and UOL Esporte, both of which embed. */
+    const TWO_EMBEDDABLE = HIGHLIGHTS["554977"] ?? [];
+    /** Fluminense 2 x 1 Remo: ge tv, then CazéTV, which YouTube refuses to
+     *  play in a frame — see `playsInPage` for what was measured. */
+    const WITH_REFUSED = HIGHLIGHTS["554975"] ?? [];
+
+    const embedOf = (video: (typeof TWO_EMBEDDABLE)[number] | undefined) => {
+      const id = youtubeVideoId(video?.url);
+      // A curated line whose id will not parse keeps a plain link, so these
+      // assertions would be about a channel that never had a frame. Failing
+      // here says the fixture changed, not that the page is broken.
+      if (!id) throw new Error("a fixture these tests pin no longer parses");
+      return new RegExp(`youtube-nocookie\\.com/embed/${id}\\b`);
+    };
+
+    test("the video is the section, and no channel button is left", async ({ page }) => {
+      await page.goto("/partida/554977");
+      await expect(page.getByRole("heading", { name: "Melhores momentos" })).toBeVisible();
+
+      const frame = page.locator("main iframe");
+      await expect(frame).toHaveCount(1);
+      // The preferred package — the file's own order is the rights-holder
+      // preference `KNOWN_CHANNELS` states — playing where the reader is.
+      await expect(frame).toHaveAttribute("src", embedOf(TWO_EMBEDDABLE[0]));
+      await expect(frame).toBeVisible();
+    });
+
+    test("nothing plays by itself", async ({ page }) => {
+      await page.goto("/partida/554977");
+
+      // A video that started on its own would be the club page's "hino que
+      // ninguém pediu", on a page a reader may have opened for the scoreline.
+      // The absence is invisible in a screenshot and in every other assertion
+      // here, which is why it is pinned at both ends — see the unit test on
+      // `videoEmbedUrl` for the other one.
+      await expect(page.locator("main iframe")).toHaveAttribute("src", /^((?!autoplay).)*$/);
+    });
+
+    test("another channel swaps the video rather than adding a second player", async ({
+      page,
+    }) => {
+      await page.goto("/partida/554977");
+      const other = page.getByRole("link", { name: new RegExp(TWO_EMBEDDABLE[1].channel) });
+      // Records whether the anchor's default was prevented, read at `document`
+      // so it runs after React's own root handler. See below for why the
+      // click's own event is what this asks about.
+      await page.evaluate(() => {
+        (window as unknown as { __prevented?: boolean | null }).__prevented = null;
+        document.addEventListener("click", (event) => {
+          (window as unknown as { __prevented?: boolean | null }).__prevented =
+            event.defaultPrevented;
+        });
+      });
+
+      await other.click();
+
+      const frame = page.locator("main iframe");
+      // Two players is two things able to play at once, which is why the
+      // section holds one frame and the other channels are links under it.
+      await expect(frame).toHaveCount(1);
+      await expect(frame).toHaveAttribute("src", embedOf(TWO_EMBEDDABLE[1]));
+      // **And it does not ALSO open the tab.** Dropping `preventDefault` from
+      // the handler leaves every check above green — the popup opens, the page
+      // keeps running and the frame still swaps — so a reader would get a new
+      // tab *and* a swapped player, with nothing here saying so.
+      //
+      // **Two obvious ways to catch that do not work, and both were run.**
+      // `context.pages()` answers 1 at every point in this test even while the
+      // popup exists, so it passes against the bug it names. And
+      // `waitForEvent("popup", { timeout: 1200 })` catches it in isolation and
+      // **missed it in a 5-worker run** — the popup is created later than that
+      // under load — so it is a detector that reports green on a good day. It
+      // also charges the whole timeout to every passing run, since the correct
+      // behaviour is an event that never comes.
+      //
+      // Asking the click itself is instant and cannot race: the handler either
+      // prevented the default or it did not.
+      expect(
+        await page.evaluate(
+          () => (window as unknown as { __prevented?: boolean | null }).__prevented,
+        ),
+      ).toBe(true);
+      // Still a link to the watch page, so a modified click and a
+      // JavaScript-less reader both still reach the video.
+      await expect(other).toHaveAttribute("href", /youtube\.com\/watch/);
+    });
+
+    test("a channel YouTube will not embed stays a link out", async ({ page }) => {
+      const refused = WITH_REFUSED.find((video) => !playsInPage(video));
+      // Named rather than searched for: if the list of refused channels ever
+      // empties, this test has nothing to say and should be deleted with it,
+      // not silently pass over an empty season.
+      expect(refused, "554975 no longer carries a channel that refuses embedding").toBeTruthy();
+
+      await page.goto("/partida/554975");
+      const link = page.getByRole("link", { name: new RegExp(refused!.channel) });
+
+      await expect(link).toHaveAttribute("href", refused!.url);
+      // No frame to swap, so nothing claims one — the safe direction, and the
+      // one thing that stops the page offering a player that would render
+      // "This video is unavailable".
+      await expect(link).not.toHaveAttribute("aria-controls", /.*/);
+      await expect(link).toHaveAccessibleName(/abre em nova aba/);
+      // The frame that IS there is the channel that plays, never the refused
+      // one.
+      await expect(page.locator("main iframe")).toHaveAttribute(
+        "src",
+        embedOf(WITH_REFUSED.find((video) => playsInPage(video))),
+      );
+    });
+
+    test("the search fallback offers no player at all", async ({ page }) => {
+      await openMatchWithoutVideo(page);
+
+      await expect(page.getByRole("link", { name: /Procurar melhores momentos/ })).toBeVisible();
+      // Embedding the first result of a query is exactly the "presenting the
+      // search as an official video" CONTEXT.md forbids.
+      await expect(page.locator("main iframe")).toHaveCount(0);
+    });
   });
 });

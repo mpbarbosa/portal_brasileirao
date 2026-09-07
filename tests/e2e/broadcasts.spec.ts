@@ -135,11 +135,56 @@ test.describe("Onde assistir", () => {
     await mark.scrollIntoViewIfNeeded();
     await expect(mark).toBeVisible();
 
-    const loaded = await page.locator("dd img").evaluateAll((all) =>
-      all.map((i) => ({ alt: i.getAttribute("alt"), ok: (i as HTMLImageElement).naturalWidth > 0 })),
-    );
-    expect(loaded.length).toBeGreaterThan(0);
-    expect(loaded.filter((m) => !m.ok)).toEqual([]);
+    // The SPA catch-all answers 200 with the HTML shell for a path that is not
+    // a file, so a mark named in the data but never vendored into
+    // `public/marks/` would still render an <img> and still "load" as far as
+    // the DOM is concerned. Only the decoded size tells the two apart.
+    //
+    // So this must be a poll rather than a single read. `toBeVisible()` above
+    // resolves as soon as an element has a box and says nothing about whether
+    // the bytes have decoded, and only the one mark above was ever waited on
+    // while this reads every `dd img` on the page — including lazy ones. Read
+    // once and `naturalWidth` is 0 for a mark being served perfectly: the same
+    // defect fixed in `players.spec.ts`, which failed on the full local suite
+    // at 7 workers while passing in isolation and in the slower CI.
+    const marks = page.locator("dd img");
+
+    // **Both halves are read in ONE evaluate, and that is the whole shape.**
+    // Naming the marks first and then polling the painted set against that
+    // baseline is sound only while the DOM holds still: the baseline is a
+    // snapshot, so a mark the page adds after it is taken is counted as painted
+    // while missing from the target, the two can never compare equal, and the
+    // test times out over a page that is behaving. Reading the set that exists
+    // and the set that has painted from the same `evaluateAll` describes one
+    // instant, so a mark arriving mid-poll simply lands on both sides and the
+    // next read settles it.
+    //
+    // **It is arrival-shaped rather than an absence.** A poll returns the
+    // moment its matcher is satisfied, so polling the *pending* list for
+    // `[]` would be satisfied by the marks not having rendered yet — it would
+    // assert that this test out-ran the browser, which is a fact about the
+    // machine. `tests/e2e-poll.test.ts` refuses that shape. Here the empty DOM
+    // and the fully-painted DOM produce different strings, and only the second
+    // matches.
+    //
+    // **The value is a sentence so that a failure names the stragglers.** The
+    // count alone would settle the assertion and report `expected > 0,
+    // received 0`, which says a mark did not paint without saying which; the
+    // pending alts are what a person needs, and a poll can only surface them by
+    // returning them.
+    await expect
+      .poll(() =>
+        marks.evaluateAll((all) => {
+          const pending = all
+            .filter((i) => !((i as HTMLImageElement).naturalWidth > 0))
+            .map((i) => i.getAttribute("alt") ?? "(no alt)");
+          if (all.length === 0) return "no marks in the DOM";
+          return pending.length === 0
+            ? `${all.length} marks painted`
+            : `still waiting on: ${pending.join(", ")}`;
+        }),
+      )
+      .toMatch(/^\d+ marks painted$/);
   });
 
   test("a broadcaster with no mark still reads as its name", async ({ page }) => {
@@ -150,12 +195,23 @@ test.describe("Onde assistir", () => {
     await expect(page.getByText("Record", { exact: true })).toBeVisible();
   });
 
-  test("the highlights link keeps its name when the label becomes a mark", async ({ page }) => {
+  test("the highlights name every channel in text, with no mark to rest on", async ({ page }) => {
     await page.goto("/partida/554975");
 
-    // The accessible name must not rest on an image's alt: these are lazy and
-    // cross-origin, so the text carries it and the mark is decorative.
-    await expect(page.getByRole("link", { name: /^ge tv —/ })).toBeVisible();
-    await expect(page.getByRole("link", { name: /^CazéTV —/ })).toBeVisible();
+    // **This case used to be about the marks inside the highlights pills, and
+    // the pills are gone** — the section is the video now, and the channels
+    // are text beside it. What it was defending survives the change and is
+    // what is asserted here: a channel's name must not rest on a lazy,
+    // cross-origin image's `alt`, which is exactly what happens when somebody
+    // reaches for `BroadcasterMark` to label a channel again.
+    const section = page.locator("main section").filter({ hasText: "Melhores momentos" });
+
+    await expect(section.getByText(/ge tv/)).toBeVisible();
+    await expect(section.getByRole("link", { name: /^CazéTV —/ })).toBeVisible();
+    // Written as "no image" rather than as "the text is there", because the
+    // text being there is true of the broken version too: a mark beside a name
+    // is fine, and a mark *instead* of one is what this refuses. The frame is
+    // an iframe and the crests are outside this section, so the count is zero.
+    await expect(section.locator("img")).toHaveCount(0);
   });
 });

@@ -59,11 +59,37 @@ const PIXEL = Buffer.from(
  */
 const OFFLINE_HOSTS = [/crests\.football-data\.org/, /img\.youtube\.com/];
 
+/**
+ * Every host this suite must not reach that is **not** an image.
+ *
+ * One entry: YouTube's player, which **Melhores momentos** mounts once a
+ * reader picks a broadcaster. It is a second list rather than a third regex in
+ * the one above because what separates them is the *stub*, not the rule — a
+ * document served as `image/png` renders as an image document inside the
+ * frame, so a spec asserting on the player's own box would be measuring a
+ * picture of nothing. This fulfils an empty HTML document instead.
+ *
+ * Note it is only ever requested after a click, so most of the suite never
+ * touches it. That is exactly the argument the crest CDN's own comment refuses
+ * to accept as a reason not to stub: "how bad would it be" is a property of
+ * this week's markup, and hermeticity is the property being defended.
+ */
+const OFFLINE_FRAME_HOSTS = [/www\.youtube-nocookie\.com/];
+
 export const test = base.extend({
   page: async ({ page }, use) => {
     for (const host of OFFLINE_HOSTS) {
       await page.route(host, (route) =>
         route.fulfill({ status: 200, contentType: "image/png", body: PIXEL }),
+      );
+    }
+    for (const host of OFFLINE_FRAME_HOSTS) {
+      await page.route(host, (route) =>
+        route.fulfill({
+          status: 200,
+          contentType: "text/html; charset=utf-8",
+          body: "<!doctype html><title>player</title>",
+        }),
       );
     }
     await use(page);

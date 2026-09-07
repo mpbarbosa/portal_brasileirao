@@ -393,6 +393,50 @@ export const videoWatchUrl = (raw: string | undefined): string | null => {
 };
 
 /**
+ * The **player** address for a video — the one that goes in an `<iframe>`.
+ *
+ * Written here beside `videoWatchUrl` for that function's stated reason: the
+ * origin is spelled in one place, so the link a reader can copy and the frame
+ * a reader can watch cannot come to disagree about what YouTube is.
+ *
+ * **The host is `youtube-nocookie.com`, which is YouTube's own
+ * privacy-enhanced mode**, and it is the whole reason an embed is defensible
+ * here at all: it serves the same player from the same API without writing
+ * the tracking cookies `www.youtube.com` writes on load. `CONTEXT.md`'s
+ * **Hino do clube** and **Vídeos do clube** entries both refuse an embedded
+ * player, and both are about the **club** page, where a video is one of a
+ * dozen things offered. `MatchHighlights` records why the Partida page is the
+ * one place that argument does not reach; neither entry's own decision
+ * changes.
+ *
+ * **There is deliberately no `autoplay`, and that absence is the load-bearing
+ * half.** The frame renders with the section rather than on a click, so a
+ * video that started by itself would be **Hino do clube**'s objection exactly
+ * — a video nobody asked for, playing at whatever volume the reader's device
+ * is on, on a page they may have opened for the scoreline. What renders is a
+ * poster and YouTube's own play button, which is one press either way, and the
+ * press is the reader's.
+ *
+ * The two parameters it does set:
+ *
+ * - **`playsinline=1`** — without it iOS Safari takes the video fullscreen and
+ *   out of the page, which is exactly the leaving-the-page this replaces.
+ * - **`rel=0`** — since 2018 this no longer removes the end-of-video
+ *   suggestions, it restricts them to the **same channel**. That is the honest
+ *   description and it is still worth setting: what follows a broadcaster's
+ *   package is then more of that broadcaster, not whatever the platform would
+ *   like a reader to watch next.
+ *
+ * Null for anything `youtubeVideoId` will not parse, which the caller renders
+ * as an ordinary link-out — the degradation `videoThumbnailUrl` and
+ * `hymnUrl` already take.
+ */
+export const videoEmbedUrl = (raw: string | undefined): string | null => {
+  const id = youtubeVideoId(raw);
+  return id && `https://www.youtube-nocookie.com/embed/${id}?playsinline=1&rel=0`;
+};
+
+/**
  * YouTube's own thumbnail for a video, at the size that always exists.
  *
  * `hqdefault` is 480×360 and is generated for every video — the higher

@@ -1345,4 +1345,46 @@ export const HIGHLIGHTS: Record<string, Highlight[]> = {
     { url: "https://www.youtube.com/watch?v=73TuudPw_Wk", channel: "ge tv" },
     { url: "https://www.youtube.com/watch?v=VIu4-IAjnzg", channel: "UOL Esporte" },
   ],
+  // Atlético-MG 2 x 1 Vitória, rodada 25.
+  "554981": [
+    { url: "https://www.youtube.com/watch?v=dFMhqLTQ18c", channel: "ge tv" },
+    { url: "https://www.youtube.com/watch?v=DvwQ8quT0bk", channel: "UOL Esporte" },
+  ],
+  // São Paulo 2 x 1 Bragantino, rodada 25.
+  "554988": [
+    { url: "https://www.youtube.com/watch?v=944Wf6ml_Ik", channel: "ge tv" },
+    { url: "https://www.youtube.com/watch?v=8c3kaGstBV4", channel: "UOL Esporte" },
+  ],
+  // Vasco da Gama 3 x 1 Cruzeiro, rodada 25.
+  "554989": [
+    { url: "https://www.youtube.com/watch?v=1HYlke2BMkU", channel: "ge tv" },
+    { url: "https://www.youtube.com/watch?v=X9Ea5L6Yk-Y", channel: "CazéTV" },
+    { url: "https://www.youtube.com/watch?v=FXb2GD3OOtg", channel: "UOL Esporte" },
+  ],
+  // Athletico-PR 3 x 3 Fluminense, rodada 25.
+  "554980": [
+    { url: "https://www.youtube.com/watch?v=6poZINPng44", channel: "ge tv" },
+    { url: "https://www.youtube.com/watch?v=Q310laU_l0o", channel: "UOL Esporte" },
+  ],
+  // Corinthians 0 x 1 Santos, rodada 25.
+  "554983": [
+    { url: "https://www.youtube.com/watch?v=sqrfQHoe1Jg", channel: "ge tv" },
+    { url: "https://www.youtube.com/watch?v=S5b4JEAnboc", channel: "CazéTV" },
+    { url: "https://www.youtube.com/watch?v=R4nLZxqfULc", channel: "UOL Esporte" },
+  ],
+  // Grêmio 3 x 1 Chapecoense, rodada 25.
+  "554985": [
+    { url: "https://www.youtube.com/watch?v=nkkiPyivHbA", channel: "ge tv" },
+    { url: "https://www.youtube.com/watch?v=jRf-bII67E8", channel: "UOL Esporte" },
+  ],
+  // Bahia 3 x 2 Internacional, rodada 25.
+  "554982": [
+    { url: "https://www.youtube.com/watch?v=qrLehY_2A7M", channel: "ge tv" },
+    { url: "https://www.youtube.com/watch?v=xrmsDDAOUhc", channel: "UOL Esporte" },
+  ],
+  // Clube do Remo 2 x 3 Coritiba, rodada 25.
+  "554987": [
+    { url: "https://www.youtube.com/watch?v=gKBVcygj6kQ", channel: "ge tv" },
+    { url: "https://www.youtube.com/watch?v=ScFH7-yn65E", channel: "UOL Esporte" },
+  ],
 };
