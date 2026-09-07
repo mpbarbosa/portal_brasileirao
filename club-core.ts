@@ -474,9 +474,48 @@ export const videoWatchUrl = (raw: string | undefined): string | null => {
  * as an ordinary link-out — the degradation `videoThumbnailUrl` and
  * `hymnUrl` already take.
  */
+/**
+ * The origin and the parameters every player address here is built from,
+ * written **once** for `videoWatchUrl`'s stated reason: two spellings of
+ * YouTube is how the link a reader can copy and the frame a reader can watch
+ * come to disagree about what YouTube is.
+ */
+const embedAddress = (id: string, params: string): string =>
+  `https://www.youtube-nocookie.com/embed/${id}?${params}`;
+
+const PLAYER_PARAMS = "playsinline=1&rel=0";
+
 export const videoEmbedUrl = (raw: string | undefined): string | null => {
   const id = youtubeVideoId(raw);
-  return id && `https://www.youtube-nocookie.com/embed/${id}?playsinline=1&rel=0`;
+  return id && embedAddress(id, PLAYER_PARAMS);
+};
+
+/**
+ * The player address for a video the reader has just **pressed play on**, which
+ * is the only address in this file that carries `autoplay`.
+ *
+ * **Two named functions rather than one taking a flag**, which is the rule
+ * `serialiseDevicePreferences` already states: a boolean at a call site is easy
+ * to pass wrong and impossible to see in a diff, and the thing being got wrong
+ * here is the single parameter `CONTEXT.md` spends two entries refusing.
+ *
+ * **`autoplay` is not a softening of that refusal — it is what keeps the press
+ * count at one.** `videoEmbedUrl` above is for a frame that renders *with* its
+ * section, where the reader has asked for nothing and the poster plus YouTube's
+ * own play button is the whole safeguard. This one is for a frame that exists
+ * **because** the reader pressed play: `ClubVideos` mounts it in the click
+ * handler, so without `autoplay` their press would put a second play button
+ * under their cursor and ask them to press it again. The video still starts on
+ * a user gesture and never on a page load, which is what the objection was
+ * always about.
+ *
+ * Never call it where a frame renders unasked. `ClubVideos` is its only caller
+ * and mounts nothing until a card is pressed; `MatchHighlights`, whose frame
+ * *does* render with its section, takes `videoEmbedUrl` and must keep to it.
+ */
+export const videoPressedEmbedUrl = (raw: string | undefined): string | null => {
+  const id = youtubeVideoId(raw);
+  return id && embedAddress(id, `${PLAYER_PARAMS}&autoplay=1`);
 };
 
 /**

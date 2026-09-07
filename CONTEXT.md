@@ -600,40 +600,70 @@ Cid and its `Orquestra e Coro Cid - Topic` channel.
 _Avoid_: keying on **tla**, storing the full URL, showing the URL or the video
 title as the link text, taking a search result on trust without reading the
 channel, YouTube's own mark (that names the host, not the hymn), an embedded
-player on the club page (a hymn that can start playing is a hymn nobody asked
-for).
+player for the hymn (a hymn that can start playing is a hymn nobody asked for —
+an objection to a video starting **unasked** rather than to frames, which is why
+**Vídeos do clube** may now play in this same page on a press while this link may
+not: it is one of four addresses in a row, not a section a reader came to
+watch).
 
 **Vídeos do clube**:
 A rail of curated videos about a club, on its own page between the **Artilheiros
-do clube** and **Jogos disputados**. Each entry is a thumbnail, a title and the
-uploading channel, and opens on YouTube in a new tab. No provider carries a
-video at any tier, so `src/data/club-videos.ts` is hand-curated and keyed by
-club code — and unlike every other curated club file the value is a **list**,
-and **the same video may be listed under more than one club**: a comparação
-naming two sides belongs on both pages, so the id repeating is the mapping
-working rather than a duplicate to normalise away. Stored as the **video id
-alone**, as **Hino do clube** is, with `videoWatchUrl` and `videoThumbnailUrl`
-deriving both addresses from `youtubeVideoId` — the one parser the hymn now
-shares, so the two files cannot come to disagree about what a `youtu.be` link
-means. `title` and `channel` are both **required**: the title is the only thing
-telling two entries apart and is the one place in the app where a video title is
-the link text, and the channel is what stops this app's own render being read as
-a broadcaster's package. Confirm every id through YouTube's oEmbed endpoint
-before writing it down, the way the hymns were. The thumbnail is **hotlinked**
-from YouTube's own CDN rather than vendored — the argument that vendored the
-stadium and player photographs is a volunteer host's 429 over somebody's
-copyrighted work, and neither half holds for the platform's own artwork served
-for exactly this — so `img.youtube.com` joins the crest CDN in the end-to-end
-suite's `OFFLINE_HOSTS`.
+do clube** and **Jogos disputados**, and on its **Painel**. Each entry is a
+thumbnail, a title and the uploading channel — and **pressing one plays it where
+it sits**, the player replacing that card's thumbnail inside the card's own box.
+A **modified** click still opens YouTube in a new tab, because a card is a link
+first. No provider carries a video at any tier, so `src/data/club-videos.ts` is
+hand-curated and keyed by club code — and unlike every other curated club file
+the value is a **list**, and **the same video may be listed under more than one
+club**: a comparação naming two sides belongs on both pages, so the id repeating
+is the mapping working rather than a duplicate to normalise away. Stored as the
+**video id alone**, as **Hino do clube** is, with `videoWatchUrl`,
+`videoThumbnailUrl` and `videoPressedEmbedUrl` deriving all three addresses from
+`youtubeVideoId` — the one parser the hymn and the melhores momentos now share,
+so no two of them can come to disagree about what a `youtu.be` link means, or
+about what YouTube is. `title` and `channel` are both **required**: the title is
+the only thing telling two entries apart and is the one place in the app where a
+video title is the link text, and the channel is what stops this app's own render
+being read as a broadcaster's package. Confirm every id through YouTube's oEmbed
+endpoint before writing it down, the way the hymns were. The thumbnail is
+**hotlinked** from YouTube's own CDN rather than vendored — the argument that
+vendored the stadium and player photographs is a volunteer host's 429 over
+somebody's copyrighted work, and neither half holds for the platform's own
+artwork served for exactly this — so `img.youtube.com` joins the crest CDN in the
+end-to-end suite's `OFFLINE_HOSTS`, and the player host joins
+`OFFLINE_FRAME_HOSTS` beside it.
+
+**It is a facade and NOT `MatchHighlights`' always-mounted frame**, and the
+distinction is the one this entry and **Hino do clube** have been drawing all
+along rather than a new one: the Partida page is where the video *is the errand*,
+so a frame that renders with the section is charged to a reader who came for it,
+while a club page offers a video among a dozen other things and would charge the
+same frame to every reader who came for the campanha. Three things follow, each
+strictly better here than an always-mounted frame rather than a compromise with
+one. **Nothing is requested from the player until a card is pressed** — no
+frame, no cookie, no script. **The press count is unchanged at one**: an
+always-mounted frame carries no `autoplay`, so the reader presses YouTube's own
+button; here they press the card and `videoPressedEmbedUrl` starts it, which is
+the *only* address in `club-core.ts` carrying `autoplay` and is legitimate
+precisely because a user gesture mounted the frame. And **the section does not
+change height** — measured at the capture viewport, 24 nodes and zero paint
+differences against the rail it replaced. That last one is load-bearing: an
+always-mounted 736px frame put this section's bottom at 1619px against
+`screenshot.ts`' `MAX_HEIGHT` of 1170, so the crop would have fallen back to
+Artilheiros and `clube-palmeiras-{light,dark}` would have lost the section
+entirely — the #418 failure that raising the ceiling to 1170 was meant to repair,
+and one that ceiling cannot absorb (its measured safe band is [1146, 1189]).
 _Avoid_: "Redes sociais" (the name **Onde acompanhar** already rejects, and this
-is one platform rather than a reader's several), an **embedded player** (the
-reason **Hino do clube** gives, harder: a rail of iframes would be the first
-third-party script this app ships), keying on **tla**, storing the full URL,
-printing the id as the link text, `maxresdefault` (it 404s for anything uploaded
-below that resolution, which renders as a broken image), a heading over a club
-with no entries, and inventing entries to fill the other eighteen clubs — the
-sibling repo's social view runs on fabricated `SEED_POSTS` and that half does not
-travel here.
+is one platform rather than a reader's several), **two players at once** (one id
+in state, so pressing a second card unmounts the first — the **Melhores
+momentos** refusal), a frame mounted on **render** rather than on a press (that
+is the Partida page's arrangement and this page's whole objection), `autoplay` on
+any address a page mounts unasked, `www.youtube.com` as the embed host, keying on
+**tla**, storing the full URL, printing the id as the link text, `maxresdefault`
+(it 404s for anything uploaded below that resolution, which renders as a broken
+image), a heading over a club with no entries, and inventing entries to fill the
+other eighteen clubs — the sibling repo's social view runs on fabricated
+`SEED_POSTS` and that half does not travel here.
 
 **Wikipédia**:
 The club's encyclopedia article, linked from its page as a fourth external link
@@ -863,9 +893,15 @@ picking no longer means leaving. With no entry it falls back to a YouTube
 *search* for "melhores momentos", and says so, because no provider we use
 exposes highlight links and guessing a video id would eventually point at the
 wrong match or a reupload.
-This is the **one** place in the app with an embedded player, and it is not a
-softening of the refusal **Hino do clube** and **Vídeos do clube** both state —
-those are about the *club* page, where a video is one of a dozen things offered.
+This was the **first** place in the app with an embedded player, and it is still
+the only one that mounts a frame **on render**. **Vídeos do clube** has since
+taken the same player onto the club page as a *facade* — nothing is requested
+until a card is pressed — and the reason the two differ is the reason this entry
+already gave: here the video is the errand, there it is one of a dozen things
+offered. What has not moved at all is **Hino do clube**, which stays a link in a
+row of links: the objection there was never to a *player* but to sound nobody
+asked for, and a hymn among four addresses is not a section a reader came to
+watch.
 Two conditions carry it: nothing autoplays (`videoEmbedUrl` sets no `autoplay`,
 so what renders is a poster and YouTube's own play button — the "hino que
 ninguém pediu" objection in full), and the host is `youtube-nocookie.com`, so a
