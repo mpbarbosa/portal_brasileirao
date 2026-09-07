@@ -4,6 +4,7 @@ import { test } from "node:test";
 import { COACH_OVERRIDES } from "@/src/data/coach-overrides";
 import { CLUBS } from "@/src/data/clubs";
 import { CLUB_HYMNS } from "@/src/data/club-hymns";
+import { CLUB_REDDIT } from "@/src/data/club-reddit";
 import { CLUB_WIKIPEDIA } from "@/src/data/club-wikipedia";
 import {
   clubAddress,
@@ -19,6 +20,8 @@ import {
   hymnUrl,
   instagramHandle,
   instagramUrl,
+  redditUrl,
+  subredditName,
   lastFixture,
   nextFixture,
   ofClub,
@@ -38,6 +41,7 @@ import {
   withCoachOverrides,
   withHymns,
   withInstagram,
+  withReddit,
   withWikipedia,
 } from "@/club-core";
 import type { Match, Scorer, StandingsRow } from "@/src/types";
@@ -432,6 +436,69 @@ test("anything that is not a handle yields no link", () => {
   assert.equal(instagramUrl(undefined), null);
 });
 
+test("a subreddit name becomes the canonical community address", () => {
+  assert.equal(redditUrl("CRFla"), "https://www.reddit.com/r/CRFla/");
+  assert.equal(redditUrl("r/CRFla"), "https://www.reddit.com/r/CRFla/");
+  assert.equal(redditUrl("/r/CRFla"), "https://www.reddit.com/r/CRFla/");
+});
+
+test("a pasted subreddit URL is reduced to the name", () => {
+  // What a person copies out of the address bar, share suffix and all.
+  assert.equal(
+    redditUrl("https://www.reddit.com/r/CRFla/?rdt=53291"),
+    "https://www.reddit.com/r/CRFla/",
+  );
+  assert.equal(redditUrl("reddit.com/r/CRFla/new/"), "https://www.reddit.com/r/CRFla/");
+  assert.equal(redditUrl("https://old.reddit.com/r/CRFla/"), "https://www.reddit.com/r/CRFla/");
+});
+
+test("a subreddit's casing survives, because the name is what the link says", () => {
+  // Reddit resolves a sub case-insensitively but prints one canonical form, so
+  // folding the value would reach the right page under a name the community
+  // does not use. This is the one way the parser differs from its Instagram
+  // sibling, and the assertion is what stops it being "tidied" into agreement.
+  assert.equal(subredditName("CRFla"), "CRFla");
+  assert.equal(subredditName("https://www.reddit.com/r/CRFla/"), "CRFla");
+});
+
+test("anything that is not a subreddit name yields no link", () => {
+  // Renders as no link at all, rather than one landing on a Reddit search.
+  assert.equal(redditUrl("with spaces"), null);
+  assert.equal(redditUrl("https://www.reddit.com/"), null);
+  assert.equal(redditUrl("r/"), null);
+  // Reddit's own bounds: 3 to 21 characters.
+  assert.equal(redditUrl("ab"), null);
+  assert.equal(redditUrl("a".repeat(22)), null);
+  // A user profile is not a community, and `u/` is one keystroke from `r/`.
+  assert.equal(redditUrl("https://www.reddit.com/u/alguem/"), null);
+  assert.equal(redditUrl(""), null);
+  assert.equal(redditUrl(undefined), null);
+});
+
+test("curated subreddits attach to the club list by code", () => {
+  const clubs = [club("1783", "Flamengo", "flamengo"), club("9999", "Outro", "outro")];
+
+  const [flamengo, outro] = withReddit(clubs, { "1783": "CRFla" });
+
+  assert.equal(flamengo.reddit, "CRFla");
+  assert.equal(outro.reddit, undefined);
+});
+
+test("the subreddit rides along with the website into live payloads", () => {
+  // `withClubDetails` is the one place where "works in CI" and "works in
+  // production" genuinely differ: every suite runs the frozen seed, which
+  // already carries the field, while production builds its clubs from a live
+  // payload that carries none of these. A field left out of that function
+  // renders offline and silently vanishes on the deployed site — which is
+  // exactly how `state` went missing for as long as the list existed.
+  const known = [{ ...club("1783", "Flamengo", "flamengo"), reddit: "CRFla" }];
+
+  const [merged] = withClubDetails([club("1783", "Flamengo", "flamengo")], known);
+
+  assert.equal(merged.reddit, "CRFla");
+  assert.equal(withClubDetails([club("1783", "Flamengo", "flamengo")], [])[0].reddit, undefined);
+});
+
 test("curated handles attach to the club list by code", () => {
   const clubs = [club("1769", "Palmeiras", "palmeiras"), club("9999", "Outro", "outro")];
 
@@ -642,6 +709,43 @@ test("no two clubs share an article", () => {
   const titles = CLUBS.map((entry) => CLUB_WIKIPEDIA[entry.code]);
 
   assert.equal(new Set(titles).size, titles.length);
+});
+
+test("every curated subreddit names a club in the division", () => {
+  // Coverage is deliberately partial — unlike the hymn and the article, which
+  // are on all twenty pages — so there is no "every club has one" gate here.
+  // What CAN be checked is that no entry is keyed to nothing: a code that is
+  // not in the division renders no link and reports nothing, which is the same
+  // silent failure `player-core.test.ts` guards for an id no longer in a squad.
+  const codes = new Set(CLUBS.map((entry) => entry.code));
+  const orphans = Object.keys(CLUB_REDDIT).filter((code) => !codes.has(code));
+
+  assert.deepEqual(orphans, []);
+});
+
+test("every curated subreddit survives its own parser", () => {
+  // A value the parser refuses renders as no link at all, which looks exactly
+  // like a club that simply has no entry — so a typo here is invisible on the
+  // page and invisible in review. The parser is the only thing that can say.
+  const unusable = Object.entries(CLUB_REDDIT).filter(([, sub]) => !redditUrl(sub));
+
+  assert.deepEqual(unusable, []);
+});
+
+test("the curated subreddits are not empty, and no two clubs share one", () => {
+  // The emptiness half is what stops the two tests above passing vacuously if
+  // the file is ever cleared — `tests/e2e/coaches.spec.ts` carries the same
+  // guard over `coach-overrides.ts`, and for the same reason.
+  //
+  // The distinctness half is VACUOUS TODAY at one entry, and is written now
+  // rather than later because the failure it names is invisible in review: a
+  // sub keyed to the wrong club id renders a working link on both pages, and
+  // one of them sends a club's supporters into their rivals' community. It is
+  // the `no two clubs share an article` gate, one file over.
+  const subs = Object.values(CLUB_REDDIT);
+
+  assert.ok(subs.length > 0);
+  assert.equal(new Set(subs).size, subs.length);
 });
 
 test("instagramHandle keeps only the handle, whatever was written down", () => {
