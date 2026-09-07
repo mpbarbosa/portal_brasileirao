@@ -2,15 +2,16 @@ src/components
 src/data
 src/index.css
 src/App.tsx
-index.html
 account-core.ts
 brand-core.ts
 broadcast-core.ts
+campaign-facts-core.ts
 campaign-plot-core.ts
 club-core.ts
 escalacao-core.ts
 goals-core.ts
 health-core.ts
+index.html
 league-stats-core.ts
 live-core.ts
 match-core.ts

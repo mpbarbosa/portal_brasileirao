@@ -25,6 +25,7 @@ import { PlayersView } from "@/src/components/PlayersView";
 import { RoundBrowser } from "@/src/components/RoundBrowser";
 import { ScorersTable } from "@/src/components/ScorersTable";
 import { StadiumView } from "@/src/components/StadiumView";
+import { CampaignFacts } from "@/src/components/CampaignFacts";
 import { LeagueStats } from "@/src/components/LeagueStats";
 import { StandingsTable } from "@/src/components/StandingsTable";
 import { hasLiveMatch } from "@/live-core";
@@ -473,6 +474,14 @@ export function App() {
                 <LeagueStats
                   rows={standings}
                   matches={matches.matches}
+                  onSelectClub={(key) => navigate({ section: "clube", key })}
+                />
+              )}
+              {matches && (
+                <CampaignFacts
+                  rankHistory={rankHistory}
+                  rows={standings}
+                  clubs={matches.clubs}
                   onSelectClub={(key) => navigate({ section: "clube", key })}
                 />
               )}
