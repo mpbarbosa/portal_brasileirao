@@ -1,6 +1,6 @@
 # Animações em Manim
 
-Três cenas, três leituras da mesma campanha:
+Quatro cenas, quatro leituras da mesma campanha:
 
 - **`campanhas.py`** — dois clubes rodada a rodada, a **posição** desenhada como
   linha sobre a divisão inteira, e ao lado o jogo daquela rodada com o
@@ -11,11 +11,23 @@ Três cenas, três leituras da mesma campanha:
   posição de abertura à de fechamento, o pavio cobre a melhor e a pior posição
   ocupada *durante* a rodada, e embaixo, no mesmo eixo x, a barra de **pontos
   acumulados** com o ganho da rodada na tampa.
+- **`barras.py`** — os **20 clubes** como uma **corrida de barras deitadas**: o
+  comprimento é o total de pontos, a altura é a colocação, e as linhas trocam de
+  lugar a cada rodada. É o `pontos.py` com a ordem no lugar do tempo — lá a
+  ultrapassagem é o cruzamento de duas curvas que o leitor tem de achar, aqui é
+  a única coisa que se mexe.
 
-Nenhuma das três recalcula classificação. As duas primeiras leem
-`rank-history.ts`, que já carrega posição *e* pontos por rodada; a terceira lê
-`computeRankCandles`, que é a mesma função que o Painel do site serve. Um número
-errado aqui está errado no site também.
+Nenhuma das quatro recalcula classificação. A primeira, a segunda e a quarta
+leem `rank-history.ts`, que já carrega posição *e* pontos por rodada; a terceira
+lê `computeRankCandles`, que é a mesma função que o Painel do site serve. Um
+número errado aqui está errado no site também.
+
+**O `barras.py` lê o `pontos.json` e não tem exportador próprio**, o que é
+deliberado: aquele payload já carrega `{round, points, position, played}` por
+clube, que é exatamente e inteiramente o que a corrida de barras precisa. Um
+`export-barras.ts` sairia byte a byte igual ao `export-pontos.ts`, e a segunda
+cópia é onde a divergência começa — o argumento que o `commons-core.ts` faz
+sobre o `scripts/commons-api.ts`. `BARRAS_JSON` aponta para outra temporada.
 
 **A vela responde o que a linha não responde**, e é o argumento do
 `rank-candles-core.ts`, não um novo: a linha liga a posição do *fim* de cada
@@ -49,7 +61,24 @@ npx tsx scripts/manim/export-pontos.ts > scripts/manim/pontos.json
 
 npx tsx scripts/manim/export-velas.ts > scripts/manim/velas.json
 ./.venv-manim/bin/manim -qh scripts/manim/velas.py Velas
+
+# a corrida de barras reaproveita o pontos.json acima
+./.venv-manim/bin/manim -qh scripts/manim/barras.py Barras
+BARRAS_ASPECT=4:5  ./.venv-manim/bin/manim -qh scripts/manim/barras.py Barras
+BARRAS_ASPECT=9:16 ./.venv-manim/bin/manim -qh scripts/manim/barras.py Barras
+npx tsx scripts/manim/thumbnail-barras.ts
 ```
+
+**Copie cada corte ANTES de renderizar o próximo.** Os três escrevem caminhos
+diferentes (`1080p60`, `1350p60`, `1920p60`), então aqui o atropelo não é o do
+`velas.py` — mas o 16:9 de uma rodada e o 4:5 de outra num mesmo `docs/medias/`
+é um conjunto que ninguém consegue olhar e ver que está misturado.
+
+**O `BARRAS_ASPECT` segue o `VELAS_ASPECT` à risca**: `16:9` (o padrão, YouTube),
+`4:5` (feed do Instagram) e `9:16` (Reels e YouTube Short), com um valor
+desconhecido **abortando** em vez de cair no 16:9 em silêncio. No 9:16 a nota de
+fecho sobe para dentro da zona segura, porque é conteúdo; só o crédito fica na
+faixa que a UI come.
 
 `export-velas.ts` aceita **um** código de clube (`1765` Fluminense é o padrão) —
 uma vela por rodada só cabe para um clube: duas séries sobrepostas na mesma
