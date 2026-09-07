@@ -157,6 +157,63 @@ const stampOf = (match: Match): number => {
  * the same direction `kickoffValue` sorts it, and the conservative one for a
  * rule whose whole job is to overrule the provider.
  */
+/**
+ * A record that carries a scoreline for a kickoff already past is **not
+ * scheduled**, whatever the provider says — so this repairs the status rather
+ * than the score.
+ *
+ * **It exists because `retractsResult` cannot reach the shape production
+ * actually served.** That rule refuses an incoming record with *no* score; on
+ * 2026-09-07 upstream served the opposite — nine of round 26's ten fixtures as
+ * `SCHEDULED` **with both goals present**, kickoffs two days past, `source:
+ * football-data`, read off the live API. Every page then read it back: Jogos
+ * badged nine played matches *A realizar*, Ao vivo dropped the round out of
+ * Últimos resultados entirely and fell back to fixtures a fortnight old, and
+ * the club page offered a match from 30/08 as *Próximo jogo* — while the
+ * Classificação, which is upstream's own table, went on counting them as
+ * played. The two halves of one provider disagreed and the app rendered both.
+ *
+ * **Widening `retractsResult` instead was the obvious fix and is the wrong
+ * one, for two independent reasons.**
+ *
+ * It would not have repaired what was live. `mergeByFreshness`' output is what
+ * `rememberMatches` persists, so the first fill that accepted the incoherent
+ * record **overwrote the held FINISHED copy** — the "it stores the loser"
+ * failure `CLAUDE.md` already records for the stamp comparison. A rule that
+ * only ever prefers a *held* record has nothing left to prefer, and a cold
+ * start has nothing at all.
+ *
+ * And it would pin a genuine correction. A corrected scoreline is exactly how
+ * an honest amendment states itself — 2-3 becoming 2-4 — so refusing every
+ * scored record that arrives under a SCHEDULED status would hold the stale
+ * score for ever. Repairing keeps the provider's freshest *claim* and fixes
+ * only the field that contradicts it.
+ *
+ * **It is coherence and not a status ranking**, which is the objection
+ * `mergeByFreshness` documents and does not work around: nothing here compares
+ * two records or decides that FINISHED outranks SCHEDULED. It reads one record
+ * and observes that a scoreline is upstream's own assertion that the match was
+ * played, which a kickoff in the future could not be — so the clock is what
+ * makes this safe, and it arrives as a parameter like everywhere else.
+ *
+ * Deliberately narrow. A LIVE record keeps its status, because a match being
+ * played has a score and is not finished; POSTPONED and CANCELLED are how a
+ * result is genuinely voided and are untouched; a score against a kickoff still
+ * in the future is left alone, since nothing here knows it was played; and an
+ * unparseable kickoff counts as *not* past, the direction `retractsResult`
+ * already fails in.
+ */
+export const withPlayedStatus = (matches: Match[], now: number): Match[] =>
+  matches.map((match) => {
+    if (match.status !== "SCHEDULED") return match;
+    if (match.homeGoals === null || match.awayGoals === null) return match;
+
+    const at = Date.parse(match.kickoff);
+    if (Number.isNaN(at) || at >= now) return match;
+
+    return { ...match, status: "FINISHED" };
+  });
+
 const retractsResult = (kept: Match, incoming: Match, now: number): boolean => {
   if (kept.homeGoals === null || kept.awayGoals === null) return false;
   if (incoming.homeGoals !== null || incoming.awayGoals !== null) return false;
