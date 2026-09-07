@@ -101,6 +101,42 @@ fi
 
 say() { printf '%s  %s\n' "$(date -u '+%Y-%m-%dT%H:%M:%SZ')" "$*" >> "$LOG"; }
 
+# Tell a person, once per transition. The markers are files on disk and reach
+# nobody; a rodada stays due for days, so the reader who needs this is by
+# definition not sitting at a terminal.
+#
+# CRON HAS NO SESSION BUS, AND THAT IS THE WHOLE DIFFICULTY. Measured on this
+# workstation rather than assumed: `notify-send` with no
+# DBUS_SESSION_BUS_ADDRESS answers "Cannot autolaunch D-Bus without X11
+# $DISPLAY" and exits 1; with `unix:path=/run/user/<uid>/bus` it exits 0. The
+# address is therefore derived from the running uid when absent, and only when
+# the socket is really there — inventing one puts us back to a notifier that
+# does not notify, which is worse than none because it is believed.
+#
+# IT MAY NEVER CHANGE THE OUTCOME OF A RUN. A logged-out desktop has no bus, and
+# that is normal rather than a failure of the poll: the marker is still written,
+# the log still records what happened, and the exit code still describes the
+# SYNC and not the notification. Every failure here is logged and swallowed.
+notify() { # notify <summary> <body>
+  local sock
+  command -v notify-send >/dev/null 2>&1 || { say "      (no notify-send; marker written, nobody told)"; return 0; }
+  if [ -z "${DBUS_SESSION_BUS_ADDRESS:-}" ]; then
+    sock="/run/user/$(id -u)/bus"
+    if [ -S "$sock" ]; then
+      export DBUS_SESSION_BUS_ADDRESS="unix:path=$sock"
+    else
+      say "      (no session bus at $sock; marker written, nobody told)"
+      return 0
+    fi
+  fi
+  if notify-send --app-name=caRtola --urgency=normal "$1" "$2" 2>>"$LOG"; then
+    say "      notified: $1"
+  else
+    say "      (notify-send failed; marker written, nobody told)"
+  fi
+  return 0
+}
+
 # One instance at a time. A 30-minute cron against a probe that walks up to 20
 # HTTP requests can overlap if the network is slow.
 exec 9>"$BASE/.lock"
@@ -139,6 +175,11 @@ case "$ec" in
     rm -f "$ATTENTION"
     ;;
   1)
+    # Was it already due last hour? The marker persists until the sync lands, so
+    # this branch runs every hour while a rodada waits — notifying here rather
+    # than on the TRANSITION would ping once an hour for days, which is how a
+    # person learns to ignore it.
+    was_due=$([ -f "$DUE" ] && echo yes || echo no)
     say "DUE   $head  a sync is due"
     printf '%s\n' "$out" | sed 's/^/      /' >> "$LOG"
     { date -u '+%Y-%m-%dT%H:%M:%SZ'; echo; printf '%s\n' "$out"; cat <<'NEXT'
@@ -164,12 +205,17 @@ The full procedure, including the Coritiba reading this round votes on, is in
 .claude/worktrees/COORDINATION.md — search for "RODADA 26 IS OWED".
 NEXT
     } > "$DUE"
+    [ "$was_due" = no ] && notify "Rodada da caRtola disponivel" \
+      "Um sync esta em falta. Veja ~/cartola-cron/DUE para o procedimento."
     rm -f "$ATTENTION"
     ;;
   *)
+    was_attention=$([ -f "$ATTENTION" ] && echo yes || echo no)
     say "LOOK  $head  sync-schedule.sh exited $ec — a person must look"
     printf '%s\n' "$out" | sed 's/^/      /' >> "$LOG"
     { date -u '+%Y-%m-%dT%H:%M:%SZ'; printf 'sync-schedule.sh --check exited %s\n\n' "$ec"; printf '%s\n' "$out"; } > "$ATTENTION"
+    [ "$was_attention" = no ] && notify "caRtola: o poller precisa de uma pessoa" \
+      "sync-schedule.sh saiu $ec. Veja ~/cartola-cron/ATTENTION."
     ;;
 esac
 
