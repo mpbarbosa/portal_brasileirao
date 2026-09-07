@@ -737,11 +737,12 @@ test("the curated subreddits are not empty, and no two clubs share one", () => {
   // the file is ever cleared — `tests/e2e/coaches.spec.ts` carries the same
   // guard over `coach-overrides.ts`, and for the same reason.
   //
-  // The distinctness half is VACUOUS TODAY at one entry, and is written now
-  // rather than later because the failure it names is invisible in review: a
-  // sub keyed to the wrong club id renders a working link on both pages, and
-  // one of them sends a club's supporters into their rivals' community. It is
-  // the `no two clubs share an article` gate, one file over.
+  // The distinctness half was VACUOUS at one entry and has teeth at seven. The
+  // failure it names is invisible in review: a sub keyed to the wrong club id
+  // renders a working link on both pages, and one of them sends a club's
+  // supporters into their rivals' community. It is the `no two clubs share an
+  // article` gate, one file over — and the file it guards is now exactly the
+  // shape that gate exists for, six of the seven having been added at once.
   const subs = Object.values(CLUB_REDDIT);
 
   assert.ok(subs.length > 0);
