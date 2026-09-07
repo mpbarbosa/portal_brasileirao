@@ -16,7 +16,8 @@
 #
 # **WHY `git` IS STUBBED, AND WHY THIS FILE WAS RED ON `main` FOR HALF AN HOUR.**
 # `sync-schedule.sh` refuses to run outside a linked worktree, because a sync
-# writes six generated files and several sessions share the root checkout. The
+# rewrites every generated file the chain owns and several sessions share the
+# root checkout. The
 # test for that is `git rev-parse --git-dir` against `--git-common-dir`, which
 # differ **only** inside a worktree — so the guard's answer is a property of
 # WHERE THE REHEARSAL HAPPENS TO BE RUN FROM.
