@@ -37,7 +37,7 @@ or not caRtola has published anything.
 
 ## 0. Take a worktree. `sync-schedule.sh` will refuse otherwise
 
-A rodada update writes six generated files. That is precisely the collision the
+A rodada update writes seven generated files. That is precisely the collision the
 worktree rule at the top of `CLAUDE.md` exists to prevent, so the script tests
 `--git-dir` against `--git-common-dir` and dies in the shared root.
 
