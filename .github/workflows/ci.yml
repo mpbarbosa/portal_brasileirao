@@ -198,6 +198,16 @@ jobs:
       - name: Rehearse the sync schedule (scripts/sync-schedule.sh)
         run: ./scripts/rehearse-sync-schedule.sh
 
+      # The caRtola poller runs from cron on a workstation, unattended and
+      # hourly, and every outcome it has is a FILE rather than a message — so a
+      # branch that stops working stops writing a marker, and a marker nobody
+      # writes is indistinguishable from "nothing is due", which is the
+      # reassuring answer. It is also the script that spent years unversioned,
+      # which is how it came to carry a wrong count of the files a sync writes.
+      # Shellcheck proves it parses; this proves it decides.
+      - name: Rehearse the caRtola cron poller (scripts/cartola-cron-check.sh)
+        run: ./scripts/rehearse-cartola-cron.sh
+
       # The only behavioural coverage 12_traffic_report.sh has. Shellcheck above
       # proves it parses; this proves it reads a log. It is here rather than
       # merely shellchecked because the script travels inside the release
