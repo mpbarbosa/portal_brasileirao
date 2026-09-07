@@ -149,26 +149,42 @@ test.describe("Onde assistir", () => {
     // at 7 workers while passing in isolation and in the slower CI.
     const marks = page.locator("dd img");
 
-    // Name the marks that exist, once. `toBeVisible()` above has already put at
-    // least the Premiere one in the DOM, so this cannot be empty.
-    const named = await marks.evaluateAll((all) => all.map((i) => i.getAttribute("alt")));
-    expect(named.length).toBeGreaterThan(0);
-
-    // Then wait for every one of them to have painted. Written as the set that
-    // HAS decoded reaching the set that exists, rather than as "nothing is
-    // undecoded": a poll for an absence returns on its first read, so
-    // `.toEqual([])` here would be satisfied by the marks not having rendered
-    // yet and would assert only that this test out-ran the browser.
-    // `tests/e2e-poll.test.ts` refuses that shape, and refused this one.
+    // **Both halves are read in ONE evaluate, and that is the whole shape.**
+    // Naming the marks first and then polling the painted set against that
+    // baseline is sound only while the DOM holds still: the baseline is a
+    // snapshot, so a mark the page adds after it is taken is counted as painted
+    // while missing from the target, the two can never compare equal, and the
+    // test times out over a page that is behaving. Reading the set that exists
+    // and the set that has painted from the same `evaluateAll` describes one
+    // instant, so a mark arriving mid-poll simply lands on both sides and the
+    // next read settles it.
+    //
+    // **It is arrival-shaped rather than an absence.** A poll returns the
+    // moment its matcher is satisfied, so polling the *pending* list for
+    // `[]` would be satisfied by the marks not having rendered yet — it would
+    // assert that this test out-ran the browser, which is a fact about the
+    // machine. `tests/e2e-poll.test.ts` refuses that shape. Here the empty DOM
+    // and the fully-painted DOM produce different strings, and only the second
+    // matches.
+    //
+    // **The value is a sentence so that a failure names the stragglers.** The
+    // count alone would settle the assertion and report `expected > 0,
+    // received 0`, which says a mark did not paint without saying which; the
+    // pending alts are what a person needs, and a poll can only surface them by
+    // returning them.
     await expect
       .poll(() =>
-        marks.evaluateAll((all) =>
-          all
-            .filter((i) => (i as HTMLImageElement).naturalWidth > 0)
-            .map((i) => i.getAttribute("alt")),
-        ),
+        marks.evaluateAll((all) => {
+          const pending = all
+            .filter((i) => !((i as HTMLImageElement).naturalWidth > 0))
+            .map((i) => i.getAttribute("alt") ?? "(no alt)");
+          if (all.length === 0) return "no marks in the DOM";
+          return pending.length === 0
+            ? `${all.length} marks painted`
+            : `still waiting on: ${pending.join(", ")}`;
+        }),
       )
-      .toEqual(named);
+      .toMatch(/^\d+ marks painted$/);
   });
 
   test("a broadcaster with no mark still reads as its name", async ({ page }) => {
