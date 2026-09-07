@@ -143,9 +143,10 @@ vídeo. Um artefato para todos os destinos é uma razão suficiente. Segue o GIF
 
 ### O que existe hoje
 
-**Os quatro têm GIF, todos commitados** — PR #362 (`95557a9`) rendereizou os três
-que faltavam com a receita do `scripts/manim/README.md`, sem tocar em cena
-nenhuma. Conte `docs/medias/`, não esta tabela:
+**Todos têm GIF, todos commitados** — PR #362 (`95557a9`) renderizou os três que
+faltavam com a receita do `scripts/manim/README.md`, sem tocar em cena nenhuma,
+e a corrida de barras acrescentou o quinto. Conte `docs/medias/`, não esta
+tabela:
 
 | arquivo | mp4 | GIF | duração |
 |---|---|---|---|
@@ -153,10 +154,13 @@ nenhuma. Conte `docs/medias/`, não esta tabela:
 | `velas-fluminense` | 4,0 MB | **5,1 MB** | 21,1 s |
 | `campanhas-palmeiras-flamengo` | 3,7 MB | **5,3 MB** | 22,9 s |
 | `pontos-20-clubes` | 4,6 MB | **5,7 MB** | 20,6 s |
+| `barras-20-clubes` | 4,7 MB | **6,5 MB** | 20,5 s |
 
-Todos 960×540, 15fps. Nenhum passa de 6 MB, o que fica bem abaixo do teto de
-upload de imagem do Reddit — **o tamanho não é o problema aqui**, e é por isso
-que a seção seguinte é sobre outra coisa.
+Todos 960×540, 15fps. **O `barras` é o primeiro a passar de 6 MB** e continua
+muito abaixo do teto de upload de imagem do Reddit — **o tamanho não é o problema
+aqui**, e é por isso que a seção seguinte é sobre outra coisa. Vale corrigir a
+frase que estava aqui, e não só o número: "nenhum passa de 6 MB" era uma
+propriedade do conjunto daquele dia, não um limite que alguém tivesse escolhido.
 
 **A régua de legibilidade do README passa nos quatro.** Abri um quadro de cada
 GIF e li: `melhor · pior na rodada` nos dois `velas`, os dois cards de placar no
@@ -165,6 +169,12 @@ coluna `1º … 20º` com clube e pontos no `pontos-20-clubes`, legível a 960px
 960 do README tinham sido medidos contra o card do `velas`; valem para as outras
 duas cenas também. **Medido abrindo os quadros, não deduzido da resolução** — e
 conferido nos bytes que foram commitados, não nos de um render de rascunho.
+
+O `barras` passa com a maior folga dos cinco, e é o caso oposto ao do `pontos`:
+a legenda que lá é uma coluna de 20 linhas a 14pt aqui **é o desenho**, então
+nome do clube, ordinal e pontos são o próprio conteúdo em vez de uma chave ao
+lado dele. Lido num quadro do GIF commitado, a 960px: os vinte nomes, os vinte
+ordinais e os vinte números.
 
 ### A coisa que realmente decide o post
 
@@ -188,7 +198,23 @@ Três saídas, em ordem de esforço:
 Não escolhi por você: (2) e (3) são commits deliberados em `scripts/manim/`, e
 esse diretório teve seis PRs em dois dias.
 
-### Se um dia entrar um quinto GIF
+### O quinto GIF entrou, e é o mais indicado dos cinco para cá
+
+`barras-20-clubes` é uma **corrida de barras**, que é um formato que o
+r/dataisbeautiful já reconhece de longe — o leitor não precisa da legenda para
+saber o que está olhando, o que nenhuma das outras quatro cenas pode dizer.
+
+E ele responde melhor à objeção da seção acima sem que ninguém tenha mexido em
+nada: **o desfecho não está só no fim.** Numa corrida de barras cada rodada é uma
+troca de posições, então três segundos no meio já mostram o assunto do vídeo, ao
+contrário do resumo do `campanhas` ou da distância final do `pontos`. A saída (1)
+— aceitar — é mais forte aqui do que nas outras.
+
+**O que ainda não é:** um clube só. Os rascunhos 7.1 e 7.2 abaixo são de sub de
+clube e pedem o `velas-<clube>`; este é um post de divisão inteira e vai para
+r/dataisbeautiful e r/futebol, não para r/Palmeiras.
+
+### E se entrar um sexto
 
 Não é copiar arquivo. O `docs/medias/RENDERED` precisa nomear cada um com a data
 do snapshot de que foi desenhado, senão `tests/manim-renders.test.ts` fica
