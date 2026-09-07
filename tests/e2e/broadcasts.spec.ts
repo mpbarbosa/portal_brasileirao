@@ -179,12 +179,23 @@ test.describe("Onde assistir", () => {
     await expect(page.getByText("Record", { exact: true })).toBeVisible();
   });
 
-  test("the highlights link keeps its name when the label becomes a mark", async ({ page }) => {
+  test("the highlights name every channel in text, with no mark to rest on", async ({ page }) => {
     await page.goto("/partida/554975");
 
-    // The accessible name must not rest on an image's alt: these are lazy and
-    // cross-origin, so the text carries it and the mark is decorative.
-    await expect(page.getByRole("link", { name: /^ge tv —/ })).toBeVisible();
-    await expect(page.getByRole("link", { name: /^CazéTV —/ })).toBeVisible();
+    // **This case used to be about the marks inside the highlights pills, and
+    // the pills are gone** — the section is the video now, and the channels
+    // are text beside it. What it was defending survives the change and is
+    // what is asserted here: a channel's name must not rest on a lazy,
+    // cross-origin image's `alt`, which is exactly what happens when somebody
+    // reaches for `BroadcasterMark` to label a channel again.
+    const section = page.locator("main section").filter({ hasText: "Melhores momentos" });
+
+    await expect(section.getByText(/ge tv/)).toBeVisible();
+    await expect(section.getByRole("link", { name: /^CazéTV —/ })).toBeVisible();
+    // Written as "no image" rather than as "the text is there", because the
+    // text being there is true of the broken version too: a mark beside a name
+    // is fine, and a mark *instead* of one is what this refuses. The frame is
+    // an iframe and the crests are outside this section, so the count is zero.
+    await expect(section.locator("img")).toHaveCount(0);
   });
 });

@@ -82,8 +82,10 @@ same way. The campanhas are the only one of the two any capture still shows.
 Both clubs' campanhas are stacked rather than overlaid, so
 they share one scale and their rounds line up — the app has no series palette, and inventing
 a hue pair would be the only place colour carried meaning no token defines. **Melhores
-momentos** links each broadcaster's own package; where none is curated it falls back to a
-YouTube search and says so.*
+momentos** now *plays* the preferred package in the page, with the other broadcasters as
+links under it that swap the frame; where none is curated it falls back to a YouTube search
+and says so. The captures beneath still show the row of channel marks that section used to
+be — they are true of the build they were taken from, and go stale at the next re-shoot.*
 
 ![Página da partida Botafogo 1 x 1 Fluminense no tema claro: a 22ª rodada à esquerda e a etiqueta Encerrado à direita; o placar com os escudos dos dois clubes e, sob o nome de cada um, uma ligação para o seu artigo na Wikipédia; sob uma linha divisória, quem marcou de cada lado e quando — Alex Telles, de falta, aos 43' pelo Botafogo, e Ignacio aos 58' pelo Fluminense, ambos sublinhados porque abrem o cartão do jogador; os melhores momentos, três marcas — a ge, a CazéTV e o UOL Esporte — que abrem o vídeo no YouTube, sob a legenda “Melhores momentos no YouTube, por emissora”; a data e a hora do jogo; o estádio, com um alfinete ao lado do nome "Nilton Santos", que liga à página do próprio estádio, e a cidade e o estado; a linha do árbitro, que nomeia Bruno Arleu de Araujo; e as emissoras que transmitiram. No pé do enquadramento, a secção Escalações, fechada — é preciso abri-la para ver os onze e o banco de cada lado. A Campanha dos dois clubes fica abaixo do recorte.](docs/screenshots/partida-554951-light.png)
 
