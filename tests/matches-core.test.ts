@@ -6,6 +6,7 @@ import {
   currentRound,
   matchesForRound,
   mergeByFreshness,
+  withPlayedStatus,
   roundsOf,
   isAwaitingResult,
 } from "@/matches-core";
@@ -508,4 +509,107 @@ test("a postponed fixture whose kickoff has passed is still asked about", () => 
 
 test("an unreadable kickoff is a reason to look again, not to stop", () => {
   assert.equal(isAwaitingResult(match({ id: "1", kickoff: "not a date" }), KICKOFF), true);
+});
+
+/**
+ * The shape production served on 2026-09-07, and the one `retractsResult`
+ * cannot see: `SCHEDULED` **with** a scoreline, kickoff two days past.
+ *
+ * Read off the live API rather than invented — nine of round 26's ten
+ * fixtures, `source: football-data`, while the Classificação (upstream's own
+ * table) went on counting them as played.
+ */
+test("a scoreline against a kickoff already past is not scheduled", () => {
+  const [repaired] = withPlayedStatus(
+    [
+      match({
+        id: "554991",
+        status: "SCHEDULED",
+        homeGoals: 2,
+        awayGoals: 3,
+        kickoff: "2026-09-05T19:00:00Z",
+      }),
+    ],
+    Date.parse("2026-09-07T19:09:44Z"),
+  );
+
+  assert.equal(repaired.status, "FINISHED");
+  // The score is upstream's freshest claim and is never touched — repairing
+  // the status is the whole of it.
+  assert.equal(repaired.homeGoals, 2);
+  assert.equal(repaired.awayGoals, 3);
+});
+
+test("0-0 is a scoreline, and the repair reaches it", () => {
+  // `countsTowardStandings`' own trap: a goalless result is a result, and a
+  // truthiness test here would leave exactly the fixtures nobody scored in
+  // reading "A realizar".
+  const [repaired] = withPlayedStatus(
+    [
+      match({
+        id: "554990",
+        status: "SCHEDULED",
+        homeGoals: 0,
+        awayGoals: 0,
+        kickoff: "2026-09-06T21:30:00Z",
+      }),
+    ],
+    Date.parse("2026-09-07T19:09:44Z"),
+  );
+
+  assert.equal(repaired.status, "FINISHED");
+});
+
+test("the repair is narrow, and leaves every honest record alone", () => {
+  const now = Date.parse("2026-09-07T19:09:44Z");
+  const past = "2026-09-05T19:00:00Z";
+  const future = "2026-09-30T19:00:00Z";
+
+  const untouched: Match[] = [
+    // Being played: a score and a past kickoff, and emphatically not finished.
+    match({ id: "live", status: "LIVE", homeGoals: 1, awayGoals: 0, kickoff: past }),
+    // How a result is genuinely voided.
+    match({ id: "adiado", status: "POSTPONED", homeGoals: 1, awayGoals: 1, kickoff: past }),
+    match({ id: "cancelado", status: "CANCELLED", homeGoals: 1, awayGoals: 1, kickoff: past }),
+    // Scheduled and not played: nothing here knows anything about it.
+    match({ id: "porvir", status: "SCHEDULED", homeGoals: null, awayGoals: null, kickoff: past }),
+    // A score against a kickoff still to come is incoherent too, and this is
+    // deliberately not the function that decides what it means.
+    match({ id: "futuro", status: "SCHEDULED", homeGoals: 2, awayGoals: 0, kickoff: future }),
+    // An unparseable kickoff counts as *not* past — `retractsResult`'s
+    // direction, so the two rules fail the same way.
+    match({ id: "sem-hora", status: "SCHEDULED", homeGoals: 2, awayGoals: 0, kickoff: "amanhã" }),
+  ];
+
+  assert.deepEqual(
+    withPlayedStatus(untouched, now).map((m) => m.status),
+    untouched.map((m) => m.status),
+  );
+});
+
+/**
+ * The half a merge test cannot show: the repair works with **no held state**.
+ *
+ * That is the whole reason it is not a widening of `retractsResult`. The merge
+ * persists its own output, so the fill that accepted the incoherent record had
+ * already overwritten the held FINISHED copy — and a rule that can only prefer
+ * a held record has nothing left to prefer.
+ */
+test("it repairs a cold start, where no held record exists", () => {
+  const incoming = withPlayedStatus(
+    [
+      match({
+        id: "554994",
+        status: "SCHEDULED",
+        homeGoals: 3,
+        awayGoals: 1,
+        kickoff: "2026-09-06T19:00:00Z",
+      }),
+    ],
+    Date.parse("2026-09-07T19:09:44Z"),
+  );
+
+  const merged = mergeByFreshness([], incoming, Date.parse("2026-09-07T19:09:44Z"));
+
+  assert.equal(merged[0].status, "FINISHED");
 });

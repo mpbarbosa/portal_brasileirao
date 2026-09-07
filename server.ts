@@ -55,6 +55,7 @@ import {
   currentRound,
   matchesForRound,
   mergeByFreshness,
+  withPlayedStatus,
   roundsOf,
 } from "@/matches-core";
 import { injectMeta, pageMeta, type MetaContext } from "@/page-meta-core";
@@ -444,7 +445,16 @@ const loadMatches = async (): Promise<ApiEnvelope<MatchesPayload>> => {
     // and sometimes newer — so what this fill returned is not automatically
     // what we serve. `now` is what separates the second case from an honest
     // re-schedule. See `mergeByFreshness`.
-    const matches = mergeByFreshness(freshestMatches, mapMatches(raw), now);
+    // `withPlayedStatus` first: a record carrying a scoreline for a kickoff
+    // already past is repaired before anything compares it, so the merge and
+    // the state it persists both see a coherent record. Doing it after would
+    // remember the incoherent one — which is how the held copy was lost the
+    // first time. See that function for what production served.
+    const matches = mergeByFreshness(
+      freshestMatches,
+      withPlayedStatus(mapMatches(raw), now),
+      now,
+    );
     rememberMatches(matches);
     const payload: MatchesPayload = {
       rounds: roundsOf(matches),
