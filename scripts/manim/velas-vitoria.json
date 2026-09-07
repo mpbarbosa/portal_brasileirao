@@ -1,5 +1,5 @@
 {
-  "snapshot": "2026-09-02",
+  "snapshot": "2026-09-07",
   "club": {
     "code": "1782",
     "name": "Vitória",
@@ -86,7 +86,7 @@
       "round": 5,
       "open": 15,
       "close": 15,
-      "best": 13,
+      "best": 14,
       "worst": 16,
       "points": 1,
       "totalPoints": 5,
@@ -105,7 +105,7 @@
       "round": 6,
       "open": 15,
       "close": 10,
-      "best": 7,
+      "best": 8,
       "worst": 15,
       "points": 3,
       "totalPoints": 8,
@@ -480,6 +480,19 @@
         "goalsAgainst": 2,
         "result": "D"
       }
+    },
+    {
+      "round": 26,
+      "open": 13,
+      "close": 14,
+      "best": 13,
+      "worst": 14,
+      "points": null,
+      "totalPoints": 29,
+      "played": 25,
+      "result": null,
+      "moved": -1,
+      "match": null
     }
   ]
 }

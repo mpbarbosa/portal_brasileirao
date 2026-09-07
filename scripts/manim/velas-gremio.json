@@ -1,5 +1,5 @@
 {
-  "snapshot": "2026-09-02",
+  "snapshot": "2026-09-07",
   "club": {
     "code": "1767",
     "name": "Grêmio",
@@ -66,14 +66,14 @@
     {
       "round": 4,
       "open": 13,
-      "close": 8,
+      "close": 9,
       "best": 8,
       "worst": 13,
       "points": 3,
       "totalPoints": 6,
       "played": 4,
       "result": "V",
-      "moved": 5,
+      "moved": 4,
       "match": {
         "opponent": "Atlético-MG",
         "home": true,
@@ -84,15 +84,15 @@
     },
     {
       "round": 5,
-      "open": 8,
+      "open": 9,
       "close": 9,
-      "best": 8,
+      "best": 9,
       "worst": 10,
       "points": 1,
       "totalPoints": 7,
       "played": 5,
       "result": "E",
-      "moved": -1,
+      "moved": 0,
       "match": {
         "opponent": "Bragantino",
         "home": true,
@@ -124,7 +124,7 @@
       "round": 7,
       "open": 8,
       "close": 8,
-      "best": 7,
+      "best": 8,
       "worst": 8,
       "points": 3,
       "totalPoints": 11,
@@ -474,6 +474,19 @@
         "goalsAgainst": 1,
         "result": "V"
       }
+    },
+    {
+      "round": 26,
+      "open": 15,
+      "close": 15,
+      "best": 15,
+      "worst": 15,
+      "points": null,
+      "totalPoints": 28,
+      "played": 24,
+      "result": null,
+      "moved": 0,
+      "match": null
     }
   ]
 }

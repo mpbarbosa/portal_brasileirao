@@ -1,5 +1,5 @@
 {
-  "snapshot": "2026-09-02",
+  "snapshot": "2026-09-07",
   "club": {
     "code": "4241",
     "name": "Coritiba",
@@ -124,7 +124,7 @@
       "round": 7,
       "open": 7,
       "close": 7,
-      "best": 6,
+      "best": 7,
       "worst": 7,
       "points": 3,
       "totalPoints": 13,
@@ -181,7 +181,7 @@
       "round": 10,
       "open": 7,
       "close": 7,
-      "best": 6,
+      "best": 7,
       "worst": 7,
       "points": 1,
       "totalPoints": 15,
@@ -479,6 +479,25 @@
         "goalsFor": 3,
         "goalsAgainst": 2,
         "result": "V"
+      }
+    },
+    {
+      "round": 26,
+      "open": 7,
+      "close": 7,
+      "best": 7,
+      "worst": 7,
+      "points": 0,
+      "totalPoints": 37,
+      "played": 26,
+      "result": "D",
+      "moved": 0,
+      "match": {
+        "opponent": "Mirassol",
+        "home": true,
+        "goalsFor": 1,
+        "goalsAgainst": 2,
+        "result": "D"
       }
     }
   ]

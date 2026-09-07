@@ -1,5 +1,5 @@
 {
-  "snapshot": "2026-09-02",
+  "snapshot": "2026-09-07",
   "club": {
     "code": "4287",
     "name": "Clube do Remo",
@@ -162,7 +162,7 @@
       "round": 9,
       "open": 19,
       "close": 20,
-      "best": 19,
+      "best": 18,
       "worst": 20,
       "points": 0,
       "totalPoints": 6,
@@ -478,6 +478,25 @@
         "home": true,
         "goalsFor": 2,
         "goalsAgainst": 3,
+        "result": "D"
+      }
+    },
+    {
+      "round": 26,
+      "open": 19,
+      "close": 19,
+      "best": 19,
+      "worst": 19,
+      "points": 0,
+      "totalPoints": 23,
+      "played": 26,
+      "result": "D",
+      "moved": 0,
+      "match": {
+        "opponent": "Flamengo",
+        "home": true,
+        "goalsFor": 0,
+        "goalsAgainst": 1,
         "result": "D"
       }
     }

@@ -1,5 +1,5 @@
 {
-  "snapshot": "2026-09-02",
+  "snapshot": "2026-09-07",
   "club": {
     "code": "1765",
     "name": "Fluminense",
@@ -66,14 +66,14 @@
     {
       "round": 4,
       "open": 4,
-      "close": 5,
+      "close": 6,
       "best": 4,
-      "worst": 5,
+      "worst": 6,
       "points": 0,
       "totalPoints": 7,
       "played": 4,
       "result": "D",
-      "moved": -1,
+      "moved": -2,
       "match": {
         "opponent": "Palmeiras",
         "home": false,
@@ -84,9 +84,9 @@
     },
     {
       "round": 5,
-      "open": 5,
-      "close": 5,
-      "best": 4,
+      "open": 6,
+      "close": 6,
+      "best": 5,
       "worst": 6,
       "points": 3,
       "totalPoints": 10,
@@ -103,9 +103,9 @@
     },
     {
       "round": 6,
-      "open": 5,
-      "close": 4,
-      "best": 3,
+      "open": 6,
+      "close": 5,
+      "best": 4,
       "worst": 6,
       "points": 3,
       "totalPoints": 13,
@@ -122,15 +122,15 @@
     },
     {
       "round": 7,
-      "open": 4,
+      "open": 5,
       "close": 6,
-      "best": 4,
+      "best": 5,
       "worst": 6,
       "points": 0,
       "totalPoints": 13,
       "played": 7,
       "result": "D",
-      "moved": -2,
+      "moved": -1,
       "match": {
         "opponent": "Vasco da Gama",
         "home": false,
@@ -142,14 +142,14 @@
     {
       "round": 8,
       "open": 6,
-      "close": 5,
-      "best": 4,
+      "close": 6,
+      "best": 5,
       "worst": 6,
       "points": 3,
       "totalPoints": 16,
       "played": 8,
       "result": "V",
-      "moved": 1,
+      "moved": 0,
       "match": {
         "opponent": "Atlético-MG",
         "home": true,
@@ -160,15 +160,15 @@
     },
     {
       "round": 9,
-      "open": 5,
+      "open": 6,
       "close": 3,
       "best": 3,
-      "worst": 5,
+      "worst": 6,
       "points": 3,
       "totalPoints": 19,
       "played": 9,
       "result": "V",
-      "moved": 2,
+      "moved": 3,
       "match": {
         "opponent": "Corinthians",
         "home": true,
@@ -180,14 +180,14 @@
     {
       "round": 10,
       "open": 3,
-      "close": 3,
+      "close": 4,
       "best": 3,
-      "worst": 4,
+      "worst": 5,
       "points": 1,
       "totalPoints": 20,
       "played": 10,
       "result": "E",
-      "moved": 0,
+      "moved": -1,
       "match": {
         "opponent": "Coritiba",
         "home": false,
@@ -198,15 +198,15 @@
     },
     {
       "round": 11,
-      "open": 3,
+      "open": 4,
       "close": 5,
-      "best": 2,
+      "best": 3,
       "worst": 5,
       "points": 0,
       "totalPoints": 20,
       "played": 11,
       "result": "D",
-      "moved": -2,
+      "moved": -1,
       "match": {
         "opponent": "Flamengo",
         "home": true,
@@ -479,6 +479,25 @@
         "goalsFor": 3,
         "goalsAgainst": 3,
         "result": "E"
+      }
+    },
+    {
+      "round": 26,
+      "open": 4,
+      "close": 4,
+      "best": 4,
+      "worst": 5,
+      "points": 3,
+      "totalPoints": 45,
+      "played": 26,
+      "result": "V",
+      "moved": 0,
+      "match": {
+        "opponent": "Vasco da Gama",
+        "home": true,
+        "goalsFor": 1,
+        "goalsAgainst": 0,
+        "result": "V"
       }
     }
   ]

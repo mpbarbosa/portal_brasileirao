@@ -1,5 +1,5 @@
 {
-  "snapshot": "2026-09-02",
+  "snapshot": "2026-09-07",
   "club": {
     "code": "6685",
     "name": "Santos",
@@ -86,7 +86,7 @@
       "round": 5,
       "open": 14,
       "close": 14,
-      "best": 11,
+      "best": 12,
       "worst": 14,
       "points": 1,
       "totalPoints": 5,
@@ -104,14 +104,14 @@
     {
       "round": 6,
       "open": 14,
-      "close": 14,
-      "best": 13,
+      "close": 13,
+      "best": 12,
       "worst": 14,
       "points": 1,
       "totalPoints": 6,
       "played": 6,
       "result": "E",
-      "moved": 0,
+      "moved": 1,
       "match": {
         "opponent": "Corinthians",
         "home": true,
@@ -122,10 +122,10 @@
     },
     {
       "round": 7,
-      "open": 14,
-      "close": 16,
-      "best": 14,
-      "worst": 16,
+      "open": 13,
+      "close": 15,
+      "best": 13,
+      "worst": 15,
       "points": 0,
       "totalPoints": 6,
       "played": 7,
@@ -141,15 +141,15 @@
     },
     {
       "round": 8,
-      "open": 16,
+      "open": 15,
       "close": 16,
-      "best": 16,
-      "worst": 17,
+      "best": 15,
+      "worst": 16,
       "points": 1,
       "totalPoints": 7,
       "played": 8,
       "result": "E",
-      "moved": 0,
+      "moved": -1,
       "match": {
         "opponent": "Cruzeiro",
         "home": false,
@@ -472,6 +472,25 @@
         "home": false,
         "goalsFor": 1,
         "goalsAgainst": 0,
+        "result": "V"
+      }
+    },
+    {
+      "round": 26,
+      "open": 14,
+      "close": 12,
+      "best": 12,
+      "worst": 14,
+      "points": 3,
+      "totalPoints": 32,
+      "played": 25,
+      "result": "V",
+      "moved": 2,
+      "match": {
+        "opponent": "Internacional",
+        "home": false,
+        "goalsFor": 3,
+        "goalsAgainst": 2,
         "result": "V"
       }
     }

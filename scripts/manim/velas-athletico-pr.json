@@ -1,5 +1,5 @@
 {
-  "snapshot": "2026-09-02",
+  "snapshot": "2026-09-07",
   "club": {
     "code": "1768",
     "name": "Athletico-PR",
@@ -66,14 +66,14 @@
     {
       "round": 4,
       "open": 6,
-      "close": 6,
+      "close": 7,
       "best": 5,
-      "worst": 6,
+      "worst": 7,
       "points": 1,
       "totalPoints": 7,
       "played": 4,
       "result": "E",
-      "moved": 0,
+      "moved": -1,
       "match": {
         "opponent": "Bragantino",
         "home": false,
@@ -84,7 +84,7 @@
     },
     {
       "round": 5,
-      "open": 6,
+      "open": 7,
       "close": 4,
       "best": 4,
       "worst": 8,
@@ -92,7 +92,7 @@
       "totalPoints": 10,
       "played": 5,
       "result": "V",
-      "moved": 2,
+      "moved": 3,
       "match": {
         "opponent": "Botafogo",
         "home": true,
@@ -124,7 +124,7 @@
       "round": 7,
       "open": 6,
       "close": 5,
-      "best": 4,
+      "best": 5,
       "worst": 6,
       "points": 3,
       "totalPoints": 13,
@@ -142,14 +142,14 @@
     {
       "round": 8,
       "open": 5,
-      "close": 3,
-      "best": 3,
+      "close": 4,
+      "best": 4,
       "worst": 6,
       "points": 3,
       "totalPoints": 16,
       "played": 8,
       "result": "V",
-      "moved": 2,
+      "moved": 1,
       "match": {
         "opponent": "Coritiba",
         "home": true,
@@ -160,10 +160,10 @@
     },
     {
       "round": 9,
-      "open": 3,
-      "close": 5,
-      "best": 3,
-      "worst": 5,
+      "open": 4,
+      "close": 6,
+      "best": 4,
+      "worst": 6,
       "points": 0,
       "totalPoints": 16,
       "played": 9,
@@ -179,15 +179,15 @@
     },
     {
       "round": 10,
-      "open": 5,
+      "open": 6,
       "close": 6,
-      "best": 5,
+      "best": 6,
       "worst": 6,
       "points": 0,
       "totalPoints": 16,
       "played": 10,
       "result": "D",
-      "moved": -1,
+      "moved": 0,
       "match": {
         "opponent": "Atlético-MG",
         "home": false,
@@ -200,7 +200,7 @@
       "round": 11,
       "open": 6,
       "close": 6,
-      "best": 5,
+      "best": 6,
       "worst": 6,
       "points": 3,
       "totalPoints": 19,
@@ -409,7 +409,7 @@
       "round": 22,
       "open": 3,
       "close": 3,
-      "best": 2,
+      "best": 3,
       "worst": 3,
       "points": 3,
       "totalPoints": 40,
@@ -479,6 +479,25 @@
         "goalsFor": 3,
         "goalsAgainst": 3,
         "result": "E"
+      }
+    },
+    {
+      "round": 26,
+      "open": 3,
+      "close": 3,
+      "best": 3,
+      "worst": 3,
+      "points": 0,
+      "totalPoints": 45,
+      "played": 26,
+      "result": "D",
+      "moved": 0,
+      "match": {
+        "opponent": "Cruzeiro",
+        "home": false,
+        "goalsFor": 1,
+        "goalsAgainst": 3,
+        "result": "D"
       }
     }
   ]
