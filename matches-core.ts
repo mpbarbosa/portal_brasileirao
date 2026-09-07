@@ -196,6 +196,17 @@ const stampOf = (match: Match): number => {
  * played, which a kickoff in the future could not be — so the clock is what
  * makes this safe, and it arrives as a parameter like everywhere else.
  *
+ * **It repairs the merge's OUTPUT, and applying it to the incoming records
+ * instead is the mistake this shipped with.** `mergeByFreshness` returns a
+ * strictly-newer *held* copy unmodified, so a record decided on stamp never
+ * passes through a repair placed upstream of it — and the host's held state
+ * had already stored the incoherent records before the fix arrived, which is
+ * exactly the "it stores the loser" failure one function down. Production
+ * therefore went on serving ten SCHEDULED records with the fix live and
+ * `/api/health` reporting the right commit. Reproduced from one held record
+ * and one incoming record: repaired before the merge that fixture stays
+ * SCHEDULED, repaired after it reads FINISHED.
+ *
  * Deliberately narrow. A LIVE record keeps its status, because a match being
  * played has a score and is not finished; POSTPONED and CANCELLED are how a
  * result is genuinely voided and are untouched; a score against a kickoff still

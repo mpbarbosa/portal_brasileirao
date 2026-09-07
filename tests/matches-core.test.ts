@@ -588,6 +588,38 @@ test("the repair is narrow, and leaves every honest record alone", () => {
 });
 
 /**
+ * The case that shipped broken, and the only one that reaches the placement.
+ *
+ * Production served ten SCHEDULED records for eleven minutes **with the fix
+ * live and `/api/health` reporting the right commit**, because the repair was
+ * applied to the incoming records: `mergeByFreshness` returns a strictly-newer
+ * *held* copy unmodified, and the host's state had stored the incoherent
+ * record before the fix arrived. Nothing in the unit suite could see it — every
+ * other case here starts from an empty held list, where the placement makes no
+ * difference at all.
+ */
+test("a held record that wins on stamp is repaired too", () => {
+  const NOW = Date.parse("2026-09-07T19:42:00Z");
+  const incoherent = {
+    id: "554991",
+    status: "SCHEDULED" as const,
+    homeGoals: 2,
+    awayGoals: 3,
+    kickoff: "2026-09-05T19:00:00Z",
+  };
+  // What the host held, stamped by the generation that introduced it…
+  const held = [match({ ...incoherent, lastUpdated: "2026-09-07T12:00:00Z" })];
+  // …against what upstream replays now, stamped older, so the held copy wins.
+  const incoming = [match({ ...incoherent, lastUpdated: "2026-09-06T10:00:00Z" })];
+
+  const merged = mergeByFreshness(held, incoming, NOW);
+  assert.equal(merged[0].status, "SCHEDULED", "the held copy is what the merge returns");
+
+  // So the repair has to wrap the output, which is where `server.ts` applies it.
+  assert.equal(withPlayedStatus(merged, NOW)[0].status, "FINISHED");
+});
+
+/**
  * The half a merge test cannot show: the repair works with **no held state**.
  *
  * That is the whole reason it is not a widening of `retractsResult`. The merge
