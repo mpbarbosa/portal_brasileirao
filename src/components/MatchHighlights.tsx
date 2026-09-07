@@ -3,7 +3,7 @@ import { useId, useState } from "react";
 import { videoEmbedUrl } from "@/club-core";
 import { playsInPage } from "@/match-core";
 import { controlClasses } from "@/src/components/Button";
-import { LINK_UNDERLINE } from "@/src/components/interaction";
+import { LINK_UNDERLINE, TOUCH_TARGET } from "@/src/components/interaction";
 import type { Highlight } from "@/src/types";
 
 /**
@@ -167,14 +167,39 @@ export function MatchHighlights({
           )}
 
           {others.length > 0 && (
-            <p className="mt-1 text-body-small text-ink-faint">
-              Também por{" "}
+            /* **A 48dp band, and the height is what makes the targets safe
+                rather than what makes them big.** `TOUCH_TARGET` is a
+                pseudo-element, so it overhangs the link's box without moving
+                anything — and 48dp over a 14px line overhangs 17px into the
+                caption above and into "Data e hora" below, where a thumb
+                aiming at neither would swap the video. Measured on production
+                before this: 44x14 and 71x14. Giving the row its own 48dp band
+                and centring the text in it means the overhang has somewhere to
+                go that belongs to these links, which is the whole trick;
+                `interaction.ts` records the same failure between the two
+                controls in the top app bar, where 8px of overhang sat in a 4px
+                gap and the toggle won every pixel.
+
+                `gap-x-3` is the horizontal half of it, and the width it needs
+                is a property of the CHANNEL NAMES rather than of the layout: a
+                target is at least 48dp, so a name narrower than that overhangs
+                half the difference on each side. `KNOWN_CHANNELS` puts the
+                shortest at "ge tv", about 35px, which overhangs 6.5px; the
+                widest pair that can meet here is that against "CazéTV" (2px),
+                so 8.5px of overhang against the ~16px this leaves between two
+                link boxes. `gap-x-2` also held, at 3.5px of margin, and this is
+                the cheaper of the two numbers to be wrong about.
+                `tests/e2e/touch-targets.spec.ts` measures it — including a
+                prepared payload with two short names, because the real ones
+                cannot collide and a guard nothing can trip is not a guard. */
+            <p className="mt-1 flex min-h-12 flex-wrap items-center gap-x-3 text-body-small text-ink-faint">
+              <span>Também por</span>
               {others.map((video, index) => {
                 const embed = embedFor(video);
 
                 return (
-                  <span key={video.url}>
-                    {index > 0 && " · "}
+                  <span key={video.url} className="inline-flex items-center gap-x-2">
+                    {index > 0 && <span aria-hidden="true">·</span>}
                     <a
                       href={video.url}
                       target="_blank"
@@ -203,7 +228,12 @@ export function MatchHighlights({
                             }
                           : undefined
                       }
-                      className={LINK_UNDERLINE}
+                      // `relative` is what `TOUCH_TARGET` needs to hang off,
+                      // and it is on the anchor rather than the wrapper so the
+                      // target is centred on the *word* — a target centred on a
+                      // span that also holds the separator would sit off to one
+                      // side of the thing being pressed.
+                      className={`relative ${LINK_UNDERLINE} ${TOUCH_TARGET}`}
                     >
                       {video.channel}
                       <span className="sr-only">
@@ -215,7 +245,10 @@ export function MatchHighlights({
                   </span>
                 );
               })}
-              .
+              {/* No full stop. In the flex row it would be a third item with
+                  `gap-x-2` in front of it, printing " ." a space away from the
+                  channel it belongs to — and a row of tap targets is a list
+                  rather than the sentence this used to be. */}
             </p>
           )}
         </>

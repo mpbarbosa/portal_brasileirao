@@ -142,3 +142,188 @@ test.describe("Alvos de toque na barra", () => {
     ).toBe(before);
   });
 });
+
+/**
+ * The channel switcher under **Melhores momentos**, which is the one place in
+ * this app where a *content* link is also a control.
+ *
+ * The 48dp floor deliberately does not reach inline links — twenty club names
+ * in the Classificação, ten fixture links, ~950 player buttons — and these look
+ * like exactly that: words in a caption. They are not. Pressing one swaps the
+ * video in the frame above, which is a control's job, and on production they
+ * measured **44x14 and 71x14** on a phone where the pills they replaced had
+ * been 48dp targets.
+ *
+ * **The band is the fix and the collision is the risk.** `TOUCH_TARGET` hangs
+ * off a pseudo-element, so it overhangs the box without moving anything — and
+ * 48dp over a 14px line reaches 17px up into the caption and 17px down into
+ * "Data e hora", where a thumb aiming at neither would change the video. The
+ * row therefore carries its own 48dp band, and these cases measure the four
+ * clearances rather than trusting that.
+ */
+test.describe("Alvos de toque no seletor de emissora", () => {
+  /** Botafogo 1 x 1 Fluminense: three channels, so the row holds two. */
+  const THREE_CHANNELS = "/partida/554951";
+
+  const row = (page: Page) =>
+    page.locator("main section", { hasText: "Melhores momentos" }).locator("p").last();
+
+  test("each channel link carries a 48dp target it did not have", async ({ page }) => {
+    await page.setViewportSize({ width: 375, height: 812 });
+    await page.goto(THREE_CHANNELS);
+    await expect(page.locator("main iframe")).toHaveCount(1);
+
+    const links = row(page).locator("a");
+    await expect(links).toHaveCount(2);
+
+    for (const link of await links.all()) {
+      const m = await link.evaluate((el) => {
+        const r = el.getBoundingClientRect();
+        const b = getComputedStyle(el, "::before");
+        return {
+          box: { w: Math.round(r.width), h: Math.round(r.height) },
+          target: { w: parseFloat(b.height), h: parseFloat(b.height) },
+          name: el.textContent?.trim().slice(0, 12),
+        };
+      });
+      // The box is untouched — this raises the target, not the type.
+      expect(m.box.h, `${m.name} box height`).toBeLessThan(48);
+      expect(m.target.h, `${m.name} target height`).toBeGreaterThanOrEqual(48);
+    }
+  });
+
+  test("the two targets do not overlap, and neither reaches its neighbours", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 375, height: 812 });
+    await page.goto(THREE_CHANNELS);
+    await expect(page.locator("main iframe")).toHaveCount(1);
+
+    const m = await row(page).evaluate((rowEl) => {
+      const rect = (el: Element) => el.getBoundingClientRect();
+      const targetOf = (el: Element) => {
+        const r = rect(el);
+        const b = getComputedStyle(el, "::before");
+        const w = parseFloat(b.width);
+        const h = parseFloat(b.height);
+        return { x: r.x + r.width / 2 - w / 2, y: r.y + r.height / 2 - h / 2, w, h };
+      };
+      const links = [...rowEl.querySelectorAll("a")];
+      const section = rowEl.closest("section")!;
+      return {
+        targets: links.map(targetOf),
+        // The label the row opens with, and the caption's own link above it.
+        labelRight: rect(rowEl.firstElementChild!).right,
+        captionLinkBottom: rect(section.querySelector("p a")!).bottom,
+        // The first term of the list below the section.
+        nextTermTop: rect(document.querySelector("main dl dt")!).top,
+      };
+    });
+
+    const [first, second] = m.targets;
+    // Horizontal: the failure `interaction.ts` records between the two controls
+    // in the top app bar, where 8px of overhang sat in a 4px gap.
+    expect(
+      first.x + first.w,
+      `the two channel targets overlap by ${(first.x + first.w - second.x).toFixed(1)}px`,
+    ).toBeLessThanOrEqual(second.x);
+    // …and neither eats the words in front of the list.
+    expect(first.x, "the first target reaches back over “Também por”").toBeGreaterThanOrEqual(
+      m.labelRight,
+    );
+    // Vertical: the band is what keeps the overhang off the caption above and
+    // the kickoff below. Without it a press on either would swap the video.
+    for (const t of m.targets) {
+      expect(t.y, "a target reaches up into the caption").toBeGreaterThanOrEqual(
+        m.captionLinkBottom,
+      );
+      expect(t.y + t.h, "a target reaches down into “Data e hora”").toBeLessThanOrEqual(
+        m.nextTermTop,
+      );
+    }
+  });
+
+  /**
+   * The horizontal half, with the names it takes to reach it.
+   *
+   * **The real channel vocabulary cannot collide, which makes the assertion
+   * above vacuous on its own.** `CazéTV` measures 44px and `UOL Esporte` 71, so
+   * they overhang 2px and 0 against ~16px of gap — closing `gap-x-3` entirely
+   * still leaves them clear, confirmed by mutation. What *can* collide is a
+   * short pair, and a name is curator input rather than a constant, so the
+   * state is produced here instead of hunted for: `CLAUDE.md`'s rule for
+   * `goals.spec.ts`, one section over.
+   *
+   * Prepared once and fulfilled from memory, never `route.fetch()` per
+   * request — a proxying handler came back as something other than the
+   * envelope under this suite's workers.
+   */
+  test("two short channel names still do not collide", async ({ page }) => {
+    await page.setViewportSize({ width: 375, height: 812 });
+
+    const response = await page.request.get("/api/matches");
+    const payload = await response.json();
+    for (const match of payload.data.matches) {
+      if (match.id !== "554951") continue;
+      // Two names short enough to overhang hard, and neither is a channel
+      // `playsInPage` refuses, so both keep a target.
+      match.highlights = [
+        { url: "https://www.youtube.com/watch?v=0ceAn6TLVtE", channel: "ge tv" },
+        { url: "https://www.youtube.com/watch?v=ryRpY29ySvk", channel: "ge sp" },
+        { url: "https://www.youtube.com/watch?v=o-_hD5Q8f4Q", channel: "ge rj" },
+      ];
+    }
+    await page.route("**/api/matches*", (route) =>
+      route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(payload) }),
+    );
+
+    await page.goto(THREE_CHANNELS);
+    await expect(page.locator("main iframe")).toHaveCount(1);
+    const links = row(page).locator("a");
+    await expect(links).toHaveCount(2);
+
+    const targets = await row(page).evaluate((rowEl) =>
+      [...rowEl.querySelectorAll("a")].map((el) => {
+        const r = el.getBoundingClientRect();
+        const b = getComputedStyle(el, "::before");
+        const w = parseFloat(b.width);
+        return { x: r.x + r.width / 2 - w / 2, w, box: Math.round(r.width) };
+      }),
+    );
+
+    const [first, second] = targets;
+    expect(
+      first.x + first.w,
+      `two ${first.box}px names overlap by ${(first.x + first.w - second.x).toFixed(1)}px`,
+    ).toBeLessThanOrEqual(second.x);
+  });
+
+  test("a press 4px above the box still swaps the video", async ({ page }) => {
+    await page.setViewportSize({ width: 375, height: 812 });
+    await page.goto(THREE_CHANNELS);
+    const frame = page.locator("main iframe");
+    await expect(frame).toHaveCount(1);
+    const before = await frame.getAttribute("src");
+
+    // The only assertion here a stylesheet could not have lied about: the
+    // computed `::before` says the rule applied, not that a thumb landing
+    // outside the word reaches the link.
+    const swap = row(page).locator("a[aria-controls]");
+    // **Centred in the viewport first, and `scrollIntoViewIfNeeded` is not
+    // enough.** At 375dp this row lands under the **fixed bottom navigation
+    // bar**, which really is on top of it: `document.elementFromPoint` at the
+    // press coordinate returned `a.flex.flex-col` — a nav destination — and the
+    // first two versions of this case pressed the navigation and reported the
+    // target as broken. Playwright will not scroll it away either, because it
+    // counts an element inside the viewport as visible however much a fixed bar
+    // paints over it. Only `block: "center"` moves it clear.
+    await swap.evaluate((el) => el.scrollIntoView({ block: "center" }));
+    await page.mouse.move(0, 0);
+    const rect = (await swap.boundingBox())!;
+    await page.mouse.click(rect.x + rect.width / 2, rect.y - 4);
+
+    await expect(frame).not.toHaveAttribute("src", before ?? "");
+    // And still one frame: the press must swap the video, not add a player.
+    await expect(frame).toHaveCount(1);
+  });
+});
