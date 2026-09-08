@@ -9,6 +9,7 @@ campaign-facts-core.ts
 campaign-plot-core.ts
 club-core.ts
 escalacao-core.ts
+events-core.ts
 goals-core.ts
 health-core.ts
 index.html

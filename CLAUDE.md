@@ -799,6 +799,109 @@ what makes the logic testable without mocking HTTP.
   excluded every goalless match from the one feature that is mostly about time.
   One PDF per fixture serves both.
 
+- `events-core.ts` — the **Acontecimentos** on the club page: what happened off
+  the pitch, dated, in two scopes. A **geral** touches all twenty clubs (the
+  paralisação for the Copa do Mundo); a **de clube** touches exactly one (Tite
+  saindo do Cruzeiro). `CONTEXT.md` keeps the word apart from **Partida**, which
+  is what `structured-data-core.ts` already calls an `Event`.
+
+  It exists because the club page contains the question and never states it. A
+  run of four defeats is on the **Forma**; that the club changed técnico in the
+  middle of it is nowhere. And the season's single largest fact — that there was
+  no football at all between 1 June and 15 July — is visible only as a hole in
+  **Jogos disputados** that a reader has to notice and then explain to
+  themselves.
+
+  Its input is `src/data/events.ts`, a committed file, so the section costs no
+  request and cannot fail — `scouts-core.ts`' arrangement — and coverage grows
+  by hand like `broadcasts.ts`.
+
+  **The two scopes are a discriminated union and not a `scope` field beside an
+  optional `clubCode`.** `tsc` then refuses a general acontecimento carrying a
+  club and a club one carrying none, where a runtime check would be a rule
+  nobody runs. `clubCode` is our club code, never the `tla`, for the reason
+  every keyed file here gives.
+
+  **`clubTimeline` merges the general ones into every club's list rather than
+  listing them apart, and that is the whole of what `geral` means**: one that
+  touches all twenty belongs in all twenty timelines. So this is the one section
+  of the club page that is **never empty**, for any club, including the nine
+  with no acontecimento of their own. (Thirteen club entries across eleven
+  clubs, as shipped — recount rather than trusting this sentence, which was
+  wrong in both halves when first written.)
+
+  **A range sorts by where it STARTS**, and ties break on `id`.
+  `Array.prototype.sort` is stable only with respect to its *input*, so without
+  the tie-break two sackings on one day would render in whatever order somebody
+  appended them to the data file — and a spec asserting the order would go red
+  on an unrelated edit.
+
+  **NOTHING HERE EVER CONSTRUCTS A `Date`, and that is the whole design.** A
+  date is a **Brazil-local calendar day** — `"2026-03-15"` — because that is
+  what the press that reports these things reports. `new Date("2026-03-15")` is
+  midnight **UTC** by the language spec, so formatting it in a browser west of
+  Greenwich prints **14 March**: the one obvious way to render this field is off
+  by a day for every reader this app has, and it renders *correctly* on a
+  workstation in UTC and in CI, so nothing goes red. Labels are therefore built
+  by indexing a month table with the digits of the string, and comparisons are
+  ordinary string comparisons, which are correct on ISO dates by construction.
+  `brasiliaDay` is the one bridge from an instant, through `Intl` with an
+  explicit `timeZone`.
+
+  **The same shift is what the data file's two-source bar caught.** One
+  consolidated list dates Tite's sacking to 14 March; ge.globo files its report
+  under `/2026/03/15/` and four others say "ao fim da noite de domingo (15)".
+  Our **own** fixture list settles it — Cruzeiro 3x3 Vasco kicked off
+  `2026-03-15T23:30:00Z`, 20:30 BRT, and finished after midnight UTC — so 14 is
+  wrong, 15 is the local day and 16 is what a UTC conversion prints. That third
+  source is free and applies to most entries: a sacking follows a named match,
+  and `src/data/matches.ts` dates that match. Three entries were confirmed that
+  way and two were corrected by it (the same list puts Anselmi's departure at
+  "~27/03" against four reports saying Sunday 22 March).
+
+  **The bound on that third source is the entry it got wrong, and it is worth
+  more than the two it got right: our fixture list dates the MATCH, never what
+  followed it.** Santos' round-7 defeat kicked off `2026-03-19T00:30:00Z`, which
+  is 21:30 BRT on Wednesday the 18th, so deriving the sacking from the fixture
+  gives the 18th — and the reports say "na madrugada desta quinta-feira (19)",
+  with Cuca announced hours later the same morning. This file shipped that entry
+  dated 18 until a second source was asked for it. A match date bounds an
+  acontecimento from below and does not date it; where the two differ, the
+  reports win, because they are the only source that knows what happened after
+  the whistle.
+
+  **`tests/events-core.test.ts` SETS the host's zone rather than inheriting
+  it**, and the first version of that test was worthless on the machine it was
+  written on. Deleting the explicit `timeZone` from `brasiliaDay` is the one
+  mutation that matters, and the obvious assertion passed against it here
+  because this workstation already runs `-03`; it would have gone red in CI,
+  which runs UTC. That is `rehearse-sync-schedule.sh`'s inherited-environment
+  failure arriving in a unit test — hermetic, and still answering differently in
+  two places. It sweeps four zones now, and the mutation dies in all of them.
+
+  **`SeasonEvents` renders below the Vídeos and above Jogos disputados, and the
+  order is mechanical before it is editorial.** `screenshot.ts` crops at the
+  last section fitting in 1080 CSS px, so a section inserted *above* one can
+  evict it from the committed frame — the failure that cost `partida-554977`
+  its campanha and 581px. Placed here the worst case is that this section falls
+  outside the crop itself. Measured on the snapshot at 960px: on
+  `/clube/palmeiras` it opens at **1241px**, 71px below the 1170 ceiling, so
+  the crop stays at 873 and nothing above it moves; on `/clube/cruzeiro`, which
+  carries a club row too, it sits at 875–1127 and is fully inside. Those are
+  snapshot readings and the captures are taken from **production**, so they are
+  evidence rather than a trailer.
+
+  **A club may hold more than one, so nothing keys on the club.** Chapecoense
+  and Botafogo each changed técnico twice in 2026 — the `Record<ClubCode, T>`
+  shape every other curated file here uses would silently keep one of the two,
+  and `tests/events-core.test.ts` asserts that a club with two exists so the
+  point cannot be quietly lost.
+
+  **Rounds 29 to 38 carry placeholder kickoffs** — every fixture at exactly
+  `00:00Z` — so the 17-day and 14-day calendar holes in that stretch look
+  exactly like the Copa do Mundo hole and are artefacts of the placeholder. No
+  entry may be derived from them.
+
 - `squad-core.ts` — the **Jogadores** page: every club's elenco, grouped into
   the lines a squad is read in. It exists because the provider reports a
   position at **two levels of detail in the same list** — mostly a broad line
@@ -2315,6 +2418,36 @@ while `/api/coaches`, `/api/squads` and the club page served the wrong name from
 one line. That spec is what makes five a rule rather than something to remember,
 and it carries a case asserting at least one override exists, so emptying the
 file cannot make the rest of it pass vacuously.
+
+`src/data/events.ts` holds the season's **Acontecimentos** — 14 entries as
+shipped, one geral and thirteen de clube — hand-maintained for the reason every
+curated file here is: no provider reports a técnico being sacked. The judgement
+lives in `events-core.ts`, above, which is also where the date rule and the
+two-source bar are argued; what belongs here is the shape of an entry.
+
+**`source` is a REQUIRED field, and that is the compiler doing a reviewer's
+job.** Every other rule about this file is prose somebody has to remember; this
+one refuses an entry nobody can trace. The bar for adding one is
+`nationality`'s in `player-overrides.ts` rather than `name`'s — **two
+independent sources have to agree on the day**, and where they disagree the
+entry stays out. A plausible date is indistinguishable from a correct one, and
+it bites harder here than for a capacity: a sacking dated three days wrong still
+sits plausibly beside the run of results that caused it.
+
+**The paralisação's span is read off our OWN fixture list and not off the
+press**, and the two genuinely differ. Reports announce the return as 22 July;
+CBF brought two round-19 matches forward to 16 July, before the Copa's own final
+on the 19th. `src/data/matches.ts` says the last round-18 match kicked off
+`2026-05-31T23:30:00Z` and the first round-19 match `2026-07-16T22:30:00Z`, with
+**zero fixtures between** — so 1 June to 15 July is the stretch a reader of this
+app actually finds empty, and it is the stretch the entry names. A date taken
+from the press would leave six days of football inside a band captioned "sem
+jogos".
+
+**The Copa do Mundo is not a second entry beside it.** The tournament is the
+cause; the halt is what touched the twenty clubs, and two rows for one thing
+would say the championship stopped twice. Its own window is named in the halt's
+`detail`.
 
 `src/data/club-hymns.ts` holds each club's hymn on YouTube, hand-maintained the
 same way and for the same reason — no provider carries one. It stores the video

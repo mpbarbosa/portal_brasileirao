@@ -367,6 +367,16 @@ provider than it needed to build:
   projected from a mean across both levels on the same site that photographs the
   change one page over.
 
+  **The trocas de técnico are now DATED data rather than a phenomenon named in
+  prose**, which is worth knowing before anybody reaches for a half-life:
+  `src/data/events.ts` carries each one as an **Acontecimento**, with a
+  Brazil-local day and a source, and `events-core.ts` reads them. That is the
+  input a changepoint model wants and it is already in the repository — but note
+  it is **curated and partial** (thirteen entries across eleven clubs as
+  shipped), so a model
+  resting on it would inherit that coverage, and an absent entry would read as a
+  club that never changed.
+
   **Not a change to make by picking a half-life.** That is a free parameter, and
   choosing one by eye is this file's own *a plausible number is indistinguishable
   from a correct one* — the trap `stadiums.ts` records about capacity and

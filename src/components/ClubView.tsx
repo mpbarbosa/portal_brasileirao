@@ -18,8 +18,10 @@ import { formatRoute } from "@/route-core";
 import { pointsPercentageLabel } from "@/standings-core";
 import { ClubCrest } from "@/src/components/ClubCrest";
 import { ClubVideos } from "@/src/components/ClubVideos";
+import { SeasonEvents } from "@/src/components/SeasonEvents";
 import { GLYPH, InstagramLink, MapPinGlyph, WikipediaLink } from "@/src/components/ClubLinks";
 import { CLUB_VIDEOS } from "@/src/data/club-videos";
+import { SEASON_EVENTS } from "@/src/data/events";
 import { BACK_LINK, LINK_UNDERLINE, STATE_LAYER } from "@/src/components/interaction";
 import { MatchList } from "@/src/components/MatchList";
 import { FollowButton } from "@/src/components/MeuTime";
@@ -504,6 +506,22 @@ export function ClubView({
           which is most of them, so for those pages this is not a decision the
           reader can see. */}
       <ClubVideos videos={videos} clubName={club.shortName} />
+
+      {/* Below the rail rather than above it, and the reason is mechanical
+          before it is editorial. `screenshot.ts` crops a capture at the last
+          section that fits in 1080 CSS px, so content inserted ABOVE a section
+          can evict that section from the frame — which is how the Gols block
+          cost `partida-554977` its campanha and 581px, and what the always-
+          mounted video frame would have cost this very page. Placed here, the
+          worst this section can do is fall outside the crop itself; placed one
+          higher, it could take **Vídeos do clube** out with it.
+
+          It reads correctly here too. The page's spine is the football — where
+          the club sits, its form, its next match, its artilheiros — and this is
+          context for that spine rather than part of it. It renders for every
+          club, not only the curated ones, because the paralisação touches all
+          twenty: this is the one section on the page that is never empty. */}
+      <SeasonEvents events={SEASON_EVENTS} clubCode={code} />
 
       <section className="mt-6">
         <h3 className="mb-2 text-body-medium font-medium text-ink-muted">Jogos disputados</h3>
