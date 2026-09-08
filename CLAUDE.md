@@ -190,6 +190,32 @@ what makes the logic testable without mocking HTTP.
   club: the two campanhas there are read against each other, and a page that could
   draw one as a line and the other as bars would be comparing two pictures rather
   than two clubs.
+  **`rankMovement` is the same campanha read at its shortest — the variação**, one
+  round against the one before it, drawn as a triangle beside the position. Both
+  ends go through `positionAfterRound` and that is the whole decision: the row's
+  own position comes from `/api/standings`, which counts `IN_PLAY` where this app
+  does not, so *that* number minus a campanha position would be a real movement
+  plus a disagreement between two sources — appearing and vanishing as matches
+  kick off, and contradicting the sparkline in the same row while it did. It is
+  `scatterTrail`'s rule, which takes the built scatter rather than the division.
+  It returns a **direction and a count, never a signed number**, because the sign
+  of a position runs backwards — 5º → 3º is a club climbing while its position
+  falls — and every call site that subtracts is one `-` from drawing the arrow the
+  wrong way, which is read rather than checked. A round with no round before it
+  returns **null and not "same"**: nobody held a position they had never had, so
+  round 1 draws twenty empty cells rather than twenty clubs standing still.
+  The unit tests carry a property the per-club cases cannot see — **every place
+  climbed is a place another club fell**, since a round's positions are a
+  permutation — and `tests/e2e/standings.spec.ts` asserts it again off the words
+  the rows actually say, where it also catches a lookup keyed to the wrong clubs.
+  Five mutations were confirmed red, and one of them is worth recording because it
+  is the one the permutation property does **not** catch: flipping the direction
+  comparison swaps which total is which and leaves them equal.
+  It is suppressed under **Casa** and **Fora** with the leader disc, the rails and
+  the mark column — a whole-season movement beside a table re-ranked over a subset
+  describes a different table from the one the row is in. That is #248's rule
+  rather than a new judgement, and #248 is the commit that shipped having asked
+  three of those five.
 
 - `rank-candles-core.ts` — the **Painel do clube** (`/painel/<clube>`): the same
   campanha read one level closer, as a candle per rodada. **The sparkline is on
@@ -4125,11 +4151,36 @@ enforces rather than early and carved-out.
   the row separator lives on every cell (`ROW_LINE`) rather than on the `<tr>`, since the
   separated model does not paint row borders at all; and the **G4/Z4 rail rides on the
   first cell, not the row**, because a row scrolls and would carry its rail away.
-  The trap: `STICKY_CLUB`'s `left-12` must equal `STICKY_POSITION`'s `w-12`. Widen the
+  The trap: `STICKY_CLUB`'s `left-*` must equal `STICKY_POSITION`'s `w-*` — read the
+  two constants rather than a pair of numbers here, which said `left-12`/`w-12` until
+  the variação made them 14. Widen the
   position column alone and the two frozen columns overlap or gap — and only while
   scrolled, because ordinary table layout puts them adjacent either way. Three specs in
   `tests/e2e/standings.spec.ts` scroll a 380px viewport and check exactly these three
   things; nothing else would catch any of them.
+  **The pairing is broken far more easily by the CELL than by either constant**, and
+  that is the half worth knowing before adding a mark to that column. A specified width
+  is a request: the column clamps up to its own content minimum, exactly as `w-0` does
+  two paragraphs down. So putting something in the cell that does not fit grows the
+  column silently, `left-*` stops matching, and nothing looks wrong until a reader
+  scrolls. Measured when the **variação** landed: a two-digit position plus a 4px gap
+  plus an 8px glyph is a 32px minimum, `w-14` at `px-3` leaves 30, and the column
+  rendered **58px against a `left-14` of 56**. The padding gave way rather than the
+  width — `px-2`, which is why it now lives on `STICKY_POSITION` itself and not at the
+  two call sites, since a header and a body cell disagreeing about it puts the `#` out
+  of line with the numbers under it. Buying the same slack with `w-16` costs 8px of
+  *frozen* width instead, which is the scarce thing here: the guarded ratio went
+  0.619 → 0.646 at 380dp as shipped, against 0.669 the other way.
+  **The variação also broke a spec that had nothing to do with it**, which is the
+  `data-scatter-svg` lesson one section over arriving in this table:
+  `row.locator("svg").first()` was the campanha's sparkline only while the row had one
+  drawing, and an 8px triangle in the first cell made that spec measure a gap it was
+  not about. It selects through the campanha cell now. Two more went red for the same
+  shape — an assertion that the position cell is *only* digits, and one forbidding the
+  two words "posições"/"primeiras" as a proxy for the zone rule. Both were claims about
+  the zone written as claims about the whole cell, so both were narrowed to the thing
+  they meant; the second is now read off `ZONES`, which also closed a hole it had, since
+  G5's rule is "a quinta posição" and matched neither word.
   **A frozen column must never be the one that absorbs the table's `min-w` surplus.**
   Auto layout hands surplus to the widest column, which is Clube — so it rendered 219px
   around 137px of content at 360dp, and because that column is frozen the 82px of empty

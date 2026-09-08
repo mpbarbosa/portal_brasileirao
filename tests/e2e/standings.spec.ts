@@ -1,3 +1,4 @@
+import { ZONES } from "@/standings-core";
 import { expect, test, type Page } from "@/tests/e2e/clock";
 
 /**
@@ -62,8 +63,16 @@ test.describe("Classificação", () => {
     expect(said[4].startsWith("5")).toBe(true);
 
     // Silence in the middle is the correct announcement, not a gap.
+    //
+    // Scoped to the *zone* rather than to the whole cell, which is what this
+    // test is about. It read `/^\d+$/` while the number and the zone were the
+    // only two things in here; the variação is a third, and a claim about one
+    // mark that is written as "nothing else exists" fails on the next mark to
+    // arrive whether or not that mark is wrong. What may appear beside the
+    // number is pinned by its own test below, so nothing is given up.
     for (const row of said.slice(11, 16)) {
-      expect(row).toMatch(/^\d+$/);
+      expect(row).toMatch(/^\d+\b/);
+      expect(row).not.toMatch(/Libertadores|Americana|Rebaixamento/);
     }
   });
 
@@ -75,9 +84,20 @@ test.describe("Classificação", () => {
       .locator("table tbody tr td:first-child")
       .evaluateAll((cells) => cells.map((cell) => cell.textContent!));
 
+    // The rule is `where` on each band, read off `ZONES` for the reason the
+    // test above reads the names off it: a rewording there must not leave this
+    // guarding a sentence nobody says any more.
+    //
+    // It was two literal words before — "posições" and "primeiras" — and they
+    // were a proxy with a hole in it, since G5's rule is "a quinta posição" and
+    // matches neither. Naming the four strings closes that and stops the guard
+    // firing on any other sentence that happens to contain the word: the
+    // variação says "caiu 2 posições", which is a movement rather than a rule
+    // restated, and the old form could not tell the two apart.
     for (const row of said) {
-      expect(row).not.toContain("posições");
-      expect(row).not.toContain("primeiras");
+      for (const zone of ZONES) {
+        expect(row).not.toContain(zone.where);
+      }
     }
   });
 
@@ -704,11 +724,96 @@ test.describe("Classificação", () => {
     // belongs there; the regression put seven times that in.
     await page.setViewportSize({ width: 1280, height: 800 });
 
+    // Through the campanha cell, never `row.locator("svg").first()`. The row's
+    // first svg was the sparkline only while the sparkline was the row's only
+    // drawing; the variação put an 8px triangle in the first cell and this
+    // began measuring the gap from *that* to J — a real failure, on a spec
+    // about a column it no longer looked at. Same narrowing the Painel's
+    // scatter forced on `data-scatter-svg`.
     const row = page.locator("table tbody tr").first();
-    const mark = (await row.locator("svg").first().boundingBox())!;
+    const mark = (await row.locator("td:nth-child(4) svg").first().boundingBox())!;
     const played = (await row.locator("td").nth(4).boundingBox())!;
 
     expect(played.x - (mark.x + mark.width)).toBeLessThan(32);
+  });
+
+  const movementMarks = (page: Page) =>
+    page.locator("table tbody tr td:first-child svg[data-movement]");
+
+  test("every row carries a variação, or no row does", async ({ page }) => {
+    // All-or-nothing rather than a count, because both states are correct and
+    // which one is showing depends on the snapshot: before the second round
+    // there is no previous round to compare against and the column is properly
+    // empty. What must never happen is *some* rows having one — that is a
+    // lookup keyed on something the rows do not all carry, and it looks like
+    // fourteen clubs standing still.
+    const rows = await page.locator("table tbody tr").count();
+    const marks = await movementMarks(page).count();
+
+    expect(rows).toBe(20);
+    expect([0, rows]).toContain(marks);
+  });
+
+  test("the variação says which way in its shape, not only in its colour", async ({ page }) => {
+    // A climb and a fall have to be two marks in grayscale, to a red/green
+    // colourblind reader and in forced-colours mode — the single-channel
+    // failure the zone rail had to break a border style to escape. Here the
+    // direction has a shape, so the geometry is what is asserted; the tones
+    // agree with it and are not carrying it.
+    const geometry = await movementMarks(page).evaluateAll((marks) => {
+      const byDirection: Record<string, Set<string>> = {};
+      for (const mark of marks) {
+        const direction = (mark as SVGElement).dataset.movement!;
+        const path = mark.querySelector("path")!.getAttribute("d")!;
+        (byDirection[direction] ??= new Set()).add(path);
+      }
+      return Object.fromEntries(
+        Object.entries(byDirection).map(([k, v]) => [k, [...v]]),
+      );
+    });
+
+    // One geometry per direction, and never one shared between two of them.
+    const drawn = Object.values(geometry).flat();
+    for (const paths of Object.values(geometry)) expect(paths).toHaveLength(1);
+    expect(new Set(drawn).size).toBe(drawn.length);
+  });
+
+  test("every place climbed is a place another club fell", async ({ page }) => {
+    // Positions at a round are a permutation, so the two totals agree exactly.
+    // Read off the words each row says rather than off the glyphs, which is
+    // what makes this end-to-end: it fails if the marks are keyed to the wrong
+    // clubs, or measured against the wrong round, or read from a table other
+    // than the campanha the row draws beside them — none of which any per-row
+    // assertion can see, because every row looks plausible on its own.
+    const said = await page
+      .locator("table tbody tr td:first-child")
+      .evaluateAll((cells) => cells.map((cell) => cell.textContent!));
+
+    const total = (verb: string) =>
+      said.reduce((sum, row) => {
+        const found = row.match(new RegExp(`${verb} (\\d+) posi`));
+        return sum + (found ? Number(found[1]) : 0);
+      }, 0);
+
+    expect(total("subiu")).toBe(total("caiu"));
+  });
+
+  test("a split has no variação either", async ({ page }) => {
+    // Casa and Fora re-rank the division over a subset of the fixtures, so a
+    // movement carried over from the whole-season campanha would describe a
+    // different table from the one the row is in — the same reason the leader
+    // disc, the rails and the mark column all go. #248 shipped having asked
+    // three of those five, which is how the wrong two survive.
+    await side(page, "Casa").click();
+    await expect(movementMarks(page)).toHaveCount(0);
+
+    await side(page, "Fora").click();
+    await expect(movementMarks(page)).toHaveCount(0);
+
+    // And it comes back, so the suppression is a condition rather than a
+    // one-way door.
+    await side(page, "Completa").click();
+    await expect(movementMarks(page)).toHaveCount(20);
   });
 
   const zoneKey = (page: Page) =>
