@@ -1351,6 +1351,24 @@ The shape for facts that are words rather than figures.
 _Avoid_: "campo" (that is the pitch), a row whose value is a bare number (that is
 a **Ficha**), and a row rendered empty for a fact the provider did not supply.
 
+**Marca da camisa**:
+The shirt number a second time on the **Cartão do jogador**, very large and
+nearly invisible behind the header — the card's one piece of decoration. It is
+not a duplicate of the *Camisa* **Ficha** competing with it: at 57px and 10% of
+the accent it reads as ground rather than as a value, which is what lets it
+carry a number printed again below. Absent until the enrichment answers, since
+the competition's team payload carries no shirt number for anybody.
+**Its place is decided by two boxes and not by a corner.** The close control
+takes the top of the header and the mark is taller than what is left, so the
+top-right corner can only clip it or hide it behind the button — the card
+shipped both, first as a digit sliced by the header's own rule. It sits on the
+bottom edge, as far right as clearing the button allows; what it passes behind
+on the way is the player's name, and a ground is the one thing that may.
+_Avoid_: "marca d'água" (the file and the specs call every one of these a
+*marca*, and this is the shirt's), reading it as a value, letting it decide the
+header's height, and a placement written from the arithmetic alone — the two
+boxes are measured in `tests/e2e/player-card.spec.ts`.
+
 **Nascimento**:
 A player's date of birth, written the way a reader writes one — "13 fev. 1994".
 Shown as a **Linha do cartão** beside the derived *Idade*, which is a **Ficha**;
