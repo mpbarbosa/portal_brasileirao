@@ -26,7 +26,7 @@
  * pastes — redirects to the unprefixed address anyway. Sofascore negotiates the
  * language itself, so a Brazilian reader lands in Portuguese without our help.
  *
- * Coverage is **partial**, like every curated file here — 427 of the 948 listed
+ * Coverage is **partial**, like every curated file here — 428 of the 948 listed
  * players, spread across all twenty clubs. A player absent here renders no link.
  *
  * ## How these were checked
@@ -74,6 +74,7 @@ export const PLAYER_SOFASCORE: Record<string, string> = {
   "22166": "925173",   // Juan Aguirre
   "178353": "2441724", // Juan Portilla
   "56226": "1167536",  // Julimar
+  "192070": "925124",  // Kevin Viveros
   "1386": "360940",    // Léo
   "153853": "1087079", // Lucas Esquivel
   "8357": "29735",     // Luiz Gustavo
