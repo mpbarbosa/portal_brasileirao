@@ -300,7 +300,7 @@ export const PLAYER_WIKIPEDIA: Record<string, string> = {
   "31609": "Josué Filipe Soares Pesqueira", // Josué
   "203383": "Lucas Ronier",
   "30539": "Maicon Pereira Roque", // Maicon
-  "156724": "Pedro Rangel (goleiro)", // Pedro Rangel
+  "156724": "Pedro Rangel (futebolista)", // Pedro Rangel
   "16154": "Pedro Rocha Neves", // Pedro Rocha
   "1572": "Rodrigo Moledo",
   "22162": "Sebastián Gómez",
