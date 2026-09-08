@@ -34,6 +34,7 @@ import {
   slugify,
   standingFor,
   videoEmbedUrl,
+  videoPressedEmbedUrl,
   videoWatchUrl,
   wikipediaUrl,
   youtubeVideoId,
@@ -569,6 +570,32 @@ test("the embed address is the same video, on the privacy-enhanced host", () => 
   // iOS Safari takes a video fullscreen without this, which is the leaving of
   // the page that the whole section was changed to stop.
   assert.match(videoEmbedUrl("DiKvx0gRfaQ") ?? "", /[?&]playsinline=1(&|$)/);
+});
+
+test("the pressed address is the same player, plus the reader's own autoplay", () => {
+  const id = "DiKvx0gRfaQ";
+
+  // **Same origin, same parameters, one addition.** The two are built from one
+  // `embedAddress` precisely so they cannot drift into two spellings of
+  // YouTube — `videoWatchUrl`'s stated rule, applied to the third address.
+  assert.equal(videoPressedEmbedUrl(id), `${videoEmbedUrl(id)}&autoplay=1`);
+  assert.match(videoPressedEmbedUrl(id) ?? "", /[?&]playsinline=1(&|$|&)/);
+  assert.match(videoPressedEmbedUrl(id) ?? "", /[?&]rel=0(&|$)/);
+
+  // **And the split is the whole point: `videoEmbedUrl` must stay silent.**
+  // That is the address a section may mount unasked, and the one the club page
+  // spent three years refusing a player over. Two named functions rather than
+  // a boolean parameter, for `serialiseDevicePreferences`' reason — a flag at a
+  // call site is easy to pass wrong and impossible to see in a diff — and this
+  // pair of assertions is what makes collapsing them back go red.
+  assert.doesNotMatch(videoEmbedUrl(id) ?? "", /autoplay/);
+  assert.match(videoPressedEmbedUrl(id) ?? "", /[?&]autoplay=1(&|$)/);
+
+  // It degrades exactly as its two siblings do, so a caller that has no embed
+  // to mount also has no half-built address to mount.
+  for (const raw of ["short", "not a url/", "", undefined]) {
+    assert.equal(videoPressedEmbedUrl(raw), null, `esperava null para ${String(raw)}`);
+  }
 });
 
 test("the embed address refuses what the watch address refuses", () => {

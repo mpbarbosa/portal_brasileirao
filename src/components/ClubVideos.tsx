@@ -1,29 +1,76 @@
 import { useState } from "react";
 
-import { videoThumbnailHdUrl, videoThumbnailUrl, videoWatchUrl } from "@/club-core";
-import { FOCUS_RING } from "@/src/components/interaction";
+import {
+  videoPressedEmbedUrl,
+  videoThumbnailHdUrl,
+  videoThumbnailUrl,
+  videoWatchUrl,
+} from "@/club-core";
+import { FOCUS_RING, LINK_UNDERLINE } from "@/src/components/interaction";
 import type { ClubVideo } from "@/src/types";
 
 /**
  * The **Vídeos do clube** rail: curated videos about one club, each a
- * thumbnail that opens on YouTube.
+ * thumbnail — and each one **plays where it sits** once the reader presses it.
  *
- * **It links out; it does not embed.** `CONTEXT.md`'s **Hino do clube** entry
- * already settled that for this page — "an embedded player on the club page (a
- * hymn that can start playing is a hymn nobody asked for)" — and everything in
- * that argument applies harder to a rail of several. An iframe per entry would
- * also be the first third-party **script** this app has ever shipped: the
- * broadcaster marks, the crests and the vendored photographs are all images,
- * and YouTube's player brings its own JavaScript, cookies and tracking with it.
+ * **This reverses the refusal this component was built on, and the argument it
+ * reverses had already expired.** The comment here used to say an iframe would
+ * be "the first third-party **script** this app has ever shipped" — true when
+ * it was written and false since `eb53d77`, which put YouTube's player on the
+ * Partida page for the melhores momentos.
  *
- * **The thumbnail is the whole affordance.** A row of titles is a list of
- * links; a row of thumbnails is recognisably video, and the play badge says so
- * without a word of copy. The mark is YouTube's red disc rather than one of
- * this app's monochrome outlines, and that is the one place in the app where
- * naming the *host* is right: everywhere else — the hymn's quavers, the sede's
- * pin — the link's own words name the thing and the platform is incidental,
- * where here the reader is being told, before they click, that this leaves for
- * YouTube.
+ * **What replaces it is a facade, not `MatchHighlights`' always-mounted frame,
+ * and the reason is that this page is not that page.** `CONTEXT.md` has drawn
+ * that line for three entries now: the Partida page is where the video *is the
+ * errand*, so a frame that renders with the section is charged to a reader who
+ * came for it. A club page is where a video is **one of a dozen things
+ * offered**, so the same frame would be charged to every reader who came for
+ * the campanha, the artilheiros or the next fixture. The distinction is the
+ * one those entries already make; only the mechanism is new.
+ *
+ * Three things follow, and each is strictly better than the always-mounted
+ * frame on this page rather than a compromise with it:
+ *
+ * - **Nothing is requested from YouTube until a card is pressed.** Not a
+ *   frame, not a cookie, not a script. The `<img>` was always hotlinked from
+ *   `img.youtube.com` and still is; what is new is that this page can now play
+ *   a video without ever having asked the player for anything.
+ * - **The press count is unchanged at one.** An always-mounted frame carries
+ *   no `autoplay`, so a reader presses YouTube's own play button; here they
+ *   press the card and `videoPressedEmbedUrl` starts it. One gesture either
+ *   way, and the video still never starts on a page load — which is the whole
+ *   of `CONTEXT.md`'s **Hino do clube** objection.
+ * - **The section does not change height, and that is measured rather than
+ *   hoped.** The player replaces the thumbnail *inside the card's own
+ *   `aspect-video` box*, so the box is the same box. An always-mounted 736px
+ *   frame put this section's bottom at **1619px** against `screenshot.ts`'
+ *   `MAX_HEIGHT` of **1170** — so `cropHeight` would have fallen back to
+ *   Artilheiros and `clube-palmeiras-{light,dark}` would have lost the section
+ *   entirely, which is exactly the #418 failure that raising the ceiling to
+ *   1170 was meant to repair. That ceiling cannot absorb it: its measured safe
+ *   band is [1146, 1189], bounded above by the estádio page.
+ *
+ * **One video plays at a time, and the state is the id rather than a flag per
+ * card.** Two players on one page is two things able to play at once, which is
+ * the **Melhores momentos** entry's own refusal; pressing a second card
+ * therefore unmounts the first. It is a single value for the same reason
+ * `MatchHighlights` keeps one: a flag per card is a way for two to be true.
+ *
+ * **The cards are still real `<a href>`s and a modified click still leaves.**
+ * Ctrl, cmd, shift, alt and the middle button are the browser's, exactly as in
+ * `MatchList`, `ClubView` and `MatchHighlights`: this is a link first, and
+ * "open in new tab" has to keep working.
+ *
+ * **The badge is YouTube's red disc only while the card is a link out.** That
+ * disc names the *host*, and it earned that when every press left for YouTube.
+ * A card that plays in place does not go there, so once the player is mounted
+ * there is no disc to name anything — and until it is pressed the disc is
+ * still telling the truth about the one thing that press could also do.
+ *
+ * **A video that will not embed keeps the plain link-out.**
+ * `videoPressedEmbedUrl` returns null for anything `youtubeVideoId` cannot
+ * reduce to an id, and such a card simply never becomes a player — the
+ * degradation `videoThumbnailUrl` and `hymnUrl` already take.
  *
  * A **horizontal rail** rather than a wrapping grid, because the count is
  * curated and small and a rail says "there may be more to the right" while a
@@ -31,43 +78,32 @@ import type { ClubVideo } from "@/src/types";
  * so the page body never scrolls sideways.
  *
  * **The card is `w-full` under a 26rem cap, and both halves were measured
- * rather than picked.** It was a flat `w-44` — 176px of card in a 736px content
- * column (`max-w-3xl` less `px-4` in `App`), so the thumbnail drew 176×99 and
- * the one thing the rail is offering was the smallest thing on the page.
+ * rather than picked.** It was a flat `w-44` — 176px of card in a 736px
+ * content column, so the thumbnail drew 176×99 and the one thing the rail is
+ * offering was the smallest thing on the page. The **cap** is what keeps that
+ * a widening rather than a redesign: uncapped at the full 736 the card grows
+ * by about 320px, and at 26rem by about 135. The **`w-full`** is what makes it
+ * responsive rather than a second fixed number — percentages on a flex item
+ * resolve against the container's *visible* width, so on a 360dp phone the
+ * card is the column and the cap never binds.
  *
- * The **cap** is what keeps that a widening rather than a redesign. Uncapped at
- * the full 736 the thumbnail is 414px tall and the card grows by about 320px,
- * which on the Painel is enough to push a section out of the 1080px screenshot
- * crop — the eviction `CLAUDE.md` records for the Partida and estádio captures,
- * arrived at from the other direction. At 26rem the card is 416px and the
- * growth is about 135, which is a bigger picture and the same page.
- *
- * **What the cap does NOT save is the club page's capture, and that was
- * measured on both sides rather than predicted.** `clube-palmeiras-{light,dark}`
- * ends *on this section*: at the old `w-44` the card's bottom sits at 1072.5px
- * against `screenshot.ts`' 1080 ceiling — **7.5px of headroom** — so the crop
- * took the rail as the last thing that fits. At any width worth having it does
- * not fit, `cropHeight` falls back to the section above, and the whole rail
- * leaves the frame. There is no cap that keeps it: 176.5px of card is the
- * budget, which is a 189px card, which is the width it already had. So the two
- * captures shorten and their README captions lose a sentence — a re-shoot, and
- * never a `Screenshots-unaffected:` trailer.
- *
- * The Painel is untouched by that: its own rail sits **2077px** below its crop,
- * as `3565b70`'s trailer measured when the section landed there.
- *
- * The **`w-full`** is what makes it responsive rather than a second fixed
- * number. Percentages on a flex item resolve against the container's *visible*
- * width and not its scroll width, so on a 360dp phone the card is the column —
- * 328px, a card a thumb can actually aim at — and the cap simply never binds.
- * A `sm:`-prefixed pair of widths would say the same thing in two places and
- * be wrong at every width between them.
- *
- * Renders **nothing** — not an empty heading — for a club with no entries,
- * which is 18 of 20 today. `videosFor` has already dropped anything whose id
- * will not parse, so this component is handed a list it can draw in full.
+ * Renders **nothing** — not an empty heading — for a club with no entries.
+ * `videosFor` has already dropped anything whose id will not parse, so this
+ * component is handed a list it can draw in full.
  */
 export function ClubVideos({ videos, clubName }: { videos: ClubVideo[]; clubName: string }) {
+  /**
+   * Which video is playing, keyed by id, and `null` for "none yet" — which is
+   * the state every reader arrives in and most leave in.
+   *
+   * **It is never seeded**, for the reason `MatchHighlights` gives and one of
+   * its own: a `useState` initialiser runs once, and the same id appears under
+   * more than one club — the comparação sits under Palmeiras and Flamengo both
+   * — so a reader moving between two club pages would otherwise carry a
+   * mounted player into a list that may not contain it.
+   */
+  const [playing, setPlaying] = useState<string | null>(null);
+
   if (videos.length === 0) return null;
 
   return (
@@ -94,124 +130,211 @@ export function ClubVideos({ videos, clubName }: { videos: ClubVideo[]; clubName
           // `MatchPage` keeps its own `played` gate under.
           if (!watch || !thumb) return null;
 
+          const embed = videoPressedEmbedUrl(video.id);
+          const isPlaying = embed !== null && playing === video.id;
+
           return (
             <li key={video.id} className="w-full max-w-[26rem] shrink-0 snap-start">
-              <a
-                href={watch}
-                target="_blank"
-                rel="noopener noreferrer"
-                data-club-video={video.id}
-                // The clamp below cuts a long title visually; this is how a
-                // sighted reader still reaches the whole of it.
-                title={video.title}
-                className={`group block rounded-x-small ${FOCUS_RING}`}
-              >
-                {/* 16:9, the shape a YouTube video is delivered in. The frame
-                    is that shape whichever thumbnail lands inside it:
-                    `maxresdefault` is native 16:9 and fills it exactly, while
-                    the `hqdefault` fallback is 4:3 with the picture letterboxed,
-                    so `object-cover` crops the bars away rather than drawing two
-                    black bands under a card that has none. */}
-                <span className="relative block aspect-video overflow-hidden rounded-x-small border border-outline-variant bg-surface-container">
-                  <VideoThumbnail id={video.id} fallback={thumb} />
-                  {/* The badge, and the veil under it. Both are `aria-hidden`:
-                      the link's text below already names the video and the
-                      list's label already says where it goes, so an announced
-                      mark would read the destination a third time.
+              {isPlaying ? (
+                /* **The player, in the box the thumbnail was in.** Same
+                   `aspect-video`, same radius, same border — which is what
+                   makes the swap cost the section no height at all, and the
+                   whole reason this shape was chosen over a frame above the
+                   rail. `overflow-hidden` is what makes the radius reach the
+                   player, which paints to its own edges. */
+                <div
+                  data-club-video-frame={video.id}
+                  className="relative block aspect-video overflow-hidden rounded-x-small border border-outline-variant bg-surface-container-lowest"
+                >
+                  <iframe
+                    src={embed}
+                    title={`${video.title} — ${video.channel}`}
+                    // Each of these is refused by default in a frame and each
+                    // is something a player is expected to be able to do.
+                    allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
+                    allowFullScreen
+                    // The default would send the full club URL to YouTube with
+                    // every request. Same reasoning as the crests' own policy.
+                    referrerPolicy="strict-origin-when-cross-origin"
+                    className="absolute inset-0 h-full w-full"
+                  />
+                </div>
+              ) : (
+                <a
+                  href={watch}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  data-club-video={video.id}
+                  onClick={
+                    embed
+                      ? (event) => {
+                          // Modified clicks are the browser's, exactly as in
+                          // `MatchList` and `MatchHighlights`: this is a link
+                          // first.
+                          if (
+                            event.metaKey ||
+                            event.ctrlKey ||
+                            event.shiftKey ||
+                            event.altKey ||
+                            event.button !== 0
+                          )
+                            return;
+                          event.preventDefault();
+                          setPlaying(video.id);
+                        }
+                      : undefined
+                  }
+                  // The clamp below cuts a long title visually; this is how a
+                  // sighted reader still reaches the whole of it.
+                  title={video.title}
+                  className={`group block rounded-x-small ${FOCUS_RING}`}
+                >
+                  {/* 16:9, the shape a YouTube video is delivered in. The frame
+                      is that shape whichever thumbnail lands inside it:
+                      `maxresdefault` is native 16:9 and fills it exactly, while
+                      the `hqdefault` fallback is 4:3 with the picture
+                      letterboxed, so `object-cover` crops the bars away rather
+                      than drawing two black bands under a card that has none.
+                      It is also the box the player takes over, so these classes
+                      and the `div`'s above are one shape written twice and must
+                      stay that way. */}
+                  <span className="relative block aspect-video overflow-hidden rounded-x-small border border-outline-variant bg-surface-container">
+                    <VideoThumbnail id={video.id} fallback={thumb} />
+                    {/* The badge, and the veil under it. Both are
+                        `aria-hidden`: the link's text below already names the
+                        video and the suffix already says what pressing it does,
+                        so an announced mark would say it a third time.
 
-                      **The disc is 48px and that was read off the picture
-                      rather than derived.** It was 36 — right when the card was
-                      176 wide, where it filled a fifth of it, and adrift once
-                      the card became 416, where it filled a twelfth. Four
-                      sizes were drawn over the real thumbnail and looked at:
-                      36 reads as small, 56 covers the campanha's own line — it
-                      is a drawing under there, not a photograph, so a badge
-                      that overlaps it hides the thing the video is about — and
-                      48 sits in the gap between the wordmark and the chart at
-                      both widths, 11.5% of the desktop card and 14.6% of the
-                      phone's.
+                        **The disc is 48px and that was read off the picture
+                        rather than derived.** It was 36 — right when the card
+                        was 176 wide, where it filled a fifth of it, and adrift
+                        once the card became 416, where it filled a twelfth.
+                        Four sizes were drawn over the real thumbnail and looked
+                        at: 36 reads as small, 56 covers the campanha's own line
+                        — it is a drawing under there, not a photograph, so a
+                        badge that overlaps it hides the thing the video is
+                        about — and 48 sits in the gap between the wordmark and
+                        the chart at both widths, 11.5% of the desktop card and
+                        14.6% of the phone's.
 
-                      **It is deliberately one size rather than a `sm:` pair.**
-                      The card reaches its 26rem cap at a viewport of about 448
-                      and the `sm` breakpoint is 640, so a responsive pair would
-                      draw the small badge on a card already at full width for
-                      almost 200px of viewport — the "wrong at every width
-                      between them" the card's own width note refuses.
+                        **It is deliberately one size rather than a `sm:`
+                        pair.** The card reaches its 26rem cap at a viewport of
+                        about 448 and the `sm` breakpoint is 640, so a
+                        responsive pair would draw the small badge on a card
+                        already at full width for almost 200px of viewport — the
+                        "wrong at every width between them" the card's own width
+                        note refuses.
 
-                      **The veil does not change on hover, and that is the token
-                      gate's doing rather than a preference.** Lightening it was
-                      the first draft and `design-tokens-core.test.ts` refused
-                      it as a hand-written state — correctly: a state colour
-                      belongs in `interaction.ts`, and this is not `STATE_LAYER`
-                      (an 8% veil of `on-surface` over a container) but a
-                      constant scrim over artwork, which is a different idea
-                      that happens to look like one. Hover is carried by the
-                      badge growing and the title gaining its underline, which
-                      is two signals on the thing being pointed at. */}
-                  <span
-                    aria-hidden="true"
-                    className="absolute inset-0 flex items-center justify-center bg-scrim/25"
-                  >
-                    <span className="flex h-12 w-12 items-center justify-center rounded-full bg-[#ff0000] transition group-hover:scale-110">
-                      {/* YouTube's own red is a brand colour and deliberately
-                          not a token: it is not this app's palette speaking,
-                          and putting it in `index.css` would offer it to
-                          components that have no business with it — the
-                          argument `BroadcasterMark` already makes about
-                          `plate`. It sits on artwork rather than on a themed
-                          surface, so no contrast pairing changes with the
-                          theme. */}
-                      <svg viewBox="0 0 24 24" className="h-5 w-5 translate-x-px fill-white">
-                        <path d="M8 5v14l11-7z" />
-                      </svg>
+                        **The veil does not change on hover, and that is the
+                        token gate's doing rather than a preference.**
+                        Lightening it was the first draft and
+                        `design-tokens-core.test.ts` refused it as a
+                        hand-written state — correctly: a state colour belongs
+                        in `interaction.ts`, and this is not `STATE_LAYER` (an
+                        8% veil of `on-surface` over a container) but a constant
+                        scrim over artwork, which is a different idea that
+                        happens to look like one. Hover is carried by the badge
+                        growing and the title gaining its underline, which is
+                        two signals on the thing being pointed at. */}
+                    <span
+                      aria-hidden="true"
+                      className="absolute inset-0 flex items-center justify-center bg-scrim/25"
+                    >
+                      <span className="flex h-12 w-12 items-center justify-center rounded-full bg-[#ff0000] transition group-hover:scale-110">
+                        {/* YouTube's own red is a brand colour and deliberately
+                            not a token: it is not this app's palette speaking,
+                            and putting it in `index.css` would offer it to
+                            components that have no business with it — the
+                            argument `BroadcasterMark` already makes about
+                            `plate`. It sits on artwork rather than on a themed
+                            surface, so no contrast pairing changes with the
+                            theme.
+
+                            **It survives the facade because it is still true.**
+                            A press plays the video here, and a *modified* press
+                            still opens it on YouTube — so the mark names a
+                            thing this control genuinely does, which is the test
+                            the **Melhores momentos** entry applies to a
+                            broadcaster's mark standing in for a name. Once the
+                            player is mounted there is no disc at all, because
+                            then there is nothing left that leaves. */}
+                        <svg viewBox="0 0 24 24" className="h-5 w-5 translate-x-px fill-white">
+                          <path d="M8 5v14l11-7z" />
+                        </svg>
+                      </span>
                     </span>
                   </span>
-                </span>
 
-                {/* Three lines and then an ellipsis. A curated title is written
-                    by the uploader and can run to a paragraph; letting it push
-                    the card taller would leave a rail of cards at four
-                    different heights.
+                  {/* Three lines and then an ellipsis. A curated title is
+                      written by the uploader and can run to a paragraph;
+                      letting it push the card taller would leave a rail of
+                      cards at four different heights.
 
-                    **Three rather than two, and that was read off the page
-                    rather than picked.** At two, the seed entry rendered
-                    *"Palmeiras × Flamengo: a campanha rodada a rodada d…"* — it
-                    loses the season and the rodada, which is the half that says
-                    *which* campanha this is, and the rail's whole promise is
-                    telling one entry from the next. A title is the only thing
-                    doing that here, so the clamp has to fall past the part that
-                    distinguishes rather than before it. The bound still exists;
-                    it is set where a real title needed it.
+                      **Three rather than two, and that was read off the page
+                      rather than picked.** At two, the seed entry rendered
+                      *"Palmeiras × Flamengo: a campanha rodada a rodada d…"* —
+                      it loses the season and the rodada, which is the half that
+                      says *which* campanha this is, and the rail's whole promise
+                      is telling one entry from the next.
 
-                    Clamping is visual only — the full string stays in the DOM,
-                    so a screen reader hears all of it and `title` gives a
-                    sighted reader the same on hover.
+                      Clamping is visual only — the full string stays in the
+                      DOM, so a screen reader hears all of it and `title` gives
+                      a sighted reader the same on hover.
 
-                    **There is no `block` here and adding one silently switches
-                    the clamp off**, which is what the first draft did.
-                    `line-clamp-2` works by setting `display: -webkit-box`, so a
-                    `block` beside it wins on stylesheet order and leaves
-                    `-webkit-line-clamp: 2` set on an element the property does
-                    not apply to. Nothing fails: the class compiles, the rule
-                    matches, the element renders — it simply does not clamp, and
-                    a three-line title was drawn under a two-line promise.
-                    Measured with `getComputedStyle` in the page, which is what
-                    `CLAUDE.md` prescribes for this whole family after the
-                    disclosure chevron that rotated 0deg through two spellings. */}
-                <span className="mt-1.5 line-clamp-3 text-body-small text-on-surface group-hover:underline">
-                  {video.title}
-                </span>
-                {/* Whose video it is. Faint, because it is provenance rather
-                    than the thing being offered — but present, because for the
-                    entries here the answer is *ours*, and a reader is owed that
-                    before they take it for a broadcaster's package. */}
-                <span className="block text-body-small text-ink-faint">{video.channel}</span>
-                {/* Where the link goes, said once per link. The title and the
-                    channel above are already the accessible name; this is what
-                    turns it from a description of a video into a description of
-                    a destination. */}
-                <span className="sr-only"> — no YouTube (abre em nova aba)</span>
-              </a>
+                      **There is no `block` here and adding one silently
+                      switches the clamp off**, which is what the first draft
+                      did. `line-clamp-3` works by setting `display:
+                      -webkit-box`, so a `block` beside it wins on stylesheet
+                      order and leaves `-webkit-line-clamp: 3` set on an element
+                      the property does not apply to. Nothing fails: the class
+                      compiles, the rule matches, the element renders — it
+                      simply does not clamp. Measured with `getComputedStyle` in
+                      the page, which is what `CLAUDE.md` prescribes for this
+                      whole family after the disclosure chevron that rotated
+                      0deg through two spellings. */}
+                  <span className="mt-1.5 line-clamp-3 text-body-small text-on-surface group-hover:underline">
+                    {video.title}
+                  </span>
+                  {/* Whose video it is. Faint, because it is provenance rather
+                      than the thing being offered — but present, because for
+                      the entries here the answer is *ours*, and a reader is
+                      owed that before they take it for a broadcaster's
+                      package. */}
+                  <span className="block text-body-small text-ink-faint">{video.channel}</span>
+                  {/* What pressing it does, said once per link. The title and
+                      the channel above are already the accessible name; this is
+                      what turns it from a description of a video into a
+                      description of an action — and it is the only thing that
+                      tells a reader who cannot see the swap that a card which
+                      plays here differs from one that leaves. */}
+                  <span className="sr-only">
+                    {embed ? " — tocar aqui na página" : " — no YouTube (abre em nova aba)"}
+                  </span>
+                </a>
+              )}
+
+              {isPlaying && (
+                /* **The title stays, and it stays a link**, which is two jobs
+                    in one line. It keeps the card's own caption where a reader
+                    was already reading it, and it is the way out: a frame can
+                    fail for reasons no list anticipates — a video pulled since
+                    it was curated, an embed the uploader later disallowed, a
+                    country it is not licensed in — and what YouTube draws then
+                    is its own error card, with no way forward inside it. */
+                <p className="mt-1.5 text-body-small">
+                  <a
+                    href={watch}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    data-club-video-out={video.id}
+                    className={`line-clamp-3 text-on-surface ${LINK_UNDERLINE}`}
+                  >
+                    {video.title}
+                    <span className="sr-only"> — no YouTube (abre em nova aba)</span>
+                  </a>
+                  <span className="block text-body-small text-ink-faint">{video.channel}</span>
+                </p>
+              )}
             </li>
           );
         })}

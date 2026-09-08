@@ -63,16 +63,21 @@ const OFFLINE_HOSTS = [/crests\.football-data\.org/, /img\.youtube\.com/];
  * Every host this suite must not reach that is **not** an image.
  *
  * One entry: YouTube's player, which **Melhores momentos** mounts once a
- * reader picks a broadcaster. It is a second list rather than a third regex in
+ * reader picks a broadcaster and which **Vídeos do clube** mounts once a reader
+ * presses a card. It is a second list rather than a third regex in
  * the one above because what separates them is the *stub*, not the rule — a
  * document served as `image/png` renders as an image document inside the
  * frame, so a spec asserting on the player's own box would be measuring a
  * picture of nothing. This fulfils an empty HTML document instead.
  *
- * Note it is only ever requested after a click, so most of the suite never
- * touches it. That is exactly the argument the crest CDN's own comment refuses
- * to accept as a reason not to stub: "how bad would it be" is a property of
- * this week's markup, and hermeticity is the property being defended.
+ * **It is only ever requested after a press, on either page, so most of the
+ * suite never touches it** — both sections are facades over a poster and
+ * neither mounts a frame on render. Reaching for that as a reason not to stub
+ * is exactly what the crest CDN's own comment refuses: "how bad would it be" is
+ * a property of this week's markup, and hermeticity is the property being
+ * defended. The club page proved the point on the way past — it was built with
+ * an always-mounted frame first, and this list needed no edit either way, which
+ * is the whole point of stubbing a host rather than a moment.
  */
 const OFFLINE_FRAME_HOSTS = [/www\.youtube-nocookie\.com/];
 
