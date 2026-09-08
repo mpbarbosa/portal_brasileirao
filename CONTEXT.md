@@ -15,6 +15,36 @@ tie-breakers. Rendered by `StandingsTable` and served by `/api/standings` as
 _Avoid_: "tabela" (ambiguous — reads as the HTML `<table>` element as often as the
 league table), "ranking" (not the Brazilian football word), "leaderboard".
 
+**Variação**:
+Which way a club moved between the previous **Rodada** and the current one, and
+by how many places — a triangle at the right edge of the position cell in the
+**Classificação**, up in `positive`, down in `negative`, and a bar in
+`ink-faint` for a club that held its place. Modelled as `RankMovement` and
+computed by `rankMovement` in `rank-history-core.ts`; the words each row says
+are `rankMovementLabel`'s ("subiu 2 posições", "caiu 1 posição", "manteve a
+posição"), and they are what a screen reader gets in place of the drawing.
+
+**Both ends are read off the same `ClubRankHistory`** the **Campanha** beside it
+is drawn from, and never as the row's own position minus a remembered one: that
+position comes from `/api/standings`, which counts `IN_PLAY` matches where this
+app does not, so the difference would be a real movement plus a disagreement
+between two sources — appearing and vanishing as matches kick off.
+
+It is a **movement, not a place**: the model carries a direction and a count
+rather than a signed number, because the sign of a position runs backwards (a
+club going 5º → 3º climbed while its position fell) and an arrow drawn the wrong
+way round is read rather than checked.
+
+The first **Rodada** has none — not "manteve a posição", which is a claim about a
+position nobody had yet — and neither does a **Classificação** recortada by
+**Casa** or **Fora**, where the division is re-ranked over a subset of the
+fixtures and a whole-season movement would describe a different table from the
+one the row is in.
+_Avoid_: "evolução" (the **Campanha** already owns the word, and it reads as a
+club improving where a variação is signless), "posição" alone (that is where the
+club *is*, and the two sit in the same cell), "movimentação" (reads as transfer
+business in a football context).
+
 **Campanha**:
 A club's run through the season seen as a path rather than a final row: its
 position in the **Classificação** after every round played, modelled as

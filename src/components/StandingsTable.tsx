@@ -8,7 +8,13 @@ import { ClubCrest } from "@/src/components/ClubCrest";
 import { FormPill } from "@/src/components/FormPill";
 import { StarGlyph } from "@/src/components/MeuTime";
 import { LINK_UNDERLINE } from "@/src/components/interaction";
-import { lastRecordedRound } from "@/rank-history-core";
+import {
+  lastRecordedRound,
+  rankMovement,
+  rankMovementLabel,
+  type RankMovement,
+  type RankMovementDirection,
+} from "@/rank-history-core";
 import { RankSparkline } from "@/src/components/RankSparkline";
 import { formatRoute } from "@/route-core";
 import { ZONES, type ZoneId, pointsPercentageLabel, zoneAt } from "@/standings-core";
@@ -158,6 +164,78 @@ const LeaderPosition = ({ position }: { position: number }) => (
   </span>
 );
 
+/**
+ * The **variação**: which way the club moved between the previous round and
+ * this one, drawn at the right edge of the position cell.
+ *
+ * **The direction is the shape, and the colour only agrees with it.** An up
+ * triangle and a down triangle are two different marks in grayscale, to a
+ * red/green-colourblind reader and in forced-colours mode — which is the
+ * single-channel failure `ZONE_RAIL` two blocks up had to break a border style
+ * to escape. Here the fix is free, because a movement has a direction and a
+ * direction has a shape.
+ *
+ * The tones are `positive`/`negative` all the same, because a climb is good and
+ * a fall is not, and every league table a Brazilian reader has ever seen says so
+ * in green and red. That does put `positive` in the same 56px cell as the G4
+ * rail, which is also `positive` — permitted by the same two conditions the
+ * leader disc is: one is a filled shape where the other is a rule, and they sit
+ * at opposite edges of the cell rather than adjacent. Contrast against `surface`
+ * measured rather than assumed: light 3.02 / dark 8.06 for `positive`, 4.26 /
+ * 5.85 for `negative`, against MD3's 3:1 floor for a non-text mark. The green is
+ * the tight one, and it is the tone the G4 rail already ships at 2px wide — a
+ * filled triangle is a great deal more of it.
+ *
+ * **An unchanged position gets a bar rather than nothing**, and that is the
+ * whole reason this record has three entries instead of two. A club that held
+ * its place and a club with no previous round to be compared against are
+ * different facts; drawing the first as an empty cell says the second. Round 1
+ * draws nothing at all — `rankMovement` returns null there — so twenty blank
+ * cells read as "no round to compare with yet" rather than as twenty clubs that
+ * all stood still, which never happened.
+ *
+ * SVG and not `▲`/`▼`, for the reason the theme toggle draws `SunIcon` instead
+ * of `☀`: a font decides a character's size and weight, and it decides them
+ * differently for two characters that have to read as one mark rotated.
+ *
+ * **No key, unlike the zone rail below**, and the difference is what each mark
+ * has to be looked up. A rail is a colour, and a colour means whatever a legend
+ * says it means — which is why `ZONE_KEY` exists and why its `where` had to name
+ * the positions. An arrow pointing up already means up. A key here would be
+ * three lines under the table restating the three glyphs above it.
+ *
+ * **How many places is said in words and not drawn**, which is a decision rather
+ * than a shortage of room. The cell has 38px and a digit beside the triangle
+ * would fit — but the count is the detail and the direction is the fact, and a
+ * table of twenty rows is read by scanning one column, not by reading twenty
+ * numbers. `rankMovementLabel` carries the count for anyone who wants it, which
+ * is where a screen reader gets it too.
+ */
+const MOVEMENT_MARK: Record<RankMovementDirection, { path: string; tone: string }> = {
+  up: { path: "M4 0.5 7.5 6.5H0.5Z", tone: "text-positive" },
+  down: { path: "M4 7.5 0.5 1.5H7.5Z", tone: "text-negative" },
+  same: { path: "M0.5 3.25H7.5V4.75H0.5Z", tone: "text-ink-faint" },
+};
+
+const MovementGlyph = ({ direction }: { direction: RankMovementDirection }) => {
+  const mark = MOVEMENT_MARK[direction];
+
+  return (
+    <svg
+      viewBox="0 0 8 8"
+      width="8"
+      height="8"
+      // The words are said once by the cell, after the zone — see the row.
+      aria-hidden="true"
+      focusable="false"
+      className={`shrink-0 ${mark.tone}`}
+      data-movement={direction}
+    >
+      <path d={mark.path} fill="currentColor" />
+    </svg>
+  );
+};
+
 /** The row separator. It lives on every cell because the table is
  *  `border-separate` (see below), and that model does not paint borders set on
  *  a `<tr>` at all. */
@@ -167,8 +245,30 @@ const ROW_LINE = "border-t border-outline-variant";
  *  Clube can be offset by exactly that much — an auto-sized first column would
  *  put the second one a few pixels off, which reads as a rendering bug. Each
  *  carries its own background, since the cells that slide beneath them would
- *  otherwise show through. */
-const STICKY_POSITION = "sticky left-0 z-10 w-12";
+ *  otherwise show through.
+ *
+ *  **`w-14` must equal `STICKY_CLUB`'s `left-14`, and a specified width is only
+ *  a request** — the column clamps up to its own content minimum, exactly as
+ *  `w-0` two blocks down relies on. So the pairing is not broken by editing one
+ *  of the two constants; it is broken by putting something in the cell that does
+ *  not fit, after which the column silently grows and the offset no longer
+ *  matches. Unscrolled it still looks right, which is why the spec that catches
+ *  it scrolls first.
+ *
+ *  Measured when the variação landed: the widest cell is a two-digit position
+ *  (20px) plus the 4px gap plus the 8px glyph, so the content minimum is 32px.
+ *  `w-14` (56px, border-box) less the 2px zone rail leaves 54px for padding and
+ *  content, and it was the padding that gave way — `px-2` rather than the `px-3`
+ *  the cell used to carry, which leaves 38px and six of slack. **The padding is
+ *  in this constant rather than at the two call sites for that reason**: it is
+ *  now part of the width arithmetic, and a header and a body cell that disagree
+ *  about it would put the `#` out of line with the numbers under it.
+ *
+ *  `px-3` and `w-16` buys the same slack and was rejected: it costs another 8px
+ *  of *frozen* width, which is the one thing this table is short of on a phone —
+ *  the ratio the spec below guards went 0.619 → 0.646 at 380dp as it is, against
+ *  0.669 the other way. */
+const STICKY_POSITION = "sticky left-0 z-10 w-14 px-2";
 
 /** `w-0` does not make the column zero wide — it makes it *content* wide, and
  *  that is the whole point.
@@ -192,7 +292,7 @@ const STICKY_POSITION = "sticky left-0 z-10 w-12";
  *  second line — 12 of 20 rows went from 37px to 57px tall. That reads as a
  *  narrower column to anything measuring width alone, which is exactly how it
  *  survived the first round of measurements here. */
-const STICKY_CLUB = "sticky left-12 z-10 w-0 whitespace-nowrap border-r border-outline-variant";
+const STICKY_CLUB = "sticky left-14 z-10 w-0 whitespace-nowrap border-r border-outline-variant";
 
 /** Clube is the only column whose padding is worth a breakpoint: it is frozen,
  *  so every pixel it takes is one the numbers never get back, and only a narrow
@@ -347,6 +447,38 @@ export function StandingsTable({
   /** One x domain for the whole table — see `lastRecordedRound`. */
   const lastRound = useMemo(() => lastRecordedRound(rankHistory ?? []), [rankHistory]);
 
+  /**
+   * The **variação** each row prints beside its position: where the club stood
+   * at the end of the previous round against where it stands after this one.
+   *
+   * **Empty under Casa and Fora, and that is the rule this table has already
+   * been taught rather than a new judgement.** The split re-ranks the division
+   * over a subset of the fixtures, so 5º in the Casa table is the fifth-best
+   * host — and a movement carried over from the whole-season campanha would be
+   * describing a different table from the one the row is in. It is the same
+   * reason the leader disc, the zone rails and the mark column all go, and #248
+   * is the commit that shipped having asked three of those five. A movement
+   * *within* the Casa table is a coherent thing to want and is not this: it
+   * would need the split recomputed round by round, which is a season of
+   * `computeStandings` per press of a button.
+   *
+   * `lastRound` is the whole table's domain rather than each club's own last
+   * entry, so twenty rows compare the same pair of rounds. They are the same
+   * number today — `computeRankHistory` gives every club an entry for every
+   * round — and asking the shared domain is what keeps that true if it ever
+   * stops being.
+   */
+  const movements = useMemo(() => {
+    const byClub = new Map<ClubCode, RankMovement>();
+    if (splitting) return byClub;
+
+    for (const club of rankHistory ?? []) {
+      const movement = rankMovement(club, lastRound);
+      if (movement) byClub.set(club.clubCode, movement);
+    }
+    return byClub;
+  }, [rankHistory, lastRound, splitting]);
+
   // Nothing to draw before the fixtures land. Rendering the column empty would
   // read as twenty broken cells rather than as data still in flight.
   /**
@@ -427,7 +559,7 @@ export function StandingsTable({
           <caption className="sr-only">Classificação do Campeonato Brasileiro Série A</caption>
           <thead className="bg-surface-container-low text-label-medium uppercase text-ink-muted">
             <tr>
-              <th scope="col" className={`${STICKY_POSITION} bg-surface-container-low px-3 py-2 text-left`}>#</th>
+              <th scope="col" className={`${STICKY_POSITION} bg-surface-container-low py-2 text-left`}>#</th>
               <th scope="col" className={`${STICKY_CLUB} ${CLUB_PADDING} bg-surface-container-low py-2 text-left`}>Clube</th>
               <th scope="col" className="px-2 py-2 text-right">P</th>
               {/* Beside the points rather than after SG: the campanha is read
@@ -451,6 +583,7 @@ export function StandingsTable({
               // One lookup per row, shared by the rail and the words, so the
               // two cannot come to disagree about which band a club is in.
               const rowZone = zoned ? zoneAt(row.position, shown.length) : undefined;
+              const movement = movements.get(row.club.code);
 
               return (
               <tr key={row.club.code}>
@@ -473,14 +606,29 @@ export function StandingsTable({
                       those rows are in no band, and `zoneAt` returning nothing
                       is what says so. */}
                 <td
-                  className={`${ROW_LINE} ${STICKY_POSITION} ${zoned ? zoneClass(row.position, shown.length) : "border-l-2 border-l-transparent"} bg-surface px-3 py-2 tabular-nums text-ink-muted`}
+                  className={`${ROW_LINE} ${STICKY_POSITION} ${zoned ? zoneClass(row.position, shown.length) : "border-l-2 border-l-transparent"} bg-surface py-2 tabular-nums text-ink-muted`}
                 >
-                  {row.position === 1 && !splitting ? (
-                    <LeaderPosition position={row.position} />
-                  ) : (
-                    row.position
-                  )}
+                  {/* The number keeps the cell's left edge, under the `#` of
+                      the header, and the variação takes the right — so twenty
+                      arrows line up in a column of their own whether the
+                      position beside them is one digit or two. `justify-between`
+                      rather than a gap, because a gap would push the arrow
+                      1ch further right on the ten single-digit rows. */}
+                  <span className="flex items-center justify-between gap-1">
+                    <span>
+                      {row.position === 1 && !splitting ? (
+                        <LeaderPosition position={row.position} />
+                      ) : (
+                        row.position
+                      )}
+                    </span>
+                    {movement && <MovementGlyph direction={movement.direction} />}
+                  </span>
                   {rowZone && <span className="sr-only">, {rowZone.competition}</span>}
+                  {/* Said after the zone rather than beside the glyph, so the
+                      cell reads "1 — líder, Libertadores, subiu 1 posição" in
+                      one pass instead of interleaving the two marks. */}
+                  {movement && <span className="sr-only">, {rankMovementLabel(movement)}</span>}
                 </td>
                 <td className={`${ROW_LINE} ${STICKY_CLUB} ${CLUB_PADDING} bg-surface py-2 font-medium`}>
                   <span className="mr-2 inline-flex align-middle">

@@ -7,6 +7,8 @@ import {
   lastRecordedRound,
   lastRoundWithResult,
   positionAfterRound,
+  rankMovement,
+  rankMovementLabel,
   sparklineBars,
   sparklinePoints,
   sparklinePolyline,
@@ -321,6 +323,96 @@ test("bars and the line agree about which round is last", () => {
 
   assert.equal(bars.length, points.length);
   assert.equal(bars[bars.length - 1].round, points[points.length - 1].round);
+});
+
+test("a movement reads as a direction and a count, never a signed position", () => {
+  // BBB is 1st after round 1 and 2nd after round 2 — see SEASON.
+  assert.deepEqual(rankMovement(historyFor("BBB"), 2), {
+    direction: "down",
+    places: 1,
+    from: 1,
+    to: 2,
+  });
+  assert.deepEqual(rankMovement(historyFor("AAA"), 2), {
+    direction: "up",
+    places: 1,
+    from: 2,
+    to: 1,
+  });
+});
+
+test("places is never negative, whichever way the club moved", () => {
+  // The whole reason the direction is a word: a caller subtracting one position
+  // from another draws the arrow backwards half the time, and an arrow is read
+  // rather than checked.
+  for (const code of ["AAA", "BBB", "CCC", "DDD"]) {
+    const movement = rankMovement(historyFor(code), 2);
+    assert.ok(movement);
+    assert.ok(movement.places >= 0, `${code} moved ${movement.places} places`);
+    assert.equal(movement.places, Math.abs(movement.from - movement.to));
+  }
+});
+
+test("holding a place and having no place to hold are different answers", () => {
+  // Round 1 has no round before it, so nobody moved and nobody stood still —
+  // an absence. Rendering it as "same" would tell twenty readers their club
+  // held a position it had never had.
+  for (const code of ["AAA", "BBB", "CCC", "DDD"]) {
+    assert.equal(rankMovement(historyFor(code), 1), null, code);
+  }
+
+  const held = rankMovement(historyFor("AAA", [
+    ...SEASON,
+    match({ round: 3, homeCode: "AAA", awayCode: "CCC", homeGoals: 1, awayGoals: 0 }),
+    match({ round: 3, homeCode: "BBB", awayCode: "DDD", homeGoals: 1, awayGoals: 0 }),
+  ]), 3);
+  assert.deepEqual(held, { direction: "same", places: 0, from: 1, to: 1 });
+});
+
+test("a round outside the history has no movement rather than the last one", () => {
+  assert.equal(rankMovement(historyFor("AAA"), 9), null);
+  assert.equal(rankMovement({ clubCode: "AAA", shortName: "AAA", entries: [] }, 2), null);
+});
+
+test("every place climbed is a place someone else fell", () => {
+  // Positions at a round are a permutation of 1..N, so the two totals must
+  // agree exactly. This is the property that catches a movement computed
+  // against the wrong round, or against a table from a different source — a
+  // per-club assertion cannot see either, because each row still looks
+  // plausible on its own.
+  const history = computeRankHistory(CLUBS, SEASON);
+  const movements = history.map((club) => rankMovement(club, 2));
+
+  const climbed = movements.reduce((t, m) => t + (m?.direction === "up" ? m.places : 0), 0);
+  const fell = movements.reduce((t, m) => t + (m?.direction === "down" ? m.places : 0), 0);
+
+  assert.ok(climbed > 0, "the fixture must contain some movement to be worth asserting on");
+  assert.equal(climbed, fell);
+});
+
+test("the movement agrees with the campanha drawn in the same row", () => {
+  // The arrow and the sparkline sit in one row and are read together, so they
+  // are both taken from `positionAfterRound` rather than from two readings of
+  // one club. A movement measured against `/api/standings` — which counts
+  // IN_PLAY where this app does not — would contradict the line beside it
+  // mid-round, and only mid-round.
+  for (const club of computeRankHistory(CLUBS, SEASON)) {
+    const movement = rankMovement(club, 2);
+    assert.ok(movement);
+    assert.equal(movement.to, positionAfterRound(club, 2));
+    assert.equal(movement.from, positionAfterRound(club, 1));
+  }
+});
+
+test("the movement is said in words, with pt-BR singular and plural", () => {
+  const label = (direction: "up" | "down" | "same", places: number) =>
+    rankMovementLabel({ direction, places, from: 1, to: 1 });
+
+  assert.equal(label("up", 1), "subiu 1 posição");
+  assert.equal(label("up", 4), "subiu 4 posições");
+  assert.equal(label("down", 1), "caiu 1 posição");
+  assert.equal(label("down", 2), "caiu 2 posições");
+  assert.equal(label("same", 0), "manteve a posição");
 });
 
 const round2 = (value: number): number => Math.round(value * 100) / 100;

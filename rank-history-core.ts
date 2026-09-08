@@ -73,6 +73,84 @@ export const positionAfterRound = (
 ): number | null => history.entries.find((entry) => entry.round === round)?.position ?? null;
 
 /**
+ * Which way a club moved between two consecutive rounds, and by how much — the
+ * **variação** the Classificação prints beside the position.
+ *
+ * **`direction` and `places` rather than a signed number, because the sign of a
+ * position is upside down.** A club going 5º → 3º *climbed*, and its position
+ * *fell* by two; every call site that subtracts one position from another is one
+ * `-` away from drawing the arrow backwards, and an arrow pointing the wrong way
+ * is read rather than checked. `places` is therefore never negative and the
+ * direction is a word, so nothing downstream does the arithmetic a second time.
+ *
+ * **Both ends are read through `positionAfterRound`, and that is the load-bearing
+ * half.** The row's own position comes from `/api/standings`, which counts
+ * `IN_PLAY` matches where this app does not — so a movement measured as *that*
+ * number minus a campanha position would be a real movement plus a disagreement
+ * between two sources, and it would appear and vanish as matches kick off. Read
+ * off one history, the difference is a movement and nothing else. It is the rule
+ * `scatterTrail` follows in taking the built scatter rather than the division.
+ *
+ * A round with no round before it has no movement, and neither has a club whose
+ * history does not reach back that far: **null is an absence, not a zero.**
+ * "Nobody had a position before the first round" and "held its place" are
+ * different facts, and a caller that renders them alike says the second when it
+ * means the first — `positionAfterRound`'s own rule one function up.
+ *
+ * Note the movement of a club that did not play in `round` is still real: the
+ * table moved under it while its rivals played, and that is what the reader is
+ * looking at. Nothing here filters on `played`.
+ */
+export type RankMovementDirection = "up" | "down" | "same";
+
+export interface RankMovement {
+  direction: RankMovementDirection;
+  /** Places moved, **never negative**. Zero exactly when direction is "same". */
+  places: number;
+  /** Where the club stood at the end of the previous round. */
+  from: number;
+  /** Where it stands after `round`. */
+  to: number;
+}
+
+export const rankMovement = (
+  history: ClubRankHistory,
+  round: number,
+): RankMovement | null => {
+  const to = positionAfterRound(history, round);
+  const from = positionAfterRound(history, round - 1);
+  if (to === null || from === null) return null;
+
+  return {
+    direction: from === to ? "same" : from > to ? "up" : "down",
+    places: Math.abs(from - to),
+    from,
+    to,
+  };
+};
+
+/**
+ * The movement in words — the arrow's accessible name.
+ *
+ * A triangle carries the direction to anyone who can see it and nothing at all
+ * to a screen reader, so the same fact is said in text, exactly as the zone rail
+ * and the **Meu time** star already do in the two cells beside it.
+ *
+ * The count is spelled out rather than left to the glyph, because "subiu" and
+ * "subiu quatro posições" are different readings and only the second is worth
+ * interrupting a row for. Singular and plural genuinely differ in pt-BR and a
+ * one-place move is the commonest of all, which is why `tests/` holds a case for
+ * it rather than trusting the template.
+ */
+export const rankMovementLabel = (movement: RankMovement): string => {
+  if (movement.direction === "same") return "manteve a posição";
+
+  const verb = movement.direction === "up" ? "subiu" : "caiu";
+  const places = movement.places === 1 ? "1 posição" : `${movement.places} posições`;
+  return `${verb} ${places}`;
+};
+
+/**
  * The last round any club in the history has played — the x domain every
  * sparkline shares.
  *
