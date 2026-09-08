@@ -355,11 +355,20 @@ test.describe("Clube", () => {
     page,
   }) => {
     // The absence is the point: `r/<club name>` is exactly the address somebody
-    // would be tempted to derive, and most of those are another community or
-    // nothing at all. Without this, emptying the curated file would leave every
-    // assertion above passing on the one club that still had an entry.
-    await page.goto("/clube/palmeiras");
-    await expect(pageHeading(page)).toContainText("Palmeiras");
+    // would be tempted to derive, and the survey in `club-reddit.ts` found four
+    // such addresses naming a different subject entirely — a Mexican club, the
+    // Civil Air Patrol, a state and a city. Without this, emptying the curated
+    // file would leave every assertion above passing on whichever club still
+    // had an entry.
+    //
+    // **This named PALMEIRAS until Palmeiras acquired one**, which is the cost
+    // of picking the subject of a negative assertion out of a curated file that
+    // grows: it went red on the commit that widened coverage — correctly, and
+    // confirmed by running it — and no club here is guaranteed to stay absent
+    // for ever. Fluminense is the safest available: its `r/FluminenseFC` has
+    // ONE member, so it is absent by the bar rather than by nobody looking.
+    await page.goto("/clube/fluminense");
+    await expect(pageHeading(page)).toContainText("Fluminense");
     await expect(redditLink(page)).toHaveCount(0);
   });
 
