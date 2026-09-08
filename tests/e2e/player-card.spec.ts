@@ -221,6 +221,61 @@ test.describe("Cartão do jogador", () => {
     await expect(card(page).getByRole("heading", { level: 2 })).not.toContainText("9");
   });
 
+  test("the shirt watermark is whole, and clear of the close control", async ({ page }) => {
+    // The mark is 57px at `leading-none`, the close button ends 64px down a
+    // 101px header, and 64 + 57 does not fit — so the two ways to
+    // get this wrong are opposite corners of the same box, and both shipped.
+    // `-bottom-5` hung 20px of the glyph under the header's `overflow-hidden`
+    // and the card printed half a digit against the header's own rule;
+    // pulling it back to the corner put the whole numeral behind the button.
+    // Both assertions below were confirmed red, one against each.
+    //
+    // Only reachable with the enrichment stubbed: the competition's team
+    // payload carries no shirt number for anybody, so the mark does not
+    // render at all in the frozen snapshot the suite runs against.
+    await page.route("**/api/players/*", (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          source: "football-data",
+          note: "stub",
+          updatedAt: new Date().toISOString(),
+          // Two digits, which is the wider of the two shapes this has to hold
+          // — a one-digit mark clears the button by 45px and would pass
+          // against a placement that a real 95 collides with.
+          data: { id: "1077", name: "Pedro", shirtNumber: 95 },
+        }),
+      }),
+    );
+
+    await openFirstPlayer(page);
+
+    const header = card(page).locator("header");
+    const mark = header.locator("[data-shirt-mark]");
+    await expect(mark).toHaveText("95");
+
+    const band = await header.boundingBox();
+    const box = await mark.boundingBox();
+    const close = await card(page).getByRole("button", { name: "Fechar" }).boundingBox();
+    if (!band || !box || !close) throw new Error("the card did not lay out");
+
+    // Whole: the header clips its overflow, so a box crossing either edge is a
+    // digit the reader sees cut.
+    expect(box.y).toBeGreaterThanOrEqual(band.y);
+    expect(box.y + box.height).toBeLessThanOrEqual(band.y + band.height);
+
+    // Clear: no overlap with the control, which is a claim about the pair and
+    // not about the `right-20` written beside the mark. Read as boxes rather
+    // than as the arithmetic, so a change to the button's size fails here.
+    const overlaps =
+      box.x < close.x + close.width &&
+      box.x + box.width > close.x &&
+      box.y < close.y + close.height &&
+      box.y + box.height > close.y;
+    expect(overlaps).toBe(false);
+  });
+
   test("without enrichment the card omits unknown details rather than showing blanks", async ({
     page,
   }) => {

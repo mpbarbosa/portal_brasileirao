@@ -356,11 +356,34 @@ export function PlayerOverlayCard({ player, scorer, onClose }: PlayerOverlayCard
              site. `aria-hidden` because the tile already says it. */
           <span
             aria-hidden="true"
-            /* Bottom-right, not top-right: the close button lives up there, and
-               a 57px numeral behind it reads as a rendering fault rather than
-               as a ground. Clipped by the header's `overflow-hidden`, which is
-               what keeps it from setting the card's height. */
-            className="pointer-events-none absolute -bottom-5 right-3 select-none text-display-large font-black leading-none tabular-nums text-primary/10"
+            /* Named, so a spec can measure this box against the close
+               button's without selecting on `header > span` — the header has
+               gained an element before now, and it will again. */
+            data-shirt-mark=""
+            /* Bottom edge, and to the LEFT of the close button — the two
+               constraints are what fix this position, and there is no corner
+               that satisfies both. The header is 101px tall — measured, and
+               the same with a photograph as without, since the 64px portrait
+               plus its padding is shorter than the three lines beside it; the
+               close button ends 64px down it; and this numeral's box is 57 at
+               `leading-none`. 64 + 57 > 101, so a top-right corner either sits
+               behind the button or hangs out of the header — and it did the
+               second, `-bottom-5` putting 20px of the glyph under
+               `overflow-hidden`. A digit cut in half by the header's own rule
+               is exactly the "rendering fault" this comment used to warn about
+               for the corner above it, arriving at the corner below.
+
+               `right-20` is that arithmetic: 20 for the header's own `px-5`
+               plus 48 for the button is 68, so 80 clears it by 12dp. Keep the
+               two in step if the button's size ever changes — this is
+               `STICKY_CLUB`'s pairing, and `tests/e2e/player-card.spec.ts`
+               measures both boxes rather than trusting the sum written here.
+
+               It stays as far right as that clearance allows, because what it
+               passes behind on the way left is the player's name: on a narrow
+               card a long name truncates into this band, and a ground is the
+               one thing that may sit under text. */
+            className="pointer-events-none absolute bottom-0 right-20 select-none text-display-large font-black leading-none tabular-nums text-primary/10"
           >
             {enriched.shirtNumber}
           </span>
