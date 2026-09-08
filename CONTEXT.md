@@ -698,6 +698,38 @@ image), a heading over a club with no entries, and inventing entries to fill the
 other eighteen clubs — the sibling repo's social view runs on fabricated
 `SEED_POSTS` and that half does not travel here.
 
+**Acontecimento**:
+Something that happened off the pitch, on a dated day, that a reader needs in
+order to read the table honestly — a técnico sacked, the championship halted.
+Two scopes: **geral**, which touches all twenty clubs, and **de clube**, which
+touches exactly one. Modelled as `SeasonEvent` in `src/types.ts` as a
+discriminated union, so a general acontecimento carrying a club, or a club one
+carrying none, is unrepresentable rather than merely discouraged. Curated in
+`src/data/events.ts`, ordered and labelled by `events-core.ts`, rendered by
+`SeasonEvents` under the heading **Acontecimentos** on the club page, below the
+**Vídeos do clube** and above **Jogos disputados**.
+
+**The general ones are merged into every club's list rather than given a section
+of their own**, which is what *geral* means: an acontecimento touching all
+twenty belongs in all twenty timelines. It is the one section of the club page
+that is never empty, because the paralisação reaches every club. A general row
+is captioned **"Todo o Brasileirão"**; a club row carries no counterpart,
+because the page has already said whose page it is.
+
+**A date here is a Brazil-local calendar day and never an instant** — the one
+rule in this entry that is load-bearing rather than descriptive. Cruzeiro sacked
+Tite on the night of Sunday 15 March, after a fixture that kicked off
+`2026-03-15T23:30:00Z`; the same event is the 15th in Belo Horizonte and the
+16th in UTC, and one consolidated list surveyed for the file says the 14th.
+Nothing in `events-core.ts` constructs a `Date` from a day for that reason.
+_Avoid_: "Evento" (`Event` is a lib.dom global and this repo already spells the
+word in schema.org's sense for a **Partida**, which is exactly what an
+acontecimento is not; in pt-BR it also reads as something scheduled — a match, a
+show — rather than as news), "Notícia" (the entry is the fact, and the report is
+the provenance beneath it), "Linha do tempo" (the arrangement, not the thing;
+and it would name a section whose rows are not evenly spaced in time),
+"Histórico" (the **Campanha** already owns the club's own history, on the pitch).
+
 **Wikipédia**:
 The club's encyclopedia article, linked from its page as a fourth external link
 beside the **Site oficial**, the **Instagram do clube** and the **Hino do

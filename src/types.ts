@@ -114,6 +114,91 @@ export interface ClubVideo {
   channel: string;
 }
 
+/**
+ * An **Acontecimento** — something that happened off the pitch, dated, that a
+ * reader needs in order to read the table honestly. A técnico sacked, the
+ * championship halted for the Copa do Mundo.
+ *
+ * **The name is `SeasonEvent` and not `Event`, which is not a style
+ * preference.** `Event` is a lib.dom global, so a type of that name would
+ * shadow it silently at every import site; and this repository already speaks
+ * the word in a second sense — `structured-data-core.ts` emits schema.org
+ * `Event` nodes for a fixture, and a fixture is exactly what an acontecimento
+ * is not.
+ *
+ * **`date` is a BRAZIL-LOCAL CALENDAR DAY, never a UTC instant**, and this is
+ * the trap the first entry here walked into. A `Match.kickoff` is UTC by
+ * construction; an acontecimento is reported as a *day* by the press that
+ * reports it, in the country it happened in. Cruzeiro sacked Tite on the night
+ * of Sunday 15 March, after a fixture that kicked off `2026-03-15T23:30:00Z` —
+ * 20:30 BRT — and finished after midnight UTC. So the same event is 15 March
+ * locally and 16 March in UTC, and one of the consolidated lists surveyed for
+ * this file states 14 March, which is neither. Converting a day to an instant
+ * would pick one of those three and print it as a fact.
+ *
+ * That is the same shift `CLAUDE.md` records for CBF's own fixture listing,
+ * which is keyed by local date while our kickoffs are UTC — met here from the
+ * other side.
+ */
+interface SeasonEventBase {
+  /**
+   * A stable kebab-case handle, unique across the file. It is the React key,
+   * and it is what a spec selects on — `CampaignFact`'s `data-fact` rule, so
+   * an assertion never has to regex rendered prose.
+   */
+  id: string;
+  /** ISO `YYYY-MM-DD`, the Brazil-local day. See the note above: not an instant. */
+  date: string;
+  /**
+   * The last day of an acontecimento that occupied a span rather than a day —
+   * a paralisação. **Absent means one of two different things**, and the
+   * component tells them apart by the clock rather than by this field alone: a
+   * span still running has no last day *yet*, while a sacking never had one.
+   * `eventSpan` is what decides, and it needs `now` to do it.
+   */
+  endDate?: string;
+  /** The headline, in pt-BR. One line. */
+  title: string;
+  /** One sentence of context. Optional, and left out rather than padded. */
+  detail?: string;
+  /**
+   * The report this entry was read from, as an `https://` address.
+   *
+   * **Required, and that is the compiler doing the work a review would
+   * otherwise have to do.** Every other rule in this file is prose somebody
+   * has to remember; this one refuses an entry nobody can trace. A plausible
+   * date is indistinguishable from a correct one — the rule
+   * `src/data/stadiums.ts` states about capacity — and a sacking dated wrongly
+   * reads exactly like a sacking dated rightly.
+   */
+  source: string;
+}
+
+/** An acontecimento that touches the whole division. */
+export interface GeneralSeasonEvent extends SeasonEventBase {
+  scope: "geral";
+  /**
+   * Never. The union below is what makes "a general acontecimento belonging to
+   * one club" unrepresentable rather than merely discouraged — `tsc` refuses
+   * it where a runtime check would be a rule nobody runs.
+   */
+  clubCode?: never;
+}
+
+/** An acontecimento that touches exactly one club. */
+export interface ClubSeasonEvent extends SeasonEventBase {
+  scope: "clube";
+  /**
+   * Our club code — the upstream numeric id, never the `tla`, for the reason
+   * every keyed file here gives: Corinthians and Coritiba both report `COR`,
+   * and filing one club's sacking under the other is the failure that keying
+   * on an abbreviation produces.
+   */
+  clubCode: ClubCode;
+}
+
+export type SeasonEvent = GeneralSeasonEvent | ClubSeasonEvent;
+
 /** Where a match is played. Not from the data provider — merged from the CBF
  *  sync, which reports it as "Stadium - City - UF". */
 export interface Venue {
