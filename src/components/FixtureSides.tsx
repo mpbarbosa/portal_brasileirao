@@ -20,7 +20,23 @@ export const fixtureScore = (match: Match): string =>
     : `${match.homeGoals} × ${match.awayGoals}`;
 
 /**
- * Both clubs of a fixture: crest, name, the scoreline, crest, name.
+ * Both clubs of a fixture: name, crest, the scoreline, crest, name.
+ *
+ * **The two sides are mirrored, and that asymmetry is the whole of the
+ * arrangement.** The home crest follows its name and the away crest precedes
+ * its own, so the two marks meet either side of the scoreline instead of both
+ * sitting to the left of the club they belong to. Reading outward from the `×`
+ * the row is then symmetric about it — mark, mark, and each name on the far
+ * side of its own — where the previous order put the away crest between the
+ * home name and the score, which reads as belonging to whichever club the eye
+ * reached first.
+ *
+ * **The home name now precedes a fixed-width mark rather than following one**,
+ * which is only safe because `ClubCrest` is `shrink-0` in all three of its
+ * branches — the image, the monogram and the brand mark. Without that, a flex
+ * row under pressure would take the space out of whichever item yields, and the
+ * mark sitting between a truncating name and the scoreline is exactly the item
+ * a reader would not notice losing.
  *
  * Extracted at its **fourth** copy, not its second — the two branches of a
  * `MatchList` row had it twice over, and the **Meu time** strip a third time.
@@ -72,8 +88,8 @@ export function FixtureSides({
 
   return (
     <>
-      {home && <ClubCrest club={home} size={crestSize} />}
       <span className="truncate">{clubName(match.homeCode)}</span>
+      {home && <ClubCrest club={home} size={crestSize} />}
       <span className="shrink-0 font-semibold tabular-nums text-on-surface-variant">
         {fixtureScore(match)}
       </span>
