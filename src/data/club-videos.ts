@@ -39,9 +39,14 @@ import type { ClubCode, ClubVideo } from "@/src/types";
  *   curl -s "https://www.youtube.com/oembed?url=https%3A//www.youtube.com/watch%3Fv%3D<id>&format=json"
  *
  * The Palmeiras × Flamengo entries were confirmed that way on 2026-09-03, the
- * Fluminense one on 2026-09-05, and the six velas of the 26ª on 2026-09-07;
- * every title and channel below is oEmbed's own string rather than anything
- * retyped.
+ * first Fluminense one on 2026-09-05, six velas of the 26ª on 2026-09-07 and
+ * six more on 2026-09-08; every title and channel below is oEmbed's own string
+ * rather than anything retyped.
+ *
+ * **The 2026-09-08 six answered 200 straight away**, with none of the 403 lag
+ * the note below records. Read that as the lag being a property of the moment
+ * rather than a stage every upload passes through — one 200 does not retire the
+ * warning, and one 403 still does not establish that a flip failed.
  *
  * **The 403 has a second edge: oEmbed LAGS the visibility change.** The five
  * uploaded on 2026-09-07 answered 403 at 22:09:58Z with Studio already showing
@@ -65,9 +70,19 @@ export const CLUB_VIDEOS: Record<ClubCode, ClubVideo[]> = {
   // and what the Painel already shows this club on its own page. So it appears
   // under one code, and that is the file working as much as the repetition is.
   "1765": [
+    // **The 26ª render, REPLACING `doMq2ELvtrc` (the 25ª)** — the same
+    // substitution Palmeiras took one entry down, for the same reason and on
+    // the same grounds: the two are one drawing at two moments, and a club page
+    // offering both would ask a reader to pick a rodada, which is not a question
+    // the section poses anywhere else. `89d3cb2` redrew this along with the
+    // other 130 artefactos.
+    //
+    // The superseded video is still on the channel — nothing here can unlist it,
+    // since this app holds only `youtube.upload` and `videos.update` refuses
+    // that scope. It is a Studio action.
     {
-      id: "doMq2ELvtrc",
-      title: "Fluminense em velas: a campanha rodada a rodada do Brasileirão 2026 (até a 25ª)",
+      id: "Vdz1qJwHYYc",
+      title: "Fluminense: 3º ao 6º em 26 rodadas, a campanha mais confinada da Série A",
       channel: "Marcelo Barbosa",
     },
   ],
@@ -103,8 +118,17 @@ export const CLUB_VIDEOS: Record<ClubCode, ClubVideo[]> = {
     },
   ],
 
-  // Flamengo. The same video, for the same reason.
+  // Flamengo, and the second club to carry two entries — for exactly the reason
+  // Palmeiras does, and in the same order. The velas is about this club alone
+  // and sits under this code only; the comparação is about a pair this club
+  // happens to be half of, and repeats under Palmeiras above. The velas leads
+  // because it is the club's own season.
   "1783": [
+    {
+      id: "vU4ntqwfm2M",
+      title: "Flamengo assume a ponta na 26ª: a campanha em velas do Brasileirão 2026",
+      channel: "Marcelo Barbosa",
+    },
     {
       id: "8Kr9MLphoEc",
       title: "Palmeiras × Flamengo: a campanha rodada a rodada do Brasileirão 2026 (até a 25ª)",
@@ -166,6 +190,47 @@ export const CLUB_VIDEOS: Record<ClubCode, ClubVideo[]> = {
     {
       id: "wPcIydfzJZU",
       title: "Bragantino liderou na 2ª e fechou em 9º: a campanha em velas até a 26ª",
+      channel: "Marcelo Barbosa",
+    },
+  ],
+
+  // Chapecoense.
+  "1772": [
+    {
+      id: "dsqz7J0pcgA",
+      title: "Chapecoense: 14 derrotas em 25 jogos, a campanha em velas até a 26ª",
+      channel: "Marcelo Barbosa",
+    },
+  ],
+
+  // Clube do Remo. Code 4287, beside Bragantino's 4286 rather than in the 17xx
+  // block, for that entry's reason: the id is upstream's.
+  "4287": [
+    {
+      id: "4FmqjHMkRlE",
+      title: "Clube do Remo: nunca fechou acima do 16º em 26 rodadas | Brasileirão",
+      channel: "Marcelo Barbosa",
+    },
+  ],
+
+  // Corinthians — 1779, and NOT Coritiba below. The two report the same
+  // `tla: "COR"`, which is the collision this file's own header names as the
+  // reason the key is the upstream numeric id; a velas filed by abbreviation
+  // would put one club's season on the other's page. The codes were read from
+  // `clubs.ts` rather than derived.
+  "1779": [
+    {
+      id: "RgYGW3XIdYI",
+      title: "Corinthians em velas: do 5º ao 17º até a 26ª rodada do Brasileirão",
+      channel: "Marcelo Barbosa",
+    },
+  ],
+
+  // Coritiba — 4241, the other half of that collision.
+  "4241": [
+    {
+      id: "Ke9ccxusaeQ",
+      title: "Coritiba em velas: do 16º ao 7º até a 26ª rodada do Brasileirão",
       channel: "Marcelo Barbosa",
     },
   ],
