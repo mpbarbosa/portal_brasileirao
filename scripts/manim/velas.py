@@ -1198,6 +1198,20 @@ class Velas(Scene):
         dos clubes já publicados não pode mexer o painel deles por causa desta
         mudança. Só quando ele encosta em alguma vela é que a grade é varrida,
         e vence o centro que deixa a maior folga.
+
+        **E quando NENHUM centro deixa folga, a pergunta muda** — ver o
+        comentário no corpo. Isso não é um caso de canto: medido sobre os vinte
+        clubes nos três cortes, **39 das 60 combinações não cabem**. O painel ocupa
+        52% da altura do gráfico no 16:9 e **71% a 78% nos cortes verticais**,
+        contra uma campanha que atravessa a divisão inteira — não há buraco onde
+        pousá-lo, e adensar a grade não inventa um: de 24×24 para 240×240 o
+        ganho máximo é **+0,041** e nenhuma combinação passa a caber.
+
+        Ou seja: isto coloca o painel onde ele estraga menos, e não onde ele
+        deixa de estragar. O que resolveria de vez é o painel ser menor ou
+        morar fora do gráfico, e as duas coisas são mudanças de desenho — a
+        x0,80, que já é pequeno demais para o piso de tipo deste projecto, o
+        Atlético-MG ainda fica em -0,62.
         """
         # Cada vela ocupa o corpo mais o toco à esquerda, e vai do melhor ao
         # pior do pavio — que é o que precisa ficar visível.
@@ -1242,16 +1256,71 @@ class Velas(Scene):
         if right < left or top < bottom:
             return default
 
-        best, best_score = default, clearance(default)
         steps = 24
+        candidates = [default]
         for i in range(steps + 1):
             for j in range(steps + 1):
-                centre = [
-                    left + (right - left) * i / steps,
-                    bottom + (top - bottom) * j / steps,
-                    0,
-                ]
-                score = clearance(centre)
-                if score > best_score:
-                    best, best_score = centre, score
-        return best
+                candidates.append(
+                    [
+                        left + (right - left) * i / steps,
+                        bottom + (top - bottom) * j / steps,
+                        0,
+                    ]
+                )
+
+        best, best_score = default, clearance(default)
+        for centre in candidates:
+            score = clearance(centre)
+            if score > best_score:
+                best, best_score = centre, score
+        if best_score >= 0:
+            return best
+
+        # **Chegando aqui, o painel NÃO CABE — e aí `clearance` deixa de ser a
+        # pergunta certa.** Ela maximiza a MENOR separação, o que só ordena o
+        # quão fundo entra a pior vela; entre duas posições igualmente ruins por
+        # essa conta, uma pode roçar um pavio e a outra enterrar seis corpos.
+        #
+        # Medido sobre os vinte clubes nos três cortes: das 60 combinações, 39
+        # não cabem, e o `clearance` da posição escolhida vai de -0,036 a -1,133
+        # enquanto o CORPO realmente coberto vai de 0,005 a 0,906 un² — as duas
+        # escalas não são a mesma, e nem sequer ordenam igual. Os -0,036 do
+        # Bahia são 0,005 un², um pavio roçado que ninguém vê; os -0,587 do
+        # Vitória no 16:9 são 0,906, o pior da tabela inteira.
+        #
+        # Então o desempate passa a ser o que se perde de facto: área de CORPO
+        # coberta, com o PAVIO como segundo critério para que o painel não se
+        # sente exactamente em cima de uma vela longa a marcar zero de corpo.
+        # Mesma grade (24), mesma margem, mesmo `default` na lista — só a
+        # pergunta muda, e só neste ramo. Um clube que já cabia sai byte a byte
+        # igual, porque nem chega aqui.
+        #
+        # Sobre as 39 que não cabem: **31 melhoram, 8 ficam iguais, NENHUMA
+        # piora** — e nenhuma pode piorar, porque o conjunto de candidatos é o
+        # mesmo e este ramo minimiza exactamente a área que o outro ignorava.
+        # No total, 12,036 -> 9,282 un² de corpo tapado, menos 23%. Os maiores
+        # ganhos: Fluminense 4:5 -93%, Mirassol 9:16 -64%, Coritiba 16:9 -60%,
+        # Cruzeiro 4:5 -52%.
+        bodies = []
+        for entry in rounds:
+            x = self.x_of(entry["round"])
+            low, high = sorted(
+                (
+                    self.at_pos(entry["round"], entry["open"])[1],
+                    self.at_pos(entry["round"], entry["close"])[1],
+                )
+            )
+            bodies.append((x - BODY_WIDTH / 2, x + BODY_WIDTH / 2, low, high))
+
+        def covered(marks, centre) -> float:
+            """Área das marcas que o painel tapa, em unidades de cena ao quadrado."""
+            cx, cy = centre[0], centre[1]
+            total = 0.0
+            for x0, x1, y0, y1 in marks:
+                w = min(x1, cx + half_w) - max(x0, cx - half_w)
+                h = min(y1, cy + half_h) - max(y0, cy - half_h)
+                if w > 0 and h > 0:
+                    total += w * h
+            return total
+
+        return min(candidates, key=lambda c: (covered(bodies, c), covered(boxes, c)))

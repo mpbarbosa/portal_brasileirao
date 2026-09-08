@@ -657,6 +657,33 @@ viram outros arquivos quando a temporada anda — o antigo tem que sair do
   de verdade. Um caso especial aqui esconderia uma rodada de dado real. Ele é
   também o vizinho da esquerda do painel de resumo, que é o que decide a largura
   daquele painel.
+- **O painel do fecho NÃO CABE para a maioria dos clubes, e o `summary_anchor`
+  escolhe onde estraga menos — não onde deixa de estragar.** Medido sobre os
+  vinte clubes nos três cortes: **39 das 60 combinações não têm posição livre**.
+  O painel ocupa 52% da altura do gráfico no 16:9 e 71–78% nos verticais, contra
+  campanhas que atravessam a divisão inteira. Adensar a grade não resolve — de
+  24×24 para 240×240 o ganho máximo é **+0,041** e nenhuma combinação passa a
+  caber — e encolher também não: a **x0,80**, já abaixo do piso de tipo deste
+  projecto, o Atlético-MG continua em −0,62.
+
+  **O `clearance` e o estrago não são a mesma escala**, e é isso que o segundo
+  ramo corrige. Ele maximiza a MENOR separação, que só ordena quão fundo entra a
+  pior vela: os −0,036 do Bahia são **0,005 un²** de corpo tapado, um pavio
+  roçado; os −0,587 do Vitória no 16:9 são **0,906 un²**, o pior da tabela. Onde
+  nada cabe, o desempate passa a ser área de CORPO coberta, com o PAVIO como
+  segundo critério. Mesma grade, mesma margem, mesmo `default` — **31 das 39
+  melhoram, 8 ficam iguais, nenhuma piora** (12,036 → 9,282 un², menos 23%).
+
+  **Nenhum portão vê isto**, então re-medir é à mão. Embrulhe o
+  `Velas.summary_anchor` e pergunte a folga do centro que ele devolve, com o
+  tamanho real do painel — **nunca reimplemente `at_pos`**: uma reimplementação
+  reportou OVERLAP em vídeos commitados e correctos, e só um conhecido-negativo
+  (rodar a mesma sonda sobre um vídeo aceite) a denunciou. Contar pixels não
+  serve de todo aqui: com `fill_opacity=0,94` uma vela tapada compõe a 6% de si.
+
+  E confira que os clubes que JÁ cabiam saem byte a byte iguais, com a receita de
+  `velas_orig.py` acima — é a única prova de que um re-render não mexe no painel
+  de quem já estava bem.
 - **A barra de pontos é o TOTAL e a tampa clara é o ganho.** Pontos são
   cumulativos, então o eixo começa no zero e a altura é a temporada inteira. Uma
   derrota não acrescenta nada e a barra não cresce — leitura honesta, e é
