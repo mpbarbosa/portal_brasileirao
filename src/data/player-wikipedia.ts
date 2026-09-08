@@ -14,7 +14,7 @@
  * the full one ("Danilo Luiz da Silva"), or at a disambiguated one where the
  * popular name is shared.
  *
- * Coverage is **partial**, like every curated file here — 378 of the 948
+ * Coverage is **partial**, like every curated file here — 379 of the 948
  * listed players, every club represented. A player absent here renders no
  * link.
  *
@@ -144,6 +144,7 @@ export const PLAYER_WIKIPEDIA: Record<string, string> = {
   "22166": "Juan Felipe Aguirre", // Juan Aguirre
   "178353": "Juan Portilla",
   "56226": "Julimar",
+  "192070": "Kevin Viveros",
   "1386": "Léo Pelé", // Léo
   "153853": "Lucas Esquivel",
   "8357": "Luiz Gustavo (futebolista, 1987)", // Luiz Gustavo
