@@ -4873,11 +4873,12 @@ noticing, and `painel-palmeiras-{light,dark}` has since made it twenty. A number
 has no gate on it — this one has now been wrong twice, and the second time it was wrong
 in a paragraph telling you it would be.
 
-**Six of the twenty can no longer come back byte-identical, and this paragraph has now
-said fewer than the truth three times.** They vary for three unrelated reasons, on three
-different clocks — and note the count rose because a *feature* landed, not because anyone
-had miscounted, so re-derive it from what the pages render rather than trusting the number
-here:
+**Eight of the twenty can no longer be relied on to come back byte-identical, and this
+paragraph has now said fewer than the truth four times.** Six vary for three unrelated
+reasons on three different clocks; the other two vary because somebody else's server
+decides to. Note that the count has risen because a *feature* landed and because a
+re-shoot **measured** something nobody had predicted — never because anyone miscounted —
+so re-derive it from what the pages render rather than trusting the number here:
 
 - **The desktop Classificação pair, per deploy.** `fullPage` is `!mobile && route === "/"`,
   so it photographs the whole page — including the **Rodapé**, whose Saúde do serviço
@@ -4898,16 +4899,42 @@ here:
   over. This joined the list with the weather itself, in #240, and was found by re-shooting
   rather than by anyone predicting it.
 
-All three are the same lesson at different speeds, and the Ao vivo one is the sharpest: the
+- **The two partida pairs, on nobody's clock at all** — and these are a different kind
+  from the three above, which is why they are worth more than the count they add. The
+  **Melhores momentos** facade hotlinks its thumbnail from `img.youtube.com`, so those
+  bytes are a third party's to re-encode whenever they like. Measured on the #475
+  re-shoot: `partida-554951-{light,dark}` and `partida-554977-{light,dark}` each differed
+  in a **32x32 px** square with a **maximum channel delta of 10** and a mean of 1.9 —
+  inside the ge tv channel avatar, invisible to a reader, with the layout and every value
+  on the page unchanged.
+
+  **The distinction matters more than the number.** The six above move *by construction*
+  and on a schedule you can name — per deploy, per minute, per reading — so two shoots far
+  enough apart are **expected** to differ. These two may come back identical any number of
+  times and then not, with nothing on our side having changed and nothing to predict it
+  from. So they do not belong in the "expected to disagree" set below; they belong in a
+  set of their own: **a difference here is not automatically real, and confirming it means
+  measuring the delta rather than trusting that the bytes moved.** A 32x32 patch at delta
+  10 is noise; the same image moving by a legible amount is not.
+
+All three of the *clocked* ones are the same lesson at different speeds, and the Ao vivo
+one is the sharpest: the
 Classificação pair moves only when something shipped, the estádio pair when Open-Meteo is
 re-read, while Ao vivo moves while you are looking at it. **Two refreshes of one build are
-expected to disagree on those six images.** Disagreeing on any of the other twelve is a real
-difference and worth reading.
+expected to disagree on those six images**, and *may* disagree on the two partida ones.
+Disagreeing on any of the other twelve is a real difference and worth reading.
 
-**Those same six captures' CAPTIONS rot too, and that is a different cost from the
-byte-noise above.** The list is framed as image reproducibility — two shoots of one
-build disagree, and that is a nuisance. A caption describing values no longer in the
-frame is a defect, and the two sit under one heading.
+**That "twelve" was wrong until this commit and is now right by arithmetic rather than by
+anyone fixing it**, which is the whole paragraph's own warning arriving from underneath.
+It is stale from the era of eighteen captures: against a set of twenty and six volatile
+ones it should have read *fourteen*, and 6 + 12 = 18 sat here unnoticed through every
+re-shoot since. At eight volatile it is correct again. **Count the directory.**
+
+**Those same six captures' CAPTIONS rot too — the six on clocks, and not the two partida
+ones, whose delta of 10 changes no value a caption could state — and that is a different
+cost from the byte-noise above.** The list is framed as image reproducibility — two
+shoots of one build disagree, and that is a nuisance. A caption describing values no
+longer in the frame is a defect, and the two sit under one heading.
 
 **A caption is true of its own image and stays true; it goes false at the re-shoot.**
 Alt text describes a picture, and the picture never changes once committed — so
