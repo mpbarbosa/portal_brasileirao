@@ -23,7 +23,7 @@ import type { ClubCode } from "@/src/types";
  * torcedores". Nothing here is a club's own statement, and presenting one as if
  * it were is the kind of wrong that looks right.
  *
- * **Coverage is deliberately PARTIAL — nine clubs of twenty — and grows by
+ * **Coverage is deliberately PARTIAL — ten clubs of twenty — and grows by
  * hand**, like `player-instagram.ts` and `broadcasts.ts`. A club with no entry
  * renders no link rather than a guessed one, and the survey below is what that
  * rule is worth: `r/<name>` is exactly the shape somebody would be tempted to
@@ -105,6 +105,21 @@ import type { ClubCode } from "@/src/types";
  * one. Confirm the entity before believing what it does not carry. Why the
  * weaker pair is acceptable is `Furacao`'s paragraph above and is not restated.
  *
+ * **`Cruzeiro` is that same rule met in its hard form, where Santos was the
+ * legible one.** subredditstats titles the sub *"Cruzeiro Esporte Clube"*,
+ * which reads like the question already settled — and that name belongs to at
+ * least **four** Brazilian clubs: ours in Belo Horizonte (`Q188277`), plus
+ * Cruzeiro Esporte Clube of Rondônia, of Paraíba, and Esporte Clube Cruzeiro of
+ * Arapiraca. It matches our club exactly *and* matches three others exactly, so
+ * the title is not an identification. Read the two cases together and the
+ * difference is the whole point: `r/santos` is the **wrong name** pointing at
+ * another sport's club, which a reader might notice, while this is the **right
+ * name on the wrong club**, which nobody could. `P3984` is absent from
+ * `Q188277` (read 2026-09-09Z) and would be absent from the other three too —
+ * an absence is only as good as the Q-id it was read off. What separated them
+ * was a human opening the sidebar, which is the one instrument this
+ * workstation does not have and the paragraph above explains why.
+ *
  * **subredditstats is FROZEN ~1000 days back, and the counts below are
  * therefore historical.** Proved by control rather than suspected: `r/AskReddit`,
  * 44 million members and busy every second, reports its last post **994 days**
@@ -115,13 +130,14 @@ import type { ClubCode } from "@/src/types";
  * bytes where a real one returns 65KB, so it is an instrument with a failing
  * branch rather than one that agrees with whatever it is handed.
  *
- * Sizes at that reading: `corinthians` 66.8k, `SaoPauloFC` 51.2k, `palmeiras`
- * 44.8k, `internacional` 21.5k, `gremio` 21.2k, `SantosFC` 16.8k, `vasco`
- * 15.0k, `CRFla` 95.9k,
- * `Furacao` 390. That last one is two orders of magnitude below the rest and is
- * still nothing like the five rejected below: **a small community is not an
- * empty room**, and the line those five fall the wrong side of is whether
- * anybody is there at all.
+ * Sizes at that reading: `CRFla` 95.9k, `corinthians` 66.8k, `SaoPauloFC`
+ * 51.2k, `palmeiras` 44.8k, `internacional` 21.5k, `gremio` 21.2k, `SantosFC`
+ * 16.8k, `vasco` 15.0k, `Cruzeiro` 2.8k, `Furacao` 390. **The smallest is two
+ * orders of magnitude below the largest and is still nothing like the five
+ * rejected below**: a small community is not an empty room, and the line those
+ * five fall the wrong side of is whether anybody is there at all. Named by
+ * size rather than by position, because the sentence used to say "that last
+ * one" and every club added after `Furacao` silently re-pointed it.
  *
  * **São Paulo is the one entry whose CASING had to be resolved.** Wikidata
  * carries `SaoPauloFC` and `saopaulofc` as two claims of equal rank; they are
@@ -130,7 +146,7 @@ import type { ClubCode } from "@/src/types";
  * verified against two controls (`crfla` -> `CRFla`, `askreddit` -> `AskReddit`)
  * before being believed.
  *
- * **THE ELEVEN CLUBS THAT ARE ABSENT, AND WHY — so nobody re-runs this.**
+ * **THE TEN CLUBS THAT ARE ABSENT, AND WHY — so nobody re-runs this.**
  * Four derived addresses would have been wrong in a way no reader could see,
  * and they are the whole argument against deriving a name from a club's name:
  *
@@ -163,14 +179,14 @@ import type { ClubCode } from "@/src/types";
  * members), Remo (5), Fluminense (1), Mirassol (1), Vitória (2). Linking a room
  * with one person in it is worse than the absence, which at least says nothing.
  *
- * Four clubs have a real, correctly-identified sub and only **one** source, so
- * they fail the bar rather than the sniff test, and are the obvious candidates
- * for the second: Cruzeiro (`Cruzeiro`, 2.8k), Botafogo (`botafogo`, 2.1k),
- * Atlético-MG (`Galo`, 1.9k), Chapecoense (326). Coritiba's `r/Coritiba` (298)
- * carries **no title and no description at all**, so nothing in it says which
- * Coritiba it is. Athletico-PR and Santos stood in this list and are now above,
- * which is what a second source looks like when it arrives: one line of the
- * survey moves and the rest stay exactly where they were.
+ * Three clubs have a real, correctly-identified sub and only **one** source,
+ * so they fail the bar rather than the sniff test, and are the obvious
+ * candidates for the second: Botafogo (`botafogo`, 2.1k), Atlético-MG (`Galo`,
+ * 1.9k), Chapecoense (326). Coritiba's `r/Coritiba` (298) carries **no title
+ * and no description at all**, so nothing in it says which Coritiba it is.
+ * Athletico-PR, Santos and Cruzeiro stood in this list and are now above, which
+ * is what a second source looks like when it arrives: one line of the survey
+ * moves and the rest stay exactly where they were.
  *
  * **Count the names rather than the number in front of them.** The sentence
  * above read "Four clubs" while listing six, from the commit that wrote it —
@@ -192,6 +208,7 @@ export const CLUB_REDDIT: Record<ClubCode, string> = {
   "1767": "gremio",
   "1768": "Furacao",
   "1769": "palmeiras",
+  "1771": "Cruzeiro",
   "1776": "SaoPauloFC",
   "1779": "corinthians",
   "1780": "vasco",
