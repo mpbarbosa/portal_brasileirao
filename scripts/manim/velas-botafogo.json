@@ -494,5 +494,31 @@
         "result": "E"
       }
     }
+  ],
+  "events": [
+    {
+      "id": "botafogo-anselmi",
+      "title": "Botafogo demite Martín Anselmi",
+      "date": "2026-03-22",
+      "round": 8,
+      "endRound": 8,
+      "label": "após a 8ª rodada · Botafogo demite Martín Anselmi (22 de março de 2026)"
+    },
+    {
+      "id": "paralisacao-copa-2026",
+      "title": "Brasileirão paralisado para a Copa do Mundo",
+      "date": "2026-06-01",
+      "round": 18,
+      "endRound": 18,
+      "label": "após a 18ª rodada · Brasileirão paralisado para a Copa do Mundo (1 de junho de 2026)"
+    },
+    {
+      "id": "botafogo-franclim",
+      "title": "Botafogo demite Franclim Carvalho",
+      "date": "2026-08-18",
+      "round": 23,
+      "endRound": 23,
+      "label": "após a 23ª rodada · Botafogo demite Franclim Carvalho (18 de agosto de 2026)"
+    }
   ]
 }

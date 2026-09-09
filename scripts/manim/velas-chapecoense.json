@@ -494,5 +494,31 @@
         "result": "V"
       }
     }
+  ],
+  "events": [
+    {
+      "id": "chapecoense-dal-pozzo",
+      "title": "Chapecoense demite Gilmar Dal Pozzo",
+      "date": "2026-04-03",
+      "round": 9,
+      "endRound": 9,
+      "label": "após a 9ª rodada · Chapecoense demite Gilmar Dal Pozzo (3 de abril de 2026)"
+    },
+    {
+      "id": "chapecoense-fabio-matias",
+      "title": "Chapecoense demite Fábio Matias",
+      "date": "2026-05-25",
+      "round": 17,
+      "endRound": 17,
+      "label": "após a 17ª rodada · Chapecoense demite Fábio Matias (25 de maio de 2026)"
+    },
+    {
+      "id": "paralisacao-copa-2026",
+      "title": "Brasileirão paralisado para a Copa do Mundo",
+      "date": "2026-06-01",
+      "round": 18,
+      "endRound": 18,
+      "label": "após a 18ª rodada · Brasileirão paralisado para a Copa do Mundo (1 de junho de 2026)"
+    }
   ]
 }

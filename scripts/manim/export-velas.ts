@@ -22,9 +22,10 @@
  * file, the same split every `*-core.ts` module draws.
  */
 import { CLUBS } from "@/src/data/clubs";
+import { SEASON_EVENTS } from "@/src/data/events";
 import { SEED_MATCHES, SNAPSHOT_DATE } from "@/src/data/matches";
 import { playsIn, resultFor } from "@/club-core";
-import { candlesFor, computeRankCandles, placesMoved } from "@/rank-candles-core";
+import { candlesFor, computeRankCandles, eventMarks, placesMoved } from "@/rank-candles-core";
 
 const [code = "1765"] = process.argv.slice(2);
 
@@ -33,6 +34,8 @@ if (!club) throw new Error(`unknown club code ${code}`);
 
 const candles = candlesFor(computeRankCandles(CLUBS, SEED_MATCHES), code);
 if (candles.length === 0) throw new Error(`no candles for ${club.shortName}`);
+
+const lastRound = Math.max(...candles.map((candle) => candle.round));
 
 const rounds = candles.map((candle) => {
   // The club plays at most one fixture per round; a postponed one leaves none,
@@ -83,12 +86,55 @@ const rounds = candles.map((candle) => {
   };
 });
 
+/**
+ * The ACONTECIMENTOS, joined to the rodadas by `eventMarks` — the same function
+ * the Painel draws from, so a rule in the video lands on the same boundary as
+ * the rule on the site.
+ *
+ * **The box is measured in RODADAS**, which is the whole reason it is written
+ * out here rather than copied from a component. `eventMarks` returns `x` and
+ * `width` in whatever user units its caller's box uses; the scene has its own
+ * geometry and converts a rodada to a scene x with `x_of()`. Handing it a box
+ * `lastRound` wide with no padding makes a band exactly 1 unit, so `x` is the
+ * rodada boundary itself and `width` is a count of rodadas — numbers the scene
+ * can read, instead of pixels from a drawing that is not this one.
+ *
+ * `x` and `width` are therefore NOT exported: `round` and `endRound` already
+ * carry them in those units, and two spellings of one fact is how a mark comes
+ * to sit a rodada away from the acontecimento it names.
+ *
+ * `height` and `clubCount` are unread by `eventMarks` — it is a horizontal join
+ * — and are filled from the drawing anyway rather than with zeroes, so nothing
+ * here asserts which fields that function happens to touch today.
+ */
+const events = eventMarks(SEASON_EVENTS, SEED_MATCHES, code, {
+  width: lastRound,
+  height: 1,
+  padding: 0,
+  clubCount: CLUBS.length,
+  lastRound,
+}).map(({ id, title, date, round, endRound, label }) => ({
+  id,
+  title,
+  date,
+  // The last rodada this club played on or before the day. The mark belongs on
+  // the boundary AFTER it — `velas.py` draws at `x_of(round + 0.5)` — because
+  // the acontecimento followed that rodada rather than happening inside it.
+  round,
+  endRound,
+  // The pt-BR sentence `eventMarks` writes, carried whole. The scene prints the
+  // `title` beside the rule and keeps this for the closing list, so the two
+  // cannot come to describe one acontecimento differently.
+  label,
+}));
+
 process.stdout.write(
   JSON.stringify(
     {
       snapshot: SNAPSHOT_DATE,
       club: { code, name: club.shortName, tla: club.tla },
       rounds,
+      events,
     },
     null,
     2,

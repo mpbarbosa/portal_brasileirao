@@ -500,5 +500,23 @@
         "result": "V"
       }
     }
+  ],
+  "events": [
+    {
+      "id": "flamengo-filipe-luis",
+      "title": "Flamengo demite Filipe Luís",
+      "date": "2026-03-03",
+      "round": 3,
+      "endRound": 3,
+      "label": "após a 3ª rodada · Flamengo demite Filipe Luís (3 de março de 2026)"
+    },
+    {
+      "id": "paralisacao-copa-2026",
+      "title": "Brasileirão paralisado para a Copa do Mundo",
+      "date": "2026-06-01",
+      "round": 18,
+      "endRound": 18,
+      "label": "após a 18ª rodada · Brasileirão paralisado para a Copa do Mundo (1 de junho de 2026)"
+    }
   ]
 }

@@ -74,6 +74,7 @@ from manim import (
     RIGHT,
     UP,
     Create,
+    DashedLine,
     FadeIn,
     FadeOut,
     GrowFromEdge,
@@ -347,6 +348,70 @@ RESULT_COLOUR = {"V": POSITIVE, "E": WARNING, "D": NEGATIVE}
 CLUBS_IN_DIVISION = 20
 NAMED_POSITIONS = (1, 4, 8, 12, 16, 20)
 
+# O ACONTECIMENTO: régua tracejada e o encaixe no topo dela, o MESMO par que o
+# `RankCandles.tsx` desenha no Painel — `stroke-ink-faint`, `strokeDasharray`
+# "3 3" e um retângulo de 3x10 na borda de cima. Copiado de propósito: quem viu
+# a linha no site tem de reconhecê-la aqui, e um segundo vocabulário para uma
+# só ideia é o que o `StatusChip` existe para impedir.
+#
+# `INK_FAINT` é régua e nunca texto — a regra que o `README.md` cataloga —, e
+# uma régua é marca gráfica, então o piso dela é 3 e não 4,5. O NOME do
+# acontecimento é texto e sai em `INK_SOFT`.
+EVENT_DASH = 0.13
+EVENT_NOTCH = 0.14
+# **A LARGURA é o que a codificação come, não a cor, e isto foi medido.** A 1,4
+# de traço a régua entregou **1,94** no quadro codificado contra o piso de 3 —
+# enquanto o encaixe, que é a MESMA cor com 4,5 de traço, entregou 3,16 no mesmo
+# quadro. O `INK_FAINT` dá 3,27 sobre o `SURFACE` no cálculo, então a perda toda
+# estava no traço fino e tracejado: é o mesmo efeito que o `README.md` cataloga
+# sobre um `0` sozinho medir 2,96 onde `50 pts` na mesma cor mede 3,36.
+#
+# Subir a cor não resolveria: `lift_to_floor` sobre o `INK_FAINT` devolve
+# `#5F6B67`, que é 3,46 — 6% acima, contra uma falta de 55%. O traço engrossa e
+# os tracinhos alongam; a cor passa pelo `lift_to_floor` mesmo assim, porque
+# custa nada e deixa a marca no piso de projeto em vez de 6% abaixo dele.
+#
+# Ela fica mais pesada que a grade de propósito: a grade é andaime e a régua
+# carrega sentido. Continua abaixo das velas, que são o assunto.
+#
+# **E a margem de 15% do resto do ficheiro não cobre esta marca**, o que também é
+# medida e não estimativa. Três renders em 1080p, medindo no quadro codificado:
+#
+#     traço 1,4 · cor 3,27 nominal -> 1,94
+#     traço 2,6 · cor 3,46 nominal -> 2,85
+#     traço 3,4 · cor 3,46 nominal -> 2,97   (o encaixe, a 4,5, dá 3,19)
+#     traço 2,8 · cor 3,89 nominal -> 2,87 e 3,08 nos dois painéis
+#     traço 3,4 · cor 3,89 nominal -> 3,89 e 3,97   <- o que está no vídeo
+#
+# As leituras acima são com a caixa do tamanho da marca (`--width 8`): a régua
+# tem 5px e a caixa por omissão tem 90, que mede sobretudo fundo — ver o
+# `README.md`, onde isso quase custou um traço mais grosso para corrigir um
+# defeito inexistente.
+#
+# Ou seja, a codificação devolve ~83% do nominal num tracejado fino, contra os
+# ~87% que o `ENCODED_MARGIN` assume. **Nenhum dos dois eixos sozinho fecha**:
+# engrossar tem retorno decrescente — 0,8 de traço comprou 0,12 — e só a cor
+# deixa a marca em cima do piso, com as duas amostras caindo dos dois lados
+# dele conforme a caixa pegue mais traço ou mais vão. Daí os dois juntos, e daí
+# a margem própria de 1,30 nesta linha e só nela: a marca é fina E tracejada,
+# que são duas perdas, e o número é o que o quadro entregou.
+EVENT_RULE_WIDTH = 3.4
+EVENT_RULE_MARGIN = 1.30
+EVENT_RULE_COLOUR = lift_to_floor(INK_FAINT, SURFACE, MARK_FLOOR * EVENT_RULE_MARGIN)
+EVENT_LABEL_SIZE = 13
+EVENT_LABEL_BUFF = 0.10
+# Quantos compassos o nome do acontecimento fica no ar. **Medido no render, não
+# escolhido:** a 3 o nome ficava opaco por ~1,0s e presente por ~2,0s contando
+# as duas transições, e o mais longo da temporada tem 43 caracteres — a
+# paralisação para a Copa, que aparece nos vinte clubes por ser `geral`. A 4 são
+# ~1,5s opaco e ~2,5s presente, que é a ordem de grandeza que o card do jogo já
+# ganha para ser lido.
+#
+# Um nome que chega enquanto outro ainda está no ar despacha o anterior na hora,
+# então este número é um teto e não uma promessa: a Chapecoense tem
+# acontecimentos na 17ª e na 18ª rodadas, e o primeiro deles fica um compasso.
+EVENT_LABEL_BEATS = 4
+
 # As duas caixas, em unidades de cena. Tudo dentro delas passa por `at_pos()` e
 # `at_pts()`; elas compartilham o eixo x de propósito, porque as duas leituras
 # são da mesma rodada e ler uma contra a outra é metade do desenho.
@@ -393,6 +458,18 @@ else:
     PLOT_LEFT, PLOT_RIGHT = -6.30, 1.30
     POS_TOP, POS_BOTTOM = 2.86, -0.30
     PTS_TOP, PTS_BOTTOM = -0.95, -2.35
+
+# Onde o nome do acontecimento é escrito: no meio da FOLGA ENTRE OS DOIS
+# PAINÉIS, que é a única faixa do desenho vazia para clube nenhum. Dentro das
+# molduras não há canto seguro — a campanha de um clube passa por qualquer um
+# deles, que é a falha que o `README.md` cataloga sobre a legenda do eixo em
+# cima do pavio da 1ª rodada. Aqui nada é desenhado, para clube nenhum, por
+# construção.
+#
+# A folga mede 0,65 unidades no 16:9 contra 0,34 nos dois cortes verticais, e
+# UMA linha de 13 cabe centrada nas duas. Que seja uma só é o que
+# `build_event_marks` garante, e não uma aposta sobre os dados.
+EVENT_LABEL_TOP = (POS_BOTTOM + PTS_TOP) / 2
 
 # O corpo acompanha o passo do eixo x: 0,19 sobre 7,6 unidades e 0,145 sobre
 # 5,85 é a mesma fração da rodada, então a folga entre duas velas vizinhas é a
@@ -496,10 +573,29 @@ class Velas(Scene):
         self.play(Create(frames), FadeIn(grid), FadeIn(labels), run_time=1.0)
         self.play(FadeIn(bands), FadeIn(band_captions), run_time=0.45)
 
-        key = self.build_key()
+        key = self.build_key(bool(payload.get("events")))
         # O crédito entra junto com a chave e fica o vídeo inteiro: um quadro
         # qualquer que alguém recorte tem de carregar de onde ele veio.
         self.play(FadeIn(key), FadeIn(self.build_credit()), run_time=0.45)
+
+        # As réguas dos acontecimentos, agrupadas pela rodada que elas seguem.
+        # Uma rodada 0 é um acontecimento anterior ao primeiro jogo do clube:
+        # ela não tem compasso para entrar e entra com a moldura, que é onde
+        # "antes de tudo isto" fica neste eixo. Nada nos dados de hoje chega
+        # lá — leia como a ausência de um caso especial, não como um caso que
+        # alguém já viu.
+        events = self.build_event_marks(payload.get("events", []))
+        # Uma rodada 0 é um acontecimento anterior ao primeiro jogo do clube:
+        # ela não tem compasso para entrar e entra com a moldura, que é onde
+        # "antes de tudo isto" fica neste eixo. Nada nos dados de hoje chega lá
+        # — leia como a ausência de um caso especial, não como um caso que
+        # alguém já viu.
+        # `eventMarks` grampeia a rodada em 0, então isto é no máximo uma —
+        # e o nome dela entra junto e sai pelo mesmo caminho que os outros, sem
+        # o que a régua apareceria anônima.
+        opening = [events.pop(number) for number in sorted(events) if number < 1]
+        if opening:
+            self.play(*[FadeIn(part) for mark in opening for part in mark], run_time=0.4)
 
         marker = Line(
             [self.at_pos(1, 0.5)[0], POS_TOP, 0],
@@ -514,6 +610,10 @@ class Velas(Scene):
         # pontos cresce e os dois cards são trocados pela rodada que descrevem.
         panels = None
         previous_total = 0
+        # O nome que está no ar, e até que compasso. Duas variáveis e não uma
+        # fila: por construção nunca há dois ao mesmo tempo.
+        naming = opening[-1][1] if opening else None
+        naming_until = EVENT_LABEL_BEATS
 
         for index, entry in enumerate(rounds):
             animations = []
@@ -539,11 +639,26 @@ class Velas(Scene):
 
             animations.append(marker.animate.move_to(self.marker_position(entry["round"])))
 
+            # O acontecimento entra no compasso da rodada que ele SEGUE. A régua
+            # fica; o nome sai alguns compassos depois, ou na hora, se outro
+            # acontecimento chegar antes disso — ver `build_event_marks`.
+            mark = events.get(entry["round"])
+            if mark is not None or (naming is not None and index >= naming_until):
+                if naming is not None:
+                    animations.append(FadeOut(naming))
+                    naming = None
+            if mark is not None:
+                rule, naming = mark
+                animations += [FadeIn(rule), FadeIn(naming)]
+                naming_until = index + EVENT_LABEL_BEATS
+
             self.play(*animations, run_time=0.52 if index else 0.8)
             previous_total = entry["totalPoints"]
 
         self.wait(0.4)
-        self.play(FadeOut(marker), run_time=0.3)
+        # O nome que sobrou sai junto com o cursor: o painel de fecho entra na
+        # área vazia do gráfico e não divide o quadro com uma frase solta.
+        self.play(FadeOut(marker), *([FadeOut(naming)] if naming else []), run_time=0.3)
         self.play(FadeIn(self.build_summary(club, rounds), shift=UP * 0.16), run_time=0.9)
         self.wait(2.8)
 
@@ -679,6 +794,108 @@ class Velas(Scene):
             captions.add(tag)
         return bands, captions
 
+    # ---- os acontecimentos --------------------------------------------------
+
+    def build_event_marks(self, events) -> dict[int, tuple[VGroup, Text]]:
+        """Os ACONTECIMENTOS, pela rodada que cada um segue.
+
+        O par régua-tracejada + encaixe é o do Painel do site, e a JUNÇÃO
+        também: o `eventMarks` do `rank-candles-core.ts` já decidiu em que
+        fronteira cada acontecimento cai, ancorado nos jogos DESTE clube e não
+        no calendário da rodada. Uma rodada não é um instante — as partidas dela
+        se espalham por três ou quatro dias —, e o Cruzeiro é exatamente o caso:
+        o Tite saiu na noite de domingo 15 de março, o jogo do Cruzeiro pela 6ª
+        foi às 20h30 daquele domingo e OUTRO jogo da 6ª foi disputado no dia 16.
+        "A última rodada encerrada" responde 5 e põe a régua antes de um jogo
+        que o clube já tinha feito sob ele; os jogos do próprio clube respondem
+        6.
+
+        **A régua fica na FRONTEIRA entre duas velas, nunca sobre uma** — x em
+        `round + 0.5`, a borda direita da banda. O acontecimento veio depois que
+        a rodada fechou, então sombrear a rodada seria reivindicar justamente a
+        que não está coberta por ele.
+
+        **A RÉGUA FICA E O NOME PASSA, e é essa divisão que faz o desenho
+        caber.** Os nomes são longos — 43 caracteres na paralisação — e a folga
+        entre os dois painéis tem 0,65 unidades no 16:9 e 0,34 nos dois cortes
+        verticais. Medido sobre os vinte clubes: dois deles têm TRÊS
+        acontecimentos e a Chapecoense tem dois em rodadas VIZINHAS, a 17ª e a
+        18ª, com 31 e 43 caracteres a uma banda de distância. Não existe
+        tipografia nem empilhamento que resolva isso num quadro — no primeiro
+        render as duas frases do Cruzeiro já se cruzavam e uma foi parar em cima
+        da moldura do painel de pontos.
+
+        O vídeo tem a saída que o desenho parado do site não tem: **tempo**. O
+        nome entra no compasso da rodada que o acontecimento segue, fica alguns
+        compassos e sai; a régua fica até o fim, explicada pela chave. Dois
+        nomes nunca coexistem, então a colisão deixa de ser um caso a tratar e
+        passa a ser impossível — para qualquer clube, em qualquer formato.
+
+        É também a leitura mais honesta: no site as duas réguas já estão lá
+        quando o leitor chega, e aqui a saída do técnico acontece DEPOIS da 6ª
+        rodada porque o vídeo ainda não passou por ela.
+        """
+        # **Agrupado pela rodada ANTES de desenhar, e não um `marks[round] = ...`
+        # por acontecimento.** Dois acontecimentos na mesma fronteira produzem a
+        # MESMA régua — mesmo x, mesmo encaixe —, e uma atribuição direta faria o
+        # segundo apagar o primeiro do dicionário sem que nada dissesse. Nenhum
+        # clube da temporada chega lá, mas o `eventMarks` ordena empates de dia
+        # explicitamente, então é um caso que a fonte prevê e este desenho
+        # precisa não perder. Os nomes vão numa frase só, separados por `·`, que
+        # é o que a banda de uma linha comporta.
+        grouped: dict[int, list[str]] = {}
+        for event in events:
+            grouped.setdefault(event["round"], []).append(event["title"])
+
+        marks: dict[int, tuple[VGroup, Text]] = {}
+
+        for round_number, titles in grouped.items():
+            x = self.x_of(round_number + 0.5)
+            rule = DashedLine(
+                [x, POS_TOP, 0],
+                [x, PTS_BOTTOM, 0],
+                dash_length=EVENT_DASH,
+                dashed_ratio=0.55,
+                stroke_color=EVENT_RULE_COLOUR,
+                stroke_width=EVENT_RULE_WIDTH,
+            )
+            # O encaixe: o retângulo de 3x10 do Painel, aqui um traço curto e
+            # grosso na borda de cima da moldura. Ele existe porque a régua
+            # tracejada some no meio da grade — que é tracejada também, na mesma
+            # cor, por ser a mesma classe de marca.
+            notch = Line(
+                [x, POS_TOP, 0],
+                [x, POS_TOP - EVENT_NOTCH, 0],
+                stroke_color=EVENT_RULE_COLOUR,
+                stroke_width=4.5,
+            )
+
+            caption = label(" · ".join(titles), EVENT_LABEL_SIZE, INK_SOFT)
+            # **AO LADO da régua e nunca centrado nela.** Centrado, o tracejado
+            # atravessa a frase que ele nomeia: medido no primeiro render, o
+            # traço passava por dentro de "demite" e de "paralisado". Nada
+            # falhava — a régua estava certa, o nome estava certo, e o par era
+            # ilegível.
+            #
+            # À direita por omissão, porque a régua abre o que vem DEPOIS dela e
+            # é para lá que a frase aponta. Se não couber até a borda, ela vira
+            # para a esquerda em vez de ser grampeada para dentro: grampear
+            # recentraliza o texto na régua pela porta dos fundos, que é a falha
+            # que esta linha existe para consertar.
+            left = x + EVENT_LABEL_BUFF
+            if left + caption.width > PLOT_RIGHT:
+                left = x - EVENT_LABEL_BUFF - caption.width
+            # E se não couber de nenhum dos dois lados — uma frase mais larga do
+            # que o gráfico —, ela encosta na borda esquerda em vez de sair do
+            # quadro. Nenhum título da temporada chega lá; é a ausência de um
+            # caso especial, não um caso que alguém já viu.
+            left = max(left, PLOT_LEFT)
+            caption.move_to([left + caption.width / 2, EVENT_LABEL_TOP, 0])
+
+            marks[round_number] = (VGroup(rule, notch), caption)
+
+        return marks
+
     # ---- as marcas ----------------------------------------------------------
 
     def build_candle(self, entry) -> VGroup:
@@ -774,7 +991,7 @@ class Velas(Scene):
             )
         return bar
 
-    def build_key(self) -> VGroup:
+    def build_key(self, has_events: bool) -> VGroup:
         """A chave da vela, e ela não é opcional.
 
         Uma vela é uma marca que quem lê uma tabela de futebol não encontra em
@@ -814,10 +1031,20 @@ class Velas(Scene):
                 label("pavio: melhor e pior posição durante ela", 13, INK_SOFT),
             ).arrange(DOWN, buff=0.14, aligned_edge=LEFT)
             key = VGroup(drawing, captions).arrange(RIGHT, buff=0.30)
-            key.add(
-                label("toco à esquerda: a posição de abertura", 13, INK_SOFT)
-                .next_to(key, DOWN, buff=0.16)
-            )
+            # **A régua entra NESTA linha e não numa quarta, e a amostra dela
+            # não vem.** Medido: uma linha a mais empurra o bloco 0,33 unidades,
+            # e no 4:5 ele tem 0,18 de folga até a fileira de números da rodada
+            # em cima e encosta no card da rodada embaixo — não há para onde
+            # crescer, e mover o bloco resolve uma ponta piorando a outra.
+            #
+            # É a mesma troca que as amostras V/E/D já fazem duas linhas acima,
+            # pelo mesmo motivo: no vertical a chave desenha o que não dá para
+            # dizer e diz o resto. "Tracejada" descreve a marca, e o desenho tem
+            # duas delas à vista enquanto a frase é lida.
+            tail = "toco à esquerda: a posição de abertura"
+            if has_events:
+                tail += "   ·   régua tracejada: um acontecimento"
+            key.add(label(tail, 13, INK_SOFT).next_to(key, DOWN, buff=0.16))
             key.move_to([(PLOT_LEFT + PLOT_RIGHT) / 2, -4.25 if REELS else -1.55, 0])
             return key
 
@@ -834,11 +1061,61 @@ class Velas(Scene):
             second.add(VGroup(swatch, word))
         second.arrange(RIGHT, buff=0.55)
 
-        key = VGroup(VGroup(drawing, legend).arrange(RIGHT, buff=0.3), second).arrange(
-            DOWN, buff=0.18
-        )
+        rows = [VGroup(drawing, legend).arrange(RIGHT, buff=0.3), second]
+        if has_events:
+            rows.append(self.event_key_row())
+        # **O bloco APERTA em vez de descer, e mover foi a primeira tentativa e
+        # estava errada.** A faixa entre a fileira de números da rodada e a
+        # borda de baixo mede 1,32 unidades; com duas fileiras o bloco mede 1,24
+        # — a amostra da vela sozinha tem 0,52 —, então ele já entra com 0,04 de
+        # cada lado. Uma terceira fileira não cabe de jeito nenhum a 0,18, e
+        # subir o bloco 0,16 só troca a ponta que estoura: medido no render, a
+        # legenda do corpo passou a atravessar o "20" e o "25" do eixo.
+        #
+        # A 0,11 o bloco mede 1,10 e sobra 0,11 em cima e embaixo, que é a única
+        # leitura em que as duas pontas ficam livres ao mesmo tempo.
+        key = VGroup(*rows).arrange(DOWN, buff=0.11 if has_events else 0.18)
         key.move_to([(PLOT_LEFT + PLOT_RIGHT) / 2, PTS_BOTTOM - 0.98, 0])
         return key
+
+    def event_key_row(self) -> VGroup:
+        """A entrada da RÉGUA na chave, e ela só aparece se houver alguma.
+
+        Uma chave que explica uma marca que o desenho não tem é pior do que
+        nenhuma: ela manda o leitor procurar. Nove dos vinte clubes não têm
+        acontecimento de clube nenhum — mas a paralisação para a Copa é `geral`
+        e toca os vinte, então na prática todo painel tem pelo menos uma. É a
+        `CandlesKey` do site chegando à mesma conclusão, e a condição fica de pé
+        porque ela é sobre o payload e não sobre a temporada.
+
+        A amostra é uma régua tracejada COM o encaixe, e não um traço liso: o
+        encaixe é metade do que distingue esta marca da grade, que é tracejada
+        na mesma cor por ser a mesma classe de marca.
+        """
+        # **A amostra tem a altura da LINHA, não a da régua que ela representa.**
+        # A 0,19 de meia-altura ela media 51px no quadro de 1080 contra os 20px
+        # do texto ao lado, e o bloco inteiro da chave é centrado pela fileira
+        # mais alta: medido, a última linha de tinta caía na 1076 de 1080 — três
+        # pixels da borda, com o tracejado já cortado ao meio por uma falha do
+        # traço. Nada falhava, e a chave estava saindo do quadro.
+        half, notch = 0.11, 0.08
+        sample = VGroup(
+            DashedLine(
+                [0, half, 0],
+                [0, -half, 0],
+                dash_length=EVENT_DASH,
+                dashed_ratio=0.55,
+                stroke_color=EVENT_RULE_COLOUR,
+                stroke_width=EVENT_RULE_WIDTH,
+            ),
+            Line([0, half, 0], [0, half - notch, 0], stroke_color=EVENT_RULE_COLOUR, stroke_width=4.5),
+        )
+        caption = label(
+            "régua tracejada: um acontecimento, entre as duas rodadas que ele separa",
+            13,
+            INK_SOFT,
+        )
+        return VGroup(sample, caption).arrange(RIGHT, buff=0.26)
 
     def build_credit(self) -> Text:
         """De onde o vídeo veio, embaixo da coluna de cards.

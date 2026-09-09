@@ -186,6 +186,13 @@ spreads over three or four days, so Cruzeiro's round 6 was played on 15 March
 and another club's on the 16th, and only the club's own match divides its
 season. On a **Comparação** each drawing carries its own club's réguas, and a
 *geral* one lands at the same place on both, since they share the frame.
+The **velas** animation in `scripts/manim/` carries the same mark under the same
+word, joined by the same `eventMarks` — so a régua in a video and a régua on the
+site are the same claim about the same fronteira. What differs is only what the
+medium allows: there the rule is permanent and the acontecimento's **name** is
+transient, entering on the rodada it follows and leaving a few compassos later,
+because a still frame has no room for three names at once and an animation has
+time instead.
 _Avoid_: "linha" unqualified (the **Campanha**'s sparkline is already a line,
 and the G4/Z4 are already "linhas tracejadas horizontais"), "marcador"/"marco"
 (they read as a point on the axis, where this is a division of it), "anotação"

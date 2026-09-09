@@ -684,6 +684,88 @@ viram outros arquivos quando a temporada anda — o antigo tem que sair do
   E confira que os clubes que JÁ cabiam saem byte a byte iguais, com a receita de
   `velas_orig.py` acima — é a única prova de que um re-render não mexe no painel
   de quem já estava bem.
+- **Os ACONTECIMENTOS entram como régua, e a régua fica enquanto o nome passa.**
+  A junção é a do `eventMarks` no `rank-candles-core.ts` — a mesma que o Painel
+  do site desenha —, então a fronteira é ancorada nos jogos **deste clube** e não
+  no calendário da rodada. O Cruzeiro é o caso que mostra a diferença: o Tite
+  saiu na noite de domingo 15 de março, o jogo do Cruzeiro pela 6ª foi às 20h30
+  daquele domingo e outro jogo da 6ª foi disputado no dia 16 — "a última rodada
+  encerrada" responde 5 e põe a régua antes de um jogo que o clube já tinha feito
+  sob ele.
+
+  **Só a régua é permanente. O nome entra no compasso da rodada que o
+  acontecimento segue e sai quatro compassos depois** — e é isso que faz o
+  desenho caber, não uma escolha de estilo. Medido sobre os vinte clubes: dois
+  têm TRÊS acontecimentos e a Chapecoense tem dois em rodadas **vizinhas**, a 17ª
+  e a 18ª, com 31 e 43 caracteres a uma banda de distância; a folga entre os dois
+  painéis, que é a única faixa vazia para clube nenhum, mede 0,65 unidades no
+  16:9 e **0,34** nos dois cortes verticais. Não há tipografia nem empilhamento
+  que resolva isso num quadro parado. Com um nome de cada vez a colisão deixa de
+  ser um caso a tratar e passa a ser impossível.
+
+  **O nome fica AO LADO da régua e nunca centrado nela**, à direita por omissão,
+  virando para a esquerda quando não cabe até a borda — e nunca grampeado para
+  dentro, que recentraliza o texto na régua pela porta dos fundos. No primeiro
+  render, centrado, o tracejado passava por dentro de "demite" e de "paralisado":
+  nada falhava, a régua estava certa, o nome estava certo, e o par era ilegível.
+
+  **A largura do traço é o que a codificação come, não a cor.** Quatro renders em
+  1080p, medindo no quadro codificado contra o piso de 3 de uma marca gráfica:
+
+  | traço | cor nominal | medido |
+  |---|---|---|
+  | 1,4 | 3,27 (`INK_FAINT` cru) | **1,94** |
+  | 2,6 | 3,46 | **2,85** |
+  | 3,4 | 3,46 | **2,97** |
+  | 2,8 | 3,89 (margem 1,30) | **2,87** e **3,08**, um painel cada |
+  | 3,4 | 3,89 (margem 1,30) | **3,89** e **3,97** — o que está no vídeo |
+
+  Nos três cortes, com a caixa do tamanho da marca: **3,89 / 3,97** no 16:9,
+  **4,13 / 4,05** no 4:5 e **3,88 / 3,91** no 9:16, contra o piso de 3.
+
+  O encaixe no topo, que é a MESMA cor com 4,5 de traço, deu **3,19** no mesmo
+  quadro — o que isola a causa. É o efeito que a tabela do `INK_FAINT` acima já
+  cataloga sobre um `0` sozinho medir 2,96 onde `50 pts` na mesma cor mede 3,36,
+  e ele é mais forte aqui porque um tracejado fino perde duas vezes.
+
+  **Nenhum dos dois eixos sozinho fecha, e é por isso que a marca leva os dois.**
+  Engrossar tem retorno decrescente (0,8 de traço comprou 0,12) e só subir a cor
+  deixa a marca EM CIMA do piso, com as duas amostras caindo de lados diferentes
+  dele conforme a caixa pegue mais traço ou mais vão — que é a leitura honesta de
+  2,87 e 3,08 no mesmo render. A margem própria de **1,30**, contra o
+  `ENCODED_MARGIN` de 1,15 do resto do ficheiro, é o que o quadro pediu: ele
+  devolve ~83% do nominal nesta marca e ~87% nas outras.
+
+  **Meça uma marca fina com uma caixa do tamanho dela, e passe o
+  `--frame-units` nos cortes verticais.** A régua tem 5px de largura e a caixa
+  do `measure-contrast.py` tem 90 por omissão, então ela mede sobretudo fundo e
+  reporta a média: a mesma régua deu **1,37** com a caixa larga e **4,05** com
+  `--width 8` no mesmo quadro. E o script assume o quadro do 16:9 (14,222x8),
+  então sem `--frame-units 8,10` (4:5) ou `8,14.2222222` (9:16) as coordenadas
+  de cena caem noutro sítio — as primeiras leituras aqui deram `NO INK`, que
+  pelo menos se anuncia, e depois um 3,06 sobre um glifo `#645f61` que não é
+  cor nenhuma desta paleta. **Foi essa incoerência que denunciou o
+  instrumento**, e não a leitura baixa: um perfil de pixels ao longo da régua
+  mostrou pico 117 no 16:9 contra 115 no 4:5, 5px nos dois — a marca era a
+  mesma e a caixa é que não era. Vale mais do que o número: quase custou um
+  traço mais grosso para corrigir um defeito que não existia.
+
+  **A chave só aparece se houver acontecimento**, e no 16:9 ela é uma terceira
+  fileira enquanto nos verticais é um pedaço da linha do toco. A faixa entre a
+  fileira de números da rodada e a borda de baixo mede 1,32 unidades e o bloco
+  com duas fileiras já mede 1,24 — a amostra da vela sozinha tem 0,52 —, então a
+  terceira fileira só cabe apertando o `buff` de 0,18 para 0,11. **Descer o bloco
+  foi a primeira tentativa e estava errada**: subi-lo 0,16 só troca a ponta que
+  estoura, e a legenda do corpo passou a atravessar o "20" e o "25" do eixo. No
+  4:5 não cabe de jeito nenhum — 0,18 de folga em cima e o card encostado
+  embaixo —, e por isso lá a régua entra na linha do toco sem amostra, que é a
+  mesma troca que as amostras V/E/D já fazem naquele corte.
+
+  E a amostra na chave tem a altura da **linha**, não a da régua que representa:
+  a 0,19 de meia-altura ela media 51px contra os 20px do texto ao lado, e como o
+  bloco é centrado pela fileira mais alta, a última linha de tinta caía na 1076
+  de 1080 — três pixels da borda, com o tracejado já cortado ao meio.
+
 - **A barra de pontos é o TOTAL e a tampa clara é o ganho.** Pontos são
   cumulativos, então o eixo começa no zero e a altura é a temporada inteira. Uma
   derrota não acrescenta nada e a barra não cresce — leitura honesta, e é

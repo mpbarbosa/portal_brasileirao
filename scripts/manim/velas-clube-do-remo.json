@@ -500,5 +500,23 @@
         "result": "D"
       }
     }
+  ],
+  "events": [
+    {
+      "id": "remo-osorio",
+      "title": "Remo demite Juan Carlos Osorio",
+      "date": "2026-03-01",
+      "round": 4,
+      "endRound": 4,
+      "label": "após a 4ª rodada · Remo demite Juan Carlos Osorio (1 de março de 2026)"
+    },
+    {
+      "id": "paralisacao-copa-2026",
+      "title": "Brasileirão paralisado para a Copa do Mundo",
+      "date": "2026-06-01",
+      "round": 18,
+      "endRound": 18,
+      "label": "após a 18ª rodada · Brasileirão paralisado para a Copa do Mundo (1 de junho de 2026)"
+    }
   ]
 }

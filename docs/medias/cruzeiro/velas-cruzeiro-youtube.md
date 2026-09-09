@@ -32,6 +32,12 @@ Texto que acompanha [`velas-cruzeiro.mp4`](velas-cruzeiro.mp4)
 >
 > **O saldo e o aproveitamento vêm do `computeStandings`**, a mesma função que
 > monta a tabela do site, e não somados à mão a partir do JSON.
+>
+> **As duas réguas tracejadas saem do `events` do mesmo JSON**, pelo
+> `eventMarks` que o Painel do site já desenha — a saída de Tite após a 6ª
+> rodada e a paralisação para a Copa após a 18ª. Elas também envelhecem: um
+> acontecimento acrescentado ao `src/data/events.ts` aparece na próxima
+> reexportação, e a descrição abaixo nomeia duas.
 
 ---
 
@@ -70,6 +76,8 @@ Uma ressalva que a maioria dos clubes não precisa dar, e que aqui vale a favor:
 
 O preço está nas 8 derrotas em 26 jogos, o número alto de quem começou mal, e a barra de pontos embaixo muda de inclinação e não volta.
 
+As duas réguas tracejadas que cruzam o desenho são acontecimentos de fora de campo, e cada uma cai na FRONTEIRA entre duas rodadas em vez de sobre uma: a saída de Tite depois da 6ª rodada, e a paralisação para a Copa do Mundo depois da 18ª. A primeira é a explicação da escada — o clube estava em 19º quando ela aparece.
+
 O eixo mostra a divisão inteira, 1º no topo e 20º embaixo, com as faixas do G4 e do Z4 ao fundo — é isso que permite comparar este vídeo com o de qualquer outro clube.
 
 Nenhum número foi digitado à mão. A animação lê a mesma função que calcula as velas no Portal Brasileirão, então um valor errado aqui estaria errado no site também.
@@ -91,7 +99,7 @@ carregar o vídeo sozinha.
 Para Short, ou onde a descrição longa não couber.
 
 ```
-A campanha do Cruzeiro em velas: o corpo vai da posição de abertura à de fechamento da rodada, o pavio mostra até onde o clube subiu e desceu dentro dela, e a barra de baixo são os pontos. Do 20º ao 6º: 14 posições de subida. Dados até a 26ª: 42 pts, 12V 6E 8D, saldo +1.
+A campanha do Cruzeiro em velas: o corpo vai da posição de abertura à de fechamento da rodada, o pavio mostra até onde o clube subiu e desceu dentro dela, e a barra de baixo são os pontos. As réguas tracejadas marcam a saída de Tite e a parada para a Copa. Do 20º ao 6º: 14 posições de subida. Dados até a 26ª: 42 pts, 12V 6E 8D, saldo +1.
 
 Animação em Manim, dados do Portal Brasileirão: https://brasileirao.mpbarbosa.com
 Código: https://github.com/mpbarbosa/portal_brasileirao
@@ -102,8 +110,12 @@ Código: https://github.com/mpbarbosa/portal_brasileirao
 ## Tags
 
 Medido sobre o bloco como está — separado por `, `, que é o que se cola.
-280 caracteres, 20 tags.
+286 caracteres, 21 tags.
 
 ```
-brasileirão, brasileirao 2026, campeonato brasileiro, série a, serie a, cruzeiro, raposa, cabuloso, cec, campanha do cruzeiro, campanha rodada a rodada, candlestick, gráfico de velas, futebol brasileiro, visualização de dados, dataviz, manim, python, portal brasileirão, rodada 26
+brasileirão, brasileirao 2026, campeonato brasileiro, série a, serie a, cruzeiro, raposa, cabuloso, cec, campanha do cruzeiro, campanha rodada a rodada, candlestick, gráfico de velas, futebol brasileiro, visualização de dados, dataviz, manim, python, portal brasileirão, rodada 26, tite
 ```
+
+`tite` entra porque o vídeo agora **marca** a saída dele, e é assim que o
+torcedor busca esse recorte da temporada. As outras duas réguas do vocabulário
+— "acontecimento", "régua" — ficam de fora: descrevem a marca e não o assunto.
