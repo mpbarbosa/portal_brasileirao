@@ -37,7 +37,7 @@ import type { PlayerPost } from "@/src/types";
  * looked at. It is also why there is no thumbnail: a preview image would have to
  * come from Instagram's CDN, which is the copy this file refuses.
  *
- * ## Checking an entry, which is by hand and cannot be otherwise
+ * ## Checking an entry: by hand to add it, by browser to keep it
  *
  * `player-instagram.ts` records why there is no `check-player-instagram`:
  * Instagram serves the **identical JavaScript shell** for a real handle and an
@@ -48,18 +48,27 @@ import type { PlayerPost } from "@/src/types";
  * same title, same everything that matters. A script reporting "200 OK" would
  * confirm nothing while looking exactly like the ones that confirm something.
  *
- * **That paragraph said "and there cannot be one", and that was too strong.**
- * What no **HTTP** client can check, a **browser** can: the `/embed/captioned/`
- * page renders its content client-side, so `get_page_text` on it returns the
- * account, the verified badge, the follower count, the like count and the whole
- * caption. Every entry below was read that way. So a `check-player-posts`
- * driving headless Chromium — which this repo already carries for Playwright
- * and `screenshot.ts` — is possible and would earn its place, because it can
- * see the one failure this file cannot otherwise detect: **a post that has been
- * deleted.** Measured while curating this pass — `DbPDTdToXCN` came back from a
- * search with a plausible title and answers *"The link to this photo or video
- * may be broken, or the post may have been removed."* A dead entry renders as
- * an empty white frame and nothing here would have said so.
+ * **That paragraph said "and there cannot be one", and that was too strong.
+ * `npm run check-player-posts` now exists.** What no **HTTP** client can check,
+ * a **browser** can: the `/embed/captioned/` page renders its content
+ * client-side, so a real engine reads the account, the verified badge, the
+ * follower count and the whole caption. `scripts/check-player-posts.ts` drives
+ * the `chromium` this repo already carries for Playwright and
+ * `screenshot.ts` — so no dependency was added — and checks that the post still
+ * exists, that the publisher is still the recorded `account`, and that the
+ * account is still verified.
+ *
+ * **The one it exists for is the deleted post**, which nothing else here can
+ * see: a dead entry renders as an empty white frame inside the card, the facade
+ * still reads correctly and the link still looks right. `DbPDTdToXCN` came back
+ * from a search during this file's second pass with a plausible title and
+ * answers *"The link to this photo or video may be broken, or the post may have
+ * been removed."* It is the checker's own mutation case.
+ *
+ * **The checker does not re-check the two curation rules below.** A post does
+ * not become old, and a player leaving the division is already refused by
+ * `tests/player-posts.test.ts` with no network at all. What can rot is
+ * somebody else's server, which is the only thing it asks about.
  *
  * ## The bar an entry has to clear, and what it rejected
  *

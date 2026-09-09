@@ -26,6 +26,7 @@
     "check-hymns": "tsx scripts/check-hymns.ts",
     "check-player-wikipedia": "tsx scripts/check-player-wikipedia.ts",
     "check-player-photos": "tsx scripts/check-player-photos.ts",
+    "check-player-posts": "tsx scripts/check-player-posts.ts",
     "check-stadium-coordinates": "tsx scripts/check-stadium-coordinates.ts",
     "check-stadium-photos": "tsx scripts/check-stadium-photos.ts",
     "find-highlights": "tsx scripts/find-highlights.ts",
