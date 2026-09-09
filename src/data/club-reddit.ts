@@ -23,7 +23,7 @@ import type { ClubCode } from "@/src/types";
  * torcedores". Nothing here is a club's own statement, and presenting one as if
  * it were is the kind of wrong that looks right.
  *
- * **Coverage is deliberately PARTIAL — ten clubs of twenty — and grows by
+ * **Coverage is deliberately PARTIAL — eleven clubs of twenty — and grows by
  * hand**, like `player-instagram.ts` and `broadcasts.ts`. A club with no entry
  * renders no link rather than a guessed one, and the survey below is what that
  * rule is worth: `r/<name>` is exactly the shape somebody would be tempted to
@@ -120,6 +120,47 @@ import type { ClubCode } from "@/src/types";
  * was a human opening the sidebar, which is the one instrument this
  * workstation does not have and the paragraph above explains why.
  *
+ * **`botafogo` is the worst name of the four and the cleanest split of the
+ * labour, and it also corrects how this file reads subredditstats.** The
+ * survey above talks about "title and description" as though they were one
+ * thing. They are two fields, and which one carries the identification moves
+ * from sub to sub — measured with controls on 2026-09-09Z:
+ *
+ *   Cruzeiro   title "Cruzeiro Esporte Clube"  desc "Discussões sobre o Cruzeiro Esporte Clube"
+ *   Galo       title "Clube Atlético Mineiro"  desc "Clube Atlético Mineiro, uma vez até morrer!"
+ *   botafogo   title "/r/botafogo"             desc "Subreddit da torcida botafoguense! Junte-se a nós!"
+ *   Coritiba   (no field)                      (no field)
+ *
+ * `r/botafogo` takes its own **address** as its title, which identifies
+ * nothing, so a survey reading titles alone would have rejected it — and would
+ * have accepted `Cruzeiro`, whose title is the *ambiguous* one. Read the wrong
+ * field and this file's two hardest cases come out backwards.
+ *
+ * The description is what resolves it, and it resolves the half that matters:
+ * **"torcida" kills the neighbourhood.** This is the worst name in the series —
+ * asking Wikidata for "Botafogo" returns the **bairro of Rio de Janeiro
+ * first**, then an administrative region, then a different football club, then
+ * our own club's basketball team — and the club is named *after* the
+ * neighbourhood, so `r/bahia`'s and `r/vitoria`'s trap is live here in its
+ * strongest form. A bairro has no torcida; that one word settles it.
+ *
+ * What the description does **not** say is *which* Botafogo, since a
+ * botafoguense of Ribeirão Preto or of João Pessoa is one too. That half is the
+ * maintainer's read. So the two sources each do one half of a single
+ * identification — the machine says what kind of thing it is, the human says
+ * which one — which is the clearest statement of this bar the file has.
+ *
+ * `P3984` is absent from **`Q80958`** (ours: Rio, founded 1904,
+ * `botafogo.com.br`), read 2026-09-09Z, and confirming *that* Q-id rather than
+ * a homonym is the rule two paragraphs up, met where it bites hardest.
+ *
+ * The casing is taken from the address as given, and **the method that settled
+ * `SaoPauloFC` is no longer available** — it read the canonical name back off
+ * Reddit, which now returns the subject-free shell. Two independent lowercase
+ * readings (the pasted URL and subredditstats' own `"/r/botafogo"`) are what
+ * there is; Reddit resolves case-insensitively, so nothing here is broken by
+ * being wrong about it, which is why it ships rather than waiting.
+ *
  * **subredditstats is FROZEN ~1000 days back, and the counts below are
  * therefore historical.** Proved by control rather than suspected: `r/AskReddit`,
  * 44 million members and busy every second, reports its last post **994 days**
@@ -132,12 +173,13 @@ import type { ClubCode } from "@/src/types";
  *
  * Sizes at that reading: `CRFla` 95.9k, `corinthians` 66.8k, `SaoPauloFC`
  * 51.2k, `palmeiras` 44.8k, `internacional` 21.5k, `gremio` 21.2k, `SantosFC`
- * 16.8k, `vasco` 15.0k, `Cruzeiro` 2.8k, `Furacao` 390. **The smallest is two
- * orders of magnitude below the largest and is still nothing like the five
- * rejected below**: a small community is not an empty room, and the line those
- * five fall the wrong side of is whether anybody is there at all. Named by
- * size rather than by position, because the sentence used to say "that last
- * one" and every club added after `Furacao` silently re-pointed it.
+ * 16.8k, `vasco` 15.0k, `Cruzeiro` 2.8k, `botafogo` 2.1k, `Furacao` 390.
+ * **The smallest is two orders of magnitude below the largest and is still
+ * nothing like the five rejected below**: a small community is not an empty
+ * room, and the line those five fall the wrong side of is whether anybody is
+ * there at all. Named by size rather than by position, because the sentence
+ * used to say "that last one" and every club added after `Furacao` silently
+ * re-pointed it.
  *
  * **São Paulo is the one entry whose CASING had to be resolved.** Wikidata
  * carries `SaoPauloFC` and `saopaulofc` as two claims of equal rank; they are
@@ -146,7 +188,7 @@ import type { ClubCode } from "@/src/types";
  * verified against two controls (`crfla` -> `CRFla`, `askreddit` -> `AskReddit`)
  * before being believed.
  *
- * **THE TEN CLUBS THAT ARE ABSENT, AND WHY — so nobody re-runs this.**
+ * **THE NINE CLUBS THAT ARE ABSENT, AND WHY — so nobody re-runs this.**
  * Four derived addresses would have been wrong in a way no reader could see,
  * and they are the whole argument against deriving a name from a club's name:
  *
@@ -179,14 +221,15 @@ import type { ClubCode } from "@/src/types";
  * members), Remo (5), Fluminense (1), Mirassol (1), Vitória (2). Linking a room
  * with one person in it is worse than the absence, which at least says nothing.
  *
- * Three clubs have a real, correctly-identified sub and only **one** source,
- * so they fail the bar rather than the sniff test, and are the obvious
- * candidates for the second: Botafogo (`botafogo`, 2.1k), Atlético-MG (`Galo`,
- * 1.9k), Chapecoense (326). Coritiba's `r/Coritiba` (298) carries **no title
- * and no description at all**, so nothing in it says which Coritiba it is.
- * Athletico-PR, Santos and Cruzeiro stood in this list and are now above, which
- * is what a second source looks like when it arrives: one line of the survey
- * moves and the rest stay exactly where they were.
+ * Two clubs have a real, correctly-identified sub and only **one** source, so
+ * they fail the bar rather than the sniff test, and are the obvious candidates
+ * for the second: Atlético-MG (`Galo`, 1.9k), Chapecoense (326). Coritiba's
+ * `r/Coritiba` (298) carries **no title and no description at all** — checked
+ * again 2026-09-09Z rather than carried forward, and it holds — so nothing in
+ * it says which Coritiba it is. Athletico-PR, Santos, Cruzeiro and Botafogo
+ * stood in this list and are now above, which is what a second source looks
+ * like when it arrives: one line of the survey moves and the rest stay exactly
+ * where they were.
  *
  * **Count the names rather than the number in front of them.** The sentence
  * above read "Four clubs" while listing six, from the commit that wrote it —
@@ -208,6 +251,7 @@ export const CLUB_REDDIT: Record<ClubCode, string> = {
   "1767": "gremio",
   "1768": "Furacao",
   "1769": "palmeiras",
+  "1770": "botafogo",
   "1771": "Cruzeiro",
   "1776": "SaoPauloFC",
   "1779": "corinthians",
