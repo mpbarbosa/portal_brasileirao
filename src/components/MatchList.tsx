@@ -1,3 +1,4 @@
+import { kickoffLabel } from "@/src/components/kickoff";
 import { formatRoute } from "@/route-core";
 import { BroadcasterMark } from "@/src/components/BroadcasterMark";
 import { CLUBS_BY_CODE } from "@/src/data/clubs";
@@ -6,19 +7,6 @@ import { LINK_UNDERLINE } from "@/src/components/interaction";
 import { StatusChip } from "@/src/components/StatusChip";
 import { Surface } from "@/src/components/Surface";
 import type { Club, ClubCode, Match } from "@/src/types";
-
-const kickoffLabel = (kickoff: string): string => {
-  const parsed = new Date(kickoff);
-  if (Number.isNaN(parsed.getTime())) return "Horário a definir";
-
-  return parsed.toLocaleString("pt-BR", {
-    weekday: "short",
-    day: "2-digit",
-    month: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-};
 
 /**
  * Resolve a club code to the club itself, or to nothing.
@@ -141,7 +129,7 @@ export function MatchList({
                 <FixtureSides match={match} clubs={clubs} />
               </p>
             )}
-            <p className="mt-0.5 text-body-small text-ink-faint">{kickoffLabel(match.kickoff)}</p>
+            <p className="mt-0.5 text-body-small text-ink-faint">{kickoffLabel(match)}</p>
             {note?.(match) && (
               <p className="mt-0.5 text-body-small text-ink-muted">{note(match)}</p>
             )}

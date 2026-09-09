@@ -777,6 +777,25 @@ export interface Match {
    */
   referees?: Referee[];
   /**
+   * Set when the provider gave this fixture's **round** a date and no time, so the page
+   * prints the day alone.
+   *
+   * Derived by `withKickoffPrecision`, never stored and never from upstream — `Goal.playerId`'s
+   * arrangement, and for its reason: a regenerated seed picks the rule up with no resync.
+   *
+   * **The evidence is the ROUND's and not the fixture's**, which is why this is a field rather
+   * than a comparison at the call site. Midnight UTC is 21:00 in Brasília, one of the commonest
+   * kickoff times there, so a lone `00:00Z` is usually a real fixture — measured on the 2026
+   * season, ten of the 256 matches already played kick off at exactly `00:00Z`, each the only
+   * such fixture in a round carrying five to seven distinct hours. A round nobody has scheduled
+   * looks nothing like that: all ten sit on the same midnight, and no scheduled round in the
+   * season has all ten at any hour at all.
+   *
+   * Absent means the time stands, which is the direction to fail in: a missing flag prints what
+   * upstream said, where a wrongly set one deletes a fact.
+   */
+  kickoffDateOnly?: boolean;
+  /**
    * When the provider last touched *this record*, verbatim from football-data.
    *
    * It exists because upstream regresses individual records: the same URL, four

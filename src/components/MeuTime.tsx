@@ -1,3 +1,4 @@
+import { kickoffLabel } from "@/src/components/kickoff";
 import { useMemo } from "react";
 
 import { followLabel, type FollowState } from "@/preferences-core";
@@ -92,20 +93,6 @@ export function FollowButton({
 const isPlainClick = (event: React.MouseEvent): boolean =>
   !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey && event.button === 0;
 
-/** The kickoff in the reader's own zone, as the fixture lists write it. */
-const kickoffLabel = (kickoff: string): string => {
-  const parsed = new Date(kickoff);
-  if (Number.isNaN(parsed.getTime())) return "Horário a definir";
-
-  return parsed.toLocaleString("pt-BR", {
-    weekday: "short",
-    day: "2-digit",
-    month: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-};
-
 /**
  * The **Próximo jogo do meu time** line inside the strip.
  *
@@ -171,7 +158,7 @@ function ProximoJogo({
    */
   const spoken = playing
     ? `Bola rolando: ${clubName(match.homeCode)} ${fixtureScore(match)} ${clubName(match.awayCode)}, ${where}.`
-    : `Próximo jogo: contra o ${opponent}, ${where}, ${kickoffLabel(match.kickoff)}. ${countdownLabel(match.kickoff, now)}.`;
+    : `Próximo jogo: contra o ${opponent}, ${where}, ${kickoffLabel(match)}. ${countdownLabel(match.kickoff, now)}.`;
 
   const body = (
     <>
@@ -193,7 +180,7 @@ function ProximoJogo({
         <FixtureSides match={match} clubs={clubs} />
       </span>
       <span className="block truncate text-body-small text-ink-faint">
-        {playing ? where : `${kickoffLabel(match.kickoff)} · ${where}`}
+        {playing ? where : `${kickoffLabel(match)} · ${where}`}
       </span>
       {!playing && (
         <span className="block truncate text-body-small text-ink-muted">

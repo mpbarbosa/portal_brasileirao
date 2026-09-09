@@ -6,6 +6,7 @@ import {
   currentRound,
   matchesForRound,
   mergeByFreshness,
+  withKickoffPrecision,
   withPlayedStatus,
   roundsOf,
   isAwaitingResult,
@@ -644,4 +645,85 @@ test("it repairs a cold start, where no held record exists", () => {
   const merged = mergeByFreshness([], incoming, Date.parse("2026-09-07T19:09:44Z"));
 
   assert.equal(merged[0].status, "FINISHED");
+});
+
+/* `withKickoffPrecision` — the rule is the ROUND's, and every case below exists because the
+   per-fixture version of it passes the first and fails the second.  */
+
+const midnight = (id: string, round: number) =>
+  match({ id, round, kickoff: `2026-10-${id}T00:00:00Z` });
+
+test("a round whose every fixture sits on midnight UTC states no time", () => {
+  const marked = withKickoffPrecision([midnight("24", 33), midnight("25", 33)]);
+
+  assert.deepEqual(
+    marked.map((m) => m.kickoffDateOnly),
+    [true, true],
+  );
+});
+
+test("a lone midnight fixture in a timed round keeps its time — it is 21:00 in Brasília", () => {
+  // The regression the round rule exists to prevent. Measured on the 2026 season: ten *played*
+  // matches kick off at exactly 00:00Z, each the only one in a round carrying five to seven
+  // distinct hours. Suppressing per fixture would delete all ten, one of them inside a committed
+  // screenshot.
+  const marked = withKickoffPrecision([
+    midnight("24", 8),
+    match({ id: "b", round: 8, kickoff: "2026-10-24T19:00:00Z" }),
+  ]);
+
+  assert.deepEqual(
+    marked.map((m) => m.kickoffDateOnly),
+    [undefined, undefined],
+  );
+});
+
+test("absent rather than false, so an unmarked fixture is returned untouched", () => {
+  const one = match({ id: "a", round: 8, kickoff: "2026-10-24T19:00:00Z" });
+
+  assert.deepEqual(withKickoffPrecision([one]), [one]);
+  assert.ok(!("kickoffDateOnly" in withKickoffPrecision([one])[0]));
+});
+
+test("a round of one is never marked: one fixture is no evidence either way", () => {
+  // `/api/matches?round=` and every client-side filter hand this function a subset.
+  assert.equal(withKickoffPrecision([midnight("24", 33)])[0].kickoffDateOnly, undefined);
+});
+
+test("rounds are judged one at a time, never the list as a whole", () => {
+  const marked = withKickoffPrecision([
+    midnight("24", 33),
+    midnight("25", 33),
+    midnight("26", 8),
+    match({ id: "timed", round: 8, kickoff: "2026-10-26T19:00:00Z" }),
+  ]);
+
+  assert.deepEqual(
+    marked.map((m) => m.kickoffDateOnly),
+    [true, true, undefined, undefined],
+  );
+});
+
+test("a second past midnight is a time, and is not suppressed", () => {
+  const marked = withKickoffPrecision([
+    match({ id: "a", round: 33, kickoff: "2026-10-24T00:00:01Z" }),
+    midnight("25", 33),
+  ]);
+
+  assert.deepEqual(
+    marked.map((m) => m.kickoffDateOnly),
+    [undefined, undefined],
+  );
+});
+
+test("an unreadable kickoff stops the round being marked — cannot tell is not yes", () => {
+  const marked = withKickoffPrecision([
+    match({ id: "a", round: 33, kickoff: "nao-e-uma-data" }),
+    midnight("25", 33),
+  ]);
+
+  assert.deepEqual(
+    marked.map((m) => m.kickoffDateOnly),
+    [undefined, undefined],
+  );
 });

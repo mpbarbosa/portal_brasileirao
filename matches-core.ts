@@ -214,6 +214,60 @@ const stampOf = (match: Match): number => {
  * unparseable kickoff counts as *not* past, the direction `retractsResult`
  * already fails in.
  */
+/** Exactly midnight UTC — the instant a date with no time parses to. */
+const atMidnightUtc = (kickoff: string): boolean => {
+  const at = new Date(kickoff);
+  if (Number.isNaN(at.getTime())) return false;
+  return (
+    at.getUTCHours() === 0 &&
+    at.getUTCMinutes() === 0 &&
+    at.getUTCSeconds() === 0 &&
+    at.getUTCMilliseconds() === 0
+  );
+};
+
+/**
+ * Mark the fixtures whose round the provider has dated but not timed, so the page can print the
+ * day without inventing an hour.
+ *
+ * football-data serves a round it holds no times for as every fixture at exactly `00:00Z`. Read
+ * in Brasília that is **21:00 the previous day** — a precise, plausible, entirely fictional
+ * kickoff, which is `live-core.ts`'s refusal to print a match minute met on a larger surface: 80
+ * fixtures of the 2026 season, the whole of rounds 31 to 38.
+ *
+ * **The test is the round's and not the fixture's, and that is the whole decision.** 21:00 BRT is
+ * one of the commonest kickoff times in Brazil, so `00:00Z` alone is more often a real fixture
+ * than a placeholder. Measured rather than assumed: 18 fixtures outside rounds 31-38 sit at
+ * `00:00Z`, ten of them already played, and each is the only such fixture in a round carrying
+ * five to seven distinct hours. Suppressing per fixture would delete those ten kickoffs — São
+ * Paulo x Palmeiras of round 8 among them — to repair a round nobody has scheduled yet.
+ *
+ * So a round qualifies only when **every** one of its fixtures sits on that midnight, which no
+ * scheduled round in the season does at any hour.
+ *
+ * **A round of one is never marked**, because a single fixture is no evidence either way and the
+ * honest answer to "cannot tell" is to print what upstream said. Not hypothetical tidiness:
+ * `/api/matches?round=` and every client-side filter hand this a subset.
+ *
+ * Reads no clock, unlike its neighbours here — what the provider stated does not change with the
+ * hour.
+ */
+export const withKickoffPrecision = (matches: Match[]): Match[] => {
+  const dateOnly = new Map<number, boolean>();
+  const counted = new Map<number, number>();
+  for (const match of matches) {
+    const held = dateOnly.get(match.round);
+    dateOnly.set(match.round, held !== false && atMidnightUtc(match.kickoff));
+    counted.set(match.round, (counted.get(match.round) ?? 0) + 1);
+  }
+
+  return matches.map((match) =>
+    dateOnly.get(match.round) && (counted.get(match.round) ?? 0) > 1
+      ? { ...match, kickoffDateOnly: true }
+      : match,
+  );
+};
+
 export const withPlayedStatus = (matches: Match[], now: number): Match[] =>
   matches.map((match) => {
     if (match.status !== "SCHEDULED") return match;
