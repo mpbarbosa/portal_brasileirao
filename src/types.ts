@@ -499,6 +499,84 @@ export interface Lineup {
   subs?: Substitution[];
 }
 
+/**
+ * How one player is **stored** in `src/data/escalacoes.ts`, and nowhere else.
+ *
+ * `LineupPlayer` above is the shape the app reads; this is the shape the file
+ * on disk carries, and `decodeLineups` in `escalacao-core.ts` is the only thing
+ * that crosses between them. The split is `ScoutHistoryEntry`'s — a storage
+ * encoding earns its keep in a generated file nobody reads and must not leak
+ * into the components, which is why every consumer of `ESCALACOES` still sees
+ * `Lineup[]` and none of them changed when this landed.
+ *
+ * **Measured before choosing, on the real 252 fixtures**: as objects the file
+ * is 791.7 KB over 18 017 lines and 84.9 KB gzipped; as these tuples it is
+ * 316.5 KB over 258 lines and 40.4 KB gzipped. Converting the same data to
+ * JSON instead — the obvious other answer — gives 645.6 KB and 69.8 KB, so the
+ * encoding beats the format change roughly two to one on both axes and keeps
+ * the typecheck that JSON gives up. `resolveJsonModule` types by inference, so
+ * `keeper?: true` widens to `boolean` and the only way past it is a cast.
+ *
+ * `flags` is a bitfield because the two booleans are absent far more often than
+ * present — 5501 of 11 548 players are neither keeper nor starter — so the
+ * cheapest thing to write for half the sheet is nothing at all. Two separate
+ * `0 | 1` fields were measured too and cost 33.3 KB more raw for no gain in
+ * legibility, since a reader of this file is reading a wall of tuples either
+ * way and the meaning lives here.
+ */
+export type LineupPlayerEntry = readonly [
+  name: string,
+  /** The shirt, as a string, for `LineupPlayer.shirt`'s reason. */
+  shirt: string,
+  /**
+   * 1 = goleiro, 2 = titular, 3 = both; **absent means neither**, which is a
+   * bench outfielder and the commonest row in the file.
+   *
+   * Absent rather than `0` follows `LineupPlayer`'s own rule: `keeper` and
+   * `starter` are present-or-absent because twelve `false`s on a 23-man sheet
+   * is the word "false" twelve times to say nothing.
+   */
+  flags?: LineupPlayerFlags,
+];
+
+/** The inhabited values of `LineupPlayerEntry`'s bitfield; 0 is written as absence. */
+export type LineupPlayerFlags = 1 | 2 | 3;
+
+/**
+ * How one substitution is **stored**. `Substitution` is what the app reads.
+ *
+ * **The two shirts are positional and never shuffled left.** Every row in the
+ * committed file carries both or neither — of 2417 recorded substitutions 89
+ * carry the pair, 2328 carry nothing and none carries one, which
+ * `tests/escalacao-core.test.ts` asserts off the real file, because it is a
+ * property of `attachSubstitutions` resolving a row through both numbers or
+ * refusing the fixture. But `Substitution` declares the two independently
+ * optional, so a lone shirt is constructible, and the encoding writes it into
+ * its own slot beside an empty string rather than into the first free one. The
+ * compact alternative encodes a lone `offShirt` as an `onShirt` and prints the
+ * wrong player as having come on — a plausible lie, from a branch no fixture
+ * in the data can reach and no test over that data can see.
+ */
+export type SubstitutionEntry = readonly [
+  on: string,
+  off: string,
+  minute: string,
+  onShirt?: string,
+  offShirt?: string,
+];
+
+/**
+ * How one club's sheet is **stored**. `Lineup` is what the app reads.
+ *
+ * `subs` is a trailing optional for the reason it is optional on `Lineup`:
+ * absent is "the súmula was not read", never "this club made no changes".
+ */
+export type LineupEntry = readonly [
+  clubCode: ClubCode,
+  players: LineupPlayerEntry[],
+  subs?: SubstitutionEntry[],
+];
+
 export interface Goal {
   /**
    * The club the goal **counts for**, as one of our codes.

@@ -2380,6 +2380,46 @@ churn; what it buys is that the two files cannot disagree about which matches
 they cover. Coverage grows a window at a time, like `broadcasts.ts`, and a
 missing match means "not synced", never "no lineup published".
 
+**It is stored as TUPLES, one fixture per line, and it is the second file here
+that is** — `club-scouts-history.ts`' encoding, applied to the biggest file in
+`src/data/` rather than to the one with the tightest bundle budget.
+`decodeLineups` and `encodeLineups` in `escalacao-core.ts` are the only things
+that cross between the stored shape and `Lineup`, so **nothing outside the data
+file sees a tuple**: no component, no core module and no test changed when the
+encoding did, which is the property that made the change safe to make at all.
+
+**Measured before choosing, and the measurement is the argument.** As objects
+the file was **791.7 KB over 18 017 lines, 84.9 KB gzipped**; as tuples it is
+**318.3 KB over 293 lines, 41.2 KB gzipped**, and `dist/server.cjs` — which
+rsyncs to the host on every release — went **1228.9 KB to 792.8 KB**. The
+obvious other answer was **JSON**, and it loses on both axes: the same data
+serialises to 645.6 KB raw and 69.8 KB gzipped, roughly half the saving, while
+giving up the typecheck. `resolveJsonModule` types by inference, so
+`keeper?: true` widens to `boolean`, the assignment to `Lineup[]` is refused
+outright, and the only way past it is a cast that validates nothing. That is
+the general rule for `src/data/`: **the lever is the encoding, not the format.**
+
+**The re-encoding was verified as lossless rather than eyeballed**, which
+matters because a plausible team sheet is indistinguishable from a correct one:
+the file was re-rendered from the data already on disk — no CBF request, no new
+reading — and the decoded result compared against a capture of the old one, key
+order normalised, md5 `8a17ff3e…` on both sides. Five mutations of the
+encoder were confirmed red, and **one of them passed first**: promoting a lone
+shirt into the pair is unobservable from the committed data, because every one
+of the 2417 substitutions carries both shirts or neither. That branch is
+reachable from the *type* and not from the *data*, so the test for it is
+hand-written and `tests/escalacao-core.test.ts` says so at the case.
+
+**The renderer is `scripts/escalacoes-file.ts` rather than a heredoc inside the
+sync**, and that is the one structural thing to know before editing either. The
+committed file has to be byte-identical to what the next real sync writes, or a
+resync rewrites all 293 lines and nobody can tell a formatting change from a
+data change; the file is idempotent under re-render, checked. It is also how the
+writer stops enumerating fields by hand — which is how adding
+`Substitution.onShirt` to the type once left the sync emitting the three fields
+it already knew, so a resync produced a file identical to the one it replaced
+and the new field looked broken rather than unwritten.
+
 `src/data/coach-overrides.ts` corrects the **técnico** where the provider names
 the wrong person — the sibling of `player-overrides.ts`, keyed by club code, and
 existing for the same reason: `clubs.ts` and `squads.ts` are generated, so a
@@ -3076,8 +3116,10 @@ aggregate field for field, and unless some counter strictly increases across the
 season — the second is the aliasing guard, because `accumulate` mutates one
 object per club and pushing it by reference yields twenty-five identical rows
 that satisfy every other check.
-**It is tuple-encoded and it is the only curated file here that is**, which is a
-measurement rather than a taste: on a real `vite build`, one object per rodada
+**It is tuple-encoded**, which is a measurement rather than a taste — and it was
+the first file here to be, which is why the argument lives at this paragraph;
+`escalacoes.ts` took the same encoding later and for a larger saving, on a file
+that never reaches the client at all. On a real `vite build`, one object per rodada
 costs **+9.3 kB gzip** on the client bundle against **+5.7 kB** for tuples, for
 760 rows nobody reads. `ScoutHistoryEntry` states the field order and `tsc`
 holds the arity. **The rodada is the array index**, never a stored field.
