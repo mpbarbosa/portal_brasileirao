@@ -2,6 +2,8 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import {
+  decodeGoals,
+  encodeGoals,
   goalKindLabel,
   goalKindOf,
   goalLabel,
@@ -14,6 +16,7 @@ import {
   withGoals,
 } from "@/goals-core";
 import type { CbfRegistro, SideMap } from "@/goals-core";
+import { GOALS } from "@/src/data/goals";
 import type { Goal, Match, Squad } from "@/src/types";
 
 const SIDES: SideMap = {
@@ -577,4 +580,95 @@ test("the two new qualifiers read in pt-BR", () => {
     goalLabel({ clubCode: "1769", scorer: "Camutanga", kind: "own" }),
     "Camutanga (contra)",
   );
+});
+
+// ---------------------------------------------------------------------------
+// The storage encoding — `GoalEntry` in `src/types.ts` has the measurements
+// ---------------------------------------------------------------------------
+
+/** Every shape a stored row can take, including the two that never occur. */
+const encodable = (): Goal[] => [
+  { clubCode: "1769", scorer: "Lopez", minute: "26'" },
+  { clubCode: "1766", scorer: "Khellven", kind: "own", minute: "73'" },
+  { clubCode: "1772", scorer: "Walter Clar", kind: "penalty", minute: "15'" },
+  { clubCode: "1770", scorer: "Artur", kind: "freekick", minute: "90+2'" },
+  { clubCode: "1769", scorer: "Sem minuto" },
+  { clubCode: "1769", scorer: "Kind sem minuto", kind: "penalty" },
+];
+
+test("the goal encoding round-trips exactly", () => {
+  const before = encodable();
+  assert.deepStrictEqual(decodeGoals(encodeGoals(before)), before);
+});
+
+test("an ordinary goal is three fields and an absent kind is absent, not undefined", () => {
+  // `deepStrictEqual` above covers this; it is asserted on its own because the
+  // tempting simplification — always emitting four fields, or decoding to
+  // `kind: undefined` — type-checks, renders identically, and changes every
+  // object in the file.
+  const [ordinary] = decodeGoals(encodeGoals(encodable()));
+  assert.deepStrictEqual(Object.keys(ordinary), ["clubCode", "scorer", "minute"]);
+  assert.equal("kind" in ordinary, false);
+  assert.deepEqual(encodeGoals(encodable())[0], ["1769", "Lopez", "26'"]);
+});
+
+test("a goal with neither minute nor kind is two fields", () => {
+  assert.deepEqual(encodeGoals(encodable())[4], ["1769", "Sem minuto"]);
+});
+
+test("a kind with no minute pads rather than shifting left into the minute", () => {
+  /*
+   * No goal in the committed file is in this state — all 83 rows carrying a
+   * kind also carry a minute — so this case is unreachable from the data and
+   * **an assertion over the data cannot see it**. It is written by hand for the
+   * reason `SubstitutionEntry`'s lone shirt is: the compact encoder puts
+   * `"penalty"` where the clock goes, and the match page then prints a kind as
+   * the minute of the goal.
+   */
+  const row = encodeGoals(encodable())[5];
+  assert.deepEqual(row, ["1769", "Kind sem minuto", "", "penalty"]);
+  const [back] = decodeGoals([row]);
+  assert.equal(back.kind, "penalty");
+  assert.equal("minute" in back, false);
+});
+
+test("every committed match decodes into goals that reconcile with each other", () => {
+  // The end-to-end gate on the encoding: a swapped or shifted field shows up
+  // as a club code that is not a club, or a scorer that is empty. Confirmed
+  // red by exchanging clubCode and scorer in the decoder.
+  const ids = Object.keys(GOALS);
+  assert.ok(ids.length > 200, `expected the season, got ${ids.length} matches`);
+  let goals = 0;
+  let kinds = 0;
+  for (const id of ids) {
+    for (const goal of GOALS[id]) {
+      goals++;
+      assert.match(goal.clubCode, /^\d+$/, `${id}: clubCode ${JSON.stringify(goal.clubCode)}`);
+      assert.notEqual(goal.scorer, "", `${id}: empty scorer`);
+      if (goal.minute !== undefined) {
+        assert.match(goal.minute, /^\d+(\+\d+)?'$/, `${id}: minute ${JSON.stringify(goal.minute)}`);
+      }
+      if (goal.kind !== undefined) {
+        kinds++;
+        assert.ok(
+          ["penalty", "own", "freekick"].includes(goal.kind),
+          `${id}: kind ${JSON.stringify(goal.kind)}`,
+        );
+      }
+    }
+  }
+  // Both populations non-empty, so neither branch passes vacuously.
+  assert.ok(goals > 600, `expected the season's goals, got ${goals}`);
+  assert.ok(kinds > 0, "no goal carries a kind — the kind field is not being decoded");
+});
+
+test("no committed goal stores a playerId", () => {
+  // `Goal.playerId` is derived at serve time by `withGoals`, never stored, and
+  // `GoalEntry` has no slot for it. Storing one would commit a resolution that
+  // a squad correction should be free to change.
+  for (const [id, list] of Object.entries(GOALS)) {
+    for (const goal of list) {
+      assert.equal("playerId" in goal, false, `${id} stores a playerId`);
+    }
+  }
 });

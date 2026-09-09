@@ -15,7 +15,7 @@
  * `scripts/commons-api.ts`.
  */
 import { matchPlayerByName } from "@/player-core";
-import type { ClubCode, Goal, GoalKind, Match, Player, Squad } from "@/src/types";
+import type { ClubCode, Goal, GoalEntry, GoalKind, Match, Player, Squad } from "@/src/types";
 
 /**
  * One row of CBF's `registros` array, which carries **goals and cards in the
@@ -234,6 +234,52 @@ export const goalsReconcile = (
   goals.filter((goal) => goal.clubCode === homeCode).length === homeGoals &&
   goals.filter((goal) => goal.clubCode === awayCode).length === awayGoals &&
   goals.length === homeGoals + awayGoals;
+
+/**
+ * The storage encoding of `src/data/goals.ts`, both directions.
+ *
+ * **One decision read twice, so it lives in one place** — `sync-goals.ts`
+ * writes through `encodeGoals` and the app reads through `decodeGoals`, which
+ * is the arrangement `decodeLineups`/`encodeLineups` already takes for the
+ * sibling file the same run writes. A field added to one is then a compile
+ * error in the other rather than a value that quietly stops being written.
+ *
+ * The encoding itself, and what it was measured against, is on `GoalEntry` in
+ * `src/types.ts`.
+ *
+ * **Hand-editing this file is still supported and the header still says so.**
+ * It now means writing a tuple — `["1769", "Lopez", "26'"]`, with an optional
+ * fourth field of `"penalty" | "own" | "freekick"` — which is a real cost, so
+ * it is written down at both ends rather than left to be discovered. Worth
+ * knowing before weighing it: every commit that has ever touched
+ * `src/data/goals.ts` is a sync, so the capability is genuine and has not yet
+ * been used. It matters for the case it was written for — the sync REFUSES a
+ * match whose `resultado` it does not know, and a person filling one in by hand
+ * is exactly how those 25 refusals were meant to be recoverable.
+ */
+export const decodeGoals = (entries: GoalEntry[]): Goal[] =>
+  entries.map(([clubCode, scorer, minute, kind]) => ({
+    clubCode,
+    scorer,
+    // Present-or-absent, never `kind: undefined` — the round trip has to land
+    // back on the object the file used to hold, and a key holding `undefined`
+    // is not the same object as one without the key to a deep comparison.
+    ...(kind ? { kind } : {}),
+    ...(minute ? { minute } : {}),
+  }));
+
+/** The inverse of `decodeGoals`, used by `scripts/sync-goals.ts` to write the file. */
+export const encodeGoals = (goals: Goal[]): GoalEntry[] =>
+  goals.map((goal) => {
+    // `minute` sits before `kind`, so a goal carrying a kind and no minute —
+    // none today, but the type allows it — pads rather than shifting the kind
+    // left into the minute's slot. That is `SubstitutionEntry`'s rule: a
+    // positional field never moves, because a `kind` read back as a minute
+    // would print "own" where the clock goes.
+    if (goal.kind) return [goal.clubCode, goal.scorer, goal.minute ?? "", goal.kind];
+    if (goal.minute) return [goal.clubCode, goal.scorer, goal.minute];
+    return [goal.clubCode, goal.scorer];
+  });
 
 /**
  * Attach synced goals to the matches whose own scoreline still agrees with them.

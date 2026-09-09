@@ -660,6 +660,51 @@ export interface Goal {
  */
 export type GoalKind = "penalty" | "own" | "freekick";
 
+/**
+ * How one goal is **stored** in `src/data/goals.ts`, and nowhere else.
+ *
+ * `Goal` above is the shape the app reads; this is the shape on disk, and
+ * `decodeGoals` in `goals-core.ts` is the only thing that crosses between them.
+ * The split is `LineupEntry`'s, one file over, written by the same
+ * `sync-goals` run — having one of the two in tuples and the other in objects
+ * would be an inconsistency inside a single command.
+ *
+ * **Measured on the real 238 matches**: as objects the file is 47.5 KB over
+ * 1171 lines; as tuples it is 22.2 KB over 244. Read the gzipped figures before
+ * quoting the first pair as the win, because they are the honest ones and they
+ * are much smaller — **6.4 KB against 5.3 KB**, a saving of about a kilobyte.
+ * This file is a twentieth the size of `escalacoes.ts` and the compression
+ * ratio is what makes the two so different; the reason to do it anyway is the
+ * **1171 lines becoming 244**, which is what a person reads in a diff when a
+ * rodada lands, and the consistency with the sibling file.
+ *
+ * **`minute` precedes `kind` because a tuple cannot skip a middle element.**
+ * 665 of 669 goals carry a minute and 83 carry a kind, so this order leaves the
+ * common row three fields long; the reverse order would pad nearly every row
+ * with an empty string to reach the minute.
+ *
+ * **`kind` stays the string union rather than becoming an integer**, which is
+ * the opposite of `LineupPlayerEntry`'s bitfield and was measured rather than
+ * assumed: numbering the three kinds saves 0.6 KB raw and **nothing at all**
+ * gzipped, over 83 rows. So it buys no bytes and costs a lookup table and a
+ * vocabulary `tsc` can no longer check against `GoalKind` directly. The
+ * bitfield earns its keep at 11 548 players; three kinds do not.
+ *
+ * **`playerId` is absent by construction and must stay absent.** It is derived
+ * at serve time by `withGoals` reading the scorer against the elencos — never
+ * stored — so adding it here would commit a resolution that a squad correction
+ * should have been free to change.
+ */
+export type GoalEntry = readonly [
+  /** The club the goal **counts for**, which for an own goal is not the scorer's. */
+  clubCode: ClubCode,
+  scorer: string,
+  /** `"12'"`, `"45+1'"` — a rendered label, for `Goal.minute`'s reason. Absent where the súmula was not read. */
+  minute?: string,
+  /** Absent for an ordinary goal, which is 586 of the 669 recorded. */
+  kind?: GoalKind,
+];
+
 export interface Match {
   id: string;
   round: number;
