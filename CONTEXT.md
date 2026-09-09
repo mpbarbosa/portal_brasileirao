@@ -560,15 +560,25 @@ the attribution.
 The `account` is whoever published the post and is often not the player — the
 first entry is Athletico-PR's post about Viveros, with Viveros as a collaborator —
 so the card names it on every entry.
+**An entry has to clear two rules**, and they were written after a curating pass
+rejected **9 of 11** candidates: the account is the club's own or the player's
+own **and verified**, never merely whoever posted something true; and the post is
+from the **current season**. Both are read off the embed, which renders the badge,
+the follower count and the caption to a logged-out browser even though `curl`
+sees only the login shell.
 _Avoid_: storing the pasted permalink (it carries the share token), an `<img>`
 from `cdninstagram.com` (the copyright the **Foto do jogador** entry refuses, and
 the addresses expire), a thumbnail preview (same copy, by another road), mounting
 the frame on render, framing `/p/<code>/` or `/embed/` rather than
 `/embed/captioned/`, a fixed frame height (a post may be 1:1, 4:5, 1.91:1, a
 carrossel or carry a long caption), copying Instagram's caption into the summary,
-calling the section "Fotos" (a post may be a video or a carrossel), and — above
-all — writing down a shortcode nobody has opened: Instagram serves the identical
-shell for a real post and an invented one, so nothing can check it for you.
+calling the section "Fotos" (a post may be a video or a carrossel), taking a post
+from a fan page, a news outlet, a broadcaster's advert or a gossip account (all
+four were offered and refused), trusting a search result's title (it names the
+post, never the account that published it, and a **dead** shortcode looks the
+same), and — above all — writing down a shortcode nobody has opened: `curl` sees
+the identical login shell for a real post and an invented one, so only a browser
+can tell you anything.
 
 **Verbete do jogador**:
 A player's article on the Portuguese Wikipedia, shown on the **Card do jogador**

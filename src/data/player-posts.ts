@@ -48,6 +48,41 @@ import type { PlayerPost } from "@/src/types";
  * same title, same everything that matters. A script reporting "200 OK" would
  * confirm nothing while looking exactly like the ones that confirm something.
  *
+ * **That paragraph said "and there cannot be one", and that was too strong.**
+ * What no **HTTP** client can check, a **browser** can: the `/embed/captioned/`
+ * page renders its content client-side, so `get_page_text` on it returns the
+ * account, the verified badge, the follower count, the like count and the whole
+ * caption. Every entry below was read that way. So a `check-player-posts`
+ * driving headless Chromium — which this repo already carries for Playwright
+ * and `screenshot.ts` — is possible and would earn its place, because it can
+ * see the one failure this file cannot otherwise detect: **a post that has been
+ * deleted.** Measured while curating this pass — `DbPDTdToXCN` came back from a
+ * search with a plausible title and answers *"The link to this photo or video
+ * may be broken, or the post may have been removed."* A dead entry renders as
+ * an empty white frame and nothing here would have said so.
+ *
+ * ## The bar an entry has to clear, and what it rejected
+ *
+ * Two rules, both applied to every entry below:
+ *
+ * - **The account is the club's own or the player's own, and verified.** Not
+ *   "whoever posted something true". This is checkable from the embed itself —
+ *   the badge, the follower count, and the handle matching `club-instagram.ts`
+ *   or `player-instagram.ts`.
+ * - **Current season.** Instagram prints a bare "April 2" for a post from the
+ *   current year and "April 27, 2025" for an older one, which is the tell; the
+ *   canonical `/p/<code>/` page shows it where the embed does not.
+ *
+ * **9 of 11 candidates were rejected**, which is a far worse rate than the
+ * 13-of-70 `player-instagram.ts` records for handles, and the reasons are why
+ * a search result's *title* is worth nothing here: a broadcaster's advertisement
+ * (`premiere`, ending "#BoraDePremiere"), two fan pages, a news outlet
+ * (`lancedigital`), a **rival club's** analysis account posting a Palmeiras goal
+ * (`analisacrvg`, a Vasco page), a **gossip** account whose Neymar caption is
+ * about a poker tournament, one **dead** shortcode, and two posts from the right
+ * club's own verified account that were simply a year old. Every one of those
+ * reads as a reasonable match in a list of search results.
+ *
  * So every entry is **opened in a browser**, and `summary` is written from that
  * viewing — `PlayerPhoto.alt`'s rule. Do not paste a link from a search result.
  *
@@ -75,6 +110,30 @@ export const PLAYER_POSTS: Record<string, PlayerPost[]> = {
       account: "athleticoparanaense",
       summary:
         "O Athletico anuncia Viveros como jogador do mês de agosto, com nota 7,28 do Sofascore.",
+    },
+  ],
+
+  // Yuri Alberto · Corinthians. Opened 2026-09-09: `corinthians`, verificada,
+  // 16M seguidores, 14 de maio — o gol que garantiu a classificação. A conta
+  // dele, `yurialberto`, está em `player-instagram.ts`; quem publicou foi o
+  // clube.
+  "1325": [
+    {
+      code: "DYV1l9tB11y",
+      account: "corinthians",
+      summary: "O gol de Yuri Alberto que sacramentou a classificação do Corinthians.",
+    },
+  ],
+
+  // José Manuel López (Flaco) · Palmeiras. Opened 2026-09-09: `palmeiras`,
+  // verificada, 7,7M seguidores, 2 de abril. Marco de carreira e não um lance,
+  // que é o tipo de post que envelhece melhor num cartão de jogador.
+  "170698": [
+    {
+      code: "DWpfDycoBoq",
+      account: "palmeiras",
+      summary:
+        "O Palmeiras celebra as 200 partidas de Flaco López pelo clube — o 5º estrangeiro a chegar lá.",
     },
   ],
 };
