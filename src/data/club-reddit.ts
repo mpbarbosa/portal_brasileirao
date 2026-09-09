@@ -23,7 +23,7 @@ import type { ClubCode } from "@/src/types";
  * torcedores". Nothing here is a club's own statement, and presenting one as if
  * it were is the kind of wrong that looks right.
  *
- * **Coverage is deliberately PARTIAL — eight clubs of twenty — and grows by
+ * **Coverage is deliberately PARTIAL — nine clubs of twenty — and grows by
  * hand**, like `player-instagram.ts` and `broadcasts.ts`. A club with no entry
  * renders no link rather than a guessed one, and the survey below is what that
  * rule is worth: `r/<name>` is exactly the shape somebody would be tempted to
@@ -34,12 +34,30 @@ import type { ClubCode } from "@/src/types";
  * rather than of diligence** — the same asymmetry `player-sofascore.ts` and
  * `player-instagram.ts` already record, and the reason it is written here is so
  * nobody re-investigates. Measured 2026-09-07 from this workstation: Reddit
- * answers **403 with an HTML body** to a scripted request, `about.json` and a
+ * answered **403 with an HTML body** to a scripted request, `about.json` and a
  * browser User-Agent included, `old.reddit.com` redirects, and the in-app
- * browser refuses `reddit.com` by policy. A checker could therefore read
- * nothing, and one that reported a 403 as a pass would confirm nothing while
- * looking exactly like the checkers that confirm something. Open the sub in a
- * real browser before adding a line, the way Sofascore's ids were opened.
+ * browser refuses `reddit.com` by policy. The harness's own `WebFetch` refuses
+ * the host outright — tried 2026-09-09Z, when `SantosFC` was written.
+ *
+ * **Re-read 2026-09-09Z, `www.reddit.com/r/<name>/` no longer 403s. It answers
+ * 200 with an 8.4 KB empty shell, and that is WORSE than the refusal it
+ * replaced**, because a 200 reads as access. Known-negative, which is the only
+ * thing that settles it: the file's own control `CRFla` (8405 bytes), the real
+ * `SantosFC` (8408) and a name nobody has registered (8421) return the *same*
+ * shell — `<title>Reddit</title>`, no Open Graph, the sizes differing only by
+ * the length of the name in the URL. **The probe has no failing branch**, so a
+ * checker written against it would pass an invented sub, which is the shape
+ * `CLAUDE.md` names for the piped `git log`. `about.json` still 403s.
+ *
+ * A checker could therefore read nothing, and one reporting a 403 — or, now, a
+ * 200 — as a pass would confirm nothing while looking exactly like the checkers
+ * that confirm something. Note which of the two is live, because they are not
+ * equally dangerous: a refusal is at least legible as a refusal, where the
+ * shell is a success code carrying no subject. Open the sub in a real browser
+ * before adding a line, the way Sofascore's ids were opened.
+ *
+ * The 200 was found by the session adding `r/Cruzeiro`; the readings above are
+ * this workstation's own, re-measured here rather than relayed.
  *
  * **THE BAR IS TWO INDEPENDENT SOURCES NAMING THE SAME SUB**, which is
  * `player-overrides.ts`' rule for a position and `coach-overrides.ts`' for a
@@ -75,6 +93,18 @@ import type { ClubCode } from "@/src/types";
  * — and a person who follows the club is the source least able to make that
  * mistake.
  *
+ * **`SantosFC` is the second of that kind, and it is recorded here rather
+ * than argued again.** The maintainer supplied the address, subredditstats
+ * identifies the sub correctly at 16.8k, and
+ * **Wikidata carries no `P3984` for `Q80955`** — read 2026-09-09Z, before the
+ * entry was written, on an entity whose own claims say Santos Futebol Clube,
+ * founded 1912, of Santos SP. That last clause is not ceremony. Asking
+ * Wikidata for "Santos FC" returns **five** items, among them the women's club
+ * *of the same city* and a Burkinabé one, so an absence read off the wrong
+ * Q-id is an absence about somebody else — and it would read exactly like this
+ * one. Confirm the entity before believing what it does not carry. Why the
+ * weaker pair is acceptable is `Furacao`'s paragraph above and is not restated.
+ *
  * **subredditstats is FROZEN ~1000 days back, and the counts below are
  * therefore historical.** Proved by control rather than suspected: `r/AskReddit`,
  * 44 million members and busy every second, reports its last post **994 days**
@@ -86,7 +116,8 @@ import type { ClubCode } from "@/src/types";
  * branch rather than one that agrees with whatever it is handed.
  *
  * Sizes at that reading: `corinthians` 66.8k, `SaoPauloFC` 51.2k, `palmeiras`
- * 44.8k, `internacional` 21.5k, `gremio` 21.2k, `vasco` 15.0k, `CRFla` 95.9k,
+ * 44.8k, `internacional` 21.5k, `gremio` 21.2k, `SantosFC` 16.8k, `vasco`
+ * 15.0k, `CRFla` 95.9k,
  * `Furacao` 390. That last one is two orders of magnitude below the rest and is
  * still nothing like the five rejected below: **a small community is not an
  * empty room**, and the line those five fall the wrong side of is whether
@@ -99,7 +130,7 @@ import type { ClubCode } from "@/src/types";
  * verified against two controls (`crfla` -> `CRFla`, `askreddit` -> `AskReddit`)
  * before being believed.
  *
- * **THE TWELVE CLUBS THAT ARE ABSENT, AND WHY — so nobody re-runs this.**
+ * **THE ELEVEN CLUBS THAT ARE ABSENT, AND WHY — so nobody re-runs this.**
  * Four derived addresses would have been wrong in a way no reader could see,
  * and they are the whole argument against deriving a name from a club's name:
  *
@@ -119,26 +150,36 @@ import type { ClubCode } from "@/src/types";
  * the shape a reader cannot see and a compiler cannot either. `CAP` is also the
  * abbreviation this file's own header refuses to key on.
  *
+ * **`r/santos` is now that same line and a worse one**, Santos having arrived
+ * as `r/SantosFC`. Two of the four derivations therefore sit beside a right
+ * answer that exists, which is the case for reading the list as a rule rather
+ * than as a list of six-year-old accidents. And this one is harder to catch
+ * than `CAP` was: a volunteer air force announces itself as the wrong page in
+ * its first line, where **Club Santos Laguna is a football club**, with a
+ * crest, a league table and supporters posting about a match — everything a
+ * reader arrives expecting to find, and none of it this club's.
+ *
  * Five clubs have a sub that exists and is not a community: Bragantino (49
  * members), Remo (5), Fluminense (1), Mirassol (1), Vitória (2). Linking a room
  * with one person in it is worse than the absence, which at least says nothing.
  *
- * Five clubs have a real, correctly-identified sub and only **one** source, so
+ * Four clubs have a real, correctly-identified sub and only **one** source, so
  * they fail the bar rather than the sniff test, and are the obvious candidates
- * for the second: Santos (`SantosFC`, 16.8k, and absent from Wikidata only),
- * Cruzeiro (`Cruzeiro`, 2.8k), Botafogo (`botafogo`, 2.1k), Atlético-MG
- * (`Galo`, 1.9k), Chapecoense (326). Coritiba's `r/Coritiba` (298) carries **no
- * title and no description at all**, so nothing in it says which Coritiba it
- * is. Athletico-PR stood in this list and is now above, which is what a second
- * source looks like when it arrives: one line of the survey moves and the rest
- * stay exactly where they were.
+ * for the second: Cruzeiro (`Cruzeiro`, 2.8k), Botafogo (`botafogo`, 2.1k),
+ * Atlético-MG (`Galo`, 1.9k), Chapecoense (326). Coritiba's `r/Coritiba` (298)
+ * carries **no title and no description at all**, so nothing in it says which
+ * Coritiba it is. Athletico-PR and Santos stood in this list and are now above,
+ * which is what a second source looks like when it arrives: one line of the
+ * survey moves and the rest stay exactly where they were.
  *
  * **Count the names rather than the number in front of them.** The sentence
  * above read "Four clubs" while listing six, from the commit that wrote it —
  * a count in prose has no gate on it, which is `CLAUDE.md`'s own recurring
  * failure met inside a file that spends eighty lines on being checkable. The
- * twelve, the eight and the five here were each counted against `clubs.ts` on
- * 2026-09-09Z; none of them is safe to carry forward on trust.
+ * eleven, the nine and the four here were each counted against `clubs.ts` on
+ * 2026-09-09Z — recounted for this entry rather than decremented, which is the
+ * same discipline stated one sentence up; none of them is safe to carry
+ * forward on trust.
  *
  * **Bahia is the entry that is deliberately absent though a source names one**,
  * and it is `coach-overrides.ts`' Vasco written out again. Wikidata says
@@ -156,4 +197,5 @@ export const CLUB_REDDIT: Record<ClubCode, string> = {
   "1780": "vasco",
   "1783": "CRFla",
   "6684": "internacional",
+  "6685": "SantosFC",
 };
