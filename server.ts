@@ -46,6 +46,7 @@ import {
   slugify,
   withClubDetails,
   withCoachOverrides,
+  withDiscord,
   withHymns,
   withInstagram,
   withReddit,
@@ -121,6 +122,7 @@ import { computeStandings } from "@/standings-core";
 import { CLUBS as SEED_CLUBS } from "@/src/data/clubs";
 import { CLUB_HYMNS } from "@/src/data/club-hymns";
 import { CLUB_INSTAGRAM } from "@/src/data/club-instagram";
+import { CLUB_DISCORD } from "@/src/data/club-discord";
 import { CLUB_REDDIT } from "@/src/data/club-reddit";
 import { CLUB_WIKIPEDIA } from "@/src/data/club-wikipedia";
 import { BROADCASTS } from "@/src/data/broadcasts";
@@ -222,7 +224,13 @@ const breaker = new CircuitBreaker();
  *  makes that a rule rather than something to remember. */
 const CLUBS = withCoachOverrides(
   withWikipedia(
-    withHymns(withReddit(withInstagram(SEED_CLUBS, CLUB_INSTAGRAM), CLUB_REDDIT), CLUB_HYMNS),
+    withHymns(
+      withDiscord(
+        withReddit(withInstagram(SEED_CLUBS, CLUB_INSTAGRAM), CLUB_REDDIT),
+        CLUB_DISCORD,
+      ),
+      CLUB_HYMNS,
+    ),
     CLUB_WIKIPEDIA,
   ),
   COACH_OVERRIDES,

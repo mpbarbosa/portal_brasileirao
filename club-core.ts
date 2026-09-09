@@ -483,6 +483,86 @@ export const redditUrl = (raw: string | null | undefined): string | null => {
 };
 
 /**
+ * The Discord **invite code** alone, from whatever was written down.
+ *
+ * `subredditName`'s shape one level over: accepts a bare code, a `discord.gg/`
+ * short link or a `discord.com/invite/` link, and keeps only the code — so a
+ * pasted invite's `?event=…` suffix does not survive into the file, and the
+ * origin is written once.
+ *
+ * **A `discord.com/channels/<guild>/…` address is REFUSED, and that refusal is
+ * the whole reason this parser exists rather than a bare string in the data
+ * file.** It is the shape somebody actually pastes, because it is what the
+ * browser's address bar shows while they are reading the server — and it is
+ * not a link to a server at all. It is an in-app pointer for a reader who is
+ * **already a member**: a non-member opening it gets their own Discord with no
+ * join affordance and no indication that anything was meant to happen. Storing
+ * one would put a link on nineteen readers' club page that silently does
+ * nothing for the eighteen who are not in it, which is `instagramPostCode`'s
+ * argument against reels and `matchPlayerByName`'s bar — refuse rather than
+ * guess.
+ *
+ * The second half of that argument is verification, and it is measured rather
+ * than asserted. A guild id can be checked against **nothing**: `widget.json`
+ * answers 403 unless the server has opted in, `/v10/guilds/<id>/preview` is
+ * 401, and `discord.com/channels/<id>/@home` is 200 with `<title>Discord</title>`
+ * for a real id **and for invented ones**, within 50 bytes of each other — the
+ * trap `src/data/player-instagram.ts` records for Instagram, met again. An
+ * invite is public: `api/v10/invites/<code>` names the guild without auth and
+ * answers `Unknown Invite` for a code nobody minted, which is what lets
+ * `scripts/check-club-discord.ts` exist at all.
+ *
+ * Returns null for anything else, which the UI renders as no link rather than
+ * one that lands nowhere.
+ */
+export const discordInvite = (raw: string | null | undefined): string | null => {
+  const value = raw?.trim();
+  if (!value) return null;
+
+  // A server address rather than an invite. Anchored on `channels/` wherever it
+  // appears rather than on the host, because the shape that actually slips
+  // through is the one with the host already gone: measured, a full
+  // `https://discord.com/channels/956…/@home` is refused by the character rule
+  // below anyway — its first segment is `https:` — while a hand-trimmed
+  // `channels/956…/@home` yields the segment `channels` and would be stored as
+  // the invite code **"channels"**, building `discord.gg/channels`. A refusal
+  // that reads as an acceptance is worse than no parser.
+  if (/(^|\/)channels\//i.test(value)) return null;
+
+  // What follows `discord.gg/` or `.com/invite/`, or the value itself.
+  const afterHost = value
+    .replace(/^.*discord(app)?\.com\/invite\//i, "")
+    .replace(/^.*discord\.gg\//i, "");
+  const code = afterHost.split(/[/?#]/)[0];
+
+  // A **snowflake**, which is the guild id itself — the single likeliest thing
+  // for somebody to lift out of a `channels/<guild>/…` address by hand, and the
+  // one shape that satisfies every rule below while being categorically not an
+  // invite. Discord mints codes of 7–10 characters and vanities are words, so
+  // nothing legitimate is 17 or more digits; an id stored here would build
+  // `discord.gg/956…`, a link that looks minted and resolves to nothing.
+  if (/^[0-9]{17,20}$/.test(code)) return null;
+
+  // Discord's own rule: a minted code is alphanumeric, a vanity URL may carry
+  // hyphens, and both sit inside 2–32 characters.
+  return /^[A-Za-z0-9-]{2,32}$/.test(code) ? code : null;
+};
+
+/**
+ * The address for an invite, built from the normalised code rather than from
+ * the raw value — so the link and the `discord.gg/code` printed beside it
+ * cannot come to name two different servers. `redditUrl`'s rule.
+ *
+ * `discord.gg` rather than `discord.com/invite`, because the two resolve to the
+ * same place and the short form is what Discord's own copy button produces —
+ * so the address on the page is the one a reader has seen before.
+ */
+export const discordUrl = (raw: string | null | undefined): string | null => {
+  const code = discordInvite(raw);
+  return code && `https://discord.gg/${code}`;
+};
+
+/**
  * The video id inside whatever a person pasted.
  *
  * Accepts a bare id, a `watch?v=` link, a `youtu.be` short link or an `embed/`
@@ -758,6 +838,15 @@ export const withReddit = (clubs: Club[], subs: Record<string, string>): Club[] 
     return reddit && !club.reddit ? { ...club, reddit } : club;
   });
 
+/** Attach curated Discord invite codes to a club list, keyed by code. A server
+ *  is the supporters' and not the club's, exactly as a subreddit is — see
+ *  `src/data/club-discord.ts` for what that costs the screen-reader suffix. */
+export const withDiscord = (clubs: Club[], invites: Record<string, string>): Club[] =>
+  clubs.map((club) => {
+    const discord = invites[club.code];
+    return discord && !club.discord ? { ...club, discord } : club;
+  });
+
 /** Attach curated Wikipedia article titles to a club list, keyed by code. */
 export const withWikipedia = (clubs: Club[], articles: Record<string, string>): Club[] =>
   clubs.map((club) => {
@@ -926,6 +1015,7 @@ export const withClubDetails = (clubs: Club[], known: Club[]): Club[] => {
     const website = club.website ?? source?.website;
     const instagram = club.instagram ?? source?.instagram;
     const reddit = club.reddit ?? source?.reddit;
+    const discord = club.discord ?? source?.discord;
     const hymn = club.hymn ?? source?.hymn;
     const wikipedia = club.wikipedia ?? source?.wikipedia;
     const address = club.address ?? source?.address;
@@ -937,6 +1027,7 @@ export const withClubDetails = (clubs: Club[], known: Club[]): Club[] => {
       ...(website ? { website } : {}),
       ...(instagram ? { instagram } : {}),
       ...(reddit ? { reddit } : {}),
+      ...(discord ? { discord } : {}),
       ...(hymn ? { hymn } : {}),
       ...(wikipedia ? { wikipedia } : {}),
       ...(address ? { address } : {}),

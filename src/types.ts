@@ -40,6 +40,20 @@ export interface Club {
    * says and why the club page does not file it as a third club-owned address.
    */
   reddit?: string;
+  /**
+   * The supporters' Discord, stored as the **invite code alone** ("aBcD1234").
+   * The address is derived by `discordUrl`, so a pasted invite's `?event=…`
+   * suffix does not persist and the origin is written once.
+   *
+   * Not an official channel, exactly like `reddit` and unlike `instagram` and
+   * `website` — which is what the link's screen-reader suffix says.
+   *
+   * **An invite code and never a guild id.** `discord.com/channels/<guild>/…`
+   * is an in-app address for a reader who is already a member; a non-member
+   * opening one gets nothing. `discordInvite` refuses that shape rather than
+   * storing the id out of it — the reasoning is at that function.
+   */
+  discord?: string;
   /** The club's official site, normalised to an HTTPS origin. */
   website?: string;
   /**

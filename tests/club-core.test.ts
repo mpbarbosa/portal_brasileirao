@@ -4,6 +4,7 @@ import { test } from "node:test";
 import { COACH_OVERRIDES } from "@/src/data/coach-overrides";
 import { CLUBS } from "@/src/data/clubs";
 import { CLUB_HYMNS } from "@/src/data/club-hymns";
+import { CLUB_DISCORD } from "@/src/data/club-discord";
 import { CLUB_REDDIT } from "@/src/data/club-reddit";
 import { CLUB_WIKIPEDIA } from "@/src/data/club-wikipedia";
 import {
@@ -15,6 +16,8 @@ import {
   coachOf,
   coachesOf,
   crestMonogram,
+  discordInvite,
+  discordUrl,
   findClub,
   hasClubArticle,
   hymnUrl,
@@ -875,6 +878,107 @@ test("the curated subreddits are not empty, and no two clubs share one", () => {
 
   assert.ok(subs.length > 0);
   assert.equal(new Set(subs).size, subs.length);
+});
+
+test("discordInvite keeps only the invite code, whatever was written down", () => {
+  // The code and the URL must never disagree about which server they mean,
+  // which is `subredditName`'s rule one host over.
+  assert.equal(discordInvite("https://discord.gg/aBcD1234"), "aBcD1234");
+  assert.equal(discordInvite("https://discord.com/invite/aBcD1234"), "aBcD1234");
+  assert.equal(discordInvite("discord.gg/flamengo?event=123"), "flamengo");
+  assert.equal(discordInvite("  aBcD1234  "), "aBcD1234");
+  assert.equal(discordInvite("não é um convite"), null);
+  assert.equal(discordInvite(undefined), null);
+});
+
+test("discordInvite refuses a server address, rather than lifting an id out of it", () => {
+  // THE test on this parser, and the reason it exists at all. A
+  // `channels/<guild>` URL is what a person actually pastes — it is what the
+  // address bar shows while they read the server — and it is not a link
+  // anybody outside the server can use: a non-member following it gets their
+  // own Discord, no join affordance, no sign anything was meant to happen.
+  //
+  // The failure this guards is the parser being *helpful*: `956…` is a
+  // perfectly good first path segment, so a rule that merely split on `/`
+  // would store it as an invite code and build `discord.gg/956…`, which is a
+  // working-looking link to nothing. That is a refusal reading as an
+  // acceptance, which is worse than no parser — `instagramPostCode`'s rule
+  // about reels, and the same bar `matchPlayerByName` sets.
+  assert.equal(discordInvite("https://discord.com/channels/956003357129076746/@home"), null);
+  assert.equal(discordInvite("https://discord.com/channels/956003357129076746/1234567890"), null);
+  assert.equal(discordInvite("discord.com/channels/956003357129076746"), null);
+  assert.equal(discordUrl("https://discord.com/channels/956003357129076746/@home"), null);
+
+  // THE case, and the three above it are not it. Measured with the refusal
+  // deleted: all three are already refused by the character rule, because
+  // their first path segment is `https:` or `discord.com` — so a test built
+  // only from them PASSES against the mutation it is named for, which is this
+  // repo's own `page.route` trap arriving in a unit test. The shape that
+  // actually reaches the refusal is the one with the host trimmed off, which
+  // yields the segment `channels` and would be stored as an invite code.
+  assert.equal(discordInvite("channels/956003357129076746/@home"), null);
+});
+
+test("discordInvite refuses a bare guild id, which is not an invite code", () => {
+  // The likeliest hand-edit of all: somebody reads the rule above, deletes the
+  // `channels/` wrapper themselves, and writes down the number. It satisfies
+  // every other rule — 18 characters, all inside the alphabet — and builds
+  // `discord.gg/956…`, which looks minted and resolves to nothing.
+  //
+  // Refused on the SHAPE rather than on a host check, because by this point
+  // there is no host left to read. Discord mints codes of 7–10 characters and
+  // vanities are words, so nothing legitimate is 17+ digits.
+  assert.equal(discordInvite("956003357129076746"), null);
+  assert.equal(discordUrl("956003357129076746"), null);
+
+  // The bound, stated so the rule cannot be widened into refusing real codes:
+  // digits are perfectly good inside an invite, and a short numeric one stands.
+  assert.equal(discordInvite("12345678"), "12345678");
+});
+
+test("discordUrl builds the short form, from the parsed code and not the raw value", () => {
+  // `discord.gg` rather than `discord.com/invite`: the two resolve to the same
+  // place, and the short one is what Discord's own copy button produces, so
+  // the address on the page is one a reader has seen before.
+  assert.equal(discordUrl("https://discord.com/invite/aBcD1234"), "https://discord.gg/aBcD1234");
+  assert.equal(discordUrl("aBcD1234"), "https://discord.gg/aBcD1234");
+  assert.equal(discordUrl(""), null);
+});
+
+test("every curated Discord invite names a club in the division", () => {
+  // Coverage is partial by design, like the subreddits, so there is no "every
+  // club has one" gate. What can be checked is that no entry is keyed to
+  // nothing: a code outside the division renders no link and reports nothing.
+  const codes = new Set(CLUBS.map((entry) => entry.code));
+  const orphans = Object.keys(CLUB_DISCORD).filter((code) => !codes.has(code));
+
+  assert.deepEqual(orphans, []);
+});
+
+test("every curated Discord invite survives its own parser", () => {
+  // A value the parser refuses renders as no link, which looks exactly like a
+  // club that has no entry — so a typo here is invisible on the page and in
+  // review. This is where a pasted `channels/<guild>` URL is caught: the
+  // refusal above proves the parser says no, and this proves the FILE never
+  // holds one.
+  const unusable = Object.entries(CLUB_DISCORD).filter(([, invite]) => !discordUrl(invite));
+
+  assert.deepEqual(unusable, []);
+});
+
+test("no two clubs share a Discord server", () => {
+  // An invite keyed to the wrong club id renders a working link on both pages,
+  // and one of them drops a club's supporters into their rivals' server — the
+  // `no two clubs share an article` gate, at a third host.
+  //
+  // Deliberately WITHOUT the "not empty" half its `club-reddit.ts` sibling
+  // carries: this file ships empty, so that assertion would fail on a state
+  // the file is honestly in. It is owed the moment the first entry lands, and
+  // until then this test is vacuous and says so rather than looking like
+  // coverage.
+  const invites = Object.values(CLUB_DISCORD);
+
+  assert.equal(new Set(invites).size, invites.length);
 });
 
 test("instagramHandle keeps only the handle, whatever was written down", () => {

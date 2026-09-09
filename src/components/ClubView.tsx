@@ -3,6 +3,7 @@ import {
   clubMapUrl,
   clubMatches,
   coachOf,
+  discordUrl,
   findClub,
   nextFixture,
   hymnUrl,
@@ -107,9 +108,10 @@ export function StatTile({ label, value }: { label: string; value: string }) {
  * day it became a link — that rule is what moved all three, and what keeps these
  * here.
  *
- * All four are monochrome outlines — a plain globe for the club's own site, a
+ * All five are monochrome outlines — a plain globe for the club's own site, a
  * pair of quavers for the hymn rather than YouTube's play button, a speech
- * bubble for the subreddit rather than Snoo, three candles for the **Painel**:
+ * bubble for the subreddit rather than Snoo, a headset for the supporters'
+ * Discord rather than the blurple wordmark, three candles for the **Painel**:
  * each names the *thing* and not the host that happens to keep it. Their shared attributes come from `GLYPH`, so a mark defined here
  * cannot drift from the one defined there.
  *
@@ -119,8 +121,9 @@ export function StatTile({ label, value }: { label: string; value: string }) {
  * conflicting line — so both comments emerged from a clean textual merge
  * describing a file neither of them had seen. `PanelGlyph`'s own "like the three
  * above it" broke in the mirror direction at the same instant. Recount before
- * trusting either — it went from "two" to "three" to **four** when the
- * subreddit's bubble landed, and each time by hand.
+ * trusting either — it went from "two" to "three" to "four" when the
+ * subreddit's bubble landed and to **five** when the Discord headset did, and
+ * each time by hand.
  */
 
 /** A globe: the club's own site, as distinct from a profile it keeps elsewhere. */
@@ -160,6 +163,32 @@ function RedditGlyph() {
       <path d="M20 12a8 7 0 1 0-13.4 5.1L5 21l4.3-1.4A9 9 0 0 0 12 19a8 7 0 0 0 8-7Z" />
       <path d="M9 11.5h.01M15 11.5h.01" />
       <path d="M9 14.5c.9.7 1.9 1 3 1s2.1-.3 3-1" />
+    </svg>
+  );
+}
+
+/**
+ * A headset: the supporters' Discord — people watching a match together, which
+ * is what the server is for. Discord's own mark is artwork with a fixed form
+ * and a fixed blurple, so it cannot take `currentColor` and would sit cold
+ * beside links that warm on hover: `RedditGlyph`'s argument about Snoo and
+ * `InstagramGlyph`'s about Meta's gradient, a third time.
+ *
+ * **Not a second speech bubble, and that is the whole choice.** The bubble
+ * beside it already means "a conversation", and two near-identical outlines a
+ * gap apart in one row is `RankCandles`' two greys — a distinction the marks
+ * assert and the reader cannot make at 16px. The headset is legible at that
+ * size because it is three strokes, and it names the half of a Discord a
+ * subreddit does not have.
+ *
+ * Local, like the marks around it, because it has one call site.
+ */
+function DiscordGlyph() {
+  return (
+    <svg {...GLYPH}>
+      <path d="M4 14v-1a8 8 0 0 1 16 0v1" />
+      <rect x="2" y="13" width="4" height="7" rx="2" />
+      <rect x="18" y="13" width="4" height="7" rx="2" />
     </svg>
   );
 }
@@ -225,6 +254,7 @@ export function ClubView({
   // so the words on the page and the address behind them cannot come to name
   // two different communities — `InstagramLink`'s rule for its `@handle`.
   const subName = subredditName(club.reddit);
+  const chat = discordUrl(club.discord);
   const coach = coachOf(club, coaches);
   const mapUrl = clubMapUrl(club.address);
   const videos = videosFor(CLUB_VIDEOS, code);
@@ -335,6 +365,31 @@ export function ClubView({
                 <span className="sr-only">
                   {" "}
                   — comunidade de torcedores no Reddit (abre em nova aba)
+                </span>
+              </a>
+            )}
+            {/* Named for what it is rather than for its address, which is the
+                hymn's rule and not the subreddit's: `r/CRFla` is a name a
+                reader recognises, where an invite code is eight characters a
+                server minted and nobody has ever read. So this says "Discord",
+                the way the article link says "Wikipédia".
+
+                Supporters' again, so the suffix is the sub's and not the
+                Instagram line's — the club is talked about here, it is not
+                talking. */}
+            {chat && (
+              <a
+                href={chat}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`truncate ${LINK_UNDERLINE}`}
+                data-discord
+              >
+                <DiscordGlyph />
+                Discord
+                <span className="sr-only">
+                  {" "}
+                  — comunidade de torcedores no Discord (abre em nova aba)
                 </span>
               </a>
             )}

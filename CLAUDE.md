@@ -2693,6 +2693,61 @@ bare `npm run check-…` added outside an `if` exits 0 as written and **1** unde
 `set -euo`, which turns the rule above into a red build. The workflow says so at
 the line itself.
 
+`src/data/club-discord.ts` holds the **supporters' Discord** for a club, keyed
+by club code and storing the **invite code alone** — `discordUrl` in
+`club-core.ts` builds the address. Hand-maintained and partial like
+`club-reddit.ts`, whose rule it takes whole: a server is the torcida's and not
+the club's, so the screen-reader suffix says "comunidade de torcedores" and the
+link is not filed beside the Site oficial.
+
+**An invite code and never a guild id, and both halves of that were measured.**
+What a person pastes is `discord.com/channels/<guild>/@home`, because it is what
+the address bar shows while they read the server — and it is an in-app pointer
+for somebody **already a member**: a non-member following it gets their own
+Discord, no join affordance, no sign anything was meant to happen. It is also
+unverifiable, which is the half that decides the design: `widget.json` answers
+403 unless the server opted in, `/v10/guilds/<id>/preview` answers 401, and
+`discord.com/channels/<id>/@home` answers **200 with `<title>Discord</title>` for
+a real id and for two invented ones**, within 50 bytes of each other — the
+Instagram trap `player-instagram.ts` records, met at a second host. An invite is
+public: `api/v10/invites/<code>?with_counts=true` names the guild with no auth
+and answers `Unknown Invite` for a code nobody minted, which is `check-hymns`'
+oEmbed test in another costume and why **this file has a checker where
+`player-instagram.ts` deliberately has none**.
+
+```sh
+npm run check-club-discord    # every recorded invite resolves and names its club
+```
+
+**`discordInvite` therefore REFUSES rather than salvages, and the first test
+written for it passed against the bug it named.** Deleting the refusal changes
+nothing for `https://discord.com/channels/956…/@home` — that value is already
+refused by the character rule, its first path segment being `https:` — so three
+assertions built from full URLs were green against a parser with no refusal in
+it at all. Two shapes actually reach it, and both were found by running the
+mutation rather than by reading: a hand-trimmed `channels/956…/@home` yields the
+segment `channels` and would be stored as the invite code **"channels"**, and a
+**bare guild id** — the likeliest hand-edit of all — satisfies every rule and
+builds `discord.gg/956…`, a link that looks minted and resolves to nothing. The
+snowflake rule (17–20 digits) is what refuses the second, and
+`tests/club-core.test.ts` carries a case pinning that a short numeric code still
+stands, so it cannot be widened into refusing real invites.
+
+**Prefer an invite set to never expire with no use limit.** Discord's default is
+7 days and one use, so an invite copied without editing those two fields is dead
+before most readers arrive — rot that is scheduled rather than accidental, which
+is what the checker's expiry clause is for.
+
+**`tests/e2e/club-discord.spec.ts` prepares a payload, because the shipped file
+is empty and the anchor therefore renders nowhere** — `meu-time.spec.ts`'
+arrangement, and without it the feature would ship having never once rendered.
+The trap it cost: **`ClubView` resolves its club from `/api/standings` first and
+falls back to `/api/matches`**, so a fixture preparing only the fixtures payload
+injects into the copy that loses and the link silently never appears — measured,
+with the page holding `discord` on the club it was handed and drawing nothing
+while the subreddit beside it drew fine. It prepares both, so the spec does not
+encode which one wins.
+
 `src/data/player-instagram.ts` holds players' own Instagram accounts, keyed by
 **player id** and hand-maintained for the same reason `club-instagram.ts` is: no
 provider carries a social account at any tier. Coverage is deliberately
