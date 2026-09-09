@@ -31,4 +31,5 @@ standings-core.ts
 standings-mark-core.ts
 theme-core.ts
 venue-core.ts
+version-core.ts
 weather-core.ts

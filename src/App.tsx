@@ -41,6 +41,7 @@ import { useAccount } from "@/src/useAccount";
 import { usePreferences } from "@/src/usePreferences";
 import { useCampaignPlotKind } from "@/src/useCampaignPlotKind";
 import { useTheme } from "@/src/useTheme";
+import { useVersionWatch } from "@/src/useVersionWatch";
 import { useRoute } from "@/src/useRoute";
 import type { ClubCode, Player, Scorer, Squad, StandingsRow } from "@/src/types";
 
@@ -192,11 +193,20 @@ export function App() {
    * reason to fail a page, the same rule `page-meta-core.ts` keeps for
    * metadata.
    *
-   * Not refetched. Every fact it carries is fixed for the life of the process —
-   * the commit, the build time, the configured provider and the instant it
-   * started — so polling would spend requests re-reading constants. A restart
-   * is picked up on the next load, which is when a reader could act on it
-   * anyway.
+   * Not refetched **here**. Every fact it carries is fixed for the life of the
+   * process — the commit, the build time, the configured provider and the
+   * instant it started — so polling for the rodapé's sake would spend requests
+   * re-reading constants, and the rodapé is deliberately still a single
+   * reading: `startInstant` is computed once against the instant the payload
+   * landed, and a band of text that moves between two captures of one build is
+   * noise every screenshot refresh then commits.
+   *
+   * This paragraph used to go on to say that a restart "is picked up on the
+   * next load, which is when a reader could act on it anyway", and that half
+   * was wrong rather than stale. The reader cannot act on it: taking a new
+   * version means reloading, and nobody reads a footer to find that out.
+   * `useVersionWatch` below re-reads the endpoint for **that** question alone,
+   * and does not feed what it learns back into this state.
    */
   useEffect(() => {
     let cancelled = false;
@@ -216,6 +226,17 @@ export function App() {
       cancelled = true;
     };
   }, []);
+
+  /**
+   * Take a new build when the host starts serving one.
+   *
+   * Fed the reading above rather than fetching its own, so the check on load
+   * costs nothing; it re-reads `/api/health` on its own only while the tab is
+   * visible, and on the moment a reader returns to it. See
+   * `src/useVersionWatch.ts` and `version-core.ts` for why it compares the two
+   * builds rather than watching the server's sha change.
+   */
+  useVersionWatch(health);
 
   /**
    * The elencos, fetched **only when the Jogadores page is opened**, and only
