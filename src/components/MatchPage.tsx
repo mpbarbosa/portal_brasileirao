@@ -1,3 +1,4 @@
+import { kickoffLabelLong } from "@/src/components/kickoff";
 import {
   clubsOf,
   highlightsSearchUrl,
@@ -57,20 +58,6 @@ interface MatchPageProps {
    */
   onSelectPlayer?: (player: Player) => void;
 }
-
-const kickoffLabel = (kickoff: string): string => {
-  const parsed = new Date(kickoff);
-  if (Number.isNaN(parsed.getTime())) return "Horário a definir";
-
-  return parsed.toLocaleString("pt-BR", {
-    weekday: "long",
-    day: "2-digit",
-    month: "long",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-};
 
 /**
  * One club's campanha, stacked with its opponent's rather than drawn on shared
@@ -550,7 +537,7 @@ export function MatchPage({
       <dl className="mt-4 space-y-3 text-body-medium">
         <div>
           <dt className="text-body-small text-ink-faint">Data e hora</dt>
-          <dd className="font-medium first-letter:uppercase">{kickoffLabel(match.kickoff)}</dd>
+          <dd className="font-medium first-letter:uppercase">{kickoffLabelLong(match)}</dd>
         </div>
 
         {venue && (

@@ -56,6 +56,7 @@ import {
   currentRound,
   matchesForRound,
   mergeByFreshness,
+  withKickoffPrecision,
   withPlayedStatus,
   roundsOf,
 } from "@/matches-core";
@@ -341,7 +342,7 @@ const seedMatchesPayload = (): MatchesPayload => ({
   matches: withLineups(
     withGoals(
       withHighlights(
-        withVenues(withBroadcasters([...SEED_MATCHES].sort(compareForFeed), BROADCASTS), VENUES),
+        withVenues(withBroadcasters(withKickoffPrecision([...SEED_MATCHES].sort(compareForFeed)), BROADCASTS), VENUES),
         HIGHLIGHTS,
       ),
       GOALS,
@@ -473,7 +474,7 @@ const loadMatches = async (): Promise<ApiEnvelope<MatchesPayload>> => {
       matches: withLineups(
         withGoals(
           withHighlights(
-            withVenues(withBroadcasters([...matches].sort(compareForFeed), BROADCASTS), VENUES),
+            withVenues(withBroadcasters(withKickoffPrecision([...matches].sort(compareForFeed)), BROADCASTS), VENUES),
             HIGHLIGHTS,
           ),
           GOALS,
