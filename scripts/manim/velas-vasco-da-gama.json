@@ -494,5 +494,23 @@
         "result": "D"
       }
     }
+  ],
+  "events": [
+    {
+      "id": "vasco-diniz",
+      "title": "Vasco demite Fernando Diniz",
+      "date": "2026-02-22",
+      "round": 3,
+      "endRound": 3,
+      "label": "após a 3ª rodada · Vasco demite Fernando Diniz (22 de fevereiro de 2026)"
+    },
+    {
+      "id": "paralisacao-copa-2026",
+      "title": "Brasileirão paralisado para a Copa do Mundo",
+      "date": "2026-06-01",
+      "round": 18,
+      "endRound": 18,
+      "label": "após a 18ª rodada · Brasileirão paralisado para a Copa do Mundo (1 de junho de 2026)"
+    }
   ]
 }

@@ -500,5 +500,23 @@
         "result": "V"
       }
     }
+  ],
+  "events": [
+    {
+      "id": "paralisacao-copa-2026",
+      "title": "Brasileirão paralisado para a Copa do Mundo",
+      "date": "2026-06-01",
+      "round": 18,
+      "endRound": 18,
+      "label": "após a 18ª rodada · Brasileirão paralisado para a Copa do Mundo (1 de junho de 2026)"
+    },
+    {
+      "id": "fluminense-zubeldia",
+      "title": "Fluminense demite Luis Zubeldía",
+      "date": "2026-08-13",
+      "round": 22,
+      "endRound": 22,
+      "label": "após a 22ª rodada · Fluminense demite Luis Zubeldía (13 de agosto de 2026)"
+    }
   ]
 }

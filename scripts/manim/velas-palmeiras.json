@@ -500,5 +500,15 @@
         "result": "E"
       }
     }
+  ],
+  "events": [
+    {
+      "id": "paralisacao-copa-2026",
+      "title": "Brasileirão paralisado para a Copa do Mundo",
+      "date": "2026-06-01",
+      "round": 18,
+      "endRound": 18,
+      "label": "após a 18ª rodada · Brasileirão paralisado para a Copa do Mundo (1 de junho de 2026)"
+    }
   ]
 }
