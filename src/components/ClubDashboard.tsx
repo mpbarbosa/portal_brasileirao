@@ -14,6 +14,7 @@ import { CLUB_VIDEOS } from "@/src/data/club-videos";
 import { StatTile } from "@/src/components/ClubView";
 import { BACK_LINK, LINK_UNDERLINE } from "@/src/components/interaction";
 import { CandlesKey, RankCandles } from "@/src/components/RankCandles";
+import { SEASON_EVENTS } from "@/src/data/events";
 import { RankSparkline } from "@/src/components/RankSparkline";
 import { Surface } from "@/src/components/Surface";
 import type { Club, ClubCode, ClubRankHistory, Match, StandingsRow } from "@/src/types";
@@ -328,19 +329,38 @@ export function ClubDashboard({
               {/* Named only while there are two. On its own this drawing is
                   what the page and the section heading have both just named,
                   and a third statement of the club is noise. */}
+              {/* The acontecimentos are read straight from the committed file
+                  rather than threaded in as a prop, which is what `ClubView`
+                  does for the section beneath: it costs no request and cannot
+                  fail, so there is nothing for a caller to supply or degrade.
+                  `matches` is the whole division's, because `eventMarks` dates
+                  a boundary against *this club's* fixtures and picks them out
+                  itself — the same list `computeRankCandles` was handed. */}
               <RankCandles
                 candles={candles}
                 clubCount={clubCount}
                 lastRound={lastRound}
                 name={opponent ? club.shortName : undefined}
+                events={SEASON_EVENTS}
+                matches={matches}
+                clubCode={club.code}
               />
               {opponent && (
                 <div className="mt-4 border-t border-outline-variant pt-3">
+                  {/* The comparison gets its OWN acontecimentos, keyed to its
+                      own club. Both charts share the frame — same clubCount,
+                      same lastRound — so two clubs' rules line up on one axis,
+                      and a reader can see that one changed técnico three rounds
+                      before the other. Passing the subject's marks here would
+                      draw the wrong club's season on the right club's candles. */}
                   <RankCandles
                     candles={opponentCandles}
                     clubCount={clubCount}
                     lastRound={lastRound}
                     name={opponent.shortName}
+                    events={SEASON_EVENTS}
+                    matches={matches}
+                    clubCode={opponent.code}
                   />
                 </div>
               )}

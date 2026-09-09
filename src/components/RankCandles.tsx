@@ -2,10 +2,11 @@ import {
   candleShapes,
   describeCandle,
   describeCandles,
+  eventMarks,
   zoneGuides,
   type CandleBox,
 } from "@/rank-candles-core";
-import type { FormResult, RoundCandle } from "@/src/types";
+import type { ClubCode, FormResult, Match, RoundCandle, SeasonEvent } from "@/src/types";
 
 /**
  * The box the painel is drawn in, in user units.
@@ -83,6 +84,17 @@ interface RankCandlesProps {
    * of the same shape, on the same frame, are told apart by nothing else.
    */
   name?: string;
+  /**
+   * The **acontecimentos** to mark on the drawing, what to date them against,
+   * and whose season this is. All three together or none — a chart handed no
+   * events simply draws none, which is what the club page's own sparkline does.
+   *
+   * `clubCode` is separate from `name` on purpose: `name` is omitted on a
+   * painel drawing one club, and the marks are wanted there most of all.
+   */
+  events?: SeasonEvent[];
+  matches?: Match[];
+  clubCode?: ClubCode;
 }
 
 /**
@@ -100,11 +112,21 @@ interface RankCandlesProps {
  * names the ends of its sparkline in text for the same reason; this is that
  * idea with a gutter, and it costs the chart nothing it would otherwise have.
  */
-export function RankCandles({ candles, clubCount, lastRound, name }: RankCandlesProps) {
+export function RankCandles({
+  candles,
+  clubCount,
+  lastRound,
+  name,
+  events,
+  matches,
+  clubCode,
+}: RankCandlesProps) {
   const domain: CandleBox = { ...BOX, clubCount, lastRound };
   const shapes = candleShapes(candles, domain);
   const guides = zoneGuides(domain);
   const label = describeCandles(candles, name);
+  const marks =
+    events && matches && clubCode ? eventMarks(events, matches, clubCode, domain) : [];
 
   if (shapes.length === 0) {
     return <p className="text-body-medium text-ink-muted">{label}.</p>;
@@ -190,6 +212,70 @@ export function RankCandles({ candles, clubCount, lastRound, name }: RankCandles
             />
           )}
 
+          {/* The acontecimentos, **behind the candles and in front of
+              nothing**. They are reference lines like the G4 and the Z4 above,
+              so they are painted before the marks they place rather than over
+              them — a dashed rule across a body would read as part of the
+              body. Dashed at a different rhythm from the zones (3 3 against
+              6 6) because the two say different kinds of thing and share a
+              tone: every mark on a page here is one tone unless the tone
+              encodes something, which is `TrafficView`'s rule.
+
+              **The notch is a rect and deliberately not a triangle.** This
+              drawing scales non-uniformly, which is safe for filled rects and
+              turns any other shape into a different shape at a proportion the
+              reader's viewport decides — the argument `ProfileScatter` makes
+              for refusing `preserveAspectRatio="none"` outright, met here from
+              the side that keeps it. The line alone carries
+              `non-scaling-stroke` and so stays hairline at every width; the
+              notch is what makes it findable. */}
+          {marks.map((mark) => (
+            <g
+              key={mark.id}
+              /* **`data-candle-event`, never `data-event`.** `SeasonEvents`
+                 already carries `data-event={event.id}` on its rows, and
+                 `tests/e2e/acontecimentos.spec.ts` selects it UNSCOPED. The two
+                 never meet today — `ClubView` and `ClubDashboard` are separate
+                 branches of `App`'s route switch — so a shared name would be
+                 unambiguous by accident and a strict-mode violation the day
+                 anything puts a campanha on the club page. That is the
+                 `data-scatter-svg` lesson, and it costs a prefix to avoid. */
+              data-candle-event={mark.id}
+              data-candle-event-round={mark.round}
+            >
+              <title>{mark.label}</title>
+              {/* Nothing renders this today: the one span this season ships
+                  holds no rodada, so its width is zero. See `EventMark.width`
+                  — the zero is the measurement, not a stub. */}
+              {mark.width > 0 && (
+                <rect
+                  x={mark.x}
+                  y={0}
+                  width={mark.width}
+                  height={BOX.height}
+                  className="fill-on-surface/5"
+                />
+              )}
+              <line
+                x1={mark.x}
+                x2={mark.x}
+                y1={0}
+                y2={BOX.height}
+                className="stroke-ink-faint"
+                strokeWidth={1}
+                strokeDasharray="3 3"
+                vectorEffect="non-scaling-stroke"
+              />
+              <rect
+                x={mark.x - 1.5}
+                y={0}
+                width={3}
+                height={10}
+                className="fill-ink-faint"
+              />
+            </g>
+          ))}
+
           {shapes.map((shape) => {
             const { candle } = shape;
             const body = candle.result ? BODY_FILL[candle.result] : IDLE_MARK;
@@ -243,6 +329,35 @@ export function RankCandles({ candles, clubCount, lastRound, name }: RankCandles
         <span>{lastRound}ª rodada</span>
       </p>
 
+      {/* What the vertical rules are, named in the order they are drawn.
+          **A `ul`, and not a second `p` of spans** — `tests/e2e/painel.spec.ts`
+          reads this figure's axis ends as `figure p span`, so a paragraph here
+          would be caught by that selector and the spec would go red for a
+          reason that has nothing to do with what it asserts.
+
+          The swatch is the mark itself at the size it is drawn, which is the
+          rule `Swatch` follows in the key below: a legend entry that looks
+          unlike the thing it names is a legend for a different drawing. It is
+          `aria-hidden` and the sentence carries the meaning. */}
+      {marks.length > 0 && (
+        <ul
+          data-candle-events={marks.length}
+          className="mt-1.5 space-y-0.5 text-body-small text-ink-muted"
+        >
+          {marks.map((mark) => (
+            <li key={mark.id} data-candle-event-item={mark.id} className="flex gap-1.5">
+              <span
+                aria-hidden="true"
+                className="mt-1 inline-block h-3 w-0.5 shrink-0 bg-ink-faint"
+              />
+              {/* `mark.label` and not a second composition of the same facts:
+                  this string is also the mark's `<title>`, so the hover and
+                  the list cannot come to say different things about one rule. */}
+              <span>{mark.label}</span>
+            </li>
+          ))}
+        </ul>
+      )}
     </figure>
   );
 }
@@ -277,8 +392,17 @@ export function CandlesKey({ className }: { className?: string }) {
       <p>
         O corpo vai da posição em que a rodada começou até a do fim dela, e o traço
         à esquerda marca o começo. A linha fina atravessa todas as posições que o
-        clube ocupou enquanto a rodada era disputada. As linhas tracejadas são o G4
-        e o Z4.
+        clube ocupou enquanto a rodada era disputada. As linhas tracejadas horizontais
+        são o G4 e o Z4.
+      </p>
+      {/* General, like everything else in this key: it says what a vertical
+          rule *is*, and which acontecimento each one marks is named beneath the
+          drawing it belongs to. Never orphaned — the paralisação para a Copa
+          touches all twenty clubs, so every painel draws at least one. */}
+      <p>
+        Cada régua vertical é um acontecimento, na fronteira entre a última rodada
+        disputada antes dele e a seguinte. Os acontecimentos vêm nomeados abaixo de
+        cada campanha.
       </p>
     </div>
   );

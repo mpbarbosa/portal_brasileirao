@@ -286,6 +286,55 @@ what makes the logic testable without mocking HTTP.
   `overflow-visible` the last candles painted outside the card while every
   assertion about them passed. `tests/e2e/painel.spec.ts` measures the drawing's
   box against the panel's, and was confirmed red against that markup.
+  **`eventMarks` puts the ACONTECIMENTOS on the same drawing, and the whole of
+  it is one join: candles are indexed by rodada, an acontecimento is dated by a
+  Brazil-local day.** The rule is drawn at the **boundary between two candles**,
+  never over one — the sacking happened *after* round 6 closed, so shading round
+  6 would claim the round that is precisely not covered by it.
+  **The boundary is anchored on THIS CLUB's matches, and the round's own
+  calendar is the trap.** A rodada is not an instant: its fixtures spread over
+  three or four days. Cruzeiro sacked Tite late on Sunday 15 March; Cruzeiro's
+  own round-6 match kicked off 20:30 BRT that evening, and **another round-6
+  fixture was played on the 16th** — so "the last round that had *finished*"
+  answers 5, and the rule lands before a match the club had already played under
+  him. Reading the club's own fixtures answers 6. It is also the only anchor
+  that means anything here: this is one club's season, so the reader's question
+  is *which of these candles are before and which after*, and only the club's
+  own matches divide them.
+  It goes through `brasiliaDay` rather than the ISO date's first ten characters,
+  which is the second half of the same trap — a kickoff at `02:00Z` is the
+  previous evening in São Paulo, and slicing the string files it under the wrong
+  day. That is `events-core.ts`' rule met from the other side: **that** module
+  never constructs a `Date` because a `YYYY-MM-DD` read as one is midnight UTC,
+  while a `kickoff` is a real instant and `brasiliaDay` is the named bridge.
+  **`touchesClub` decides membership rather than a scope test written here**, so
+  the paralisação para a Copa marks all twenty painéis for the reason it appears
+  in all twenty timelines — which also means **no painel ever has zero marks**,
+  and the sentence added to `CandlesKey` is never orphaned. On a **comparação**
+  each drawing takes its own club's acontecimentos, and because both share the
+  division's frame the general rule lands at the same x on both: a reader can
+  drop a vertical line through the pair. Passing the subject's code to both is
+  the mutation `tests/e2e/painel.spec.ts` was confirmed red against, and it is
+  the one the other three cases pass — the wrong club's rules are still
+  well-formed rules, which is why that spec checks the comparison figure against
+  that club's **own** painel rather than against a list written in the spec.
+  **The notch at the top of each rule is a rect and deliberately not a
+  triangle**, for the reason stated one paragraph up: below `sm` the drawing
+  scales non-uniformly, which is safe for filled rects and turns anything else
+  into a shape whose proportions the reader's viewport decides. The rules are
+  painted **before** the candles, like the G4 and Z4 guides, because a dashed
+  line across a body reads as part of the body.
+  **The band is computed and nothing renders one**, which is a measurement
+  rather than a stub: a span shades the rounds it covers, and the one span this
+  season ships covers none — the last round-18 match was played 31 May and the
+  first round-19 match 16 July, so the paralisação collapses onto its own
+  boundary and its width is zero. `EventMark.width` says so at the field.
+  The acontecimentos are **named beneath the drawing in a `ul`, never a second
+  `p` of spans**: `tests/e2e/painel.spec.ts` reads this figure's axis ends as
+  `figure p span`, so a paragraph there would be caught by that selector and
+  redden a spec that has nothing to do with acontecimentos. The list prints
+  `EventMark.label`, the same string the mark's `<title>` carries, so a hover
+  and the list cannot come to say different things about one rule.
 
 - `scouts-core.ts` — the **Perfil** at the foot of the Painel: six rates read
   against the division rather than on their own. It exists because the

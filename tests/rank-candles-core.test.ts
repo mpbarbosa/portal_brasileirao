@@ -7,13 +7,14 @@ import {
   computeRankCandles,
   describeCandle,
   describeCandles,
+  eventMarks,
   placesMoved,
   summariseCandles,
   zoneGuides,
   type CandleBox,
 } from "@/rank-candles-core";
 import { computeRankHistory } from "@/rank-history-core";
-import type { Club, Match, RoundCandle } from "@/src/types";
+import type { Club, Match, RoundCandle, SeasonEvent } from "@/src/types";
 
 const club = (code: string, shortName = code): Club => ({
   code,
@@ -558,4 +559,215 @@ test("an unnamed painel does not print the club, which its two headings already 
  */
 test("an empty comparação says WHICH club has no campanha", () => {
   assert.equal(describeCandles([], "Aaa"), "Campanha do Aaa ainda não disponível");
+});
+
+// ── eventMarks ─────────────────────────────────────────────────────────────
+//
+// The join between two clocks: candles are indexed by rodada, an acontecimento
+// is dated by a Brazil-local day. Every case below is about which side of a
+// boundary a day falls on.
+
+const MARK_BOX: CandleBox = { width: 720, height: 300, padding: 6, clubCount: 4, lastRound: 2 };
+
+const clubEvent = (overrides: Partial<SeasonEvent> & { date: string }): SeasonEvent => ({
+  id: `e-${overrides.date}`,
+  scope: "clube",
+  clubCode: "AAA",
+  title: "AAA demite o técnico",
+  source: "https://example.com/a",
+  ...overrides,
+} as SeasonEvent);
+
+const geralEvent = (date: string, endDate?: string): SeasonEvent => ({
+  id: `g-${date}`,
+  scope: "geral",
+  date,
+  endDate,
+  title: "Campeonato paralisado",
+  source: "https://example.com/g",
+});
+
+/** The boundary in bands: 0 is the left edge, `lastRound` the right. */
+const bandsOf = (x: number, box = MARK_BOX): number =>
+  (x - box.padding) / ((box.width - box.padding * 2) / box.lastRound);
+
+test("an acontecimento lands after the last round THIS CLUB played by its day", () => {
+  // AAA played round 1 on 11 April and round 2 on 18 April.
+  const [mark] = eventMarks([clubEvent({ date: "2026-04-11" })], SEASON, "AAA", MARK_BOX);
+
+  assert.equal(mark.round, 1);
+  assert.equal(bandsOf(mark.x), 1);
+});
+
+test("the anchor is the club's own fixtures, not whether the ROUND had finished", () => {
+  // The trap, and the reason this function exists rather than a round lookup.
+  // Round 1 is not over on 11 April — BBB plays it on the 12th — but AAA's own
+  // round-1 match was played on the 11th. Asking which rounds were *complete*
+  // answers 0 and draws the rule before a match the club had already played.
+  const day = "2026-04-11";
+  const marks = eventMarks([clubEvent({ date: day })], SEASON, "AAA", MARK_BOX);
+  assert.equal(marks[0].round, 1);
+
+  // Same day, same season, the other club: BBB genuinely had not played, so its
+  // own boundary is 0. One day, two correct answers — which is the whole point.
+  const forBbb = eventMarks(
+    [clubEvent({ date: day, clubCode: "BBB" })],
+    SEASON,
+    "BBB",
+    MARK_BOX,
+  );
+  assert.equal(forBbb[0].round, 0);
+});
+
+test("a kickoff late in the UTC day is dated by the Brazilian evening it was", () => {
+  // 02:00Z on the 12th is 23:00 on the 11th in São Paulo. A boundary read off
+  // the UTC date would put this match *after* an acontecimento dated the 11th,
+  // and the club would appear to have played it under whoever came next.
+  const late: Match[] = [
+    match({ round: 1, homeCode: "AAA", awayCode: "CCC", homeGoals: 1, kickoff: "2026-04-12T02:00:00Z" }),
+    match({ round: 1, homeCode: "BBB", awayCode: "DDD", kickoff: "2026-04-12T02:00:00Z" }),
+  ];
+  const [mark] = eventMarks([clubEvent({ date: "2026-04-11" })], late, "AAA", MARK_BOX);
+
+  assert.equal(mark.round, 1);
+});
+
+test("a general acontecimento is marked on every club's painel", () => {
+  for (const code of ["AAA", "BBB", "CCC", "DDD"]) {
+    const marks = eventMarks([geralEvent("2026-04-13")], SEASON, code, MARK_BOX);
+    assert.equal(marks.length, 1, `${code} should carry the general acontecimento`);
+  }
+});
+
+test("another club's acontecimento is not marked on this one's", () => {
+  const marks = eventMarks(
+    [clubEvent({ date: "2026-04-13", clubCode: "BBB" })],
+    SEASON,
+    "AAA",
+    MARK_BOX,
+  );
+  assert.deepEqual(marks, []);
+});
+
+test("marks run oldest first, the opposite of the timeline beneath them", () => {
+  const marks = eventMarks(
+    [
+      clubEvent({ id: "late", date: "2026-04-19" }),
+      clubEvent({ id: "early", date: "2026-04-11" }),
+    ],
+    SEASON,
+    "AAA",
+    MARK_BOX,
+  );
+
+  assert.deepEqual(marks.map((mark) => mark.id), ["early", "late"]);
+});
+
+test("two acontecimentos on one boundary keep a fixed order rather than file order", () => {
+  const forwards = eventMarks(
+    [clubEvent({ id: "b", date: "2026-04-12" }), clubEvent({ id: "a", date: "2026-04-12" })],
+    SEASON,
+    "AAA",
+    MARK_BOX,
+  );
+  const backwards = eventMarks(
+    [clubEvent({ id: "a", date: "2026-04-12" }), clubEvent({ id: "b", date: "2026-04-12" })],
+    SEASON,
+    "AAA",
+    MARK_BOX,
+  );
+
+  assert.deepEqual(forwards.map((mark) => mark.id), ["a", "b"]);
+  assert.deepEqual(backwards.map((mark) => mark.id), ["a", "b"]);
+});
+
+test("the mark falls BETWEEN two candles, never over one", () => {
+  // The claim the whole design rests on: the acontecimento happened after round
+  // 1 closed, so round 1 must stay entirely on its own side of the rule.
+  const [mark] = eventMarks([clubEvent({ date: "2026-04-12" })], SEASON, "AAA", MARK_BOX);
+  const shapes = candleShapes(candlesOf("AAA"), MARK_BOX);
+  const first = shapes.find((shape) => shape.round === 1)!;
+  const second = shapes.find((shape) => shape.round === 2)!;
+
+  assert.ok(mark.x > first.body.x + first.body.width, "the rule is past round 1's body");
+  assert.ok(mark.x < second.body.x, "the rule is before round 2's body");
+  // And past round 1's stub too, which is drawn in the gutter to its left.
+  assert.ok(mark.x > first.openTick.x + first.openTick.width);
+});
+
+test("a span that no rodada falls inside collapses onto its own boundary", () => {
+  // The shipped paralisação, in miniature: it opens after round 1 and closes
+  // before round 2 is played, so there is nothing to shade.
+  const [mark] = eventMarks(
+    [geralEvent("2026-04-13", "2026-04-17")],
+    SEASON,
+    "AAA",
+    MARK_BOX,
+  );
+
+  assert.equal(mark.round, 1);
+  assert.equal(mark.endRound, 1);
+  assert.equal(mark.width, 0);
+});
+
+test("a span a rodada DOES fall inside is a band as wide as the rounds it covers", () => {
+  const [mark] = eventMarks(
+    [geralEvent("2026-04-13", "2026-04-30")],
+    SEASON,
+    "AAA",
+    MARK_BOX,
+  );
+
+  assert.equal(mark.round, 1);
+  assert.equal(mark.endRound, 2);
+  assert.equal(bandsOf(mark.x + mark.width), 2);
+});
+
+test("an acontecimento with no end is a day and never a band", () => {
+  const [mark] = eventMarks([clubEvent({ date: "2026-04-13" })], SEASON, "AAA", MARK_BOX);
+
+  assert.equal(mark.endRound, mark.round);
+  assert.equal(mark.width, 0);
+});
+
+test("a mark is clamped into the box rather than painted past the frame", () => {
+  // A day beyond the drawn season, on a chart whose domain stops at round 1 —
+  // which is what the comparação can hand a club with a game in hand.
+  const narrow: CandleBox = { ...MARK_BOX, lastRound: 1 };
+  const [mark] = eventMarks([clubEvent({ date: "2026-05-30" })], SEASON, "AAA", narrow);
+
+  assert.equal(mark.round, 1);
+  assert.equal(mark.x, narrow.width - narrow.padding);
+});
+
+test("an acontecimento predating the club's first match sits at the left edge", () => {
+  const [mark] = eventMarks([clubEvent({ date: "2026-01-01" })], SEASON, "AAA", MARK_BOX);
+
+  assert.equal(mark.round, 0);
+  assert.equal(mark.x, MARK_BOX.padding);
+  assert.match(mark.label, /antes da 1ª rodada/);
+});
+
+test("the label names the boundary and the day, since a hover gets no list", () => {
+  const [mark] = eventMarks(
+    [clubEvent({ date: "2026-04-12", title: "AAA demite Tite" })],
+    SEASON,
+    "AAA",
+    MARK_BOX,
+  );
+
+  assert.equal(mark.label, "após a 1ª rodada · AAA demite Tite (12 de abril de 2026)");
+});
+
+test("an unfinished fixture does not move a boundary", () => {
+  // The x domain counts finished matches, so a boundary must too — otherwise a
+  // scheduled match would push a rule past the last candle drawn.
+  const withFuture: Match[] = [
+    ...SEASON,
+    match({ round: 3, homeCode: "AAA", awayCode: "CCC", status: "SCHEDULED", homeGoals: null, awayGoals: null, kickoff: "2026-04-25T19:00:00Z" }),
+  ];
+  const box: CandleBox = { ...MARK_BOX, lastRound: 3 };
+  const [mark] = eventMarks([clubEvent({ date: "2026-04-26" })], withFuture, "AAA", box);
+
+  assert.equal(mark.round, 2);
 });
