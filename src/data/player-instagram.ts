@@ -137,6 +137,28 @@
  * finding**. The join produces candidates; it does not define them, and it is
  * not a gate anything here is checked against. Absence from it is not a reason
  * to remove an entry somebody opened.
+ *
+ * ## A handle that arrived without a join at all
+ *
+ * `carlosvinicius95` (`37833`, Grêmio) came from a link somebody pasted, not
+ * from `P2003` — so there is no date-of-birth join behind it and none of the
+ * corroboration the paragraphs above rest on. That removes a check; it does
+ * not lower the bar, because the bar was never the join. Every entry here was
+ * confirmed by **opening the profile**, and the join only ever decided which
+ * profile was worth opening.
+ *
+ * What the profile says is the whole of the evidence, and it is the same
+ * evidence the survey above accepted: title `Carlos Vinicius
+ * (@carlosvinicius95)`, 676K followers, and a bio naming **@gremio** and
+ * `Porto Alegre` — and `squads.ts` lists `37833` under `squad("1767")`, which
+ * is Grêmio. The `95` is his birth year, `1995-03-25`, which is a coincidence
+ * worth noticing and not a check: a handle can carry any number.
+ *
+ * Note what is **not** claimed. The bio establishes that this account belongs
+ * to a Carlos Vinicius at Grêmio, and the division carries exactly one — but
+ * this file already records that exact name plus exact date is not a unique
+ * key here, so a second Carlos Vinícius arriving in a transfer window is the
+ * case that would need this re-read rather than trusted.
  */
 export const PLAYER_INSTAGRAM: Record<string, string> = {
   "192070": "kevinviveros9",     // Kevin Viveros · Athletico-PR
@@ -197,6 +219,7 @@ export const PLAYER_INSTAGRAM: Record<string, string> = {
   "157533": "jkennedy",          // John Kennedy · Fluminense
   "179177": "martinelli.08",     // Martinelli · Fluminense
   "23333": "yefersonsoteldo1006", // Yeferson Soteldo · Fluminense
+  "37833": "carlosvinicius95",   // Carlos Vinícius · Grêmio
   "3219": "kichanpavon",         // Cristian Pavón · Grêmio
   "147442": "ericknoriega34",    // Erick Noriega · Grêmio
   "116177": "furacaotete",       // Tetê · Grêmio
