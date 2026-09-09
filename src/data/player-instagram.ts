@@ -81,8 +81,27 @@
  * deactivated account is what the Ayrton Lucas entry above records, and no id
  * anywhere reports it. Title, follower count and a bio naming **@palmeiras**,
  * read in a browser.
+ *
+ * ## An entry the join cannot reach at all
+ *
+ * `kevinviveros9` had no candidate to check. Wikidata carries **no `P2003`**
+ * for Kevin Viveros (`192070`), so the join at the top of this file does not
+ * reach him — which is how the competition's own **artilheiro** came to be
+ * missing from this file while `player-wikipedia.ts` and
+ * `player-sofascore.ts` both record him. The handle was handed over directly
+ * and then opened, which is the whole of what this file has ever required:
+ * title `Kevin Viveros (@kevinviveros9)`, follower count, and a bio naming
+ * **@athleticoparanaense** — the club `squads.ts` lists him at. The same
+ * reading that settled `flacolopez_10` one section up, arrived at without the
+ * agreeing-ids half, because there were no ids to agree.
+ *
+ * So a **re-run of the Wikidata join will not find him, and that is not a
+ * finding**. The join produces candidates; it does not define them, and it is
+ * not a gate anything here is checked against. Absence from it is not a reason
+ * to remove an entry somebody opened.
  */
 export const PLAYER_INSTAGRAM: Record<string, string> = {
+  "192070": "kevinviveros9",     // Kevin Viveros · Athletico-PR
   "1182": "7_dudu",              // Dudu · Atlético-MG
   "1447": "maycon",              // Maycon · Atlético-MG
   "1548": "evertonri",           // Éverton Ribeiro · Bahia
