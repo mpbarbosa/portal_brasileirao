@@ -6,6 +6,8 @@ import {
   attachSubstitutions,
   STARTERS_PER_SIDE,
   bySection,
+  decodeLineups,
+  encodeLineups,
   lineupFor,
   lineupsFromAtletas,
   lineupsReconcile,
@@ -17,6 +19,7 @@ import {
 } from "@/escalacao-core";
 import type { SideMap } from "@/goals-core";
 import type { SumulaSubstitution } from "@/sumula-core";
+import { ESCALACOES } from "@/src/data/escalacoes";
 import type { Lineup, Match } from "@/src/types";
 
 const SIDES: SideMap = {
@@ -504,3 +507,137 @@ test("nothing here infers the keeper from shirt 1", () => {
   };
   assert.deepEqual(sidesWithoutStartingKeeper([noOne]), ["PAL"]);
   assert.equal(noOne.players.some((p) => p.keeper), false);});
+
+// ---------------------------------------------------------------------------
+// The storage encoding — `LineupEntry` in `src/types.ts` has the measurements
+// ---------------------------------------------------------------------------
+
+/** A sheet exercising every flag combination and both substitution shapes. */
+const encodable = (): Lineup[] => [
+  {
+    clubCode: "PAL",
+    players: [
+      { name: "Titular goleiro", shirt: "1", keeper: true, starter: true },
+      { name: "Reserva goleiro", shirt: "12", keeper: true },
+      { name: "Titular de linha", shirt: "9", starter: true },
+      { name: "Reserva de linha", shirt: "27" },
+    ],
+    subs: [
+      { on: "Reserva de linha", off: "Titular de linha", minute: "70'" },
+      { on: "A", off: "B", onShirt: "27", offShirt: "9", minute: "Intervalo" },
+    ],
+  },
+  { clubCode: "VAS", players: [{ name: "Só um", shirt: "07" }] },
+];
+
+test("the escalação encoding round-trips exactly", () => {
+  const before = encodable();
+  assert.deepStrictEqual(decodeLineups(encodeLineups(before)), before);
+});
+
+test("a flag that is not set is absent, never false", () => {
+  // `deepStrictEqual` above would catch this, and it is asserted on its own
+  // because it is the half a reader is most likely to "tidy" into
+  // `keeper: Boolean(flags & 1)` — which type-checks, renders identically, and
+  // silently changes every object in the file.
+  const [pal] = decodeLineups(encodeLineups(encodable()));
+  const bench = pal.players.find((p) => p.name === "Reserva de linha")!;
+  assert.deepStrictEqual(Object.keys(bench), ["name", "shirt"]);
+  assert.equal("starter" in bench, false);
+  assert.equal("keeper" in bench, false);
+});
+
+test("a player with no flags is written as two fields, not three", () => {
+  // The encoding decision itself: 5501 of 11 548 real players are neither
+  // keeper nor starter, so the commonest row in the file is the shortest one.
+  const [[, players]] = encodeLineups(encodable());
+  assert.deepEqual(
+    players.map((entry) => entry.length),
+    [3, 3, 3, 2],
+  );
+  assert.deepEqual(players[0], ["Titular goleiro", "1", 3]);
+  assert.deepEqual(players[1], ["Reserva goleiro", "12", 1]);
+  assert.deepEqual(players[2], ["Titular de linha", "9", 2]);
+});
+
+test("absent subs stay absent through the encoding, never an empty list", () => {
+  // `Lineup.subs` absent means the súmula was not read; an empty array would
+  // mean a club that made no changes. The file cannot tell them apart if the
+  // encoding flattens one into the other.
+  const [, vas] = decodeLineups(encodeLineups(encodable()));
+  assert.equal("subs" in vas, false);
+  const [, encoded] = encodeLineups(encodable());
+  assert.equal(encoded.length, 2);
+});
+
+test("a substitution's shirts are positional", () => {
+  const [[, , subs]] = encodeLineups(encodable());
+  assert.deepEqual(subs, [
+    ["Reserva de linha", "Titular de linha", "70'"],
+    ["A", "B", "Intervalo", "27", "9"],
+  ]);
+});
+
+test("a lone shirt keeps its own slot rather than being promoted", () => {
+  /*
+   * The committed file has no such row — `attachSubstitutions` resolves both
+   * numbers or refuses the fixture — so this case is unreachable from the data
+   * and **the assertion over the data cannot see it**. That is the whole reason
+   * it is written by hand: the obvious encoder shuffles a lone `offShirt` left
+   * into the `onShirt` slot, which round-trips into a substitution naming the
+   * wrong player as having come on, and a mutation doing exactly that passed
+   * every other test in this file.
+   */
+  const lonely: Lineup[] = [
+    {
+      clubCode: "PAL",
+      players: [{ name: "P", shirt: "1" }],
+      subs: [
+        { on: "Entrou", off: "Saiu", offShirt: "9", minute: "70'" },
+        { on: "Entrou", off: "Saiu", onShirt: "27", minute: "80'" },
+      ],
+    },
+  ];
+  const [[, , encoded]] = encodeLineups(lonely);
+  assert.deepEqual(encoded, [
+    ["Entrou", "Saiu", "70'", "", "9"],
+    ["Entrou", "Saiu", "80'", "27", ""],
+  ]);
+  assert.deepStrictEqual(decodeLineups(encodeLineups(lonely)), lonely);
+});
+
+test("every committed escalação decodes into a sheet lineupsReconcile accepts", () => {
+  // The end-to-end gate on the encoding, and the one that catches a swapped
+  // bit: with 1 and 2 exchanged every keeper becomes a starter and this fails
+  // on all 252 fixtures. Confirmed red by making that swap.
+  const ids = Object.keys(ESCALACOES);
+  assert.ok(ids.length > 200, `expected the season, got ${ids.length} fixtures`);
+  for (const id of ids) {
+    assert.equal(lineupsReconcile(ESCALACOES[id]), true, `${id} does not reconcile`);
+  }
+});
+
+test("no committed substitution carries one shirt without the other", () => {
+  // The property the tuple's trailing pair rests on, read off the real file
+  // rather than assumed: 89 rows carry the pair, 2328 carry nothing, none
+  // carries one. It is what makes `attachSubstitutions` all-or-nothing
+  // visible here.
+  let withShirts = 0;
+  let withoutShirts = 0;
+  for (const lineups of Object.values(ESCALACOES)) {
+    for (const lineup of lineups) {
+      for (const sub of lineup.subs ?? []) {
+        assert.equal(
+          Boolean(sub.onShirt),
+          Boolean(sub.offShirt),
+          `${lineup.clubCode} ${sub.on}/${sub.off} carries one shirt alone`,
+        );
+        if (sub.onShirt) withShirts++;
+        else withoutShirts++;
+      }
+    }
+  }
+  // Both populations are non-empty, so neither branch passes vacuously.
+  assert.ok(withShirts > 0, "no substitution carries shirts");
+  assert.ok(withoutShirts > 0, "every substitution carries shirts");
+});

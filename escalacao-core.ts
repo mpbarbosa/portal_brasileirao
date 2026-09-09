@@ -52,7 +52,17 @@
  * table beside the Gols table that module already parses, which is where that
  * work starts.
  */
-import type { ClubCode, Lineup, LineupPlayer, Match, Substitution } from "@/src/types";
+import type {
+  ClubCode,
+  Lineup,
+  LineupEntry,
+  LineupPlayer,
+  LineupPlayerEntry,
+  LineupPlayerFlags,
+  Match,
+  Substitution,
+  SubstitutionEntry,
+} from "@/src/types";
 import { type SideMap, tidyScorerName } from "@/goals-core";
 import { type SumulaSubstitution, sumulaSubstitutionLabel } from "@/sumula-core";
 
@@ -186,6 +196,72 @@ export const sidesWithoutStartingKeeper = (lineups: Lineup[]): ClubCode[] =>
   lineups
     .filter((lineup) => !lineup.players.some((player) => player.starter && player.keeper))
     .map((lineup) => lineup.clubCode);
+
+/**
+ * The storage encoding of `src/data/escalacoes.ts`, both directions.
+ *
+ * **They live together because they are one decision read twice**, which is the
+ * split `commons-core.ts` and `scripts/commons-api.ts` already draw and the
+ * reason `parseSumulaSubstitutions` is not written twice: `sync-goals.ts` writes
+ * the file through `encodeLineups` and the app reads it through
+ * `decodeLineups`, so a field added to one is a compile error in the other
+ * rather than a value that silently stops being written. The writer used to
+ * enumerate its fields inline, and adding `Substitution.onShirt` to the type
+ * left it emitting the three it already knew — a resync then produced a file
+ * identical to the one it replaced, and the new field looked broken rather than
+ * unwritten. That failure is not available from here.
+ *
+ * The encoding itself, and what it was measured against, is on `LineupEntry` in
+ * `src/types.ts`.
+ */
+export const decodeLineups = (entries: LineupEntry[]): Lineup[] =>
+  entries.map(([clubCode, players, subs]) => ({
+    clubCode,
+    players: players.map(([name, shirt, flags = 0]) => ({
+      name,
+      shirt,
+      // Present-or-absent, never `keeper: false` — the round trip has to land
+      // back on the exact object the file used to hold, and `{ keeper: false }`
+      // is a different object from `{}` to every deep comparison that guards
+      // this.
+      ...((flags & 1) === 1 ? { keeper: true as const } : {}),
+      ...((flags & 2) === 2 ? { starter: true as const } : {}),
+    })),
+    ...(subs ? { subs: subs.map(decodeSubstitution) } : {}),
+  }));
+
+const decodeSubstitution = ([on, off, minute, onShirt, offShirt]: SubstitutionEntry): Substitution => ({
+  on,
+  off,
+  ...(onShirt ? { onShirt } : {}),
+  ...(offShirt ? { offShirt } : {}),
+  minute,
+});
+
+/** The inverse of `decodeLineups`, used by `scripts/sync-goals.ts` to write the file. */
+export const encodeLineups = (lineups: Lineup[]): LineupEntry[] =>
+  lineups.map((lineup) => {
+    const players: LineupPlayerEntry[] = lineup.players.map((player) => {
+      const flags = ((player.keeper ? 1 : 0) | (player.starter ? 2 : 0)) as 0 | LineupPlayerFlags;
+      return flags === 0 ? [player.name, player.shirt] : [player.name, player.shirt, flags];
+    });
+    const subs = lineup.subs?.map(encodeSubstitution);
+    return subs ? [lineup.clubCode, players, subs] : [lineup.clubCode, players];
+  });
+
+const encodeSubstitution = (sub: Substitution): SubstitutionEntry =>
+  // The pair is positional, so a lone shirt is written into **its own slot**
+  // beside an empty string rather than being shuffled left into the pair. Every
+  // row in the committed file carries both or neither and a test asserts it, so
+  // this branch is unreachable from `attachSubstitutions` today — which is
+  // exactly why it is written the careful way. `Substitution` declares the two
+  // fields independently optional, so a lone one is constructible, and the
+  // compact-looking alternative promotes an `off` shirt into the `on` slot and
+  // names the wrong player as having come on. `""` decodes back to absent, so
+  // the round trip stays exact for an input nothing produces yet.
+  sub.onShirt || sub.offShirt
+    ? [sub.on, sub.off, sub.minute, sub.onShirt ?? "", sub.offShirt ?? ""]
+    : [sub.on, sub.off, sub.minute];
 
 /** Attach synced lineups to the matches that have any. Mirrors `withGoals`. */
 export const withLineups = (
