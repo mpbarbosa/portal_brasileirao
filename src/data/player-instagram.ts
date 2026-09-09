@@ -27,6 +27,44 @@
  * and a script that fetched a profile and reported "200 OK" would confirm
  * nothing while looking exactly like the ones that confirm something.
  *
+ * **That still holds for a script, and it is narrower than it reads. A
+ * RENDERING browser does distinguish, and the 48 entries added in the ptwiki
+ * sweep were confirmed that way.** The paragraph above rules out a `check-*`
+ * of the kind this repo ships — `curl` gets the shell and learns nothing. It
+ * does not rule out driving a real browser, which executes the JavaScript and
+ * so reaches what a person would see. Measured against a known-negative
+ * BEFORE any candidate was trusted, which is the whole reason to believe it:
+ * an invented handle renders **"Profile isn't available"**, while a real one
+ * renders the display name, the follower count and the bio.
+ *
+ * Do not read that as "it can be automated after all". What the browser
+ * supplies is the same evidence the search snippet supplied, more reliably;
+ * the JUDGEMENT is still per-entry and still refuses more than it accepts.
+ * Over 86 candidates: **48 accepted, 19 refused, 19 held** — a 22% hard
+ * failure rate, in line with the 13-of-70 the first pass recorded.
+ *
+ * The 19 refusals are worth keeping, because a script trusting Wikidata would
+ * have written every one of them:
+ *
+ * - **13 handles simply do not resolve.** Accounts are renamed and deleted,
+ *   and Wikidata keeps the old value.
+ * - **`r.junior.07`** (Robson Júnior) has **0 followers and 1 following** —
+ *   an empty account somebody made and abandoned.
+ * - **`_allansoouza`** (Allan) has **1 follower**. **`opatrickalan`** (Alan
+ *   Patrick) is **private with 12.2K**, which no first-choice Internacional
+ *   playmaker's account is. The follower count is what refuses these, exactly
+ *   as this file's original pass said.
+ * - **`carlos_f20`** renders as *Carlos **Figueroa***; the player is Carlos
+ *   **Cuesta**. A surname apart, and nothing but opening it would show that.
+ * - **`joaopaulo34`** (João Paulo, *Bahia*) reads *"Menino da vila"* over
+ *   Santos' colours, and **`matheuzinho.02`** (Matheuzinho, *Corinthians*) is
+ *   private with 170 followers and a `@flamengo` bio. Both are a different
+ *   man of the same name — the trap this file exists to catch.
+ *
+ * The 19 held are not rejections: the name matches and the account is
+ * plainly a footballer's, but nothing on the profile names the club, so
+ * there is no second source. Absent is the honest answer for those.
+ *
  * The candidates came from Wikidata's `P2003` (Instagram username), joined to
  * `squads.ts` on **exact date of birth plus a shared name token** — the join is
  * on identity, not on which club a player is at, since the seed is a frozen
@@ -102,43 +140,91 @@
  */
 export const PLAYER_INSTAGRAM: Record<string, string> = {
   "192070": "kevinviveros9",     // Kevin Viveros · Athletico-PR
+  "1662": "goleirosantosoficial", // Santos · Athletico-PR
+  "8606": "stevenmendozaoficial", // Stiven Mendoza · Athletico-PR
   "1182": "7_dudu",              // Dudu · Atlético-MG
+  "7569": "cassierrajr",         // Mateo Cassierra · Atlético-MG
   "1447": "maycon",              // Maycon · Atlético-MG
+  "123350": "reinier.jesus",     // Reinier · Atlético-MG
+  "46266": "tomascuello28",      // Tomás Cuello · Atlético-MG
+  "178854": "victorhg_10_",      // Victor Hugo Gomes · Atlético-MG
   "1548": "evertonri",           // Éverton Ribeiro · Bahia
+  "1547": "jeanlucas8_",         // Jean Lucas · Bahia
   "15904": "alextelles13",       // Alex Telles · Botafogo
   "2096": "allanmarques91",      // Allan · Botafogo
+  "250493": "alvaro_montoro10",  // Alvaro Montoro · Botafogo
+  "1580": "edenilson",           // Edenilson · Botafogo
+  "12653": "jr.santos.oficial",  // Júnior Santos · Botafogo
+  "286833": "kadirbarria_18",    // Kadir Barría · Botafogo
+  "160792": "mateoponte_04",     // Mateo Ponte · Botafogo
   "7838": "yannickbolasie",      // Yannick Bolasie · Chapecoense
+  "119621": "jl_carvalho",       // João Lucas · Clube do Remo
+  "168807": "vitorfbueno",       // Vitor Bueno · Clube do Remo
   "3789": "carrillo",            // André Carrillo · Corinthians
+  "179054": "brenobidon",        // Bidon · Corinthians
   "33145": "gpaulista5",         // Gabriel Paulista · Corinthians
+  "82991": "hugosouza",          // Hugo Souza · Corinthians
   "3325": "jesselingard",        // Jesse Lingard · Corinthians
+  "1614": "matheuspereira_98",   // Matheus Pereira · Corinthians
   "8472": "memphisdepay",        // Memphis Depay · Corinthians
   "1325": "yurialberto",         // Yuri Alberto · Corinthians
   "169022": "brenolopesoficial", // Breno Lopes · Coritiba
+  "249479": "jp_chermont",       // João Pedro Chermont · Coritiba
+  "16154": "pedrorocha32",       // Pedro Rocha · Coritiba
+  "1572": "rodrigomoledo13",     // Rodrigo Moledo · Coritiba
   "1266": "fabriciobruno96",     // Fabrício Bruno · Cruzeiro
   "1815": "gersonsantoss",       // Gerson · Cruzeiro
   "91310": "kaiojorge",          // Kaio Jorge · Cruzeiro
   "178822": "matheuscunha_01",   // Matheus Cunha · Cruzeiro
   "2028": "alxsndro12",          // Alex Sandro · Flamengo
+  "1074": "ayrtonlucas",         // Ayrton Lucas · Flamengo
   "7881": "daniluiz2",           // Danilo Luiz da Silva · Flamengo
+  "1131": "emerson_royal",       // Emerson Royal · Flamengo
   "1244": "g10dearrascaeta",     // Giorgian De Arrascaeta · Flamengo
   "29012": "carrascall",         // Jorge Carrascal · Flamengo
   "1408": "leortiz33",           // Leo Ortiz · Flamengo
+  "11192": "leopereira4",        // Léo Pereira · Flamengo
   "1543": "lucaspaqueta",        // Lucas Paquetá · Flamengo
+  "8413": "l.araujo11oficial",   // Luiz Araújo · Flamengo
   "168795": "nicodelacruz10",    // Nicolas de la Cruz · Flamengo
   "1077": "pedroguilherme",      // Pedro · Flamengo
   "118": "saulniguez",           // Saúl · Flamengo
   "28614": "agus_cano7",         // Agustín Canobbio · Fluminense
+  "245200": "facubernal_08",     // Facundo Bernal · Fluminense
   "15929": "guiarana",           // Guilherme Arana · Fluminense
   "21689": "hulkparaiba",        // Hulk · Fluminense
   "1215": "igorrabellooficial",  // Igor Rabello · Fluminense
+  "157533": "jkennedy",          // John Kennedy · Fluminense
+  "179177": "martinelli.08",     // Martinelli · Fluminense
+  "23333": "yefersonsoteldo1006", // Yeferson Soteldo · Fluminense
+  "3219": "kichanpavon",         // Cristian Pavón · Grêmio
+  "147442": "ericknoriega34",    // Erick Noriega · Grêmio
+  "116177": "furacaotete",       // Tetê · Grêmio
+  "1138": "wkannemann",          // Walter Kannemann · Grêmio
   "1129": "alerrandro_souza00",  // Alerrandro · Internacional
+  "58": "gabimercado25",         // Gabriel Mercado · Internacional
+  "30386": "chinorochet93",      // Sergio Rochet · Internacional
+  "272": "gabrielpires.oficial", // Gabriel · Mirassol
+  "1181": "victorluis",          // Victor Luis · Mirassol
+  "33153": "andreaspereira",     // Andreas Pereira · Palmeiras
   "115222": "bruno_fuchs",       // Bruno Fuchs · Palmeiras
+  "130957": "emimartinez.32",    // Emiliano Martínez · Palmeiras
   "28740": "joacopiquerez",      // Joaquín Piquerez · Palmeiras
   "170698": "flacolopez_10",     // José Manuel López · Palmeiras
   "115559": "khellvensilva",     // Khellven · Palmeiras
+  "119594": "mauriciomp7",       // Mauricio · Palmeiras
   "140647": "ramon.sosa17",      // Ramón Sosa · Palmeiras
   "181439": "vitor_roque9",      // Vítor Roque · Palmeiras
+  "99380": "gabrielbrazao1",     // Gabriel Brazão · Santos
   "139933": "gabrielmenino00",   // Gabriel Menino · Santos
+  "1086": "luanperes94",         // Luan Peres · Santos
   "8491": "neymarjr",            // Neymar · Santos
+  "2295": "tomasrincon8",        // Tomás Rincón · Santos
+  "3244": "cedricsoares41",      // Cédric · São Paulo
   "85523": "marcosantonio",      // Marcos Antônio · São Paulo
+  "169542": "pablo_maia02",      // Pablo Maia · São Paulo
+  "171304": "nmmoreira_79",      // Nuno Moreira · Vasco da Gama
+  "179017": "robertrenan03",     // Robert · Vasco da Gama
+  "77470": "cacazagueiro",       // Cacá · Vitória
+  "166758": "kike_saverio",      // Kike Saverio · Vitória
 };
