@@ -1547,6 +1547,51 @@ async function startServer() {
   const port = await resolveAppPort();
   const httpServer = createHttpServer(app);
 
+  /**
+   * How long an idle keep-alive connection is allowed to live.
+   *
+   * **Node's default is 5 seconds, and that is shorter than any pooling client
+   * waits between two requests** — which makes the close instant a race rather
+   * than a tidy-up. A client that holds a pooled connection and writes to it at
+   * the moment the server has decided to close gets a TCP reset, and the
+   * request never happens: `socket hang up` on one side of the millisecond,
+   * `read ECONNRESET` on the other. It is not a defect of any one client —
+   * Node's own `http.Agent` loses the same race.
+   *
+   * Measured rather than reasoned about. With the default the server closes an
+   * idle connection at **~6.01s** (the 5s timeout plus Node's timer slack), and
+   * a client reusing one at exactly that gap fails while every other gap is
+   * clean:
+   *
+   *     gap    5800  6000  6200  7000  9000  15000  ms
+   *     errors  0/8   2/8   0/8   0/8   0/8    0/8
+   *
+   * Shorter and the connection is still open; longer and the client has seen
+   * the FIN while idle and discarded it. Only the ±100ms coincidence fails.
+   * The same probe against a server with this value set is 0 errors in 32,
+   * against 4 in 32 with the default, arms interleaved so one machine's load
+   * could not favour either.
+   *
+   * This is what the end-to-end suite has been hitting for months: a
+   * transport-level failure of a `page.request` call, never an assertion,
+   * attributed in turn to the accounts area, to `goals.spec.ts`, to
+   * `seo.spec.ts` and to `match-page.spec.ts` — because the route is
+   * irrelevant. It is whichever request happens to reuse a connection at the
+   * wrong millisecond.
+   *
+   * **65 seconds because nginx's own upstream `keepalive_timeout` defaults to
+   * 60**, and the rule for an origin behind a proxy is that it must outlive the
+   * proxy's idle timeout — otherwise the proxy is the client losing this race,
+   * and it surfaces as an intermittent 502. Today `04_setup_nginx.sh` declares
+   * no `upstream ... keepalive` block, so nginx opens a fresh connection per
+   * request and production cannot hit this at all; the value is what makes
+   * enabling upstream keep-alive later a performance change rather than an
+   * incident. `headersTimeout` has to stay above it, or the invariant that a
+   * request may finish arriving after an idle wait stops holding.
+   */
+  httpServer.keepAliveTimeout = 65_000;
+  httpServer.headersTimeout = 70_000;
+
   if (IS_PRODUCTION) {
     const distPath = path.join(process.cwd(), "dist");
     app.use(express.static(distPath, { index: false }));
