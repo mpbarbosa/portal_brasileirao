@@ -23,7 +23,7 @@ import type { ClubCode } from "@/src/types";
  * torcedores". Nothing here is a club's own statement, and presenting one as if
  * it were is the kind of wrong that looks right.
  *
- * **Coverage is deliberately PARTIAL — seven clubs of twenty — and grows by
+ * **Coverage is deliberately PARTIAL — eight clubs of twenty — and grows by
  * hand**, like `player-instagram.ts` and `broadcasts.ts`. A club with no entry
  * renders no link rather than a guessed one, and the survey below is what that
  * rule is worth: `r/<name>` is exactly the shape somebody would be tempted to
@@ -43,16 +43,37 @@ import type { ClubCode } from "@/src/types";
  *
  * **THE BAR IS TWO INDEPENDENT SOURCES NAMING THE SAME SUB**, which is
  * `player-overrides.ts`' rule for a position and `coach-overrides.ts`' for a
- * técnico, and it is what the seven here clear. The two are **Wikidata's P3984**
- * and **subredditstats.com**, and they are independent in the way that matters:
+ * técnico. **Wikidata's P3984** and **subredditstats.com** are the pair that
+ * produced most of these, and they are independent in the way that matters:
  * one is an editor's claim about the club, the other is the sub's own title,
  * description, subscriber count and canonical casing.
  *
- * `CRFla` is the **control** rather than merely the first entry: it was supplied
- * by this repository's own maintainer, and Wikidata reached it independently.
- * A method that agrees with the one value already known is a method with
+ * **That pair is the METHOD and not the whole of what counts as a source**, and
+ * saying so is the correction `Furacao` obliged. Read as a closed whitelist the
+ * bar excludes the maintainer — who is the one party here that can do the thing
+ * this file asks for in as many words, which is to open the sub in a real
+ * browser. `CRFla` is the proof, not an exception to be argued around: it was
+ * **supplied by this repository's own maintainer** and Wikidata reached it
+ * independently, so the first entry in the file already cleared the bar with a
+ * person as one of its two. A rule whose own control violates it is a rule
+ * written down slightly wrong.
+ *
+ * Which is also why `CRFla` is the **control** rather than merely the first
+ * entry: a method that agrees with the one value already known is a method with
  * something behind it — the known-negative rule `CLAUDE.md` states, for once
  * pointed at a source instead of at a command.
+ *
+ * **`Furacao` is therefore maintainer + subredditstats, and the honest reading
+ * of that is one machine source rather than two.** Recorded plainly instead of
+ * folded into the seven: subredditstats identifies it correctly, the maintainer
+ * supplied the address, and **Wikidata still carries no `P3984` for `Q506832`**
+ * — re-queried 2026-09-09Z, before the entry was written rather than after, so
+ * the absence is a reading and not an assumption inherited from the survey
+ * below. Nobody need run that query again. Note what the weaker pair costs and
+ * what it does not: the failure this bar exists to refuse is a sub naming a
+ * **different subject** — a Mexican club, the Civil Air Patrol, a state, a city
+ * — and a person who follows the club is the source least able to make that
+ * mistake.
  *
  * **subredditstats is FROZEN ~1000 days back, and the counts below are
  * therefore historical.** Proved by control rather than suspected: `r/AskReddit`,
@@ -65,7 +86,11 @@ import type { ClubCode } from "@/src/types";
  * branch rather than one that agrees with whatever it is handed.
  *
  * Sizes at that reading: `corinthians` 66.8k, `SaoPauloFC` 51.2k, `palmeiras`
- * 44.8k, `internacional` 21.5k, `gremio` 21.2k, `vasco` 15.0k, `CRFla` 95.9k.
+ * 44.8k, `internacional` 21.5k, `gremio` 21.2k, `vasco` 15.0k, `CRFla` 95.9k,
+ * `Furacao` 390. That last one is two orders of magnitude below the rest and is
+ * still nothing like the five rejected below: **a small community is not an
+ * empty room**, and the line those five fall the wrong side of is whether
+ * anybody is there at all.
  *
  * **São Paulo is the one entry whose CASING had to be resolved.** Wikidata
  * carries `SaoPauloFC` and `saopaulofc` as two claims of equal rank; they are
@@ -74,9 +99,9 @@ import type { ClubCode } from "@/src/types";
  * verified against two controls (`crfla` -> `CRFla`, `askreddit` -> `AskReddit`)
  * before being believed.
  *
- * **THE THIRTEEN CLUBS THAT ARE ABSENT, AND WHY — so nobody re-runs this.**
- * Four would have been wrong in a way no reader could see, and they are the
- * whole argument against deriving a name from a club's name:
+ * **THE TWELVE CLUBS THAT ARE ABSENT, AND WHY — so nobody re-runs this.**
+ * Four derived addresses would have been wrong in a way no reader could see,
+ * and they are the whole argument against deriving a name from a club's name:
  *
  *   r/santos    -> **Club Santos Laguna**, of Torreón, MEXICO
  *   r/CAP       -> **Civil Air Patrol**
@@ -86,17 +111,34 @@ import type { ClubCode } from "@/src/types";
  * That is `club-hymns.ts`' Santos trap exactly — the hymn of the *city* of
  * Santos returned beside the club's — met a second time in a second dataset.
  *
+ * **`r/CAP` stays on that list although Athletico-PR is now PRESENT**, and it
+ * is the sharpest line in it for exactly that reason: the club has a sub, it is
+ * `r/Furacao`, and the address a `tla` would produce reaches an American
+ * volunteer air force. So the derivation is not merely unreliable where the
+ * data is thin — it is wrong **next to a right answer that exists**, which is
+ * the shape a reader cannot see and a compiler cannot either. `CAP` is also the
+ * abbreviation this file's own header refuses to key on.
+ *
  * Five clubs have a sub that exists and is not a community: Bragantino (49
  * members), Remo (5), Fluminense (1), Mirassol (1), Vitória (2). Linking a room
  * with one person in it is worse than the absence, which at least says nothing.
  *
- * Four clubs have a real, correctly-identified sub and only **one** source, so
+ * Five clubs have a real, correctly-identified sub and only **one** source, so
  * they fail the bar rather than the sniff test, and are the obvious candidates
- * if it is ever widened: Santos (`SantosFC`, 16.8k, and absent from Wikidata
- * only), Cruzeiro (`Cruzeiro`, 2.8k), Botafogo (`botafogo`, 2.1k), Atlético-MG
- * (`Galo`, 1.9k), Athletico-PR (`Furacao`, 390), Chapecoense (326). Coritiba's
- * `r/Coritiba` (298) carries **no title and no description at all**, so nothing
- * in it says which Coritiba it is.
+ * for the second: Santos (`SantosFC`, 16.8k, and absent from Wikidata only),
+ * Cruzeiro (`Cruzeiro`, 2.8k), Botafogo (`botafogo`, 2.1k), Atlético-MG
+ * (`Galo`, 1.9k), Chapecoense (326). Coritiba's `r/Coritiba` (298) carries **no
+ * title and no description at all**, so nothing in it says which Coritiba it
+ * is. Athletico-PR stood in this list and is now above, which is what a second
+ * source looks like when it arrives: one line of the survey moves and the rest
+ * stay exactly where they were.
+ *
+ * **Count the names rather than the number in front of them.** The sentence
+ * above read "Four clubs" while listing six, from the commit that wrote it —
+ * a count in prose has no gate on it, which is `CLAUDE.md`'s own recurring
+ * failure met inside a file that spends eighty lines on being checkable. The
+ * twelve, the eight and the five here were each counted against `clubs.ts` on
+ * 2026-09-09Z; none of them is safe to carry forward on trust.
  *
  * **Bahia is the entry that is deliberately absent though a source names one**,
  * and it is `coach-overrides.ts`' Vasco written out again. Wikidata says
@@ -107,6 +149,7 @@ import type { ClubCode } from "@/src/types";
  */
 export const CLUB_REDDIT: Record<ClubCode, string> = {
   "1767": "gremio",
+  "1768": "Furacao",
   "1769": "palmeiras",
   "1776": "SaoPauloFC",
   "1779": "corinthians",
