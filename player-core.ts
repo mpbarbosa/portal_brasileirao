@@ -2,8 +2,15 @@
  * Pure player display logic. No I/O, no React — translation and age are total
  * functions over their inputs (tests/player-core.test.ts).
  */
-import { instagramHandle, wikipediaUrl } from "@/club-core";
-import type { Player, PlayerOverride, PlayerPhoto, Scorer, Squad } from "@/src/types";
+import { instagramHandle, instagramPostCode, wikipediaUrl } from "@/club-core";
+import type {
+  Player,
+  PlayerOverride,
+  PlayerPhoto,
+  PlayerPost,
+  Scorer,
+  Squad,
+} from "@/src/types";
 
 /**
  * football-data reports positions in English, at two levels of detail: broad
@@ -370,6 +377,30 @@ export const playerInstagram = (
   id: string,
   handles: Record<string, string>,
 ): string | null => instagramHandle(handles[id]);
+
+/**
+ * The curated Instagram posts for one player, already filtered to the ones that
+ * can actually be drawn.
+ *
+ * `videosFor`'s contract in `club-core.ts`, and it is worth keeping the same:
+ * the component is then handed a list it can render in full, rather than each
+ * card having to decide for itself whether its own code parses. An entry whose
+ * `code` will not reduce to a shortcode is dropped rather than rendered as a
+ * frame pointing nowhere.
+ *
+ * Returns the entries rather than addresses — unlike `playerWikipedia` and
+ * `playerSofascore` above, which return a URL because their caller renders one
+ * link and nothing else. A post carries an account and a summary the card
+ * prints beside the frame, so the whole entry has to survive.
+ *
+ * The table is passed in rather than imported, keeping this module free of I/O
+ * like every other core module. An unknown id is absence, not an error —
+ * coverage is partial by design and always will be.
+ */
+export const playerPosts = (
+  id: string,
+  posts: Record<string, PlayerPost[]>,
+): PlayerPost[] => (posts[id] ?? []).filter((post) => instagramPostCode(post.code) !== null);
 
 /**
  * The player's article on the Portuguese Wikipedia, or null when none is

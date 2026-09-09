@@ -11,6 +11,7 @@ import {
   PLAYER_PHOTO_WIDTHS,
   playerPhotoPage,
   playerPhotoUrl,
+  playerPosts,
   playerSearchUrls,
   playerName,
   playerNationality,
@@ -127,6 +128,31 @@ test("playerInstagram normalises whatever form the handle was written in", () =>
   );
   // Not a plausible handle: no link at all, rather than a broken one.
   assert.equal(playerInstagram("c", { c: "não é um perfil" }), null);
+});
+
+test("playerPosts returns the recorded posts and nothing for an unknown id", () => {
+  const post = { code: "Dc1GBBADkfo", account: "athleticoparanaense", summary: "Jogador do mês." };
+  const posts = { "192070": [post] };
+
+  assert.deepEqual(playerPosts("192070", posts), [post]);
+  // Absence, not an error — coverage is partial by design, and a player with
+  // none renders no section rather than a heading over nothing.
+  assert.deepEqual(playerPosts("1", posts), []);
+});
+
+test("playerPosts drops an entry whose code cannot be drawn", () => {
+  // `videosFor`'s contract: the component is handed a list it can render in
+  // full, so a code that will not reduce to a shortcode is dropped here rather
+  // than reaching the page as a frame pointing nowhere. The file is
+  // hand-maintained, so a reel link or a profile link is the plausible mistake.
+  const good = { code: "Dc1GBBADkfo", account: "athleticoparanaense", summary: "Jogador do mês." };
+  // `/reels/` and not `/reel/`: the shorter spelling is refused by length
+  // whatever `instagramPostCode` does about path kinds, so a case built on it
+  // would pass for a reason unrelated to what it claims to test.
+  const reel = { code: "https://www.instagram.com/reels/Dc1GBBADkfo/", account: "x", summary: "y" };
+  const junk = { code: "with spaces", account: "x", summary: "y" };
+
+  assert.deepEqual(playerPosts("a", { a: [good, reel, junk] }), [good]);
 });
 
 test("playerWikipedia builds the article address from a stored title", () => {

@@ -62,7 +62,7 @@ const OFFLINE_HOSTS = [/crests\.football-data\.org/, /img\.youtube\.com/];
 /**
  * Every host this suite must not reach that is **not** an image.
  *
- * One entry: YouTube's player, which **Melhores momentos** mounts once a
+ * The first was YouTube's player, which **Melhores momentos** mounts once a
  * reader picks a broadcaster and which **Vídeos do clube** mounts once a reader
  * presses a card. It is a second list rather than a third regex in
  * the one above because what separates them is the *stub*, not the rule — a
@@ -78,8 +78,17 @@ const OFFLINE_HOSTS = [/crests\.football-data\.org/, /img\.youtube\.com/];
  * defended. The club page proved the point on the way past — it was built with
  * an always-mounted frame first, and this list needed no edit either way, which
  * is the whole point of stubbing a host rather than a moment.
+ *
+ * **Instagram is the second entry, and it arrived exactly as that comment
+ * predicted** — a new section, a new host, one line here and no other change.
+ * **Publicações** on the player card mounts a frame on `www.instagram.com`
+ * once a reader presses a post, and the same facade argument applies: nothing
+ * requests it on render, so most of the suite never touches it. The stub is
+ * what keeps that a property of the *host list* rather than of this week's
+ * markup, and it matters more here than for YouTube — the third party is Meta,
+ * and a frame reaching it from CI is an outbound request nobody asked for.
  */
-const OFFLINE_FRAME_HOSTS = [/www\.youtube-nocookie\.com/];
+const OFFLINE_FRAME_HOSTS = [/www\.youtube-nocookie\.com/, /www\.instagram\.com/];
 
 export const test = base.extend({
   page: async ({ page }, use) => {
