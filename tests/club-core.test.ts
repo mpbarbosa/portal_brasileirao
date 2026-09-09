@@ -19,6 +19,9 @@ import {
   hasClubArticle,
   hymnUrl,
   instagramHandle,
+  instagramPostCode,
+  instagramPostEmbedUrl,
+  instagramPostUrl,
   instagramUrl,
   redditUrl,
   subredditName,
@@ -435,6 +438,61 @@ test("anything that is not a handle yields no link", () => {
   assert.equal(instagramUrl("a".repeat(31)), null);
   assert.equal(instagramUrl(""), null);
   assert.equal(instagramUrl(undefined), null);
+});
+
+test("a post shortcode becomes the canonical post address", () => {
+  assert.equal(instagramPostUrl("Dc1GBBADkfo"), "https://www.instagram.com/p/Dc1GBBADkfo/");
+  assert.equal(
+    instagramPostUrl("https://www.instagram.com/p/Dc1GBBADkfo/"),
+    "https://www.instagram.com/p/Dc1GBBADkfo/",
+  );
+});
+
+test("a pasted post link loses its share token", () => {
+  // Exactly what Instagram's own "copy link" puts on the clipboard. `stkn`
+  // identifies the account that copied it, so storing the raw URL would commit
+  // somebody's share token — which is why `instagramPostCode` exists at all
+  // rather than the data file holding permalinks.
+  const pasted =
+    "https://www.instagram.com/p/Dc1GBBADkfo/?utm_source=ig_web_copy_link&stkn=MzRlODBiNWFlZA==";
+  assert.equal(instagramPostCode(pasted), "Dc1GBBADkfo");
+  assert.equal(instagramPostUrl(pasted), "https://www.instagram.com/p/Dc1GBBADkfo/");
+});
+
+test("the frame address is the captioned embed and not the canonical post", () => {
+  // Not interchangeable: `/p/<code>/` answers `X-Frame-Options: DENY` and
+  // cannot be framed at all, and `/embed/` (uncaptioned) misreports its own
+  // height by a factor of three, so a frame sized from its MEASURE clips the
+  // picture. Both were measured in a browser; see `instagramPostEmbedUrl`.
+  assert.equal(
+    instagramPostEmbedUrl("Dc1GBBADkfo"),
+    "https://www.instagram.com/p/Dc1GBBADkfo/embed/captioned/",
+  );
+  assert.notEqual(instagramPostEmbedUrl("Dc1GBBADkfo"), instagramPostUrl("Dc1GBBADkfo"));
+});
+
+test("a link that is not a post yields no post", () => {
+  // Refuses rather than guesses. A reel and a `/tv/` post have their own path
+  // kinds and nothing here has checked that `/p/` serves them, so they are out
+  // until somebody checks — widening this is a deliberate change.
+  assert.equal(instagramPostCode("https://www.instagram.com/reel/Dc1GBBADkfo/"), null);
+  assert.equal(instagramPostCode("https://www.instagram.com/tv/Dc1GBBADkfo/"), null);
+  // `/reels/` rather than `/reel/`, and the difference is the whole reason this
+  // line exists: with the kind check deleted, those two are refused anyway
+  // because "reel" and "tv" are shorter than a shortcode can be — they pass for
+  // a reason that has nothing to do with what they are. "reels" is five
+  // characters and clears the same regex, so only the kind check refuses it,
+  // and the same holds for a profile handle. Confirmed by mutation.
+  assert.equal(instagramPostCode("https://www.instagram.com/reels/Dc1GBBADkfo/"), null);
+  assert.equal(instagramPostCode("https://www.instagram.com/palmeiras/"), null);
+  assert.equal(instagramPostCode("https://www.instagram.com/"), null);
+  assert.equal(instagramPostCode("with spaces"), null);
+  assert.equal(instagramPostCode("abc"), null);
+  assert.equal(instagramPostCode(""), null);
+  assert.equal(instagramPostCode(undefined), null);
+  // Every caller degrades to no post rather than to a frame pointing nowhere.
+  assert.equal(instagramPostUrl("https://www.instagram.com/reel/Dc1GBBADkfo/"), null);
+  assert.equal(instagramPostEmbedUrl("with spaces"), null);
 });
 
 test("a subreddit name becomes the canonical community address", () => {

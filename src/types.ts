@@ -289,6 +289,62 @@ export interface PlayerPhoto {
 }
 
 /**
+ * A **Publicação do jogador** — one Instagram post shown on the **Card do
+ * jogador**, curated in `src/data/player-posts.ts`.
+ *
+ * **This is not a photograph, and must not be folded into `PlayerPhoto`** one
+ * type up. That one names a file this app has *copied* onto its own origin, so
+ * it owes a licence and a credit and carries three required fields saying so.
+ * This one names a post that stays where its author put it, drawn by
+ * Instagram's own `/embed/` page inside a frame — republication through the
+ * route Meta publishes for exactly that, rather than bytes taken.
+ *
+ * That distinction is the whole of why this section may exist at all.
+ * `CONTEXT.md`'s **Foto do jogador** entry refuses an Instagram picture in as
+ * many words, and what it refuses is a **copy**: a player's own photographs are
+ * their copyright and a public profile licenses nothing. So nothing here may
+ * become one — an `<img>` pointed at `*.cdninstagram.com` is precisely the
+ * thing that entry forbids, and those addresses expire besides.
+ *
+ * Every field is required, like `ClubVideo`'s and for the same reason: a post
+ * with no account is one whose provenance the page cannot state, and a post
+ * with no summary is a press target with nothing written on it.
+ */
+export interface PlayerPost {
+  /**
+   * The post's shortcode alone — the `Dc1GBBADkfo` of
+   * `instagram.com/p/Dc1GBBADkfo/`. `instagramPostUrl` and
+   * `instagramPostEmbedUrl` derive the two addresses, so a pasted link's
+   * `?utm_source=ig_web_copy_link&stkn=…` does not persist here.
+   *
+   * `Club.hymn`'s rule, and sharper than it: that query string carries a
+   * **share token** identifying whoever copied the link, which is not a thing
+   * to commit to a public repository.
+   */
+  code: string;
+  /**
+   * The handle the post was published from, without the `@`.
+   *
+   * **Required, and frequently not the player's own account** — the seed entry
+   * is Athletico-PR's post *about* Viveros, with Viveros as a collaborator. The
+   * section names the account for that reason: a heading over an embed reads as
+   * a claim of authorship, and a club's post presented as a player's own is a
+   * claim about a person that a reader cannot check.
+   */
+  account: string;
+  /**
+   * What the post *is*, in pt-BR, written after opening it.
+   *
+   * It is what a reader presses before any frame is mounted, so it carries the
+   * whole offer on its own — `PlayerPhoto.alt`'s rule, arriving at a button
+   * rather than at an image. Instagram's own caption is deliberately **not**
+   * copied here: the embed renders it, and a second copy in this file would be
+   * the author's words going stale beside theirs.
+   */
+  summary: string;
+}
+
+/**
  * Current conditions at a ground, from Open-Meteo. Everything but the
  * temperature and the description is optional, because the payload is somebody
  * else's and `parseWeather` narrows it field by field rather than trusting a

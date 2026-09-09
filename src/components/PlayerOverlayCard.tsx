@@ -9,6 +9,7 @@ import {
   PLAYER_PHOTO_WIDTHS,
   playerPhotoPage,
   playerPhotoUrl,
+  playerPosts,
   playerSearchUrls,
   playerSofascore,
   positionLabel,
@@ -16,8 +17,10 @@ import {
 import { Button } from "@/src/components/Button";
 import { GLYPH, InstagramLink, WikipediaLink } from "@/src/components/ClubLinks";
 import { LINK_UNDERLINE } from "@/src/components/interaction";
+import { PlayerPosts } from "@/src/components/PlayerPosts";
 import { PLAYER_INSTAGRAM } from "@/src/data/player-instagram";
 import { PLAYER_PHOTOS } from "@/src/data/player-photos";
+import { PLAYER_POSTS } from "@/src/data/player-posts";
 import { PLAYER_SOFASCORE } from "@/src/data/player-sofascore";
 import { PLAYER_WIKIPEDIA } from "@/src/data/player-wikipedia";
 import type { Player, Scorer } from "@/src/types";
@@ -278,6 +281,7 @@ export function PlayerOverlayCard({ player, scorer, onClose }: PlayerOverlayCard
   const instagram = playerInstagram(player.id, PLAYER_INSTAGRAM);
   const wikipedia = PLAYER_WIKIPEDIA[player.id];
   const sofascore = playerSofascore(player.id, PLAYER_SOFASCORE);
+  const posts = playerPosts(player.id, PLAYER_POSTS);
   const photo = PLAYER_PHOTOS[player.id];
   const search = playerSearchUrls(enriched.name, club?.shortName);
 
@@ -471,6 +475,22 @@ export function PlayerOverlayCard({ player, scorer, onClose }: PlayerOverlayCard
               <WikipediaLink title={wikipedia} subject="do jogador" />
               <SofascoreLink href={sofascore} />
             </div>
+          </section>
+        )}
+
+        {posts.length > 0 && (
+          /* Below **Onde acompanhar** rather than above it, and that ordering is
+             the point: the link row says where to follow this player, and this
+             is one thing they or their club published — the specific under the
+             general. It is also the heaviest block on the card once a reader
+             opens one, so it sits after the links a reader scans and before the
+             web search, which is the card's last resort.
+
+             Curated, so absent for nearly every player. No heading over nothing:
+             an absent post is not a missing value. */
+          <section>
+            <GroupLabel>Publicações</GroupLabel>
+            <PlayerPosts posts={posts} playerName={enriched.name} />
           </section>
         )}
 

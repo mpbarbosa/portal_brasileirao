@@ -519,6 +519,40 @@ suffix says whose), and — above all — writing down a handle nobody has opene
 Wikidata was wrong or stale for nearly one in five of the candidates, including
 one account that had been deactivated.
 
+**Publicação do jogador**:
+One Instagram post shown on the **Card do jogador** under the heading
+**Publicações**, below **Onde acompanhar** — the specific under the general, since
+that row says where to follow a player and this is one thing that was published.
+Curated in `src/data/player-posts.ts`, keyed by **player id** like the **Instagram
+do jogador** beside it, and storing the post's **shortcode alone**: Instagram's own
+"copy link" appends a `stkn` share token identifying whoever copied it, and
+`instagramPostCode` in `club-core.ts` is what stops that reaching a public
+repository. Coverage is partial and always will be; a player with none gets no
+section rather than an empty heading.
+It is a **facade** — a labelled press target carrying a hand-written summary, and
+no frame at all until a reader presses it, which is the **Vídeos do clube** rule
+and matters more here because the third party is Meta and a card is opened dozens
+of times while reading an elenco. Pressing it mounts Instagram's own
+`/embed/captioned/` page, which sizes itself by `postMessage`; the canonical post
+URL answers `X-Frame-Options: DENY` and the uncaptioned `/embed/` misreports its
+height badly enough to clip the picture, both measured in a browser.
+**It is not a Foto do jogador and does not become one.** That is a file *copied*
+onto this app's origin, owing a **crédito da foto**; this is a post left where its
+author put it, drawn by Meta's own published embed, whose header and caption *are*
+the attribution.
+The `account` is whoever published the post and is often not the player — the
+first entry is Athletico-PR's post about Viveros, with Viveros as a collaborator —
+so the card names it on every entry.
+_Avoid_: storing the pasted permalink (it carries the share token), an `<img>`
+from `cdninstagram.com` (the copyright the **Foto do jogador** entry refuses, and
+the addresses expire), a thumbnail preview (same copy, by another road), mounting
+the frame on render, framing `/p/<code>/` or `/embed/` rather than
+`/embed/captioned/`, a fixed frame height (a post may be 1:1, 4:5, 1.91:1, a
+carrossel or carry a long caption), copying Instagram's caption into the summary,
+calling the section "Fotos" (a post may be a video or a carrossel), and — above
+all — writing down a shortcode nobody has opened: Instagram serves the identical
+shell for a real post and an invented one, so nothing can check it for you.
+
 **Verbete do jogador**:
 A player's article on the Portuguese Wikipedia, shown on the **Card do jogador**
 beside the **Instagram do jogador** and rendered by the same `WikipediaLink` as
