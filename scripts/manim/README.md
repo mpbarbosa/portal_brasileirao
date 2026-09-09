@@ -766,6 +766,38 @@ viram outros arquivos quando a temporada anda — o antigo tem que sair do
   bloco é centrado pela fileira mais alta, a última linha de tinta caía na 1076
   de 1080 — três pixels da borda, com o tracejado já cortado ao meio.
 
+  **O pior fundo para a régua é uma FAIXA, e qual faixa ela cruza é uma
+  propriedade do clube e não da cena.** Os números do Cruzeiro acima foram
+  medidos onde as réguas cruzam o fundo chapado; o Flamengo passou a temporada
+  no G4, então as duas réguas dele atravessam a faixa verde, que é mais clara
+  que o fundo — e a mesma marca, com a mesma cor e a mesma largura, entrega
+  menos. Medido no quadro codificado, contra o piso de 3 de uma marca gráfica:
+
+  | corte | régua da 3ª | régua da 18ª | fundo |
+  |---|---|---|---|
+  | 16:9 | **3,90** | **3,94** | chapado |
+  | 16:9 | — | **3,41** | faixa do Z4 |
+  | 4:5 | **3,63** | **3,48** | faixa do G4 |
+  | 9:16 | **3,81** | **3,79** | faixa do G4 |
+
+  Todas passam, e a margem de 1,30 é o que faz passarem: o caso apertado é 3,41,
+  a 14% do piso. **Um clube que viva no Z4 é o próximo a medir** — não porque
+  algo tenha mudado, mas porque a faixa vermelha é o fundo mais claro que a
+  régua encontra, e nenhum dos vinte payloads diz de antemão qual clube põe uma
+  régua dentro dela. O nome e a chave são `INK_SOFT` e não dependem disto:
+  remedidos aqui em **7,78** e **7,82**.
+
+  **A vela ao lado de uma régua não é o que veio DEPOIS dela, e o Flamengo é o
+  caso em que isso morde.** O desenho é em ordem de rodada, que é o que o
+  `computeRankCandles` promete e o que torna dois clubes comparáveis — mas a 4ª
+  rodada do Flamengo foi disputada em **02/09**, seis meses depois da demissão
+  de Filipe Luís e depois de outras 21 rodadas. É o único jogo fora de ordem da
+  temporada inteira, e ele calha de ser o vizinho imediato de uma régua. O
+  quadro convida à leitura causal — a maior subida do ano, +7 posições, encosta
+  na régua — e os dados não a sustentam. Nada na cena pode corrigir isso, porque
+  a cena está certa: quem tem de recusar a frase é a cópia, e o
+  `docs/medias/flamengo/velas-flamengo-youtube.md` recusa no bloco de notas.
+
 - **A barra de pontos é o TOTAL e a tampa clara é o ganho.** Pontos são
   cumulativos, então o eixo começa no zero e a altura é a temporada inteira. Uma
   derrota não acrescenta nada e a barra não cresce — leitura honesta, e é
