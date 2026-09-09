@@ -14,7 +14,7 @@
  * the full one ("Danilo Luiz da Silva"), or at a disambiguated one where the
  * popular name is shared.
  *
- * Coverage is **partial**, like every curated file here — 379 of the 948
+ * Coverage is **partial**, like every curated file here — 401 of the 948
  * listed players, every club represented. A player absent here renders no
  * link.
  *
@@ -140,12 +140,14 @@
 export const PLAYER_WIKIPEDIA: Record<string, string> = {
   // Athletico-PR
   "104494": "Carlos Terán",
+  "1584": "Dudu (futebolista, 1997)", // Dudu
   "127557": "Gastón Benavídez",
   "22166": "Juan Felipe Aguirre", // Juan Aguirre
   "178353": "Juan Portilla",
   "56226": "Julimar",
   "192070": "Kevin Viveros",
   "1386": "Léo Pelé", // Léo
+  "249477": "Leozinho",
   "153853": "Lucas Esquivel",
   "8357": "Luiz Gustavo (futebolista, 1987)", // Luiz Gustavo
   "187426": "Mycael",
@@ -170,6 +172,7 @@ export const PLAYER_WIKIPEDIA: Record<string, string> = {
   "141379": "Natanael (futebolista, 2002)", // Natanael
   "123350": "Reinier",
   "1671": "Renan Lodi",
+  "46266": "Tomás Cuello",
   "178854": "Victor Hugo (futebolista)", // Victor Hugo Gomes
   "1773": "Vitor Hugo Franchescoli de Souza", // Vitor Hugo
 
@@ -185,6 +188,7 @@ export const PLAYER_WIKIPEDIA: Record<string, string> = {
   "1566": "Iago Borduchi",
   "1547": "Jean Lucas",
   "1296": "João Paulo Silva Martins", // João Paulo
+  "1205": "Kanu",
   "140873": "Luciano Juba",
   "191376": "Mateo Sanabria",
   "28422": "Michel Araújo", // Michel Araujo
@@ -206,6 +210,7 @@ export const PLAYER_WIKIPEDIA: Record<string, string> = {
   "77": "Joaquín Correa",
   "206393": "Jordan Barrera",
   "12653": "Júnior Santos",
+  "286833": "Kadir Barría",
   "179157": "Léo Linck", // Leo Linck
   "8457": "Marçal (futebolista)", // Marçal
   "160792": "Mateo Ponte",
@@ -228,6 +233,7 @@ export const PLAYER_WIKIPEDIA: Record<string, string> = {
   "1439": "Juninho Capixaba",
   "1214": "Matheus Fernandes (futebolista)", // Matheus Fernandes
   "1435": "Pedro Henrique (futebolista)", // Pedro Henrique
+  "183235": "Rodriguinho (futebolista, 2004)", // Rodrigo Huendra
   "39920": "Tiago Volpi",
   "154767": "Vanderlan",
 
@@ -236,6 +242,7 @@ export const PLAYER_WIKIPEDIA: Record<string, string> = {
   "138222": "Sebastião Ênio Santos de Almeida", // Ênio
   "1485": "Giovanni Augusto",
   "13922": "Jean Carlos",
+  "1675": "Marcio Antonio de Sousa Junior", // Marcinho
   "13237": "Rafael Santos (futebolista)", // Rafael Santos
   "1274": "Rafael Thyere",
   "154554": "Vinicius Balieiro", // Vinicius
@@ -243,6 +250,7 @@ export const PLAYER_WIKIPEDIA: Record<string, string> = {
 
   // Clube do Remo
   "90803": "Alef Manga",
+  "12960": "Carlinhos (futebolista, 1997)", // Carlinhos
   "56082": "Gabriel Poveda",
   "11194": "Gabriel Taliari",
   "12602": "Ivan Quaresma da Silva", // Ivan
@@ -298,6 +306,7 @@ export const PLAYER_WIKIPEDIA: Record<string, string> = {
   "249479": "JP Chermont", // João Pedro Chermont
   "259981": "Joaquín Lavega",
   "31609": "Josué Filipe Soares Pesqueira", // Josué
+  "1193": "Keno (futebolista)", // Keno
   "203383": "Lucas Ronier",
   "30539": "Maicon Pereira Roque", // Maicon
   "156724": "Pedro Rangel (futebolista)", // Pedro Rangel
@@ -315,6 +324,7 @@ export const PLAYER_WIKIPEDIA: Record<string, string> = {
   "1266": "Fabrício Bruno",
   "1434": "Fagner (futebolista)", // Fágner
   "1815": "Gerson Santos da Silva", // Gerson
+  "115095": "João Marcelo",
   "181633": "Kaiki Bruno",
   "91310": "Kaio Jorge",
   "205585": "Keny Arroyo",
@@ -338,6 +348,7 @@ export const PLAYER_WIKIPEDIA: Record<string, string> = {
   "1317": "Bruno Henrique",
   "203359": "Daniel Sales",
   "7881": "Danilo Luiz da Silva",
+  "1131": "Emerson Royal",
   "1867": "Erick Pulgar",
   "1159": "Everton Cebolinha", // Éverton
   "203401": "Evertton Araújo", // Evertton
@@ -368,6 +379,7 @@ export const PLAYER_WIKIPEDIA: Record<string, string> = {
   "1230": "Fábio Deivson Lopes Maciel", // Fábio
   "245200": "Facundo Bernal",
   "76": "Paulo Henrique Ganso", // Ganso
+  "12594": "Guga (futebolista, 1998)", // Guga
   "15929": "Guilherme Arana",
   "145985": "Hércules (futebolista)", // Hércules
   "21689": "Hulk (futebolista)", // Hulk
@@ -378,6 +390,7 @@ export const PLAYER_WIKIPEDIA: Record<string, string> = {
   "157533": "John Kennedy (futebolista)", // John Kennedy
   "98654": "Freytes", // Juan Freytes
   "104480": "Julián Millán",
+  "181336": "Kevin Serna",
   "76910": "Lucho Acosta", // Luciano Acosta
   "136654": "Marcelo Pitaluga",
   "179177": "Martinelli (futebolista)", // Martinelli
@@ -413,6 +426,7 @@ export const PLAYER_WIKIPEDIA: Record<string, string> = {
   "3467": "Martin Braithwaite",
   "46178": "Mathías Villasanti",
   "178482": "Miguel Monsalve",
+  "116177": "Tetê (futebolista)", // Tetê
   "168793": "Wagner Leonardo",
   "1138": "Walter Kannemann",
   "1170": "Weverton",
@@ -437,6 +451,7 @@ export const PLAYER_WIKIPEDIA: Record<string, string> = {
   "30386": "Sergio Rochet",
   "45372": "Bruno Tabata", // Tabata
   "8404": "Thiago Maia",
+  "169553": "Vitor Hugo Naum dos Santos", // Vitinho
   "261682": "Yago Noal",
 
   // Mirassol
@@ -475,6 +490,7 @@ export const PLAYER_WIKIPEDIA: Record<string, string> = {
   "1080": "Marlon Freitas",
   "119594": "Maurício (futebolista)", // Mauricio
   "170525": "Murilo Cerqueira",
+  "1490": "Paulinho (futebolista, 2000)", // Paulinho
   "140647": "Ramón Sosa",
   "181439": "Vitor Roque", // Vítor Roque
 
@@ -489,6 +505,7 @@ export const PLAYER_WIKIPEDIA: Record<string, string> = {
   "1849": "João Schmidt",
   "192844": "Lautaro Díaz", // Lautaro Diaz
   "1086": "Luan Peres",
+  "1304": "Lucas Veríssimo",
   "1174": "Mayke",
   "8491": "Neymar",
   "280705": "Robinho Jr.", // Robson Júnior
@@ -530,12 +547,15 @@ export const PLAYER_WIKIPEDIA: Record<string, string> = {
   "1360": "Brenner Souza da Silva", // Brenner
   "22497": "Carlos Cuesta",
   "178432": "Andrés Gómez (futebolista)", // Carlos Gómez
+  "203341": "Cauan Barros", // Cauan Lucas
+  "46101": "Claudio Spinelli",
   "181575": "Cuiabano (futebolista)", // Cuiabano
   "1169": "Daniel Fuzato",
   "1251": "David Corrêa da Fonseca", // David
   "103153": "Hugo Moura",
   "13192": "Jair (futebolista)", // Jair
   "178193": "Johan Rojas",
+  "179586": "Léo Jardim",
   "117822": "Lucas Piton",
   "85890": "Marino Hinestroza",
   "176241": "Matheus França", // Matheus Franca
@@ -546,9 +566,11 @@ export const PLAYER_WIKIPEDIA: Record<string, string> = {
   "8402": "Thiago Mendes",
 
   // Vitória
+  "77470": "Cacá (futebolista, 1999)", // Cacá
   "40441": "Erick de Arruda Serafim", // Erick
   "2478": "Gabriel Vasconcellos", // Gabriel
   "61447": "Gabriel Baralhas",
+  "166758": "Kike Saverio",
   "95136": "Luan Cândido",
   "203646": "Matheuzinho (futebolista, 1997)", // Matheuzinho
   "179845": "Nathan (futebolista, 2002)", // Nathan
