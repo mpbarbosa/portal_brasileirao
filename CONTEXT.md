@@ -578,7 +578,9 @@ four were offered and refused), trusting a search result's title (it names the
 post, never the account that published it, and a **dead** shortcode looks the
 same), and — above all — writing down a shortcode nobody has opened: `curl` sees
 the identical login shell for a real post and an invented one, so only a browser
-can tell you anything.
+can tell you anything. That is also why the checker is a browser:
+`npm run check-player-posts` drives headless Chromium and reports a post that
+has been **deleted**, which nothing else here can see.
 
 **Verbete do jogador**:
 A player's article on the Portuguese Wikipedia, shown on the **Card do jogador**

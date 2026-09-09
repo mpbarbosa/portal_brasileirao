@@ -6,8 +6,9 @@ name: Curated data still resolves
 # WHY IT IS NOT PART OF CI, AND MUST NOT BECOME PART OF CI. CLAUDE.md is
 # explicit: "CI has no network dependency on a third party by design, and a link
 # that rots on someone else's server is not a reason for a red build on a commit
-# that did not touch it." These four talk to YouTube, Wikimedia Commons and
-# Wikipedia. Wiring them into `check` would mean a contributor's typo fix goes
+# that did not touch it." They talk to YouTube, Wikimedia Commons, Wikipedia
+# and Instagram — count the `for c in` line rather than trusting a number
+# written here, which has been wrong before. Wiring them into `check` would mean a contributor's typo fix goes
 # red because somebody deleted a video overnight — and, worse, that a genuinely
 # rotted link is indistinguishable from every other red build.
 #
@@ -29,8 +30,8 @@ on:
   schedule:
     # 06:00 UTC on the 1st. Monthly because these are third-party links that rot
     # over months, not hours, and each run spends someone else's rate limit:
-    # ~169 Wikipedia articles, 70 Commons files, 19 stadium photographs and 20
-    # YouTube lookups.
+    # ~169 Wikipedia articles, 70 Commons files, 19 stadium photographs, 20
+    # YouTube lookups and one Instagram embed per curated post.
     - cron: "0 6 1 * *"
   workflow_dispatch:
 
@@ -56,7 +57,21 @@ jobs:
 
       - run: npm ci
 
-      - name: Run the four checkers
+      # `check-player-posts` is the only checker here that needs a browser, and
+      # the reason is a property of Instagram rather than a preference: it serves
+      # a script the same login shell for a real shortcode and an invented one,
+      # and renders the post only to a real engine. `chromium` alone rather than
+      # all three, and `--with-deps` because a bare runner lacks the libraries.
+      #
+      # `continue-on-error` keeps the always-green promise the header states. If
+      # the install fails, the checker fails and is REPORTED as data, exactly
+      # like a rotted link — where a failing step here would go red and take the
+      # whole design with it.
+      - name: Install the browser check-player-posts needs
+        continue-on-error: true
+        run: npx playwright install --with-deps chromium
+
+      - name: Run the curated-data checkers
         id: run
         run: |
           # Three things keep this step green, and they are not equally
@@ -76,7 +91,7 @@ jobs:
           failed=""
           : > report.md
 
-          for c in check-hymns check-stadium-photos check-stadium-coordinates check-player-wikipedia check-player-photos; do
+          for c in check-hymns check-stadium-photos check-stadium-coordinates check-player-wikipedia check-player-photos check-player-posts; do
             echo "::group::${c}"
             if npm run --silent "$c" > "out-${c}.txt" 2>&1; then
               status="ok"
@@ -137,11 +152,11 @@ jobs:
 
           if [ "$ANY" != "true" ]; then
             if [ -n "$existing" ]; then
-              gh issue comment "$existing" --body "All four checkers pass as of ${RUN_URL}. Closing."
+              gh issue comment "$existing" --body "Every checker passes as of ${RUN_URL}. Closing."
               gh issue close "$existing"
               echo "Closed #${existing} — everything resolves again."
             else
-              echo "All four pass, and no issue was open."
+              echo "Every checker passes, and no issue was open."
             fi
             exit 0
           fi
@@ -150,8 +165,8 @@ jobs:
             echo "\`${FAILED}\` did not pass on ${RUN_URL}."
             echo
             echo "This is **not** a build failure and nothing is broken in this repository:"
-            echo "these checkers read YouTube, Wikimedia Commons and Wikipedia, so a failure"
-            echo "usually means somebody else deleted, renamed or relicensed something."
+            echo "these checkers read YouTube, Wikimedia Commons, Wikipedia and Instagram, so a"
+            echo "failure usually means somebody else deleted, renamed or relicensed something."
             echo "Read the table rather than only the failures — a title match narrows what a"
             echo "person has to look at, it does not replace looking."
             echo
