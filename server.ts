@@ -627,6 +627,10 @@ const renderShell = async (
       jsonLd: status.index
         ? jsonLdScript(structuredData(route, context, origin, meta.description, meta.image?.url))
         : undefined,
+      // What this process is, so the page it serves can notice when it stops
+      // being what a later process serves. `"dev"` under tsx, which is what the
+      // client reads back and compares equal to.
+      buildSha: BUILD_SHA,
     }),
   );
 };

@@ -1052,6 +1052,15 @@ what makes the logic testable without mocking HTTP.
   node**, **76 a browser carrying this site's own Referer**. So 17.8% of
   "monitoring" was readers, and the second series subtracted them from the very
   line meant to count them.
+  **That composition is superseded and the ratio moves the wrong way for this
+  chart.** `useVersionWatch` re-reads `/api/health` every five minutes while a
+  tab is visible, so a reader now contributes up to 12 hits an hour where the
+  measurement above counted one per visit — the browser share of this path can
+  only grow, which is exactly the direction that made `total − monitor` a lie in
+  the first place. The two-series design already handles it, since `visitorHits`
+  counts by Referer rather than by subtraction; what is stale is the **number**.
+  Re-measure before citing 327/24/76, and read it as a reading taken before
+  2026-09-09 rather than as a property of the traffic.
   **The page therefore draws two views: `Físico` and `Visitantes`** —
   `ratePerMin` and `visitorRatePerMin`. The first is every access the server
   served; the second is traffic a browser on this site caused, and it is a rate
@@ -1122,6 +1131,76 @@ what makes the logic testable without mocking HTTP.
   noise on every refresh — the failure `settle` was written for. It is read at
   the moment the payload lands rather than per render, because `now` moves and
   `uptime` does not.
+
+- `version-core.ts` — whether the bundle a reader is running is still the one
+  this host serves, and the second core module whose subject is this deployment
+  rather than the championship — `health-core.ts` was the first, and they read
+  the same field for opposite purposes: one reports the `Versão` in the Rodapé,
+  the other acts on it. `main` deploys itself several times on a busy evening
+  and a page already open goes on running whatever it loaded, so a reader
+  watching a match finish is exactly the reader who never gets the fix.
+
+  **It compares the CLIENT's build against the SERVER's, never the server
+  against a previous reading of itself.** Watching `/api/health`'s sha *change*
+  answers *did the host restart*, which is a different question with a worse
+  failure: a restart on the same commit — a `systemctl restart`, an OOM, an
+  `.env` edit — would reload every open page for a release nobody made, and a
+  reader who arrived mid-deploy was already stale before the first reading and
+  would never see a change at all. Comparing two builds is stateless, so it is
+  right on the reading it already has.
+
+  **The client's own sha is in the SHELL and not in the bundle, and that was
+  measured rather than preferred.** The obvious place is a build-time Vite
+  `define`, which was built first and works — and it puts the sha inside the
+  client JavaScript, therefore inside its **content hash**, so every deploy
+  issues a new asset filename and every returning reader downloads it again.
+  Over the 60 commits before this landed, **35 of them changed nothing the
+  client bundle contains**: 133 KB gzipped re-fetched by everybody to announce a
+  release they run no part of. `injectMeta` writes one `<meta name="app-version">`
+  instead, on a document that is revalidated on every navigation anyway. It also
+  answers the better question — not *which build produced this script* but
+  *which process served the document I am looking at*.
+
+  **An absent sha is never a difference.** A host still serving a build older
+  than this feature answers a payload with no `sha`, and a shell from one has no
+  tag; reading either as "different" would put every reader of that deploy into
+  an endless reload against a server that can never agree. Running from source
+  both sides answer `dev` and match, which is what keeps a developer from being
+  reloaded out of the page they are editing.
+
+  **One reload per sha, and the guard is not hypothetical.** Anything that pins
+  a client to an old bundle — a proxy holding the shell, a half-finished rsync,
+  a `dist/` whose HTML and assets disagree — makes the reload land on the same
+  mismatch it was trying to fix. The marker is in `sessionStorage` (per tab: a
+  sibling tab's success must not talk this one out of its own attempt) and is
+  written **before** `reload`, or it never lands. Removing it is the mutation
+  `tests/e2e/version-reload.spec.ts` was confirmed red against, and it fails as
+  *Execution context was destroyed* — the page reloading without bound.
+
+  `useVersionWatch` is the impure half. It is fed the reading `App` already
+  holds for the Rodapé, **so the check on load costs no request at all**; it
+  re-reads `/api/health` only on the interval and on the moment a tab becomes
+  visible again, which is the case that matters — a reader returning to a tab
+  that sat through a deploy. **The interval is five minutes rather than the
+  fixture poll's 30–60s, and the reason is that `/api/health` is counted:**
+  `traffic-report-core.ts` draws `monitorHits` off that path and `visitorHits`
+  off the Referer, and a browser poll lands in both. At 60s an open tab would
+  contribute 60 hits an hour to the chart whose whole purpose is separating
+  machines from readers; at five minutes it is 12, and only while visible. That
+  does supersede the composition measured on 2026-09-05 (327 curl / 24 node / 76
+  browser of 427) — re-measure rather than citing it after this ships.
+
+  **The suite cannot see this feature by construction, which is why the spec is
+  end-to-end and not only a unit test.** Both targets boot a server whose sha
+  *agrees* with the client's — `dev` under `tsx`, the stamped commit under
+  `PLAYWRIGHT_TARGET=bundle` — so the passing state is indistinguishable from
+  the feature being deleted in every other spec. Only a prepared `/api/health`
+  payload produces a disagreement; it is fulfilled from memory rather than
+  proxied, which is `meu-time.spec.ts`' rule. Three mutations were confirmed red
+  — the hook not called, the loop guard removed, the server not emitting the tag
+  — and the two "nothing happens" cases are deliberately weak: they pass against
+  anything, and exist so that *no reload* is a measured outcome rather than the
+  absence of one.
 
 - `session-core.ts`, `account-core.ts`, `oauth-core.ts`, `rate-limit-core.ts` — the
   **Conta** subsystem's judgement, all pure and all taking `now` as a parameter like

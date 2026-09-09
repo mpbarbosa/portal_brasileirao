@@ -353,6 +353,23 @@ export interface InjectOptions {
    * it back would close a cycle. The caller already holds both.
    */
   jsonLd?: string;
+  /**
+   * The commit of the process serving this shell, for `version-core.ts`.
+   *
+   * **In the shell rather than in the bundle, and that was measured.** The
+   * obvious place is a build-time `define`, which puts the sha in the client
+   * JavaScript — and therefore in its content hash, so *every* deploy issues a
+   * new asset filename and every returning reader downloads it again. Over the
+   * 60 commits before this landed, **35 of them changed nothing the client
+   * bundle contains**: 133 KB gzipped, re-fetched by everybody, to announce a
+   * release they run no part of. Here it costs one tag on a response that is
+   * revalidated on every navigation anyway.
+   *
+   * It also answers a slightly better question. A build stamp says which build
+   * produced the script; this says which process served the document the reader
+   * is looking at, which is what "am I out of date" actually means.
+   */
+  buildSha?: string;
 }
 
 /**
@@ -369,7 +386,7 @@ export const injectMeta = (
   meta: PageMeta,
   options: InjectOptions = {},
 ): string => {
-  const { canonicalUrl, noindex, jsonLd } = options;
+  const { canonicalUrl, noindex, jsonLd, buildSha } = options;
   const title = escapeHtml(meta.title);
   const description = escapeHtml(meta.description);
 
@@ -405,6 +422,11 @@ export const injectMeta = (
     // its links still lead to pages that are, and a stale link is the common
     // way a crawler reaches this branch at all.
     noindex ? `<meta name="robots" content="noindex, follow" />` : "",
+    // Read by `useVersionWatch` and by nothing else. Emitted only when known,
+    // so a shell served by a process that cannot say leaves the client with no
+    // claim rather than an empty one — `versionVerdict` reads an absent sha as
+    // "no information", never as a difference.
+    buildSha ? `<meta name="app-version" content="${escapeHtml(buildSha)}" />` : "",
     jsonLd ?? "",
   ]
     .filter(Boolean)
