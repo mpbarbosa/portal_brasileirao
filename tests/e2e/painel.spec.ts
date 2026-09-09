@@ -825,3 +825,126 @@ test.describe("Painel do clube", () => {
     });
   });
 });
+
+/**
+ * The acontecimentos drawn on the velas. The join between two clocks — candles
+ * indexed by rodada, an acontecimento dated by a Brazil-local day — is unit
+ * tested in `tests/rank-candles-core.test.ts`; what only a browser can settle
+ * is where the rule lands among the marks it divides.
+ *
+ * **Never a count and never an id.** `src/data/events.ts` is curated and grows
+ * by hand, so an assertion naming `cruzeiro-tite` or expecting two rules is one
+ * `git commit` from red — the rule this file already follows for `broadcasts.ts`.
+ * Every case below is about shape. It is safe to assert that at least one rule
+ * exists on any club's painel, because the paralisação para a Copa is `geral`
+ * and so touches all twenty.
+ */
+test.describe("Acontecimentos nas velas", () => {
+  /** Every rule on one figure: its id, the round it follows, and its x. */
+  const marksOf = (page: Page, club = "") =>
+    page.locator(`main figure[data-candles-figure="${club}"] g[data-candle-event]`);
+
+  test("every acontecimento drawn is also named beneath the drawing", async ({ page }) => {
+    await openPanel(page);
+
+    const rules = marksOf(page);
+    const named = page.locator("main [data-candle-events] li");
+
+    const drawn = await rules.count();
+    // The paralisação is general, so no club's painel can have none.
+    expect(drawn).toBeGreaterThan(0);
+    await expect(named).toHaveCount(drawn);
+
+    // The attribute is what a spec elsewhere would count, so it has to agree
+    // with the marks actually painted — `data-candles`' own rule one section up.
+    await expect(page.locator("main [data-candle-events]")).toHaveAttribute(
+      "data-candle-events",
+      String(drawn),
+    );
+  });
+
+  test("a rule falls BETWEEN two candles, never across one", async ({ page }) => {
+    await openPanel(page);
+
+    const svg = page.locator("main svg[data-candles]").first();
+    await expect(svg).toBeVisible();
+
+    // Read in the page, off the boxes the browser actually laid out, rather
+    // than off the user units the core module emitted — those are already
+    // asserted in the unit suite, and what can only fail here is the scale.
+    const verdicts = await svg.evaluate((node) => {
+      const bodyOf = (round: number) => {
+        const group = node.querySelector(`g[data-round="${round}"]`);
+        return group ? (group.querySelectorAll("rect")[1] as SVGRectElement) : null;
+      };
+
+      return [...node.querySelectorAll("g[data-candle-event]")].map((mark) => {
+        const round = Number(mark.getAttribute("data-candle-event-round"));
+        const x = Number(mark.querySelector("line")!.getAttribute("x1"));
+        const before = bodyOf(round);
+        const after = bodyOf(round + 1);
+        return {
+          round,
+          // A rule after round r must clear r's body and stop short of r+1's.
+          // Either neighbour may be absent at the ends of the axis, and an
+          // absent neighbour constrains nothing rather than failing.
+          clearsBefore:
+            before === null ||
+            x >= before.x.baseVal.value + before.width.baseVal.value,
+          stopsBeforeNext: after === null || x <= after.x.baseVal.value,
+        };
+      });
+    });
+
+    expect(verdicts.length).toBeGreaterThan(0);
+    for (const verdict of verdicts) {
+      expect(verdict.clearsBefore, `rule after round ${verdict.round} sits on it`).toBe(true);
+      expect(verdict.stopsBeforeNext, `rule after round ${verdict.round} overruns`).toBe(true);
+    }
+  });
+
+  test("no rule is painted outside the box it belongs to", async ({ page }) => {
+    await openPanel(page);
+
+    // `RankCandles`' painting-past-the-card failure, met by the one mark that
+    // spans the drawing's whole height and so would show it first.
+    const chart = (await page.locator("main svg[data-candles]").first().boundingBox())!;
+    const rules = marksOf(page);
+
+    for (let index = 0; index < (await rules.count()); index += 1) {
+      const box = (await rules.nth(index).boundingBox())!;
+      expect(box.x).toBeGreaterThanOrEqual(chart.x - 1);
+      expect(box.x + box.width).toBeLessThanOrEqual(chart.x + chart.width + 1);
+    }
+  });
+
+  test("each drawing of a comparação carries its OWN club's acontecimentos", async ({ page }) => {
+    const subject = await openPanel(page);
+
+    const select = page.locator("#comparar-clube");
+    const option = select.locator("option").nth(1);
+    const code = (await option.getAttribute("value")) ?? "";
+    const other = (await option.innerText()).trim();
+    await select.selectOption(code);
+
+    await expect(page.locator("main svg[data-candles]")).toHaveCount(2);
+    const beside = await marksOf(page, other).evaluateAll((nodes) =>
+      nodes.map((node) => node.getAttribute("data-candle-event")),
+    );
+
+    // The comparison figure is checked against that club's OWN painel rather
+    // than against a list written here, so the case stays true as
+    // `src/data/events.ts` grows. Under the mutation that hands both drawings
+    // the subject's club, this is the assertion that goes red — the other three
+    // pass, because the wrong club's rules are still well-formed rules.
+    await page.goto(`/painel/${code}`);
+    await expect(pageHeading(page)).toHaveText(`Painel do ${other}`);
+    const alone = await marksOf(page).evaluateAll((nodes) =>
+      nodes.map((node) => node.getAttribute("data-candle-event")),
+    );
+
+    expect(beside).toEqual(alone);
+    // And the subject is a different club, so at least the drawing was named.
+    expect(other).not.toBe(subject);
+  });
+});

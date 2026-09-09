@@ -22,6 +22,7 @@
  * drawing comes to disagree with the table it describes.
  */
 import { playsIn, resultFor } from "@/club-core";
+import { brasiliaDay, dayLabel, touchesClub } from "@/events-core";
 import { lastRoundWithResult } from "@/rank-history-core";
 import { computeStandings, countsTowardStandings, ZONE_DEPTH } from "@/standings-core";
 import type {
@@ -31,6 +32,7 @@ import type {
   FormResult,
   Match,
   RoundCandle,
+  SeasonEvent,
 } from "@/src/types";
 
 /** One club's position, points and games played at a single instant. */
@@ -359,6 +361,160 @@ export const summariseCandles = (candles: RoundCandle[]): CandleSummary | null =
 
   const last = candles[candles.length - 1];
   return { best, worst, rise, fall, points: last.totalPoints, rounds: last.round };
+};
+
+/**
+ * Where an **acontecimento** falls on the x axis, and what to call it.
+ *
+ * The candles are indexed by rodada and an acontecimento is dated by a
+ * **Brazil-local day** — two different clocks, and joining them is the whole of
+ * what this section does. Everything below follows from one decision.
+ *
+ * ## The boundary is anchored on THIS CLUB's matches, never on the round's
+ *
+ * A rodada is not an instant: its fixtures are spread over three or four days.
+ * So "the round the day fell in" has no single answer, and the two obvious
+ * spellings disagree — measured on the shipped season rather than reasoned out.
+ * Cruzeiro sacked Tite late on Sunday 15 March; Cruzeiro's own round-6 match
+ * kicked off 20:30 BRT that evening, and **another round-6 fixture was played
+ * on the 16th**. Asking which rounds were *complete* by the 15th therefore
+ * answers 5, and a line drawn there puts the sacking before a match the club
+ * had already played under him.
+ *
+ * Reading the club's own fixtures answers 6, which is what happened. That is
+ * also the only anchor that means anything on this drawing: it is one club's
+ * season, so the reader's question is *which of these candles are before and
+ * which after*, and only the club's own matches divide them.
+ *
+ * ## What the mark is, and what it is not
+ *
+ * It is a **boundary between two candles**, not a band over one. The
+ * acontecimento happened *after* round 6 closed, so shading round 6 would claim
+ * that round belongs to what followed it — and round 6 is precisely the round
+ * that does not.
+ *
+ * A `round` of 0 is an acontecimento that predates the club's first match, and
+ * it draws at the left edge of the first band rather than being dropped: that
+ * is where "before any of this" is on this axis. Nothing in the shipped data
+ * reaches it — the earliest entry lands on round 3 — so read it as the absence
+ * of a special case rather than as a case somebody has seen.
+ */
+export interface EventMark {
+  /** `SeasonEvent.id`, so a spec selects on a handle rather than on prose. */
+  id: string;
+  title: string;
+  /** The acontecimento's Brazil-local day, carried through unparsed. */
+  date: string;
+  /** The last round this club played on or before `date`. 0 before its first. */
+  round: number;
+  /**
+   * The same reading taken at the end of a span. Equal to `round` for a single
+   * day **and** for a span that no round falls inside.
+   */
+  endRound: number;
+  /** The boundary itself: the right edge of `round`'s band, in user units. */
+  x: number;
+  /**
+   * How far the span reaches, in user units — **0 for a day, and 0 for the one
+   * span this season ships.**
+   *
+   * That zero is measured rather than assumed, and it is the honest picture. The
+   * paralisação runs 1 June to 15 July; the last round-18 match was played on
+   * 31 May and the first round-19 match on 16 July, so **no rodada falls inside
+   * it at all** and the band collapses onto its own boundary. A span that did
+   * contain rounds would draw over them, which is why the width is computed
+   * rather than dropped — but nothing renders one today.
+   */
+  width: number;
+  /** The pt-BR sentence: the hover title and the words printed beneath. */
+  label: string;
+}
+
+/**
+ * The last round `clubCode` played on or before a Brazil-local day, or 0.
+ *
+ * Finished matches only, so the answer cannot run past the drawing: the x
+ * domain is `lastRoundWithResult`, which counts the same fixtures.
+ *
+ * **The one `new Date` in this module, and it is reading an instant rather than
+ * a day.** `events-core` refuses to construct one from a `YYYY-MM-DD` because
+ * the language reads that as midnight UTC and prints the day before for every
+ * reader in Brazil. A `kickoff` is a full ISO instant with a zone on it, which
+ * is exactly what `brasiliaDay` is for — it is the bridge, and this is the
+ * crossing.
+ */
+const roundPlayedBy = (matches: Match[], clubCode: ClubCode, day: string): number => {
+  let last = 0;
+  for (const match of matches) {
+    if (!countsTowardStandings(match) || !playsIn(match, clubCode)) continue;
+    if (brasiliaDay(new Date(match.kickoff)) <= day) last = Math.max(last, match.round);
+  }
+  return last;
+};
+
+/**
+ * The acontecimentos to draw on one club's painel, oldest first.
+ *
+ * **`touchesClub` decides membership, not a scope test written here.** A
+ * `geral` acontecimento belongs on all twenty painéis for the same reason it
+ * belongs in all twenty timelines, and a second statement of that rule is how
+ * the drawing comes to disagree with the section beneath it.
+ *
+ * **Oldest first, which is the opposite of `clubTimeline`.** That list is read
+ * top to bottom with the latest news first; this one is read left to right
+ * along an axis that starts at round 1, and the printed list beneath the chart
+ * has to run the same way as the marks it names. Ties break on the day and then
+ * on `id`, `clubTimeline`'s tie-break, so two acontecimentos landing on one
+ * boundary render in a fixed order rather than in file order.
+ */
+export const eventMarks = (
+  events: SeasonEvent[],
+  matches: Match[],
+  clubCode: ClubCode,
+  box: CandleBox,
+): EventMark[] => {
+  const innerWidth = box.width - box.padding * 2;
+  const rounds = Math.max(1, box.lastRound);
+  const band = innerWidth / rounds;
+  // Clamped, so an acontecimento dated after the last drawn round sits on the
+  // right edge instead of outside the box. `roundPlayedBy` cannot exceed
+  // `lastRoundWithResult`, but this drawing's domain is the caller's — the
+  // comparação hands both charts the season's last round — and a mark painted
+  // past the frame is the failure `tests/e2e/painel.spec.ts` measures.
+  const clamp = (round: number): number => Math.max(0, Math.min(rounds, round));
+
+  return events
+    .filter((event) => touchesClub(event, clubCode))
+    .map((event) => {
+      const round = clamp(roundPlayedBy(matches, clubCode, event.date));
+      const endRound = clamp(
+        event.endDate ? roundPlayedBy(matches, clubCode, event.endDate) : round,
+      );
+      const day = dayLabel(event.date);
+      const when = round === 0 ? "antes da 1ª rodada" : `após a ${round}ª rodada`;
+
+      return {
+        id: event.id,
+        title: event.title,
+        date: event.date,
+        round,
+        endRound,
+        x: round2(box.padding + round * band),
+        width: round2(Math.max(0, endRound - round) * band),
+        // The day is appended rather than left to the section beneath, because
+        // this string is also the mark's `<title>`: a reader hovering a line
+        // gets no list, and "após a 6ª rodada" is a position on an axis rather
+        // than a date.
+        label: day ? `${when} · ${event.title} (${day})` : `${when} · ${event.title}`,
+      };
+    })
+    .sort((a, b) =>
+      a.round !== b.round
+        ? a.round - b.round
+        : a.date !== b.date
+          ? a.date.localeCompare(b.date)
+          : a.id.localeCompare(b.id),
+    );
 };
 
 const RESULT_WORD: Record<FormResult, string> = {

@@ -175,6 +175,23 @@ inverted and the names say so), "sombra" for the pavio (it reads as a drop
 shadow), "abertura/fechamento" in user-facing copy (market words for a football
 page — the legend says "onde a rodada começou" instead).
 
+**Régua** (and **fronteira**):
+The dashed vertical rule an **Acontecimento** draws across a Painel, and the
+gap between two velas that it sits in. A régua marks the boundary *after* the
+last rodada the club played before that day — not a band over a rodada, because
+the acontecimento happened once that rodada had closed, and shading it would
+claim the one round it does not cover. Which rodada that is comes from **this
+club's own fixtures**, never from whether the rodada had finished: a rodada
+spreads over three or four days, so Cruzeiro's round 6 was played on 15 March
+and another club's on the 16th, and only the club's own match divides its
+season. On a **Comparação** each drawing carries its own club's réguas, and a
+*geral* one lands at the same place on both, since they share the frame.
+_Avoid_: "linha" unqualified (the **Campanha**'s sparkline is already a line,
+and the G4/Z4 are already "linhas tracejadas horizontais"), "marcador"/"marco"
+(they read as a point on the axis, where this is a division of it), "anotação"
+(it names the label rather than the rule, and the label lives beneath the
+drawing).
+
 **Comparação** (of a **Painel**):
 A second club's **velas** drawn beneath this club's, on the same frame, chosen
 from `Comparar com` beside the section heading. The resting state is **Nenhum**
@@ -742,6 +759,13 @@ carrying none, is unrepresentable rather than merely discouraged. Curated in
 `src/data/events.ts`, ordered and labelled by `events-core.ts`, rendered by
 `SeasonEvents` under the heading **Acontecimentos** on the club page, below the
 **Vídeos do clube** and above **Jogos disputados**.
+
+**It is read in two places, and the second is the Painel's velas.** The section
+lists what happened; `eventMarks` in `rank-candles-core.ts` puts the same
+acontecimentos on the **Campanha rodada a rodada** as a **régua** — a dashed
+vertical rule on the **fronteira** between two velas, named beneath the drawing.
+The two never disagree, because both read `src/data/events.ts` through
+`touchesClub`.
 
 **The general ones are merged into every club's list rather than given a section
 of their own**, which is what *geral* means: an acontecimento touching all
