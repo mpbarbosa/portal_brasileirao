@@ -961,24 +961,28 @@ test("every curated Discord invite survives its own parser", () => {
   // review. This is where a pasted `channels/<guild>` URL is caught: the
   // refusal above proves the parser says no, and this proves the FILE never
   // holds one.
-  const unusable = Object.entries(CLUB_DISCORD).filter(([, invite]) => !discordUrl(invite));
+  const unusable = Object.entries(CLUB_DISCORD).filter(([, entry]) => !discordUrl(entry.invite));
 
   assert.deepEqual(unusable, []);
 });
 
-test("no two clubs share a Discord server", () => {
-  // An invite keyed to the wrong club id renders a working link on both pages,
-  // and one of them drops a club's supporters into their rivals' server — the
-  // `no two clubs share an article` gate, at a third host.
+test("the curated Discord entries are not empty, and no two clubs share a server", () => {
+  // The emptiness half is what stops the two tests above passing vacuously —
+  // `club-reddit.ts`' sibling gate, and it was owed the moment the first entry
+  // landed: while the file shipped empty this test said so in its own comment
+  // rather than looking like coverage it did not have.
   //
-  // Deliberately WITHOUT the "not empty" half its `club-reddit.ts` sibling
-  // carries: this file ships empty, so that assertion would fail on a state
-  // the file is honestly in. It is owed the moment the first entry lands, and
-  // until then this test is vacuous and says so rather than looking like
-  // coverage.
-  const invites = Object.values(CLUB_DISCORD);
+  // The distinctness half is checked on the GUILD and not on the invite, and
+  // that is not the same assertion. Two clubs could carry two different vanity
+  // codes that resolve to one server — different strings, one community — and
+  // an invite-keyed Set would call that distinct. The failure is the `no two
+  // clubs share an article` one at a third host: both pages render a working
+  // link, and one of them drops a club's supporters among their rivals.
+  const entries = Object.values(CLUB_DISCORD);
+  const guilds = entries.map((entry) => entry.guild);
 
-  assert.equal(new Set(invites).size, invites.length);
+  assert.ok(entries.length > 0);
+  assert.equal(new Set(guilds).size, guilds.length);
 });
 
 test("instagramHandle keeps only the handle, whatever was written down", () => {

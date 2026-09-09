@@ -250,6 +250,35 @@ export interface Venue {
  * form — "Arne Müseler / www.arne-mueseler.com" — and that form is the one with
  * legal force, so it is copied verbatim rather than reduced to a name.
  */
+/**
+ * A club's supporters' Discord, as `src/data/club-discord.ts` records it.
+ *
+ * Two fields because **identity and address are different facts here**, and
+ * only one of them can be checked. The invite is what a reader follows; the
+ * guild id is what says which server that is.
+ */
+export interface ClubDiscord {
+  /** The invite code alone — `discordUrl` builds the address. */
+  invite: string;
+  /**
+   * The guild the invite resolved to when the entry was written, as Discord's
+   * own snowflake.
+   *
+   * **This is what `check-club-discord` asserts, and it is why the checker is
+   * exact where every other curated checker here is a hint.** A vanity code is
+   * *transferable*: Discord releases it when a server loses its boost level,
+   * and whoever claims it next inherits our link — so `discord.gg/flamengo`
+   * pointing somewhere else entirely is a live failure mode rather than a
+   * hypothetical one, and no amount of reading the server's name catches it.
+   *
+   * A name check cannot even do the easy half. The server here calls itself
+   * **FlaDiscord**, which contains no word of "CR Flamengo" — so a name rule
+   * strict enough to be worth anything refuses the correct entry, and one loose
+   * enough to accept it accepts most things. An id is the identity itself.
+   */
+  guild: string;
+}
+
 export interface StadiumPhoto {
   /** Commons file title, without the `File:` prefix. */
   file: string;

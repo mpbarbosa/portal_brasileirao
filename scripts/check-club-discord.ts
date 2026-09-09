@@ -16,18 +16,34 @@
  * unauthenticated with the guild behind a live code and `Unknown Invite` for
  * one that has expired or never existed. Four things are checked per club:
  *
- *   1. the stored value is a usable code — `discordUrl` accepts it;
+ *   1. the stored value is a usable code — `discordInvite` accepts it;
  *   2. the invite resolves — `Unknown Invite` here means expired or revoked;
  *   3. it does not carry an expiry — a dated invite is a dated link;
- *   4. the guild's name names *this* club.
+ *   4. it still opens the guild the entry was written against.
  *
- * The fourth is the one worth having, and it is deliberately loose. An invite
- * code is minted rather than derived, so nothing about the string says which
- * server it opens — a code pasted into the wrong club's row is invisible in
- * review and renders a working link on both pages, which is exactly the
- * failure `no two clubs share an article` guards one file over. A name match
- * narrows what a person has to read rather than replacing them, so the whole
- * table is printed, passes included.
+ * **The fourth is EXACT, where every other curated checker here is a hint**,
+ * and that difference is the point rather than an inconsistency. `check-hymns`
+ * asks whether a video's title names the club, because a title is all YouTube
+ * offers; an invite resolves to a guild **id**, which is the identity itself.
+ *
+ * It had to be. This checker first asked whether the guild's *name* named the
+ * club, and refused the only correct entry in the file: the server is called
+ * **FlaDiscord**, which contains no word of "CR Flamengo". Supporters name
+ * their servers the way supporters talk. A rule strict enough to be worth
+ * something rejects that, and one loose enough to accept it accepts nearly
+ * anything — a false negative, which is the direction a gate must never fail
+ * in, and it was reached by trying to be careful.
+ *
+ * The id also catches the failure a name never could: a **vanity code is
+ * transferable**. Discord releases one when a server drops below the boost
+ * level that earned it, and whoever claims it next inherits our link — so
+ * `discord.gg/flamengo` opening a different server is a live failure mode, and
+ * a replacement server plausibly also calls itself something Fla-ish.
+ *
+ * The whole table is still printed, passes included, because the guild's name
+ * and member count are what a person reads to decide the entry is still the
+ * community they meant — the check says it is the same server, not that the
+ * server is still worth linking to.
  *
  * **This checker can exist because the value is an invite, and could not if it
  * were a guild id.** Measured 2026-09-09: `widget.json` answers 403 unless the
@@ -57,23 +73,8 @@ import type { Club } from "@/src/types";
 
 const appUrl = process.argv[2];
 
-/** Accents off, case off. A server names itself "Naçao" and "Nacao" by turns,
- *  and one of them would otherwise read as the wrong club. */
-const fold = (value: string): string =>
-  value.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
-
-/**
- * The words that would identify this club in a server's name. A supporters'
- * server is named by supporters, so it may be "Nação Rubro-Negra" rather than
- * "Flamengo" — the short name and the nickname-bearing words of the registered
- * name are what a match can plausibly be found in.
- */
-const clubWords = (club: Club): string[] =>
-  [...new Set([...fold(club.shortName).split(/[^a-z0-9]+/), ...fold(club.name).split(/[^a-z0-9]+/)])]
-    .filter((word) => word.length > 3);
-
 interface InviteMeta {
-  guild?: { name?: string };
+  guild?: { id?: string; name?: string };
   expires_at?: string | null;
   approximate_member_count?: number;
   message?: string;
@@ -116,14 +117,14 @@ const served = async (): Promise<Map<string, string | undefined> | null> => {
 };
 
 const check = async (club: Club, live: Map<string, string | undefined> | null): Promise<Row> => {
-  const stored = CLUB_DISCORD[club.code];
-  const code = discordInvite(stored);
+  const entry = CLUB_DISCORD[club.code];
+  const code = discordInvite(entry?.invite);
   const problems: string[] = [];
   let guild = "";
   let members = "";
 
   if (!code) {
-    problems.push(`"${stored}" is not a usable invite code`);
+    problems.push(`"${entry?.invite}" is not a usable invite code`);
   } else {
     try {
       const meta = await lookup(code);
@@ -135,9 +136,14 @@ const check = async (club: Club, live: Map<string, string | undefined> | null): 
       // say; when it does, the entry is already rotting.
       if (meta.expires_at) problems.push(`invite expires ${meta.expires_at}`);
 
-      const words = clubWords(club);
-      if (guild && !words.some((word) => fold(guild).includes(word))) {
-        problems.push(`server "${guild}" names none of ${words.join(", ")}`);
+      // THE check. Exact, and against the id rather than the name — see this
+      // file's header for why a name rule refused the one correct entry in the
+      // file, and for the vanity transfer a name rule cannot see at all.
+      const reached = meta.guild?.id;
+      if (!reached) {
+        problems.push("invite resolved without naming a guild");
+      } else if (reached !== entry.guild) {
+        problems.push(`opens guild ${reached} ("${guild}"), recorded as ${entry.guild}`);
       }
     } catch (error) {
       problems.push((error as Error).message);
@@ -146,12 +152,12 @@ const check = async (club: Club, live: Map<string, string | undefined> | null): 
 
   if (live) {
     const there = live.get(club.code);
-    if (there !== stored) {
+    if (there !== entry?.invite) {
       problems.push(`${appUrl} serves ${there ? `"${there}"` : "no invite"} — deploy is behind`);
     }
   }
 
-  return { club, code: stored, guild, members, problems };
+  return { club, code: entry?.invite, guild, members, problems };
 };
 
 let live: Map<string, string | undefined> | null;
@@ -190,6 +196,7 @@ const failed = rows.filter((row) => row.problems.length);
 console.log(`\n${rows.length - failed.length}/${rows.length} invites verified`);
 
 if (failed.length) {
-  console.log("Read the server names above before editing: a name match is evidence, not proof.");
+  console.log("The guild check is exact; the name and member count are for you to read —");
+  console.log("they say WHICH community it is, where the check only says it is the same one.");
   process.exit(1);
 }

@@ -2694,11 +2694,13 @@ bare `npm run check-…` added outside an `if` exits 0 as written and **1** unde
 the line itself.
 
 `src/data/club-discord.ts` holds the **supporters' Discord** for a club, keyed
-by club code and storing the **invite code alone** — `discordUrl` in
-`club-core.ts` builds the address. Hand-maintained and partial like
-`club-reddit.ts`, whose rule it takes whole: a server is the torcida's and not
-the club's, so the screen-reader suffix says "comunidade de torcedores" and the
-link is not filed beside the Site oficial.
+by club code and storing an **invite and the guild it opens** — `discordUrl` in
+`club-core.ts` builds the address from the invite, and the guild id is never
+rendered. Hand-maintained and partial like `club-reddit.ts`, whose rule it takes
+whole: a server is the torcida's and not the club's, so the screen-reader suffix
+says "comunidade de torcedores" and the link is not filed beside the Site
+oficial. One entry as shipped — Flamengo's **FlaDiscord**, 49 862 membros,
+`expires_at: null`.
 
 **An invite code and never a guild id, and both halves of that were measured.**
 What a person pastes is `discord.com/channels/<guild>/@home`, because it is what
@@ -2716,8 +2718,24 @@ oEmbed test in another costume and why **this file has a checker where
 `player-instagram.ts` deliberately has none**.
 
 ```sh
-npm run check-club-discord    # every recorded invite resolves and names its club
+npm run check-club-discord    # every invite still opens the guild it was written against
 ```
+
+**That checker is EXACT where every other curated checker here is a hint, and
+it had to become so.** It first asked whether the guild's *name* named the club
+and refused the only correct entry in the file: the server is called
+**FlaDiscord**, which contains no word of "CR Flamengo" — supporters name their
+servers the way supporters talk. A rule strict enough to be worth something
+rejects that, and one loose enough to accept it accepts nearly anything; the
+false negative was reached by trying to be careful. So `ClubDiscord` carries the
+**guild id**, and the check is identity rather than resemblance. It also catches
+what no name rule could: **a vanity code is transferable** — Discord releases
+one when a server drops below the boost level that earned it, and whoever claims
+it next inherits our link, plausibly under a name that is also Fla-ish. Both
+directions were confirmed by mutation (the recorded id changed, and the invite
+re-pointed at another server); `tests/club-core.test.ts` checks distinctness on
+the **guild** and not the invite, since two vanity codes can resolve to one
+community and an invite-keyed `Set` would call that two.
 
 **`discordInvite` therefore REFUSES rather than salvages, and the first test
 written for it passed against the bug it named.** Deleting the refusal changes

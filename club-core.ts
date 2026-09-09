@@ -5,7 +5,16 @@
  */
 import { compareByKickoff, isConcluded } from "@/matches-core";
 import { countsTowardStandings } from "@/standings-core";
-import type { Club, ClubCode, ClubVideo, FormResult, Match, Scorer, StandingsRow } from "@/src/types";
+import type {
+  Club,
+  ClubCode,
+  ClubDiscord,
+  ClubVideo,
+  FormResult,
+  Match,
+  Scorer,
+  StandingsRow,
+} from "@/src/types";
 
 /**
  * URL-safe form of a club name: "Atlético-MG" becomes "atletico-mg".
@@ -838,12 +847,18 @@ export const withReddit = (clubs: Club[], subs: Record<string, string>): Club[] 
     return reddit && !club.reddit ? { ...club, reddit } : club;
   });
 
-/** Attach curated Discord invite codes to a club list, keyed by code. A server
- *  is the supporters' and not the club's, exactly as a subreddit is — see
- *  `src/data/club-discord.ts` for what that costs the screen-reader suffix. */
-export const withDiscord = (clubs: Club[], invites: Record<string, string>): Club[] =>
+/** Attach curated Discord invites to a club list, keyed by code. A server is
+ *  the supporters' and not the club's, exactly as a subreddit is — see
+ *  `src/data/club-discord.ts` for what that costs the screen-reader suffix.
+ *
+ *  Only the **invite** travels onto the club: the guild id beside it in the
+ *  curated file is evidence for `check-club-discord` and is not something any
+ *  page renders, so putting it on twenty club objects and through every payload
+ *  would be upkeep for no reader — the rule `Club.coach` already states about a
+ *  shirt number nothing dereferences. */
+export const withDiscord = (clubs: Club[], invites: Record<string, ClubDiscord>): Club[] =>
   clubs.map((club) => {
-    const discord = invites[club.code];
+    const discord = invites[club.code]?.invite;
     return discord && !club.discord ? { ...club, discord } : club;
   });
 

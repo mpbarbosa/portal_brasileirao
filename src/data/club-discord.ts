@@ -1,4 +1,4 @@
-import type { ClubCode } from "@/src/types";
+import type { ClubCode, ClubDiscord } from "@/src/types";
 
 /**
  * HAND-MAINTAINED — no data provider carries a supporters' chat server at any
@@ -9,10 +9,12 @@ import type { ClubCode } from "@/src/types";
  * supporters into another club's server is the exact failure that keying on an
  * abbreviation produces.
  *
- * The value is the **invite code alone** — `aBcD1234`, or a vanity name where
- * the server has one. `discordUrl` in `club-core.ts` derives the address, so
- * the origin is written once and a pasted invite's `?event=…` suffix does not
- * persist.
+ * The value is an `invite` and the `guild` it resolved to. `discordUrl` in
+ * `club-core.ts` derives the address from the invite, so the origin is written
+ * once and a pasted invite's `?event=…` suffix does not persist; the guild id
+ * is never rendered and exists so `check-club-discord` can assert **identity**
+ * rather than resemblance — see `ClubDiscord` in `src/types.ts` for why a
+ * vanity code makes that necessary.
  *
  * **A Discord server is the SUPPORTERS' and not the club's**, which is
  * `club-reddit.ts`' rule and not a second idea: the page does not file this
@@ -52,9 +54,15 @@ import type { ClubCode } from "@/src/types";
  * guessed one — and there is nothing to guess from here, since a server's
  * invite code is minted rather than derived from the club's name.
  */
-export const CLUB_DISCORD: Record<ClubCode, string> = {
-  // Flamengo ("1783") is the first entry and is pending an invite: the URL it
-  // was raised by is a `channels/<guild>` address, which the rule above
-  // refuses. Nothing is written here until a `discord.gg/…` invite has been
-  // read back through `check-club-discord`.
+export const CLUB_DISCORD: Record<ClubCode, ClubDiscord> = {
+  // FlaDiscord — "O maior servidor não oficial do Flamengo, sendo a casa da
+  // torcida no Discord", 49 862 membros, sem expiração. A vanity, so the code
+  // is a word rather than the usual eight characters.
+  //
+  // **Confirmed by GUILD ID and not by its name**, which is the stronger check
+  // and the one available here: the invite resolves to guild
+  // `956003357129076746`, the same server as the `channels/<guild>` address
+  // this entry was raised from. A name match could not have said that — the
+  // server calls itself *FlaDiscord*, which contains no word of "CR Flamengo".
+  "1783": { invite: "flamengo", guild: "956003357129076746" },
 };
