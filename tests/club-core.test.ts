@@ -142,6 +142,49 @@ test("a cancelled fixture is never offered as the next one", () => {
   assert.equal(nextFixture(all, "A")?.id, "real");
 });
 
+test("a postponed fixture is passed over while a real one is pending", () => {
+  // The defect this rule exists for. A postponed match keeps its OLD kickoff until upstream
+  // re-schedules it, so it sorts first and the club page led with a date already gone — on all
+  // six clubs holding a postponed round-21 fixture in 2026, while the Meu time strip named the
+  // real match four days out.
+  const all = [
+    match({ id: "adiado", kickoff: "2026-07-29T00:00:00Z", status: "POSTPONED", homeGoals: null }),
+    match({ id: "real", kickoff: "2026-09-13T19:00:00Z", status: "SCHEDULED", homeGoals: null }),
+  ];
+
+  assert.equal(nextFixture(all, "A")?.id, "real");
+});
+
+test("a postponed fixture is still offered when it is all that is left", () => {
+  // Passed over, never dropped: an empty section would tell a reader the season is finished.
+  const all = [
+    match({ id: "done", kickoff: "2026-04-01T19:00:00Z" }),
+    match({ id: "adiado", kickoff: "2026-07-29T00:00:00Z", status: "POSTPONED", homeGoals: null }),
+  ];
+
+  assert.equal(nextFixture(all, "A")?.id, "adiado");
+});
+
+test("passing over the postponed one does not reorder what is left", () => {
+  const all = [
+    match({ id: "adiado", kickoff: "2026-07-29T00:00:00Z", status: "POSTPONED", homeGoals: null }),
+    match({ id: "later", kickoff: "2026-09-20T19:00:00Z", status: "SCHEDULED", homeGoals: null }),
+    match({ id: "soon", kickoff: "2026-09-13T19:00:00Z", status: "SCHEDULED", homeGoals: null }),
+  ];
+
+  assert.equal(nextFixture(all, "A")?.id, "soon");
+});
+
+test("a live match outranks a later scheduled one, postponed rule or not", () => {
+  const all = [
+    match({ id: "adiado", kickoff: "2026-07-29T00:00:00Z", status: "POSTPONED", homeGoals: null }),
+    match({ id: "agora", kickoff: "2026-09-13T19:00:00Z", status: "LIVE", homeGoals: 0 }),
+    match({ id: "later", kickoff: "2026-09-20T19:00:00Z", status: "SCHEDULED", homeGoals: null }),
+  ];
+
+  assert.equal(nextFixture(all, "A")?.id, "agora");
+});
+
 test("there is no next fixture once everything is played", () => {
   assert.equal(nextFixture([match({ id: "done" })], "A"), null);
 });

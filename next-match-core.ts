@@ -24,11 +24,17 @@
  *   follows anybody at all is `followState`'s answer, and it stays there.
  *
  * **Not a duplicate of `nextFixture` in `club-core.ts`**, which the club page
- * uses and which answers a different question: it has no clock, so it counts a
- * POSTPONED fixture and a kickoff that passed an hour ago as still to come.
- * That is right for a club's season at a glance and wrong for a line that tells
- * a reader when to sit down. Neither should be rewritten in terms of the other
- * — the club page would gain a clock it does not want.
+ * uses and which answers a different question: it has no clock, so a kickoff
+ * that passed an hour ago still counts as to come. That is right for a club's
+ * season at a glance and wrong for a line that tells a reader when to sit down.
+ * Neither should be rewritten in terms of the other — the club page would gain
+ * a clock it does not want.
+ *
+ * The two no longer differ about a **postponed** fixture, and that half of the
+ * gap was a defect rather than a distinction: `nextFixture` led with a date
+ * that had already passed while this module named the real match, on all six
+ * clubs holding a postponed round-21 fixture. It passes them over now, on
+ * status rather than on a clock, so it did not have to become this.
  */
 import { clubMatches } from "@/club-core";
 import { LATE_GRACE_MS } from "@/live-core";
