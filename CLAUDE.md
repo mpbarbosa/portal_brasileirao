@@ -3632,6 +3632,33 @@ session can run every documented check, get every answer right, and duplicate a
 day of work, because none of the checks was ever pointed at what it was about to
 do.
 
+**And one of those checks is worse than mis-aimed: a `/proc` cwd scan of a
+worktree carries NO information when it comes back empty.** Measured 2026-09-09,
+about to redo a re-shoot another session had been running for three hours: that
+session held **three** live processes — the shell, its script, a second shell —
+and **zero** of them appeared in a cwd scan of the worktree they were driving.
+Its script names the worktree by absolute path and keeps its own cwd in the
+shared root, so nothing it runs ever has a cwd inside the directory it is
+rewriting. `pgrep -af <script>` saw all three.
+
+**The asymmetry is what makes it unusable rather than merely weak.** The
+*other* session's script that evening opened with `cd "$W"` and would have been
+plainly visible. So whether a scan can see an occupant is a property of **how
+the other session happened to write its script**, not of the worktree — which
+means an empty result is not weak evidence of absence, it is no evidence at
+all. Only a hit means anything, and that was already the rule; what is new is
+that the miss has no floor under it.
+
+Note this is a **third** arm, and the two that are written down do not reach it:
+*live with its cwd inside*, and the `" (deleted)"` suffix of a worktree removed
+underneath a running process. This one is **live on it, from outside**.
+
+**What actually caught it was `git -C <worktree> status --porcelain`** — ten
+modified PNGs in a directory `/proc` reported as unoccupied. That is the check
+to lead with, because dirty paths you did not write are conclusive where a scan
+is not, and it costs one command. Run the cwd scan still, and promote only its
+hits.
+
 The ledger is **readable by absolute path from inside any worktree** — verified by
 opening it — even though `.claude/worktrees/` is gitignored and so does not exist
 in the worktree's own tree. Four committed files name it. What was missing was
