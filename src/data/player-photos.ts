@@ -54,6 +54,41 @@ import type { PlayerPhoto } from "@/src/types";
  * pixels wide at 64px, and Nuno Moreira's only free picture has him in a snood
  * with his face covered.
  *
+ * **Kevin Viveros (`192070`) is the worked example of that first case, and he
+ * is recorded here by name because everything about him invites a second
+ * attempt.** He is the competition's top scorer, his article and Sofascore id
+ * are both stored, and Wikidata carries a `P18` — so the obvious conclusion is
+ * that a photograph was simply overlooked. It was not. `File:Kevinviveros.jpg`
+ * is CC BY-SA 4.0 by *Ronald 2001*, which `redistributable` admits and which
+ * would fill `credit`, `license` and `licenseUrl` cleanly. **The licence
+ * passes; the framing is what refuses it.**
+ *
+ * Measured at the widths this card actually renders rather than judged by eye:
+ * the original is 960x520, so `PLAYER_PHOTO_WIDTHS[0]` renders it **64x35** and
+ * the player is a few pixels tall. Commons also holds
+ * `Kevinviveros (cropped).jpg`, which looks like the answer and is not — the
+ * crop is landscape to **portrait orientation**, not to the head, so at 412x520
+ * it renders **64x81** and is the same full-body training shot in a taller box.
+ * Read that as a general warning about the `(cropped)` suffix, which promises a
+ * shape and never a subject.
+ *
+ * Note what does *not* refuse it, so the wrong lesson is not drawn: the crop's
+ * aspect ratio is 1.27, comfortably inside the 0.88-1.51 the accepted
+ * photographs span. Shape was never the problem. A face was.
+ *
+ * Two lesser marks against it, either of which would have needed care even had
+ * the framing worked. The description names nobody — it reads only "Futbolista
+ * Juvenil Colombiano", so identity rests on the file's title, the `P18` and
+ * five Wikipedias using it, which is corroboration rather than the file
+ * asserting it; that is a weaker footing than Thiago Maia's rejection above but
+ * the same kind. And it is an **América de Cali** shirt from December 2017,
+ * when he was seventeen, so `alt` would have had to say so under the paragraph
+ * below about free photographs being old and another club's.
+ *
+ * The point of writing this down is that a `P18` is cheap to find and this one
+ * will be found again. Absence here is a framing judgement that was measured,
+ * not a licence that was never checked.
+ *
  * Two rejections came from the rules in this file rather than from looking.
  * Thiago Maia's candidate named him nowhere — not in the file title, not in the
  * description — so nothing but a face connected it to him. Patrick de Paula's
