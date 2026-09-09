@@ -23,7 +23,7 @@ import type { ClubCode } from "@/src/types";
  * torcedores". Nothing here is a club's own statement, and presenting one as if
  * it were is the kind of wrong that looks right.
  *
- * **Coverage is deliberately PARTIAL — eleven clubs of twenty — and grows by
+ * **Coverage is deliberately PARTIAL — twelve clubs of twenty — and grows by
  * hand**, like `player-instagram.ts` and `broadcasts.ts`. A club with no entry
  * renders no link rather than a guessed one, and the survey below is what that
  * rule is worth: `r/<name>` is exactly the shape somebody would be tempted to
@@ -161,6 +161,36 @@ import type { ClubCode } from "@/src/types";
  * there is; Reddit resolves case-insensitively, so nothing here is broken by
  * being wrong about it, which is why it ships rather than waiting.
  *
+ * **`Galo` is the EASIEST entry in this file, and that is worth stating beside
+ * the two hardest ones rather than passed over.** The sub identifies itself as
+ * "Clube Atlético Mineiro" in *both* fields — a name unique in Brazilian
+ * football, where `Cruzeiro` and `Botafogo` name themselves things four and
+ * five entities share — and its description is a line of the club's own hymn.
+ * Wikidata returns **our club first** for "Galo", ahead of the bird, which is
+ * the exact inverse of `Botafogo`, where the bairro outranked the club. So the
+ * machine source is, here alone, sufficient by itself.
+ *
+ * **The bar still wanted the second source, and refusing to make an exception
+ * is the point.** A rule relaxed for the cases that look obvious is a rule that
+ * binds only where nobody was going to get it wrong — and "this one is clearly
+ * fine" is exactly what a reader would also have said about `r/santos`, which
+ * is a Mexican club. The cost of holding the line here was one paste.
+ *
+ * **The four combinations of the two fields all occur, which is what makes the
+ * paragraph above a rule rather than an anecdote** — measured 2026-09-09Z:
+ *
+ *   Galo         title "Clube Atlético Mineiro"   desc "…uma vez até morrer!"
+ *   Cruzeiro     title "Cruzeiro Esporte Clube"   desc "Discussões sobre o…"
+ *   botafogo     title "/r/botafogo"  (useless)   desc "…torcida botafoguense!"
+ *   Chapecoense  title "Chapecoense - Força…"     (no description)
+ *   Coritiba     (no field)                       (no field)
+ *
+ * `Chapecoense` is `botafogo`'s mirror — the title carries it and there is no
+ * description — so neither field may be treated as the one that identifies.
+ *
+ * `P3984` is absent from **`Q270995`** (ours: Belo Horizonte, founded 1908,
+ * `atletico.com.br`), read 2026-09-09Z.
+ *
  * **subredditstats is FROZEN ~1000 days back, and the counts below are
  * therefore historical.** Proved by control rather than suspected: `r/AskReddit`,
  * 44 million members and busy every second, reports its last post **994 days**
@@ -173,13 +203,13 @@ import type { ClubCode } from "@/src/types";
  *
  * Sizes at that reading: `CRFla` 95.9k, `corinthians` 66.8k, `SaoPauloFC`
  * 51.2k, `palmeiras` 44.8k, `internacional` 21.5k, `gremio` 21.2k, `SantosFC`
- * 16.8k, `vasco` 15.0k, `Cruzeiro` 2.8k, `botafogo` 2.1k, `Furacao` 390.
- * **The smallest is two orders of magnitude below the largest and is still
- * nothing like the five rejected below**: a small community is not an empty
- * room, and the line those five fall the wrong side of is whether anybody is
- * there at all. Named by size rather than by position, because the sentence
- * used to say "that last one" and every club added after `Furacao` silently
- * re-pointed it.
+ * 16.8k, `vasco` 15.0k, `Cruzeiro` 2.8k, `botafogo` 2.1k, `Galo` 1.9k,
+ * `Furacao` 390. **The smallest is two orders of magnitude below the largest
+ * and is still nothing like the five rejected below**: a small community is
+ * not an empty room, and the line those five fall the wrong side of is whether
+ * anybody is there at all. Named by size rather than by position, because the
+ * sentence used to say "that last one" and every club added after `Furacao`
+ * silently re-pointed it.
  *
  * **São Paulo is the one entry whose CASING had to be resolved.** Wikidata
  * carries `SaoPauloFC` and `saopaulofc` as two claims of equal rank; they are
@@ -188,7 +218,7 @@ import type { ClubCode } from "@/src/types";
  * verified against two controls (`crfla` -> `CRFla`, `askreddit` -> `AskReddit`)
  * before being believed.
  *
- * **THE NINE CLUBS THAT ARE ABSENT, AND WHY — so nobody re-runs this.**
+ * **THE EIGHT CLUBS THAT ARE ABSENT, AND WHY — so nobody re-runs this.**
  * Four derived addresses would have been wrong in a way no reader could see,
  * and they are the whole argument against deriving a name from a club's name:
  *
@@ -221,12 +251,14 @@ import type { ClubCode } from "@/src/types";
  * members), Remo (5), Fluminense (1), Mirassol (1), Vitória (2). Linking a room
  * with one person in it is worse than the absence, which at least says nothing.
  *
- * Two clubs have a real, correctly-identified sub and only **one** source, so
- * they fail the bar rather than the sniff test, and are the obvious candidates
- * for the second: Atlético-MG (`Galo`, 1.9k), Chapecoense (326). Coritiba's
- * `r/Coritiba` (298) carries **no title and no description at all** — checked
- * again 2026-09-09Z rather than carried forward, and it holds — so nothing in
- * it says which Coritiba it is. Athletico-PR, Santos, Cruzeiro and Botafogo
+ * **One club** has a real, correctly-identified sub and only **one** source,
+ * so it fails the bar rather than the sniff test and is the obvious candidate
+ * for the second: Chapecoense (`Chapecoense`, 326), whose sub titles itself
+ * "Chapecoense - Força, Chapecoense!" and carries **no description** — the
+ * mirror of `botafogo`, and measured 2026-09-09Z rather than carried forward.
+ * Coritiba's `r/Coritiba` (298) carries **no title and no description at all**
+ * — re-checked the same day, and it holds — so nothing in it says which
+ * Coritiba it is. Athletico-PR, Santos, Cruzeiro, Botafogo and Atlético-MG
  * stood in this list and are now above, which is what a second source looks
  * like when it arrives: one line of the survey moves and the rest stay exactly
  * where they were.
@@ -248,6 +280,7 @@ import type { ClubCode } from "@/src/types";
  * which is the whole of what this file may hold.
  */
 export const CLUB_REDDIT: Record<ClubCode, string> = {
+  "1766": "Galo",
   "1767": "gremio",
   "1768": "Furacao",
   "1769": "palmeiras",
