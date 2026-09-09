@@ -239,9 +239,30 @@ export const recentForm = (matches: Match[], code: ClubCode, size = 5): FormResu
     .filter((result): result is FormResult => result !== null)
     .slice(-size);
 
-/** The next fixture still to be played, or null once the season is over. */
-export const nextFixture = (matches: Match[], code: ClubCode): Match | null =>
-  clubMatches(matches, code).find((match) => !isConcluded(match)) ?? null;
+/**
+ * The next fixture still to be played, or null once the season is over.
+ *
+ * **A postponed fixture is passed over while anything else is pending**, and that is the whole
+ * of what this does beyond ordering by kickoff. `isConcluded` deliberately counts POSTPONED as
+ * still to come — a postponed match really is owed — but its stored kickoff is the *old* one,
+ * which upstream keeps until the match is re-scheduled. So the earliest pending fixture is
+ * routinely a date that has already passed, and the club page led with it: measured on the 2026
+ * season, all six clubs holding a postponed round-21 fixture had their **Próximo jogo** naming a
+ * 29 July match while the Meu time strip named their real one, four days out.
+ *
+ * **It is a claim about STATUS and not about time, which is why there is still no clock here.**
+ * `clubFocus` in `next-match-core.ts` is the one that reads `now`, and the two must stay apart:
+ * this answers *what does this club still owe* for a season at a glance, and gaining a clock is
+ * exactly what that module's own comment says must not happen to it. A postponed fixture loses
+ * its place in the queue because it has no usable date, not because of what the hour is.
+ *
+ * **It falls back to the postponed one when there is nothing else**, so a club whose only
+ * remaining fixture is postponed still sees it, chip and all, rather than an empty section.
+ */
+export const nextFixture = (matches: Match[], code: ClubCode): Match | null => {
+  const pending = clubMatches(matches, code).filter((match) => !isConcluded(match));
+  return pending.find((match) => match.status !== "POSTPONED") ?? pending[0] ?? null;
+};
 
 /** The most recently finished match, or null before the club has played. */
 export const lastFixture = (matches: Match[], code: ClubCode): Match | null => {
