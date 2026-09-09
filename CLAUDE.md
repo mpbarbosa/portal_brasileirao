@@ -2429,6 +2429,39 @@ churn; what it buys is that the two files cannot disagree about which matches
 they cover. Coverage grows a window at a time, like `broadcasts.ts`, and a
 missing match means "not synced", never "no lineup published".
 
+**`goals.ts` took the same tuple encoding, and its numbers are the argument
+AGAINST assuming this generalises.** Both files are written by one `sync-goals`
+run, so leaving one in objects would be an inconsistency inside a single
+command — but the payoff is a different order of magnitude, and it is worth
+having the figures here before anybody reaches for the third file:
+
+    escalacoes.ts   791.7 KB -> 318.3 KB   gzip 84.9 -> 41.2 KB   18 017 -> 293 lines
+    goals.ts         47.5 KB ->  24.1 KB   gzip  6.4 ->  6.4 KB    1 171 -> 281 lines
+
+**The gzipped saving on `goals.ts` is nil**, and that is measured rather than
+rounded: the tuple body does shrink, and the longer header explaining the
+encoding costs back exactly what it saves. Deflate was already finding the
+repetition that the encoding removes by hand — which is the same reason
+`squads.ts` gzips *larger* as JSON than as TypeScript. So the rule is narrower
+than "tuples are smaller": **the encoding pays on the raw file and on the diff,
+and pays over the wire only where the file is big enough for the ratio to
+matter.** On this one the case rests on 1171 lines becoming 281, which is what a
+person reads when a rodada lands, plus 21.8 KB off `dist/server.cjs`.
+
+Two decisions inside it are deliberately unlike the escalação's, both measured:
+`kind` stays the **string union** rather than becoming an integer, because
+numbering three kinds saves 0.6 KB raw and **nothing** gzipped over 83 rows
+while costing a lookup table and a vocabulary `tsc` can no longer check; and
+`minute` precedes `kind` in the tuple because a tuple cannot skip a middle
+element and 665 of 669 goals carry a minute against 83 that carry a kind.
+
+**The header still says "safe to hand-edit" and that is still true**, but it now
+means writing `["1769","Lopez","26'"]`. The generated file spells the row out
+where somebody adding a goal will be standing, because the capability is real
+and unexercised — every commit that has ever touched `src/data/goals.ts` is a
+sync — and the case it exists for is the sync **refusing** a match whose
+`resultado` it does not know.
+
 **It is stored as TUPLES, one fixture per line, and it is the second file here
 that is** — `club-scouts-history.ts`' encoding, applied to the biggest file in
 `src/data/` rather than to the one with the tightest bundle budget.
@@ -2459,8 +2492,8 @@ of the 2417 substitutions carries both shirts or neither. That branch is
 reachable from the *type* and not from the *data*, so the test for it is
 hand-written and `tests/escalacao-core.test.ts` says so at the case.
 
-**The renderer is `scripts/escalacoes-file.ts` rather than a heredoc inside the
-sync**, and that is the one structural thing to know before editing either. The
+**The renderer is `scripts/sync-goals-files.ts` rather than a heredoc inside the
+sync**, and it renders BOTH of the run's files, and that is the one structural thing to know before editing either. The
 committed file has to be byte-identical to what the next real sync writes, or a
 resync rewrites all 293 lines and nobody can tell a formatting change from a
 data change; the file is idempotent under re-render, checked. It is also how the
