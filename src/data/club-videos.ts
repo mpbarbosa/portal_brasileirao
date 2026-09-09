@@ -39,14 +39,23 @@ import type { ClubCode, ClubVideo } from "@/src/types";
  *   curl -s "https://www.youtube.com/oembed?url=https%3A//www.youtube.com/watch%3Fv%3D<id>&format=json"
  *
  * The Palmeiras × Flamengo entries were confirmed that way on 2026-09-03, the
- * first Fluminense one on 2026-09-05, six velas of the 26ª on 2026-09-07 and
- * six more on 2026-09-08; every title and channel below is oEmbed's own string
- * rather than anything retyped.
+ * first Fluminense one on 2026-09-05, six velas of the 26ª on 2026-09-07, six
+ * more on 2026-09-08 and the last six on 2026-09-09; every title and channel
+ * below is oEmbed's own string rather than anything retyped.
  *
- * **The 2026-09-08 six answered 200 straight away**, with none of the 403 lag
- * the note below records. Read that as the lag being a property of the moment
- * rather than a stage every upload passes through — one 200 does not retire the
- * warning, and one 403 still does not establish that a flip failed.
+ * **The 2026-09-08 and 2026-09-09 sixes both answered 200 straight away**, with
+ * none of the 403 lag the note below records. Read that as the lag being a
+ * property of the moment rather than a stage every upload passes through — two
+ * clean batches do not retire the warning, and one 403 still does not establish
+ * that a flip failed.
+ *
+ * **Coverage is eighteen of the twenty clubs, and what stopped it was the QUOTA
+ * rather than the work.** `videos.insert` costs 1600 of the 10.000 units a day
+ * and `thumbnails.set` 50, so 1650 a club puts six at 9.900 and a seventh out
+ * of reach. Vasco da Gama (`1780`) and Vitória (`1782`) are rendered, their
+ * copy passes `tests/youtube-upload-core.test.ts`, and they wait only on the
+ * next reset — so a club missing here means "not uploaded yet", never "no velas
+ * exists".
  *
  * **The 403 has a second edge: oEmbed LAGS the visibility change.** The five
  * uploaded on 2026-09-07 answered 403 at 22:09:58Z with Studio already showing
@@ -231,6 +240,87 @@ export const CLUB_VIDEOS: Record<ClubCode, ClubVideo[]> = {
     {
       id: "Ke9ccxusaeQ",
       title: "Coritiba em velas: do 16º ao 7º até a 26ª rodada do Brasileirão",
+      channel: "Marcelo Barbosa",
+    },
+  ],
+
+  // The six below are the third batch through `npm run upload-video`, and each
+  // is again one club's own campanha em velas through the 26ª — so each sits
+  // under one code and repeats nowhere, for the reason the Fluminense entry
+  // gives. Every code was read out of `clubs.ts` rather than derived from the
+  // slug, which matters twice here: Grêmio reports `tla: "FBP"` and São Paulo
+  // `tla: "PAU"`, so an abbreviation would not even have looked like the club.
+  //
+  // Their titles read as a headline plus a figure rather than a rodada, which
+  // is the copy in each `velas-<clube>-youtube.md` and not a choice made here —
+  // this file only ever writes oEmbed's own string.
+  //
+  // **All six answered 200 straight away**, with none of the 403 lag the header
+  // records. That is now twice running; read it as the lag being a property of
+  // the moment rather than a stage every upload passes through, and keep the
+  // warning, since one 403 still does not establish that a flip failed.
+
+  // Cruzeiro. The one climb in this batch — 20º after the first rodada to 6º at
+  // the 26ª — which is what its title names and what the velas draws.
+  "1771": [
+    {
+      id: "nOzTbO2YYrs",
+      title: "Cruzeiro: do 20º ao 6º em 26 rodadas, a campanha em velas",
+      channel: "Marcelo Barbosa",
+    },
+  ],
+
+  // Grêmio — 1767, and the one title in the file that names a number of JOGOS
+  // rather than of rodadas, because this club has two fixtures in arrears: 24
+  // played inside 26 rodadas. The velas draws that as two rounds the club did
+  // not play, which `rank-candles-core.ts` renders hollow rather than grey.
+  "1767": [
+    {
+      id: "KwEJKDlZhEA",
+      title: "Grêmio em velas: 28 pontos em 24 jogos, com partidas em atraso",
+      channel: "Marcelo Barbosa",
+    },
+  ],
+
+  // Internacional — 6684, a code outside the 17xx block like Bragantino's and
+  // Clube do Remo's, and upstream's rather than ours to tidy. Ten empates is
+  // the most of any club in this batch, which is the fact its title leads with.
+  "6684": [
+    {
+      id: "1ogVcWlYPYk",
+      title: "Internacional: 10 empates e 5 vitórias em 26 jogos, a campanha em velas",
+      channel: "Marcelo Barbosa",
+    },
+  ],
+
+  // Mirassol — 4364. Its title states a subtraction rather than a range: the
+  // club's best fechamento was 4º and it ends 16º, and 12 is that difference.
+  "4364": [
+    {
+      id: "GXk_VFdV8Uw",
+      title: "Mirassol: do 4º ao 16º, 12 posições perdidas | Brasileirão em velas",
+      channel: "Marcelo Barbosa",
+    },
+  ],
+
+  // Santos — 6685, beside Internacional's 6684 and not in the 17xx block, for
+  // that entry's reason. Its campanha never closes outside 12º–18º, which is
+  // the "sem movimento" the title names — the narrowest band in this batch.
+  "6685": [
+    {
+      id: "qZof-bgho5E",
+      title: "Santos em velas: 12º ao 18º em 26 rodadas, uma campanha sem movimento",
+      channel: "Marcelo Barbosa",
+    },
+  ],
+
+  // São Paulo — 1776. The `tla` is `PAU` and not `SAO`, which `CLAUDE.md` names
+  // as a live mismatch between upstream's abbreviation and the local seed; the
+  // numeric code is what keeps this entry on the right page regardless.
+  "1776": [
+    {
+      id: "pQ85KZWH2_4",
+      title: "São Paulo: do 1º ao 10º em 26 rodadas, a campanha em velas",
       channel: "Marcelo Barbosa",
     },
   ],
