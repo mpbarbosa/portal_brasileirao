@@ -26,7 +26,7 @@
  * pastes — redirects to the unprefixed address anyway. Sofascore negotiates the
  * language itself, so a Brazilian reader lands in Portuguese without our help.
  *
- * Coverage is **partial**, like every curated file here — 428 of the 948 listed
+ * Coverage is **partial**, like every curated file here — 455 of the 948 listed
  * players, spread across all twenty clubs. A player absent here renders no link.
  *
  * ## How these were checked
@@ -84,6 +84,7 @@ export const PLAYER_SOFASCORE: Record<string, string> = {
   // Atlético-MG
   "24670": "822729",   // Alan Franco
   "179174": "1122552", // Alan Minda
+  "189371": "1185617",  // Alexsander Gomes
   "24673": "881844",   // Ángelo Preciado
   "16476": "241488",   // Bernard
   "1182": "147464",    // Dudu
@@ -112,6 +113,8 @@ export const PLAYER_SOFASCORE: Record<string, string> = {
   "13419": "810715",   // David Duarte
   "275590": "2050427", // Dell
   "18478": "874063",   // Erick
+  "203872": "1104070",  // Erick
+  "39954": "386212",    // Everaldo
   "1548": "145063",    // Éverton Ribeiro
   "181587": "1117710", // Gabriel Xavier
   "1073": "261687",    // Gilberto
@@ -157,6 +160,7 @@ export const PLAYER_SOFASCORE: Record<string, string> = {
 
   // Bragantino
   "142936": "1018093", // Bruno Praxedes
+  "1098": "844576",     // Cleiton
   "280896": "2032806", // Davi Gomes
   "1326": "143846",    // Eduardo Sasha
   "82776": "950545",   // Eric Ramires
@@ -178,6 +182,7 @@ export const PLAYER_SOFASCORE: Record<string, string> = {
 
   // Chapecoense
   "73828": "942061",   // Anderson
+  "118377": "975319",   // Camilo
   "138222": "1015935", // Ênio
   "1485": "82680",     // Giovanni Augusto
   "171073": "973845",  // Higor Meritao
@@ -188,6 +193,7 @@ export const PLAYER_SOFASCORE: Record<string, string> = {
   "150815": "1050353", // Maurício Garcez
   "299874": "1184312", // Miguel Carvalho
   "1274": "354894",    // Rafael Thyere
+  "154554": "1065976",  // Vinicius
   "105065": "846362",  // Walter Clar
   "7838": "46620",     // Yannick Bolasie
 
@@ -225,15 +231,19 @@ export const PLAYER_SOFASCORE: Record<string, string> = {
   "3789": "115182",    // André Carrillo
   "285271": "1647612", // André Luiz
   "16342": "148155",   // André Ramalho
+  "179054": "1199261",  // Bidon
   "169688": "981703",  // Bidu
   "1577": "845178",    // Charles
   "46376": "311462",   // Fabrizio Angileri
+  "249314": "1485272",  // Felipe Longo
   "33145": "124737",   // Gabriel Paulista
   "1301": "243181",    // Gustavo Henrique
   "120089": "1017827", // Hugo
   "82991": "950454",   // Hugo Souza
   "3325": "205508",    // Jesse Lingard
+  "211608": "1411150",  // João Pedro
   "192626": "1396009", // Kaio César
+  "211607": "1411152",  // Kayke
   "179167": "1002609", // Matheus Donelli
   "1614": "795268",    // Matheus Pereira
   "13710": "931540",   // Matheuzinho
@@ -250,10 +260,13 @@ export const PLAYER_SOFASCORE: Record<string, string> = {
   "129391": "995294",  // Fabinho
   "1706": "931574",    // Felipe Jonatan
   "13851": "931479",   // Fernando Sobral
+  "249479": "1482361",  // João Pedro Chermont
   "259981": "1122737", // Joaquín Lavega
+  "31609": "77726",     // Josué
   "1193": "787607",    // Keno
   "30539": "44691",    // Maicon
   "156724": "1092614", // Pedro Rangel
+  "16154": "794930",    // Pedro Rocha
   "179086": "1194689", // Renato Marques
   "1572": "72080",     // Rodrigo Moledo
   "19958": "989091",   // Rodrigo Rodrigues
@@ -299,6 +312,7 @@ export const PLAYER_SOFASCORE: Record<string, string> = {
   "1131": "856123",    // Emerson Royal
   "1867": "590262",    // Erick Pulgar
   "1159": "386198",    // Éverton
+  "203401": "1145106",  // Evertton
   "1244": "333587",    // Giorgian De Arrascaeta
   "56066": "937937",   // Gonzalo Plata
   "3165": "311456",    // Guillermo Varela
@@ -315,6 +329,7 @@ export const PLAYER_SOFASCORE: Record<string, string> = {
   "118": "116955",     // Saúl
   "113807": "876625",  // Vitão
 
+  "249147": "1466084",  // Yan
   // Fluminense
   "28614": "846413",   // Agustín Canobbio
   "1154": "291723",    // Alisson
@@ -362,6 +377,7 @@ export const PLAYER_SOFASCORE: Record<string, string> = {
   "117570": "974558",  // José Enamorado
   "170674": "989862",  // Juan Ignacio Nardoni
   "213173": "1471214", // Leonel Perez
+  "276278": "2352783",  // Luis Guedes
   "1178": "82576",     // Marcos Rocha
   "1072": "870787",    // Marlon
   "3467": "66471",     // Martin Braithwaite
@@ -380,16 +396,19 @@ export const PLAYER_SOFASCORE: Record<string, string> = {
   "153573": "1084963", // Braian Aguirre
   "129367": "995071",  // Bruno Gomes
   "1189": "345113",    // Bruno Henrique
+  "243622": "1394242",  // Clayton
   "24740": "881848",   // Félix Torres
   "58": "128376",      // Gabriel Mercado
   "22061": "925125",   // Johan Carbonero
   "168882": "1106151", // Kayky
+  "140872": "1047204",  // Matheus Bahia
   "192652": "1464309", // Paulinho
   "11680": "560116",   // Rafael Borré
   "278143": "1888163", // Raykkonen
   "113611": "978563",  // Rodrigo Villagra
   "1550": "824152",    // Ronaldo
   "30386": "581060",   // Sergio Rochet
+  "45372": "845433",    // Tabata
   "8404": "358550",    // Thiago Maia
   "165600": "1106487", // Victor Gabriel
   "169553": "982405",  // Vitinho
@@ -397,10 +416,13 @@ export const PLAYER_SOFASCORE: Record<string, string> = {
   // Mirassol
   "95982": "871015",   // Alesson
   "44810": "340113",   // Alex Muralha
+  "13116": "904297",    // André Luis
   "179043": "883207",  // Antonio Galeano
   "183580": "76507",   // Carlos Eduardo
+  "179144": "795295",   // Carlos Eduardo
   "103163": "880132",  // Chico
   "12931": "794874",   // Daniel Borges
+  "272": "178407",      // Gabriel
   "1617": "874195",    // Igor Cariús
   "181603": "1009030", // Igor Formiga
   "103442": "863297",  // João Victor
@@ -429,6 +451,7 @@ export const PLAYER_SOFASCORE: Record<string, string> = {
   "170698": "1094179", // José Manuel López
   "115559": "984896",  // Khellven
   "45173": "331397",   // Lucas Evangelista
+  "249169": "1597267",  // Luighi Hanri
   "287767": "1884646", // Luis Pacheco
   "1562": "34141",     // Marcelo Lomba
   "1080": "840202",    // Marlon Freitas
@@ -474,8 +497,10 @@ export const PLAYER_SOFASCORE: Record<string, string> = {
   "168954": "1015261", // Damian Bobadilla
   "13860": "356514",   // Danielzinho
   "59844": "932937",   // Enzo Díaz
+  "103499": "998499",   // Ferreira
   "149959": "1002947", // Gonzalo Tapia
   "3137": "340519",    // Jonathan Calleri
+  "73058": "942426",    // Luan
   "8003": "149710",    // Lucas Moura
   "13647": "797225",   // Lucas Ramon
   "276282": "2162243", // Lucca Marques
@@ -489,6 +514,7 @@ export const PLAYER_SOFASCORE: Record<string, string> = {
   "1832": "82943",     // Rafael Tolói
   "1338": "338937",    // Robert Arboleda
 
+  "6475": "335033",     // Wendell
   // Vasco da Gama
   "165615": "1105970", // Adson
   "202193": "1112908", // Alan Saldivia
@@ -506,6 +532,7 @@ export const PLAYER_SOFASCORE: Record<string, string> = {
   "176241": "1116593", // Matheus Franca
   "171304": "851285",  // Nuno Moreira
   "169566": "1021721", // Paulo Henrique
+  "179017": "1191278",  // Robert
   "1172": "840398",    // Tchê Tchê
   "8402": "329303",    // Thiago Mendes
 
