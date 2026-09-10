@@ -364,14 +364,25 @@ test.describe("Clube", () => {
     // file would leave every assertion above passing on whichever club still
     // had an entry.
     //
-    // **This named PALMEIRAS until Palmeiras acquired one**, which is the cost
-    // of picking the subject of a negative assertion out of a curated file that
-    // grows: it went red on the commit that widened coverage — correctly, and
-    // confirmed by running it — and no club here is guaranteed to stay absent
-    // for ever. Fluminense is the safest available: its `r/FluminenseFC` has
-    // ONE member, so it is absent by the bar rather than by nobody looking.
-    await page.goto("/clube/fluminense");
-    await expect(pageHeading(page)).toContainText("Fluminense");
+    // **This named PALMEIRAS, then FLUMINENSE, and now Mirassol** — which is
+    // the cost of picking the subject of a negative assertion out of a curated
+    // file that grows: it goes red on the commit that widens coverage —
+    // correctly, and confirmed by running it both times — and no club here is
+    // guaranteed to stay absent for ever. Three subjects is enough to stop the
+    // next move reading as an accident: budget for it rather than for a club
+    // that stays absent.
+    //
+    // Mirassol is the safest available on the criterion this comment has used
+    // throughout — absent by the BAR rather than by nobody looking — and its
+    // absence is the most durable kind the survey in `club-reddit.ts` records.
+    // Fluminense left because the club's community turned out to be at another
+    // address (`r/nense`), which a second source can deliver at any time; the
+    // clubs still absent for a MISSING second source (Chapecoense, Coritiba)
+    // are therefore the wrong pick, and so is Bahia, whose two sources merely
+    // disagree. `r/Mirassol` has ONE member, so nothing but that room filling
+    // up can move it, and no source can supply that.
+    await page.goto("/clube/mirassol");
+    await expect(pageHeading(page)).toContainText("Mirassol");
     await expect(redditLink(page)).toHaveCount(0);
   });
 
