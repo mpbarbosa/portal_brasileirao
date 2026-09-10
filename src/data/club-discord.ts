@@ -64,5 +64,16 @@ export const CLUB_DISCORD: Record<ClubCode, ClubDiscord> = {
   // `956003357129076746`, the same server as the `channels/<guild>` address
   // this entry was raised from. A name match could not have said that — the
   // server calls itself *FlaDiscord*, which contains no word of "CR Flamengo".
+  "1769": { invite: "palmeiras", guild: "794150101504491530" },
+  // Palmeiras • ＯＢＳＥＳＳÃＯ — 20 010 membros, sem expiração. Vanity, como a
+  // do Flamengo.
+  //
+  // **Sem âncora independente, ao contrário do Flamengo**, cuja guild foi
+  // confirmada contra o `channels/<guild>` que originou a entrada. Aqui só veio
+  // o convite, portanto a prova de que este é o servidor certo é o próprio
+  // servidor a dizê-lo: "O servidor não oficial da Sociedade Esportiva
+  // Palmeiras é o espaço ideal para os palmeirenses se reunirem…". Nomeia o
+  // clube pelo nome legal E diz **não oficial**, que é precisamente o sufixo
+  // "comunidade de torcedores" que a ligação carrega.
   "1783": { invite: "flamengo", guild: "956003357129076746" },
 };
