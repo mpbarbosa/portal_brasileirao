@@ -31,6 +31,11 @@ Texto que acompanha [`velas-clube-do-remo.mp4`](velas-clube-do-remo.mp4)
 >
 > **O saldo e o aproveitamento vêm do `computeStandings`**, a mesma função que
 > monta a tabela do site, e não somados à mão a partir do JSON.
+>
+> **As réguas tracejadas saem do `events` do mesmo JSON**, pelo
+> `eventMarks` que o Painel do site já desenha — a demissão de Juan Carlos Osorio depois da 4ª rodada; a paralisação para a Copa do Mundo depois da 18ª rodada. Elas também
+> envelhecem: um acontecimento acrescentado ao `src/data/events.ts` aparece na
+> próxima reexportação, e a descrição abaixo nomeia as duas.
 
 ---
 
@@ -67,6 +72,8 @@ Dados até 07/09/2026 (26ª rodada):
 
 O painel diz 15º porque o pavio chega uma posição além do melhor fechamento: o clube passou pelo 15º dentro de uma rodada sem nunca terminar ali. São 13 derrotas em 26 jogos, o segundo maior número da divisão, atrás das 14 da Chapecoense.
 
+As réguas tracejadas que cruzam o desenho são acontecimentos de fora de campo, e cada uma cai na FRONTEIRA entre duas rodadas em vez de sobre uma: a demissão de Juan Carlos Osorio depois da 4ª rodada, e a paralisação para a Copa do Mundo depois da 18ª rodada. Quando a primeira aparece, o clube vinha de fechar a 4ª em 16º com 3 pts.
+
 O eixo mostra a divisão inteira, 1º no topo e 20º embaixo, com as faixas do G4 e do Z4 ao fundo — é isso que permite comparar este vídeo com o de qualquer outro clube.
 
 Nenhum número foi digitado à mão. A animação lê a mesma função que calcula as velas no Portal Brasileirão, então um valor errado aqui estaria errado no site também.
@@ -88,7 +95,7 @@ carregar o vídeo sozinha.
 Para Short, ou onde a descrição longa não couber.
 
 ```
-A campanha do Clube do Remo em velas: o corpo vai da posição de abertura à de fechamento da rodada, o pavio mostra até onde o clube subiu e desceu dentro dela, e a barra de baixo são os pontos. Nunca fechou uma rodada acima do 16º. Dados até a 26ª: 23 pts, 5V 8E 13D, saldo -13.
+A campanha do Clube do Remo em velas: o corpo vai da posição de abertura à de fechamento da rodada, o pavio mostra até onde o clube subiu e desceu dentro dela, e a barra de baixo são os pontos. As réguas tracejadas marcam a saída de Juan Carlos Osorio e a parada para a Copa. Nunca fechou uma rodada acima do 16º. Dados até a 26ª: 23 pts, 5V 8E 13D, saldo -13.
 
 Animação em Manim, dados do Portal Brasileirão: https://brasileirao.mpbarbosa.com
 Código: https://github.com/mpbarbosa/portal_brasileirao
@@ -99,8 +106,12 @@ Código: https://github.com/mpbarbosa/portal_brasileirao
 ## Tags
 
 Medido sobre o bloco como está — separado por `, `, que é o que se cola.
-295 caracteres, 20 tags.
+303 caracteres, 21 tags.
 
 ```
-brasileirão, brasileirao 2026, campeonato brasileiro, série a, serie a, clube do remo, leão azul, leao azul, remo, campanha do clube do remo, campanha rodada a rodada, candlestick, gráfico de velas, futebol brasileiro, visualização de dados, dataviz, manim, python, portal brasileirão, rodada 26
+brasileirão, brasileirao 2026, campeonato brasileiro, série a, serie a, clube do remo, leão azul, leao azul, remo, campanha do clube do remo, campanha rodada a rodada, candlestick, gráfico de velas, futebol brasileiro, visualização de dados, dataviz, manim, python, portal brasileirão, rodada 26, osorio
 ```
+
+`osorio` entra porque o vídeo agora **marca** essa saída, e é assim que o torcedor
+busca esse recorte da temporada. O vocabulário da marca — "acontecimento",
+"régua" — fica de fora: descreve o desenho e não o assunto.

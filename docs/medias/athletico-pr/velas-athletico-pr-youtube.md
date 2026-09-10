@@ -32,6 +32,11 @@ Texto que acompanha [`velas-athletico-pr.mp4`](velas-athletico-pr.mp4)
 >
 > **O saldo e o aproveitamento vêm do `computeStandings`**, a mesma função que
 > monta a tabela do site, e não somados à mão a partir do JSON.
+>
+> **A régua tracejada sai do `events` do mesmo JSON**, pelo
+> `eventMarks` que o Painel do site já desenha — a paralisação para a Copa do Mundo depois da 18ª rodada. Ela também
+> envelhece: um acontecimento acrescentado ao `src/data/events.ts` aparece na
+> próxima reexportação, e a descrição abaixo a nomeia.
 
 ---
 
@@ -68,6 +73,8 @@ O Athletico-PR nunca liderou e nunca chegou perto do Z4: fecha a temporada intei
 
 São 10 rodadas sem perder na maior série, atrás só das 14 do Palmeiras, contra 7 derrotas em 26 jogos.
 
+A régua tracejada que cruza o desenho é o acontecimento de fora de campo que tocou os vinte clubes: a paralisação para a Copa do Mundo depois da 18ª rodada. Ela cai na FRONTEIRA entre duas rodadas em vez de sobre uma, porque é isso que ela separa — o que veio antes dela e o que veio depois. Aqui o clube parou em 4º com 30 pts.
+
 O eixo mostra a divisão inteira, 1º no topo e 20º embaixo, com as faixas do G4 e do Z4 ao fundo — é isso que permite comparar este vídeo com o de qualquer outro clube.
 
 Nenhum número foi digitado à mão. A animação lê a mesma função que calcula as velas no Portal Brasileirão, então um valor errado aqui estaria errado no site também.
@@ -89,7 +96,7 @@ carregar o vídeo sozinha.
 Para Short, ou onde a descrição longa não couber.
 
 ```
-A campanha do Athletico-PR em velas: o corpo vai da posição de abertura à de fechamento da rodada, o pavio mostra até onde o clube subiu e desceu dentro dela, e a barra de baixo são os pontos. 10 rodadas de invencibilidade, a segunda maior da série a. Dados até a 26ª: 45 pts, 13V 6E 7D, saldo +10.
+A campanha do Athletico-PR em velas: o corpo vai da posição de abertura à de fechamento da rodada, o pavio mostra até onde o clube subiu e desceu dentro dela, e a barra de baixo são os pontos. A régua tracejada marca a parada para a Copa. 10 rodadas de invencibilidade, a segunda maior da série a. Dados até a 26ª: 45 pts, 13V 6E 7D, saldo +10.
 
 Animação em Manim, dados do Portal Brasileirão: https://brasileirao.mpbarbosa.com
 Código: https://github.com/mpbarbosa/portal_brasileirao
@@ -105,3 +112,8 @@ Medido sobre o bloco como está — separado por `, `, que é o que se cola.
 ```
 brasileirão, brasileirao 2026, campeonato brasileiro, série a, serie a, athletico-pr, furacão, furacao, cap, athletico paranaense, campanha do athletico-pr, campanha rodada a rodada, candlestick, gráfico de velas, futebol brasileiro, visualização de dados, dataviz, manim, python, portal brasileirão, rodada 26
 ```
+
+Nenhuma tag nova: o único acontecimento que o vídeo marca é a paralisação
+para a Copa, que não nomeia ninguém — e uma tag aqui nomeia a PESSOA que o
+desenho passou a marcar, que foi o critério do `velas-cruzeiro`. O vocabulário
+da marca — "acontecimento", "régua" — descreve o desenho e não o assunto.

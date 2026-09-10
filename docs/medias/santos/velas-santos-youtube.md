@@ -32,6 +32,11 @@ Texto que acompanha [`velas-santos.mp4`](velas-santos.mp4)
 >
 > **O saldo e o aproveitamento vêm do `computeStandings`**, a mesma função que
 > monta a tabela do site, e não somados à mão a partir do JSON.
+>
+> **As réguas tracejadas saem do `events` do mesmo JSON**, pelo
+> `eventMarks` que o Painel do site já desenha — a demissão de Juan Pablo Vojvoda depois da 7ª rodada; a paralisação para a Copa do Mundo depois da 18ª rodada. Elas também
+> envelhecem: um acontecimento acrescentado ao `src/data/events.ts` aparece na
+> próxima reexportação, e a descrição abaixo nomeia as duas.
 
 ---
 
@@ -68,6 +73,8 @@ O Santos não subiu nem caiu: 26 rodadas fechadas entre o 12º e o 18º, uma das
 
 O painel diz 12º e 20º porque o pavio desce mais fundo do que qualquer fechamento. São 9 derrotas em 25 jogos, e há jogo em atraso: 25 contra 26 rodadas.
 
+As réguas tracejadas que cruzam o desenho são acontecimentos de fora de campo, e cada uma cai na FRONTEIRA entre duas rodadas em vez de sobre uma: a demissão de Juan Pablo Vojvoda depois da 7ª rodada, e a paralisação para a Copa do Mundo depois da 18ª rodada. Quando a primeira aparece, o clube vinha de fechar a 7ª em 15º com 6 pts.
+
 O eixo mostra a divisão inteira, 1º no topo e 20º embaixo, com as faixas do G4 e do Z4 ao fundo — é isso que permite comparar este vídeo com o de qualquer outro clube.
 
 Nenhum número foi digitado à mão. A animação lê a mesma função que calcula as velas no Portal Brasileirão, então um valor errado aqui estaria errado no site também.
@@ -89,7 +96,7 @@ carregar o vídeo sozinha.
 Para Short, ou onde a descrição longa não couber.
 
 ```
-A campanha do Santos em velas: o corpo vai da posição de abertura à de fechamento da rodada, o pavio mostra até onde o clube subiu e desceu dentro dela, e a barra de baixo são os pontos. Fechou 26 rodadas inteiras entre o 12º e o 18º. Dados até a 26ª: 32 pts, 8V 8E 9D, saldo -1.
+A campanha do Santos em velas: o corpo vai da posição de abertura à de fechamento da rodada, o pavio mostra até onde o clube subiu e desceu dentro dela, e a barra de baixo são os pontos. As réguas tracejadas marcam a saída de Juan Pablo Vojvoda e a parada para a Copa. Fechou 26 rodadas inteiras entre o 12º e o 18º. Dados até a 26ª: 32 pts, 8V 8E 9D, saldo -1.
 
 Animação em Manim, dados do Portal Brasileirão: https://brasileirao.mpbarbosa.com
 Código: https://github.com/mpbarbosa/portal_brasileirao
@@ -100,8 +107,12 @@ Código: https://github.com/mpbarbosa/portal_brasileirao
 ## Tags
 
 Medido sobre o bloco como está — separado por `, `, que é o que se cola.
-290 caracteres, 20 tags.
+299 caracteres, 21 tags.
 
 ```
-brasileirão, brasileirao 2026, campeonato brasileiro, série a, serie a, santos, peixe, alvinegro praiano, santos fc, campanha do santos, campanha rodada a rodada, candlestick, gráfico de velas, futebol brasileiro, visualização de dados, dataviz, manim, python, portal brasileirão, rodada 26
+brasileirão, brasileirao 2026, campeonato brasileiro, série a, serie a, santos, peixe, alvinegro praiano, santos fc, campanha do santos, campanha rodada a rodada, candlestick, gráfico de velas, futebol brasileiro, visualização de dados, dataviz, manim, python, portal brasileirão, rodada 26, vojvoda
 ```
+
+`vojvoda` entra porque o vídeo agora **marca** essa saída, e é assim que o torcedor
+busca esse recorte da temporada. O vocabulário da marca — "acontecimento",
+"régua" — fica de fora: descreve o desenho e não o assunto.

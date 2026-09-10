@@ -31,6 +31,11 @@ Texto que acompanha [`velas-mirassol.mp4`](velas-mirassol.mp4)
 >
 > **O saldo e o aproveitamento vêm do `computeStandings`**, a mesma função que
 > monta a tabela do site, e não somados à mão a partir do JSON.
+>
+> **A régua tracejada sai do `events` do mesmo JSON**, pelo
+> `eventMarks` que o Painel do site já desenha — a paralisação para a Copa do Mundo depois da 18ª rodada. Ela também
+> envelhece: um acontecimento acrescentado ao `src/data/events.ts` aparece na
+> próxima reexportação, e a descrição abaixo a nomeia.
 
 ---
 
@@ -67,6 +72,8 @@ O Mirassol abre a temporada perto do G4 e fecha o recorte na borda do Z4: 12 pos
 
 A amplitude total de fechamento é do 4º ao 20º, e o painel diz 2º e 20º porque conta também o que aconteceu dentro das rodadas. São 12 derrotas em 26 jogos, com invencibilidade máxima de 3 rodadas.
 
+A régua tracejada que cruza o desenho é o acontecimento de fora de campo que tocou os vinte clubes: a paralisação para a Copa do Mundo depois da 18ª rodada. Ela cai na FRONTEIRA entre duas rodadas em vez de sobre uma, porque é isso que ela separa — o que veio antes dela e o que veio depois. Aqui o clube parou em 19º com 16 pts.
+
 O eixo mostra a divisão inteira, 1º no topo e 20º embaixo, com as faixas do G4 e do Z4 ao fundo — é isso que permite comparar este vídeo com o de qualquer outro clube.
 
 Nenhum número foi digitado à mão. A animação lê a mesma função que calcula as velas no Portal Brasileirão, então um valor errado aqui estaria errado no site também.
@@ -88,7 +95,7 @@ carregar o vídeo sozinha.
 Para Short, ou onde a descrição longa não couber.
 
 ```
-A campanha do Mirassol em velas: o corpo vai da posição de abertura à de fechamento da rodada, o pavio mostra até onde o clube subiu e desceu dentro dela, e a barra de baixo são os pontos. Do 4º ao 16º: 12 posições perdidas desde o melhor fechamento. Dados até a 26ª: 28 pts, 7V 7E 12D, saldo -11.
+A campanha do Mirassol em velas: o corpo vai da posição de abertura à de fechamento da rodada, o pavio mostra até onde o clube subiu e desceu dentro dela, e a barra de baixo são os pontos. A régua tracejada marca a parada para a Copa. Do 4º ao 16º: 12 posições perdidas desde o melhor fechamento. Dados até a 26ª: 28 pts, 7V 7E 12D, saldo -11.
 
 Animação em Manim, dados do Portal Brasileirão: https://brasileirao.mpbarbosa.com
 Código: https://github.com/mpbarbosa/portal_brasileirao
@@ -104,3 +111,8 @@ Medido sobre o bloco como está — separado por `, `, que é o que se cola.
 ```
 brasileirão, brasileirao 2026, campeonato brasileiro, série a, serie a, mirassol, leão, leao, mirassol fc, time do interior, campanha do mirassol, campanha rodada a rodada, candlestick, gráfico de velas, futebol brasileiro, visualização de dados, dataviz, manim, python, portal brasileirão, rodada 26
 ```
+
+Nenhuma tag nova: o único acontecimento que o vídeo marca é a paralisação
+para a Copa, que não nomeia ninguém — e uma tag aqui nomeia a PESSOA que o
+desenho passou a marcar, que foi o critério do `velas-cruzeiro`. O vocabulário
+da marca — "acontecimento", "régua" — descreve o desenho e não o assunto.
