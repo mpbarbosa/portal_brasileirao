@@ -5134,12 +5134,17 @@ noticing, and `painel-palmeiras-{light,dark}` has since made it twenty. A number
 has no gate on it — this one has now been wrong twice, and the second time it was wrong
 in a paragraph telling you it would be.
 
-**Eight of the twenty can no longer be relied on to come back byte-identical, and this
-paragraph has now said fewer than the truth four times.** Six vary for three unrelated
-reasons on three different clocks; the other two vary because somebody else's server
-decides to. Note that the count has risen because a *feature* landed and because a
-re-shoot **measured** something nobody had predicted — never because anyone miscounted —
-so re-derive it from what the pages render rather than trusting the number here:
+**Ten of the twenty can no longer be relied on to come back byte-identical, and this
+paragraph has now said fewer than the truth five times.** Six vary for three unrelated
+reasons on three different clocks; the other four vary because somebody else's server
+decides to. **Four of those five understatements were the count rising underneath the
+line — a feature landing, or a re-shoot measuring something nobody had predicted. The
+fifth, this one, was a plain miscount**, and the sentence that used to stand here denied
+it could be: it read *"never because anyone miscounted"*. What slipped was the **unit**.
+The bullets below count in **pairs** — "the two partida pairs", "the three above" — while
+this header counts in **images**, and *eight* is exactly what you get by reading that last
+bullet as two images instead of the four it names. So re-derive it from what the pages
+render rather than trusting the number here:
 
 - **The desktop Classificação pair, per deploy.** `fullPage` is `!mobile && route === "/"`,
   so it photographs the whole page — including the **Rodapé**, whose Saúde do serviço
@@ -5171,7 +5176,8 @@ so re-derive it from what the pages render rather than trusting the number here:
 
   **The distinction matters more than the number.** The six above move *by construction*
   and on a schedule you can name — per deploy, per minute, per reading — so two shoots far
-  enough apart are **expected** to differ. These two may come back identical any number of
+  enough apart are **expected** to differ. These **four** — two pairs, and counting them as
+  two images is what put *eight* in the header above — may come back identical any number of
   times and then not, with nothing on our side having changed and nothing to predict it
   from. So they do not belong in the "expected to disagree" set below; they belong in a
   set of their own: **a difference here is not automatically real, and confirming it means
@@ -5182,14 +5188,32 @@ All three of the *clocked* ones are the same lesson at different speeds, and the
 one is the sharpest: the
 Classificação pair moves only when something shipped, the estádio pair when Open-Meteo is
 re-read, while Ao vivo moves while you are looking at it. **Two refreshes of one build are
-expected to disagree on those six images**, and *may* disagree on the two partida ones.
-Disagreeing on any of the other twelve is a real difference and worth reading.
+expected to disagree on those six images**, and *may* disagree on the four partida ones.
+Disagreeing on any of the other ten is a real difference and worth reading.
 
-**That "twelve" was wrong until this commit and is now right by arithmetic rather than by
-anyone fixing it**, which is the whole paragraph's own warning arriving from underneath.
-It is stale from the era of eighteen captures: against a set of twenty and six volatile
-ones it should have read *fourteen*, and 6 + 12 = 18 sat here unnoticed through every
-re-shoot since. At eight volatile it is correct again. **Count the directory.**
+**That "twelve" has now been wrong twice, and the second time is the instructive one
+because the repair itself looked like it closed.** The first was staleness from the era of
+eighteen captures, where `6 + 12 = 18` sat here through every re-shoot. The repair took the
+header to *eight*, and `8 + 12 = 20` **balances** — which is precisely why nobody looked
+again. A total that adds up is not a total that is right: the header was already short by
+two, because the partida bullet names two *pairs* and the header counted them as two
+*images*. Ten volatile and ten stable is what the enumeration has said all along.
+
+**It was caught from the data rather than from the prose**, and by a session that had no
+stake in this paragraph: re-shooting all twenty against one build, **six** came back
+byte-identical — `classificacao-mobile-{light,dark}`, `jogadores-{light,dark}`,
+`jogos-{light,dark}` — and fourteen moved, of which four were a real appearance change.
+Fourteen minus four is ten, reached without reading a word of the list above. Two
+independent routes to the same number is what makes this a correction rather than a
+re-count.
+
+Worth keeping from that measurement: **`classificacao-mobile` does not move while the
+desktop pair does**, which is not noise and is already implied by the first bullet —
+`fullPage` is `!mobile && route === "/"`, so only the desktop capture photographs the
+Rodapé and its sha. The bullet is right as written; it was only ever the total that failed
+to close. **A number repaired once is not a number that stays repaired** — this file says
+that about the sitemap a thousand lines up, and has now demonstrated it about itself.
+**Count the directory, and count the bullets in images.**
 
 **Those same six captures' CAPTIONS rot too — the six on clocks, and not the two partida
 ones, whose delta of 10 changes no value a caption could state — and that is a different
