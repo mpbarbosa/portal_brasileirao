@@ -23,7 +23,7 @@ import type { ClubCode } from "@/src/types";
  * torcedores". Nothing here is a club's own statement, and presenting one as if
  * it were is the kind of wrong that looks right.
  *
- * **Coverage is deliberately PARTIAL — twelve clubs of twenty — and grows by
+ * **Coverage is deliberately PARTIAL — thirteen clubs of twenty — and grows by
  * hand**, like `player-instagram.ts` and `broadcasts.ts`. A club with no entry
  * renders no link rather than a guessed one, and the survey below is what that
  * rule is worth: `r/<name>` is exactly the shape somebody would be tempted to
@@ -191,22 +191,62 @@ import type { ClubCode } from "@/src/types";
  * `P3984` is absent from **`Q270995`** (ours: Belo Horizonte, founded 1908,
  * `atletico.com.br`), read 2026-09-09Z.
  *
+ * **`nense` is the entry where the NAME carries nothing and the description
+ * carries everything, which is the fourth combination arriving in the field.**
+ * The address is not a word — it is the tail of "Fluminense", and derived from
+ * it nobody would reach it — so the survey's whole method of guessing at
+ * `r/<club name>` fails here in the one direction it has not yet failed: not a
+ * wrong subject, but no candidate at all. It arrived pasted, which is the only
+ * way it could have.
+ *
+ * The machine source is nonetheless the **strongest in this file**, and both
+ * fields carry it (2026-09-10Z): the title is `"Fluminense Football Club"` —
+ * the *same string* `club-wikipedia.ts` already stores for `1765` and has
+ * verified resolves to our club — and the description reads "O Fluminense é o
+ * único time tricolor do mundo" and "Bem vindo ao subreddit do atual campeão
+ * da América". That last clause is the discriminator the `Cruzeiro` paragraph
+ * wanted and did not have: "Fluminense Football Club" is a name Fluminense de
+ * Feira and Fluminense-PI do not carry, and the **Libertadores** narrows it
+ * further to the Rio club, in 2023. Compare `Cruzeiro`, whose title matched our
+ * club exactly *and* matched three others exactly.
+ *
+ * `P3984` is absent from **`Q80987`** — read 2026-09-10Z on the entity
+ * confirmed first, which is this file's rule met where it is cheap: pt label
+ * "Fluminense Football Club", inception **1902-07-21**, `fluminense.com.br`,
+ * `P118` the Série A. So the pair is **maintainer + subredditstats**, the
+ * weaker one of `Furacao`/`SantosFC`/`Cruzeiro`/`botafogo`/`Galo`, and the
+ * paragraph arguing why that is acceptable is above and is not restated.
+ *
+ * The casing is the pasted lowercase, corroborated by subredditstats' own
+ * `"r/nense"`; `SaoPauloFC`'s method of reading the canonical form back off
+ * Reddit is still unavailable, for the reason four paragraphs up.
+ *
  * **subredditstats is FROZEN ~1000 days back, and the counts below are
  * therefore historical.** Proved by control rather than suspected: `r/AskReddit`,
  * 44 million members and busy every second, reports its last post **994 days**
- * ago, and `lastSubredditInfoUpdate` is ~1001 days for every sub asked. So it
+ * ago. So it
  * establishes **identity** and never **liveness**, which is why the sizes here
  * are recorded as a reading with a date and not as a claim about today —
  * `StadiumWeather`'s rule. It does discriminate: an invented name 404s at 9
  * bytes where a real one returns 65KB, so it is an instrument with a failing
  * branch rather than one that agrees with whatever it is handed.
  *
+ * **The freeze is PER SUB and not one global date, which this paragraph used
+ * to say it was** — it read "~1001 days for every sub asked", and that is the
+ * shape of claim this file exists to refuse, since it produces no work while
+ * it holds. Measured 2026-09-10Z, one `lastSubredditInfoUpdate` in each page
+ * and no other: `nense` **2023-12-11** (~1003 days, which is where the ~1001
+ * came from) against `CRFla` **2021-05-13** (~1946). So a size below is only as
+ * recent as its **own** stamp, and `CRFla` 95.9k is a 2021 reading sitting in a
+ * list a reader will take as one date. Two samples is not a survey; what it is
+ * enough for is to stop the general claim being carried forward.
+ *
  * Sizes at that reading: `CRFla` 95.9k, `corinthians` 66.8k, `SaoPauloFC`
  * 51.2k, `palmeiras` 44.8k, `internacional` 21.5k, `gremio` 21.2k, `SantosFC`
- * 16.8k, `vasco` 15.0k, `Cruzeiro` 2.8k, `botafogo` 2.1k, `Galo` 1.9k,
- * `Furacao` 390. **The smallest is two orders of magnitude below the largest
- * and is still nothing like the five rejected below**: a small community is
- * not an empty room, and the line those five fall the wrong side of is whether
+ * 16.8k, `vasco` 15.0k, `Cruzeiro` 2.8k, `nense` 2.2k, `botafogo` 2.1k,
+ * `Galo` 1.9k, `Furacao` 390. **The smallest is two orders of magnitude below
+ * the largest and is still nothing like the four rejected below**: a small community is
+ * not an empty room, and the line those four fall the wrong side of is whether
  * anybody is there at all. Named by size rather than by position, because the
  * sentence used to say "that last one" and every club added after `Furacao`
  * silently re-pointed it.
@@ -218,7 +258,7 @@ import type { ClubCode } from "@/src/types";
  * verified against two controls (`crfla` -> `CRFla`, `askreddit` -> `AskReddit`)
  * before being believed.
  *
- * **THE EIGHT CLUBS THAT ARE ABSENT, AND WHY — so nobody re-runs this.**
+ * **THE SEVEN CLUBS THAT ARE ABSENT, AND WHY — so nobody re-runs this.**
  * Four derived addresses would have been wrong in a way no reader could see,
  * and they are the whole argument against deriving a name from a club's name:
  *
@@ -247,9 +287,21 @@ import type { ClubCode } from "@/src/types";
  * crest, a league table and supporters posting about a match — everything a
  * reader arrives expecting to find, and none of it this club's.
  *
- * Five clubs have a sub that exists and is not a community: Bragantino (49
- * members), Remo (5), Fluminense (1), Mirassol (1), Vitória (2). Linking a room
+ * Four clubs have a sub that exists and is not a community: Bragantino (49
+ * members), Remo (5), Mirassol (1), Vitória (2). Linking a room
  * with one person in it is worse than the absence, which at least says nothing.
+ *
+ * **Fluminense stood in that list and is now above, and it is the one club
+ * that left it for a reason none of the others can copy.** `Athletico-PR`,
+ * `Santos`, `Cruzeiro`, `Botafogo` and `Atlético-MG` moved up when a second
+ * source arrived for a sub already identified. Fluminense's `r/Fluminense`
+ * (1 member) did not grow and is still the dead room it was — what changed is
+ * that the club's actual community is at a **different address**. So this is
+ * `r/CAP` and `r/santos` a third time: a derived address sitting beside a right
+ * answer that exists, and the third variety of it. `r/CAP` reaches the wrong
+ * subject loudly, `r/santos` reaches the wrong subject plausibly, and
+ * `r/Fluminense` reaches the **right** subject with nobody in it — which is the
+ * one a reader would never question, because the name is correct.
  *
  * **One club** has a real, correctly-identified sub and only **one** source,
  * so it fails the bar rather than the sniff test and is the obvious candidate
@@ -267,10 +319,11 @@ import type { ClubCode } from "@/src/types";
  * above read "Four clubs" while listing six, from the commit that wrote it —
  * a count in prose has no gate on it, which is `CLAUDE.md`'s own recurring
  * failure met inside a file that spends eighty lines on being checkable. The
- * eleven, the nine and the four here were each counted against `clubs.ts` on
- * 2026-09-09Z — recounted for this entry rather than decremented, which is the
- * same discipline stated one sentence up; none of them is safe to carry
- * forward on trust.
+ * thirteen, the seven and the four here were each counted against `clubs.ts`
+ * on 2026-09-10Z — recounted for this entry rather than decremented, which is
+ * the same discipline stated one sentence up; none of them is safe to carry
+ * forward on trust. The three before them read eleven, nine and four, and only
+ * the last was still right.
  *
  * **Bahia is the entry that is deliberately absent though a source names one**,
  * and it is `coach-overrides.ts`' Vasco written out again. Wikidata says
@@ -280,6 +333,7 @@ import type { ClubCode } from "@/src/types";
  * which is the whole of what this file may hold.
  */
 export const CLUB_REDDIT: Record<ClubCode, string> = {
+  "1765": "nense",
   "1766": "Galo",
   "1767": "gremio",
   "1768": "Furacao",
