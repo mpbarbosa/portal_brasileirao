@@ -23,7 +23,7 @@ import type { ClubCode } from "@/src/types";
  * torcedores". Nothing here is a club's own statement, and presenting one as if
  * it were is the kind of wrong that looks right.
  *
- * **Coverage is deliberately PARTIAL — thirteen clubs of twenty — and grows by
+ * **Coverage is deliberately PARTIAL — fourteen clubs of twenty — and grows by
  * hand**, like `player-instagram.ts` and `broadcasts.ts`. A club with no entry
  * renders no link rather than a guessed one, and the survey below is what that
  * rule is worth: `r/<name>` is exactly the shape somebody would be tempted to
@@ -244,7 +244,12 @@ import type { ClubCode } from "@/src/types";
  * Sizes at that reading: `CRFla` 95.9k, `corinthians` 66.8k, `SaoPauloFC`
  * 51.2k, `palmeiras` 44.8k, `internacional` 21.5k, `gremio` 21.2k, `SantosFC`
  * 16.8k, `vasco` 15.0k, `Cruzeiro` 2.8k, `nense` 2.2k, `botafogo` 2.1k,
- * `Galo` 1.9k, `Furacao` 390. **The smallest is two orders of magnitude below
+ * `Galo` 1.9k, `Furacao` 390. **`ecbahia` is deliberately NOT in this list**:
+ * subredditstats has no record of it — no stamp, no title — so it has no
+ * reading here to quote, and the `59` the old Bahia paragraph carried came out
+ * of that same empty record. Absence from this list is absence of a
+ * measurement, which is exactly the distinction that paragraph now turns on.
+ * **The smallest is two orders of magnitude below
  * the largest and is still nothing like the four rejected below**: a small community is
  * not an empty room, and the line those four fall the wrong side of is whether
  * anybody is there at all. Named by size rather than by position, because the
@@ -258,7 +263,7 @@ import type { ClubCode } from "@/src/types";
  * verified against two controls (`crfla` -> `CRFla`, `askreddit` -> `AskReddit`)
  * before being believed.
  *
- * **THE SEVEN CLUBS THAT ARE ABSENT, AND WHY — so nobody re-runs this.**
+ * **THE SIX CLUBS THAT ARE ABSENT, AND WHY — so nobody re-runs this.**
  * Four derived addresses would have been wrong in a way no reader could see,
  * and they are the whole argument against deriving a name from a club's name:
  *
@@ -277,6 +282,11 @@ import type { ClubCode } from "@/src/types";
  * data is thin — it is wrong **next to a right answer that exists**, which is
  * the shape a reader cannot see and a compiler cannot either. `CAP` is also the
  * abbreviation this file's own header refuses to key on.
+ *
+ * **`r/bahia` is now the THIRD of these**, Bahia having arrived as
+ * `r/ecbahia` — and it is the one where the derivation is most tempting,
+ * because the club is called Bahia and the state is called Bahia and no amount
+ * of care about *spelling* separates them. Only knowing the subject does.
  *
  * **`r/santos` is now that same line and a worse one**, Santos having arrived
  * as `r/SantosFC`. Two of the four derivations therefore sit beside a right
@@ -308,9 +318,11 @@ import type { ClubCode } from "@/src/types";
  * for the second: Chapecoense (`Chapecoense`, 326), whose sub titles itself
  * "Chapecoense - Força, Chapecoense!" and carries **no description** — the
  * mirror of `botafogo`, and measured 2026-09-09Z rather than carried forward.
- * Coritiba's `r/Coritiba` (298) carries **no title and no description at all**
- * — re-checked the same day, and it holds — so nothing in it says which
- * Coritiba it is. Athletico-PR, Santos, Cruzeiro, Botafogo and Atlético-MG
+ * Coritiba's `r/Coritiba` (298) has **no title and no description at
+ * subredditstats** — but read the next paragraph before treating that as a
+ * fact about the sub, because it is not one.
+ *
+ * Athletico-PR, Santos, Cruzeiro, Botafogo, Atlético-MG and now **Bahia**
  * stood in this list and are now above, which is what a second source looks
  * like when it arrives: one line of the survey moves and the rest stay exactly
  * where they were.
@@ -319,18 +331,59 @@ import type { ClubCode } from "@/src/types";
  * above read "Four clubs" while listing six, from the commit that wrote it —
  * a count in prose has no gate on it, which is `CLAUDE.md`'s own recurring
  * failure met inside a file that spends eighty lines on being checkable. The
- * thirteen, the seven and the four here were each counted against `clubs.ts`
+ * fourteen, the six and the four here were each counted against `clubs.ts`
  * on 2026-09-10Z — recounted for this entry rather than decremented, which is
  * the same discipline stated one sentence up; none of them is safe to carry
- * forward on trust. The three before them read eleven, nine and four, and only
- * the last was still right.
+ * forward on trust. Two entries ago they read eleven, nine and four, and only
+ * the last was still right; the derivation count has now survived three
+ * recounts, which is what a number that is actually stable looks like.
  *
- * **Bahia is the entry that is deliberately absent though a source names one**,
- * and it is `coach-overrides.ts`' Vasco written out again. Wikidata says
- * `ecbahia`; that sub has **59 members, no title and no description**. A
- * different sub, `EsporteClubeBahia` (232), plainly is the club's. So the two
- * sources **disagree**, and doubt that one is right is not knowledge of which —
- * which is the whole of what this file may hold.
+ * **`ecbahia` was the one entry this file REFUSED IN WRITING, and it is now
+ * here — so the reason it was refused is worth more than the entry.** The old
+ * paragraph said Bahia was `coach-overrides.ts`' Vasco written out again: two
+ * sources disagreeing, Wikidata naming `ecbahia` while `EsporteClubeBahia`
+ * (232) "plainly is the club's", and doubt that one is right not being
+ * knowledge of which. The doubt was reasonable. **It rested on a reading of an
+ * instrument that had never been pointed at the subject.**
+ *
+ * **"No title and no description" was never a property of `r/ecbahia`. It is
+ * subredditstats having no record of it at all**, and the tell is a field the
+ * old reading did not look at. Measured 2026-09-10Z with controls:
+ *
+ *   ecbahia            stamp=NONE        title=NO     <- never indexed
+ *   Coritiba           stamp=NONE        title=NO     <- never indexed
+ *   Chapecoense        stamp=2021-07-19  title=yes
+ *   EsporteClubeBahia  stamp=2023-04-08  title=yes
+ *
+ * `title=NO` co-occurs **exactly** with `stamp=NONE`. So the silence was the
+ * instrument's and not the sub's — `CLAUDE.md`'s stale-absence failure, which
+ * ends an enquiry rather than inviting a re-derivation, reached here through a
+ * field nobody thought to read. **The `59` is suspect for the same reason** and
+ * is not repeated above as a size: it is the one number that survived in a
+ * record carrying no stamp.
+ *
+ * **What resolved it is the one instrument this workstation does not have: a
+ * person opening the sub.** The maintainer did, and said so when asked — which
+ * is `CRFla`'s pairing and `Furacao`'s, not an exception argued around them.
+ * Asking first was the point: the two answers led to different data, and the
+ * bar's own words are that where sources disagree the entry stays out.
+ *
+ * **A third corroboration was sitting in this repository the whole time, and
+ * costs nothing to check: `club-instagram.ts` records `"1777": "ecbahia"`.**
+ * `ecbahia` is the club's own handle, so the name is Bahia's across platforms —
+ * which is what the old paragraph actually doubted, since its worry was *which*
+ * sub rather than whether the name meant this club. Wikidata's `P3984` says
+ * `ecbahia` too, read on **`Q198032`** confirmed first (Bahia, founded 1931,
+ * `esporteclubebahia.com.br`), which is this file's rule met where it is cheap.
+ *
+ * **`EsporteClubeBahia` (232) is recorded here as the rejected alternative
+ * rather than deleted**, because it is a real sub and unmistakably this club's
+ * — it titles itself "O Maior Clube Do Norte/Nordeste/Centro-Oeste do Brasil!"
+ * and speaks of the "Esquadrão de Aço" and the "Nação Tricolor". The next
+ * session will find it and wonder why it is not the entry. Two subs for one
+ * club is an ordinary thing on Reddit; what this file stores is the address the
+ * club and its own sources use, and where that ever stops being where the
+ * torcida actually is, the entry should move and this paragraph with it.
  */
 export const CLUB_REDDIT: Record<ClubCode, string> = {
   "1765": "nense",
@@ -341,6 +394,7 @@ export const CLUB_REDDIT: Record<ClubCode, string> = {
   "1770": "botafogo",
   "1771": "Cruzeiro",
   "1776": "SaoPauloFC",
+  "1777": "ecbahia",
   "1779": "corinthians",
   "1780": "vasco",
   "1783": "CRFla",
