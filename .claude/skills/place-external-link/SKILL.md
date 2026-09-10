@@ -234,10 +234,34 @@ And confirm it: delete the anchor from the component and watch the spec fail.
   club reaches no capture:
 
   ```sh
-  git diff -- src/data/club-<thing>.ts | grep -c '"1769"'    # 0 = no captured frame moves
+  git diff origin/main...HEAD -- src/data/club-<thing>.ts | grep -c '"1769"'
+  # 0 = no captured frame moves; >0 = you owe a RE-SHOOT, not a trailer
   ```
 
-  Verify it in a real render rather than by reading, then write a
+  **Name the refs. The bare `git diff -- <path>` this skill used to prescribe is
+  wrong twice, and both were measured after it shipped.** It compares the
+  working tree to `HEAD`, so it answers about wherever you are standing — run it
+  in the shared root, which is where somebody re-checking your claim will run
+  it, and a clean tree gives **0**. Worse, it gives **0 in the correct worktree
+  too, the moment you commit**, because the tree is clean again. So it fails
+  toward *you owe nothing*, which is exactly how a stale screenshot reaches
+  production, and it happens to be right only while the change is unstaged —
+  which is the accident that let it look correct on the commit that introduced
+  it. The three-dot form asks what this branch changed and is correct from
+  anywhere, at any commit state.
+
+  **This generalises past screenshots: any command in a skill that reads "the
+  change" must name its refs**, because it will be run from the shared root, or
+  after committing, or by somebody else. `git show origin/main:<path>` and
+  `git show HEAD:<path>` are the same discipline for file contents; `git ls-tree
+  origin/main <dir>` for a listing.
+
+  If it comes back non-zero, **a trailer is not available to you** — a captured
+  frame really does change, and the honest answer is a re-shoot taken from
+  production after the deploy. The gate will be red in between; it is advisory
+  and is not in `deploy`'s `needs`.
+
+  If it is zero, verify it in a real render rather than by reading, then write a
   `Screenshots-unaffected:` trailer **in the last paragraph**, beside
   `Co-Authored-By:` — a blank line above it means git does not parse it and the
   claim is silently dropped. Check with:
@@ -267,3 +291,27 @@ And confirm it: delete the anchor from the component and watch the spec fail.
 5. `check-club-discord` compares guild ids exactly; both mutation-red.
 6. Ask for **Expire after: Never** and **Max uses: No limit** — Discord's
    default is 7 days and one use, so an unedited invite is dead within a week.
+
+## The second one, which went differently in two ways
+
+`discord.com/invite/palmeiras` → guild `794150101504491530`, «Palmeiras •
+ＯＢＳＥＳＳÃＯ», 20 010 members, never expires. One line of data, since the
+plumbing already existed. Both differences are worth recognising when they recur:
+
+**No independent anchor.** Flamengo's guild id was confirmed against the
+`channels/<guild>` URL the person had pasted — two sources agreeing on one
+number. Here only the invite arrived, so the evidence is the server describing
+itself: *"O servidor **não oficial** da Sociedade Esportiva Palmeiras…"*, which
+names the club by its legal name **and** says non-official, matching the
+"comunidade de torcedores" suffix the link carries. Put that in the entry's
+comment; it is what the next person needs before touching it.
+
+(Note the guild name here *does* contain "Palmeiras", so the discarded
+name-matching checker would have passed it. That changes nothing — what is
+stored and checked is the id, and that is what catches a vanity changing hands.)
+
+**It moved a captured frame.** Palmeiras is `1769`, the club the screenshots
+photograph, so this one owed a **re-shoot** where Flamengo owed a trailer. The
+ranged `git diff` above returns 1 for it and 0 for Flamengo. Expect the gate to
+name your commit — *"appearance changed since, in: … "* — and expect it to stay
+red until the re-shoot lands, taken from production after the deploy.
