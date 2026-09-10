@@ -2705,8 +2705,10 @@ by club code and storing an **invite and the guild it opens** — `discordUrl` i
 rendered. Hand-maintained and partial like `club-reddit.ts`, whose rule it takes
 whole: a server is the torcida's and not the club's, so the screen-reader suffix
 says "comunidade de torcedores" and the link is not filed beside the Site
-oficial. One entry as shipped — Flamengo's **FlaDiscord**, 49 862 membros,
-`expires_at: null`.
+oficial. **Three entries as of 2026-09-10** — Flamengo's **FlaDiscord**,
+Palmeiras' and Athletico-PR's — and every one `expires_at: null`. Count the file
+rather than this sentence: it said *one* for as long as it took the second entry
+to land, which is the number-in-prose failure this file keeps recording.
 
 **An invite code and never a guild id, and both halves of that were measured.**
 What a person pastes is `discord.com/channels/<guild>/@home`, because it is what
@@ -2762,9 +2764,13 @@ stands, so it cannot be widened into refusing real invites.
 before most readers arrive — rot that is scheduled rather than accidental, which
 is what the checker's expiry clause is for.
 
-**`tests/e2e/club-discord.spec.ts` prepares a payload, because the shipped file
-is empty and the anchor therefore renders nowhere** — `meu-time.spec.ts`'
-arrangement, and without it the feature would ship having never once rendered.
+**`tests/e2e/club-discord.spec.ts` prepares a payload rather than opening a club
+that has an entry, and the reason outlived the one it was written for.** It
+shipped when the file was **empty**, so the anchor rendered nowhere and without a
+payload the feature would have shipped having never once rendered —
+`meu-time.spec.ts`' arrangement. The file has entries now and the payload is still
+right: a spec pinned to *which record happens to hold a value* is the trap
+**End-to-end tests** records for `goals.spec.ts`, and curated data moves by hand.
 The trap it cost: **`ClubView` resolves its club from `/api/standings` first and
 falls back to `/api/matches`**, so a fixture preparing only the fixtures payload
 injects into the copy that loses and the link silently never appears — measured,
@@ -5093,8 +5099,20 @@ owed and that no trailer applied, and both halves were wrong.
 The check is one command against the commit, not a judgement about the file:
 
 ```sh
-git show <sha> -- src/data/escalacoes.ts | grep -cE '"(554951|554977)"'
+git show -U0 <sha> -- src/data/escalacoes.ts | grep -cE '^[+-][^+-].*"(554951|554977)"'
 ```
+
+**`-U0` and the `^[+-]` filter are the check, not decoration.** A diff prints
+**context** lines around every change, so a record sitting beside the one that
+changed appears in the output without having been touched — and every curated file
+here is one keyed record per line, which puts the captured record beside
+something sooner or later. Measured on `6ceb6b3`, which added Athletico-PR directly
+above Palmeiras in `club-discord.ts`: the plain `grep -c '"1769"'` answered **3**
+for a club that commit never touched, the filtered form answers **0**, and it
+answers **1** both for `"1768"` in the same commit and for `"1769"` on `1cfe990`,
+the commit that really added Palmeiras. It fails in the **safe-looking** direction
+this paragraph describes — *you owe a re-shoot* — so nothing downstream ever
+catches it.
 
 **Answer it before reaching for the camera.** Eighteen captures from a live
 production build to photograph nothing is exactly what the trailer exists to
@@ -5119,7 +5137,7 @@ So the check is the same one command, pointed at the club the capture actually
 photographs rather than at the file:
 
 ```sh
-git show <sha> -- src/data/club-reddit.ts | grep -c '"1769"'   # the CAPTURED club
+git show -U0 <sha> -- src/data/club-reddit.ts | grep -cE '^[+-][^+-].*"1769"'   # the CAPTURED club
 ```
 
 **Which club that is has to be read, never assumed** — the captures name
