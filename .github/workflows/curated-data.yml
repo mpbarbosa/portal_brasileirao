@@ -91,7 +91,7 @@ jobs:
           failed=""
           : > report.md
 
-          for c in check-hymns check-stadium-photos check-stadium-coordinates check-player-wikipedia check-player-photos check-player-posts; do
+          for c in check-hymns check-club-discord check-stadium-photos check-stadium-coordinates check-player-wikipedia check-player-photos check-player-posts; do
             echo "::group::${c}"
             if npm run --silent "$c" > "out-${c}.txt" 2>&1; then
               status="ok"

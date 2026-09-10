@@ -23,6 +23,7 @@
     "traffic-dashboard": "tsx scripts/traffic-dashboard.ts",
   "screenshot": "tsx scripts/screenshot.ts",
     "measure-refresh-latency": "tsx scripts/measure-refresh-latency.ts",
+    "check-club-discord": "tsx scripts/check-club-discord.ts",
     "check-hymns": "tsx scripts/check-hymns.ts",
     "check-player-wikipedia": "tsx scripts/check-player-wikipedia.ts",
     "check-player-photos": "tsx scripts/check-player-photos.ts",
