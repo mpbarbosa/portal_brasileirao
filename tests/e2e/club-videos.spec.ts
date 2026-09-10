@@ -34,6 +34,42 @@ import { CLUB_VIDEOS } from "@/src/data/club-videos";
  */
 const PALMEIRAS = "1769";
 
+/**
+ * Serve `src/data/club-videos.ts` as an EMPTY map, so a club page renders what a
+ * club with no entry looks like.
+ *
+ * **Every club in the division now has an entry, so that state can no longer be
+ * found — it has to be prepared.** The two "no heading" specs below reached it
+ * through Vasco for as long as Vasco had no video; the 2026-09-10 upload gave it
+ * one and left no club without. `CLAUDE.md`'s rule for exactly this is to
+ * produce the state with a prepared payload rather than hunt the data for a
+ * record in it, and `meu-time.spec.ts` does it for a LIVE fixture the snapshot
+ * never holds. The difference is only the layer: that one prepares an `/api`
+ * envelope, and this file is a committed module the client imports, so the
+ * request intercepted is the module's own.
+ *
+ * **It works because this spec runs against Vite in middleware mode**, which
+ * serves each `src/` file as its own ES module over HTTP. The bundle target
+ * would inline it, and it runs only `seo`, `page-meta` and `routing`.
+ *
+ * Prepared once and fulfilled from memory, never `route.fetch()` per request —
+ * the proxying form is the one `CLAUDE.md` records flaking under seven workers.
+ * The count it returns is the known-negative: a pattern that silently matched
+ * nothing would otherwise leave the real module loading.
+ */
+const withNoCuratedVideos = async (page: import("@playwright/test").Page) => {
+  let served = 0;
+  await page.route("**/src/data/club-videos.ts*", (route) => {
+    served += 1;
+    return route.fulfill({
+      status: 200,
+      contentType: "text/javascript",
+      body: "export const CLUB_VIDEOS = {};\n",
+    });
+  });
+  return () => served;
+};
+
 test.describe("Vídeos do clube", () => {
   test("a club with curated videos shows the rail", async ({ page }) => {
     await page.goto("/clube/palmeiras");
@@ -373,7 +409,13 @@ test.describe("Vídeos do clube", () => {
   test("a club with no curated video shows no heading at all", async ({ page }) => {
     // Not an empty section: `CONTEXT.md` avoids "a heading over a club with no
     // entries" for this page the way **Onde acompanhar** avoids it on the card.
-    expect(Object.keys(CLUB_VIDEOS)).not.toContain("1780"); // Vasco, used below.
+    //
+    // Vasco DOES have a video in the real file, and that is asserted rather than
+    // assumed: it is what makes an empty rail here a consequence of the prepared
+    // module, and not of a club that happens to have none. This line used to
+    // assert the opposite, and flipped the day the last two clubs were uploaded.
+    expect(Object.keys(CLUB_VIDEOS)).toContain("1780");
+    const served = await withNoCuratedVideos(page);
 
     await page.goto("/clube/vasco-da-gama");
     await expect(page.getByRole("main").getByRole("heading", { level: 2 })).toBeVisible();
@@ -383,6 +425,7 @@ test.describe("Vídeos do clube", () => {
     ).toHaveCount(0);
     await expect(page.locator("[data-club-video]")).toHaveCount(0);
     await expect(page.locator("main iframe")).toHaveCount(0);
+    expect(served()).toBeGreaterThan(0);
   });
 
   test("the rail scrolls inside itself and never widens the page", async ({ page }) => {
@@ -487,9 +530,11 @@ test.describe("Vídeos do clube no Painel", () => {
     // confirmed red against the painel without the section, and this one was
     // green in the same run, by construction.
     //
-    // Vasco again, and read from the file rather than written down: the point
-    // is that this club has no entry, not that it is this club.
-    expect(Object.keys(CLUB_VIDEOS)).not.toContain("1780");
+    // Vasco again, through the same prepared empty module as the club-page spec
+    // above, and for its reason: every club now has an entry, so the state has
+    // to be produced rather than found.
+    expect(Object.keys(CLUB_VIDEOS)).toContain("1780");
+    const served = await withNoCuratedVideos(page);
 
     await page.goto("/painel/vasco-da-gama");
     await expect(page.getByRole("main").getByRole("heading", { level: 2 })).toBeVisible();
@@ -499,6 +544,7 @@ test.describe("Vídeos do clube no Painel", () => {
     ).toHaveCount(0);
     await expect(page.locator("[data-club-video]")).toHaveCount(0);
     await expect(page.locator("main iframe")).toHaveCount(0);
+    expect(served()).toBeGreaterThan(0);
   });
 
   test("the section never widens the painel", async ({ page }) => {

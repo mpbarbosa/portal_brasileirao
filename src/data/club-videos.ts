@@ -40,22 +40,27 @@ import type { ClubCode, ClubVideo } from "@/src/types";
  *
  * The Palmeiras × Flamengo entries were confirmed that way on 2026-09-03, the
  * first Fluminense one on 2026-09-05, six velas of the 26ª on 2026-09-07, six
- * more on 2026-09-08 and the last six on 2026-09-09; every title and channel
- * below is oEmbed's own string rather than anything retyped.
+ * more on 2026-09-08, six on 2026-09-09 and the last two — Vasco da Gama and
+ * Vitória — on 2026-09-10; every title and channel below is oEmbed's own string
+ * rather than anything retyped.
  *
- * **The 2026-09-08 and 2026-09-09 sixes both answered 200 straight away**, with
- * none of the 403 lag the note below records. Read that as the lag being a
- * property of the moment rather than a stage every upload passes through — two
- * clean batches do not retire the warning, and one 403 still does not establish
- * that a flip failed.
+ * **The 2026-09-08 and 2026-09-09 sixes, and the 2026-09-10 pair, all answered
+ * 200 straight away**, with none of the 403 lag the note below records. Read
+ * that as the lag being a property of the moment rather than a stage every
+ * upload passes through — three clean batches do not retire the warning, and
+ * one 403 still does not establish that a flip failed.
  *
- * **Coverage is eighteen of the twenty clubs, and what stopped it was the QUOTA
- * rather than the work.** `videos.insert` costs 1600 of the 10.000 units a day
- * and `thumbnails.set` 50, so 1650 a club puts six at 9.900 and a seventh out
- * of reach. Vasco da Gama (`1780`) and Vitória (`1782`) are rendered, their
- * copy passes `tests/youtube-upload-core.test.ts`, and they wait only on the
- * next reset — so a club missing here means "not uploaded yet", never "no velas
- * exists".
+ * **Coverage is all twenty clubs, and the last two came a day late because of
+ * the QUOTA rather than the work.** `videos.insert` costs 1600 of the 10.000
+ * units a day and `thumbnails.set` 50, so 1650 a club puts six at 9.900 and a
+ * seventh out of reach — which is why Vasco da Gama (`1780`) and Vitória
+ * (`1782`) waited for the 2026-09-10 reset after the 2026-09-09 six.
+ *
+ * **That makes the empty state unreachable from this file**, which is the half
+ * worth knowing before editing a spec: every club in the division now has an
+ * entry, so no real club page can show what a club with none looks like.
+ * `tests/e2e/club-videos.spec.ts` used to reach it through Vasco and no longer
+ * can. The rule below still holds; it is only no longer demonstrable here.
  *
  * **The 403 has a second edge: oEmbed LAGS the visibility change.** The five
  * uploaded on 2026-09-07 answered 403 at 22:09:58Z with Studio already showing
@@ -70,8 +75,9 @@ import type { ClubCode, ClubVideo } from "@/src/types";
  * check that would have "confirmed" it — pasting the id from the upload page —
  * is exactly the one this file refuses. Wait for the 200.
  *
- * Coverage is **partial and grows by hand**, like every curated file here. A
- * club with no entry renders no section at all rather than an empty heading.
+ * Coverage **grows by hand**, like every curated file here, and a promoted club
+ * arrives with no entry. A club with no entry renders no section at all rather
+ * than an empty heading.
  */
 export const CLUB_VIDEOS: Record<ClubCode, ClubVideo[]> = {
   // Fluminense. Unlike the comparação below, this one is about a single club:
@@ -321,6 +327,41 @@ export const CLUB_VIDEOS: Record<ClubCode, ClubVideo[]> = {
     {
       id: "pQ85KZWH2_4",
       title: "São Paulo: do 1º ao 10º em 26 rodadas, a campanha em velas",
+      channel: "Marcelo Barbosa",
+    },
+  ],
+
+  // The two below are the fourth batch through `npm run upload-video`, and the
+  // last: with them every club in the division has its own campanha em velas
+  // here. They came a day after the third batch because of the quota the header
+  // names, not because of anything about them — both were rendered and their
+  // copy passed on the same run as the six above.
+  //
+  // Both answered 200 on the FIRST oEmbed read, three batches running now. The
+  // header keeps its warning about the 403 lag for the reason it gives.
+
+  // Vasco da Gama — 1780. 25 pontos em 25 jogos, exactly a point a game, which
+  // is what the title leads with. 25 jogos inside 26 rodadas because the club
+  // did not play the 21ª, which `rank-candles-core.ts` draws as a hollow candle
+  // rather than a grey one. Two réguas: Fernando Diniz after the 3ª, and the
+  // paralisação para a Copa after the 18ª.
+  "1780": [
+    {
+      id: "XUrSeih-NPE",
+      title: "Vasco em velas: 25 pontos em 25 jogos e o 17º lugar até a 26ª",
+      channel: "Marcelo Barbosa",
+    },
+  ],
+
+  // Vitória — 1782. Also 25 jogos in 26 rodadas, but the round it did not play
+  // is the LAST one, the 26ª — so this velas ends on a hollow candle and its
+  // closing card reads «sem jogo nesta rodada» where every other video shows a
+  // scoreline. That is the data and not a render fault. One régua, the
+  // paralisação para a Copa after the 18ª.
+  "1782": [
+    {
+      id: "2RWACTCVIOY",
+      title: "Vitória em velas: 12 derrotas em 25 jogos até a 26ª rodada",
       channel: "Marcelo Barbosa",
     },
   ],
