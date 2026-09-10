@@ -136,7 +136,11 @@ export const SEASON_EVENTS: SeasonEvent[] = [
     detail:
       "Campeão brasileiro e da Libertadores em 2025, saiu no pior início do clube em uma década. " +
       "Leonardo Jardim assumiu no dia seguinte.",
-    source: "https://credited.com.br/noticias/2026/03/03/flamengo-demite-filipe-luis-apos-goleada-e-anuncia-leonardo-jardim/",
+    // Trocada de um credited.com.br que passou a responder 404. A ge.globo
+    // confirma a data em vez de a mexer: datePublished 2026-03-03T01:02-03:00,
+    // dia local 03/03, e o título da peça é o `title` desta entrada à letra.
+    source:
+      "https://ge.globo.com/futebol/times/flamengo/noticia/2026/03/03/filipe-luis-nao-e-mais-treinador-do-flamengo.ghtml",
   },
   {
     id: "sao-paulo-crespo",
