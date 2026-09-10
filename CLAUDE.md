@@ -36,6 +36,12 @@ Modeled on the sibling repo `../agora_na_copa_2026` (a World Cup 2026 companion 
 same way). When a structural question isn't answered here, that repo is the reference
 implementation — read it rather than inventing a new pattern.
 
+`docs/guides/` holds twelve engineering guides adapted to this codebase from
+`../doc_template_lib`, with `docs/guides/README.md` as the index — it also records
+the fourteen guides deliberately **not** imported, and why, so those are not
+re-litigated. They are the citable form of what this file narrates: **this file
+stays authoritative**, and where a guide disagrees with it, the guide is wrong.
+
 ## Commands
 
 - `npm run dev` — start `server.ts` via `tsx`; it runs Vite in middleware mode, so this is

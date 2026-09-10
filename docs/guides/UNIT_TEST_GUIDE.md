@@ -1,0 +1,235 @@
+# Unit Test Guide
+
+Adapted for Portal Brasileirão from `doc_template_lib/code_quality/UNIT_TEST_GUIDE.md`.
+
+## Goal
+
+Verify one behaviour with literal inputs, no server and no network. This is the
+suite that runs in a second and gates every commit.
+
+## What a unit test is here
+
+`node:test` and `node:assert/strict`, run through `tsx`. **There is no test
+framework** — no Jest, no Vitest, no `describe`, no `expect`, no mocking library.
+A test file opens:
+
+```ts
+import assert from "node:assert/strict";
+import { test } from "node:test";
+```
+
+The unit is almost always a function exported from a root `*-core.ts` module, and
+it is testable with literal arguments because those modules perform no I/O and
+take `now` as a parameter — see
+[REFERENTIAL_TRANSPARENCY.md](./REFERENTIAL_TRANSPARENCY.md).
+
+```sh
+npm run test:unit                                    # the whole suite
+node --import tsx --test tests/standings-core.test.ts # one file
+node --import tsx --test --test-name-pattern "tie-breakers" tests/standings-core.test.ts
+npm run lint                                          # tsc --noEmit — the only lint gate
+```
+
+## The trap that costs a new test its existence
+
+**`test:unit` lists its test files explicitly.** A new `tests/*.test.ts` does
+**not** run until it is added to that script in `package.json`. Nothing reports
+this: the file exists, it passes when run by hand, and it is simply never
+executed by anything.
+
+Check it rather than remembering it — currently 62 files, 62 listed:
+
+```sh
+diff <(git ls-files 'tests/*.test.ts' | sed 's|tests/||' | LC_ALL=C sort) \
+     <(node -e 'process.stdout.write(require("./package.json").scripts["test:unit"].split(/\s+/).filter(w=>w.endsWith(".test.ts")).map(w=>w.replace("tests/","")).join("\n")+"\n")' | LC_ALL=C sort)
+```
+
+`LC_ALL=C` on both sides is not decoration: without it the shell's collation and
+`Array.prototype.sort` disagree about `match-core` versus `matches-core`, and the
+command reports a difference in a suite that is in sync.
+
+## Confirm the test red before believing it
+
+This is the practice that distinguishes this suite, and it is not optional
+rigour — it has caught tests that could not fail:
+
+- **`tests/scouts-core.test.ts`** checked that four quadrant names were distinct
+  using a `Set`. When `corners` became `{ term, gloss }` objects, **a `Set` of
+  four objects has four members whatever they contain** — so the distinctness
+  case would have passed against anything. It now checks the two halves
+  separately.
+- **`tests/e2e/escalacoes.spec.ts`** carried a case whose own title claimed each
+  side *"names a goalkeeper"*. It passed because the single fixture it opened
+  happened to be flagged correctly; four sides of the season are not.
+- **`tests/youtube-upload-core.test.ts`** had six mutations confirmed red, and
+  **two of them passed** against the first version of its tests. Two fixtures
+  exist specifically to fix that.
+- **`tests/check-screenshots.test.ts`**'s first merge fixture merged a branch
+  into a `main` that had not moved. The merge is then TREESAME to its parent, git
+  never lists it, and there was nothing for the gate to get wrong. **A fixture
+  simpler than this repository can be too simple to contain the bug.**
+
+So: break the code on purpose, watch the named test go red, then fix it. Record
+what you mutated in the test file — nine test files here already do.
+
+**And know which of your tests can go red, and when.** When `retractsResult`
+landed, only two of its eight cases failed with the rule switched off; the other
+six exist to fail if the rule is ever made *broader*, and they pass with it off
+by construction. That is a legitimate design and it is worth writing down, or the
+next reader mistakes six passing tests for six units of coverage.
+
+## Fixtures must be able to contain the bug
+
+`tests/escalacao-core.test.ts` builds its fixtures with **string** booleans —
+`reserva: "false"` — because CBF sends strings and real booleans would make every
+test pass against the bug the module exists to prevent.
+
+The general rule: a fixture built from what the code *expects* tests nothing. Build
+it from what the source actually sends, traps included.
+
+## Never assert how much curated data exists
+
+This broke CI **twice**:
+
+- A test counted the fixtures carrying broadcast data. `sync-broadcasts` runs
+  weekly and the count moved.
+- `tests/e2e/goals.spec.ts` pinned fixture `554977` as "the match with no
+  minute", on a comment reading *"554977 predates the join"*. A later
+  `sync-goals` gave it one.
+
+Assert the **shape** of a rendered line, or **produce the state with a prepared
+payload**. The same file already had the answer: `withoutGoals` constructs the
+condition instead of hunting the season for a fixture in it.
+
+## Tests that are gates over files rather than over functions
+
+A substantial share of this suite asserts facts about the repository, because no
+compiler can:
+
+| Test | What it refuses |
+| --- | --- |
+| `tests/node-version.test.ts` | The five Node declarations disagreeing |
+| `tests/appearance-paths.test.ts` | A root core module `src/` imports being unwatched — and the list keeping dead entries |
+| `tests/design-tokens-core.test.ts` | A palette shade, Tailwind radius, bare type step, `tracking-*`, `duration-*`, hand-written `hover:`, or bare `shadow-*` under `src/` |
+| `tests/e2e-fixture.test.ts` | A spec importing `test` from `@playwright/test` instead of the hermetic fixture |
+| `tests/player-photos.test.ts` | A photograph with an empty credit — the compiler accepts `""`, the page shows a missing attribution |
+| `tests/youtube-upload-core.test.ts` | A real `docs/medias/**/*-youtube.md` exceeding YouTube's limits |
+| `tests/button-classes.test.ts`, `tests/scatter-corner.test.ts` | A class string no browser spec can reach |
+
+`tests/design-tokens-core.test.ts` is a **grep**, deliberately: this repo has no
+ESLint by choice, and acquiring one to police seven string patterns costs a
+dependency, a config and a plugin API. Two details there are load-bearing —
+comments are stripped before the rules run (half the value of those files is
+prose naming the utility it replaced), and the stripper is hand-written because
+`https://` is not a comment and mistaking it for one blanks the rest of a real
+line, which is a false **negative**.
+
+## Prefer a property to a list of cases
+
+`tests/rank-history-core.test.ts` asserts something the per-club cases cannot
+see: **every place climbed is a place another club fell**, because a round's
+positions are a permutation.
+
+Note the bound, which was found by mutation: flipping the direction comparison
+swaps which total is which and **leaves them equal**, so the property does not
+catch it. A property is a strong test and not a complete one.
+
+## Real subjects, sandboxed
+
+Where the unit is a script rather than a function,
+`tests/check-screenshots.test.ts` builds **real git histories in temporary
+directories and runs the real script** through a `Sandbox` class. That is still a
+unit test by the definition that matters here: hermetic, deterministic, no
+network, and fast.
+
+The shell equivalents live in `scripts/rehearse-*.sh` and run in CI's `check`
+job. They are outside `test:unit` because they are bash.
+
+## Never pipe a test run through `head` or `tail`
+
+Two things fail together. A **pipeline's exit status is the last command's**, so
+`npx playwright test | tail` exits 0 however many specs failed — and the failure
+list prints *before* the `N passed` summary, so the last four lines of a failing
+run look exactly like a passing one. Measured: two runs read through `| tail -4`,
+`758 passed` both times, and a red `main` skipped every deploy for twenty minutes.
+
+Write the run to a file and grep for `failed`, or use `--reporter=line`. Either
+way check the exit status of **the test command itself**.
+
+## Required rules
+
+1. **Add the new file to `test:unit`** in the same commit.
+2. **Confirm the test red by mutation** before believing it; say in the file what
+   you mutated.
+3. **Build fixtures from what the source sends**, including its traps.
+4. **Never assert a count of curated data**, or that a specific record holds a
+   specific value. Prepare the state instead.
+5. **Name the scenario and the outcome**, and make sure the name is true of the
+   fixture the test actually opens.
+6. **Test the error path.** Every refusal a module makes deserves a case.
+7. **Assert `null` explicitly** where `0` is a legal value.
+8. **Do not pipe the run.**
+
+## Current reality
+
+- **62 test files, all listed.** Coverage is concentrated on the core modules and
+  is genuinely thin in a few places — `season-sim-core.ts` and `club-core.ts` are
+  the two largest modules.
+- **There is no coverage measurement.** No `c8`, no threshold, no report. Coverage
+  is argued case by case in review.
+- **There is no mocking library and no need for one**, because the units take
+  their inputs as arguments. Where a double is needed it is a literal object or a
+  small function.
+- **`npm run lint` is `tsc --noEmit` and nothing else.** A type says nothing about
+  a value that arrived over the wire — see
+  [DEFENSIVE_CODING_GUIDE.md](./DEFENSIVE_CODING_GUIDE.md).
+
+## Review heuristics
+
+**Registration test.** Is the new file in `test:unit`?
+
+**Mutation test.** Break the line the test names. Does it go red?
+
+**Vacuity test.** Could this assertion pass against *anything*? A `Set` of
+objects, a `toBeTruthy`, an `expect.poll` for an absence.
+
+**Fixture test.** Does the fixture reproduce the source's actual shape, or an
+idealised one?
+
+**Drift test.** Will this still pass after the next `sync-*` run?
+
+**Title test.** Is the test's name true of the fixture it opens, or only of the
+one case that happens to be flagged correctly?
+
+## Positive signals
+
+- The test constructs its inputs literally and asserts a value.
+- The file records which mutations were confirmed red.
+- A prepared payload produces the condition rather than a search for a record in it.
+- A property assertion sits beside the per-case ones, with its blind spot named.
+
+## Warning signs
+
+- A new `tests/*.test.ts` absent from `test:unit`.
+- An assertion on how many curated records exist, or on which one holds a value.
+- A `Set` of objects used for a distinctness check.
+- A fixture using real booleans where the provider sends strings.
+- A test nobody has watched fail.
+- A test run read through `head` or `tail`.
+
+## Related guides
+
+- [REFERENTIAL_TRANSPARENCY.md](./REFERENTIAL_TRANSPARENCY.md) — why these units need no setup.
+- [E2E_TEST_GUIDE.md](./E2E_TEST_GUIDE.md) — the other suite, and what it cannot see.
+- [DEFENSIVE_CODING_GUIDE.md](./DEFENSIVE_CODING_GUIDE.md) — every refusal deserves a case.
+- [CLEAN_ARCHITECTURE_GUIDE.md](./CLEAN_ARCHITECTURE_GUIDE.md) — the split that makes this suite possible.
+
+## Checklist
+
+- [ ] The file is listed in `test:unit`.
+- [ ] The test was confirmed red by mutation, and the mutation is recorded.
+- [ ] The fixture reproduces the source's real shape.
+- [ ] No assertion depends on how much curated data exists.
+- [ ] Error paths and refusals are covered, not only the happy path.
+- [ ] `null` and `0` are distinguished.
+- [ ] The test's title is true of the fixture it opens.
