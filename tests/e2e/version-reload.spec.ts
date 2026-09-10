@@ -45,8 +45,32 @@ const countLoads = async (page: import("@/tests/e2e/clock").Page) => {
   });
 };
 
-const loads = (page: import("@/tests/e2e/clock").Page) =>
-  page.evaluate(() => Number(window.sessionStorage.getItem("spec:loads") ?? "0"));
+/**
+ * The count, read through a context the page may be about to throw away.
+ *
+ * **The reload this spec provokes can land in the middle of the read**, and
+ * that was the flake — every red run of this file failed here, with
+ * `page.evaluate: Execution context was destroyed`, never on an assertion. The
+ * hook reloads the moment the stubbed health reading settles, which is a few
+ * milliseconds after `goto` resolves at `commit`, so whether the first poll's
+ * `evaluate` finishes before the old document goes is a race the test does not
+ * control. Measured on unmodified `main` at 12 repeats a test: **3 of 96 runs**,
+ * all in the `mobile` project, which loses the race more often.
+ *
+ * A destroyed context is therefore "not settled yet" and reads as 0, so the
+ * poll asks again against the new document. **Only that error is absorbed** —
+ * anything else still throws — and it cannot hide the regression the guard test
+ * exists for: an endless reload leaves the final `toBe(2)` reading 0 or more
+ * than 2, and fails either way.
+ */
+const loads = async (page: import("@/tests/e2e/clock").Page): Promise<number> => {
+  try {
+    return await page.evaluate(() => Number(window.sessionStorage.getItem("spec:loads") ?? "0"));
+  } catch (error) {
+    if (/Execution context was destroyed/.test(String(error))) return 0;
+    throw error;
+  }
+};
 
 test("a build the client is not running is loaded", async ({ page }) => {
   await countLoads(page);
