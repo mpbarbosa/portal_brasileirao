@@ -788,15 +788,34 @@ viram outros arquivos quando a temporada anda — o antigo tem que sair do
   remedidos aqui em **7,78** e **7,82**.
 
   **A vela ao lado de uma régua não é o que veio DEPOIS dela, e o Flamengo é o
-  caso em que isso morde.** O desenho é em ordem de rodada, que é o que o
+  único caso em que isso morde.** O desenho é em ordem de rodada, que é o que o
   `computeRankCandles` promete e o que torna dois clubes comparáveis — mas a 4ª
   rodada do Flamengo foi disputada em **02/09**, seis meses depois da demissão
-  de Filipe Luís e depois de outras 21 rodadas. É o único jogo fora de ordem da
-  temporada inteira, e ele calha de ser o vizinho imediato de uma régua. O
-  quadro convida à leitura causal — a maior subida do ano, +7 posições, encosta
-  na régua — e os dados não a sustentam. Nada na cena pode corrigir isso, porque
-  a cena está certa: quem tem de recusar a frase é a cópia, e o
-  `docs/medias/flamengo/velas-flamengo-youtube.md` recusa no bloco de notas.
+  de Filipe Luís e depois de outras 21 rodadas, e calha de ser a vizinha
+  imediata de uma régua. O quadro convida à leitura causal — a maior subida do
+  ano, +7 posições, encosta na régua — e os dados não a sustentam. Nada na cena
+  pode corrigir isso, porque a cena está certa: quem tem de recusar a frase é a
+  cópia, e o `docs/medias/flamengo/velas-flamengo-youtube.md` recusa no bloco de
+  notas.
+
+  **A frase que este parágrafo trazia era mais forte do que a medição, e foi
+  medida errado da maneira mais fácil de todas: olhando para um clube só.** Ele
+  dizia que a 4ª do Flamengo era *"o único jogo fora de ordem da temporada
+  inteira"*. É o único **do Flamengo** — que é o que tinha sido varrido —, e a
+  temporada tem muitos: varrendo os vinte, **oito outros clubes** têm pelo menos
+  um, e o Botafogo tem três (4ª, 5ª e 21ª). Uma varredura de um clube não
+  responde uma pergunta sobre a divisão, e a generalização não custou nada no
+  momento em que foi escrita, que é exatamente o feitio de alegação que este
+  repositório regista em toda a parte: **enquanto vale, não dá trabalho nenhum,
+  então nada a exercita.**
+
+  O que a varredura dos vinte estabelece é a alegação mais estreita, e é essa
+  que interessa aqui: **o Flamengo é o único clube em que um jogo fora de ordem
+  encosta numa régua** — conferido dos DOIS lados de cada régua, a vela da
+  rodada que ela segue e a da rodada seguinte, porque só um dos lados seria
+  metade da pergunta. Nos outros 18, **zero**. Por isso as cópias deles não
+  levam esta ressalva: ela seria verdadeira sobre o desenho em geral e falsa
+  sobre o que aquele leitor tem à frente.
 
 - **A barra de pontos é o TOTAL e a tampa clara é o ganho.** Pontos são
   cumulativos, então o eixo começa no zero e a altura é a temporada inteira. Uma

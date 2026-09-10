@@ -32,6 +32,11 @@ Texto que acompanha [`velas-atletico-mg.mp4`](velas-atletico-mg.mp4)
 >
 > **O saldo e o aproveitamento vêm do `computeStandings`**, a mesma função que
 > monta a tabela do site, e não somados à mão a partir do JSON.
+>
+> **As réguas tracejadas saem do `events` do mesmo JSON**, pelo
+> `eventMarks` que o Painel do site já desenha — a demissão de Jorge Sampaoli depois da 3ª rodada; a paralisação para a Copa do Mundo depois da 18ª rodada. Elas também
+> envelhecem: um acontecimento acrescentado ao `src/data/events.ts` aparece na
+> próxima reexportação, e a descrição abaixo nomeia as duas.
 
 ---
 
@@ -68,6 +73,8 @@ O Atlético-MG atravessa a temporada fechando rodadas entre o 8º e o 17º, sem 
 
 Repare no denominador: são 25 jogos contra 26 rodadas, então este clube tem partida em atraso e comparar o total de pontos com quem já jogou tudo é uma leitura torta. 9 derrotas e 7 rodadas de invencibilidade na maior série.
 
+As réguas tracejadas que cruzam o desenho são acontecimentos de fora de campo, e cada uma cai na FRONTEIRA entre duas rodadas em vez de sobre uma: a demissão de Jorge Sampaoli depois da 3ª rodada, e a paralisação para a Copa do Mundo depois da 18ª rodada. Quando a primeira aparece, o clube vinha de fechar a 3ª em 15º com 2 pts.
+
 O eixo mostra a divisão inteira, 1º no topo e 20º embaixo, com as faixas do G4 e do Z4 ao fundo — é isso que permite comparar este vídeo com o de qualquer outro clube.
 
 Nenhum número foi digitado à mão. A animação lê a mesma função que calcula as velas no Portal Brasileirão, então um valor errado aqui estaria errado no site também.
@@ -89,7 +96,7 @@ carregar o vídeo sozinha.
 Para Short, ou onde a descrição longa não couber.
 
 ```
-A campanha do Atlético-MG em velas: o corpo vai da posição de abertura à de fechamento da rodada, o pavio mostra até onde o clube subiu e desceu dentro dela, e a barra de baixo são os pontos. Fecha entre o 8º e o 17º, e tem jogo a menos que a maioria. Dados até a 26ª: 36 pts, 10V 6E 9D, saldo +2.
+A campanha do Atlético-MG em velas: o corpo vai da posição de abertura à de fechamento da rodada, o pavio mostra até onde o clube subiu e desceu dentro dela, e a barra de baixo são os pontos. As réguas tracejadas marcam a saída de Jorge Sampaoli e a parada para a Copa. Fecha entre o 8º e o 17º, e tem jogo a menos que a maioria. Dados até a 26ª: 36 pts, 10V 6E 9D, saldo +2.
 
 Animação em Manim, dados do Portal Brasileirão: https://brasileirao.mpbarbosa.com
 Código: https://github.com/mpbarbosa/portal_brasileirao
@@ -100,8 +107,12 @@ Código: https://github.com/mpbarbosa/portal_brasileirao
 ## Tags
 
 Medido sobre o bloco como está — separado por `, `, que é o que se cola.
-310 caracteres, 21 tags.
+320 caracteres, 22 tags.
 
 ```
-brasileirão, brasileirao 2026, campeonato brasileiro, série a, serie a, atlético-mg, galo, atlético mineiro, atletico mineiro, cam, campanha do atlético-mg, campanha rodada a rodada, candlestick, gráfico de velas, futebol brasileiro, visualização de dados, dataviz, manim, python, portal brasileirão, rodada 26
+brasileirão, brasileirao 2026, campeonato brasileiro, série a, serie a, atlético-mg, galo, atlético mineiro, atletico mineiro, cam, campanha do atlético-mg, campanha rodada a rodada, candlestick, gráfico de velas, futebol brasileiro, visualização de dados, dataviz, manim, python, portal brasileirão, rodada 26, sampaoli
 ```
+
+`sampaoli` entra porque o vídeo agora **marca** essa saída, e é assim que o torcedor
+busca esse recorte da temporada. O vocabulário da marca — "acontecimento",
+"régua" — fica de fora: descreve o desenho e não o assunto.

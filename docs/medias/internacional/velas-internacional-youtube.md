@@ -32,6 +32,11 @@ Texto que acompanha [`velas-internacional.mp4`](velas-internacional.mp4)
 >
 > **O saldo e o aproveitamento vêm do `computeStandings`**, a mesma função que
 > monta a tabela do site, e não somados à mão a partir do JSON.
+>
+> **A régua tracejada sai do `events` do mesmo JSON**, pelo
+> `eventMarks` que o Painel do site já desenha — a paralisação para a Copa do Mundo depois da 18ª rodada. Ela também
+> envelhece: um acontecimento acrescentado ao `src/data/events.ts` aparece na
+> próxima reexportação, e a descrição abaixo a nomeia.
 
 ---
 
@@ -68,6 +73,8 @@ O Internacional empata o dobro do que vence: 10 empates contra 5 vitórias em 26
 
 A campanha fecha entre o 11º e o 20º e termina dentro do Z4. A maior invencibilidade é de 5 rodadas, o que num clube com 11 derrotas diz que o problema não é perder, é não ganhar.
 
+A régua tracejada que cruza o desenho é o acontecimento de fora de campo que tocou os vinte clubes: a paralisação para a Copa do Mundo depois da 18ª rodada. Ela cai na FRONTEIRA entre duas rodadas em vez de sobre uma, porque é isso que ela separa — o que veio antes dela e o que veio depois. Aqui o clube parou em 14º com 21 pts.
+
 O eixo mostra a divisão inteira, 1º no topo e 20º embaixo, com as faixas do G4 e do Z4 ao fundo — é isso que permite comparar este vídeo com o de qualquer outro clube.
 
 Nenhum número foi digitado à mão. A animação lê a mesma função que calcula as velas no Portal Brasileirão, então um valor errado aqui estaria errado no site também.
@@ -89,7 +96,7 @@ carregar o vídeo sozinha.
 Para Short, ou onde a descrição longa não couber.
 
 ```
-A campanha do Internacional em velas: o corpo vai da posição de abertura à de fechamento da rodada, o pavio mostra até onde o clube subiu e desceu dentro dela, e a barra de baixo são os pontos. 10 empates e só 5 vitórias em 26 jogos. Dados até a 26ª: 25 pts, 5V 10E 11D, saldo -6.
+A campanha do Internacional em velas: o corpo vai da posição de abertura à de fechamento da rodada, o pavio mostra até onde o clube subiu e desceu dentro dela, e a barra de baixo são os pontos. A régua tracejada marca a parada para a Copa. 10 empates e só 5 vitórias em 26 jogos. Dados até a 26ª: 25 pts, 5V 10E 11D, saldo -6.
 
 Animação em Manim, dados do Portal Brasileirão: https://brasileirao.mpbarbosa.com
 Código: https://github.com/mpbarbosa/portal_brasileirao
@@ -105,3 +112,8 @@ Medido sobre o bloco como está — separado por `, `, que é o que se cola.
 ```
 brasileirão, brasileirao 2026, campeonato brasileiro, série a, serie a, internacional, colorado, inter, sci, clube do povo, campanha do internacional, campanha rodada a rodada, candlestick, gráfico de velas, futebol brasileiro, visualização de dados, dataviz, manim, python, portal brasileirão, rodada 26
 ```
+
+Nenhuma tag nova: o único acontecimento que o vídeo marca é a paralisação
+para a Copa, que não nomeia ninguém — e uma tag aqui nomeia a PESSOA que o
+desenho passou a marcar, que foi o critério do `velas-cruzeiro`. O vocabulário
+da marca — "acontecimento", "régua" — descreve o desenho e não o assunto.

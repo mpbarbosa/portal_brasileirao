@@ -32,6 +32,11 @@ Texto que acompanha [`velas-palmeiras.mp4`](velas-palmeiras.mp4)
 >
 > **O saldo e o aproveitamento vêm do `computeStandings`**, a mesma função que
 > monta a tabela do site, e não somados à mão a partir do JSON.
+>
+> **A régua tracejada sai do `events` do mesmo JSON**, pelo
+> `eventMarks` que o Painel do site já desenha — a paralisação para a Copa do Mundo depois da 18ª rodada. Ela também
+> envelhece: um acontecimento acrescentado ao `src/data/events.ts` aparece na
+> próxima reexportação, e a descrição abaixo a nomeia.
 
 ---
 
@@ -68,6 +73,8 @@ Este desenho conta uma perda que a tabela ainda não parece. O Palmeiras fechou 
 
 É, ainda assim, a campanha mais quieta da divisão. Descontadas a 1ª e a 2ª rodada, onde os empatados em nada são ordenados por NOME e a posição é alfabeto e não futebol, o Palmeiras fecha entre o 1º e o 3º — três posições em 26 rodadas. São 3 derrotas em 26 jogos, o menor número da Série A, e 14 rodadas de invencibilidade na maior sequência, a maior da divisão.
 
+A régua tracejada que cruza o desenho é o acontecimento de fora de campo que tocou os vinte clubes: a paralisação para a Copa do Mundo depois da 18ª rodada. Ela cai na FRONTEIRA entre duas rodadas em vez de sobre uma, porque é isso que ela separa — o que veio antes dela e o que veio depois. Aqui o clube parou em 1º com 41 pts.
+
 O eixo mostra a divisão inteira, 1º no topo e 20º embaixo, com as faixas do G4 e do Z4 ao fundo — é isso que permite comparar este vídeo com o de qualquer outro clube.
 
 Nenhum número foi digitado à mão. A animação lê a mesma função que calcula as velas no Portal Brasileirão, então um valor errado aqui estaria errado no site também.
@@ -89,7 +96,7 @@ carregar o vídeo sozinha.
 Para Short, ou onde a descrição longa não couber.
 
 ```
-A campanha do Palmeiras em velas: o corpo vai da posição de abertura à de fechamento da rodada, o pavio mostra até onde o clube subiu e desceu dentro dela, e a barra de baixo são os pontos. Liderou 19 rodadas e perdeu a ponta na 26ª. Dados até a 26ª: 53 pts, 15V 8E 3D, saldo +24.
+A campanha do Palmeiras em velas: o corpo vai da posição de abertura à de fechamento da rodada, o pavio mostra até onde o clube subiu e desceu dentro dela, e a barra de baixo são os pontos. A régua tracejada marca a parada para a Copa. Liderou 19 rodadas e perdeu a ponta na 26ª. Dados até a 26ª: 53 pts, 15V 8E 3D, saldo +24.
 
 Animação em Manim, dados do Portal Brasileirão: https://brasileirao.mpbarbosa.com
 Código: https://github.com/mpbarbosa/portal_brasileirao
@@ -105,3 +112,8 @@ Medido sobre o bloco como está — separado por `, `, que é o que se cola.
 ```
 brasileirão, brasileirao 2026, campeonato brasileiro, série a, serie a, palmeiras, verdão, porco, palestra, sep, campanha do palmeiras, campanha rodada a rodada, candlestick, gráfico de velas, futebol brasileiro, visualização de dados, dataviz, manim, python, portal brasileirão, rodada 26
 ```
+
+Nenhuma tag nova: o único acontecimento que o vídeo marca é a paralisação
+para a Copa, que não nomeia ninguém — e uma tag aqui nomeia a PESSOA que o
+desenho passou a marcar, que foi o critério do `velas-cruzeiro`. O vocabulário
+da marca — "acontecimento", "régua" — descreve o desenho e não o assunto.
