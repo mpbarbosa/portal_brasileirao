@@ -64,6 +64,23 @@ export const CLUB_DISCORD: Record<ClubCode, ClubDiscord> = {
   // `956003357129076746`, the same server as the `channels/<guild>` address
   // this entry was raised from. A name match could not have said that — the
   // server calls itself *FlaDiscord*, which contains no word of "CR Flamengo".
+  // AthletiCord #600 — 622 membros, sem expiração. Um código cunhado, não uma
+  // vanity, e **veio da listagem pública do Disboard** em vez de ser cunhado
+  // para nós: uma listagem parte-se se o convite morrer, portanto é permanente
+  // por necessidade dela e não por favor nosso. O primeiro convite oferecido
+  // para esta entrada expirava a 2026-10-10 e o `check-club-discord` recusou-o
+  // pela cláusula de expiração — que até aí nunca tinha disparado contra um
+  // convite real.
+  //
+  // **Clube corroborado por três vias, nenhuma delas o trocadilho do nome.**
+  // "AthletiCord" sugere Athletico-PR pelo `h`, e isso é ortografia, que é o
+  // que este ficheiro recusa como identidade em todo o lado. O que estabelece
+  // o clube: as etiquetas da listagem (`ATHLETICO-PARANAENSE`, `FURACÃO`,
+  // `ATLETICO-PR`), a mensagem de boas-vindas do próprio servidor — "Fala,
+  // Furacão! … vive o Athletico 24h", "AQUI É FURACÃO" — e o escudo. *Furacão*
+  // é do Athletico-PR e de mais ninguém; *rubro-negro* sozinho não servia,
+  // porque o Flamengo também é.
+  "1768": { invite: "cYyWz3RR4k", guild: "1395888999276613632" },
   "1769": { invite: "palmeiras", guild: "794150101504491530" },
   // Palmeiras • ＯＢＳＥＳＳÃＯ — 20 010 membros, sem expiração. Vanity, como a
   // do Flamengo.

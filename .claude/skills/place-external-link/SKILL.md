@@ -234,9 +234,25 @@ And confirm it: delete the anchor from the component and watch the spec fail.
   club reaches no capture:
 
   ```sh
-  git diff origin/main...HEAD -- src/data/club-<thing>.ts | grep -c '"1769"'
+  git diff -U0 origin/main...HEAD -- src/data/club-<thing>.ts | grep -cE '^[+-][^+-].*"1769"'
   # 0 = no captured frame moves; >0 = you owe a RE-SHOOT, not a trailer
   ```
+
+  **`-U0` and the `^[+-]` filter are not decoration, and a plain `grep -c` is
+  wrong the moment the file already has an entry near yours.** A diff prints
+  **context** lines as well as changed ones, so inserting an entry directly above
+  `"1769"` makes the captured club appear in the output having not been touched:
+  measured on the Athletico-PR entry, the naive form answered **1** for a club
+  whose line is pure context, while the filtered form answers **0** and still
+  answers **1** for the club actually added. `-U0` removes the context and the
+  `[^+-]` guard drops the `+++`/`---` headers.
+
+  Note this failure runs the *opposite* way to the one above it: no refs at all
+  says **"you owe nothing"** and ships a stale capture, while counting context
+  says **"you owe a re-shoot"** and costs twenty captures to photograph nothing —
+  which this file's own gate paragraph calls out as the mistake nothing catches,
+  because an unnecessary re-shoot passes every check. Two directions, one command,
+  both found by running it rather than reading it.
 
   **Name the refs. The bare `git diff -- <path>` this skill used to prescribe is
   wrong twice, and both were measured after it shipped.** It compares the
