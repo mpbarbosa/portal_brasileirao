@@ -1300,6 +1300,17 @@ upstream stamps newer. Three things about it are decisions:
   ever. `mapMatch` carries the stamp through for this and for nothing else.
 - **Incoming decides which fixtures exist.** A record held only in memory is
   never resurrected; a fixture upstream genuinely drops must be able to vanish.
+- **Except when incoming names none.** `requireFixtures` refuses a 2xx carrying
+  no fixtures before the merge runs, because under the rule above an empty list
+  wipes the memory, `rememberMatches` persists the wipe — switching this whole
+  guard off for the next fill — and the fill caches it as live. Measured on
+  production 2026-09-11 around 00:12Z: one 60s TTL of `/api/matches` and
+  `/api/clubs` serving zero under `source: "football-data"`, with upstream
+  answering 380 moments later. Whether upstream sent an empty list or a body
+  with no `matches` key was not established — host logs are not readable from a
+  workstation — and both are refused alike, so the fix does not depend on it.
+  It refuses **only empty**: a truncated list still drops what it omits, and no
+  threshold has been measured.
 - **An absent stamp is "no claim" and loses every comparison**, so the behaviour
   collapses to "the newest response wins" where there is nothing to compare.
   `sync-seed-data` writes an explicit field list, so the frozen snapshot carries

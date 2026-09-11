@@ -20,7 +20,7 @@ import {
 import {
   authHeaders,
   clubsFromMatches,
-  mapMatches,
+  requireFixtures,
   mapPerson,
   mapScorers,
   mapSquads,
@@ -467,8 +467,12 @@ const loadMatches = async (): Promise<ApiEnvelope<MatchesPayload>> => {
     //
     // Wrapping the output also un-poisons the state, because `rememberMatches`
     // stores what this returns.
+    //
+    // `requireFixtures` refuses a 2xx carrying no fixtures before any of this
+    // runs: an empty incoming list would otherwise wipe the memory, persist the
+    // wipe and be cached as live. See its comment.
     const matches = withPlayedStatus(
-      mergeByFreshness(freshestMatches, mapMatches(raw), now),
+      mergeByFreshness(freshestMatches, requireFixtures(raw), now),
       now,
     );
     rememberMatches(matches);
