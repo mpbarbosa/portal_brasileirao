@@ -5034,24 +5034,29 @@ is the whole of what the app reads the clock for — `currentRound`, `liveBoard`
 `countdownLabel` and `clubFocus` all take `now` as a parameter.
 
 **The failure it closes was live for four hours before anybody saw it.**
-`meu-time.spec.ts` skips when the snapshot's soonest unplayed fixture is in the
-past, and on 2026-08-30 that fixture (`2026-08-29T21:30Z`) slipped behind a real
+`meu-time.spec.ts` then skipped when the snapshot's soonest unplayed fixture was in
+the past, and on 2026-08-30 that fixture (`2026-08-29T21:30Z`) slipped behind a real
 clock. Two specs across two projects went silent, the suite reported
 `690 passed`, and the only trace was a `4 skipped` line nobody reads. Running the
 browser at *today* asks the app to reason about a world its data does not
 describe, and the gap widens by a day every day.
 
-**A guard that runs in Node is not covered by it**, which is the half that is
-easy to miss: `nextScheduled` compares kickoffs in the test process, where the
-page's clock does not reach, so it takes `E2E_NOW` explicitly. Freezing the page
-alone left all four specs still skipping.
+**Code that runs in Node is not covered by it**, which is the half that is easy
+to miss. The fixture `meu-time.spec.ts` follows is now produced by
+`upcomingFixture` in `tests/e2e/matches-payload.ts`, in the test process where the
+page's clock does not reach, so it is dated from `E2E_NOW` explicitly. Back when
+that spec read the snapshot's soonest fixture instead, freezing the page alone left
+all four specs still skipping.
 
-**`tests/e2e/clock.spec.ts` exists because nothing else would notice the fixture
-breaking.** Every other spec passes whether or not the page clock is frozen — the
-Node-side guard is what unskips `meu-time`, and the rest assert shape rather than
-dates. Verified by removing the `setFixedTime` call: `meu-time` stayed green and
-only `clock.spec.ts` went red. Same green-means-nothing shape as the `page.route`
-stub that passed against the bug it named.
+**`tests/e2e/clock.spec.ts` is the spec that names the cause when the fixture
+breaks**, because most specs assert shape rather than dates. Removing the
+`setFixedTime` call once left `meu-time` green and only `clock.spec.ts` red — the
+same green-means-nothing shape as the `page.route` stub that passed against the bug
+it named. Measured again on 2026-09-11, after `meu-time` began producing its
+fixture: the mutation now also reddens its two *Próximo jogo* specs in both
+projects, since a kickoff a minute after the snapshot's noon is days in the past to
+a real clock. Its LIVE spec stays green, because a match under way is under way
+whatever the clock says.
 
 Rules that follow from that:
 
@@ -5069,7 +5074,10 @@ Rules that follow from that:
   184 matches carry a minute today and none is mixed, so which fixture lacks one moves
   every sync. `withoutGoals` in that same file already had the answer — **produce the
   state with a prepared payload rather than hunting the season for a fixture in it** —
-  and the minute spec did not follow it.
+  and the minute spec did not follow it. `tests/e2e/matches-payload.ts` holds the
+  helpers, and `tests/e2e-fixture.test.ts` refuses a `test.skip` or `test.fixme` in
+  any spec: a skip waiting for the data to hold a state reports as a count nobody
+  reads.
 - **Do not pipe a test run through `head` or `tail`.** This is the ledger rule under
   **The protocol for commit, push, merge and deploy**, and it is *worse* here, because
   two things fail together:

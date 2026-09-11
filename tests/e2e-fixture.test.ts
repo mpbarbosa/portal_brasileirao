@@ -109,3 +109,43 @@ test("the clock rule fires on the shape it names, and not on its exception", () 
   // A type-only import carries no fixture, so it is not the shape either.
   assert.equal(skipsFrozenClock('import { type Page } from "@/tests/e2e/fixtures";\n'), false);
 });
+
+/**
+ * No spec may skip itself.
+ *
+ * A skip is reported as a `skipped` count and nothing else, so the suite goes on
+ * saying `N passed` while an assertion quietly stops running. It happened: on
+ * 2026-08-30 `meu-time.spec.ts` skipped four times across two projects for four
+ * hours, and the only trace was a line nobody reads. The skips that remained
+ * waited on curated coverage or on the season ending — states a prepared
+ * `/api/matches` payload produces on demand, which is what
+ * `tests/e2e/matches-payload.ts` is for.
+ *
+ * Comments are stripped first, so a spec may go on *explaining* why it does not
+ * skip — `broadcasts.spec.ts` does, in as many words.
+ */
+export const skipsItself = (source: string): boolean =>
+  /\btest(\.describe)?\s*\.\s*(skip|fixme)\s*\(/.test(stripComments(source));
+
+test("no end-to-end spec skips itself", () => {
+  const offenders = specs().filter((name) =>
+    skipsItself(readFileSync(path.join(E2E, name), "utf8")),
+  );
+
+  assert.deepEqual(
+    offenders,
+    [],
+    `these specs call test.skip or test.fixme, which reports as a count nobody reads: ${offenders.join(", ")}. ` +
+      "Produce the state with a prepared payload (tests/e2e/matches-payload.ts), or fail loudly.",
+  );
+});
+
+test("the skip rule fires on a call and not on prose about one", () => {
+  // Pinned for the reason the clock rule's twin is: a regex that stops matching
+  // would turn the rule above into one that passes against anything.
+  assert.equal(skipsItself('test("x", async () => { test.skip(true, "why"); });'), true);
+  assert.equal(skipsItself('test.describe.skip("block", () => {});'), true);
+  assert.equal(skipsItself('test.fixme("x", async () => {});'), true);
+  assert.equal(skipsItself('// which is what a `test.skip` here would do.\ntest("x", async () => {});'), false);
+  assert.equal(skipsItself('test("x", async () => {});'), false);
+});
