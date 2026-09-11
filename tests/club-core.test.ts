@@ -259,17 +259,17 @@ test("crestMonogram prefers the tla", () => {
 });
 
 test("crestMonogram falls back to the short name's initial, never the code", () => {
-  // A club whose provider reports no tla gets a synthetic FD-<id>, and "FD-"
-  // beside a club's name abbreviates nothing.
-  assert.equal(crestMonogram(club("FD-1783", "Flamengo")), "F");
-  assert.equal(crestMonogram({ ...club("FD-1783", "Flamengo"), tla: "   " }), "F");
+  // A club's code is the provider's numeric id, and a number beside a club's
+  // name abbreviates nothing.
+  assert.equal(crestMonogram(club("1783", "Flamengo")), "F");
+  assert.equal(crestMonogram({ ...club("1783", "Flamengo"), tla: "   " }), "F");
   // Accents are kept: this is a letter to look at, not a URL segment.
-  assert.equal(crestMonogram(club("FD-1", "Ática")), "Á");
+  assert.equal(crestMonogram(club("1", "Ática")), "Á");
 });
 
 test("crestMonogram returns empty rather than a box with nothing in it", () => {
-  assert.equal(crestMonogram(club("FD-1", "")), "");
-  assert.equal(crestMonogram(club("FD-1", "   ")), "");
+  assert.equal(crestMonogram(club("1", "")), "");
+  assert.equal(crestMonogram(club("1", "   ")), "");
 });
 
 test("clubKey prefers the slug and falls back to the code", () => {

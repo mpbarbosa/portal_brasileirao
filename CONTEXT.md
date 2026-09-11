@@ -877,8 +877,8 @@ the crest descriptive alt text, sending a `Referer` with the request.
 What an **Escudo** falls back to — the club's `tla` in a quiet disc, the same
 box the crest would have taken, when the image does not arrive. Built by
 `crestMonogram` in `club-core.ts`; `tla` first and the short name's initial when
-the provider reports none, never `code`, which for such a club is a synthetic
-`FD-<id>`.
+the provider reports none, never `code`, which is the provider's numeric id
+(`"1783"`) and abbreviates nothing.
 It carries **no information**: the club's name is beside it either way, which is
 also why the crest is `alt=""`. Its whole job is to keep the slot from looking
 broken, so it takes no club colour and no treatment a crest does not have — and

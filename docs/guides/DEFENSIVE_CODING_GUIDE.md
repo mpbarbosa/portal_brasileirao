@@ -37,8 +37,10 @@ and it is the stronger question wherever the data has internal arithmetic.
 
 - **`goalsReconcile` (`goals-core.ts`)** — each club's goals must sum to that
   club's score. `scripts/sync-goals.ts` checks it twice, against CBF's own
-  scoreline and against ours, and writes neither a failing match nor a run's
-  worth of unverified data.
+  scoreline and against ours, and **writes only the matches that pass both**. A
+  run that skipped any still writes its files — every entry in them reconciles —
+  and then exits 1 naming what it skipped, so an incomplete run is loud without
+  throwing away the matches it did verify.
 - **It is checked *again* at merge time**, in `withGoals`, because the two files
   drift between syncs: `src/data/goals.ts` is read on demand while
   `src/data/matches.ts` is a frozen snapshot regenerated on its own schedule.
@@ -47,8 +49,9 @@ and it is the stronger question wherever the data has internal arithmetic.
   tests **the scoreline, not the status**, which is what makes it self-clearing —
   the goals reappear the moment the two agree again, with nothing re-run.
 - **`lineupsReconcile` (`escalacao-core.ts`)** is weaker by necessity: a lineup
-  has no scoreline to agree with, so the check is what the laws of the game
-  guarantee — two sides, eleven starters each, every player named and numbered.
+  has no scoreline to agree with, so the check is what the laws of the game and
+  a team sheet guarantee — two sides, eleven starters each with a bench beyond
+  them, every player named and numbered.
   That is still enough to refuse the failure that produces plausible-looking
   data.
 
@@ -125,13 +128,17 @@ card; without it the endpoint answers null and the page omits the section.
 **Zero is a real value, and truthiness is the trap.** `countsTowardStandings`
 exists because a 0-0 is a real scoreline; `parseWeather` because 0 °C, 0% and
 0 km/h are real readings; `traffic-report-core.ts` because `Number(null)` is `0`,
-so a truthiness test reports a genuinely quiet hour as missing data. Check
-against `null` explicitly.
+so a truthiness test reports a genuinely quiet hour as missing data. That last
+module is also the warning that the trap outlives the parse: its parser kept an
+unreadable count null while its timeline turned the null back into 0 with
+`?? 0`, drawing a collapse and then a spike that never happened. Check against
+`null` explicitly, at every step that carries the value, not only the first.
 
-**A provider's field may lie about its own name.** `isTrue`
-(`escalacao-core.ts`) demands the exact string `"true"` because CBF's `reserva`
+**A provider's field may lie about its own name.** `startedFor`
+(`escalacao-core.ts`) demands the exact string `"false"` because CBF's `reserva`
 is the *string* `"false"` — so `if (a.reserva)` is true for all 46 players and
-reports nobody as a starter. `tests/escalacao-core.test.ts` builds its fixtures
+reports nobody as a starter. `isTrue` holds the same rule for `goleiro`,
+demanding the exact string `"true"`. `tests/escalacao-core.test.ts` builds its fixtures
 with string booleans for that reason; real ones would make every test pass
 against the bug.
 
@@ -213,7 +220,8 @@ other? Then assert it, and assert it again where the two sources meet.
 ## Positive signals
 
 - A refusal carries a comment saying what a wrong answer would have cost.
-- A sync writes nothing rather than a run's worth of unverified rows.
+- A sync writes only the rows that passed its checks, and exits non-zero naming
+  the ones it skipped.
 - A merge re-checks an invariant that its two inputs could have drifted past.
 - An unmapped provider value reaches the page verbatim, in the places where that
   is the cheaper failure.
