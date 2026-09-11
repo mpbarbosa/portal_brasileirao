@@ -42,7 +42,7 @@ import {
 import { withBroadcasters, withVenues } from "@/broadcast-core";
 import { createEnrichmentLoader, ENRICHMENT_BUDGET } from "@/enrichment-core";
 import { readMatchState, writeMatchState } from "@/match-state-store";
-import { withGoals } from "@/goals-core";
+import { contestedPlayerIds, withGoals } from "@/goals-core";
 import { withLineups } from "@/escalacao-core";
 import { withHighlights } from "@/match-core";
 import {
@@ -361,6 +361,18 @@ interface MatchesPayload {
 }
 
 /**
+ * The player ids no scorer may be given, because two shirts on one of the club's
+ * own team sheets both read as them — the elenco omitted somebody. See
+ * `contestedPlayerIds`.
+ *
+ * Computed once, here, rather than inside `withGoals`: both inputs are committed
+ * files, and the offline branch of `loadMatches` rebuilds the curated list on
+ * every request, where a pass measured at about 35ms would be spent per page.
+ * Read against the same `SEED_SQUADS` the scorers are resolved in below.
+ */
+const CONTESTED_PLAYER_IDS = contestedPlayerIds(ESCALACOES, SEED_SQUADS);
+
+/**
  * The curated data a fixture list is served with — channels, venues, highlights,
  * goals and team sheets, none of which any provider carries.
  *
@@ -383,6 +395,7 @@ const withCuratedData = (matches: Match[]): Match[] =>
       // name; the ids are the same provider's either way, and a scorer the seed
       // cannot place renders as the text it always did.
       SEED_SQUADS,
+      CONTESTED_PLAYER_IDS,
     ),
     ESCALACOES,
   );

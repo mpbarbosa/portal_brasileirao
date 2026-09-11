@@ -85,6 +85,15 @@ assertion about a person — so nothing infers it, and
   lists three players called Arthur and another four called Lucas; picking the
   first would be right about a third of the time. It is deliberately **not** a
   prefix test — "Ander" would then match "Anderson".
+
+  **And "exactly one" is only as good as the list it is counted in.** The squad
+  is incomplete, so a player it omits leaves his namesake as the only
+  candidate: CBF's "Jorge" (21) and "Carrascal" (15) share Flamengo's team
+  sheets, the squad lists only Jorge Carrascal, and both resolved to him.
+  `contestedPlayerIds` (`goals-core.ts`) asks the team sheets, where **two
+  shirts on one sheet are two people**, and refuses an id both read as — across
+  the season, because the second match it went wrong in had only one of them on
+  the sheet.
 - **`attachSubstitutions` (`escalacao-core.ts`)** is all-or-nothing per fixture:
   a row that cannot be placed returns null for the whole match, because a list
   missing one change reads as a complete record of a match where that change
@@ -160,7 +169,8 @@ unblock everybody, and the obvious implementation refuses it as an error.
 3. **Where the data has arithmetic, reconcile it** — and reconcile again at the
    point of use if the inputs can drift apart.
 4. **A join resolves to exactly one candidate or to nothing.** Never "the first
-   match", never a prefix.
+   match", never a prefix — and count the candidates somewhere that can see the
+   one who is missing.
 5. **Prefer an allowlist to a blocklist** wherever the unknown case is the
    dangerous one.
 6. **Never infer an assertion about a person** from a convention (a shirt

@@ -638,8 +638,29 @@ what makes the logic testable without mocking HTTP.
   It is deliberately **not** a prefix test — "Ander" would then match
   "Anderson", and the short name is the commoner input here.
 
-  **Coverage is 532 of 643 goals (82.7%, measured 2026-09-05) and the rest
-  render as the plain text they always were.** A scorer who has left the
+  **"Exactly one candidate" was counted in an incomplete list, and linked the
+  wrong man.** The elenco is football-data's, and a player it does not list
+  leaves his namesake as the only candidate. CBF prints Flamengo's "Jorge" (21)
+  and "Carrascal" (15) side by side; the elenco has Jorge Carrascal and no other
+  Jorge; so both names resolved to him, and two penalties opened Carrascal's
+  card — in 554874 he was not even on the sheet. `contestedPlayerIds` asks
+  `escalacoes.ts` for the second opinion: **two shirts on one sheet are two
+  people**, so an id both read as is given to no goal at that club. Season-wide
+  rather than per fixture, for exactly the 554874 case, and computed once at boot
+  (`CONTESTED_PLAYER_IDS` in `server.ts`) rather than inside `withGoals`, because
+  the offline branch rebuilds the curated fixture list on every request and the
+  pass costs about 35ms. Measured 2026-09-11:
+  five ids contested — Jorge Carrascal (Flamengo), Marino Hinestroza and Paulo
+  Henrique (Vasco), Rhuan Gabriel (Cruzeiro), Danilo dos Santos de Oliveira
+  (Botafogo) — and **18 of 549 links removed, most of them probably right**,
+  since "Carrascal" is very likely Carrascal. That is the price and it is paid on
+  purpose: which of two people an id belongs to is a guess, and this join exists
+  to refuse guesses. Exempting a name spelled exactly as the elenco spells it
+  was considered and would recover **none** of the 18, so it was not built.
+
+  **Coverage is 531 of the 669 goals `withGoals` attaches (79.4%, measured
+  2026-09-11 — 549 before the contested-id refusal above, and 532 of 643 on
+  2026-09-05) and the rest render as the plain text they always were.** A scorer who has left the
   division is unresolvable by construction, which is honest rather than a gap:
   the app holds no record of them either. Do not read a partial column as a
   bug — 554977's own Facundo is absent from Vasco's frozen elenco, which is why
@@ -673,7 +694,7 @@ what makes the logic testable without mocking HTTP.
   him on the wrong club's card, which is the orthography-matching this file
   refuses everywhere else.
 
-  **The 111 unresolved goals split three ways**, and only the third could ever
+  **On 2026-09-05 the 111 unresolved goals split three ways**, and only the third could ever
   be data: **31 ambiguous** at their own club, **10 now listed at another**,
   **70 absent from the division entirely**. The ambiguous 31 are unresolvable
   by *any* name rule — Bahia lists two players called Erick and Athletico-PR

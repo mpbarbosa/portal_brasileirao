@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import {
+  contestedPlayerIds,
   decodeGoals,
   encodeGoals,
   goalKindLabel,
@@ -17,7 +18,7 @@ import {
 } from "@/goals-core";
 import type { CbfRegistro, SideMap } from "@/goals-core";
 import { GOALS } from "@/src/data/goals";
-import type { Goal, Match, Squad } from "@/src/types";
+import type { Goal, Lineup, Match, Squad } from "@/src/types";
 
 const SIDES: SideMap = {
   homeCbfId: "20002",
@@ -43,6 +44,17 @@ const registro = (overrides: Partial<CbfRegistro> = {}): CbfRegistro => ({
  * has to keep rendering.
  */
 const NO_SQUADS: Squad[] = [];
+
+/**
+ * The ids `withGoals` must not give a scorer. Most cases pass none — the state a
+ * season with no team sheets synced produces.
+ */
+const NO_CONTESTED: ReadonlyMap<string, ReadonlySet<string>> = new Map();
+
+const sheet = (clubCode: string, players: [string, string][]): Lineup => ({
+  clubCode,
+  players: players.map(([shirt, name]) => ({ name, shirt, starter: true as const })),
+});
 
 const squad = (code: string, players: [string, string][]): Squad => ({
   club: { code, name: `Club ${code}`, shortName: `Club ${code}` },
@@ -244,6 +256,7 @@ test("withGoals attaches only where there are goals", () => {
     ],
     { "554977": [{ clubCode: "1769", scorer: "Lopez" }] },
     NO_SQUADS,
+    NO_CONTESTED,
   );
 
   assert.equal(attached.goals?.length, 1);
@@ -256,7 +269,7 @@ test("withGoals attaches a list that reconciles on both sides", () => {
       { clubCode: "1769", scorer: "Lopez" },
       { clubCode: "1780", scorer: "Payet" },
     ],
-  }, NO_SQUADS);
+  }, NO_SQUADS, NO_CONTESTED);
 
   assert.equal(only.goals?.length, 2);
 });
@@ -275,6 +288,7 @@ test("withGoals drops a list from a fixture that has no score yet", () => {
       ],
     },
     NO_SQUADS,
+    NO_CONTESTED,
   );
 
   assert.equal(only.goals, undefined);
@@ -285,7 +299,7 @@ test("withGoals drops a list the scoreline no longer accounts for", () => {
   // has since corrected, leaving the curated list one short.
   const [only] = withGoals([match({ homeGoals: 4, awayGoals: 1 })], {
     "554977": [{ clubCode: "1769", scorer: "Lopez" }],
-  }, NO_SQUADS);
+  }, NO_SQUADS, NO_CONTESTED);
 
   assert.equal(only.goals, undefined);
 });
@@ -299,13 +313,13 @@ test("withGoals drops a list that totals correctly but splits wrong", () => {
       { clubCode: "1769", scorer: "Lopez" },
       { clubCode: "1769", scorer: "Mauricio" },
     ],
-  }, NO_SQUADS);
+  }, NO_SQUADS, NO_CONTESTED);
 
   assert.equal(only.goals, undefined);
 });
 
 test("withGoals leaves an empty list off rather than attaching one", () => {
-  const [only] = withGoals([match()], { "554977": [] }, NO_SQUADS);
+  const [only] = withGoals([match()], { "554977": [] }, NO_SQUADS, NO_CONTESTED);
   assert.equal(only.goals, undefined);
 });
 
@@ -345,6 +359,7 @@ test("withGoals resolves a scorer to the player id of their own club", () => {
       // rather than to the division.
       squad("1780", [["1", "Bruno López"]]),
     ],
+    NO_CONTESTED,
   );
 
   assert.equal(only.goals?.[0].playerId, "99");
@@ -357,6 +372,7 @@ test("withGoals resolves an own goal against the scorer's own squad", () => {
     [match({ homeGoals: 1, awayGoals: 0 })],
     { "554977": [{ clubCode: "1769", scorer: "Camutanga", kind: "own" }] },
     [squad("1769", [["99", "José Manuel López"]]), squad("1780", [["7", "Camutanga"]])],
+    NO_CONTESTED,
   );
 
   assert.equal(only.goals?.[0].playerId, "7");
@@ -369,6 +385,7 @@ test("withGoals leaves a scorer the squad cannot place without an id", () => {
     [match({ homeGoals: 1, awayGoals: 0 })],
     { "554977": [{ clubCode: "1769", scorer: "Someone Else" }] },
     [squad("1769", [["99", "José Manuel López"]])],
+    NO_CONTESTED,
   );
 
   assert.equal(only.goals?.length, 1);
@@ -382,6 +399,7 @@ test("withGoals refuses an id where the name fits two players", () => {
     [match({ homeGoals: 1, awayGoals: 0 })],
     { "554977": [{ clubCode: "1769", scorer: "Arthur" }] },
     [squad("1769", [["1", "Arthur Cabral"], ["2", "Arthur Alves"]])],
+    NO_CONTESTED,
   );
 
   assert.equal(only.goals?.[0].playerId, undefined);
@@ -392,6 +410,7 @@ test("withGoals keeps everything else about a goal it resolved", () => {
     [match({ homeGoals: 1, awayGoals: 0 })],
     { "554977": [{ clubCode: "1769", scorer: "Lopez", kind: "penalty", minute: "50'" }] },
     [squad("1769", [["99", "José Manuel López"]])],
+    NO_CONTESTED,
   );
 
   assert.deepEqual(only.goals?.[0], {
@@ -401,6 +420,88 @@ test("withGoals keeps everything else about a goal it resolved", () => {
     minute: "50'",
     playerId: "99",
   });
+});
+
+test("withGoals refuses an id two shirts on one of the club's team sheets both read as", () => {
+  // The Flamengo case, measured 2026-09-11. CBF prints "Jorge" (21) and
+  // "Carrascal" (15) side by side; the elenco lists Jorge Carrascal and nobody
+  // else called Jorge, so both names resolve to him and "exactly one candidate"
+  // held for a man who was not the scorer. The sheet belongs to a DIFFERENT
+  // fixture than the goals on purpose: in 554874 Carrascal was not on the sheet,
+  // so a check reading only the goal's own match finds nothing to refuse.
+  const squads = [squad("1769", [["29012", "Jorge Carrascal"], ["1077", "Pedro"]])];
+  const [only] = withGoals(
+    [match({ homeGoals: 3, awayGoals: 0 })],
+    {
+      "554977": [
+        { clubCode: "1769", scorer: "Jorge", kind: "penalty" },
+        { clubCode: "1769", scorer: "Carrascal" },
+        { clubCode: "1769", scorer: "Pedro" },
+      ],
+    },
+    squads,
+    contestedPlayerIds(
+      { "554835": [sheet("1769", [["15", "Carrascal"], ["21", "Jorge"], ["9", "Pedro"]])] },
+      squads,
+    ),
+  );
+
+  assert.equal(only.goals?.length, 3, "the goals themselves stay attached");
+  assert.equal(only.goals?.[0].playerId, undefined, "the name the elenco cannot see");
+  // Very probably right, and still refused: which of two people an id belongs
+  // to is a guess, and the rule cannot tell it from the wrong one.
+  assert.equal(only.goals?.[1].playerId, undefined, "the name that probably is him");
+  assert.equal(only.goals?.[2].playerId, "1077", "an uncontested teammate keeps his link");
+});
+
+test("withGoals keeps a link when two spellings of one man never share a sheet", () => {
+  // One player written two ways in two fixtures is not two people. Only a
+  // single sheet listing both is evidence of that, so this must not refuse.
+  const squads = [squad("1769", [["29012", "Jorge Carrascal"]])];
+  const [only] = withGoals(
+    [match({ homeGoals: 1, awayGoals: 0 })],
+    { "554977": [{ clubCode: "1769", scorer: "Carrascal" }] },
+    squads,
+    contestedPlayerIds(
+      {
+        "554835": [sheet("1769", [["15", "Carrascal"]])],
+        "554874": [sheet("1769", [["15", "Jorge Carrascal"]])],
+      },
+      squads,
+    ),
+  );
+
+  assert.equal(only.goals?.[0].playerId, "29012");
+});
+
+test("contestedPlayerIds treats two shirts printed with one name as two people", () => {
+  // CBF prints two players "Gabriel" as readily as two different names, so the
+  // entries are told apart by shirt. A rule comparing names would pass the
+  // Jorge/Carrascal case and miss this one.
+  const contested = contestedPlayerIds(
+    { "554933": [sheet("1771", [["27", "Gabriel"], ["40", "Gabriel"]])] },
+    [squad("1771", [["289855", "Rhuan Gabriel"]])],
+  );
+
+  assert.deepEqual([...(contested.get("1771") ?? [])], ["289855"]);
+});
+
+test("contestedPlayerIds is scoped to the club whose sheet holds both", () => {
+  const contested = contestedPlayerIds(
+    {
+      "554835": [
+        sheet("1769", [["15", "Carrascal"], ["21", "Jorge"]]),
+        // One Jorge only at the other club: nothing contested there.
+        sheet("1780", [["7", "Jorge"]]),
+      ],
+    },
+    [squad("1769", [["29012", "Jorge Carrascal"]]), squad("1780", [["500", "Jorge Carrascal"]])],
+  );
+
+  assert.deepEqual(
+    Object.fromEntries([...contested].map(([club, ids]) => [club, [...ids]])),
+    { "1769": ["29012"] },
+  );
 });
 
 test("goalsBySide splits by club and keeps an empty side", () => {
