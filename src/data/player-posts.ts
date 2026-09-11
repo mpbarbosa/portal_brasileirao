@@ -255,4 +255,22 @@ export const PLAYER_POSTS: Record<string, PlayerPost[]> = {
         "Gabigol publica na noite do 3 a 1 do Santos sobre o Vitória, em que marcou o terceiro gol.",
     },
   ],
+
+  // Samuel Lino · Flamengo. Opened 2026-09-11: publicado pela própria conta
+  // dele, `osamuellino` — verificada, 1M seguidores, o mesmo handle de
+  // `player-instagram.ts` (#567) —, marcado no Estádio do Maracanã, às 20:01 de
+  // 30 de agosto em Brasília (lido do shortcode; a página diz "August 30"). É a
+  // noite do Flamengo 3 x 0 Botafogo (554984), que começou às 16:00 no Maracanã
+  // e em que ele marcou aos 12' e aos 85'. A foto é ele comemorando com a
+  // camisa do Flamengo; a legenda agradece à torcida por uma "tarde linda no
+  // MARACA" e não nomeia o jogo, então o resumo diz a data e o placar e não
+  // afirma nada que só o jogo diria.
+  "178710": [
+    {
+      code: "DcrpSI7CSak",
+      account: "osamuellino",
+      summary:
+        "Samuel Lino agradece à torcida pela tarde no Maracanã, na noite dos 3 a 0 sobre o Botafogo em que fez dois gols.",
+    },
+  ],
 };
