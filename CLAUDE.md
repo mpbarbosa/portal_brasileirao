@@ -1252,7 +1252,11 @@ signup. `DISABLE_FOOTBALL_DATA=true` is the incident kill switch.
 Mapping notes, all covered by tests:
 - Upstream status vocabulary is wider than the app's — `TIMED`→SCHEDULED, `PAUSED`→LIVE
   (half-time is still live), `SUSPENDED`→POSTPONED, `AWARDED`→FINISHED. Unknown statuses
-  degrade to SCHEDULED rather than dropping the fixture.
+  degrade to SCHEDULED rather than dropping the fixture. `EXTRA_TIME` and
+  `PENALTY_SHOOTOUT` map to LIVE: every status in v4's documented lookup table is
+  mapped (checked 2026-09-11), because the fallback is not harmless for a match in
+  progress — `withPlayedStatus` repairs a SCHEDULED record carrying a score for a
+  past kickoff into FINISHED.
 - Scores are read from `fullTime.home`/`away` **and** the legacy `homeTeam`/`awayTeam`
   spelling, because the published docs disagree with the v4 payload and guessing wrong
   silently blanks every scoreline. Note `0` is a real score — only `null` means unplayed.

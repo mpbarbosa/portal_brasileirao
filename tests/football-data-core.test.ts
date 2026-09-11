@@ -13,6 +13,7 @@ import {
   mapPerson,
   mapScorers,
   mapSquads,
+  isKnownStatus,
   mapStatus,
   matchesUrl,
   isPersonId,
@@ -50,6 +51,25 @@ test("collapses the upstream status vocabulary onto the app's", () => {
 test("an unknown or missing status degrades to SCHEDULED", () => {
   assert.equal(mapStatus("SOMETHING_NEW"), "SCHEDULED");
   assert.equal(mapStatus(undefined), "SCHEDULED");
+  // A property every object inherits is not a status: indexing a plain object
+  // with it returned Object's constructor.
+  assert.equal(mapStatus("constructor"), "SCHEDULED");
+  assert.equal(mapStatus("toString"), "SCHEDULED");
+  assert.equal(isKnownStatus("constructor"), false);
+});
+
+test("every status football-data's v4 lookup table documents is mapped, none by the fallback", () => {
+  // Read off docs.football-data.org/general/v4/lookup_tables.html on
+  // 2026-09-11. EXTRA_TIME and PENALTY_SHOOTOUT were missing: a league never
+  // produces them, so they fell silently to SCHEDULED — and a SCHEDULED record
+  // with a score for a past kickoff is repaired to FINISHED by withPlayedStatus.
+  const documented = [
+    "SCHEDULED", "TIMED", "IN_PLAY", "PAUSED", "EXTRA_TIME", "PENALTY_SHOOTOUT",
+    "FINISHED", "SUSPENDED", "POSTPONED", "CANCELLED", "AWARDED",
+  ];
+  for (const status of documented) assert.equal(isKnownStatus(status), true, status);
+  assert.equal(mapStatus("EXTRA_TIME"), "LIVE");
+  assert.equal(mapStatus("PENALTY_SHOOTOUT"), "LIVE");
 });
 
 test("identifies a club by upstream id, carrying the abbreviation for display", () => {
