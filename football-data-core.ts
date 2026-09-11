@@ -50,6 +50,16 @@ export const teamsUrl = (competition: string = BSA_COMPETITION): string =>
 export const personUrl = (id: string): string =>
   `${FOOTBALL_DATA_BASE}/persons/${encodeURIComponent(id)}`;
 
+/**
+ * Whether a string could be a person id this provider issued: digits only.
+ *
+ * Checked before `personUrl` is built rather than left for upstream to refuse,
+ * because a request that can only answer 404 still spends one of the ten a
+ * minute — and `/api/players/:id` takes the id straight from a URL anybody can
+ * type.
+ */
+export const isPersonId = (id: string): boolean => /^\d+$/.test(id);
+
 /** Upstream defaults to 10 scorers; the table shows more than that. */
 export const SCORERS_LIMIT = 20;
 

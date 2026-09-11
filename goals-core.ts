@@ -14,6 +14,7 @@
  * without a network, which is the split `commons-core.ts` draws against
  * `scripts/commons-api.ts`.
  */
+import { hasScore } from "@/matches-core";
 import { matchPlayerByName } from "@/player-core";
 import type { ClubCode, Goal, GoalEntry, GoalKind, Match, Player, Squad } from "@/src/types";
 
@@ -331,7 +332,7 @@ export const withGoals = (
   return matches.map((match) => {
     const scored = goals[match.id];
     if (!scored || scored.length === 0) return match;
-    if (match.homeGoals === null || match.awayGoals === null) return match;
+    if (!hasScore(match)) return match;
     const agrees = goalsReconcile(
       scored,
       match.homeCode,

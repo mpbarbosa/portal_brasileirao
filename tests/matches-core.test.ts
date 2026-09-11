@@ -10,6 +10,8 @@ import {
   withPlayedStatus,
   roundsOf,
   isAwaitingResult,
+  hasScore,
+  parseRoundParam,
 } from "@/matches-core";
 import type { Match } from "@/src/types";
 
@@ -726,4 +728,30 @@ test("an unreadable kickoff stops the round being marked — cannot tell is not 
     marked.map((m) => m.kickoffDateOnly),
     [undefined, undefined],
   );
+});
+
+test("hasScore needs both goal counts, and a 0-0 is a score", () => {
+  assert.equal(hasScore(match({ id: "a", homeGoals: 2, awayGoals: 1 })), true);
+  // The truthiness trap: 0 is reported, null is not.
+  assert.equal(hasScore(match({ id: "b", homeGoals: 0, awayGoals: 0 })), true);
+
+  assert.equal(hasScore(match({ id: "c" })), false);
+  assert.equal(hasScore(match({ id: "d", homeGoals: 1 })), false);
+  assert.equal(hasScore(match({ id: "e", awayGoals: 1 })), false);
+});
+
+test("hasScore says nothing about status", () => {
+  assert.equal(hasScore(match({ id: "live", status: "LIVE", homeGoals: 1, awayGoals: 0 })), true);
+  // The regressed record withPlayedStatus repairs.
+  assert.equal(hasScore(match({ id: "regressed", homeGoals: 3, awayGoals: 2 })), true);
+  assert.equal(hasScore(match({ id: "finished", status: "FINISHED" })), false);
+});
+
+test("a round parameter is a positive integer or nothing", () => {
+  assert.equal(parseRoundParam("1"), 1);
+  assert.equal(parseRoundParam("38"), 38);
+
+  for (const raw of ["", "0", "-1", "2.5", "abc", "1e400", ["3", "4"], {}]) {
+    assert.equal(parseRoundParam(raw), null, JSON.stringify(raw));
+  }
 });

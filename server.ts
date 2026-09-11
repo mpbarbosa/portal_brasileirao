@@ -26,6 +26,7 @@ import {
   mapSquads,
   mapStandings,
   matchesUrl,
+  isPersonId,
   personUrl,
   scorersUrl,
   standingsUrl,
@@ -58,11 +59,13 @@ import {
   matchesForRound,
   mergeByFreshness,
   withKickoffPrecision,
+  parseRoundParam,
   withPlayedStatus,
   roundsOf,
 } from "@/matches-core";
 import { injectMeta, pageMeta, type MetaContext } from "@/page-meta-core";
-import { parseRoute, type Route } from "@/route-core";
+import { namesSubject, parseRoute } from "@/route-core";
+import { hasLiveMatch } from "@/live-core";
 import { buildTrafficDashboard } from "@/traffic-report-core";
 import { buildStadiums } from "@/venue-core";
 import { buildWeatherUrl, parseWeather } from "@/weather-core";
@@ -107,6 +110,7 @@ import {
   clearCookie,
   digestsMatch,
   hashToken,
+  isSameOriginRequest,
   mintToken,
   readCookie,
   serialiseCookie,
@@ -344,27 +348,53 @@ interface MatchesPayload {
   clubs: Club[];
 }
 
-const seedMatchesPayload = (): MatchesPayload => ({
-  rounds: roundsOf(SEED_MATCHES),
-  currentRound: currentRound(SEED_MATCHES, Date.now()),
-  matches: withLineups(
+/**
+ * The curated data a fixture list is served with — channels, venues, highlights,
+ * goals and team sheets, none of which any provider carries.
+ *
+ * One function because both branches of `loadMatches` must apply the same chain,
+ * and for as long as they each spelled it out, a merge added to one copy was the
+ * offline/online split rule 6 of `docs/guides/CLEAN_ARCHITECTURE_GUIDE.md` warns
+ * about — which the e2e suite cannot see, since it only ever runs the seed.
+ */
+const withCuratedData = (matches: Match[]): Match[] =>
+  withLineups(
     withGoals(
       withHighlights(
-        withVenues(withBroadcasters(withKickoffPrecision([...SEED_MATCHES].sort(compareForFeed)), BROADCASTS), VENUES),
+        withVenues(withBroadcasters(withKickoffPrecision([...matches].sort(compareForFeed)), BROADCASTS), VENUES),
         HIGHLIGHTS,
       ),
       GOALS,
       // The elencos the scorers are read against — the frozen list rather than
-      // the live one, deliberately. `/api/squads` is a separate upstream request
-      // and this route must not acquire a dependency on it to print a name; the
-      // ids are the same provider's either way, and a scorer the seed cannot
-      // place renders as the text it always did.
+      // the live one, in both branches. `/api/squads` is a separate upstream
+      // request and this route must not acquire a dependency on it to print a
+      // name; the ids are the same provider's either way, and a scorer the seed
+      // cannot place renders as the text it always did.
       SEED_SQUADS,
     ),
     ESCALACOES,
-  ),
-  clubs: CLUBS,
-});
+  );
+
+/**
+ * The frozen fixture list, repaired the way a live fill is.
+ *
+ * `sync-seed-data` copies what the provider serves, and the provider is where a
+ * SCHEDULED record carrying a finished match's score came from — so a seed taken
+ * during such a regression freezes it, and without the repair the offline pages
+ * and table would call a played match unplayed while the live ones did not.
+ * Computed per call because the repair asks whether a kickoff has passed.
+ */
+const seedMatches = (): Match[] => withPlayedStatus(SEED_MATCHES, Date.now());
+
+const seedMatchesPayload = (): MatchesPayload => {
+  const matches = seedMatches();
+  return {
+    rounds: roundsOf(matches),
+    currentRound: currentRound(matches, Date.now()),
+    matches: withCuratedData(matches),
+    clubs: CLUBS,
+  };
+};
 
 const loadStandings = (): Promise<ApiEnvelope<StandingsRow[]>> =>
   loadCached<StandingsRow[]>(
@@ -382,7 +412,7 @@ const loadStandings = (): Promise<ApiEnvelope<StandingsRow[]>> =>
       );
       return rows.map((row, index) => ({ ...row, club: enriched[index] }));
     },
-    () => computeStandings(CLUBS, SEED_MATCHES),
+    () => computeStandings(CLUBS, seedMatches()),
   );
 
 /**
@@ -427,11 +457,11 @@ const rememberMatches = (matches: Match[]): void => {
   }
 };
 
-/** Fixture lists get the short TTL only while something is actually live. */
+/** Fixture lists get the short TTL only while something is actually live —
+ *  judged by `hasLiveMatch`, the predicate the client's refresh rate reads, so
+ *  the server's cache and the page's poll cannot disagree about what live is. */
 const matchesTtl = (matches: Match[]): number =>
-  matches.some((match) => match.status === "LIVE")
-    ? LIVE_MATCHES_CACHE_TTL_MS
-    : MATCHES_CACHE_TTL_MS;
+  hasLiveMatch(matches) ? LIVE_MATCHES_CACHE_TTL_MS : MATCHES_CACHE_TTL_MS;
 
 const loadMatches = async (): Promise<ApiEnvelope<MatchesPayload>> => {
   const now = Date.now();
@@ -475,23 +505,10 @@ const loadMatches = async (): Promise<ApiEnvelope<MatchesPayload>> => {
     const payload: MatchesPayload = {
       rounds: roundsOf(matches),
       currentRound: currentRound(matches, Date.now()),
-      // Curated channels, venues, highlights and goals ride along with live
-      // fixtures too — the provider supplies none of them. Applied in **both**
-      // branches on purpose: the suite exercises the seed one and production
-      // the other, which is exactly the split that would hide a difference.
-      matches: withLineups(
-        withGoals(
-          withHighlights(
-            withVenues(withBroadcasters(withKickoffPrecision([...matches].sort(compareForFeed)), BROADCASTS), VENUES),
-            HIGHLIGHTS,
-          ),
-          GOALS,
-          // The frozen elencos, as in the seed branch above — this route does
-          // not acquire a dependency on `/api/squads` to print a scorer.
-          SEED_SQUADS,
-        ),
-        ESCALACOES,
-      ),
+      // The same chain as the seed branch, through the one function both call:
+      // the suite exercises the seed and production this, which is exactly the
+      // split that would hide a difference.
+      matches: withCuratedData(matches),
       // Fixtures carry no website or handle; the committed club list does.
       clubs: withCoachOverrides(withClubDetails(clubsFromMatches(raw), CLUBS), COACH_OVERRIDES),
     };
@@ -565,15 +582,6 @@ app.get("/sitemap.xml", async (req, res) => {
   res.send(sitemapXml(originFor(req), sitemapEntries(context)));
 });
 
-/** Which routes name something that has to be looked up before the page can be
- *  titled, canonicalised or judged to exist. The rest need no data at all. */
-const needsData = (route: Route): boolean =>
-  route.section === "clube" ||
-  route.section === "painel" ||
-  route.section === "partida" ||
-  route.section === "estadio" ||
-  (route.section === "jogos" && route.round !== null);
-
 /**
  * Render the SPA shell for one request: per-route metadata, structured data and
  * an honest status code.
@@ -594,7 +602,7 @@ const renderShell = async (
   // Both come from the same cached payload the API serves — no extra upstream
   // request, and no call at all for the sections that name nothing.
   let context: MetaContext = {};
-  if (needsData(route)) {
+  if (namesSubject(route)) {
     try {
       const [matchesEnvelope, standingsEnvelope] = await Promise.all([
         loadMatches(),
@@ -769,19 +777,10 @@ const noStore = (res: express.Response): void => {
   res.set("Vary", "Cookie");
 };
 
-/**
- * Reject a state-changing request that did not come from our own pages.
- *
- * `SameSite=Lax` already blocks a cross-site POST, so this is the second lock:
- * it fails closed, needs no token plumbed through the client, and costs one
- * header comparison. A token scheme is only worth it if this app ever needs
- * `SameSite=None`.
- */
-const sameOrigin = (req: express.Request): boolean => {
-  const origin = req.get("origin");
-  if (!origin) return true; // Not sent on same-origin form posts by every browser.
-  return origin === originFor(req);
-};
+/** Reject a state-changing request that did not come from our own pages. The
+ *  rule and its reasons are `isSameOriginRequest`'s; this only reads the request. */
+const sameOrigin = (req: express.Request): boolean =>
+  isSameOriginRequest(req.get("origin"), originFor(req));
 
 const SIGN_IN_POLICY: BucketPolicy = { capacity: 10, refillMs: 60_000 };
 const signInBuckets = new Map<string, Bucket>();
@@ -1328,7 +1327,7 @@ app.get("/api/coaches", async (_req, res) => {
  */
 app.get("/api/players/:id", async (req, res) => {
   const id = req.params.id;
-  if (!/^\d+$/.test(id)) {
+  if (!isPersonId(id)) {
     res.status(400).json({ error: "O identificador do jogador deve ser numérico." });
     return;
   }
@@ -1500,8 +1499,8 @@ app.get("/api/matches", async (req, res) => {
     return;
   }
 
-  const round = Number(requested);
-  if (!Number.isInteger(round) || round < 1) {
+  const round = parseRoundParam(requested);
+  if (round === null) {
     res.status(400).json({ error: "O parâmetro 'round' deve ser um inteiro positivo." });
     return;
   }

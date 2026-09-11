@@ -1,3 +1,4 @@
+import { hasScore } from "@/matches-core";
 import { ClubCrest } from "@/src/components/ClubCrest";
 import { clubNamer, clubResolver } from "@/src/components/MatchList";
 import type { Club, Match } from "@/src/types";
@@ -7,7 +8,7 @@ import type { Club, Match } from "@/src/types";
  *
  * `×` before the match is played, the two goal counts once it has been —
  * remembering that `0` is a real score and only `null` means unplayed, which is
- * the trap `countsTowardStandings` records for a 0-0.
+ * why the test is `hasScore` and never a truthiness check.
  *
  * Exported because the **Meu time** strip needs the same string *outside* this
  * fragment: its link's accessible name is a sentence that states the score, and
@@ -15,9 +16,7 @@ import type { Club, Match } from "@/src/types";
  * for a match nobody has played.
  */
 export const fixtureScore = (match: Match): string =>
-  match.homeGoals === null || match.awayGoals === null
-    ? "×"
-    : `${match.homeGoals} × ${match.awayGoals}`;
+  hasScore(match) ? `${match.homeGoals} × ${match.awayGoals}` : "×";
 
 /**
  * Both clubs of a fixture: name, crest, the scoreline, crest, name.
