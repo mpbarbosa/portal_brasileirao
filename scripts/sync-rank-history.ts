@@ -14,7 +14,7 @@
 import { writeFileSync } from "node:fs";
 import path from "node:path";
 
-import { computeRankHistory, lastRoundWithResult } from "@/rank-history-core";
+import { computeRankHistory, lastRoundWithResult, rankHistoryProblems } from "@/rank-history-core";
 import { CLUBS } from "@/src/data/clubs";
 import { SEED_MATCHES, SNAPSHOT_DATE } from "@/src/data/matches";
 
@@ -31,26 +31,12 @@ const history = computeRankHistory(CLUBS, SEED_MATCHES).sort((a, b) =>
   a.shortName.localeCompare(b.shortName, "pt-BR"),
 );
 
-// Validate rather than trust: every club must have an entry for every round,
-// and each round must be a permutation of 1..N. A missing or repeated position
-// means the table and the history disagree, which is invisible in a chart.
-for (const club of history) {
-  if (club.entries.length !== lastRound) {
-    console.error(`Error: ${club.shortName} has ${club.entries.length} of ${lastRound} rounds.`);
-    process.exit(1);
-  }
-}
-
-for (let round = 1; round <= lastRound; round += 1) {
-  const positions = history
-    .map((club) => club.entries[round - 1]?.position)
-    .sort((a, b) => (a ?? 0) - (b ?? 0));
-  const expected = history.map((_, index) => index + 1);
-
-  if (positions.join(",") !== expected.join(",")) {
-    console.error(`Error: round ${round} positions are not 1..${history.length}:`, positions);
-    process.exit(1);
-  }
+// Validate rather than trust — see `rankHistoryProblems`, which is where the two
+// refusals are tested now that they are not inline in a script that runs on import.
+const problems = rankHistoryProblems(history, lastRound);
+if (problems.length > 0) {
+  for (const problem of problems) console.error(`Error: ${problem}`);
+  process.exit(1);
 }
 
 const generatedOn = new Date().toISOString().slice(0, 10);
