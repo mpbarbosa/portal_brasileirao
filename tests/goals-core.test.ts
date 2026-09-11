@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import {
+  cbfScore,
   contestedPlayerIds,
   decodeGoals,
   encodeGoals,
@@ -247,6 +248,25 @@ test("a goalless match reconciles with an empty list", () => {
 // ---------------------------------------------------------------------------
 // Merging and presentation
 // ---------------------------------------------------------------------------
+
+test("cbfScore reads a score CBF reports, and null where it reports none", () => {
+  assert.equal(cbfScore("0"), 0);
+  assert.equal(cbfScore("3"), 3);
+  assert.equal(cbfScore(" 2 "), 2);
+  assert.equal(cbfScore(4), 4);
+  // Every one of these is 0 or a number to Number(), which is the bug: an
+  // unscored fixture read as 0-0 passes both of sync-goals' checks against a
+  // real 0-0 of ours.
+  assert.equal(cbfScore(null), null);
+  assert.equal(cbfScore(undefined), null);
+  assert.equal(cbfScore(""), null);
+  assert.equal(cbfScore("   "), null);
+  assert.equal(cbfScore("1.5"), null);
+  assert.equal(cbfScore("-1"), null);
+  assert.equal(cbfScore("2 x 1"), null);
+  assert.equal(cbfScore(-1), null);
+  assert.equal(cbfScore(Number.NaN), null);
+});
 
 test("withGoals attaches only where there are goals", () => {
   const [attached, untouched] = withGoals(
