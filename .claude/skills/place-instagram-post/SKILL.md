@@ -1,6 +1,6 @@
 ---
 name: place-instagram-post
-description: Take one Instagram URL, verify in a browser what it actually is, and put it in the right curated file — a post in src/data/player-posts.ts, a player's profile in src/data/player-instagram.ts, a club's in src/data/club-instagram.ts — or establish that this app has nowhere to put it and say so. Use this whenever someone pastes a bare instagram.com link, says "add this post", "where does this Instagram go", "põe isto no card do jogador", "add the Instagram for <player>", or sends a "(CLUBE) Jogador — Instagram: <url>" line. Reach for it before editing any of those three files by hand: the URL a person pastes carries a share token, the parser refuses reels, and curl cannot tell a real post from an invented one.
+description: Take one Instagram URL, verify in a browser what it actually is, and put it in the right curated file — a post in src/data/player-posts.ts, a player's profile in src/data/player-instagram.ts, a club's in src/data/club-instagram.ts — or establish that this app has nowhere to put it and say so. Use this whenever someone pastes a bare instagram.com link, says "add this post", "where does this Instagram go", "põe isto no card do jogador", "add the Instagram for <player>", or sends a "(CLUBE) Jogador — Instagram: <url>" line. Reach for it before editing any of those three files by hand: the URL a person pastes carries a share token, the parser takes a post or a reel and refuses every other kind of link, and curl cannot tell a real post from an invented one.
 ---
 
 # Placing an Instagram URL
@@ -10,7 +10,8 @@ rewrite rather than a copy**: that repo routes one URL across five JSON files �
 players, national teams, coaches, referees, matches — and four of those five
 have no counterpart here. What transfers is the discipline (*the content
 decides, not the label somebody typed*); what does not transfer is the routing
-table, the `WebFetch` verification, and the acceptance of `/reel/` links.
+table and the `WebFetch` verification. Reels transfer too, but only since a
+browser showed this app's post embed serving one — see Stage 1.
 
 It is called `place-instagram-post` and not `…-highlight` because **highlight**
 already means something else in this repository: `src/data/highlights.ts` is
@@ -23,7 +24,7 @@ on Instagram ever reaches it.
 
 | The URL is… | Goes in | Keyed by | Value |
 |---|---|---|---|
-| a **post** (`/p/<code>/`) featuring a player | `src/data/player-posts.ts` | player id | `{ code, account, summary }` |
+| a **post** (`/p/<code>/`) or a **reel** (`/reel/<code>/`) featuring a player | `src/data/player-posts.ts` | player id | `{ code, account, summary }` |
 | a **profile** of a player | `src/data/player-instagram.ts` | player id | the handle alone |
 | a **profile** of a club | `src/data/club-instagram.ts` | club code | the handle alone |
 | a **post about a club, a match, a técnico or an árbitro, and no player** | **nowhere** | — | — |
@@ -84,12 +85,13 @@ Note `process.argv[1]`, not `[2]` — under `tsx -e` the script path is absent, 
 the argument lands one slot earlier than it does in a file. Getting that wrong
 prints `null` for a perfectly good URL and reads as a refusal.
 
-**Three results, measured, and the second is the trap:**
+**Four results, measured, and the handle column is the trap:**
 
 ```
 /p/CkUdiQ-r9jr/?utm_source=ig_web_copy_link&stkn=…  code "CkUdiQ-r9jr"  handle "p"
-/reel/Dc1GBBADkfo/                                  code null          handle "reel"
-/pedroguilherme/                                    code null          handle "pedroguilherme"
+/reel/Dc1GBBADkfo/                                  code "Dc1GBBADkfo"  handle "reel"
+/reels/Dc1GBBADkfo/                                 code null           handle "reels"
+/pedroguilherme/                                    code null           handle "pedroguilherme"
 ```
 
 `instagramHandle` is **not** a test for "is this a profile?". It returns the
@@ -99,12 +101,18 @@ URL's own path — `/p/`, `/reel/`, `/tv/`, `/stories/`, `/explore/`, or none of
 them — and only then call the matching parser. A handle of `p` written into
 `player-instagram.ts` type-checks, passes every unit test, and links to nothing.
 
-**`/reel/` and `/tv/` are refused, deliberately.** `instagramPostCode` returns
-null for both, and its own comment says why: nothing here has checked that the
-`/p/` embed serves them, and this file's rule is that it refuses rather than
-guesses. The sibling skill accepts reels; here a reel is a **stop**, not a value
-to coerce into `/p/`. Widening it is a change to `club-core.ts` with a check
-attached.
+**`/reel/` is accepted, and a reel is stored exactly as a post is.** A reel's
+shortcode is a post's: the `/p/<code>/embed/captioned/` page renders it with its
+author, badge and video, and `/p/<code>/` opens it — measured in a browser on
+`DbHq1mExfG9`, Pedro's own reel, before the parser was widened. So the card
+frames and links `/p/` for both, and nothing records which one it was.
+
+**`/tv/` and `/reels/` are still refused, deliberately.** Nothing here has seen
+the `/p/` embed serve the first, and the second answered only the login wall when
+opened logged out. `instagramPostCode` returns null for both, and this file's
+rule is that it refuses rather than guesses: a link of either kind is a **stop**,
+not a value to coerce into `/p/` by hand. Widening it again is a change to
+`club-core.ts` with a check attached.
 
 **Only the shortcode is ever stored.** Instagram's "copy link" appends
 `?utm_source=ig_web_copy_link&stkn=…`, and `stkn` is a **share token identifying

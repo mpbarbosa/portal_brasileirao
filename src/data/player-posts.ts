@@ -172,4 +172,20 @@ export const PLAYER_POSTS: Record<string, PlayerPost[]> = {
         "Gabigol publica na noite do 3 a 1 do Santos sobre o Vitória, em que marcou o terceiro gol.",
     },
   ],
+
+  // Pedro · Flamengo. Opened 2026-09-11: um **reel**, o primeiro deste arquivo,
+  // publicado pela conta dele, `pedroguilherme` — verificada, 8M seguidores, a
+  // mesma de `player-instagram.ts` —, 23 de julho. O vídeo é Pedro ajoelhado,
+  // comemorando sob chuva na Arena Condá, com o placar do estádio em quadro, e o
+  // jogo é o 554922: Chapecoense 0 x 4 Flamengo na noite de 22 de julho em
+  // Brasília, com dois gols dele. A legenda é um versículo e não diz nada disso —
+  // quem diz é o vídeo.
+  "1077": [
+    {
+      code: "DbHq1mExfG9",
+      account: "pedroguilherme",
+      summary:
+        "Pedro comemora sob chuva na Arena Condá, na goleada de 4 a 0 sobre a Chapecoense em que fez dois gols.",
+    },
+  ],
 };

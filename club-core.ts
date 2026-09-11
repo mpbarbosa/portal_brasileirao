@@ -373,6 +373,9 @@ export const instagramUrl = (raw: string | null | undefined): string | null => {
   return handle && `https://www.instagram.com/${handle}/`;
 };
 
+/** The path kinds whose code the `/p/` addresses were measured to serve. */
+const POST_PATH = /^(?:p|reel)\//;
+
 /**
  * The shortcode of one Instagram **post**, from whatever was written down.
  *
@@ -382,11 +385,23 @@ export const instagramUrl = (raw: string | null | undefined): string | null => {
  * `?utm_source=ig_web_copy_link&stkn=…` — a **share token identifying whoever
  * copied it**, which has no business in a committed file.
  *
- * **Only `/p/` is accepted, and a reel or a `/tv/` link is refused.** Those
- * carry their own path kind, nothing here has checked that `/p/` serves them,
- * and this file's rule everywhere else is that it refuses rather than guesses —
- * `matchPlayerByName`'s bar. Widening it is a deliberate change with a check
- * attached, not a regex loosened in passing.
+ * **`/p/` and `/reel/` are accepted; `/tv/`, `/reels/` and everything else are
+ * refused.** A reel's shortcode is a post's shortcode, and that was measured
+ * rather than assumed — in a browser on 2026-09-11, against `DbHq1mExfG9`, a
+ * reel published by Pedro's own account: `/p/<code>/embed/captioned/` rendered
+ * it with its author, the verified badge and the video, and `/p/<code>/` opened
+ * it without redirecting. Mounted in the player card in headless Chromium it
+ * also reported its own height by `MEASURE` — 899px in the 470px frame, against
+ * 953px for Viveros' post in the same run — so `PlayerPosts` sizes it with no
+ * special case. A reel is therefore stored like any other post and every
+ * address below stays `/p/`; nothing downstream needs to know which it was.
+ *
+ * `/reels/<code>/` is refused although it carries a code too: logged out it
+ * answered Instagram's login wall and nothing else, so nothing here has seen it
+ * serve a reel. `/tv/` is refused for the reason reels were until somebody
+ * checked. This file's rule everywhere else is that it refuses rather than
+ * guesses — `matchPlayerByName`'s bar — so a further path kind is a deliberate
+ * change with a check attached, not a regex loosened in passing.
  *
  * Returns null for anything that is not a plausible shortcode — Instagram's are
  * URL-safe base64 of 5 to 30 characters — which the UI renders as no post
@@ -396,17 +411,15 @@ export const instagramPostCode = (raw: string | null | undefined): string | null
   const value = raw?.trim();
   if (!value) return null;
 
-  // The segment after `/p/` in a URL, or the value itself.
-  const code = (value.includes("instagram.com/")
-    ? (value.split("instagram.com/")[1] ?? "").replace(/^p\//, "")
-    : value
-  ).split(/[/?#]/)[0];
+  // The path after the host in a URL, or null for a bare code.
+  const path = value.includes("instagram.com/") ? (value.split("instagram.com/")[1] ?? "") : null;
 
-  // A pasted URL of another kind (`/reel/…`, `/tv/…`, a profile) still has a
-  // first segment, so the `/p/` strip above is not on its own a filter — this
-  // is. Refusing here rather than earlier keeps one rule instead of two.
-  if (value.includes("instagram.com/") && !value.includes("instagram.com/p/")) return null;
+  // A pasted URL of another kind (`/reels/…`, `/tv/…`, a profile) still has a
+  // first segment, so stripping a kind below is not on its own a filter — this
+  // is. Refusing here rather than later keeps one rule instead of two.
+  if (path !== null && !POST_PATH.test(path)) return null;
 
+  const code = (path === null ? value : path.replace(POST_PATH, "")).split(/[/?#]/)[0];
   return /^[A-Za-z0-9_-]{5,30}$/.test(code) ? code : null;
 };
 
