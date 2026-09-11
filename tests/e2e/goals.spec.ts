@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@/tests/e2e/clock";
+import { finishedFixture, readMatches, serveMatches, type MatchesPayload } from "@/tests/e2e/matches-payload";
 import { goalsReconcile } from "@/goals-core";
 import { GOALS } from "@/src/data/goals";
 import { SEED_MATCHES } from "@/src/data/matches";
@@ -20,78 +21,85 @@ const reconciledGoals = (match: Match): Goal[] | null => {
 };
 
 /**
- * Seed fixture 554977 — Palmeiras 4x1 Vasco da Gama, rodada 24 — is the match
- * these specs read, and its entry is CBF's real payload run through
- * `goalsFromRegistros`. It was once the *only* match `src/data/goals.ts`
- * carried; the file now holds 184, so nothing here may assume it is alone.
+ * The goals most of these specs read, **written here and served on a finished
+ * fixture** rather than read off one.
  *
- * Chosen because it exercises every branch worth seeing at once: two goals by
- * one scorer, a penalty, and a side that scored exactly once.
+ * They read 554977 — Palmeiras 4x1 Vasco da Gama — chosen because it exercised
+ * every branch worth seeing at once: two goals by one scorer, a penalty, and a
+ * side that scored exactly once. That made each assertion a claim about one
+ * record in `src/data/goals.ts`, which `sync-goals` rewrites, and this file had
+ * already broken once on exactly that, when a sync gave its "minuteless"
+ * fixture a minute. The branches are the subject, so the list that exercises
+ * them is written down, and the fixture carrying it is whichever the payload
+ * offers. The names are invented, so nothing here depends on a real squad.
  */
-const MATCH = "554977";
+const scorers = (home: string, away: string): Goal[] => [
+  { clubCode: home, scorer: "Artilheiro", minute: "12'" },
+  { clubCode: home, scorer: "Cobrador", kind: "penalty", minute: "45+2'" },
+  { clubCode: away, scorer: "Visitante", minute: "60'" },
+  { clubCode: home, scorer: "Artilheiro", minute: "88'" },
+];
 
 /**
- * Strip the goals from the payload, so the "not synced" state is what renders.
+ * Serve a finished fixture whose goals are `build(home, away)`, with the
+ * scoreline made to agree, and open its page. `undefined` removes the goals and
+ * keeps the score, which is the "not synced" state.
  *
- * Produced rather than hunted for. Walking the season looking for a match
- * nobody has synced yet would make this a hostage to how much data exists —
- * sync the whole season and the walk finds nothing and throws, which is the
- * rule `CLAUDE.md` states as *never assert how much curated data exists*. The
- * empty state is a branch of the component, so it is tested by reaching it.
+ * **Produced rather than hunted for.** Walking the season for a match nobody has
+ * synced yet, or one without minutes, makes a spec a hostage to how much data
+ * exists — which is the rule `CLAUDE.md` states as *never assert how much
+ * curated data exists*. Both states are branches of the component, so they are
+ * tested by reaching them.
  *
- * The payload is prepared **once** and fulfilled from memory rather than
- * proxied per request: a `route.fetch()` handler flakes under the suite's
- * workers and passes in isolation.
+ * Prepared **once** and fulfilled from memory rather than proxied per request:
+ * a `route.fetch()` handler flakes under the suite's workers and passes in
+ * isolation.
  */
-const withoutGoals = async (page: Page) => {
-  const response = await page.request.get("/api/matches");
-  const body = await response.json();
-  body.data.matches = body.data.matches.map(
-    ({ goals: _dropped, ...match }: Record<string, unknown>) => match,
-  );
-  await page.route("**/api/matches*", (route) =>
-    route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(body) }),
-  );
+const openWithGoals = async (
+  page: Page,
+  build: (home: string, away: string) => Goal[] | undefined,
+) => {
+  const body = await readMatches(page);
+  const match = finishedFixture(body);
+  const goals = build(match.homeCode, match.awayCode);
+  if (goals) {
+    match.goals = goals;
+    match.homeGoals = goals.filter((goal) => goal.clubCode === match.homeCode).length;
+    match.awayGoals = goals.length - match.homeGoals;
+  } else {
+    delete match.goals;
+  }
+  await serveMatches(page, body);
+  await page.goto(`/partida/${match.id}`);
+  return { body, match };
 };
 
 /**
- * Strip the minutes from the payload, so the "synced before the súmula
- * existed" state is what renders.
- *
- * Produced rather than hunted for, for the reason `withoutGoals` above gives
- * and this spec originally ignored: it pinned 554977 as the match with no
- * minutes, on a comment reading "554977 predates the join". A later
- * `sync-goals` run gave it minutes and the assertion died — 7 of the 184
- * matches now carry one. Which fixtures happen to lack a minute is exactly
- * the "how much curated data exists" the header refuses to depend on, and
- * every future sync moves it.
+ * A fixture one of whose scorers the elencos could place, **read off the payload
+ * the server built**. The join is `withGoals`' and happens on the server, so a
+ * `playerId` written into a produced payload would test nothing of it — this is
+ * the one place a spec here has to find a fixture rather than make one.
  */
-const withoutMinutes = async (page: Page) => {
-  const response = await page.request.get("/api/matches");
-  const body = await response.json();
-  body.data.matches = body.data.matches.map((match: Record<string, unknown>) => ({
-    ...match,
-    goals: Array.isArray(match.goals)
-      ? match.goals.map(({ minute: _dropped, ...goal }: Record<string, unknown>) => goal)
-      : match.goals,
-  }));
-  await page.route("**/api/matches*", (route) =>
-    route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(body) }),
+const linkedFixture = (body: MatchesPayload) => {
+  const match = body.data.matches.find((candidate) =>
+    (candidate.goals as Goal[] | undefined)?.some((goal) => goal.playerId),
   );
+  if (!match) throw new Error("no fixture in /api/matches has a scorer the elencos could place");
+  return match;
 };
 
 test("a finished match names who scored", async ({ page }) => {
-  await page.goto(`/partida/${MATCH}`);
+  await openWithGoals(page, scorers);
 
-  const scorers = page.locator("main article [data-goal]");
-  await expect(scorers.first()).toBeVisible();
-  // The minute is optional on purpose: it arrives per match when its súmula is
-  // parsed, so pinning its presence either way makes this a test of how much
-  // has been synced rather than of who scored.
+  const lines = page.locator("main article [data-goal]");
+  await expect(lines.first()).toBeVisible();
+  // Home column first, each goal where it was scored, the penalty marked. The
+  // minute is asserted by its own specs below, so here it may follow the name
+  // or not.
   const withOptionalMinute = (name: string) =>
     new RegExp(`^${name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}(\\d+(\\+\\d+)?')?$`);
-  await expect(scorers).toHaveText(
-    ["Lopez", "Vitor Roque (pên.)", "Mauricio", "Lopez", "Facundo"].map(withOptionalMinute),
+  await expect(lines).toHaveText(
+    ["Artilheiro", "Cobrador (pên.)", "Artilheiro", "Visitante"].map(withOptionalMinute),
   );
 });
 
@@ -102,7 +110,7 @@ test("a finished match names who scored", async ({ page }) => {
  * meaning something as the data file grows.
  */
 test("each side's scorers add up to its half of the score", async ({ page }) => {
-  await page.goto(`/partida/${MATCH}`);
+  await openWithGoals(page, scorers);
   await expect(page.locator("main article [data-goal]").first()).toBeVisible();
 
   const score = await page.locator("main article p.tabular-nums").innerText();
@@ -113,31 +121,38 @@ test("each side's scorers add up to its half of the score", async ({ page }) => 
 });
 
 test("a penalty is marked and an ordinary goal is not", async ({ page }) => {
-  await page.goto(`/partida/${MATCH}`);
+  await openWithGoals(page, scorers);
 
-  const scorers = page.locator("main article [data-goal]");
-  await expect(scorers.filter({ hasText: "pên." })).toHaveCount(1);
+  const lines = page.locator("main article [data-goal]");
+  await expect(lines.filter({ hasText: "pên." })).toHaveCount(1);
   // What must hold is that the ordinary goal is *unmarked* — not that its line
-  // is the bare name, which stopped being true when its minute was synced.
-  await expect(scorers.filter({ hasText: "Mauricio" })).not.toContainText("pên.");
-  await expect(scorers.filter({ hasText: "Mauricio" })).toContainText("Mauricio");
+  // is the bare name, which stops being true the moment it carries a minute.
+  await expect(lines.filter({ hasText: "Visitante" })).not.toContainText("pên.");
+  await expect(lines.filter({ hasText: "Visitante" })).toContainText("Visitante");
 });
 
 /**
  * A list of bare surnames read aloud says nothing about who scored them, and
- * the crest above is not in the accessibility tree as text.
+ * the crest above is not in the accessibility tree as text. The names expected
+ * are the clubs the payload itself ships, so this reads which clubs the fixture
+ * is between rather than naming them.
  */
 test("each column names its club for a screen reader", async ({ page }) => {
-  await page.goto(`/partida/${MATCH}`);
+  const { body, match } = await openWithGoals(page, scorers);
   await expect(page.locator("main article [data-goal]").first()).toBeVisible();
 
-  await expect(page.locator("[data-goals='home'] .sr-only")).toHaveText("Gols do Palmeiras");
-  await expect(page.locator("[data-goals='away'] .sr-only")).toHaveText("Gols do Vasco da Gama");
+  const shortName = (code: string) =>
+    body.data.clubs.find((club) => club.code === code)?.shortName;
+  const home = shortName(match.homeCode);
+  const away = shortName(match.awayCode);
+  expect(home && away, "the payload should name both clubs of the fixture").toBeTruthy();
+
+  await expect(page.locator("[data-goals='home'] .sr-only")).toHaveText(`Gols do ${home}`);
+  await expect(page.locator("[data-goals='away'] .sr-only")).toHaveText(`Gols do ${away}`);
 });
 
 test("a match with no synced goals renders no scorer block at all", async ({ page }) => {
-  await withoutGoals(page);
-  await page.goto(`/partida/${MATCH}`);
+  await openWithGoals(page, () => undefined);
 
   // The scoreline still renders — absent goals must not read as a missing match.
   await expect(page.locator("main article p.tabular-nums")).toBeVisible();
@@ -231,12 +246,13 @@ test("a fixture with goals but no score renders no scorers", async ({ page }) =>
 /**
  * The minute, on a match that has one.
  *
- * **Derived, and not `MATCH`, on purpose.** It was 554790 — Botafogo 0x3
- * Flamengo, whose three minutes were read off CBF's own PDF by hand before the
- * parser ever ran: 12', 45+1', 48'. Pinned, this was a test of that one record
- * staying as it was, and a re-sync can legitimately move which fixtures carry
- * minutes. What it needs is any finished fixture whose every goal carries a
- * minute, one of them in stoppage time — and the committed data can say which.
+ * **Derived, and on purpose not the produced list above.** It was 554790 —
+ * Botafogo 0x3 Flamengo, whose three minutes were read off CBF's own PDF by hand
+ * before the parser ever ran: 12', 45+1', 48'. Pinned, this was a test of that
+ * one record staying as it was, and a re-sync can legitimately move which
+ * fixtures carry minutes. What it needs is any finished fixture whose every goal
+ * carries a minute, one of them in stoppage time — and the committed data can
+ * say which, which also keeps one spec here reading minutes the sync wrote.
  *
  * Asserted as *shape* for the same reason. What must hold is that a minute
  * renders beside a scorer, and that stoppage time survives as `45+1` rather
@@ -258,27 +274,29 @@ test("a goal that has a minute prints it beside the scorer", async ({ page }) =>
     "no finished fixture in the seed has every goal timed and one in stoppage time",
   ).toBeTruthy();
   await page.goto(`/partida/${TIMED_MATCH!.id}`);
-  const scorers = page.locator("main article [data-goal]");
-  await expect(scorers.first()).toBeVisible();
+  const lines = page.locator("main article [data-goal]");
+  await expect(lines.first()).toBeVisible();
 
-  const lines = await scorers.allInnerTexts();
-  expect(lines.length).toBeGreaterThan(0);
+  const texts = await lines.allInnerTexts();
+  expect(texts.length).toBeGreaterThan(0);
   // Every line names a scorer and then a minute.
-  for (const line of lines) expect(line).toMatch(/\S+.*\d+(\+\d+)?'/);
+  for (const line of texts) expect(line).toMatch(/\S+.*\d+(\+\d+)?'/);
   // And stoppage time keeps its form rather than being rounded into the 45th.
-  expect(lines.join(" ")).toMatch(/\d+\+\d+'/);
+  expect(texts.join(" ")).toMatch(/\d+\+\d+'/);
 });
 
 test("a goal with no minute prints no placeholder", async ({ page }) => {
-  // Absent is absent: no dash, no empty parentheses, no "—". The minuteless
-  // state is produced rather than found, so this cannot rot the next time a
-  // súmula is parsed.
-  await withoutMinutes(page);
-  await page.goto(`/partida/${MATCH}`);
-  const scorers = page.locator("main article [data-goal]");
-  await expect(scorers.first()).toBeVisible();
+  // Absent is absent: no dash, no empty parentheses, no "—". This spec once
+  // pinned 554977 as the match with no minutes, on a comment reading "554977
+  // predates the join"; a later `sync-goals` run gave it minutes and the
+  // assertion died. The minuteless state is produced instead.
+  await openWithGoals(page, (home, away) =>
+    scorers(home, away).map(({ minute: _dropped, ...goal }) => goal),
+  );
+  const lines = page.locator("main article [data-goal]");
+  await expect(lines.first()).toBeVisible();
 
-  for (const line of await scorers.allInnerTexts()) {
+  for (const line of await lines.allInnerTexts()) {
     expect(line).not.toMatch(/[—–-]\s*$/);
     expect(line).not.toMatch(/'/);
   }
@@ -290,13 +308,14 @@ test("a goal with no minute prints no placeholder", async ({ page }) => {
  * **Asserted as "at least one" rather than by name**, and that is the rule
  * every curated table here follows rather than caution: which scorers resolve
  * to a player is a property of `src/data/squads.ts`, which `sync-seed-data`
- * regenerates. 554977's own Facundo does not resolve — Vasco's frozen elenco
- * does not list him — so pinning a name would tie this spec to a squad list
- * that moves in every transfer window, and pinning *five* links would fail on
- * the state the page is designed for.
+ * regenerates. A scorer who has left the division does not resolve — Vasco's
+ * frozen elenco does not list 554977's Facundo — so pinning a name would tie
+ * this spec to a squad list that moves in every transfer window, and pinning
+ * every link would fail on the state the page is designed for.
  */
 test("a scorer the elencos can place opens the player card", async ({ page }) => {
-  await page.goto(`/partida/${MATCH}`);
+  const match = linkedFixture(await readMatches(page));
+  await page.goto(`/partida/${match.id}`);
 
   const linked = page.locator("main article [data-goal] [data-scorer]");
   await expect(linked.first()).toBeVisible();
@@ -316,29 +335,23 @@ test("a scorer the elencos can place opens the player card", async ({ page }) =>
  *
  * The important half is the *absence* of a control: an unresolved scorer must
  * not render a dead button, which is the shape a `?? ""` id would produce and
- * which looks identical until it is pressed. Produced rather than found, like
- * `withoutGoals` and `withoutMinutes` above — a spec that hunted the season for
- * an unresolvable scorer would be asserting how much data exists.
+ * which looks identical until it is pressed. The state is produced from a
+ * fixture that *did* have a linked scorer, with the ids taken away, so the same
+ * goals are seen with and without the door.
  */
 test("a scorer the elencos cannot place renders no control", async ({ page }) => {
-  const response = await page.request.get("/api/matches");
-  const body = await response.json();
-  body.data.matches = body.data.matches.map((match: Record<string, unknown>) => ({
-    ...match,
-    goals: Array.isArray(match.goals)
-      ? match.goals.map(({ playerId: _dropped, ...goal }: Record<string, unknown>) => goal)
-      : match.goals,
-  }));
-  await page.route("**/api/matches*", (route) =>
-    route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(body) }),
-  );
+  const body = await readMatches(page);
+  const match = linkedFixture(body);
+  match.goals = (match.goals as Goal[]).map(({ playerId: _dropped, ...goal }) => goal);
+  await serveMatches(page, body);
 
-  await page.goto(`/partida/${MATCH}`);
-  const scorers = page.locator("main article [data-goal]");
-  await expect(scorers.first()).toBeVisible();
+  await page.goto(`/partida/${match.id}`);
+  const lines = page.locator("main article [data-goal]");
+  await expect(lines.first()).toBeVisible();
 
   // Every name still renders — the goal is attached either way, only the door
   // on it is missing.
-  await expect(scorers).toHaveCount(5);
+  await expect(lines).toHaveCount(match.goals.length);
+  await expect(page.locator("main article [data-goal] [data-scorer]")).toHaveCount(0);
   await expect(page.locator("main article [data-goal] button")).toHaveCount(0);
 });

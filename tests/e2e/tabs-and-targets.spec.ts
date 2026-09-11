@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@/tests/e2e/clock";
+import { SEED_MATCHES } from "@/src/data/matches";
 
 /**
  * The two halves of M9: the desktop navigation drawn as MD3 tabs, and MD3's
@@ -18,11 +19,19 @@ import { expect, test, type Page } from "@/tests/e2e/clock";
  * it, and it measured 36x44. Its floor is that PR's to apply.
  */
 
+/**
+ * Any fixture's page carries the back link, so the one measured is the seed's
+ * first rather than a named id — it was 554951, which the capture set happens
+ * to photograph.
+ */
+const ANY_FIXTURE = SEED_MATCHES[0];
+if (!ANY_FIXTURE) throw new Error("the seed holds no fixture");
+
 const CONTROLS: { page: string; label: string; selector: string }[] = [
   { page: "/jogos", label: "round stepper (previous)", selector: '[aria-label="Rodada anterior"]' },
   { page: "/jogos", label: "round stepper (next)", selector: '[aria-label="Próxima rodada"]' },
   { page: "/jogos", label: "round picker", selector: "select" },
-  { page: "/partida/554951", label: "back link", selector: "main button:has-text('Voltar')" },
+  { page: `/partida/${ANY_FIXTURE.id}`, label: "back link", selector: "main button:has-text('Voltar')" },
 ];
 
 const boxOf = (page: Page, selector: string) =>

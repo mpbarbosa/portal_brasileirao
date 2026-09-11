@@ -232,11 +232,12 @@ alongside another session. CI runs alone and needs nothing.
   `tests/e2e/matches-payload.ts`. A curated record a spec needs, such as an own
   goal or a ground with a photograph, is derived from the committed data and
   fails by name when none exists.
-- **A few fixture ids are still literals.** `tests/e2e/goals.spec.ts`,
-  `tests/e2e/escalacoes.spec.ts` and `tests/e2e/crest-fallback.spec.ts` open 554977,
-  and `tests/e2e/tabs-and-targets.spec.ts` opens 554951. They are the remaining
-  candidates for the Drift test below; `tests/e2e/match-page.spec.ts` no longer
-  opens any fixture by id.
+- **No spec opens a fixture by a literal id**, and `tests/e2e-fixture.test.ts`
+  refuses one. A spec produces the fixture it needs in a prepared payload, or reads
+  one with the right shape off the payload the server built — a scorer the elencos
+  could place, two full team sheets — and fails by name when none exists. Only
+  specs are swept: the README captures still depict particular fixtures, and an
+  image of a page is not an assertion about it.
 
 ## Review heuristics
 

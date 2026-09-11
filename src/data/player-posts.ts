@@ -106,6 +106,34 @@ import type { PlayerPost } from "@/src/types";
  * Coverage is deliberately **partial**, like `broadcasts.ts` and every curated
  * file here — count the entries rather than a number written in this comment,
  * which has no gate on it.
+ *
+ * ## Adding an entry: look for the key on `origin/main` first
+ *
+ * A player who already has a post has a key, and a second key is not a second
+ * list. Before opening one:
+ *
+ *     git grep -n '"<player id>"' origin/main -- src/data/player-posts.ts
+ *
+ * If that answers, **append to that key's array**. Read `origin/main` rather
+ * than the working tree: several sessions add to this file on the same day, and
+ * a local copy is precisely the one missing the other session's key.
+ *
+ * **Where a key sits in the object protects nothing, and choosing a position to
+ * dodge conflicts is what broke `main`.** On 2026-09-11 three Publicações
+ * appended at the end each conflicted with the next, so #549 moved Pedro's
+ * `"1077"` to the middle — and #550 appended its own `"1077"` at the end. Neither
+ * touched the other's lines, both merged cleanly, and `main` held the key twice.
+ * A textual conflict is git refusing; moving away from it traded it for a
+ * semantic one, which git accepts. #562 folded both posts into one array.
+ *
+ * **`tsc` is the only gate that refuses it** — TS1117, which failed `check` on
+ * `3f20cc0` and held every deploy until #562 merged. Nothing downstream does:
+ * the unit tests run through tsx, which type-checks nothing, and esbuild prints
+ * a `duplicate-object-key` warning and exits 0. Both keep the **second** key and
+ * drop the first, so the page shows one plausible list with a post missing.
+ * That is why `tests/player-posts.test.ts` has no duplicate-key case: the
+ * collapse has already happened by the time a test can look, so it would pass
+ * against the bug.
  */
 export const PLAYER_POSTS: Record<string, PlayerPost[]> = {
   // Kevin Viveros · Athletico-PR. Opened 2026-09-09: a carrossel published by
@@ -134,14 +162,35 @@ export const PLAYER_POSTS: Record<string, PlayerPost[]> = {
     },
   ],
 
+  // John Kennedy · Fluminense. Opened 2026-09-11: um reel publicado pelo
+  // `fluminensefc` — verificada, 3M seguidores, o mesmo handle de
+  // `club-instagram.ts` — com `jkennedy`, o dele em `player-instagram.ts`, como
+  // colaborador. Datado de 8 de julho, 22:20 em Brasília (lido do `<time>` da
+  // página canônica); o vídeo é ele comemorando diante da torcida e a legenda
+  // diz que o gol foi "no Maraca". Não é jogo do Brasileirão: a divisão estava
+  // parada de 1º de junho a 15 de julho e `matches.ts` não tem jogo nesse
+  // intervalo. "O quinto do Fluzão" pode ser o quinto gol da partida ou o
+  // quinto dele, e o resumo não afirma nenhum dos dois nem nomeia a competição.
+  "157533": [
+    {
+      code: "Daja2zEs4fx",
+      account: "fluminensefc",
+      summary:
+        "John Kennedy comemora com a torcida o gol que marcou no Maracanã, num reel de 8 de julho.",
+    },
+  ],
+
   // Pedro · Flamengo. Opened 2026-09-11: `pedroguilherme`, verificada, 7,7M
   // seguidores — o mesmo handle de `player-instagram.ts`, e, como no do Carlos
   // Vinícius mais abaixo, quem publica é o próprio jogador. Um carrossel de 23
   // de julho, com ele de camisa do Flamengo apontando para o céu e uma legenda
   // de agradecimento a Jesus; saiu no dia seguinte a Chapecoense 0x4 Flamengo
   // (554922), em que marcou dois. O resumo diz só isso: a legenda não nomeia o
-  // jogo. Fica no meio do objeto e não no fim de propósito: três Publicações
-  // foram anexadas ao fim no mesmo dia e cada uma conflitou com a seguinte.
+  // jogo. Foi posto no meio do objeto para fugir de conflitos no fim, e a
+  // posição não protege nada: antes de abrir uma chave, rode
+  // `git grep -n '"<id>"' origin/main -- src/data/player-posts.ts` e, se ela já
+  // existir, anexe ao array dela. A regra está no cabeçalho; o comentário
+  // abaixo conta o que custou não segui-la.
   "1077": [
     {
       code: "DbJMfCuEe4p",

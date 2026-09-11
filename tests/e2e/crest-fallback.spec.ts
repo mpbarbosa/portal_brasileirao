@@ -40,12 +40,20 @@ const CLUB_ROUTES = ["/api/clubs", "/api/matches", "/api/standings"];
  * recognised by carrying both `code` and `shortName`, which no other object in
  * these payloads does.
  *
+ * It returns a fixture id **from the payload it just prepared**, so the match
+ * page cases open one it served. They opened 554977 by name, and any fixture
+ * draws the same two crest slots.
+ *
  * `stripIdentity` reaches the case the mark exists for: `crestMonogram` returns
  * `""` for a club with neither a `tla` nor a usable short name, and the
  * monogram branch then renders *nothing at all*. On the match page that is a
  * 56px hole beside the scoreline.
  */
-const withoutCrests = async (page: Page, { stripIdentity = false, goLive = false } = {}) => {
+const withoutCrests = async (
+  page: Page,
+  { stripIdentity = false, goLive = false } = {},
+): Promise<string> => {
+  let matchId = "";
   const walk = (value: unknown): unknown => {
     if (Array.isArray(value)) return value.map(walk);
     if (value === null || typeof value !== "object") return value;
@@ -68,6 +76,12 @@ const withoutCrests = async (page: Page, { stripIdentity = false, goLive = false
     // payload already being prepared, which is `meu-time.spec.ts`'s answer —
     // the real response with one record changed, so everything the page derives
     // from it stays coherent.
+    if (path === "/api/matches") {
+      const first = (body as { data: { matches: { id: string }[] } }).data.matches[0];
+      if (!first) throw new Error("the /api/matches payload holds no fixture");
+      matchId = first.id;
+    }
+
     if (goLive && path === "/api/matches") {
       const matches = (body as unknown as { data: { matches: { status: string }[] } }).data.matches;
       const target = matches.find((m) => m.status === "SCHEDULED");
@@ -78,6 +92,7 @@ const withoutCrests = async (page: Page, { stripIdentity = false, goLive = false
       r.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(body) }),
     );
   }
+  return matchId;
 };
 
 test("the club page holds a missing crest with the mark", async ({ page }) => {
@@ -109,8 +124,8 @@ test("the painel holds a missing crest the same way the club page does", async (
 });
 
 test("the match page holds both missing crests with the mark", async ({ page }) => {
-  await withoutCrests(page);
-  await page.goto("/partida/554977");
+  const matchId = await withoutCrests(page);
+  await page.goto(`/partida/${matchId}`);
 
   const held = page.locator('main article [data-crest-fallback="mark"]');
   await expect(held).toHaveCount(2);
@@ -121,8 +136,8 @@ test("the mark draws where the monogram would have nothing to draw", async ({ pa
   // The case the mark is actually for. With no `tla` and no short name there is
   // no letter to stand in, and the monogram branch renders nothing — a hole at
   // 56px. Confirmed by pointing this at `fallback="monogram"`: count 0.
-  await withoutCrests(page, { stripIdentity: true });
-  await page.goto("/partida/554977");
+  const matchId = await withoutCrests(page, { stripIdentity: true });
+  await page.goto(`/partida/${matchId}`);
 
   await expect(page.locator('main article [data-crest-fallback="mark"]')).toHaveCount(2);
 });
