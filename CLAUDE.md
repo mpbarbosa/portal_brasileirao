@@ -1258,7 +1258,10 @@ Mapping notes, all covered by tests:
   silently blanks every scoreline. Note `0` is a real score — only `null` means unplayed.
 - Club codes prefer the upstream `tla` (FLA, PAL, …), which lines up with the local seed
   codes, falling back to a synthetic `FD-<id>`.
-- Standings read the `TOTAL` group only, never the HOME/AWAY splits.
+- Standings read the `TOTAL` group only, never the HOME/AWAY splits — and a
+  payload with no `TOTAL` group is refused rather than served its first split, which
+  would be a well-formed HOME table labelled live. Measured 2026-09-11: one group,
+  `REGULAR_SEASON`/`TOTAL`, 20 rows.
 - A coach is read from `name` first and from `firstName`/`lastName` as a fallback,
   because `lastName` is frequently null for a coach known by one name. A club
   between coaches reports none at all, which is an **absence** — the club page
