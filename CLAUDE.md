@@ -2328,7 +2328,10 @@ believing the field.
 keeps a fresh clone emitting working canonicals with no `.env`, and `resolveOrigin`
 validates the host against a strict pattern before using it — the value lands in
 `<link rel="canonical">`, so an unvalidated `Host` header lets a third party claim
-ownership of this site's content. `X-Forwarded-*` is consulted only when `TRUST_PROXY=true`.
+ownership of this site's content. `X-Forwarded-*` is consulted only when `TRUST_PROXY=true`,
+and that choice is `requestOrigin` beside `resolveOrigin` — the same origin feeds the CSRF
+same-origin check and the OAuth `redirect_uri`, so it is tested there rather than read by
+hand in a handler.
 
 **The client half must not overwrite the server half before its data lands.** `usePageMeta`
 now maintains canonical, `og:url` and robots as well as the title — an in-app navigation

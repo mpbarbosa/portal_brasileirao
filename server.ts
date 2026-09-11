@@ -75,8 +75,7 @@ import { STADIUMS } from "@/src/data/stadiums";
 import {
   canonicalUrl,
   pageStatus,
-  firstHeaderValue,
-  resolveOrigin,
+  requestOrigin,
   robotsTxt,
   sitemapEntries,
   sitemapXml,
@@ -526,13 +525,14 @@ const loadMatches = async (): Promise<ApiEnvelope<MatchesPayload>> => {
   }
 };
 
-/** The absolute origin to build canonical and sitemap URLs from. */
+/** The absolute origin to build canonical and sitemap URLs from. Which headers
+ *  are believed is `requestOrigin`'s rule; this only reads the request. */
 const originFor = (req: express.Request): string =>
-  resolveOrigin(process.env.APP_URL, {
-    protocol: (TRUST_PROXY ? firstHeaderValue(req.get("x-forwarded-proto")) : undefined)
-      ?? req.protocol,
-    host: (TRUST_PROXY ? firstHeaderValue(req.get("x-forwarded-host")) : undefined)
-      ?? req.get("host"),
+  requestOrigin(process.env.APP_URL, TRUST_PROXY, {
+    protocol: req.protocol,
+    host: req.get("host"),
+    forwardedProto: req.get("x-forwarded-proto"),
+    forwardedHost: req.get("x-forwarded-host"),
   });
 
 /**

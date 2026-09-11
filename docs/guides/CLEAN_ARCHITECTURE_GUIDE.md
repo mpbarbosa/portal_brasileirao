@@ -147,7 +147,9 @@ without re-running the whole check.
   beside it, called by `loadCached`, `loadMatches` and the stadium-weather route
   (checked by the change that moved it); and `/api/matches` and `/api/players/:id` validate through
   `parseRoundParam` and `isPersonId`. `firstHeaderValue` moved to `seo-core.ts`
-  beside `resolveOrigin`, its one remaining consumer. `decodable` moved to
+  beside `resolveOrigin`, and whether `TRUST_PROXY` lets it read the forwarded
+  headers at all is `requestOrigin` there too (checked by the change that moved
+  it), so `originFor` only reads the request. `decodable` moved to
   `route-core.ts`, beside `pathSegments` — which `pageStatus` now shares rather
   than carrying its own copy — so a request's address is decoded in exactly one
   place, and the guard, the router and the status code cannot disagree about
