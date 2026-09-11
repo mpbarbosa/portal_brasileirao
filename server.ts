@@ -97,9 +97,12 @@ import {
   authorizeUrl,
   challengeFor,
   decodeIdTokenClaims,
+  encodeSignInTransaction,
   GOOGLE_TOKEN_URL,
   newVerifier,
+  readCallback,
   verifyClaims,
+  type SignInTransaction,
 } from "@/oauth-core";
 import {
   clientKey,
@@ -111,7 +114,6 @@ import {
 } from "@/rate-limit-core";
 import {
   clearCookie,
-  digestsMatch,
   hashToken,
   isSameOriginRequest,
   mintToken,
@@ -119,6 +121,7 @@ import {
   serialiseCookie,
   SESSION_COOKIE,
   SESSION_TTL_MS,
+  sessionRecord,
   sessionState,
   shouldRenew,
 } from "@/session-core";
@@ -775,12 +778,6 @@ const rateLimited = (req: express.Request, now: number): boolean => {
 const TRANSACTION_COOKIE = "__Host-pb_auth";
 const TRANSACTION_TTL_MS = 10 * 60 * 1000;
 
-interface SignInTransaction {
-  state: string;
-  nonce: string;
-  verifier: string;
-}
-
 /**
  * The session behind a request, or null.
  *
@@ -806,12 +803,7 @@ const currentAccount = (req: express.Request, res: express.Response): Account | 
 
   if (shouldRenew(session, now)) {
     const next = mintToken(randomBytes);
-    accountStore.replaceSession(session.tokenHash, {
-      tokenHash: hashToken(next),
-      accountId: session.accountId,
-      createdAt: now,
-      expiresAt: now + SESSION_TTL_MS,
-    });
+    accountStore.replaceSession(session.tokenHash, sessionRecord(next, session.accountId, now));
     res.append(
       "Set-Cookie",
       serialiseCookie(SESSION_COOKIE, next, { ...cookieOptions, maxAgeMs: SESSION_TTL_MS }),
@@ -826,12 +818,7 @@ const currentAccount = (req: express.Request, res: express.Response): Account | 
 const beginSession = (res: express.Response, accountId: string, now: number): void => {
   if (!accountStore) return;
   const token = mintToken(randomBytes);
-  accountStore.startSession({
-    tokenHash: hashToken(token),
-    accountId,
-    createdAt: now,
-    expiresAt: now + SESSION_TTL_MS,
-  });
+  accountStore.startSession(sessionRecord(token, accountId, now));
   res.append(
     "Set-Cookie",
     serialiseCookie(SESSION_COOKIE, token, { ...cookieOptions, maxAgeMs: SESSION_TTL_MS }),
@@ -898,11 +885,10 @@ app.get("/api/auth/google", (req, res) => {
 
   res.append(
     "Set-Cookie",
-    serialiseCookie(
-      TRANSACTION_COOKIE,
-      Buffer.from(JSON.stringify(transaction)).toString("base64url"),
-      { ...cookieOptions, maxAgeMs: TRANSACTION_TTL_MS },
-    ),
+    serialiseCookie(TRANSACTION_COOKIE, encodeSignInTransaction(transaction), {
+      ...cookieOptions,
+      maxAgeMs: TRANSACTION_TTL_MS,
+    }),
   );
 
   res.redirect(
@@ -935,26 +921,15 @@ app.get("/api/auth/callback", async (req, res) => {
     res.redirect(`/entrar?erro=${encodeURIComponent(reason)}`);
   };
 
-  if (typeof req.query.error === "string") return fail("denied", `provider: ${req.query.error}`);
-
-  const raw = readCookie(req.get("cookie"), TRANSACTION_COOKIE);
-  // The transaction cookie is cleared on every exit, success or not: a state
-  // that has been presented once must never be presentable again.
-  res.append("Set-Cookie", clearCookie(TRANSACTION_COOKIE, cookieOptions));
-
-  if (!raw) return fail("state", "no transaction cookie");
-
-  let transaction: SignInTransaction;
-  try {
-    transaction = JSON.parse(Buffer.from(raw, "base64url").toString("utf8")) as SignInTransaction;
-  } catch {
-    return fail("state", "unreadable transaction cookie");
+  // The refusals and their order are `readCallback`'s, including which exits
+  // spend the transaction cookie: a state that has been presented once must
+  // never be presentable again.
+  const callback = readCallback(req.query, readCookie(req.get("cookie"), TRANSACTION_COOKIE));
+  if (callback.clearsTransaction) {
+    res.append("Set-Cookie", clearCookie(TRANSACTION_COOKIE, cookieOptions));
   }
-
-  const code = req.query.code;
-  const state = req.query.state;
-  if (typeof code !== "string" || typeof state !== "string") return fail("state", "missing code");
-  if (!digestsMatch(state, transaction.state)) return fail("state", "state mismatch");
+  if (!callback.ok) return fail(callback.reason, callback.detail);
+  const { code, transaction } = callback;
 
   let idToken: string;
   try {

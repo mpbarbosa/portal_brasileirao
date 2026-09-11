@@ -139,7 +139,11 @@ without re-running the whole check.
   inline in a handler rather than in a core module beside its test.
 - **The small rules that used to live only there are in core, each with a unit
   test.** The cross-origin check in front of the state-changing account routes is
-  `isSameOriginRequest` (`session-core.ts`); which routes load data before their
+  `isSameOriginRequest` (`session-core.ts`), and the session row a sign-in and a
+  renewal both write is `sessionRecord` beside it; the sign-in transaction's
+  cookie codec and the callback's ordered refusals are `oauth-core.ts`'s
+  `encodeSignInTransaction`, `decodeSignInTransaction` and `readCallback`
+  (both checked by the change that moved them); which routes load data before their
   shell renders is `namesSubject` (`route-core.ts`), an exhaustive switch; the
   fixture TTL is `matchesCacheTtl` (`cache-core.ts`), which reads `hasLiveMatch`,
   the predicate the client's refresh rate already used; the order every cached

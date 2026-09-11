@@ -1234,8 +1234,12 @@ what makes the logic testable without mocking HTTP.
 
 - `session-core.ts`, `account-core.ts`, `oauth-core.ts`, `rate-limit-core.ts` — the
   **Conta** subsystem's judgement, all pure and all taking `now` as a parameter like
-  `cache-core.ts`. Expiry, rolling renewal, PKCE, the `id_token` claim checks and the
-  token bucket are unit-tested without a database, a browser or a Google client.
+  `cache-core.ts`. Expiry, rolling renewal and the session row (`sessionRecord`, the one
+  constructor a sign-in and a renewal share), PKCE, the sign-in transaction's cookie
+  (`encodeSignInTransaction`/`decodeSignInTransaction`), the callback's refusals in the
+  order they are checked (`readCallback`), the `id_token` claim checks and the token
+  bucket are unit-tested without a database, a browser or a Google client. Only the
+  token exchange's HTTP call stays in `server.ts`.
   `account-store.ts` is the only file that knows SQL, which is the same split
   `commons-core.ts` and `scripts/commons-api.ts` already draw.
 
