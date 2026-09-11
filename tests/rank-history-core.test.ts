@@ -8,12 +8,14 @@ import {
   lastRoundWithResult,
   positionAfterRound,
   rankMovement,
+  rankHistoryProblems,
   rankMovementLabel,
   sparklineBars,
   sparklinePoints,
   sparklinePolyline,
 } from "@/rank-history-core";
 import { computeStandings } from "@/standings-core";
+import { RANK_HISTORY } from "@/src/data/rank-history";
 import type { Club, Match } from "@/src/types";
 
 const club = (code: string, shortName = code): Club => ({
@@ -416,3 +418,31 @@ test("the movement is said in words, with pt-BR singular and plural", () => {
 });
 
 const round2 = (value: number): number => Math.round(value * 100) / 100;
+
+test("rankHistoryProblems accepts a history computed from a season", () => {
+  assert.deepEqual(rankHistoryProblems(computeRankHistory(CLUBS, SEASON), 2), []);
+});
+
+test("rankHistoryProblems refuses a club missing a round", () => {
+  const history = computeRankHistory(CLUBS, SEASON);
+  history[0] = { ...history[0], entries: history[0].entries.slice(0, 1) };
+
+  assert.ok(
+    rankHistoryProblems(history, 2).some((problem) => /has 1 of 2 rounds/.test(problem)),
+    "a missing round is named",
+  );
+});
+
+test("rankHistoryProblems refuses a round whose positions are not a permutation", () => {
+  // Two clubs 1st and nobody 2nd: four well-formed numbers a line draws happily.
+  const history = computeRankHistory(CLUBS, SEASON);
+  const second = history.find((club) => club.entries[1].position === 2);
+  assert.ok(second);
+  second.entries[1] = { ...second.entries[1], position: 1 };
+
+  assert.deepEqual(rankHistoryProblems(history, 2), ["round 2 positions are not 1..4: 1,1,3,4"]);
+});
+
+test("the committed rank history passes the checks its generator writes through", () => {
+  assert.deepEqual(rankHistoryProblems(RANK_HISTORY, lastRecordedRound(RANK_HISTORY)), []);
+});
