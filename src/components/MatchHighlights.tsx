@@ -4,6 +4,7 @@ import { videoEmbedUrl } from "@/club-core";
 import { playsInPage } from "@/match-core";
 import { controlClasses } from "@/src/components/Button";
 import { LINK_UNDERLINE, TOUCH_TARGET } from "@/src/components/interaction";
+import { isPlainClick } from "@/src/components/plainClick";
 import type { Highlight } from "@/src/types";
 
 /**
@@ -215,14 +216,7 @@ export function MatchHighlights({
                               // Modified clicks are the browser's, exactly as
                               // in `MatchList` and `ClubView`: this is a link
                               // first.
-                              if (
-                                event.metaKey ||
-                                event.ctrlKey ||
-                                event.shiftKey ||
-                                event.altKey ||
-                                event.button !== 0
-                              )
-                                return;
+                              if (!isPlainClick(event)) return;
                               event.preventDefault();
                               setPicked(video.url);
                             }

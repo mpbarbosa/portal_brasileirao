@@ -2421,7 +2421,9 @@ The URL is the source of truth for the visible section; `App` holds no section s
 is unit-tested without a browser. `src/useRoute.ts` binds it to `pushState`/`popstate`.
 
 Nav entries and club names are real `<a href>` elements, so middle-click and "open in new
-tab" behave. Their click handlers bail out on modified clicks rather than swallowing them.
+tab" behave. Their click handlers bail out on modified clicks rather than swallowing them,
+through the one `isPlainClick` in `src/components/plainClick.ts` — a copy per link had
+already drifted, two of them never testing the button.
 
 **Deep links depend on the server's SPA catch-all.** `/clube/1783` is not a file, so
 `express.static` misses and the `app.get("*")` handler serves `index.html`. That handler
@@ -2584,8 +2586,8 @@ made it stop completing TLS entirely, and plain `curl` was refused the same way
 for minutes afterwards. A block is therefore indistinguishable from the host
 being down. It paces at roughly one request a second; do not optimise the sleep
 away. `scripts/cbf-api.ts` holds that transport half, shared with
-`sync-broadcasts.ts` the way `scripts/commons-api.ts` is shared by the four
-Commons scripts, and for the same reason: the second copy is where drift starts.
+`sync-broadcasts.ts` the way `scripts/commons-api.ts` is shared by every
+Commons script, and for the same reason: the second copy is where drift starts.
 
 **CBF's match endpoint also carries both starting elevens and the
 substitutions**, which is worth knowing because `docs/roadmap.md` listed
@@ -2998,9 +3000,10 @@ at Olympique Lyonnais in 2019. That is why `alt` names the shirt and the year
 rather than the player, whom the card already names beside it.
 
 `scripts/commons-api.ts` holds the HTTP half — fetching a file's metadata and its
-bytes — shared by all four Commons scripts. It was extracted when the player
-scripts would have made a fourth copy, and the two stadium copies had already
-drifted: one asked Commons for `ImageDescription` and the other did not. It stays
+bytes — shared by every Commons script, the broadcaster marks' sync included. It
+was extracted when the player scripts would have made a fourth copy, and the two
+stadium copies had already drifted: one asked Commons for `ImageDescription` and
+the other did not. It stays
 separate from `commons-core.ts`, which is pure and holds the *judgement*, because
 that split is what lets the licence rules be unit-tested without a network.
 
@@ -6022,12 +6025,14 @@ It still builds from the **working tree** rather than from a git ref, which is w
 What is still missing from this pipeline, and the phased plan for closing it, is
 `docs/cicd-plan.md`.
 
-### One Node major, named in five places
+### One Node major, named in several places
 
 `.nvmrc` holds it. `package.json`'s `engines`, the `@types/node` devDependency,
-`REQUIRED_NODE_MAJOR` in `shell_scripts/01_setup_app_directory.sh` and both
-workflows' `node-version-file` all have to agree with it, and
-`tests/node-version.test.ts` fails when they do not.
+`REQUIRED_NODE_MAJOR` in `shell_scripts/01_setup_app_directory.sh` and the
+`node-version-file` of every workflow that sets up Node all have to agree with
+it, and `tests/node-version.test.ts` fails when they do not. The test **finds**
+those workflows by `actions/setup-node` rather than naming them: the list it
+used to carry had already fallen behind, leaving `curated-data.yml` unchecked.
 
 **The trap this closes is quiet by construction.** `tsconfig.json` sets
 `types: ["node"]`, which makes `@types/node` the *entire* ambient type surface,
@@ -6047,9 +6052,9 @@ runtime and not the other way round. `.github/dependabot.yml` therefore ignores
 the **major** for `@types/node` only; minor and patch within the line still
 arrive normally.
 
-Moving Node is consequently a deliberate five-file commit starting at `.nvmrc`,
-which is the point — before this, four of the five were literals that could each
-move alone.
+Moving Node is consequently a deliberate commit across every one of them,
+starting at `.nvmrc`, which is the point — before this, each of the others was a
+literal that could move alone.
 
 **The host floor is an exact major, not a floor**, for the same reason: a host
 one major *older* than the typings is running unchecked code just as surely as

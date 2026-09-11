@@ -13,6 +13,7 @@ import { ClubVideos } from "@/src/components/ClubVideos";
 import { CLUB_VIDEOS } from "@/src/data/club-videos";
 import { StatTile } from "@/src/components/ClubView";
 import { BACK_LINK, LINK_UNDERLINE } from "@/src/components/interaction";
+import { isPlainClick } from "@/src/components/plainClick";
 import { CandlesKey, RankCandles } from "@/src/components/RankCandles";
 import { SEASON_EVENTS } from "@/src/data/events";
 import { RankSparkline } from "@/src/components/RankSparkline";
@@ -449,12 +450,7 @@ export function ClubDashboard({
           href={href}
           onClick={(event) => {
             // Let modified clicks open a new tab, as any link should.
-            if (
-              event.metaKey || event.ctrlKey || event.shiftKey ||
-              event.altKey || event.button !== 0
-            ) {
-              return;
-            }
+            if (!isPlainClick(event)) return;
             event.preventDefault();
             onSelectClub?.(clubKey(club));
           }}

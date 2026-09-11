@@ -24,6 +24,7 @@ import { GLYPH, InstagramLink, MapPinGlyph, WikipediaLink } from "@/src/componen
 import { CLUB_VIDEOS } from "@/src/data/club-videos";
 import { SEASON_EVENTS } from "@/src/data/events";
 import { BACK_LINK, LINK_UNDERLINE, STATE_LAYER } from "@/src/components/interaction";
+import { isPlainClick } from "@/src/components/plainClick";
 import { MatchList } from "@/src/components/MatchList";
 import { FollowButton } from "@/src/components/MeuTime";
 import { FormPill } from "@/src/components/FormPill";
@@ -462,12 +463,7 @@ export function ClubView({
           href={formatRoute({ section: "painel", key: clubKey(club) })}
           onClick={(event: React.MouseEvent) => {
             // Let modified clicks open a new tab, as any link should.
-            if (
-              event.metaKey || event.ctrlKey || event.shiftKey ||
-              event.altKey || event.button !== 0
-            ) {
-              return;
-            }
+            if (!isPlainClick(event)) return;
             event.preventDefault();
             onOpenPanel(clubKey(club));
           }}

@@ -24,7 +24,7 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 
-import { buildAgent, CBF_HOST, getJson, sleep } from "@/scripts/cbf-api";
+import { buildAgent, cbfFixtureListing } from "@/scripts/cbf-api";
 import {
   channelsOf,
   joinMatch,
@@ -54,14 +54,9 @@ interface CbfJogo extends CbfFixture {
   visitante?: { nome?: string };
 }
 
-interface CbfResponse {
-  jogos?: CbfJogo[];
-  meta?: { current_page?: number; last_page?: number; total?: string };
-}
-
-// The TLS dance and the JSON reader live in scripts/cbf-api.ts, shared with
-// sync-goals.ts — a second copy of them is where drift starts, which is the
-// lesson scripts/commons-api.ts records for Wikimedia.
+// The TLS dance, the JSON reader and the listing walk live in scripts/cbf-api.ts,
+// shared with sync-goals.ts — a second copy of them is where drift starts, which
+// is the lesson scripts/commons-api.ts records for Wikimedia.
 
 // ---------------------------------------------------------------------------
 // Existing file
@@ -156,35 +151,9 @@ const agent = await buildAgent();
 
 console.log(`==> Fetching CBF broadcasts for ${from} .. ${to}`);
 
-// CBF ignores per_page and serves 15 at a time, so walk the pages. A silent
-// first-page-only read would look identical to "no broadcast listed".
-const MAX_PAGES = 60;
-const jogos: CbfJogo[] = [];
-let page = 1;
-let lastPage = 1;
-do {
-  const url =
-    `https://${CBF_HOST}/api/cbf/onde-assistir/jogos` +
-    `?dataInicio=${from}&dataTermino=${to}&page=${page}`;
-  const body = await getJson<CbfResponse>(url, agent);
-  jogos.push(...(body.jogos ?? []));
-  lastPage = Number(body.meta?.last_page ?? 1);
-  page += 1;
-
-  // Pace the walk. This is someone else's undocumented endpoint, and hammering
-  // it sequentially is what provoked the 502 in the first place.
-  if (page <= lastPage) await sleep(400);
-} while (page <= lastPage && page <= MAX_PAGES);
-
-if (lastPage > MAX_PAGES) {
-  // Never truncate quietly: a short read is indistinguishable from a quiet
-  // weekend, and the missing fixtures would simply show no channels.
-  console.error(
-    `Error: CBF reports ${lastPage} pages but the cap is ${MAX_PAGES}. ` +
-      `Narrow the date range and run again — a partial read would silently drop fixtures.`,
-  );
-  process.exit(1);
-}
+// Every page, paced, and refused rather than truncated: a first-page-only read
+// would look identical to "no broadcast listed".
+const { jogos, lastPage } = await cbfFixtureListing<CbfJogo>(from, to, agent);
 
 const serieA = jogos.filter((jogo) => jogo.competicao?.categoria_id === SERIE_A_CATEGORIA_ID);
 console.log(

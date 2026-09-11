@@ -7,6 +7,7 @@ import {
   videoWatchUrl,
 } from "@/club-core";
 import { FOCUS_RING, LINK_UNDERLINE } from "@/src/components/interaction";
+import { isPlainClick } from "@/src/components/plainClick";
 import type { ClubVideo } from "@/src/types";
 
 /**
@@ -176,14 +177,7 @@ export function ClubVideos({ videos, clubName }: { videos: ClubVideo[]; clubName
                           // Modified clicks are the browser's, exactly as in
                           // `MatchList` and `MatchHighlights`: this is a link
                           // first.
-                          if (
-                            event.metaKey ||
-                            event.ctrlKey ||
-                            event.shiftKey ||
-                            event.altKey ||
-                            event.button !== 0
-                          )
-                            return;
+                          if (!isPlainClick(event)) return;
                           event.preventDefault();
                           setPlaying(video.id);
                         }

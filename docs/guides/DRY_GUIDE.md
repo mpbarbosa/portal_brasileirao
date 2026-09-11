@@ -40,6 +40,16 @@ fourth Commons script would have made a fourth copy of the HTTP half — and the
 two stadium copies that already existed **had diverged**: one asked Commons for
 `ImageDescription` and the other did not.
 
+**And it kept happening after that extraction.** An audit of this guide against
+the code on 2026-09-11 found three more copies that had already drifted: the
+broadcaster marks' sync still carrying its own Commons client — its own user
+agent, fetch and HTML stripper — beside the shared one; the plain-click guard
+written out at every in-app link, with the button check missing from some
+copies; and the CBF listing walk copied between two syncs that no longer paced
+alike. Each now has one home: `scripts/commons-api.ts` (with the marks' licence
+rule as `publicDomain` in `commons-core.ts`), `isPlainClick` in
+`src/components/plainClick.ts`, and `cbfFixtureListing` in `scripts/cbf-api.ts`.
+
 ### 2. Generate — where the fact is derived
 
 - `src/index.css`'s palette is emitted by `npm run sync-md3-tokens`. Do not
@@ -59,15 +69,19 @@ two stadium copies that already existed **had diverged**: one asked Commons for
 
 ### 3. Gate — where the copies genuinely cannot import from each other
 
-Sometimes a fact must appear in five files that no module graph connects. Then
+Sometimes a fact must appear in several files that no module graph connects. Then
 the answer is a test that fails when they disagree.
 
-- **The Node major is named five times** — `.nvmrc`, `package.json`'s `engines`,
-  the `@types/node` devDependency, `REQUIRED_NODE_MAJOR` in
-  `shell_scripts/01_setup_app_directory.sh`, and both workflows'
-  `node-version-file`. `tests/node-version.test.ts` reads `.nvmrc` as the
-  authority and compares the rest to it. Moving Node is a deliberate five-file
-  commit; before the gate, four of the five could each move alone.
+- **The Node major is named in several places** — `.nvmrc`, `package.json`'s
+  `engines`, the `@types/node` devDependency, `REQUIRED_NODE_MAJOR` in
+  `shell_scripts/01_setup_app_directory.sh`, and the `node-version-file` of every
+  workflow that sets up Node. `tests/node-version.test.ts` reads `.nvmrc` as the
+  authority and compares the rest to it, and it **finds** the workflows by
+  `actions/setup-node` rather than naming them. It used to name them, and that
+  list had fallen behind the workflows it was meant to cover — a hand-kept list
+  inside the gate that exists to replace hand-keeping. Moving Node is a
+  deliberate commit starting at `.nvmrc`; before the gate, each of the others
+  could move alone.
 - **The appearance-path list** is computed rather than hand-kept:
   `tests/appearance-paths.test.ts` asserts the property — *every root core module
   `src/` imports is a watched path* — and runs the other way too, so the list
@@ -134,8 +148,13 @@ git ls-tree --name-only origin/main docs/screenshots/ | wc -l
   `CLAUDE.md` is the authority and is very large; this guide set exists partly to
   give principles a home that is citable in review. Where the two disagree,
   `CLAUDE.md` is authoritative and this file should be corrected.
-- **The five-place Node gate is the only one of its kind.** No other cross-file
-  fact has a test asserting agreement.
+- **Agreement gates exist, and most cross-file facts still have none.** Beside
+  the Node gate, `tests/appearance-paths.test.ts`, `tests/e2e-fixture.test.ts`
+  and the seed-reach case in `tests/scouts-core.test.ts` each hold a property
+  across files that no import connects. Still ungated: the deploy directory
+  written into the shell scripts, the AWS identifiers written into the
+  workflows, and the rehearsal and curated-data checker lists in the workflows
+  against the scripts they run.
 
 ## Review heuristics
 

@@ -2,6 +2,7 @@ import { clubKey, wikipediaUrl } from "@/club-core";
 import { formatRoute } from "@/route-core";
 import { ClubCrest } from "@/src/components/ClubCrest";
 import { BACK_LINK, LINK_UNDERLINE } from "@/src/components/interaction";
+import { isPlainClick } from "@/src/components/plainClick";
 import { MatchList } from "@/src/components/MatchList";
 import { StadiumWeather } from "@/src/components/StadiumWeather";
 import { Surface } from "@/src/components/Surface";
@@ -238,7 +239,7 @@ export function StadiumView({
                     onClick={(event) => {
                       // Let the browser handle modified clicks, so middle-click
                       // and "open in new tab" still behave.
-                      if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+                      if (!isPlainClick(event)) return;
                       event.preventDefault();
                       onSelectClub(clubKey(club));
                     }}

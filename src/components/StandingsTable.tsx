@@ -8,6 +8,7 @@ import { ClubCrest } from "@/src/components/ClubCrest";
 import { FormPill } from "@/src/components/FormPill";
 import { StarGlyph } from "@/src/components/MeuTime";
 import { LINK_UNDERLINE } from "@/src/components/interaction";
+import { isPlainClick } from "@/src/components/plainClick";
 import {
   lastRecordedRound,
   rankMovement,
@@ -671,12 +672,7 @@ export function StandingsTable({
                       href={formatRoute({ section: "clube", key: clubKey(row.club) })}
                       onClick={(event) => {
                         // Let modified clicks open a new tab, as any link should.
-                        if (
-                          event.metaKey || event.ctrlKey || event.shiftKey ||
-                          event.altKey || event.button !== 0
-                        ) {
-                          return;
-                        }
+                        if (!isPlainClick(event)) return;
                         event.preventDefault();
                         onSelectClub(clubKey(row.club));
                       }}

@@ -2,6 +2,7 @@ import { bestAttacks, bestDefences, goalsPerMatchLabel, homeWinShareLabel, leagu
 import { clubKey } from "@/club-core";
 import { ClubCrest } from "@/src/components/ClubCrest";
 import { LINK_UNDERLINE } from "@/src/components/interaction";
+import { isPlainClick } from "@/src/components/plainClick";
 import { formatRoute } from "@/route-core";
 import { Surface } from "@/src/components/Surface";
 import type { Match, StandingsRow } from "@/src/types";
@@ -68,12 +69,7 @@ function Leaderboard({
               <a
                 href={formatRoute({ section: "clube", key: clubKey(row.club) })}
                 onClick={(event) => {
-                  if (
-                    event.metaKey || event.ctrlKey || event.shiftKey ||
-                    event.altKey || event.button !== 0
-                  ) {
-                    return;
-                  }
+                  if (!isPlainClick(event)) return;
                   event.preventDefault();
                   onSelectClub(clubKey(row.club));
                 }}

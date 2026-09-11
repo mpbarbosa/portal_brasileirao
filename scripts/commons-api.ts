@@ -10,6 +10,11 @@
  * one asked for `ImageDescription` and the other did not, so a description was
  * available to the checker and silently absent from the sync.
  *
+ * `sync-broadcaster-marks` kept a fifth copy for longer — its own user agent,
+ * fetch and HTML stripper — and now reads through here like the rest. The
+ * `Special:FilePath` address is `commonsFileUrl` for the same reason:
+ * `check-stadium-photos` wrote it out by hand beside `commonsBytes`.
+ *
  * The split from `commons-core.ts` is deliberate and worth keeping. That module
  * is pure and holds the *judgement* — which licences may be republished, whether
  * a stored credit still matches. This one does the *I/O* and holds no judgement
@@ -100,12 +105,16 @@ export const commonsFacts = async (
  * not worth one on every reader's page view, which is why the bytes are
  * vendored at all.
  */
+export const commonsFileUrl = (file: string, width: number): string =>
+  `https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(file)}?width=${width}`;
+
+/** The bytes at `commonsFileUrl`. */
 export const commonsBytes = async (
   file: string,
   width: number,
   caller: string,
 ): Promise<Buffer> => {
-  const url = `https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(file)}?width=${width}`;
+  const url = commonsFileUrl(file, width);
   const response = await fetch(url, {
     headers: { "User-Agent": userAgent(caller) },
     signal: AbortSignal.timeout(60_000),

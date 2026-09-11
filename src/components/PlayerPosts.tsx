@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { instagramPostEmbedUrl, instagramPostUrl } from "@/club-core";
 import { InstagramGlyph } from "@/src/components/ClubLinks";
 import { FOCUS_RING, LINK_UNDERLINE, STATE_LAYER } from "@/src/components/interaction";
+import { isPlainClick } from "@/src/components/plainClick";
 import type { PlayerPost } from "@/src/types";
 
 /**
@@ -207,14 +208,7 @@ export function PlayerPosts({ posts, playerName }: { posts: PlayerPost[]; player
                 rel="noopener noreferrer"
                 data-post-facade={post.code}
                 onClick={(event) => {
-                  if (
-                    event.metaKey ||
-                    event.ctrlKey ||
-                    event.shiftKey ||
-                    event.altKey ||
-                    event.button !== 0
-                  )
-                    return;
+                  if (!isPlainClick(event)) return;
                   event.preventDefault();
                   setOpen(post.code);
                 }}

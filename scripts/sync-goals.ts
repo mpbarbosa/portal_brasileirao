@@ -45,7 +45,7 @@ import https from "node:https";
 import os from "node:os";
 import path from "node:path";
 
-import { buildAgent, CBF_HOST, getJson, sleep } from "@/scripts/cbf-api";
+import { buildAgent, CBF_HOST, cbfFixtureListing, getJson, sleep } from "@/scripts/cbf-api";
 import {
   type CbfAtleta,
   attachSubstitutions,
@@ -84,11 +84,6 @@ const ROOT = process.cwd();
 interface CbfJogo extends CbfFixture {
   id_jogo?: string;
   visitante?: { nome?: string };
-}
-
-interface CbfListResponse {
-  jogos?: CbfJogo[];
-  meta?: { last_page?: number };
 }
 
 /** One match as `/api/cbf/jogos/{id}` reports it. Only the parts used here. */
@@ -280,31 +275,11 @@ const agent = await buildAgent();
 
 if (listingWanted) console.log(`==> Fetching CBF fixtures for ${from} .. ${to}`);
 
-const MAX_PAGES = 60;
-const jogos: CbfJogo[] = [];
-let page = 1;
-let lastPage = 1;
-while (listingWanted) {
-  const url =
-    `https://${CBF_HOST}/api/cbf/onde-assistir/jogos` +
-    `?dataInicio=${from}&dataTermino=${to}&page=${page}`;
-  const body = await getJson<CbfListResponse>(url, agent);
-  jogos.push(...(body.jogos ?? []));
-  lastPage = Number(body.meta?.last_page ?? 1);
-  page += 1;
-  if (page <= lastPage) await sleep(600);
-  if (!(page <= lastPage && page <= MAX_PAGES)) break;
-}
-
-if (lastPage > MAX_PAGES) {
-  // Never truncate quietly: a short read is indistinguishable from a quiet
-  // weekend, and the missing fixtures would simply show no goals.
-  console.error(
-    `Error: CBF reports ${lastPage} pages but the cap is ${MAX_PAGES}. ` +
-      `Narrow the date range and run again — a partial read would silently drop fixtures.`,
-  );
-  process.exit(1);
-}
+// Every page, paced, and refused rather than truncated: a short read would
+// simply show no goals for the fixtures it dropped.
+const { jogos, lastPage } = listingWanted
+  ? await cbfFixtureListing<CbfJogo>(from, to, agent)
+  : { jogos: [] as CbfJogo[], lastPage: 1 };
 
 const serieA = jogos.filter((jogo) => jogo.competicao?.categoria_id === SERIE_A_CATEGORIA_ID);
 if (listingWanted) {

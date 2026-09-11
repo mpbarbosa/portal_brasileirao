@@ -17,29 +17,32 @@
  * so a file re-licensed upstream, or a new entry added carelessly, stops the
  * sync instead of quietly creating an obligation the app does not meet.
  *
+ * The HTTP is `scripts/commons-api.ts` and the licence rule is `publicDomain` in
+ * `commons-core.ts`, as for every other Commons script. This one carried its own
+ * client — its own user agent, fetch, HTML stripper and sleep — for as long as
+ * the others shared theirs, which is the drift that extraction was for.
+ *
  * Usage:
  *   npx tsx scripts/sync-broadcaster-marks.ts
  *
  * Exit codes:
  *   0  marks written.
- *   1  a download failed, or a file is not public domain.
+ *   1  a download failed, a file is missing from Commons, or a file is not
+ *      public domain.
  */
 import { mkdirSync, writeFileSync } from "node:fs";
 import path from "node:path";
 
 import { MARKS, type MarkSource } from "@/broadcast-core";
+import { publicDomain } from "@/commons-core";
+import { commonsBytes, commonsFacts, pause } from "@/scripts/commons-api";
 
 const ROOT = process.cwd();
 const OUT = path.join(ROOT, "public/marks");
-
-/** Wikimedia asks for a real contact in the User-Agent, and answers generic
- *  ones with 403. */
-const UA = "portal-brasileirao/1.0 (https://brasileirao.mpbarbosa.com; mpbarbosa@gmail.com)";
+const CALLER = "sync-broadcaster-marks";
 
 /** Wide enough to stay crisp at 3x on a mark that renders 18 pixels tall. */
 const WIDTH = 240;
-
-const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 interface Credit {
   slug: string;
@@ -47,36 +50,6 @@ interface Credit {
   licence: string;
   artist: string;
 }
-
-const strip = (html: string) => html.replace(/<[^>]+>/g, "").trim();
-
-const licenceOf = async (file: string): Promise<{ licence: string; artist: string }> => {
-  const url = new URL("https://commons.wikimedia.org/w/api.php");
-  url.searchParams.set("action", "query");
-  url.searchParams.set("format", "json");
-  url.searchParams.set("prop", "imageinfo");
-  url.searchParams.set("iiprop", "extmetadata");
-  url.searchParams.set("titles", `File:${file}`);
-
-  const response = await fetch(url, { headers: { "User-Agent": UA } });
-  if (!response.ok) throw new Error(`${response.status} reading licence for ${file}`);
-
-  const pages = (await response.json()).query.pages as Record<string, any>;
-  const meta = Object.values(pages)[0]?.imageinfo?.[0]?.extmetadata ?? {};
-
-  return {
-    licence: meta.LicenseShortName?.value ?? "unknown",
-    artist: strip(meta.Artist?.value ?? "unknown"),
-  };
-};
-
-const download = async (file: string): Promise<Buffer> => {
-  const url = `https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(file)}?width=${WIDTH}`;
-  const response = await fetch(url, { headers: { "User-Agent": UA } });
-  if (!response.ok) throw new Error(`${response.status} downloading ${file}`);
-
-  return Buffer.from(await response.arrayBuffer());
-};
 
 mkdirSync(OUT, { recursive: true });
 
@@ -87,9 +60,16 @@ for (const mark of Object.values(MARKS)) wanted.set(mark.slug, mark);
 const credits: Credit[] = [];
 
 for (const mark of wanted.values()) {
-  const { licence, artist } = await licenceOf(mark.commons);
+  const facts = await commonsFacts(mark.commons, CALLER);
+  if (!facts) {
+    console.error(`Error: ${mark.commons} is not on Commons — deleted or renamed.`);
+    process.exit(1);
+  }
 
-  if (!/public domain/i.test(licence)) {
+  const licence = facts.license || "unknown";
+  const artist = facts.artist || "unknown";
+
+  if (!publicDomain(licence)) {
     console.error(
       `Error: ${mark.commons} is "${licence}", not public domain.\n` +
         "  Serving it from our own origin would take on an attribution or\n" +
@@ -99,14 +79,14 @@ for (const mark of wanted.values()) {
     process.exit(1);
   }
 
-  const bytes = await download(mark.commons);
+  const bytes = await commonsBytes(mark.commons, WIDTH, CALLER);
   writeFileSync(path.join(OUT, `${mark.slug}.png`), bytes);
   console.log(`  ${mark.slug}.png  ${(bytes.length / 1024).toFixed(1)}kB  ${licence}`);
 
   credits.push({ slug: mark.slug, commons: mark.commons, licence, artist });
   // Deliberately unhurried: the 429 that motivated this script is a reminder
   // that Commons is someone else's server.
-  await sleep(1200);
+  await pause(1200);
 }
 
 writeFileSync(
