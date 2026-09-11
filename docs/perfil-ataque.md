@@ -111,6 +111,48 @@ paragraph.
 
 ---
 
+## Rodada 26 — Coritiba steps back for the first time, and Bragantino and Vasco become one shape
+
+Written 2026-09-11 against `CLUB_SCOUTS_THROUGH_ROUND = 26`. The second of the three
+votes Rule 3 asks for on the Coritiba reading.
+
+**The whole division advanced this window.** Unlike rodada 25, every club's counters
+cover exactly one more match than last entry, so a change of place below is a club's
+own round measured against everybody else's, not the artefact of some clubs standing
+still while others played.
+
+- **Coritiba: the reading holds, and for the first time it moved the way its
+  falsification names.** It is still the lowest volume in the division, by some
+  distance from Grêmio just above it. Its conversion slipped one place, out of the top
+  three and into fourth, overtaken by Santos. That is the direction the test watches
+  and the smallest step in it: still among the best converters, nowhere near the
+  middle. Counted as the second vote for, with the note that it is a weaker vote than
+  the first.
+- **Bragantino and Vasco are now the same club on both axes.** They share the top of
+  volume and share the second-worst conversion, level on both counts. Rodada 24 named
+  that shape on the two of them together and rodada 25 had them swapping ends of the
+  volume order; this window closes the gap entirely. Finishing more than anybody and
+  converting worse than almost anybody is now one sentence about two clubs.
+- **Internacional climbs off the floor of conversion**, which both previous entries
+  called settled. It is no longer the worst converter, and with Mirassol also climbing a
+  place the bottom of conversion is now Bragantino and Vasco, level. A club named
+  "unmoved" for two entries moved in the first window where everybody played.
+- **Santos is this entry's version of Athletico-PR's shape.** It climbs into the top
+  three converters while its volume drops into the bottom half — the Coritiba shape at
+  a bigger club, which rodada 25 saw on Athletico-PR. Athletico-PR itself did not
+  continue it: its volume rose and its conversion slipped a place. So the shape moved
+  club rather than hardened, which is a reason to keep not concluding anything from it.
+- **The top of conversion is now Flamengo, Palmeiras and Santos.** Flamengo still
+  leads it outright and Palmeiras is still second; the third place changed hands for the
+  second entry running, Botafogo to Coritiba last round and Coritiba to Santos now.
+
+**What would falsify the Coritiba reading from here**, unchanged, because rewording it
+after a round that moved toward it is exactly how a test stops being one: its
+conversion regressing toward the division's middle while its volume stays at the
+bottom. Rodada 27 is the third vote. If it holds there, the promotion under Rule 3
+should carry both caveats this log has now earned — the smallest-sample risk rodada 25
+named, and that the second confirmation was a step back rather than a hold.
+
 ## Rodada 25 — the Coritiba reading survives its first vote, and Vasco takes the lead it did not want
 
 Written 2026-09-02 against `CLUB_SCOUTS_THROUGH_ROUND = 25`. First entry appended
