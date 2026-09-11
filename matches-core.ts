@@ -121,74 +121,60 @@ const stampOf = (match: Match): number => {
   return Number.isNaN(parsed) ? Number.NEGATIVE_INFINITY : parsed;
 };
 
-/**
- * Keep the freshest copy the provider has given of each fixture.
- *
- * football-data regresses **individual records**, which is the whole reason
- * this exists and the reason the obvious cheaper fixes do not work. Measured on
- * 2026-08-31, one URL, one token, four minutes apart:
- *
- *     554986  00:38 -> FINISHED 1-1  lastUpdated 2026-08-30T23:37:19Z
- *     554986  00:42 -> TIMED   null  lastUpdated 2026-08-30T10:20:34Z
- *     554982  00:38 -> FINISHED 3-2  lastUpdated 2026-08-31T00:32:15Z
- *     554982  00:42 -> FINISHED 3-2  lastUpdated 2026-08-31T00:40:35Z
- *
- * The last row is the finding: in the response that regressed one fixture by
- * thirteen hours, a second fixture moved *forward*. So the responses are not
- * two whole snapshots alternating, and "prefer the newer response" would still
- * have shown a finished match as `A realizar`. The comparison has to be per
- * fixture, and against the provider's own stamp rather than against a status
- * ordering of our own invention — `lastUpdated` is what upstream **said**,
- * where "FINISHED outranks SCHEDULED" is a guess about what it meant, and one
- * that would pin a genuine correction (a result voided to POSTPONED) forever.
- *
- * `incoming` decides which fixtures exist. A record held only in `previous` is
- * never resurrected: a fixture upstream has genuinely dropped must be able to
- * disappear, and this function's job is to choose between two copies of one
- * record, not to defend the shape of the list.
- *
- * The memory is persisted by `match-state-store.ts`, so it survives a restart.
- * What it does not survive is the case below: a regression upstream stamps
- * *newer* than the record it destroys.
- */
+/** Exactly midnight UTC — the instant a date with no time parses to. */
+const atMidnightUtc = (kickoff: string): boolean => {
+  const at = new Date(kickoff);
+  if (Number.isNaN(at.getTime())) return false;
+  return (
+    at.getUTCHours() === 0 &&
+    at.getUTCMinutes() === 0 &&
+    at.getUTCSeconds() === 0 &&
+    at.getUTCMilliseconds() === 0
+  );
+};
 
 /**
- * Whether `incoming` withdraws a result `kept` already carried, in the one way
- * that cannot be an honest correction.
+ * Mark the fixtures whose round the provider has dated but not timed, so the page can print the
+ * day without inventing an hour.
  *
- * **This exists because the stamp comparison above was defeated in production.**
- * The regression `mergeByFreshness` was built against replayed an *older*
- * generation, so `lastUpdated` caught it. Upstream has since produced the
- * opposite shape — measured 2026-08-31T12:53:50Z, one token, straight from
- * `/v4/competitions/BSA/matches?matchday=25`:
+ * football-data serves a round it holds no times for as every fixture at exactly `00:00Z`. Read
+ * in Brasília that is **21:00 the previous day** — a precise, plausible, entirely fictional
+ * kickoff, which is `live-core.ts`'s refusal to print a match minute met on a larger surface: 80
+ * fixtures of the 2026 season, the whole of rounds 31 to 38.
  *
- *     554982  FINISHED  3-2   lastUpdated 2026-08-31T08:25:09Z
- *     554985  TIMED     null  lastUpdated 2026-08-31T08:25:09Z
- *     554986  TIMED     null  lastUpdated 2026-08-31T08:25:09Z
+ * **The test is the round's and not the fixture's, and that is the whole decision.** 21:00 BRT is
+ * one of the commonest kickoff times in Brazil, so `00:00Z` alone is more often a real fixture
+ * than a placeholder. Measured rather than assumed: 18 fixtures outside rounds 31-38 sit at
+ * `00:00Z`, ten of them already played, and each is the only such fixture in a round carrying
+ * five to seven distinct hours. Suppressing per fixture would delete those ten kickoffs — São
+ * Paulo x Palmeiras of round 8 among them — to repair a round nobody has scheduled yet.
  *
- * One generation, one stamp, the result lost on two of the six records it
- * touched. Against `554986`'s good copy — `FINISHED 1-1`, stamped
- * `2026-08-30T23:37:19Z` — the broken record is nine hours **newer**, so the
- * guard working exactly as designed prefers it. Freshness is not correctness,
- * and persistence does not help: it stores the loser.
+ * So a round qualifies only when **every** one of its fixtures sits on that midnight, which no
+ * scheduled round in the season does at any hour.
  *
- * The test is coherence, not a status ranking — which is the objection the
- * comparison above rejects, and it still stands. A record saying **a match is
- * scheduled to be played at a time that has already passed, and has no score**
- * contradicts itself, whatever it is stamped. Every genuine correction states
- * itself some other way and still wins:
+ * **A round of one is never marked**, because a single fixture is no evidence either way and the
+ * honest answer to "cannot tell" is to print what upstream said. Not hypothetical tidiness:
+ * `/api/matches?round=` and every client-side filter hand this a subset.
  *
- * - **POSTPONED and CANCELLED** are how a played result is honestly voided,
- *   and neither is SCHEDULED. This is the case the first bullet in CLAUDE.md's
- *   `The provider regresses individual records` warns would be pinned for ever
- *   by a status ordering; it is not pinned by this.
- * - **A corrected score** arrives with goals on it, so nothing is withdrawn.
- * - **A genuine re-schedule** carries the new kickoff, which is in the future.
- *
- * A kickoff that will not parse is treated as *not* past, so upstream wins —
- * the same direction `kickoffValue` sorts it, and the conservative one for a
- * rule whose whole job is to overrule the provider.
+ * Reads no clock, unlike its neighbours here — what the provider stated does not change with the
+ * hour.
  */
+export const withKickoffPrecision = (matches: Match[]): Match[] => {
+  const dateOnly = new Map<number, boolean>();
+  const counted = new Map<number, number>();
+  for (const match of matches) {
+    const held = dateOnly.get(match.round);
+    dateOnly.set(match.round, held !== false && atMidnightUtc(match.kickoff));
+    counted.set(match.round, (counted.get(match.round) ?? 0) + 1);
+  }
+
+  return matches.map((match) =>
+    dateOnly.get(match.round) && (counted.get(match.round) ?? 0) > 1
+      ? { ...match, kickoffDateOnly: true }
+      : match,
+  );
+};
+
 /**
  * A record that carries a scoreline for a kickoff already past is **not
  * scheduled**, whatever the provider says — so this repairs the status rather
@@ -246,60 +232,6 @@ const stampOf = (match: Match): number => {
  * unparseable kickoff counts as *not* past, the direction `retractsResult`
  * already fails in.
  */
-/** Exactly midnight UTC — the instant a date with no time parses to. */
-const atMidnightUtc = (kickoff: string): boolean => {
-  const at = new Date(kickoff);
-  if (Number.isNaN(at.getTime())) return false;
-  return (
-    at.getUTCHours() === 0 &&
-    at.getUTCMinutes() === 0 &&
-    at.getUTCSeconds() === 0 &&
-    at.getUTCMilliseconds() === 0
-  );
-};
-
-/**
- * Mark the fixtures whose round the provider has dated but not timed, so the page can print the
- * day without inventing an hour.
- *
- * football-data serves a round it holds no times for as every fixture at exactly `00:00Z`. Read
- * in Brasília that is **21:00 the previous day** — a precise, plausible, entirely fictional
- * kickoff, which is `live-core.ts`'s refusal to print a match minute met on a larger surface: 80
- * fixtures of the 2026 season, the whole of rounds 31 to 38.
- *
- * **The test is the round's and not the fixture's, and that is the whole decision.** 21:00 BRT is
- * one of the commonest kickoff times in Brazil, so `00:00Z` alone is more often a real fixture
- * than a placeholder. Measured rather than assumed: 18 fixtures outside rounds 31-38 sit at
- * `00:00Z`, ten of them already played, and each is the only such fixture in a round carrying
- * five to seven distinct hours. Suppressing per fixture would delete those ten kickoffs — São
- * Paulo x Palmeiras of round 8 among them — to repair a round nobody has scheduled yet.
- *
- * So a round qualifies only when **every** one of its fixtures sits on that midnight, which no
- * scheduled round in the season does at any hour.
- *
- * **A round of one is never marked**, because a single fixture is no evidence either way and the
- * honest answer to "cannot tell" is to print what upstream said. Not hypothetical tidiness:
- * `/api/matches?round=` and every client-side filter hand this a subset.
- *
- * Reads no clock, unlike its neighbours here — what the provider stated does not change with the
- * hour.
- */
-export const withKickoffPrecision = (matches: Match[]): Match[] => {
-  const dateOnly = new Map<number, boolean>();
-  const counted = new Map<number, number>();
-  for (const match of matches) {
-    const held = dateOnly.get(match.round);
-    dateOnly.set(match.round, held !== false && atMidnightUtc(match.kickoff));
-    counted.set(match.round, (counted.get(match.round) ?? 0) + 1);
-  }
-
-  return matches.map((match) =>
-    dateOnly.get(match.round) && (counted.get(match.round) ?? 0) > 1
-      ? { ...match, kickoffDateOnly: true }
-      : match,
-  );
-};
-
 export const withPlayedStatus = (matches: Match[], now: number): Match[] =>
   matches.map((match) => {
     if (match.status !== "SCHEDULED") return match;
@@ -311,6 +243,44 @@ export const withPlayedStatus = (matches: Match[], now: number): Match[] =>
     return { ...match, status: "FINISHED" };
   });
 
+/**
+ * Whether `incoming` withdraws a result `kept` already carried, in the one way
+ * that cannot be an honest correction.
+ *
+ * **This exists because the stamp comparison in `mergeByFreshness` was defeated
+ * in production.**
+ * The regression `mergeByFreshness` was built against replayed an *older*
+ * generation, so `lastUpdated` caught it. Upstream has since produced the
+ * opposite shape — measured 2026-08-31T12:53:50Z, one token, straight from
+ * `/v4/competitions/BSA/matches?matchday=25`:
+ *
+ *     554982  FINISHED  3-2   lastUpdated 2026-08-31T08:25:09Z
+ *     554985  TIMED     null  lastUpdated 2026-08-31T08:25:09Z
+ *     554986  TIMED     null  lastUpdated 2026-08-31T08:25:09Z
+ *
+ * One generation, one stamp, the result lost on two of the six records it
+ * touched. Against `554986`'s good copy — `FINISHED 1-1`, stamped
+ * `2026-08-30T23:37:19Z` — the broken record is nine hours **newer**, so the
+ * guard working exactly as designed prefers it. Freshness is not correctness,
+ * and persistence does not help: it stores the loser.
+ *
+ * The test is coherence, not a status ranking — which is the objection the
+ * comparison in `mergeByFreshness` rejects, and it still stands. A record saying **a match is
+ * scheduled to be played at a time that has already passed, and has no score**
+ * contradicts itself, whatever it is stamped. Every genuine correction states
+ * itself some other way and still wins:
+ *
+ * - **POSTPONED and CANCELLED** are how a played result is honestly voided,
+ *   and neither is SCHEDULED. This is the case the first bullet in CLAUDE.md's
+ *   `The provider regresses individual records` warns would be pinned for ever
+ *   by a status ordering; it is not pinned by this.
+ * - **A corrected score** arrives with goals on it, so nothing is withdrawn.
+ * - **A genuine re-schedule** carries the new kickoff, which is in the future.
+ *
+ * A kickoff that will not parse is treated as *not* past, so upstream wins —
+ * the same direction `kickoffValue` sorts it, and the conservative one for a
+ * rule whose whole job is to overrule the provider.
+ */
 const retractsResult = (kept: Match, incoming: Match, now: number): boolean => {
   if (!hasScore(kept)) return false;
   if (incoming.homeGoals !== null || incoming.awayGoals !== null) return false;
@@ -320,6 +290,36 @@ const retractsResult = (kept: Match, incoming: Match, now: number): boolean => {
   return !Number.isNaN(at) && at < now;
 };
 
+/**
+ * Keep the freshest copy the provider has given of each fixture.
+ *
+ * football-data regresses **individual records**, which is the whole reason
+ * this exists and the reason the obvious cheaper fixes do not work. Measured on
+ * 2026-08-31, one URL, one token, four minutes apart:
+ *
+ *     554986  00:38 -> FINISHED 1-1  lastUpdated 2026-08-30T23:37:19Z
+ *     554986  00:42 -> TIMED   null  lastUpdated 2026-08-30T10:20:34Z
+ *     554982  00:38 -> FINISHED 3-2  lastUpdated 2026-08-31T00:32:15Z
+ *     554982  00:42 -> FINISHED 3-2  lastUpdated 2026-08-31T00:40:35Z
+ *
+ * The last row is the finding: in the response that regressed one fixture by
+ * thirteen hours, a second fixture moved *forward*. So the responses are not
+ * two whole snapshots alternating, and "prefer the newer response" would still
+ * have shown a finished match as `A realizar`. The comparison has to be per
+ * fixture, and against the provider's own stamp rather than against a status
+ * ordering of our own invention — `lastUpdated` is what upstream **said**,
+ * where "FINISHED outranks SCHEDULED" is a guess about what it meant, and one
+ * that would pin a genuine correction (a result voided to POSTPONED) forever.
+ *
+ * `incoming` decides which fixtures exist. A record held only in `previous` is
+ * never resurrected: a fixture upstream has genuinely dropped must be able to
+ * disappear, and this function's job is to choose between two copies of one
+ * record, not to defend the shape of the list.
+ *
+ * The memory is persisted by `match-state-store.ts`, so it survives a restart.
+ * What it does not survive is the case `retractsResult` exists for: a
+ * regression upstream stamps *newer* than the record it destroys.
+ */
 export const mergeByFreshness = (
   previous: Match[],
   incoming: Match[],
