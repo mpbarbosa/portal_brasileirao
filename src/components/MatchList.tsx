@@ -4,6 +4,7 @@ import { BroadcasterMark } from "@/src/components/BroadcasterMark";
 import { CLUBS_BY_CODE } from "@/src/data/clubs";
 import { FIXTURE_ROW, FixtureSides } from "@/src/components/FixtureSides";
 import { LINK_UNDERLINE } from "@/src/components/interaction";
+import { isPlainClick } from "@/src/components/plainClick";
 import { StatusChip } from "@/src/components/StatusChip";
 import { Surface } from "@/src/components/Surface";
 import type { Club, ClubCode, Match } from "@/src/types";
@@ -111,12 +112,7 @@ export function MatchList({
               <a
                 href={formatRoute({ section: "partida", id: match.id })}
                 onClick={(event) => {
-                  if (
-                    event.metaKey || event.ctrlKey || event.shiftKey ||
-                    event.altKey || event.button !== 0
-                  ) {
-                    return;
-                  }
+                  if (!isPlainClick(event)) return;
                   event.preventDefault();
                   onSelectMatch(match.id);
                 }}

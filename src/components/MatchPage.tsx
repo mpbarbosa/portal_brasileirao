@@ -17,6 +17,7 @@ import { MatchHighlights } from "@/src/components/MatchHighlights";
 import { MapPinGlyph, WikipediaLink } from "@/src/components/ClubLinks";
 import { clubKey } from "@/club-core";
 import { BACK_LINK, ICON_LINK, STATE_LAYER, LINK_UNDERLINE } from "@/src/components/interaction";
+import { isPlainClick } from "@/src/components/plainClick";
 import { lastRecordedRound } from "@/rank-history-core";
 import type { CampaignPlotKind } from "@/campaign-plot-core";
 import { CampaignPlotToggle } from "@/src/components/CampaignPlotToggle";
@@ -131,7 +132,7 @@ function Side({ club, code, onNavigate }: { club: Club | null; code: string; onN
         <a
           href={formatRoute({ section: "clube", key: clubKey(club) })}
           onClick={(event) => {
-            if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0) return;
+            if (!isPlainClick(event)) return;
             event.preventDefault();
             onNavigate(formatRoute({ section: "clube", key: clubKey(club) }));
           }}
@@ -581,7 +582,7 @@ export function MatchPage({
               <a
                 href={formatRoute({ section: "estadio", key: stadiumSlug(venue.stadium) })}
                 onClick={(event) => {
-                  if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+                  if (!isPlainClick(event)) return;
                   event.preventDefault();
                   onNavigate(formatRoute({ section: "estadio", key: stadiumSlug(venue.stadium) }));
                 }}

@@ -4,6 +4,7 @@ import { BrandMark } from "@/src/components/BrandMark";
 import { Button } from "@/src/components/Button";
 import { MoonIcon, SunIcon } from "@/src/components/SectionIcons";
 import { FOCUS_RING, STATE_LAYER } from "@/src/components/interaction";
+import { isPlainClick } from "@/src/components/plainClick";
 import { NAV_ITEMS, type SectionId } from "@/src/navigation";
 import { useScrolled } from "@/src/useScrolled";
 import { formatRoute, type Route } from "@/route-core";
@@ -27,13 +28,6 @@ interface NavBarProps {
 /** The route a menu entry points at. Sections other than these are drill-downs. */
 const routeFor = (id: SectionId): Route =>
   id === "jogos" ? { section: "jogos", round: null } : ({ section: id } as Route);
-
-/**
- * Entries are real links, so middle-click and "open in new tab" work. Only a
- * plain left-click is intercepted; modified clicks fall through to the browser.
- */
-const isPlainClick = (event: React.MouseEvent) =>
-  !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey && event.button === 0;
 
 /**
  * The destinations on a phone: Material Design 3's navigation bar.

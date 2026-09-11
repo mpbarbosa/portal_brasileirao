@@ -6,6 +6,7 @@ import { Button } from "@/src/components/Button";
 import { ClubCrest } from "@/src/components/ClubCrest";
 import { GLYPH } from "@/src/components/ClubLinks";
 import { FOCUS_RING, STATE_LAYER } from "@/src/components/interaction";
+import { isPlainClick } from "@/src/components/plainClick";
 import { Surface } from "@/src/components/Surface";
 import { clubKey } from "@/club-core";
 import { countdownLabel } from "@/live-core";
@@ -80,18 +81,6 @@ export function FollowButton({
     </Button>
   );
 }
-
-/**
- * A modified click is the browser's, not ours.
- *
- * Middle-click and cmd/ctrl-click open a new tab, and swallowing them is how an
- * `<a href>` comes to behave worse than the plain link it replaced. Shared
- * within this file because the strip now carries two links — the club row and
- * the fixture line — and a second hand-written copy of the four modifier keys
- * is how one of them comes to swallow shift-click.
- */
-const isPlainClick = (event: React.MouseEvent): boolean =>
-  !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey && event.button === 0;
 
 /**
  * The **Próximo jogo do meu time** line inside the strip.

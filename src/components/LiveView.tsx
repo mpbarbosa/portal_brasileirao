@@ -6,6 +6,7 @@ import { hasScore } from "@/matches-core";
 import { BroadcasterMark } from "@/src/components/BroadcasterMark";
 import { ClubCrest } from "@/src/components/ClubCrest";
 import { LINK_UNDERLINE } from "@/src/components/interaction";
+import { isPlainClick } from "@/src/components/plainClick";
 import { MatchList } from "@/src/components/MatchList";
 import { formatRoute } from "@/route-core";
 import { Surface } from "@/src/components/Surface";
@@ -21,10 +22,6 @@ import type { Club, Match } from "@/src/types";
  * only moves the text the page already holds.
  */
 const TICK_MS = 30_000;
-
-/** Only a plain left-click is ours; modified clicks belong to the browser. */
-const isPlainClick = (event: React.MouseEvent) =>
-  !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey && event.button === 0;
 
 /** One club's side of a live scoreboard: crest above the name, centred. */
 function Side({ club, code }: { club: Club | null; code: string }) {
