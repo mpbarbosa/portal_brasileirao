@@ -6,6 +6,7 @@ import {
   clearCookie,
   digestsMatch,
   hashToken,
+  isSameOriginRequest,
   mintToken,
   readCookie,
   RENEW_AFTER_MS,
@@ -130,4 +131,19 @@ test("a malformed cookie header yields null rather than throwing", () => {
 
 test("a cookie name that is a prefix of another is not matched", () => {
   assert.equal(readCookie("__Host-pb_session=wrong", SESSION_COOKIE), null);
+});
+
+test("a state-changing request must come from our own origin", () => {
+  const origin = "https://brasileirao.mpbarbosa.com";
+  assert.equal(isSameOriginRequest(origin, origin), true);
+  // Not every browser sends Origin on a same-origin form post.
+  assert.equal(isSameOriginRequest(undefined, origin), true);
+  assert.equal(isSameOriginRequest("", origin), true);
+
+  assert.equal(isSameOriginRequest("https://evil.example", origin), false);
+  // What a sandboxed frame sends. A string, and not ours.
+  assert.equal(isSameOriginRequest("null", origin), false);
+  // A scheme or a port is part of an origin.
+  assert.equal(isSameOriginRequest("http://brasileirao.mpbarbosa.com", origin), false);
+  assert.equal(isSameOriginRequest(`${origin}:8443`, origin), false);
 });

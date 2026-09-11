@@ -2,6 +2,7 @@ import { useMemo } from "react";
 
 import { clubsOf } from "@/match-core";
 import { countdownLabel, liveBoard } from "@/live-core";
+import { hasScore } from "@/matches-core";
 import { BroadcasterMark } from "@/src/components/BroadcasterMark";
 import { ClubCrest } from "@/src/components/ClubCrest";
 import { LINK_UNDERLINE } from "@/src/components/interaction";
@@ -65,7 +66,7 @@ function LiveMatchCard({
 }) {
   const { home, away } = clubsOf(match, clubs);
   const path = formatRoute({ section: "partida", id: match.id });
-  const played = match.homeGoals !== null && match.awayGoals !== null;
+  const played = hasScore(match);
 
   return (
     <Surface as="li" filled className="p-4" data-live-match={match.id}>

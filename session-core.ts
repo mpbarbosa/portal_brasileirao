@@ -158,3 +158,17 @@ export const readCookie = (header: string | undefined, name: string): string | n
   }
   return null;
 };
+
+/**
+ * Whether a state-changing request came from this app's own pages.
+ *
+ * `SameSite=Lax` already blocks a cross-site POST, so this is the second lock:
+ * it needs no token plumbed through the client and costs one comparison. An
+ * `Origin` that names anything but this site is refused — including the literal
+ * `null` a sandboxed frame sends. An absent header passes, because not every
+ * browser sends one on a same-origin form post; the cookie's `SameSite` is what
+ * covers that case. A token scheme is only worth it if this app ever needs
+ * `SameSite=None`.
+ */
+export const isSameOriginRequest = (originHeader: string | undefined, origin: string): boolean =>
+  !originHeader || originHeader === origin;

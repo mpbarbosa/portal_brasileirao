@@ -2,6 +2,7 @@
  * Pure standings computation. No network, no I/O — matches in, table out — so
  * the ranking rules can be unit-tested directly (tests/standings-core.test.ts).
  */
+import { hasScore } from "@/matches-core";
 import type { Club, ClubCode, Match, StandingsRow } from "@/src/types";
 
 const POINTS_FOR_WIN = 3;
@@ -33,7 +34,7 @@ const emptyTally = (): Tally => ({
 export const countsTowardStandings = (
   match: Match,
 ): match is Match & { homeGoals: number; awayGoals: number } =>
-  match.status === "FINISHED" && match.homeGoals !== null && match.awayGoals !== null;
+  match.status === "FINISHED" && hasScore(match);
 
 const applyResult = (tally: Tally, scored: number, conceded: number): void => {
   tally.played += 1;

@@ -155,6 +155,39 @@ export const parseRoute = (pathname: string): Route => {
   }
 };
 
+/**
+ * Whether a route names something that has to be looked up before its page can
+ * be titled, canonicalised or judged to exist — a club, a fixture, a ground, or
+ * a round the season may not have. The other sections are the same page for
+ * everybody, and the server renders their shell without loading anything.
+ *
+ * A switch with no `default`, deliberately: a new section is a compile error
+ * here until somebody decides, rather than quietly needing no data. The cost of
+ * deciding wrong is not a crash — `pageStatus` reads an absent list as "cannot
+ * prove this is missing" and answers 200 — so it is precisely the mistake
+ * nothing would report.
+ */
+export const namesSubject = (route: Route): boolean => {
+  switch (route.section) {
+    case "clube":
+    case "painel":
+    case "partida":
+    case "estadio":
+      return true;
+    case "jogos":
+      return route.round !== null;
+    case "classificacao":
+    case "ao-vivo":
+    case "artilharia":
+    case "jogadores":
+    case "conta":
+    case "entrar":
+    case "trafego":
+    case "privacidade":
+      return false;
+  }
+};
+
 /** The canonical path for a route. `formatRoute(parseRoute(p))` is stable. */
 export const formatRoute = (route: Route): string => {
   switch (route.section) {

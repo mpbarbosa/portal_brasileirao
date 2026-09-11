@@ -7,6 +7,7 @@ import {
   refereeRoleLabel,
 } from "@/match-core";
 import { goalLabel, goalsBySide, scorerClubCode } from "@/goals-core";
+import { hasScore } from "@/matches-core";
 import { bySection, lineupFor, subShirtLabels } from "@/escalacao-core";
 import { stadiumMapUrl, stadiumSlug, venueName } from "@/venue-core";
 import { STADIUMS } from "@/src/data/stadiums";
@@ -380,7 +381,7 @@ export function MatchPage({
   // fixtures, so that is the common case rather than the edge one.
   const officials = match.referees ?? [];
   const videos = highlights(match);
-  const played = match.homeGoals !== null && match.awayGoals !== null;
+  const played = hasScore(match);
   // Absent means "not synced", never "goalless" — so a 0-0 and an unsynced
   // match both render nothing here, and the scoreline above is what tells a
   // reader which of the two they are looking at.

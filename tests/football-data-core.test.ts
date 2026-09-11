@@ -15,6 +15,7 @@ import {
   mapSquads,
   mapStatus,
   matchesUrl,
+  isPersonId,
   personUrl,
   requireFixtures,
   scorersUrl,
@@ -627,4 +628,14 @@ test("every elenco carries its club's coach, from the one request", () => {
   });
 
   assert.equal(squads[0].club.coach, "Filipe Luís");
+});
+
+test("a person id is digits and nothing else", () => {
+  assert.equal(isPersonId("1609"), true);
+  assert.equal(isPersonId("0"), true);
+
+  // Every one of these would be a request upstream can only answer 404.
+  for (const id of ["", "12a", "-3", "1.5", " 12", "12/../teams", "%31"]) {
+    assert.equal(isPersonId(id), false, JSON.stringify(id));
+  }
 });

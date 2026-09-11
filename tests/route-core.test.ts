@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { formatRoute, HOME, parseRoute, sameRoute, type Route } from "@/route-core";
+import { formatRoute, HOME, namesSubject, parseRoute, sameRoute, type Route } from "@/route-core";
 
 test("the root path is the table", () => {
   assert.deepEqual(parseRoute("/"), HOME);
@@ -137,4 +137,29 @@ test("/trafego parses and formats round-trip", () => {
   // `pageStatus` — the router's job is to land somewhere useful, and the
   // crawler's answer is that module's.
   assert.deepEqual(parseRoute("/trafego/qualquer-coisa"), { section: "trafego" });
+});
+
+test("a route names a subject exactly when its page has to look something up", () => {
+  const subjects: Route[] = [
+    { section: "clube", key: "flamengo" },
+    { section: "painel", key: "flamengo" },
+    { section: "partida", id: "554977" },
+    { section: "estadio", key: "maracana" },
+    { section: "jogos", round: 24 },
+  ];
+  const plain: Route[] = [
+    HOME,
+    { section: "ao-vivo" },
+    // The current round is whatever the data says it is, and cannot be missing.
+    { section: "jogos", round: null },
+    { section: "artilharia" },
+    { section: "jogadores" },
+    { section: "conta" },
+    { section: "entrar" },
+    { section: "trafego" },
+    { section: "privacidade" },
+  ];
+
+  for (const route of subjects) assert.equal(namesSubject(route), true, formatRoute(route));
+  for (const route of plain) assert.equal(namesSubject(route), false, formatRoute(route));
 });

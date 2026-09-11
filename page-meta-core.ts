@@ -9,6 +9,7 @@
  */
 import { findClub, ofClub, ofClubs } from "@/club-core";
 import { findMatch } from "@/match-core";
+import { hasScore } from "@/matches-core";
 import type { Route } from "@/route-core";
 import { capacityLabel, findStadium, stadiumLocation } from "@/venue-core";
 import type { Club, Match, StandingsRow, Stadium } from "@/src/types";
@@ -302,10 +303,7 @@ export const pageMeta = (
       const home = byCode.get(match.homeCode)?.shortName ?? match.homeCode;
       const away = byCode.get(match.awayCode)?.shortName ?? match.awayCode;
 
-      const score =
-        match.homeGoals !== null && match.awayGoals !== null
-          ? ` ${match.homeGoals} x ${match.awayGoals} `
-          : " x ";
+      const score = hasScore(match) ? ` ${match.homeGoals} x ${match.awayGoals} ` : " x ";
 
       return {
         title: suffix(`${home}${score}${away}`.replace(/\s+/g, " ").trim()),

@@ -20,6 +20,24 @@ const STATUS_ORDER: Record<MatchStatus, number> = {
 export const isConcluded = (match: Match): boolean =>
   match.status === "FINISHED" || match.status === "CANCELLED";
 
+/**
+ * Whether a match carries a scoreline: both goal counts reported.
+ *
+ * Tested against `null` and never for truthiness, because `0` is a score — a
+ * 0-0 is exactly the match a truthiness check drops. It says nothing about the
+ * status: a LIVE match carries a partial score, and a SCHEDULED record carries
+ * one when upstream regresses its status, which is what `withPlayedStatus`
+ * repairs. `countsTowardStandings` is this plus FINISHED.
+ *
+ * One predicate because it was written out eight times, three of them in
+ * components, and a copy that tests one side only is how a page comes to print
+ * `2 × null`.
+ */
+export const hasScore = (
+  match: Match,
+): match is Match & { homeGoals: number; awayGoals: number } =>
+  match.homeGoals !== null && match.awayGoals !== null;
+
 /** Chronological within a round; invalid kickoff strings sort last. */
 const kickoffValue = (match: Match): number => {
   const parsed = Date.parse(match.kickoff);
@@ -38,6 +56,20 @@ export const compareForFeed = (a: Match, b: Match): number =>
 
 export const matchesForRound = (matches: Match[], round: number): Match[] =>
   matches.filter((match) => match.round === round).sort(compareByKickoff);
+
+/**
+ * The `?round=` of `/api/matches`: a positive integer, or null for anything
+ * else. The caller decides what an absent parameter means; this only judges one
+ * that was sent.
+ *
+ * Read through `Number`, as the route always has, so `"3"` is round 3 while
+ * `""`, `"0"`, `"-1"`, `"2.5"` and `"abc"` are refused — and so is a repeated
+ * parameter, which Express hands over as an array.
+ */
+export const parseRoundParam = (raw: unknown): number | null => {
+  const round = Number(raw);
+  return Number.isInteger(round) && round >= 1 ? round : null;
+};
 
 export const roundsOf = (matches: Match[]): number[] =>
   [...new Set(matches.map((match) => match.round))].sort((a, b) => a - b);
@@ -271,7 +303,7 @@ export const withKickoffPrecision = (matches: Match[]): Match[] => {
 export const withPlayedStatus = (matches: Match[], now: number): Match[] =>
   matches.map((match) => {
     if (match.status !== "SCHEDULED") return match;
-    if (match.homeGoals === null || match.awayGoals === null) return match;
+    if (!hasScore(match)) return match;
 
     const at = Date.parse(match.kickoff);
     if (Number.isNaN(at) || at >= now) return match;
@@ -280,7 +312,7 @@ export const withPlayedStatus = (matches: Match[], now: number): Match[] =>
   });
 
 const retractsResult = (kept: Match, incoming: Match, now: number): boolean => {
-  if (kept.homeGoals === null || kept.awayGoals === null) return false;
+  if (!hasScore(kept)) return false;
   if (incoming.homeGoals !== null || incoming.awayGoals !== null) return false;
   if (incoming.status !== "SCHEDULED") return false;
 

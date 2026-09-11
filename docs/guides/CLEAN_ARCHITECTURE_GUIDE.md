@@ -129,26 +129,31 @@ route to put between them and the page.
 
 ## Current reality
 
-Read at `7560633`, when this section was last checked against the code.
+Last checked against the code by the change that added `withCuratedData` and `hasScore`.
 
 - **`server.ts` is the composition root and is doing a lot of it.** Routing,
   caching, the circuit breaker, the merge chain and the SPA fallback are all
   there. That is the intended shape; the pressure to watch is a *rule* appearing
   inline in a handler rather than in a core module beside its test.
-- **A few small rules do live only there, with no unit test.** `sameOrigin` —
-  the cross-origin check in front of the four state-changing account routes — is
-  the one that matters; `needsData`, `matchesTtl`, and the `?round=` and player-id
-  validation are the others. Each is a candidate for rule 4.
-- **One correction is applied in the live branch only.** `withPlayedStatus` wraps
-  the merge in `loadMatches` and is absent from `seedMatchesPayload`. Run over the
-  seed it changes no record, at `SNAPSHOT_DATE` or at the current time, so the two
-  answers agree today. That is a property of today's snapshot rather than of the
-  code: the seed is synced from the provider whose incoherent records the function
-  repairs.
-- **The has-a-score test is written inline three times.** `MatchPage`, `LiveView`
-  and `FixtureSides`' `fixtureScore` each compare `homeGoals`/`awayGoals` with
-  null. No core predicate answers exactly that — `countsTowardStandings` also
-  requires FINISHED.
+- **The small rules that used to live only there are in core, each with a unit
+  test.** The cross-origin check in front of the state-changing account routes is
+  `isSameOriginRequest` (`session-core.ts`); which routes load data before their
+  shell renders is `namesSubject` (`route-core.ts`), an exhaustive switch; the
+  fixture TTL reads `hasLiveMatch`, the predicate the client's refresh rate
+  already used; and `/api/matches` and `/api/players/:id` validate through
+  `parseRoundParam` and `isPersonId`. What remains is HTTP plumbing — `decodable`,
+  a `try` around `decodeURIComponent`, and `firstHeaderValue`, which takes the
+  client-most entry of a forwarded chain and is the next candidate for rule 4.
+- **Both branches of `loadMatches` share one curated-merge chain,
+  `withCuratedData`, and the seed is repaired as a live fill is.** The chain used
+  to be written out twice, and `withPlayedStatus` ran in the live branch only;
+  `seedMatches()` now feeds the seed payload and the seed standings alike. The
+  seed held no record the repair changes when this landed, so it closed a latent
+  gap rather than a visible one — `sync-seed-data` copies the provider, which is
+  where such records come from.
+- **`hasScore` in `matches-core.ts` is the one has-a-score test.** It replaced
+  eight identical null checks: three in components, and `countsTowardStandings`,
+  `withGoals`, `pageMeta` and two rules inside `matches-core` itself.
 - **`src/data/*.ts` is imported directly by both server and client.** It is
   committed data with no I/O, so it behaves as an inner layer, but nothing
   enforces that a generated file stays free of logic.
@@ -166,7 +171,8 @@ violation — and `tests/core-purity.test.ts` will say so before a reviewer does
 arguments? If it needs a server booted or a token set, the boundary is wrong.
 
 **Two-branch test.** If the change adds a merge or a correction to a route, does
-it sit inside *both* the live fill and the seed fill?
+it sit inside *both* the live fill and the seed fill? For fixtures the answer is
+structural: a curated merge goes into `withCuratedData`, which both call.
 
 **Naming test.** A file whose name ends in `-core.ts`, wherever it lives, is
 making a promise, and the test holds it to it. `-store.ts` is the name for the
