@@ -1343,6 +1343,7 @@ export const HIGHLIGHTS: Record<string, Highlight[]> = {
   // Corinthians 1 x 2 Chapecoense, rodada 26.
   "554992": [
     { url: "https://www.youtube.com/watch?v=73TuudPw_Wk", channel: "ge tv" },
+    { url: "https://www.youtube.com/watch?v=uvQNLE8O4qY", channel: "CazéTV" },
     { url: "https://www.youtube.com/watch?v=VIu4-IAjnzg", channel: "UOL Esporte" },
   ],
   // Atlético-MG 2 x 1 Vitória, rodada 25.
@@ -1386,5 +1387,10 @@ export const HIGHLIGHTS: Record<string, Highlight[]> = {
   "554987": [
     { url: "https://www.youtube.com/watch?v=gKBVcygj6kQ", channel: "ge tv" },
     { url: "https://www.youtube.com/watch?v=ScFH7-yn65E", channel: "UOL Esporte" },
+  ],
+  // Vitória 1 x 0 Grêmio, rodada 26.
+  "554999": [
+    { url: "https://www.youtube.com/watch?v=EBeO68umuBg", channel: "ge tv" },
+    { url: "https://www.youtube.com/watch?v=pd2Ane_7RJ8", channel: "UOL Esporte" },
   ],
 };

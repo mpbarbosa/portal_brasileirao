@@ -33,7 +33,7 @@ import type { Goal, GoalEntry } from "@/src/types";
  * `GoalKind` just as it checked the old object literal. Nothing outside this
  * file sees a tuple: `GOALS` is `Goal[]` exactly as it always was.
  *
- * Last synced 2026-09-07.
+ * Last synced 2026-09-11.
  */
 const ENTRIES: Record<string, GoalEntry[]> = {
   "554740": [["1769","Lopez","26'"],["1766","Victor Hugo","44'"],["1766","Khellven","73'","own"],["1769","Vitor Roque","82'"]],
@@ -274,6 +274,7 @@ const ENTRIES: Record<string, GoalEntry[]> = {
   "554996": [["6685","Gabriel Barbosa","7'"],["6685","Gabriel Barbosa","28'","penalty"],["6685","Oliva","38'"],["6684","Braian Aguirre","48'"],["6684","Bruno Henrique","90'","penalty"]],
   "554997": [["1783","Samuel Lino","64'"]],
   "554998": [["1776","Luciano","66'"],["1776","Iago","68'"]],
+  "554999": [["1782","Rene","63'"]],
 };
 
 export const GOALS: Record<string, Goal[]> = Object.fromEntries(
