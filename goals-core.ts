@@ -283,6 +283,28 @@ export const encodeGoals = (goals: Goal[]): GoalEntry[] =>
   });
 
 /**
+ * A score CBF's match payload reports, as a number — or **null** where it reports
+ * none.
+ *
+ * The field arrives as a string (`gols: "2"`) and the obvious reading is
+ * `Number()`, which is the trap: `Number(null)` and `Number("")` are both **0**.
+ * A fixture CBF has not scored then reads as 0-0 with no goals listed, and for a
+ * match that really ended 0-0 on our side it passes both of `sync-goals.ts`'
+ * checks — CBF against itself, and CBF against us. The second is the one that
+ * proves the join picked *this* fixture before its team sheet is written, so an
+ * absence read as a zero defeats exactly the gate guarding against a wrong join.
+ *
+ * A whole number is a score, as digits or as a number; anything else is null,
+ * and the sync refuses the match rather than guessing.
+ */
+export const cbfScore = (value: unknown): number | null => {
+  if (typeof value === "number") return Number.isInteger(value) && value >= 0 ? value : null;
+  if (typeof value !== "string") return null;
+  const digits = value.trim();
+  return /^\d+$/.test(digits) ? Number(digits) : null;
+};
+
+/**
  * Attach synced goals to the matches whose own scoreline still agrees with them.
  *
  * **The reconciliation `sync-goals.ts` performs on the way out is repeated here

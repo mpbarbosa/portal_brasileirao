@@ -55,6 +55,7 @@ import {
 } from "@/escalacao-core";
 import { joinMatch, SERIE_A_CATEGORIA_ID, type CbfFixture } from "@/broadcast-core";
 import {
+  cbfScore,
   goalsFromRegistros,
   goalsReconcile,
   isKnownGoalResult,
@@ -424,8 +425,17 @@ for (const { jogo, ourId } of targets) {
   // The first is CBF against itself: do the goals it lists add up to the score
   // it reports? This is what would catch an own goal filed under the club that
   // scored it rather than the club it counts for.
-  const cbfHome = Number(detail.mandante?.gols);
-  const cbfAway = Number(detail.visitante?.gols);
+  //
+  // `cbfScore` and never `Number()`: a null or blank score is 0 to `Number`, and
+  // a 0-0 read out of nothing passes both checks against a real 0-0 of ours.
+  const cbfHome = cbfScore(detail.mandante?.gols);
+  const cbfAway = cbfScore(detail.visitante?.gols);
+  if (cbfHome === null || cbfAway === null) {
+    unreconciled.push(
+      `${label} — CBF reports no score (${JSON.stringify(detail.mandante?.gols)} x ${JSON.stringify(detail.visitante?.gols)})`,
+    );
+    continue;
+  }
   if (!goalsReconcile(scored, ours.homeCode, ours.awayCode, cbfHome, cbfAway)) {
     unreconciled.push(
       `${label} — CBF lists ${scored.length} goal(s) against its own ${cbfHome}x${cbfAway}`,
