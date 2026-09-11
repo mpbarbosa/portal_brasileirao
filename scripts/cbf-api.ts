@@ -184,3 +184,75 @@ export const getJson = async <T>(
 
   throw lastError;
 };
+
+/** One page of CBF's fixture listing. Only the parts the walk reads. */
+interface ListingPage<T> {
+  jogos?: T[];
+  meta?: { last_page?: number | string };
+}
+
+/** More pages than any window a sync asks for; beyond it, narrow the window. */
+export const LISTING_MAX_PAGES = 60;
+
+/**
+ * The pause between two pages. This is someone else's undocumented endpoint, and
+ * walking it back to back is what provoked a 502 in the first place. The two
+ * copies of this walk had drifted to different pauses; the slower one is kept.
+ */
+export const LISTING_PAUSE_MS = 600;
+
+/**
+ * Read every page of a paginated listing, refusing one longer than the cap.
+ *
+ * **A short read is refused rather than returned**, because a first-page-only
+ * read looks identical to a quiet weekend: the fixtures it drops simply show no
+ * channels and no goals. It is refused as soon as the first page states how
+ * many there are, not after fetching the pages the refusal would discard.
+ *
+ * The page reader is a parameter so the walk is testable without CBF
+ * (`tests/cbf-listing.test.ts`); `cbfFixtureListing` is the real one.
+ */
+export const walkListing = async <T>(
+  readPage: (page: number) => Promise<ListingPage<T>>,
+  { maxPages = LISTING_MAX_PAGES, pauseMs = LISTING_PAUSE_MS } = {},
+): Promise<{ jogos: T[]; lastPage: number }> => {
+  const jogos: T[] = [];
+  let lastPage = 1;
+
+  for (let page = 1; ; page += 1) {
+    const body = await readPage(page);
+    jogos.push(...(body.jogos ?? []));
+    lastPage = Number(body.meta?.last_page ?? 1);
+
+    if (lastPage > maxPages) {
+      throw new Error(
+        `CBF reports ${lastPage} pages but the cap is ${maxPages}. ` +
+          "Narrow the date range and run again — a partial read would silently drop fixtures.",
+      );
+    }
+    if (page >= lastPage) break;
+    await sleep(pauseMs);
+  }
+
+  return { jogos, lastPage };
+};
+
+/**
+ * Every fixture CBF lists between two dates, all pages of it. CBF ignores
+ * `per_page` and serves fifteen at a time.
+ *
+ * The listing is keyed by **local** date while our kickoffs are UTC, so a
+ * 00:30Z fixture is listed under the previous day — a window aimed at one
+ * fixture has to allow for that.
+ *
+ * Shared by `sync-broadcasts.ts` and `sync-goals.ts`, which carried a copy of
+ * this walk each until the copies were found pacing differently.
+ */
+export const cbfFixtureListing = <T>(from: string, to: string, agent: https.Agent) =>
+  walkListing<T>((page) =>
+    getJson<ListingPage<T>>(
+      `https://${CBF_HOST}/api/cbf/onde-assistir/jogos` +
+        `?dataInicio=${from}&dataTermino=${to}&page=${page}`,
+      agent,
+    ),
+  );
