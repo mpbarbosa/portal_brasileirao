@@ -101,10 +101,10 @@ const EMBED_REFUSED_CHANNELS = new Set(["cazetv"]);
  * Whether this package can be played **inside** the Partida page, as against
  * opened on YouTube.
  *
- * Slugged through `club-core`'s `slugify` rather than lowercased here: it is
- * the one normaliser in this app, it folds the accent in "CazéTV", and a second
- * spelling of that fold is how a list of channel names comes to miss the
- * channel it names — the rule `venue-core.ts` already reuses it under.
+ * Slugged through `club-core`'s `slugify` rather than lowercased here: it folds
+ * the accent in "CazéTV", and a second spelling of that fold is how a list of
+ * channel names comes to miss the channel it names — the rule `venue-core.ts`
+ * already reuses it under.
  */
 export const playsInPage = (video: Highlight): boolean =>
   !EMBED_REFUSED_CHANNELS.has(slugify(video.channel));
