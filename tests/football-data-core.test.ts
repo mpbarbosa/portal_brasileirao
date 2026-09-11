@@ -18,6 +18,7 @@ import {
   isPersonId,
   personUrl,
   requireFixtures,
+  requireStandings,
   scorersUrl,
   standingsUrl,
   teamsUrl,
@@ -303,6 +304,20 @@ test("derives goal difference when the upstream omits it", () => {
 test("an empty standings payload yields an empty table", () => {
   assert.deepEqual(mapStandings({}), []);
   assert.deepEqual(mapStandings({ standings: [] }), []);
+});
+
+test("a standings payload that names no row is refused, not served as a table", () => {
+  assert.throws(() => requireStandings({}), /nenhuma linha/);
+  assert.throws(() => requireStandings({ standings: [] }), /nenhuma linha/);
+  // A TOTAL group with an empty table is the same answer as no group at all.
+  assert.throws(
+    () => requireStandings({ standings: [{ type: "TOTAL", table: [] }] }),
+    /nenhuma linha/,
+  );
+});
+
+test("a standings payload with rows passes through exactly as mapStandings reads it", () => {
+  assert.deepEqual(requireStandings(STANDINGS), mapStandings(STANDINGS));
 });
 
 test("maps the explicit LIVE status", () => {

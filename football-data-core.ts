@@ -427,6 +427,37 @@ export const mapStandings = (payload: StandingsResponse): StandingsRow[] => {
 };
 
 /**
+ * The overall table, refusing a response that carries no rows.
+ *
+ * `requireFixtures`' rule, one payload over. A 2xx whose table is empty is a
+ * failed response and not a championship without clubs — `computeStandings`
+ * itself emits a zeroed row for every club rather than a blank table — and
+ * cached as live it would put a Classificação with no rows in front of every
+ * reader for a TTL, labelled "football-data". Throwing sends the fill down
+ * `loadCached`'s failure path: the breaker counts it and the reader gets the
+ * table computed from the seed, labelled fallback.
+ *
+ * It was NOT observed. Through the 2026-09-11 incident that emptied the
+ * fixture list, standings kept all twenty rows. It is here because the failure
+ * it names costs a blank table, and costs less than the fixtures case did:
+ * standings carry no held memory, so an empty table would last one TTL rather
+ * than switch a guard off. It refuses only empty, for `requireFixtures`'
+ * reason — no threshold for "too short" has been measured.
+ *
+ * `mapStandings` still returns `[]` for an empty payload, because that is a
+ * faithful reading of it; the refusal is the fill's judgement. And the
+ * artilharia gets no twin: before anybody has scored, an empty scorers list is
+ * a real answer.
+ */
+export const requireStandings = (payload: StandingsResponse): StandingsRow[] => {
+  const rows = mapStandings(payload);
+  if (rows.length === 0) {
+    throw new Error("football-data respondeu sem nenhuma linha na classificação");
+  }
+  return rows;
+};
+
+/**
  * Build the top-scorer table. Upstream returns the list already ordered by
  * goals, so rank comes from position in the response rather than being
  * recomputed — the provider knows how it breaks ties.
