@@ -149,6 +149,23 @@ export const PLAYER_POSTS: Record<string, PlayerPost[]> = {
       summary:
         "Pedro agradece a Jesus num carrossel de fotos com a camisa do Flamengo, publicado um dia depois dos seus dois gols nos 4 a 0 sobre a Chapecoense.",
     },
+    // A mesma chave, e não uma segunda: #549 e #550 abriram cada uma a sua
+    // `"1077"`, e uma chave repetida num objeto literal é um erro do `tsc`
+    // (TS1117) que, no bundle, deixa a segunda apagar a primeira em silêncio.
+    //
+    // Pedro · Flamengo. Opened 2026-09-11: um **reel**, o primeiro deste arquivo,
+    // publicado pela conta dele, `pedroguilherme` — verificada, 8M seguidores, a
+    // mesma de `player-instagram.ts` —, 23 de julho. O vídeo é Pedro ajoelhado,
+    // comemorando sob chuva na Arena Condá, com o placar do estádio em quadro, e o
+    // jogo é o 554922: Chapecoense 0 x 4 Flamengo na noite de 22 de julho em
+    // Brasília, com dois gols dele. A legenda é um versículo e não diz nada disso —
+    // quem diz é o vídeo.
+    {
+      code: "DbHq1mExfG9",
+      account: "pedroguilherme",
+      summary:
+        "Pedro comemora sob chuva na Arena Condá, na goleada de 4 a 0 sobre a Chapecoense em que fez dois gols.",
+    },
   ],
 
   // José Manuel López (Flaco) · Palmeiras. Opened 2026-09-09: `palmeiras`,
@@ -187,22 +204,6 @@ export const PLAYER_POSTS: Record<string, PlayerPost[]> = {
       account: "gabigol",
       summary:
         "Gabigol publica na noite do 3 a 1 do Santos sobre o Vitória, em que marcou o terceiro gol.",
-    },
-  ],
-
-  // Pedro · Flamengo. Opened 2026-09-11: um **reel**, o primeiro deste arquivo,
-  // publicado pela conta dele, `pedroguilherme` — verificada, 8M seguidores, a
-  // mesma de `player-instagram.ts` —, 23 de julho. O vídeo é Pedro ajoelhado,
-  // comemorando sob chuva na Arena Condá, com o placar do estádio em quadro, e o
-  // jogo é o 554922: Chapecoense 0 x 4 Flamengo na noite de 22 de julho em
-  // Brasília, com dois gols dele. A legenda é um versículo e não diz nada disso —
-  // quem diz é o vídeo.
-  "1077": [
-    {
-      code: "DbHq1mExfG9",
-      account: "pedroguilherme",
-      summary:
-        "Pedro comemora sob chuva na Arena Condá, na goleada de 4 a 0 sobre a Chapecoense em que fez dois gols.",
     },
   ],
 };
