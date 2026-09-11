@@ -539,7 +539,10 @@ The name a player is known by where it is not the one the **Elenco** lists —
 "Gabigol" for the listed "Gabriel Barbosa". Printed **beside** the listed name
 and never in its place, in pt-BR double quotes: on its own line under the name on
 the **Card do jogador**, leading the caption under the name in **Jogadores**
-and the **Artilharia**, and after the name in a club page's artilheiros. The **Jogadores** search answers to it too, since it is
+and the **Artilharia**, after the name in a club page's artilheiros, and on its
+own line under the scorer in the **gols** of a **Partida**, where the goal
+resolved to that player's id — inline there it pushed the minute and the "(pên.)"
+out of a 152px column. The **Jogadores** search answers to it too, since it is
 what a reader types. Curated in `src/data/player-nicknames.ts`, keyed by
 **player id**; an entry that restates the listed name is refused by the tests.
 _Avoid_: replacing the listed name with the apelido (the gols and the escalação
