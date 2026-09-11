@@ -24,7 +24,7 @@ import {
   mapPerson,
   mapScorers,
   mapSquads,
-  mapStandings,
+  requireStandings,
   matchesUrl,
   isPersonId,
   personUrl,
@@ -403,7 +403,9 @@ const loadStandings = (): Promise<ApiEnvelope<StandingsRow[]>> =>
     "standings",
     STANDINGS_CACHE_TTL_MS,
     async () => {
-      const rows = mapStandings(await fetchFromProvider<StandingsResponse>(standingsUrl()));
+      // `requireStandings` refuses a 2xx with an empty table rather than
+      // caching a Classificação with no rows as live. See its comment.
+      const rows = requireStandings(await fetchFromProvider<StandingsResponse>(standingsUrl()));
       // Same gap as fixtures: the standings payload has no website either.
       const enriched = withCoachOverrides(
         withClubDetails(

@@ -1446,6 +1446,16 @@ none at all, and scorers' only `lastUpdated` fields sit on the player and team
 identity records (2023, 2022), never on the tally. Any guard there would have to
 be a semantic guess of the kind the first bullet above rejects.
 
+**An empty table is refused anyway, and that is not the guess ruled out above.**
+`requireStandings` is `requireFixtures`' rule one payload over: it reads no
+stamp and ranks nothing, it only declines to cache a Classificação with **no
+rows** as live, and the fill falls back to the table `computeStandings` builds
+from the seed. It was **not** observed — standings kept all twenty rows through
+the 2026-09-11 incident that emptied the fixture list — and it costs less than
+that case would have: standings hold no memory, so the failure it names lasts
+one TTL. **The artilharia gets no twin**, because before anybody has scored an
+empty scorers list is a real answer.
+
 ### API envelope
 
 Every data endpoint returns `ApiEnvelope<T>`: `source`, a human-readable pt-BR `note`, and
