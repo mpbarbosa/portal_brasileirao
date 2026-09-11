@@ -60,6 +60,32 @@ export const personUrl = (id: string): string =>
  */
 export const isPersonId = (id: string): boolean => /^\d+$/.test(id);
 
+/**
+ * A request the provider answered with something other than a 2xx, keeping the
+ * status — which is the whole difference between "the provider is failing" and
+ * "the provider told us this does not exist".
+ */
+export class ProviderStatusError extends Error {
+  constructor(
+    readonly url: string,
+    readonly status: number,
+  ) {
+    super(`${url} respondeu ${status}`);
+    this.name = "ProviderStatusError";
+  }
+}
+
+/**
+ * Whether a failed request was really an answer: a **404**, which football-data
+ * sends for an id nobody issued — measured 2026-09-11, `/v4/persons/99999999`
+ * answered `{"message":"The resource you are looking for does not exist.",
+ * "error":404}`. Only 404. A 403 is a tier this token cannot reach and a 429 is
+ * the budget: both are the provider declining to answer, never answering no, and
+ * counting either as an absence would cache a lie for an hour.
+ */
+export const isNoSuchResource = (cause: unknown): boolean =>
+  cause instanceof ProviderStatusError && cause.status === 404;
+
 /** Upstream defaults to 10 scorers; the table shows more than that. */
 export const SCORERS_LIMIT = 20;
 
