@@ -346,6 +346,17 @@ spec written to the criterion as stated would fail on all of them until somebody
 deleted it. So the spec **names** the set it measures, and the exclusions are
 recorded here rather than left looking like an oversight.
 
+**The club page's link row joined the exclusions on 2026-09-11**, found by
+measuring every page at 320, 360 and 375dp: six external links — site,
+Instagram, subreddit, Discord, hino, Wikipédia — 20px tall in a wrapping row
+with a 2px line gap. A 48dp target there overhangs 14px into the wrapped line
+above and below, so the floor is a re-layout rather than a class, and the row
+is the club's own addresses under its name: content. The same sweep found the
+opposite case beside it. The Completa / Casa / Fora segments above the
+Classificação are a control, measured 85×32, 57×32 and 53×32 with no target —
+their group's `overflow-hidden` would have clipped one anyway — and took
+`TOUCH_TARGET` that day.
+
 Raised to 48dp: the round stepper (was 34×32), its picker (32×61), the theme
 toggle (38×39), `BACK_LINK` (20 tall), the tonal highlights links (36 and 40),
 and the tabs themselves. The floor lives in `controlClasses`, so it arrives at

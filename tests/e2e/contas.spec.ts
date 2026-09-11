@@ -290,6 +290,41 @@ test.describe("Contas", () => {
     expect(avatarFill, "the two states should not share a colour").not.toBe(outFill);
   });
 
+  test("below 375dp the signed-out control gives way to the brand, never its name", async ({
+    page,
+  }) => {
+    // The pill is 97px wide, and below `sm` the brand beside it needs 174px for
+    // its subtitle — so from 363px down the pill and the app's own name cannot
+    // both be whole. Measured on production at `e4bee8a`: at 320 the brand's
+    // two lines ran 30px under the pill. It gives way in two steps and only
+    // where the arithmetic forces it: the glyph leaves from 360 to 374, where
+    // the word alone buys 23px of slack, and below 360 the word leaves the
+    // *screen* as well — the accessible name says "Entrar" at every width.
+    const control = accountControl(page);
+    const glyph = control.locator("svg");
+
+    for (const [width, word, mark] of [
+      [320, false, true],
+      [360, true, false],
+      [375, true, true],
+    ] as const) {
+      await page.setViewportSize({ width, height: 800 });
+      await page.goto("/");
+      await expect(control).toHaveAttribute("data-account", "signed-out");
+      await expect(control, `the name at ${width}px`).toHaveAccessibleName(/^Entrar$/);
+
+      const box = await control.boundingBox();
+      expect(box, `the control should be laid out at ${width}px`).toBeTruthy();
+      if (word) {
+        expect(box!.width, `the word should be on screen at ${width}px`).toBeGreaterThan(56);
+      } else {
+        expect(box!.width, `the control should be a 40dp disc at ${width}px`).toBe(40);
+      }
+      if (mark) await expect(glyph, `the glyph at ${width}px`).toBeVisible();
+      else await expect(glyph, `the glyph at ${width}px`).toBeHidden();
+    }
+  });
+
   test("a name longer than the bar is cut, not allowed to push the page", async ({ page }) => {
     // `normaliseDisplayName` stops a display name at 60 characters, which for a
     // single word renders about 490px — wider than the header's whole content

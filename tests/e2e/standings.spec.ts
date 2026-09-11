@@ -791,18 +791,31 @@ test.describe("Classificação", () => {
     // Proportional rather than a pixel count, because the club names, the
     // crest and the font all legitimately move this number around. The
     // regression it catches is not subtle: it halves this ratio.
-    await page.setViewportSize(NARROW);
+    //
+    // **Measured at 380 alone for as long as it existed**, and 380 is where the
+    // pair is roomiest of the phone widths the guide names: 0.646 there against
+    // **0.781 at 320**, read off production at `e4bee8a`. The pair's content is
+    // a fixed ~223px however narrow the screen, so the ratio only rises as the
+    // viewport falls — the one width this spec skipped was the one that broke.
+    // The state gives way below 360 (`STATE_LABEL`), which is what brings 320
+    // back under the line.
+    for (const width of [320, 360, 375, NARROW.width]) {
+      await page.setViewportSize({ width, height: NARROW.height });
 
-    const geometry = await page.locator("table").evaluate((table) => {
-      const container = table.parentElement as HTMLElement;
-      const headers = [...table.querySelectorAll("thead th")];
-      const frozen = headers
-        .slice(0, 2)
-        .reduce((total, th) => total + th.getBoundingClientRect().width, 0);
-      return { frozen, available: container.clientWidth };
-    });
+      const geometry = await page.locator("table").evaluate((table) => {
+        const container = table.parentElement as HTMLElement;
+        const headers = [...table.querySelectorAll("thead th")];
+        const frozen = headers
+          .slice(0, 2)
+          .reduce((total, th) => total + th.getBoundingClientRect().width, 0);
+        return { frozen, available: container.clientWidth };
+      });
 
-    expect(geometry.frozen / geometry.available).toBeLessThan(0.7);
+      expect(
+        geometry.frozen / geometry.available,
+        `the frozen pair takes ${geometry.frozen.toFixed(0)} of ${geometry.available}px at ${width}px`,
+      ).toBeLessThan(0.7);
+    }
   });
 
   test("no club name wraps to a second line", async ({ page }) => {

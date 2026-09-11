@@ -12,8 +12,11 @@ const goToSection = async (page: Page, label: string) => {
 };
 
 /**
- * Sign in as a named person — the widest the trailing group ever gets, and the
- * state the brand's width has to survive. A copy of `contas.spec.ts`'s helper
+ * Sign in as a named person — the widest the trailing group gets **from `sm`
+ * up**, where the account control carries the reader's name. Below `sm` it is
+ * the other way round: signed in is a 40px avatar and signed out is the Entrar
+ * pill, so a brand spec that only signs in measures the narrow state on a phone.
+ * A copy of `contas.spec.ts`'s helper
  * rather than an import: the two specs are about different things, and this one
  * needs only that the row is full.
  */
@@ -74,7 +77,7 @@ test.describe("Navegação", () => {
     ).toBeHidden();
   });
 
-  test("the brand's phone subtitle is not overrun by the mark beside it", async ({
+  test("the brand's phone lines are not overrun by anything beside them", async ({
     page,
   }) => {
     // **This is the sibling of the spec above, and it is here because that one
@@ -95,36 +98,48 @@ test.describe("Navegação", () => {
     // asserted, because they fail independently: `scrollWidth` catches the
     // text outgrowing its own box, and the gap to the next control catches a
     // block that fits but has been pushed into its neighbour.
+    //
+    // **It measured 375 alone, which is the one phone width it could pass at.**
+    // Signed out the trailing group is the Entrar pill plus the toggle, 145px,
+    // so the brand's lines get `width − 189`: 186px at 375 against a 174px
+    // subtitle, and 131px at 320 against both the subtitle and the 160px title
+    // line. Production at `e4bee8a` painted the two lines 30px under the pill
+    // at 320 and the subtitle 3px past its box at 360, with this spec green. So
+    // it takes the guide's three widths, both lines, and both account states.
     for (const signedIn of [false, true]) {
       if (signedIn) await devLogin(page, "Marcelo");
-      await page.setViewportSize({ width: 375, height: 800 });
-      await page.goto("/");
+      for (const width of [320, 360, 375]) {
+        await page.setViewportSize({ width, height: 800 });
+        await page.goto("/");
 
-      const state = signedIn ? "signed in" : "signed out";
-      const subtitle = page
-        .getByText("Campeonato Brasileiro Série A", { exact: true })
-        .first();
-      await expect(subtitle).toBeVisible();
+        const state = `${signedIn ? "signed in" : "signed out"} at ${width}px`;
+        for (const [name, text] of [
+          ["subtitle", "Campeonato Brasileiro Série A"],
+          ["wordmark", "Portal Brasileirão"],
+        ] as const) {
+          const line = page.getByText(text, { exact: true }).first();
+          await expect(line).toBeVisible();
 
-      const fit = await subtitle.evaluate((el) => {
-        const next = el.closest("[data-brand]")?.nextElementSibling;
-        return {
-          shown: el.clientWidth,
-          full: el.scrollWidth,
-          right: el.getBoundingClientRect().right,
-          nextLeft: next ? next.getBoundingClientRect().left : Infinity,
-        };
-      });
+          const fit = await line.evaluate((el) => {
+            const next = el.closest("[data-brand]")?.nextElementSibling;
+            return {
+              shown: el.clientWidth,
+              full: el.scrollWidth,
+              right: el.getBoundingClientRect().right,
+              nextLeft: next ? next.getBoundingClientRect().left : Infinity,
+            };
+          });
 
-      expect(fit.full, `the subtitle should measure something ${state}`).toBeGreaterThan(0);
-      expect(
-        fit.shown,
-        `the subtitle overflows its own box ${state} at 375px`,
-      ).toBeGreaterThanOrEqual(fit.full);
-      expect(
-        fit.right,
-        `the subtitle runs into the trailing controls ${state} at 375px`,
-      ).toBeLessThanOrEqual(fit.nextLeft);
+          expect(fit.full, `the ${name} should measure something ${state}`).toBeGreaterThan(0);
+          expect(fit.shown, `the ${name} overflows its own box ${state}`).toBeGreaterThanOrEqual(
+            fit.full,
+          );
+          expect(
+            fit.right,
+            `the ${name} runs into the trailing controls ${state}`,
+          ).toBeLessThanOrEqual(fit.nextLeft);
+        }
+      }
     }
   });
 

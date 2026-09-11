@@ -127,14 +127,23 @@ export function AccountButton({ state }: { state: AccountState }) {
     );
   }
 
+  // **Below 375dp this gives way to the brand, in two steps.** Below `sm` the
+  // brand beside it needs 174px for its subtitle, and at 97px this pill leaves
+  // it `width − 189`, so from 363dp down the two cannot both be whole —
+  // measured on production at `e4bee8a`, the brand's two lines ran 30px under
+  // the pill at 320. It yields where the arithmetic forces it and no further,
+  // the nav indicator's `min-[360px]:` precedent: from 360 to 374 the glyph
+  // goes (71px, 23px of slack at 360), and below 360 the word leaves the
+  // screen as well, for a 40dp disc. The word never leaves the accessible name,
+  // and from 375 up nothing about the control changes.
   return (
     <a
       href="/entrar"
       data-account="signed-out"
-      className={`relative inline-flex h-10 items-center gap-1.5 rounded-full bg-primary-container px-4 text-label-large font-semibold text-on-primary-container ${TOUCH_TARGET} ${STATE_LAYER_ON_PRIMARY_CONTAINER}`}
+      className={`relative inline-flex h-10 min-w-10 items-center justify-center gap-1.5 rounded-full bg-primary-container text-label-large font-semibold text-on-primary-container min-[360px]:px-4 ${TOUCH_TARGET} ${STATE_LAYER_ON_PRIMARY_CONTAINER}`}
     >
-      <AccountGlyph className="h-5 w-5" />
-      Entrar
+      <AccountGlyph className="h-5 w-5 min-[360px]:hidden min-[375px]:block" />
+      <span className="sr-only min-[360px]:not-sr-only">Entrar</span>
     </a>
   );
 }

@@ -2173,11 +2173,22 @@ none`, `stroke: currentColor`, width 2), and this mark shares none of that contr
 same geometry stroked is mush — measured at 16, 24 and 28 in both themes.
 
 Below `sm` the brand's widest line is the **subtitle** at 174px against 128px of
-title, and the block gets 202px at 375dp signed out. So a mark placed beside the
-*block* adds its width to the widest line: the subtitle overflowed its box by 3.6px
-and painted under the Entrar pill. Beside the title it costs nothing, because
-24 + 8 + 128 = 160 is still inside the 174 the subtitle already claims; above `sm`
-there is no subtitle and the two arrangements are the same element in the same place.
+title. So a mark placed beside the *block* adds its width to the widest line: the
+subtitle overflowed its box by 3.6px and painted under the Entrar pill. Beside the
+title it costs nothing, because 24 + 8 + 128 = 160 is still inside the 174 the
+subtitle already claims; above `sm` there is no subtitle and the two arrangements
+are the same element in the same place.
+
+**The block's width is `viewport − 189` signed out, and below 363dp that is less
+than the subtitle.** This paragraph said the block got 202px at 375; measured on
+production on 2026-09-11 it was 186, and at 320 it was 131 — so both brand lines
+ran 30px under the Entrar pill there, with every spec green, because the subtitle
+spec measured 375 alone. The signed-out control now gives way where the arithmetic
+forces it, on the nav indicator's `min-[360px]:` breakpoint: no glyph from 360 to
+374, and below 360 a 40dp disc whose word is only its accessible name. From 375 up
+it is unchanged. Note **the widest trailing state flips at `sm`** — signed in
+carries a name above it and is an avatar below — which is why that spec now runs
+both states at 320, 360 and 375.
 
 **The whole suite was green over that, 802 specs, and the spec that should have caught
 it is the one directly above the new one.** "Shows the brand at every width, whole and
@@ -4805,6 +4816,12 @@ enforces rather than early and carved-out.
   passed a `scrollWidth > clientWidth` clip check too, because a wrapped cell is not a
   clipped one. Assert **row height**, which is what `no club name wraps to a second line`
   does; the sibling spec asserts the frozen pair stays under 70% of the container.
+  **It measured that at 380dp only, and 320 was 0.781.** Once `w-0` pins the pair
+  to its content, the content is a fixed ~223px, so its share only rises as the
+  screen narrows — the width a fit spec skips is the one that breaks. Below 360 the
+  state (UF) is hidden and the crest gives up 4px of margin (`STATE_LABEL`,
+  `CREST_GAP`), which brings 320 to 0.687 and changes nothing from 360 up; the spec
+  now measures 320, 360, 375 and 380.
   **Pinning Clube does not end the surplus story — it moves it one column right.**
   Auto layout re-runs the same rule on what is left, and the next widest column is
   Campanha, which holds surplus worse than a tally does: the mark is a fixed 72px and

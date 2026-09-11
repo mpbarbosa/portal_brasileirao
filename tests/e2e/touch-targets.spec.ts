@@ -145,6 +145,55 @@ test.describe("Alvos de toque na barra", () => {
 });
 
 /**
+ * The Completa / Casa / Fora segments above the Classificação.
+ *
+ * A segmented button is a control by any reading — one choice among three, and
+ * it changes the table — and on production at `e4bee8a` its segments measured
+ * **85x32, 57x32 and 53x32** at 320, 360 and 375dp with no target at all: the
+ * one control on the home page under the floor. `TOUCH_TARGET` gives each 48dp
+ * without touching the 32px box, which the first case asserts so a later
+ * "fix" cannot buy the target by growing the control.
+ *
+ * **The group's `overflow-hidden` had to go for that, and it is the trap.** An
+ * overflow clip applies to hit testing as well as to paint, so a target hanging
+ * off a segment inside a clipping container is 32px tall to a thumb whatever its
+ * computed `::before` says. The first case below cannot see that; the press can.
+ */
+test.describe("Alvos de toque no recorte da classificação", () => {
+  const segment = (side: string) => `[data-side-control] [data-side="${side}"]`;
+
+  test("each segment keeps its 32px box and gains the 48dp target", async ({ page }) => {
+    await page.setViewportSize({ width: 375, height: 812 });
+    await page.goto("/");
+    await page.locator("[data-side-control]").waitFor();
+
+    for (const side of ["all", "home", "away"]) {
+      const m = await boxes(page, segment(side));
+      expect(m.box.h, `the ${side} segment changed its visible height`).toBe(32);
+      expect(m.target.h, `${side} target height`).toBeGreaterThanOrEqual(48);
+      expect(m.target.w, `${side} target width`).toBeGreaterThanOrEqual(48);
+    }
+  });
+
+  for (const width of [320, 375]) {
+    test(`a press 4px below a segment still selects it at ${width}px`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 812 });
+      await page.goto("/");
+      const home = page.locator(segment("home"));
+      await expect(home).toHaveAttribute("aria-checked", "false");
+
+      // 4px below the box: inside the 48dp target, outside the 32px segment and
+      // 3px outside the group's own border.
+      const { rect } = await boxes(page, segment("home"));
+      await page.mouse.click(rect.x + rect.w / 2, rect.y + rect.h + 4);
+
+      await expect(home, "a press inside the target but below the box did not select Casa")
+        .toHaveAttribute("aria-checked", "true");
+    });
+  }
+});
+
+/**
  * The channel switcher under **Melhores momentos**, which is the one place in
  * this app where a *content* link is also a control.
  *

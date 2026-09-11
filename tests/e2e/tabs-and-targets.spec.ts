@@ -13,7 +13,9 @@ import { SEED_MATCHES } from "@/src/data/matches";
  * spec asserting "every anchor is 48dp" would fail on all of them and the
  * honest fix would be to delete the spec. So the set is named rather than
  * inferred, and what is *not* in it is written down in `docs/md3-completion-plan.md`
- * under M9 rather than left to look like an oversight.
+ * under M9 rather than left to look like an oversight — the club page's row of
+ * external links included, which is 20px tall in a wrapping row where a 48dp
+ * target would overhang the line above and below.
  *
  * The account control is absent for a different reason: PR #173 is rewriting
  * it, and it measured 36x44. Its floor is that PR's to apply.
