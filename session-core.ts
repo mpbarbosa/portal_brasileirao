@@ -80,6 +80,21 @@ export const hashToken = (token: string): string =>
   createHash("sha256").update(token).digest("hex");
 
 /**
+ * The row a session token is stored as: its digest, never the token itself, and
+ * a life of `SESSION_TTL_MS` from `now`.
+ *
+ * One constructor because a session row is written in two places — a sign-in
+ * starting one and a renewal replacing one — and the renewal building its own
+ * literal is how the two come to disagree about how long a session lives.
+ */
+export const sessionRecord = (token: string, accountId: string, now: number): SessionRecord => ({
+  tokenHash: hashToken(token),
+  accountId,
+  createdAt: now,
+  expiresAt: now + SESSION_TTL_MS,
+});
+
+/**
  * Constant-time comparison of two hex digests.
  *
  * `timingSafeEqual` throws on length mismatch, which would itself leak a fact

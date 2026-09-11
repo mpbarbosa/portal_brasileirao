@@ -185,6 +185,25 @@
  * followers, and a bio reading "Jogador do **@flamengo**" — the club `squads.ts`
  * lists `178710` under — with an invented handle beside it rendering "Profile
  * isn't available". The division lists exactly one Samuel Lino.
+ *
+ * ## The same road, and an item carrying two birth dates
+ *
+ * `lucianoneves10` (`42901`, São Paulo) arrived as a pasted link and took
+ * `osamuellino`'s road: no item carries this `P2003`, so the person was reached
+ * through **`P12302` = `282557`**, what `player-sofascore.ts` records for
+ * `42901`. Item `Q15966749` has a `ptwiki` sitelink of `Luciano da Rocha Neves`,
+ * the title `player-wikipedia.ts` records — and **two** `P569` values,
+ * `1993-05-18` and `1965-10-13`. The first is the date `squads.ts` lists; the
+ * second is somebody else's claim left on the item, and it is recorded here so
+ * the next join on birth date is not surprised by it. The two curated files
+ * agreeing on one item is what settles the row, not the date.
+ *
+ * The handle rests on the profile alone: opened 2026-09-11, `Luciano Neves
+ * (@lucianoneves10)`, verified, 1.4M followers, and a bio naming
+ * **@saopaulofc** — the club `squads.ts` lists `42901` under — with an invented
+ * handle beside it rendering "Profile isn't available". The division lists
+ * exactly one player named `Luciano`; Luciano Juba and Luciano Acosta are other
+ * names, not namesakes.
  */
 export const PLAYER_INSTAGRAM: Record<string, string> = {
   "192070": "kevinviveros9",     // Kevin Viveros · Athletico-PR
@@ -272,6 +291,7 @@ export const PLAYER_INSTAGRAM: Record<string, string> = {
   "8491": "neymarjr",            // Neymar · Santos
   "2295": "tomasrincon8",        // Tomás Rincón · Santos
   "3244": "cedricsoares41",      // Cédric · São Paulo
+  "42901": "lucianoneves10",     // Luciano · São Paulo
   "85523": "marcosantonio",      // Marcos Antônio · São Paulo
   "169542": "pablo_maia02",      // Pablo Maia · São Paulo
   "171304": "nmmoreira_79",      // Nuno Moreira · Vasco da Gama

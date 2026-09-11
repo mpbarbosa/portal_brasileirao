@@ -96,6 +96,39 @@ export const resolveOrigin = (
   return `${protocol === "https" ? "https" : "http"}://${host}`;
 };
 
+/** What `requestOrigin` reads off a request, already pulled out of it. */
+export interface OriginRequest {
+  /** The protocol the connection itself used — `"http"` behind nginx. */
+  protocol: string;
+  /** The `Host` header. */
+  host: string | undefined;
+  /** `X-Forwarded-Proto`, verbatim. */
+  forwardedProto: string | undefined;
+  /** `X-Forwarded-Host`, verbatim. */
+  forwardedHost: string | undefined;
+}
+
+/**
+ * The origin to answer a request with, given whether its proxy is believed.
+ *
+ * `X-Forwarded-Proto` and `X-Forwarded-Host` count only when `trustProxy` is set
+ * — `TRUST_PROXY`, this app's own flag, not Express's — because on a
+ * directly-exposed port they are whatever the client chose to send, and this
+ * origin feeds the canonical tag, the CSRF same-origin check and the OAuth
+ * `redirect_uri`. Believed, the client-most entry of each is read; absent or
+ * blank, the connection's own protocol and `Host` stand. `APP_URL` still wins
+ * over all of it, and the host is still validated: both are `resolveOrigin`'s.
+ */
+export const requestOrigin = (
+  appUrl: string | undefined,
+  trustProxy: boolean,
+  request: OriginRequest,
+): string =>
+  resolveOrigin(appUrl, {
+    protocol: (trustProxy ? firstHeaderValue(request.forwardedProto) : undefined) ?? request.protocol,
+    host: (trustProxy ? firstHeaderValue(request.forwardedHost) : undefined) ?? request.host,
+  });
+
 /**
  * The route rewritten to the form its canonical URL should take.
  *

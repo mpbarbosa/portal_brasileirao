@@ -7,10 +7,10 @@ import path from "node:path";
 import "dotenv/config";
 import express from "express";
 
+import { CircuitBreaker } from "@/circuit-breaker-core";
 import {
-  CircuitBreaker,
-  LIVE_MATCHES_CACHE_TTL_MS,
-  MATCHES_CACHE_TTL_MS,
+  fillStep,
+  matchesCacheTtl,
   PLAYER_CACHE_TTL_MS,
   SCORERS_CACHE_TTL_MS,
   SQUADS_CACHE_TTL_MS,
@@ -40,7 +40,11 @@ import {
   type TeamsResponse,
 } from "@/football-data-core";
 import { withBroadcasters, withVenues } from "@/broadcast-core";
-import { createEnrichmentLoader, ENRICHMENT_BUDGET } from "@/enrichment-core";
+import {
+  createEnrichmentLoader,
+  ENRICHMENT_BUDGET,
+  enrichmentCacheControl,
+} from "@/enrichment-core";
 import { readMatchState, writeMatchState } from "@/match-state-store";
 import { contestedPlayerIds, withGoals } from "@/goals-core";
 import { withLineupNicknames, withLineups } from "@/escalacao-core";
@@ -68,7 +72,6 @@ import {
 } from "@/matches-core";
 import { injectMeta, pageMeta, type MetaContext } from "@/page-meta-core";
 import { decodable, namesSubject, parseRoute } from "@/route-core";
-import { hasLiveMatch } from "@/live-core";
 import { buildTrafficDashboard, selectSnapshotFiles } from "@/traffic-report-core";
 import { buildStadiums } from "@/venue-core";
 import { buildWeatherUrl, parseWeather } from "@/weather-core";
@@ -76,8 +79,7 @@ import { STADIUMS } from "@/src/data/stadiums";
 import {
   canonicalUrl,
   pageStatus,
-  firstHeaderValue,
-  resolveOrigin,
+  requestOrigin,
   robotsTxt,
   sitemapEntries,
   sitemapXml,
@@ -99,9 +101,12 @@ import {
   authorizeUrl,
   challengeFor,
   decodeIdTokenClaims,
+  encodeSignInTransaction,
   GOOGLE_TOKEN_URL,
   newVerifier,
+  readCallback,
   verifyClaims,
+  type SignInTransaction,
 } from "@/oauth-core";
 import {
   clientKey,
@@ -113,7 +118,6 @@ import {
 } from "@/rate-limit-core";
 import {
   clearCookie,
-  digestsMatch,
   hashToken,
   isSameOriginRequest,
   mintToken,
@@ -121,6 +125,7 @@ import {
   serialiseCookie,
   SESSION_COOKIE,
   SESSION_TTL_MS,
+  sessionRecord,
   sessionState,
   shouldRenew,
 } from "@/session-core";
@@ -128,7 +133,7 @@ import { jsonLdScript, structuredData } from "@/structured-data-core";
 import { withPlayerOverrides, withScorerNames, withSquadOverrides } from "@/player-core";
 import { sortSquads } from "@/squad-core";
 import { computeStandings } from "@/standings-core";
-import { numericDayLabel } from "@/events-core";
+import { buildEnvelope, seedSource, snapshotLabelFor } from "@/envelope-core";
 import { CLUBS as SEED_CLUBS } from "@/src/data/clubs";
 import { CLUB_HYMNS } from "@/src/data/club-hymns";
 import { CLUB_INSTAGRAM } from "@/src/data/club-instagram";
@@ -208,19 +213,8 @@ const WEATHER_TIMEOUT_MS = Number(process.env.WEATHER_TIMEOUT_MS ?? 4000);
 
 const providerEnabled = (): boolean => Boolean(FOOTBALL_DATA_TOKEN) && !PROVIDER_DISABLED;
 
-/** The snapshot's day as pt-BR copy writes it. `numericDayLabel` answers null only
- *  for a string that is not a day, which `sync-seed-data` never writes and a unit
- *  test checks for the shipped date; the raw string is the fallback because a
- *  note saying *which* day, badly formatted, beats one saying none. */
-const snapshotLabel = numericDayLabel(SNAPSHOT_DATE) ?? SNAPSHOT_DATE;
-
-const NOTE_LIVE = "Dados do football-data.org (Campeonato Brasileiro Série A).";
-const NOTE_WEATHER = "Condições atuais no estádio, do Open-Meteo.";
-const NOTE_TRAFFIC = "Instantâneos do log de acesso da produção.";
-const NOTE_PLACEHOLDER =
-  `Dados congelados de ${snapshotLabel} — defina FOOTBALL_DATA_TOKEN para dados ao vivo.`;
-const NOTE_FALLBACK =
-  `Dados congelados de ${snapshotLabel} — a fonte ao vivo está indisponível no momento.`;
+/** The frozen seed's day, as the fallback notes print it. See `snapshotLabelFor`. */
+const SNAPSHOT_LABEL = snapshotLabelFor(SNAPSHOT_DATE);
 
 const cache = new TtlCache();
 const breaker = new CircuitBreaker();
@@ -271,34 +265,18 @@ app.use("/api", (_req, res, next) => {
   next();
 });
 
+/** An envelope with this process's snapshot day bound in. The note and the key
+ *  order are `buildEnvelope`'s. */
 const envelope = <T>(
   data: T,
   source: ApiEnvelope<T>["source"],
   updatedAt: number,
-): ApiEnvelope<T> => ({
-  source,
-  note:
-    source === "football-data"
-      ? NOTE_LIVE
-      : source === "open-meteo"
-        ? NOTE_WEATHER
-        : source === "traffic-log"
-          // Named rather than left to fall through to NOTE_FALLBACK, which is
-          // about the provider and would read as an outage on a page that has
-          // never asked the provider anything. The traffic route builds its own
-          // envelope with a count in the note, so this branch is a floor.
-          ? NOTE_TRAFFIC
-          : source === "placeholder"
-            ? NOTE_PLACEHOLDER
-            : NOTE_FALLBACK,
-  updatedAt: new Date(updatedAt).toISOString(),
-  data,
-});
+): ApiEnvelope<T> => buildEnvelope(data, source, updatedAt, SNAPSHOT_LABEL);
 
-/** Seed fixtures, labelled by *why* they are being served: never configured
- *  (`placeholder`) versus configured but currently failing (`fallback`). */
+/** Seed data, labelled by *why* it is being served — `seedSource`'s rule, fed
+ *  this process's configuration. */
 const seedEnvelope = <T>(data: T, now: number): ApiEnvelope<T> =>
-  envelope(data, providerEnabled() ? "fallback" : "placeholder", now);
+  envelope(data, seedSource(providerEnabled()), now);
 
 const fetchFromProvider = async <T>(url: string): Promise<T> => {
   const response = await fetch(url, {
@@ -319,7 +297,7 @@ const fetchFromProvider = async <T>(url: string): Promise<T> => {
 /**
  * Cache-then-network with a breaker in front: a warm entry short-circuits, an
  * open breaker skips the call entirely, and any failure degrades to the seed
- * rather than surfacing a 500.
+ * rather than surfacing a 500. The order is `fillStep`'s; this does the I/O.
  */
 const loadCached = async <T>(
   key: string,
@@ -329,18 +307,13 @@ const loadCached = async <T>(
 ): Promise<ApiEnvelope<T>> => {
   const now = Date.now();
 
-  if (!providerEnabled()) {
-    return seedEnvelope(seed(), now);
-  }
-
-  const hit = cache.read<T>(key, now);
-  if (hit) {
-    return envelope(hit.value, "football-data", hit.storedAt);
-  }
-
-  if (breaker.isOpen(now)) {
-    return seedEnvelope(seed(), now);
-  }
+  const step = fillStep({
+    enabled: providerEnabled(),
+    read: () => cache.read<T>(key, now),
+    breakerOpen: () => breaker.isOpen(now),
+  });
+  if (step.kind === "local") return seedEnvelope(seed(), now);
+  if (step.kind === "cached") return envelope(step.entry.value, "football-data", step.entry.storedAt);
 
   try {
     const value = await fetchValue();
@@ -498,27 +471,18 @@ const rememberMatches = (matches: Match[]): void => {
   }
 };
 
-/** Fixture lists get the short TTL only while something is actually live —
- *  judged by `hasLiveMatch`, the predicate the client's refresh rate reads, so
- *  the server's cache and the page's poll cannot disagree about what live is. */
-const matchesTtl = (matches: Match[]): number =>
-  hasLiveMatch(matches) ? LIVE_MATCHES_CACHE_TTL_MS : MATCHES_CACHE_TTL_MS;
-
+/** `loadCached`'s order — `fillStep` — around a fill that also merges against
+ *  the remembered fixtures, which is why it is not a call to `loadCached`. */
 const loadMatches = async (): Promise<ApiEnvelope<MatchesPayload>> => {
   const now = Date.now();
 
-  if (!providerEnabled()) {
-    return seedEnvelope(seedMatchesPayload(), now);
-  }
-
-  const hit = cache.read<MatchesPayload>("matches", now);
-  if (hit) {
-    return envelope(hit.value, "football-data", hit.storedAt);
-  }
-
-  if (breaker.isOpen(now)) {
-    return seedEnvelope(seedMatchesPayload(), now);
-  }
+  const step = fillStep({
+    enabled: providerEnabled(),
+    read: () => cache.read<MatchesPayload>("matches", now),
+    breakerOpen: () => breaker.isOpen(now),
+  });
+  if (step.kind === "local") return seedEnvelope(seedMatchesPayload(), now);
+  if (step.kind === "cached") return envelope(step.entry.value, "football-data", step.entry.storedAt);
 
   try {
     const raw = await fetchFromProvider<MatchesResponse>(matchesUrl());
@@ -559,7 +523,7 @@ const loadMatches = async (): Promise<ApiEnvelope<MatchesPayload>> => {
     };
 
     breaker.recordSuccess();
-    const entry = cache.write("matches", payload, matchesTtl(matches), Date.now());
+    const entry = cache.write("matches", payload, matchesCacheTtl(matches), Date.now());
     return envelope(entry.value, "football-data", entry.storedAt);
   } catch (cause) {
     breaker.recordFailure(Date.now());
@@ -568,13 +532,14 @@ const loadMatches = async (): Promise<ApiEnvelope<MatchesPayload>> => {
   }
 };
 
-/** The absolute origin to build canonical and sitemap URLs from. */
+/** The absolute origin to build canonical and sitemap URLs from. Which headers
+ *  are believed is `requestOrigin`'s rule; this only reads the request. */
 const originFor = (req: express.Request): string =>
-  resolveOrigin(process.env.APP_URL, {
-    protocol: (TRUST_PROXY ? firstHeaderValue(req.get("x-forwarded-proto")) : undefined)
-      ?? req.protocol,
-    host: (TRUST_PROXY ? firstHeaderValue(req.get("x-forwarded-host")) : undefined)
-      ?? req.get("host"),
+  requestOrigin(process.env.APP_URL, TRUST_PROXY, {
+    protocol: req.protocol,
+    host: req.get("host"),
+    forwardedProto: req.get("x-forwarded-proto"),
+    forwardedHost: req.get("x-forwarded-host"),
   });
 
 /**
@@ -817,12 +782,6 @@ const rateLimited = (req: express.Request, now: number): boolean => {
 const TRANSACTION_COOKIE = "__Host-pb_auth";
 const TRANSACTION_TTL_MS = 10 * 60 * 1000;
 
-interface SignInTransaction {
-  state: string;
-  nonce: string;
-  verifier: string;
-}
-
 /**
  * The session behind a request, or null.
  *
@@ -848,12 +807,7 @@ const currentAccount = (req: express.Request, res: express.Response): Account | 
 
   if (shouldRenew(session, now)) {
     const next = mintToken(randomBytes);
-    accountStore.replaceSession(session.tokenHash, {
-      tokenHash: hashToken(next),
-      accountId: session.accountId,
-      createdAt: now,
-      expiresAt: now + SESSION_TTL_MS,
-    });
+    accountStore.replaceSession(session.tokenHash, sessionRecord(next, session.accountId, now));
     res.append(
       "Set-Cookie",
       serialiseCookie(SESSION_COOKIE, next, { ...cookieOptions, maxAgeMs: SESSION_TTL_MS }),
@@ -868,12 +822,7 @@ const currentAccount = (req: express.Request, res: express.Response): Account | 
 const beginSession = (res: express.Response, accountId: string, now: number): void => {
   if (!accountStore) return;
   const token = mintToken(randomBytes);
-  accountStore.startSession({
-    tokenHash: hashToken(token),
-    accountId,
-    createdAt: now,
-    expiresAt: now + SESSION_TTL_MS,
-  });
+  accountStore.startSession(sessionRecord(token, accountId, now));
   res.append(
     "Set-Cookie",
     serialiseCookie(SESSION_COOKIE, token, { ...cookieOptions, maxAgeMs: SESSION_TTL_MS }),
@@ -940,11 +889,10 @@ app.get("/api/auth/google", (req, res) => {
 
   res.append(
     "Set-Cookie",
-    serialiseCookie(
-      TRANSACTION_COOKIE,
-      Buffer.from(JSON.stringify(transaction)).toString("base64url"),
-      { ...cookieOptions, maxAgeMs: TRANSACTION_TTL_MS },
-    ),
+    serialiseCookie(TRANSACTION_COOKIE, encodeSignInTransaction(transaction), {
+      ...cookieOptions,
+      maxAgeMs: TRANSACTION_TTL_MS,
+    }),
   );
 
   res.redirect(
@@ -977,26 +925,15 @@ app.get("/api/auth/callback", async (req, res) => {
     res.redirect(`/entrar?erro=${encodeURIComponent(reason)}`);
   };
 
-  if (typeof req.query.error === "string") return fail("denied", `provider: ${req.query.error}`);
-
-  const raw = readCookie(req.get("cookie"), TRANSACTION_COOKIE);
-  // The transaction cookie is cleared on every exit, success or not: a state
-  // that has been presented once must never be presentable again.
-  res.append("Set-Cookie", clearCookie(TRANSACTION_COOKIE, cookieOptions));
-
-  if (!raw) return fail("state", "no transaction cookie");
-
-  let transaction: SignInTransaction;
-  try {
-    transaction = JSON.parse(Buffer.from(raw, "base64url").toString("utf8")) as SignInTransaction;
-  } catch {
-    return fail("state", "unreadable transaction cookie");
+  // The refusals and their order are `readCallback`'s, including which exits
+  // spend the transaction cookie: a state that has been presented once must
+  // never be presentable again.
+  const callback = readCallback(req.query, readCookie(req.get("cookie"), TRANSACTION_COOKIE));
+  if (callback.clearsTransaction) {
+    res.append("Set-Cookie", clearCookie(TRANSACTION_COOKIE, cookieOptions));
   }
-
-  const code = req.query.code;
-  const state = req.query.state;
-  if (typeof code !== "string" || typeof state !== "string") return fail("state", "missing code");
-  if (!digestsMatch(state, transaction.state)) return fail("state", "state mismatch");
+  if (!callback.ok) return fail(callback.reason, callback.detail);
+  const { code, transaction } = callback;
 
   let idToken: string;
   try {
@@ -1392,15 +1329,16 @@ app.get("/api/players/:id", async (req, res) => {
       )
     : ({ kind: "unavailable" } as const);
 
+  // What a browser may keep is `enrichmentCacheControl`'s rule: an answer for as
+  // long as the server keeps it, and a non-answer — offline, over budget, or
+  // upstream down — not at all, so the next time this card opens, it asks.
+  res.set("Cache-Control", enrichmentCacheControl(answer, PLAYER_CACHE_TTL_MS));
+
   if (answer.kind === "answered") {
-    res.set("Cache-Control", "public, max-age=3600");
     res.json(envelope(answer.value, "football-data", answer.storedAt));
     return;
   }
 
-  // Not an answer — offline, over budget, or upstream down — so nothing a
-  // browser should keep for an hour: the next time this card opens, it asks.
-  res.set("Cache-Control", "no-store");
   res.json(seedEnvelope(null, Date.now()));
 });
 
@@ -1433,16 +1371,24 @@ app.get("/api/stadium-weather/:slug", async (req, res) => {
 
   const now = Date.now();
   const point = facts.coordinates;
-  if (!point || WEATHER_DISABLED) {
-    res.json(envelope<WeatherSnapshot | null>(null, "fallback", now));
+  const key = `weather:${slug}`;
+  const step = fillStep<WeatherSnapshot | null>({
+    enabled: Boolean(point) && !WEATHER_DISABLED,
+    read: () => cache.read<WeatherSnapshot | null>(key, now),
+    // No breaker: one upstream's outage must not open the other's, and a
+    // fifteen-minute cache already caps what a hard-down Open-Meteo costs.
+    breakerOpen: () => false,
+  });
+
+  if (step.kind === "cached") {
+    res.set("Cache-Control", "public, max-age=300");
+    res.json(envelope(step.entry.value, "open-meteo", step.entry.storedAt));
     return;
   }
-
-  const key = `weather:${slug}`;
-  const hit = cache.read<WeatherSnapshot | null>(key, now);
-  if (hit) {
-    res.set("Cache-Control", "public, max-age=300");
-    res.json(envelope(hit.value, "open-meteo", hit.storedAt));
+  // `!point` is already `local`; it is restated so the compiler knows the fetch
+  // below has a coordinate to ask about.
+  if (step.kind === "local" || !point) {
+    res.json(envelope<WeatherSnapshot | null>(null, "fallback", now));
     return;
   }
 
@@ -1460,8 +1406,7 @@ app.get("/api/stadium-weather/:slug", async (req, res) => {
     res.set("Cache-Control", "public, max-age=300");
     res.json(envelope(snapshot, "open-meteo", now));
   } catch {
-    // No breaker: one upstream's outage must not open the other's, and a
-    // fifteen-minute cache already caps what a hard-down Open-Meteo costs.
+    // No breaker to tell — see `breakerOpen` above.
     res.json(envelope<WeatherSnapshot | null>(null, "fallback", now));
   }
 });

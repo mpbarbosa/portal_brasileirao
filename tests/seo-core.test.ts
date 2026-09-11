@@ -6,6 +6,7 @@ import {
   canonicalUrl,
   firstHeaderValue,
   pageStatus,
+  requestOrigin,
   resolveOrigin,
   robotsTxt,
   sitemapEntries,
@@ -77,6 +78,39 @@ test("an unrecognised protocol degrades to http rather than being echoed", () =>
     resolveOrigin(undefined, { protocol: "javascript", host: "site.test" }),
     "http://site.test",
   );
+});
+
+// Behind nginx the connection is http to an internal host, and the proxy says
+// what the reader actually typed.
+const behindProxy = {
+  protocol: "http",
+  host: "127.0.0.1:3000",
+  forwardedProto: "https, http",
+  forwardedHost: "brasileirao.example, 127.0.0.1:3000",
+};
+
+test("forwarded headers are ignored unless the proxy is trusted", () => {
+  // On a directly-exposed port those headers are the client's to write, and
+  // this origin feeds the canonical tag, the CSRF check and the OAuth redirect.
+  assert.equal(requestOrigin(undefined, false, behindProxy), "http://127.0.0.1:3000");
+});
+
+test("a trusted proxy's client-most entries decide the origin", () => {
+  assert.equal(requestOrigin(undefined, true, behindProxy), "https://brasileirao.example");
+});
+
+test("a trusted proxy that sends nothing leaves the connection's own protocol and Host", () => {
+  const bare = { ...behindProxy, forwardedProto: undefined, forwardedHost: " , x" };
+  assert.equal(requestOrigin(undefined, true, bare), "http://127.0.0.1:3000");
+});
+
+test("APP_URL wins over a trusted proxy too", () => {
+  assert.equal(requestOrigin("https://deployed.example/", true, behindProxy), "https://deployed.example");
+});
+
+test("a trusted forwarded host is still validated before it is used", () => {
+  const forged = { ...behindProxy, forwardedHost: "evil.test/path" };
+  assert.equal(requestOrigin(undefined, true, forged), "");
 });
 
 test("a club published by code canonicalises to its slug", () => {

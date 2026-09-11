@@ -34,7 +34,8 @@
  * Takes `now` as a parameter like `cache-core.ts` and performs no I/O of its own;
  * the request is a function the caller passes in.
  */
-import { CircuitBreaker, TtlCache } from "@/cache-core";
+import { TtlCache } from "@/cache-core";
+import { CircuitBreaker } from "@/circuit-breaker-core";
 import { freshBucket, spend, type Bucket, type BucketPolicy } from "@/rate-limit-core";
 
 /**
@@ -58,6 +59,18 @@ export type EnrichmentAnswer<T> =
   | { kind: "answered"; value: T | null; storedAt: number }
   /** Nobody was asked, or the asking failed. Never cached. */
   | { kind: "unavailable" };
+
+/**
+ * What a browser may do with a lookup's result.
+ *
+ * An answer — `null` included — may be kept as long as the server keeps it.
+ * Anything short of one must not be kept at all: the card renders from what the
+ * page already knew, and a reader refused once — offline, over budget, upstream
+ * down — is not then refused for an hour by their own browser. The max-age is
+ * read off the TTL rather than written beside it, so the two cannot drift.
+ */
+export const enrichmentCacheControl = (answer: EnrichmentAnswer<unknown>, ttlMs: number): string =>
+  answer.kind === "answered" ? `public, max-age=${Math.floor(ttlMs / 1000)}` : "no-store";
 
 export interface EnrichmentLoaderOptions {
   ttlMs: number;
