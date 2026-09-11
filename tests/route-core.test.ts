@@ -1,7 +1,16 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { formatRoute, HOME, namesSubject, parseRoute, sameRoute, type Route } from "@/route-core";
+import {
+  decodable,
+  formatRoute,
+  HOME,
+  namesSubject,
+  parseRoute,
+  pathSegments,
+  sameRoute,
+  type Route,
+} from "@/route-core";
 
 test("the root path is the table", () => {
   assert.deepEqual(parseRoute("/"), HOME);
@@ -162,4 +171,34 @@ test("a route names a subject exactly when its page has to look something up", (
 
   for (const route of subjects) assert.equal(namesSubject(route), true, formatRoute(route));
   for (const route of plain) assert.equal(namesSubject(route), false, formatRoute(route));
+});
+
+const READABLE = ["/", "/clube/flamengo", "/estadio/Maracan%C3%A3", "/clube/%2F", "/jogos/24?x=%20"];
+const MALFORMED = ["/clube/%", "/clube/%E0%A4%A", "/jogos/%zz", "/?q=%", "/%E0%A4/%A4"];
+
+test("a URL is decodable unless an escape in it is malformed", () => {
+  for (const url of READABLE) assert.equal(decodable(url), true, url);
+  for (const url of MALFORMED) assert.equal(decodable(url), false, url);
+});
+
+test("a pathname splits into decoded segments, all or nothing", () => {
+  assert.deepEqual(pathSegments("/estadio/Maracan%C3%A3"), ["estadio", "Maracanã"]);
+  assert.deepEqual(pathSegments("//clube///flamengo/"), ["clube", "flamengo"]);
+  assert.deepEqual(pathSegments("/"), []);
+
+  // One unreadable segment and none are returned: a route read from the rest
+  // would be a different address from the one requested.
+  assert.equal(pathSegments("/clube/%E0%A4%A"), null);
+  assert.equal(pathSegments("/%zz/flamengo"), null);
+});
+
+// The guard in front of the router asks `decodable` about the whole URL while
+// the router and `pageStatus` read `pathSegments`. A literal `/` cannot sit
+// inside an escape, so the two cannot disagree — and if that ever stopped being
+// true, the guard would wave through a path the router then refuses.
+test("the guard and the router agree on what is readable", () => {
+  for (const path of [...READABLE, ...MALFORMED]) {
+    const pathOnly = path.split("?")[0];
+    assert.equal(decodable(pathOnly), pathSegments(pathOnly) !== null, path);
+  }
 });
