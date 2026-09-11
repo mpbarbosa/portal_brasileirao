@@ -125,6 +125,7 @@ import { jsonLdScript, structuredData } from "@/structured-data-core";
 import { withPlayerOverrides, withScorerNames, withSquadOverrides } from "@/player-core";
 import { sortSquads } from "@/squad-core";
 import { computeStandings } from "@/standings-core";
+import { numericDayLabel } from "@/events-core";
 import { CLUBS as SEED_CLUBS } from "@/src/data/clubs";
 import { CLUB_HYMNS } from "@/src/data/club-hymns";
 import { CLUB_INSTAGRAM } from "@/src/data/club-instagram";
@@ -203,8 +204,11 @@ const WEATHER_TIMEOUT_MS = Number(process.env.WEATHER_TIMEOUT_MS ?? 4000);
 
 const providerEnabled = (): boolean => Boolean(FOOTBALL_DATA_TOKEN) && !PROVIDER_DISABLED;
 
-/** ISO snapshot date as dd/mm/aaaa, for pt-BR copy. */
-const snapshotLabel = SNAPSHOT_DATE.split("-").reverse().join("/");
+/** The snapshot's day as pt-BR copy writes it. `numericDayLabel` answers null only
+ *  for a string that is not a day, which `sync-seed-data` never writes and a unit
+ *  test checks for the shipped date; the raw string is the fallback because a
+ *  note saying *which* day, badly formatted, beats one saying none. */
+const snapshotLabel = numericDayLabel(SNAPSHOT_DATE) ?? SNAPSHOT_DATE;
 
 const NOTE_LIVE = "Dados do football-data.org (Campeonato Brasileiro Série A).";
 const NOTE_WEATHER = "Condições atuais no estádio, do Open-Meteo.";

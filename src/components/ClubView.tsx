@@ -16,7 +16,7 @@ import {
   videosFor,
 } from "@/club-core";
 import { formatRoute } from "@/route-core";
-import { pointsPercentageLabel } from "@/standings-core";
+import { goalDifferenceLabel, pointsPercentageLabel } from "@/standings-core";
 import { ClubCrest } from "@/src/components/ClubCrest";
 import { ClubVideos } from "@/src/components/ClubVideos";
 import { SeasonEvents } from "@/src/components/SeasonEvents";
@@ -429,7 +429,7 @@ export function ClubView({
           <StatTile label="Jogos" value={String(row.played)} />
           <StatTile
             label="Saldo"
-            value={row.goalDifference > 0 ? `+${row.goalDifference}` : String(row.goalDifference)}
+            value={goalDifferenceLabel(row.goalDifference)}
           />
           {/* Last of the five, reading left to right as the sentence a reader
               would say: it is where the club sits, what it took, out of how

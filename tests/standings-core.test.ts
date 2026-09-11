@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import {
+  goalDifferenceLabel,
   ZONES,
   compareRows,
   computeStandings,
@@ -282,4 +283,12 @@ test("a split is still ordered by the CBF tie-breakers", () => {
   // CCC and AAA both won at home; CCC's goal difference is larger.
   assert.deepEqual(home.map((row) => row.club.code).slice(0, 2), ["CCC", "AAA"]);
   assert.deepEqual(home.map((row) => row.position), [1, 2, 3]);
+});
+
+test("the saldo carries a sign only when it is positive", () => {
+  assert.equal(goalDifferenceLabel(3), "+3");
+  assert.equal(goalDifferenceLabel(24), "+24");
+  // Zero is neither a gain nor a loss, so `+0` would claim something.
+  assert.equal(goalDifferenceLabel(0), "0");
+  assert.equal(goalDifferenceLabel(-2), "-2");
 });
