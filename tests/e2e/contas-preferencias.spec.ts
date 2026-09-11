@@ -165,6 +165,49 @@ test.describe("Meu time com conta", () => {
     expect(calls).toEqual([]);
   });
 
+  test("a club change uploads once, and its response is read to the end", async ({ page }) => {
+    // Two properties of one request, and each has a failure nothing else sees.
+    //
+    // ONCE: a side effect written inside a `setState` updater runs twice under
+    // StrictMode, which the dev server — and so this suite — runs. The count
+    // is taken in the page, at the `fetch` call, because both calls of a
+    // doubled updater are made in the same flush, before either answers.
+    //
+    // READ TO THE END: the PUT answers the account as JSON, and a body nobody
+    // reads leaves Chromium holding the stream, so the request never reaches
+    // `requestfinished` — `useAccount`'s 404 did exactly that and hung every
+    // `networkidle` capture. A `page.route` stub cannot see it, because
+    // Playwright settles what it fulfils; this is the real server's answer.
+    await page.addInitScript(() => {
+      const original = window.fetch.bind(window);
+      const counted = window as unknown as { preferencePuts: number };
+      counted.preferencePuts = 0;
+      window.fetch = (input, init) => {
+        const url = typeof input === "string" ? input : input instanceof URL ? input.href : input.url;
+        if (url.includes("/api/account/preferences") && init?.method === "PUT") {
+          counted.preferencePuts += 1;
+        }
+        return original(input, init);
+      };
+    });
+
+    await devLogin(page, "sub-one-put");
+    await page.goto("/clube/palmeiras");
+    await expect(page.locator("[data-account]").first()).toHaveAttribute("data-account", "signed-in");
+    await page.evaluate(() => {
+      (window as unknown as { preferencePuts: number }).preferencePuts = 0;
+    });
+
+    const finished = page.waitForEvent(
+      "requestfinished",
+      { predicate: (request) => request.url().includes("/api/account/preferences") && request.method() === "PUT", timeout: 5_000 },
+    );
+    await followControl(page).click();
+    await finished;
+
+    expect(await page.evaluate(() => (window as unknown as { preferencePuts: number }).preferencePuts)).toBe(1);
+  });
+
   test("deleting the account takes the stored club with it", async ({ page }) => {
     await devLogin(page, "sub-delete");
     await page.goto("/clube/palmeiras");

@@ -4,6 +4,7 @@ import { countLabel } from "@/count-core";
 import { controlClasses } from "@/src/components/Button";
 import { BACK_LINK } from "@/src/components/interaction";
 import { Surface } from "@/src/components/Surface";
+import { drainBody } from "@/src/drainBody";
 import {
   botShareLabel,
   chronologicalDays,
@@ -422,7 +423,9 @@ export function TrafficView({ onBack }: { onBack: () => void }) {
   useEffect(() => {
     let cancelled = false;
     fetch("/api/traffic-dashboard")
-      .then((response) => (response.ok ? (response.json() as Promise<Payload>) : null))
+      .then((response) =>
+        response.ok ? (response.json() as Promise<Payload>) : drainBody(response).then(() => null),
+      )
       .then((body) => {
         if (cancelled) return;
         if (body) setPayload(body);

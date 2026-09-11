@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 
 import type { PublicAccount } from "@/account-core";
+import { drainBody } from "@/src/drainBody";
 
 /**
  * Four states, not two, and the extra pair is what keeps the page honest.
@@ -43,9 +44,9 @@ const fetchAccount = async (): Promise<AccountState> => {
    * this hook shipped in. Measured against the deployed site: `response` at
    * 153ms, no `requestfinished` at 20s. With the read, 110ms and finished.
    *
-   * Read rather than `body.cancel()`. Cancelling closes the stream too, but it
-   * lands in devtools as a *failed* request, which is a false lead for whoever
-   * next debugs this page. The payload is one short sentence.
+   * `drainBody` holds the read, and the reason it is a read rather than a
+   * `body.cancel()`. This is the incident that made it a rule for every fetch
+   * in `src/`, not only this one.
    *
    * **The suite cannot catch this and a stub does not either.** The 404 is
    * `refusedWithoutAccounts` refusing an installation with no accounts configured —
@@ -58,7 +59,7 @@ const fetchAccount = async (): Promise<AccountState> => {
    * the measurement above against a build with accounts disabled.
    */
   if (response.status === 404 || !response.ok) {
-    await response.text().catch(() => undefined);
+    await drainBody(response);
     return { status: response.status === 404 ? "disabled" : "signed-out" };
   }
 
@@ -95,11 +96,14 @@ export function useAccount(): {
 
   const refresh = useCallback(() => setNonce((value) => value + 1), []);
 
+  // Both answers are read on every branch: a success is a 204 with nothing in
+  // it, but a refusal (a 401, a 403 on a foreign origin) carries a JSON error.
   const signOut = useCallback(async (everywhere = false) => {
-    await fetch(`/api/auth/logout${everywhere ? "?todos=true" : ""}`, {
+    const response = await fetch(`/api/auth/logout${everywhere ? "?todos=true" : ""}`, {
       method: "POST",
       credentials: "same-origin",
     });
+    await drainBody(response);
     setState({ status: "signed-out" });
   }, []);
 
@@ -108,6 +112,7 @@ export function useAccount(): {
       method: "DELETE",
       credentials: "same-origin",
     });
+    await drainBody(response);
     if (!response.ok) return false;
     setState({ status: "signed-out" });
     return true;

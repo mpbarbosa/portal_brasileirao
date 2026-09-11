@@ -13,6 +13,7 @@ import {
   type LandingId,
   type Preferences,
 } from "@/preferences-core";
+import { drainBody } from "@/src/drainBody";
 import type { ClubCode } from "@/src/types";
 
 /**
@@ -33,14 +34,21 @@ const write = (preferences: Preferences): void => {
 
 /** Send the whole set. Failures are swallowed: the device copy is authoritative
  *  for this session either way, and an error banner over a working page is a
- *  message about the network dressed as a message about the app. */
+ *  message about the network dressed as a message about the app.
+ *
+ *  **The reply is read although nothing uses it.** The route answers the whole
+ *  account as JSON, and left unread Chromium held the request open for good —
+ *  `tests/e2e/contas-preferencias.spec.ts` waits for `requestfinished` on it
+ *  and timed out against the version of this that only caught errors. */
 const upload = (preferences: Preferences): void => {
   void fetch("/api/account/preferences", {
     method: "PUT",
     credentials: "same-origin",
     headers: { "content-type": "application/json" },
     body: serialisePreferences(preferences),
-  }).catch(() => undefined);
+  })
+    .then(drainBody)
+    .catch(() => undefined);
 };
 
 /**
@@ -142,6 +150,13 @@ export function usePreferences(account: {
    *
    * The device copy is written and uploaded from the plan rather than from
    * either input directly, so the two sides end a sign-in agreeing.
+   *
+   * **The plan is computed out here, never inside a `setPreferences` updater.**
+   * An updater must be pure — StrictMode calls it twice in development — and
+   * this one used to `write` and `upload` from inside, as `toggleClub` did:
+   * `tests/e2e/contas-preferencias.spec.ts` counted **two** PUTs for one click
+   * before they moved. Reading `preferences` from the render is safe here,
+   * because this runs in the commit where the account id changed.
    */
   useEffect(() => {
     if (!account.id) {
@@ -149,37 +164,42 @@ export function usePreferences(account: {
       // landing choice, and a page that went on opening somewhere a signed-out
       // reader cannot change is worse than one that simply stops. The club
       // stays: it is the device's, and Phase 0 predates every account here.
+      // A pure updater, so it may stay one.
       setPreferences((current) => (current.landing ? forgetAccountPreferences(current) : current));
       setSyncedAccountId(null);
       return;
     }
     if (!account.preferences) return;
 
-    setPreferences((device) => {
-      const plan = planSync(device, account.preferences!);
-      if (plan.device.club !== device.club) write(plan.device);
-      if (plan.upload) upload(plan.upload);
-      return plan.device;
-    });
+    const plan = planSync(preferences, account.preferences);
+    if (plan.device.club !== preferences.club) write(plan.device);
+    if (plan.upload) upload(plan.upload);
+    setPreferences(plan.device);
     // Set in the same update as the preferences above, which is the whole
     // point of it — see the field's own note.
     setSyncedAccountId(account.id);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // Keyed on the account id alone, deliberately — see above. `preferences`
+    // is read, not listed, and there is no ESLint here to say otherwise:
+    // `tsc --noEmit` is the whole lint gate.
   }, [account.id]);
 
+  // The writes happen beside the update rather than inside it, for the reason
+  // the reconcile above gives. So the callback reads the rendered preferences
+  // and is re-created when they change, which costs nothing: no consumer lists
+  // it as a dependency, and nothing here is memoised on it. Two clicks cannot
+  // read one stale copy, because React flushes a discrete event's update before
+  // the next event is dispatched.
   const toggleClub = useCallback(
     (code: ClubCode) => {
-      setPreferences((current) => {
-        const next = toggleFollow(current, code);
-        write(next);
-        // The device is always written; the account only when there is one.
-        // A guest choosing a club must not be a request to an endpoint that
-        // would answer 401.
-        if (account.id) upload(next);
-        return next;
-      });
+      const next = toggleFollow(preferences, code);
+      write(next);
+      // The device is always written; the account only when there is one.
+      // A guest choosing a club must not be a request to an endpoint that
+      // would answer 401.
+      if (account.id) upload(next);
+      setPreferences(next);
     },
-    [account.id],
+    [account.id, preferences],
   );
 
   const chooseLanding = useCallback(
@@ -192,15 +212,14 @@ export function usePreferences(account: {
       // next load with no error to explain why.
       if (!account.id) return;
 
-      setPreferences((current) => {
-        const next = setLanding(current, landing);
-        // No device write: this key is the account's. `write` would drop it
-        // anyway, and calling it here would read as though it did not.
-        upload(next);
-        return next;
-      });
+      // Outside the updater, for `toggleClub`'s reason.
+      const next = setLanding(preferences, landing);
+      // No device write: this key is the account's. `write` would drop it
+      // anyway, and calling it here would read as though it did not.
+      upload(next);
+      setPreferences(next);
     },
-    [account.id],
+    [account.id, preferences],
   );
 
   const forgetEverything = useCallback(() => {
