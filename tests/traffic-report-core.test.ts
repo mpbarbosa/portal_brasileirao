@@ -1,7 +1,12 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { buildTrafficDashboard, parseSummary } from "@/traffic-report-core";
+import {
+  buildTrafficDashboard,
+  MAX_SNAPSHOTS,
+  parseSummary,
+  selectSnapshotFiles,
+} from "@/traffic-report-core";
 
 /**
  * A summary in the shape `shell_scripts/12_traffic_report.sh` writes. Taken
@@ -466,4 +471,64 @@ test("one unreadable file among readable ones is skipped, not fatal", () => {
   );
   assert.equal(built.data.snapshotCount, 1);
   assert.equal(built.data.latest?.file, "good.txt");
+});
+
+test("the dashboard reads snapshot files only, oldest first", () => {
+  assert.deepEqual(
+    selectSnapshotFiles([
+      "summary-20260901-100000.txt",
+      "README.md",
+      // A copy somebody left beside the real one, and a hidden editor file.
+      "summary-20260901-100000.txt.bak",
+      ".summary-20260901-080000.txt",
+      "summary-20260901-090000.txt",
+    ]),
+    ["summary-20260901-090000.txt", "summary-20260901-100000.txt"],
+  );
+});
+
+test("the stamp in the name sorts chronologically across a day, a month and a year", () => {
+  assert.deepEqual(
+    selectSnapshotFiles([
+      "summary-20270101-000000.txt",
+      "summary-20260930-235959.txt",
+      "summary-20261231-235959.txt",
+      "summary-20261001-000000.txt",
+    ]),
+    [
+      "summary-20260930-235959.txt",
+      "summary-20261001-000000.txt",
+      "summary-20261231-235959.txt",
+      "summary-20270101-000000.txt",
+    ],
+  );
+});
+
+test("past the bound, the newest snapshots are kept and the oldest dropped", () => {
+  const hours = Array.from({ length: 5 }, (_, hour) => `summary-20260901-0${hour}0000.txt`).reverse();
+  assert.deepEqual(selectSnapshotFiles(hours, 3), [
+    "summary-20260901-020000.txt",
+    "summary-20260901-030000.txt",
+    "summary-20260901-040000.txt",
+  ]);
+
+  // The default is a month of hourly runs, and it is what an unpruned
+  // directory is cut down to.
+  assert.equal(MAX_SNAPSHOTS, 30 * 24);
+  const unpruned = Array.from({ length: 800 }, (_, index) => `summary-${String(index).padStart(4, "0")}.txt`);
+  const kept = selectSnapshotFiles(unpruned);
+  assert.equal(kept.length, MAX_SNAPSHOTS);
+  assert.equal(kept[kept.length - 1], "summary-0799.txt");
+});
+
+test("a bound of zero or less reads nothing, never everything", () => {
+  const names = ["summary-20260901-090000.txt", "summary-20260901-100000.txt"];
+  assert.deepEqual(selectSnapshotFiles(names, 0), []);
+  assert.deepEqual(selectSnapshotFiles(names, -1), []);
+});
+
+test("choosing snapshots does not reorder the caller's list", () => {
+  const names = ["summary-20260901-100000.txt", "summary-20260901-090000.txt"];
+  selectSnapshotFiles(names);
+  assert.deepEqual(names, ["summary-20260901-100000.txt", "summary-20260901-090000.txt"]);
 });

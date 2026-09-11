@@ -244,6 +244,37 @@ const project = (snap: ParsedSnapshot): TrafficSnapshot => {
   };
 };
 
+/** A snapshot file as `12_traffic_report.sh` names it: `summary-<stamp>.txt`. */
+const SNAPSHOT_FILE = /^summary-.*\.txt$/;
+
+/**
+ * The most snapshots the dashboard reads: a month of hourly runs.
+ *
+ * Past this the timeline is longer than anybody reads and the read is longer
+ * than anybody should wait. `13_install_traffic_timer.sh` also prunes the
+ * directory to about a month; this is the bound that still holds on a host
+ * where that pruning never ran.
+ */
+export const MAX_SNAPSHOTS = 720;
+
+/**
+ * Which files in the reports directory the dashboard reads, oldest first: the
+ * newest `max` snapshots, and nothing that is not a snapshot.
+ *
+ * **The order is the file NAME's, and it is chronological only because of how
+ * the host writes it.** The stamp is `date +%Y%m%d-%H%M%S` — fixed width and
+ * zero-padded — so a lexical sort is a chronological one across a day, a month
+ * and a year alike. Change that format and this quietly keeps the wrong month.
+ * `buildTrafficDashboard` re-sorts by each summary's own `Generated` instant
+ * regardless, so the name decides *which* files are read and never the order
+ * the timeline is drawn in.
+ *
+ * A bound of zero or less reads nothing. `slice(-0)` is `slice(0)` — the whole
+ * list — which is precisely the read this bound exists to prevent.
+ */
+export const selectSnapshotFiles = (names: string[], max: number = MAX_SNAPSHOTS): string[] =>
+  max <= 0 ? [] : names.filter((name) => SNAPSHOT_FILE.test(name)).sort().slice(-max);
+
 /**
  * Build the `/api/traffic-dashboard` payload from every summary the caller
  * read: a cross-snapshot timeline plus the latest snapshot.

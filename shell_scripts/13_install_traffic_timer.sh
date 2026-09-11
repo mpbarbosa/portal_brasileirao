@@ -30,10 +30,12 @@
 # two snapshots, and two snapshots a minute apart divide a small difference by a
 # small interval and mostly measure rounding.
 #
-# The pruning is not housekeeping either. `/api/traffic-dashboard` reads **every**
-# summary in the directory on a cache miss, so an unbounded directory is an
-# unbounded read on the request path — a year of hourly snapshots is ~8,700
-# files. Keeping a month bounds that, and the timeline is still a month long.
+# The pruning is not housekeeping either. `/api/traffic-dashboard` lists the
+# whole directory on a cache miss and reads the newest month of it —
+# `selectSnapshotFiles` in traffic-report-core.ts caps the read at 720 files —
+# so an unpruned directory is still an unbounded listing and unbounded disk: a
+# year of hourly snapshots is ~8,700 files. Keeping a month bounds both, and the
+# timeline is still a month long.
 #
 # ── The report needs to read a root-owned log ────────────────────────────────
 #
