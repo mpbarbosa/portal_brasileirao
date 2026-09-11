@@ -6,12 +6,14 @@ import {
   clubTimeline,
   dayLabel,
   eventSpan,
+  numericDayLabel,
   scopeLabel,
   sourceHost,
   touchesClub,
 } from "@/events-core";
 import { CLUBS } from "@/src/data/clubs";
 import { SEASON_EVENTS } from "@/src/data/events";
+import { SNAPSHOT_DATE } from "@/src/data/matches";
 import type { SeasonEvent } from "@/src/types";
 
 const geral = (id: string, date: string, endDate?: string): SeasonEvent => ({
@@ -264,4 +266,20 @@ test("every entry's source names a host", () => {
   for (const event of SEASON_EVENTS) {
     assert.ok(sourceHost(event.source), `${event.id}'s source does not parse`);
   }
+});
+
+test("a day reads as dd/mm/aaaa inside a sentence", () => {
+  assert.equal(numericDayLabel("2026-09-07"), "07/09/2026");
+  assert.equal(numericDayLabel("2026-01-31"), "31/01/2026");
+
+  for (const day of ["", "2026-9-7", "07/09/2026", "2026-09-07T00:00:00Z", "2026-13-01", "2026-00-10"]) {
+    assert.equal(numericDayLabel(day), null, JSON.stringify(day));
+  }
+});
+
+// `server.ts` falls back to the raw string when this answers null, so a
+// snapshot date the label refused would reach the page looking like a label.
+// This is what keeps that fallback unreachable for the data actually shipped.
+test("the snapshot the frozen-data note names is a day it can label", () => {
+  assert.match(numericDayLabel(SNAPSHOT_DATE) ?? "", /^\d{2}\/\d{2}\/\d{4}$/);
 });

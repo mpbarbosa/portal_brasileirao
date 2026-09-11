@@ -251,6 +251,20 @@ export const computeStandings = (
 };
 
 /**
+ * The saldo as the table prints it: `+3`, `0`, `-2`.
+ *
+ * A positive balance carries its sign because the column is read for direction
+ * as much as for size, and `3` beside `-2` reads as two magnitudes rather than a
+ * gain and a loss. Zero takes no sign — it is neither — and a negative already
+ * carries its own.
+ *
+ * One function because the Classificação and the club page each wrote it out,
+ * and a second copy is how one of them comes to print `+0`.
+ */
+export const goalDifferenceLabel = (goalDifference: number): string =>
+  goalDifference > 0 ? `+${goalDifference}` : String(goalDifference);
+
+/**
  * **Aproveitamento** — the share of the points a club could have taken that it
  * actually took, `pontos / (jogos × 3)`, as a percentage.
  *

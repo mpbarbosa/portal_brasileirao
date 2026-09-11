@@ -151,7 +151,9 @@ Last checked against the code by the change that added `withCuratedData` and `ha
   being served.) And which traffic snapshots the dashboard reads — the
   `summary-*.txt` filter, the name order and the month-long cap — is
   `selectSnapshotFiles` in `traffic-report-core.ts`; `readTrafficReports` only
-  lists the directory and reads what it is told.
+  lists the directory and reads what it is told. The frozen-data note's date is
+  `numericDayLabel` in `events-core.ts`, beside the app's other Brazil-local day
+  labels.
 - **Moving `firstHeaderValue` found a bypass in the sign-in rate limiter.** The
   limiter keyed its bucket on the same client-most entry of `X-Forwarded-For`,
   and nginx's `$proxy_add_x_forwarded_for` appends the address it saw to whatever
@@ -168,7 +170,9 @@ Last checked against the code by the change that added `withCuratedData` and `ha
   where such records come from.
 - **`hasScore` in `matches-core.ts` is the one has-a-score test.** It replaced
   eight identical null checks: three in components, and `countsTowardStandings`,
-  `withGoals`, `pageMeta` and two rules inside `matches-core` itself.
+  `withGoals`, `pageMeta` and two rules inside `matches-core` itself. The saldo's
+  sign, which the Classificação and the club page each wrote out, is
+  `goalDifferenceLabel` in `standings-core.ts`.
 - **`src/data/*.ts` is imported directly by both server and client.** It is
   committed data with no I/O, so it behaves as an inner layer, but nothing
   enforces that a generated file stays free of logic.

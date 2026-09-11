@@ -17,7 +17,7 @@ import {
 } from "@/rank-history-core";
 import { RankSparkline } from "@/src/components/RankSparkline";
 import { formatRoute } from "@/route-core";
-import { ZONES, type ZoneId, pointsPercentageLabel, zoneAt } from "@/standings-core";
+import { ZONES, type ZoneId, goalDifferenceLabel, pointsPercentageLabel, zoneAt } from "@/standings-core";
 import { computeStandings, type StandingsSide } from "@/standings-core";
 import { StandingsSideControl } from "@/src/components/StandingsSideControl";
 import { markColumnLabel, markToggleLabel } from "@/standings-mark-core";
@@ -691,7 +691,7 @@ export function StandingsTable({
                 <td className={`${ROW_LINE} px-2 py-2 text-right tabular-nums text-ink-muted`}>{row.draws}</td>
                 <td className={`${ROW_LINE} px-2 py-2 text-right tabular-nums text-ink-muted`}>{row.losses}</td>
                 <td className={`${ROW_LINE} px-2 py-2 text-right tabular-nums text-ink-muted`}>
-                  {row.goalDifference > 0 ? `+${row.goalDifference}` : row.goalDifference}
+                  {goalDifferenceLabel(row.goalDifference)}
                 </td>
                 {/* An em dash rather than `0%` before a club has played: taking
                     nothing from five matches is 0% and having played none is an

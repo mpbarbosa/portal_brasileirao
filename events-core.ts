@@ -111,6 +111,25 @@ export const clubTimeline = (events: SeasonEvent[], clubCode: ClubCode): SeasonE
 export const scopeLabel = (event: SeasonEvent): string | null =>
   event.scope === "geral" ? "Todo o Brasileirão" : null;
 
+/**
+ * `"2026-09-07"` → `"07/09/2026"`: a day as pt-BR writes it inside a sentence.
+ *
+ * Built from the string's own digits and never through `Date`, for the reason
+ * this module states at its head — `new Date("2026-09-07")` is midnight UTC, and
+ * formatting it west of Greenwich prints the 6th. Null for anything not shaped
+ * as a day, or naming a month no calendar has, exactly as `dayLabel` judges it;
+ * neither checks the day of the month.
+ *
+ * The caller is the server's frozen-data note, which names the day
+ * `sync-seed-data` took the snapshot on.
+ */
+export const numericDayLabel = (day: string): string | null => {
+  const parts = DAY.exec(day);
+  if (!parts) return null;
+  if (!MONTHS[Number(parts[2]) - 1]) return null;
+  return `${parts[3]}/${parts[2]}/${parts[1]}`;
+};
+
 /** `"2026-03-15"` → `"15 de março de 2026"`. Null for anything not a day. */
 export const dayLabel = (day: string): string | null => {
   const parts = DAY.exec(day);
