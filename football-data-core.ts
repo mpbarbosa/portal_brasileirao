@@ -228,7 +228,15 @@ export interface TeamsResponse {
 /**
  * football-data's status vocabulary is wider than the app's. TIMED (kickoff
  * time confirmed) and SCHEDULED (date only) are the same thing to a reader, and
- * PAUSED is half-time — still a live match.
+ * PAUSED is half-time — still a live match. EXTRA_TIME and PENALTY_SHOOTOUT are
+ * live too: a match being decided is a match being played.
+ *
+ * **Every status the v4 lookup table documents is mapped** — eleven, read off
+ * `docs.football-data.org/general/v4/lookup_tables.html` on 2026-09-11 — and
+ * `tests/football-data-core.test.ts` pins that list. The two extra-time statuses
+ * were missing for as long as this adapter has existed, and nothing noticed
+ * because a league never produces them; a cup would, the day one is read.
+ * `LIVE` is not in that table (it is a query filter) and stays mapped regardless.
  */
 const STATUS_MAP: Record<string, MatchStatus> = {
   SCHEDULED: "SCHEDULED",
@@ -236,6 +244,8 @@ const STATUS_MAP: Record<string, MatchStatus> = {
   LIVE: "LIVE",
   IN_PLAY: "LIVE",
   PAUSED: "LIVE",
+  EXTRA_TIME: "LIVE",
+  PENALTY_SHOOTOUT: "LIVE",
   FINISHED: "FINISHED",
   AWARDED: "FINISHED",
   POSTPONED: "POSTPONED",
@@ -243,9 +253,30 @@ const STATUS_MAP: Record<string, MatchStatus> = {
   CANCELLED: "CANCELLED",
 };
 
-/** Unknown statuses degrade to SCHEDULED rather than dropping the fixture. */
+/** Whether football-data's status is one this adapter maps, rather than one it falls back on. */
+export const isKnownStatus = (raw: string | undefined): boolean =>
+  raw !== undefined && Object.hasOwn(STATUS_MAP, raw);
+
+/**
+ * The app's status for football-data's, degrading an unknown one to SCHEDULED.
+ *
+ * **SCHEDULED rather than dropping the fixture, and that direction was chosen
+ * for its cost.** A dropped fixture is a hole in every list it belonged to — the
+ * round, the club's season, the stadium — with nothing to say why. Filed as
+ * SCHEDULED it still renders where it belongs, and the worst reading is "A
+ * realizar" beside a match that has moved on, which a reader can see is stale.
+ *
+ * **The fallback is not harmless for a match in progress, which is why the
+ * documented vocabulary is mapped in full rather than left to it.**
+ * `withPlayedStatus` repairs a SCHEDULED record carrying a score for a kickoff
+ * already past into FINISHED, so an unmapped status on a match being played,
+ * partial score and all, would be counted as a result by the offline table.
+ *
+ * `Object.hasOwn`, not a bare index: `STATUS_MAP["constructor"]` is `Object`'s
+ * constructor, truthy, and was returned as the status.
+ */
 export const mapStatus = (raw: string | undefined): MatchStatus =>
-  (raw && STATUS_MAP[raw]) || "SCHEDULED";
+  isKnownStatus(raw) ? STATUS_MAP[raw as string] : "SCHEDULED";
 
 const isNumber = (value: unknown): value is number =>
   typeof value === "number" && Number.isFinite(value);
