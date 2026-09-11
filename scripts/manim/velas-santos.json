@@ -1,5 +1,5 @@
 {
-  "snapshot": "2026-09-07",
+  "snapshot": "2026-09-11",
   "club": {
     "code": "6685",
     "name": "Santos",
@@ -478,14 +478,14 @@
     {
       "round": 26,
       "open": 14,
-      "close": 12,
+      "close": 13,
       "best": 12,
       "worst": 14,
       "points": 3,
       "totalPoints": 32,
       "played": 25,
       "result": "V",
-      "moved": 2,
+      "moved": 1,
       "match": {
         "opponent": "Internacional",
         "home": false,

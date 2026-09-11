@@ -14,7 +14,7 @@ Texto que acompanha [`velas-clube-do-remo.mp4`](velas-clube-do-remo.mp4)
   própria cena — a regra que o `scripts/manim/README.md` registra para as velas.
 
 > **Os números aqui saem de `scripts/manim/velas-clube-do-remo.json`, rodada 26,
-> snapshot de 2026-09-07** — 19º com 23 pts, 5V 8E 13D, e a oscilação entre
+> snapshot de 2026-09-11** — 19º com 23 pts, 5V 8E 13D, e a oscilação entre
 > o 15º e o 20º, que é a faixa que o painel do vídeo imprime. Eles **envelhecem**: um `sync-seed-data` seguido de uma
 > reexportação move o vídeo, e este arquivo não é regerado por nada. Reconferir
 > antes de publicar, contra o JSON e não contra esta página.
@@ -63,7 +63,7 @@ busca, e não é como o clube aparece no vídeo nem na tabela.
 ```
 A campanha do Clube do Remo rodada a rodada, desenhada como vela: o corpo vai da posição em que o clube ABRIU a rodada até onde ele FECHOU, e o pavio cobre a melhor e a pior posição que ele ocupou enquanto a rodada era jogada. Embaixo, no mesmo eixo, os pontos acumulados — a barra é o total e a tampa clara é o que a rodada acrescentou.
 
-Dados até 07/09/2026 (26ª rodada):
+Dados até 11/09/2026 (26ª rodada):
 • Clube do Remo — 19º, 23 pts em 26 jogos
 • 5V · 8E · 13D — 30 gols pró, 43 contra, saldo -13
 • 29% de aproveitamento · oscilou entre o 15º e o 20º

@@ -15,7 +15,7 @@ Texto que acompanha [`velas-corinthians.mp4`](velas-corinthians.mp4)
 - **Cortes verticais:** `velas-corinthians-45.mp4` (1080×1350, feed do Instagram) e `velas-corinthians-916.mp4` (1080×1920, Reels e YouTube Short).
 
 > **Os números aqui saem de `scripts/manim/velas-corinthians.json`, rodada 26,
-> snapshot de 2026-09-07** — 11º com 32 pts, 8V 8E 10D, e a oscilação entre
+> snapshot de 2026-09-11** — 12º com 32 pts, 8V 8E 10D, e a oscilação entre
 > o 3º e o 19º, que é a faixa que o painel do vídeo imprime. Eles **envelhecem**: um `sync-seed-data` seguido de uma
 > reexportação move o vídeo, e este arquivo não é regerado por nada. Reconferir
 > antes de publicar, contra o JSON e não contra esta página.
@@ -64,8 +64,8 @@ busca, e não é como o clube aparece no vídeo nem na tabela.
 ```
 A campanha do Corinthians rodada a rodada, desenhada como vela: o corpo vai da posição em que o clube ABRIU a rodada até onde ele FECHOU, e o pavio cobre a melhor e a pior posição que ele ocupou enquanto a rodada era jogada. Embaixo, no mesmo eixo, os pontos acumulados — a barra é o total e a tampa clara é o que a rodada acrescentou.
 
-Dados até 07/09/2026 (26ª rodada):
-• Corinthians — 11º, 32 pts em 26 jogos
+Dados até 11/09/2026 (26ª rodada):
+• Corinthians — 12º, 32 pts em 26 jogos
 • 8V · 8E · 10D — 27 gols pró, 27 contra, saldo +0
 • 41% de aproveitamento · oscilou entre o 3º e o 19º
 

@@ -12,7 +12,7 @@ Texto que acompanha [`campanhas-palmeiras-flamengo.mp4`](campanhas-palmeiras-fla
   um com 10s. Um vídeo de 23s não comporta.
 
 > **Os números aqui saem de `scripts/manim/campanhas.json`, rodada 26, snapshot
-> de 2026-09-07** — 1º com 54 pts e 2º com 53. Eles **envelhecem**: um
+> de 2026-09-11** — 1º com 54 pts e 2º com 53. Eles **envelhecem**: um
 > `sync-seed-data` seguido de `sync-rank-history` e uma reexportação movem o
 > vídeo e as capas, e este arquivo não é regerado por nada. Reconferir antes de
 > publicar, contra o JSON e não contra esta página.
@@ -45,7 +45,7 @@ imprensa esportiva grafa confrontos.
 ```
 Palmeiras × Flamengo: a campanha rodada a rodada do Brasileirão Série A, desenhada como linha sobre a divisão inteira — 1º no topo, 20º embaixo, com as faixas do G4 e do Z4 ao fundo. A cada rodada, o card ao lado mostra o jogo que moveu a linha: adversário, mando e placar.
 
-Dados até 07/09/2026 (26ª rodada):
+Dados até 11/09/2026 (26ª rodada):
 • Flamengo — 1º, 54 pts, 16V 6E 4D
 • Palmeiras — 2º, 53 pts, 15V 8E 3D
 

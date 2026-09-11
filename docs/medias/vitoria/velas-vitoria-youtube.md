@@ -15,7 +15,7 @@ Texto que acompanha [`velas-vitoria.mp4`](velas-vitoria.mp4)
 - **Cortes verticais:** `velas-vitoria-45.mp4` (1080×1350, feed do Instagram) e `velas-vitoria-916.mp4` (1080×1920, Reels e YouTube Short).
 
 > **Os números aqui saem de `scripts/manim/velas-vitoria.json`, rodada 26,
-> snapshot de 2026-09-07** — 14º com 29 pts, 8V 5E 12D, e a oscilação entre
+> snapshot de 2026-09-11** — 11º com 32 pts, 9V 5E 12D, e a oscilação entre
 > o 1º e o 16º, que é a faixa que o painel do vídeo imprime. Eles **envelhecem**: um `sync-seed-data` seguido de uma
 > reexportação move o vídeo, e este arquivo não é regerado por nada. Reconferir
 > antes de publicar, contra o JSON e não contra esta página.
@@ -45,7 +45,7 @@ Texto que acompanha [`velas-vitoria.mp4`](velas-vitoria.mp4)
 Recomendado (58 caracteres):
 
 ```
-Vitória em velas: 12 derrotas em 25 jogos até a 26ª rodada
+Vitória em velas: 12 derrotas em 26 jogos até a 26ª rodada
 ```
 
 O número que define a campanha; o terceiro maior da divisão — e **data o recorte**, que é a única defesa contra
@@ -54,7 +54,7 @@ alguém assistir daqui a três meses e achar que os números estão errados.
 | | título | caracteres | ângulo |
 |---|---|---|---|
 | 2 | `A campanha do Vitória rodada a rodada \| Brasileirão 2026 em candlestick` | 71 | genérico e buscável |
-| 3 | `Vitória: 29 pontos, 8V 5E 12D e saldo -13` | 41 | o número duro |
+| 3 | `Vitória: 32 pontos, 9V 5E 12D e saldo -12` | 41 | o número duro |
 
 **Os apelidos não estão em nenhum deles, e estão nas tags**: é como o torcedor
 busca, e não é como o clube aparece no vídeo nem na tabela.
@@ -64,12 +64,12 @@ busca, e não é como o clube aparece no vídeo nem na tabela.
 ```
 A campanha do Vitória rodada a rodada, desenhada como vela: o corpo vai da posição em que o clube ABRIU a rodada até onde ele FECHOU, e o pavio cobre a melhor e a pior posição que ele ocupou enquanto a rodada era jogada. Embaixo, no mesmo eixo, os pontos acumulados — a barra é o total e a tampa clara é o que a rodada acrescentou.
 
-Dados até 07/09/2026 (26ª rodada):
-• Vitória — 14º, 29 pts em 25 jogos
-• 8V · 5E · 12D — 24 gols pró, 37 contra, saldo -13
-• 39% de aproveitamento · oscilou entre o 1º e o 16º
+Dados até 11/09/2026 (26ª rodada):
+• Vitória — 11º, 32 pts em 26 jogos
+• 9V · 5E · 12D — 25 gols pró, 37 contra, saldo -12
+• 41% de aproveitamento · oscilou entre o 1º e o 16º
 
-O Vitória é a terceira campanha mais derrotada da Série A: 12 em 25 jogos, e a maior sequência sem perder tem 3 rodadas. No desenho isso é uma densidade de corpos vermelhos que nenhum outro clube do meio da tabela tem.
+O Vitória é a terceira campanha mais derrotada da Série A, empatada com Mirassol e Vasco da Gama: 12 em 26 jogos, e a maior sequência sem perder tem 3 rodadas. No desenho isso é uma densidade de corpos vermelhos que nenhum outro clube do meio da tabela tem.
 
 A queda acontece cedo e depois a campanha se estabiliza fechando entre o 8º e o 15º, longe do topo e ainda fora do Z4. O painel diz 1º e 16º, contando as posições ocupadas dentro das rodadas.
 
@@ -96,7 +96,7 @@ carregar o vídeo sozinha.
 Para Short, ou onde a descrição longa não couber.
 
 ```
-A campanha do Vitória em velas: o corpo vai da posição de abertura à de fechamento da rodada, o pavio mostra até onde o clube subiu e desceu dentro dela, e a barra de baixo são os pontos. A régua tracejada marca a parada para a Copa. 12 derrotas e uma invencibilidade máxima de 3 rodadas. Dados até a 26ª: 29 pts, 8V 5E 12D, saldo -13.
+A campanha do Vitória em velas: o corpo vai da posição de abertura à de fechamento da rodada, o pavio mostra até onde o clube subiu e desceu dentro dela, e a barra de baixo são os pontos. A régua tracejada marca a parada para a Copa. 12 derrotas e uma invencibilidade máxima de 3 rodadas. Dados até a 26ª: 32 pts, 9V 5E 12D, saldo -12.
 
 Animação em Manim, dados do Portal Brasileirão: https://brasileirao.mpbarbosa.com
 Código: https://github.com/mpbarbosa/portal_brasileirao

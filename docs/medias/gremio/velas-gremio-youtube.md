@@ -15,7 +15,7 @@ Texto que acompanha [`velas-gremio.mp4`](velas-gremio.mp4)
 - **Cortes verticais:** `velas-gremio-45.mp4` (1080×1350, feed do Instagram) e `velas-gremio-916.mp4` (1080×1920, Reels e YouTube Short).
 
 > **Os números aqui saem de `scripts/manim/velas-gremio.json`, rodada 26,
-> snapshot de 2026-09-07** — 15º com 28 pts, 7V 7E 10D, e a oscilação entre
+> snapshot de 2026-09-11** — 15º com 28 pts, 7V 7E 11D, e a oscilação entre
 > o 7º e o 17º, que é a faixa que o painel do vídeo imprime. Eles **envelhecem**: um `sync-seed-data` seguido de uma
 > reexportação move o vídeo, e este arquivo não é regerado por nada. Reconferir
 > antes de publicar, contra o JSON e não contra esta página.
@@ -42,10 +42,10 @@ Texto que acompanha [`velas-gremio.mp4`](velas-gremio.mp4)
 
 ## Título
 
-Recomendado (62 caracteres):
+Recomendado (61 caracteres):
 
 ```
-Grêmio em velas: 28 pontos em 24 jogos, com partidas em atraso
+Grêmio em velas: 28 pontos em 25 jogos, com partida em atraso
 ```
 
 O denominador, que é o que engana nesta campanha — e **data o recorte**, que é a única defesa contra
@@ -64,14 +64,14 @@ busca, e não é como o clube aparece no vídeo nem na tabela.
 ```
 A campanha do Grêmio rodada a rodada, desenhada como vela: o corpo vai da posição em que o clube ABRIU a rodada até onde ele FECHOU, e o pavio cobre a melhor e a pior posição que ele ocupou enquanto a rodada era jogada. Embaixo, no mesmo eixo, os pontos acumulados — a barra é o total e a tampa clara é o que a rodada acrescentou.
 
-Dados até 07/09/2026 (26ª rodada):
-• Grêmio — 15º, 28 pts em 24 jogos
-• 7V · 7E · 10D — 27 gols pró, 32 contra, saldo -5
-• 39% de aproveitamento · oscilou entre o 7º e o 17º
+Dados até 11/09/2026 (26ª rodada):
+• Grêmio — 15º, 28 pts em 25 jogos
+• 7V · 7E · 11D — 27 gols pró, 33 contra, saldo -6
+• 37% de aproveitamento · oscilou entre o 7º e o 17º
 
-O Grêmio é o clube com menos jogos do recorte: 24 contra 26 rodadas. Isso muda como o vídeo se lê — a barra de pontos embaixo tem degraus que ainda não vieram, e comparar o total com quem já jogou tudo é uma leitura torta. É a mesma armadilha que o painel do fecho evita ao dizer sempre 'em 24 jogos'.
+O Grêmio tem jogo em atraso: 25 jogos contra 26 rodadas, como outros sete clubes da Série A. Isso muda como o vídeo se lê — a barra de pontos embaixo tem um degrau que ainda não veio, e comparar o total com quem já jogou tudo é uma leitura torta. É a mesma armadilha que o painel do fecho evita ao dizer sempre 'em 25 jogos'.
 
-A campanha fecha entre o 8º e o 17º, com 10 derrotas e 4 rodadas de invencibilidade na maior sequência.
+A campanha fecha entre o 8º e o 17º, com 11 derrotas e 4 rodadas de invencibilidade na maior sequência.
 
 A régua tracejada que cruza o desenho é o acontecimento de fora de campo que tocou os vinte clubes: a paralisação para a Copa do Mundo depois da 18ª rodada. Ela cai na FRONTEIRA entre duas rodadas em vez de sobre uma, porque é isso que ela separa — o que veio antes dela e o que veio depois. Aqui o clube parou em 16º com 21 pts.
 
@@ -96,7 +96,7 @@ carregar o vídeo sozinha.
 Para Short, ou onde a descrição longa não couber.
 
 ```
-A campanha do Grêmio em velas: o corpo vai da posição de abertura à de fechamento da rodada, o pavio mostra até onde o clube subiu e desceu dentro dela, e a barra de baixo são os pontos. A régua tracejada marca a parada para a Copa. 24 jogos contra 26 rodadas: o clube com mais partidas em atraso. Dados até a 26ª: 28 pts, 7V 7E 10D, saldo -5.
+A campanha do Grêmio em velas: o corpo vai da posição de abertura à de fechamento da rodada, o pavio mostra até onde o clube subiu e desceu dentro dela, e a barra de baixo são os pontos. A régua tracejada marca a parada para a Copa. 25 jogos contra 26 rodadas: há partida em atraso. Dados até a 26ª: 28 pts, 7V 7E 11D, saldo -6.
 
 Animação em Manim, dados do Portal Brasileirão: https://brasileirao.mpbarbosa.com
 Código: https://github.com/mpbarbosa/portal_brasileirao

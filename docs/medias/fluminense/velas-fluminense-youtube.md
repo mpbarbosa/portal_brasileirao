@@ -15,7 +15,7 @@ Texto que acompanha [`velas-fluminense.mp4`](velas-fluminense.mp4)
 - **Cortes verticais:** `velas-fluminense-45.mp4` (1080×1350, feed do Instagram) e `velas-fluminense-916.mp4` (1080×1920, Reels e YouTube Short).
 
 > **Os números aqui saem de `scripts/manim/velas-fluminense.json`, rodada 26,
-> snapshot de 2026-09-07** — 4º com 45 pts, 12V 9E 5D, e a oscilação entre
+> snapshot de 2026-09-11** — 4º com 45 pts, 12V 9E 5D, e a oscilação entre
 > o 2º e o 12º, que é a faixa que o painel do vídeo imprime. Eles **envelhecem**: um `sync-seed-data` seguido de uma
 > reexportação move o vídeo, e este arquivo não é regerado por nada. Reconferir
 > antes de publicar, contra o JSON e não contra esta página.
@@ -64,7 +64,7 @@ busca, e não é como o clube aparece no vídeo nem na tabela.
 ```
 A campanha do Fluminense rodada a rodada, desenhada como vela: o corpo vai da posição em que o clube ABRIU a rodada até onde ele FECHOU, e o pavio cobre a melhor e a pior posição que ele ocupou enquanto a rodada era jogada. Embaixo, no mesmo eixo, os pontos acumulados — a barra é o total e a tampa clara é o que a rodada acrescentou.
 
-Dados até 07/09/2026 (26ª rodada):
+Dados até 11/09/2026 (26ª rodada):
 • Fluminense — 4º, 45 pts em 26 jogos
 • 12V · 9E · 5D — 40 gols pró, 32 contra, saldo +8
 • 58% de aproveitamento · oscilou entre o 2º e o 12º

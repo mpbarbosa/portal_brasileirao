@@ -1,5 +1,5 @@
 {
-  "snapshot": "2026-09-07",
+  "snapshot": "2026-09-11",
   "club": {
     "code": "1767",
     "name": "Grêmio",
@@ -481,12 +481,18 @@
       "close": 15,
       "best": 15,
       "worst": 15,
-      "points": null,
+      "points": 0,
       "totalPoints": 28,
-      "played": 24,
-      "result": null,
+      "played": 25,
+      "result": "D",
       "moved": 0,
-      "match": null
+      "match": {
+        "opponent": "Vitória",
+        "home": false,
+        "goalsFor": 0,
+        "goalsAgainst": 1,
+        "result": "D"
+      }
     }
   ],
   "events": [

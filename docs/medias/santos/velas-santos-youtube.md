@@ -15,7 +15,7 @@ Texto que acompanha [`velas-santos.mp4`](velas-santos.mp4)
 - **Cortes verticais:** `velas-santos-45.mp4` (1080×1350, feed do Instagram) e `velas-santos-916.mp4` (1080×1920, Reels e YouTube Short).
 
 > **Os números aqui saem de `scripts/manim/velas-santos.json`, rodada 26,
-> snapshot de 2026-09-07** — 12º com 32 pts, 8V 8E 9D, e a oscilação entre
+> snapshot de 2026-09-11** — 13º com 32 pts, 8V 8E 9D, e a oscilação entre
 > o 12º e o 20º, que é a faixa que o painel do vídeo imprime. Eles **envelhecem**: um `sync-seed-data` seguido de uma
 > reexportação move o vídeo, e este arquivo não é regerado por nada. Reconferir
 > antes de publicar, contra o JSON e não contra esta página.
@@ -28,7 +28,7 @@ Texto que acompanha [`velas-santos.mp4`](velas-santos.mp4)
 > duas diferem para 15 dos 20 clubes. O painel conta as posições ocupadas
 > enquanto a rodada era jogada — o pavio —, então ele é sempre igual ou mais
 > largo que o intervalo entre o melhor e o pior FECHAMENTO. Este clube fecha
-> entre o 12º e o 18º e o painel diz 12º e 20º.
+> entre o 13º e o 18º e o painel diz 12º e 20º.
 >
 > **O saldo e o aproveitamento vêm do `computeStandings`**, a mesma função que
 > monta a tabela do site, e não somados à mão a partir do JSON.
@@ -45,7 +45,7 @@ Texto que acompanha [`velas-santos.mp4`](velas-santos.mp4)
 Recomendado (69 caracteres):
 
 ```
-Santos em velas: 12º ao 18º em 26 rodadas, uma campanha sem movimento
+Santos em velas: 13º ao 18º em 26 rodadas, uma campanha sem movimento
 ```
 
 A amplitude medida, sem superlativo que não se sustente — e **data o recorte**, que é a única defesa contra
@@ -64,12 +64,12 @@ busca, e não é como o clube aparece no vídeo nem na tabela.
 ```
 A campanha do Santos rodada a rodada, desenhada como vela: o corpo vai da posição em que o clube ABRIU a rodada até onde ele FECHOU, e o pavio cobre a melhor e a pior posição que ele ocupou enquanto a rodada era jogada. Embaixo, no mesmo eixo, os pontos acumulados — a barra é o total e a tampa clara é o que a rodada acrescentou.
 
-Dados até 07/09/2026 (26ª rodada):
-• Santos — 12º, 32 pts em 25 jogos
+Dados até 11/09/2026 (26ª rodada):
+• Santos — 13º, 32 pts em 25 jogos
 • 8V · 8E · 9D — 37 gols pró, 38 contra, saldo -1
 • 43% de aproveitamento · oscilou entre o 12º e o 20º
 
-O Santos não subiu nem caiu: 26 rodadas fechadas entre o 12º e o 18º, uma das faixas mais estreitas da divisão — só o Fluminense, o Clube do Remo e o Bahia fecham em menos. O desenho é uma faixa horizontal de corpos curtos no meio do quadro.
+O Santos não subiu nem caiu: 26 rodadas fechadas entre o 13º e o 18º, uma das faixas mais estreitas da divisão — só o Fluminense e o Clube do Remo fecham numa faixa menor, e a do Bahia tem o mesmo tamanho. O desenho é uma faixa horizontal de corpos curtos no meio do quadro.
 
 O painel diz 12º e 20º porque o pavio desce mais fundo do que qualquer fechamento. São 9 derrotas em 25 jogos, e há jogo em atraso: 25 contra 26 rodadas.
 
@@ -96,7 +96,7 @@ carregar o vídeo sozinha.
 Para Short, ou onde a descrição longa não couber.
 
 ```
-A campanha do Santos em velas: o corpo vai da posição de abertura à de fechamento da rodada, o pavio mostra até onde o clube subiu e desceu dentro dela, e a barra de baixo são os pontos. As réguas tracejadas marcam a saída de Juan Pablo Vojvoda e a parada para a Copa. Fechou 26 rodadas inteiras entre o 12º e o 18º. Dados até a 26ª: 32 pts, 8V 8E 9D, saldo -1.
+A campanha do Santos em velas: o corpo vai da posição de abertura à de fechamento da rodada, o pavio mostra até onde o clube subiu e desceu dentro dela, e a barra de baixo são os pontos. As réguas tracejadas marcam a saída de Juan Pablo Vojvoda e a parada para a Copa. Fechou 26 rodadas inteiras entre o 13º e o 18º. Dados até a 26ª: 32 pts, 8V 8E 9D, saldo -1.
 
 Animação em Manim, dados do Portal Brasileirão: https://brasileirao.mpbarbosa.com
 Código: https://github.com/mpbarbosa/portal_brasileirao

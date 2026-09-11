@@ -15,7 +15,7 @@ Texto que acompanha [`velas-bahia.mp4`](velas-bahia.mp4)
 - **Cortes verticais:** `velas-bahia-45.mp4` (1080×1350, feed do Instagram) e `velas-bahia-916.mp4` (1080×1920, Reels e YouTube Short).
 
 > **Os números aqui saem de `scripts/manim/velas-bahia.json`, rodada 26,
-> snapshot de 2026-09-07** — 5º com 43 pts, 11V 10E 5D, e a oscilação entre
+> snapshot de 2026-09-11** — 5º com 43 pts, 11V 10E 5D, e a oscilação entre
 > o 1º e o 8º, que é a faixa que o painel do vídeo imprime. Eles **envelhecem**: um `sync-seed-data` seguido de uma
 > reexportação move o vídeo, e este arquivo não é regerado por nada. Reconferir
 > antes de publicar, contra o JSON e não contra esta página.
@@ -64,7 +64,7 @@ busca, e não é como o clube aparece no vídeo nem na tabela.
 ```
 A campanha do Bahia rodada a rodada, desenhada como vela: o corpo vai da posição em que o clube ABRIU a rodada até onde ele FECHOU, e o pavio cobre a melhor e a pior posição que ele ocupou enquanto a rodada era jogada. Embaixo, no mesmo eixo, os pontos acumulados — a barra é o total e a tampa clara é o que a rodada acrescentou.
 
-Dados até 07/09/2026 (26ª rodada):
+Dados até 11/09/2026 (26ª rodada):
 • Bahia — 5º, 43 pts em 26 jogos
 • 11V · 10E · 5D — 40 gols pró, 32 contra, saldo +8
 • 55% de aproveitamento · oscilou entre o 1º e o 8º
