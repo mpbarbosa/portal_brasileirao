@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import {
+  assessCbfGoals,
   cbfScore,
   contestedPlayerIds,
   decodeGoals,
@@ -266,6 +267,58 @@ test("cbfScore reads a score CBF reports, and null where it reports none", () =>
   assert.equal(cbfScore("2 x 1"), null);
   assert.equal(cbfScore(-1), null);
   assert.equal(cbfScore(Number.NaN), null);
+});
+
+// ---------------------------------------------------------------------------
+// The sequence sync-goals.ts refuses through
+// ---------------------------------------------------------------------------
+
+const OURS_1_0 = { homeGoals: 1, awayGoals: 0 };
+
+test("assessCbfGoals records goals that add up and match our score", () => {
+  const verdict = assessCbfGoals([registro()], { home: "1", away: "0" }, SIDES, OURS_1_0);
+  assert.equal(verdict.ok, true);
+  assert.deepEqual(verdict.ok && verdict.goals.map((goal) => [goal.clubCode, goal.scorer]), [["1769", "Lopez"]]);
+});
+
+test("assessCbfGoals refuses an unknown resultado before anything else", () => {
+  // Checked first because an unknown code might be an own goal — and it wins over a
+  // missing score, which would otherwise be the reason reported.
+  const verdict = assessCbfGoals([registro({ resultado: "XX" })], { home: null, away: null }, SIDES, OURS_1_0);
+  assert.deepEqual(verdict, { ok: false, reason: 'unknown resultado "XX"', unknownCodes: ["XX"] });
+});
+
+test("assessCbfGoals refuses a match CBF has not scored", () => {
+  const verdict = assessCbfGoals([], { home: null, away: "" }, SIDES, { homeGoals: 0, awayGoals: 0 });
+  assert.deepEqual(verdict, { ok: false, reason: 'CBF reports no score (null x "")', unknownCodes: [] });
+});
+
+test("assessCbfGoals refuses goals that do not add up to CBF's own score", () => {
+  const verdict = assessCbfGoals([registro()], { home: "2", away: "0" }, SIDES, { homeGoals: 2, awayGoals: 0 });
+  assert.deepEqual(verdict, { ok: false, reason: "CBF lists 1 goal(s) against its own 2x0", unknownCodes: [] });
+});
+
+test("assessCbfGoals refuses a score that is not ours — the join picked another fixture", () => {
+  const verdict = assessCbfGoals([registro()], { home: "1", away: "0" }, SIDES, { homeGoals: 2, awayGoals: 0 });
+  assert.deepEqual(verdict, { ok: false, reason: "CBF says 1x0, we have 2x0", unknownCodes: [] });
+});
+
+test("assessCbfGoals credits an own goal to the side it counts for", () => {
+  // Filed by CBF under the away player who scored it; it counts for the home side.
+  const verdict = assessCbfGoals(
+    [registro({ resultado: "CT", clube_id: "60646", atleta_apelido: "Camutanga" })],
+    { home: "1", away: "0" },
+    SIDES,
+    OURS_1_0,
+  );
+  assert.equal(verdict.ok, true);
+  assert.deepEqual(verdict.ok && verdict.goals.map((goal) => [goal.clubCode, goal.kind]), [["1769", "own"]]);
+});
+
+test("assessCbfGoals records a real 0-0 with no goals, and ignores cards", () => {
+  const card = registro({ tipo: "CA", resultado: "AMARELO" });
+  const verdict = assessCbfGoals([card], { home: "0", away: "0" }, SIDES, { homeGoals: 0, awayGoals: 0 });
+  assert.deepEqual(verdict, { ok: true, goals: [] });
 });
 
 test("withGoals attaches only where there are goals", () => {
