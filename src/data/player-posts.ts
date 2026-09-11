@@ -134,6 +134,23 @@ export const PLAYER_POSTS: Record<string, PlayerPost[]> = {
     },
   ],
 
+  // Pedro · Flamengo. Opened 2026-09-11: `pedroguilherme`, verificada, 7,7M
+  // seguidores — o mesmo handle de `player-instagram.ts`, e, como no do Carlos
+  // Vinícius mais abaixo, quem publica é o próprio jogador. Um carrossel de 23
+  // de julho, com ele de camisa do Flamengo apontando para o céu e uma legenda
+  // de agradecimento a Jesus; saiu no dia seguinte a Chapecoense 0x4 Flamengo
+  // (554922), em que marcou dois. O resumo diz só isso: a legenda não nomeia o
+  // jogo. Fica no meio do objeto e não no fim de propósito: três Publicações
+  // foram anexadas ao fim no mesmo dia e cada uma conflitou com a seguinte.
+  "1077": [
+    {
+      code: "DbJMfCuEe4p",
+      account: "pedroguilherme",
+      summary:
+        "Pedro agradece a Jesus num carrossel de fotos com a camisa do Flamengo, publicado um dia depois dos seus dois gols nos 4 a 0 sobre a Chapecoense.",
+    },
+  ],
+
   // José Manuel López (Flaco) · Palmeiras. Opened 2026-09-09: `palmeiras`,
   // verificada, 7,7M seguidores, 2 de abril. Marco de carreira e não um lance,
   // que é o tipo de post que envelhece melhor num cartão de jogador.
