@@ -86,11 +86,13 @@ const isRound = (value: string): boolean => /^[1-9]\d*$/.test(value);
  *
  * `decodeURIComponent` throws `URIError` on a malformed escape — `/clube/%`,
  * `/clube/%E0%A4%A` — and a crawler will eventually send one. This is the one
- * place in the app that catches it. The router, `pageStatus` in `seo-core` and
- * the server's SPA-fallback guard all ask through here, so what counts as a
+ * place a request's address is decoded: the router, `pageStatus` in `seo-core`
+ * and the server's SPA-fallback guard all ask through here, so what counts as a
  * readable address cannot come to differ between the page, its status code and
  * the guard in front of both — which is how a request ends up a 404 in one and
- * a 500 in another.
+ * a 500 in another. `club-core`'s Wikipédia parser keeps its own catch, and
+ * rightly: it decodes an article URL pasted into curated data, not an address
+ * being served.
  */
 const decodeOrNull = (value: string): string | null => {
   try {
