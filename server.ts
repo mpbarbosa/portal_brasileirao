@@ -142,7 +142,7 @@ import { CLUB_REDDIT } from "@/src/data/club-reddit";
 import { CLUB_WIKIPEDIA } from "@/src/data/club-wikipedia";
 import { BROADCASTS } from "@/src/data/broadcasts";
 import { GOALS } from "@/src/data/goals";
-import { ESCALACOES } from "@/src/data/escalacoes";
+import { LINEUPS } from "@/src/data/escalacoes";
 import { HIGHLIGHTS } from "@/src/data/highlights";
 import { VENUES } from "@/src/data/venues";
 import { SEED_MATCHES, SNAPSHOT_DATE } from "@/src/data/matches";
@@ -344,7 +344,7 @@ interface MatchesPayload {
  * every request, where a pass measured at about 35ms would be spent per page.
  * Read against the same `SEED_SQUADS` the scorers are resolved in below.
  */
-const CONTESTED_PLAYER_IDS = contestedPlayerIds(ESCALACOES, SEED_SQUADS);
+const CONTESTED_PLAYER_IDS = contestedPlayerIds(LINEUPS, SEED_SQUADS);
 
 /**
  * The team sheets with each player's apelido attached, resolved once here for the
@@ -352,8 +352,8 @@ const CONTESTED_PLAYER_IDS = contestedPlayerIds(ESCALACOES, SEED_SQUADS);
  * offline branch rebuilds the curated list per request. Read against the same
  * `SEED_SQUADS` and refused the same contested ids as the scorers.
  */
-const ESCALACOES_WITH_NICKNAMES = withLineupNicknames(
-  ESCALACOES,
+const LINEUPS_WITH_NICKNAMES = withLineupNicknames(
+  LINEUPS,
   SEED_SQUADS,
   CONTESTED_PLAYER_IDS,
   PLAYER_NICKNAMES,
@@ -384,7 +384,7 @@ const withCuratedData = (matches: Match[]): Match[] =>
       SEED_SQUADS,
       CONTESTED_PLAYER_IDS,
     ),
-    ESCALACOES_WITH_NICKNAMES,
+    LINEUPS_WITH_NICKNAMES,
   );
 
 /**
@@ -842,12 +842,16 @@ const preferencesOf = (accountId: string) => {
   return parsePreferences(accountStore.readPreferences(accountId).preferences);
 };
 
-/** Absent feature, not broken feature. */
-const requireAccounts = (res: express.Response): boolean => {
-  if (accountsEnabled()) return true;
+/**
+ * Absent feature, not broken feature. Answers the 404 when accounts are not
+ * configured and reports whether it did, so a route reads
+ * `if (refusedWithoutAccounts(res)) return;`.
+ */
+const refusedWithoutAccounts = (res: express.Response): boolean => {
+  if (accountsEnabled()) return false;
   noStore(res);
   res.status(404).json({ error: "Contas não estão disponíveis nesta instalação." });
-  return false;
+  return true;
 };
 
 /**
@@ -869,7 +873,7 @@ if (accountStore) {
 }
 
 app.get("/api/auth/google", (req, res) => {
-  if (!requireAccounts(res)) return;
+  if (refusedWithoutAccounts(res)) return;
   noStore(res);
 
   if (!GOOGLE_CONFIGURED) {
@@ -917,7 +921,7 @@ app.get("/api/auth/google", (req, res) => {
  * the callback a great deal.
  */
 app.get("/api/auth/callback", async (req, res) => {
-  if (!requireAccounts(res)) return;
+  if (refusedWithoutAccounts(res)) return;
   noStore(res);
 
   const fail = (reason: string, detail?: string) => {
@@ -993,7 +997,7 @@ app.get("/api/auth/callback", async (req, res) => {
  */
 if (ACCOUNTS_DEV_LOGIN) {
   app.post("/api/auth/dev-login", express.json(), (req, res) => {
-    if (!requireAccounts(res)) return;
+    if (refusedWithoutAccounts(res)) return;
     noStore(res);
     if (!sameOrigin(req)) {
       res.status(403).json({ error: "Origem inválida." });
@@ -1026,14 +1030,14 @@ if (ACCOUNTS_DEV_LOGIN) {
  * which is most of them, permanently, by design.
  */
 app.get("/api/account/me", (req, res) => {
-  if (!requireAccounts(res)) return;
+  if (refusedWithoutAccounts(res)) return;
   noStore(res);
   const account = currentAccount(req, res);
   res.json(account ? publicAccount(account, preferencesOf(account.id)) : null);
 });
 
 app.post("/api/auth/logout", (req, res) => {
-  if (!requireAccounts(res)) return;
+  if (refusedWithoutAccounts(res)) return;
   noStore(res);
   if (!sameOrigin(req)) {
     res.status(403).json({ error: "Origem inválida." });
@@ -1070,7 +1074,7 @@ app.post("/api/auth/logout", (req, res) => {
  * just changed.
  */
 app.put("/api/account/preferences", express.json({ limit: "4kb" }), (req, res) => {
-  if (!requireAccounts(res)) return;
+  if (refusedWithoutAccounts(res)) return;
   noStore(res);
   if (!sameOrigin(req)) {
     res.status(403).json({ error: "Origem inválida." });
@@ -1102,7 +1106,7 @@ app.put("/api/account/preferences", express.json({ limit: "4kb" }), (req, res) =
 /** The LGPD erasure right: a delete, in one transaction, cascading to every
  *  session. Not a flag, and not a support ticket. */
 app.delete("/api/account", (req, res) => {
-  if (!requireAccounts(res)) return;
+  if (refusedWithoutAccounts(res)) return;
   noStore(res);
   if (!sameOrigin(req)) {
     res.status(403).json({ error: "Origem inválida." });

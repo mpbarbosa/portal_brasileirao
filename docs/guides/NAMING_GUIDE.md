@@ -18,16 +18,27 @@ boundary wrong is the commonest naming mistake here.
 | Code identifiers — functions, types, parameters | **English** | `computeStandings`, `clubFocus`, `liveBoard`, `countsTowardStandings` |
 | Provider fields, kept verbatim | **as received** | `fullTime.home`, `reserva`, `entrou_jogando`, `tempo_jogo` |
 
-So `computeRankCandles` computes the **velas**, and `SeasonEvents` renders the
-**Acontecimentos**. The English name says what the function does; the pt-BR word
-is what a reader sees and what `CONTEXT.md` governs.
+So `computeRankCandles` computes the **velas**, `SeasonEvents` renders the
+**Acontecimentos**, and `LINEUPS` holds the **escalações**. The English name
+says what the code does; the pt-BR word is what a reader sees and what
+`CONTEXT.md` governs.
+
+**Two exceptions, both at the provider's edge.** A type that describes a
+provider's payload may carry that provider's word, because it is read against
+the payload: `CbfAtleta`, `CbfJogo`, and `SumulaDocumento` for CBF's
+`documentos`. And **súmula** keeps its word in identifiers — `SumulaGoal`,
+`parseSumulaGoals` — because it names CBF's own document, there is no English
+equivalent, and `CONTEXT.md` rejects "match report" as not CBF's word. Nothing
+of ours takes that exception: `Lineup` and not `Escalacao`, `FollowedClubStrip`
+and not `MeuTimeStrip`.
 
 ## `CONTEXT.md` is the glossary, and it records rejections
 
 Read it before naming a new concept, and **add the term in the same commit that
 introduces it**. Its distinguishing feature is that each entry carries an
-`_Avoid_` line — 108 of them — recording names that were considered and rejected,
-so a rejected name does not quietly come back:
+`_Avoid_` line — 110 when counted on 2026-09-11; count the file rather than
+trusting the figure — recording names that were considered and rejected, so a
+rejected name does not quietly come back:
 
 > **Classificação** — _Avoid_: "tabela" (ambiguous — reads as the HTML `<table>`
 > element as often as the league table), "ranking" (not the Brazilian football
@@ -92,8 +103,8 @@ defect:
 
 The rule that follows: keep the provider's spelling at the boundary so a reader
 can match it against the payload, and give *our* type an honest name —
-`Lineup.starters`, not `naoReservas`. `tests/escalacao-core.test.ts` builds its
-fixtures with string booleans for exactly this reason; real ones would make
+`LineupPlayer.starter`, not `naoReserva`. `tests/escalacao-core.test.ts` builds
+its fixtures with string booleans for exactly this reason; real ones would make
 every test pass against the bug.
 
 ## Required rules
@@ -101,9 +112,18 @@ every test pass against the bug.
 1. **Predicate form for booleans.** `isKnownGoalResult`, `isAwaitingResult`,
    `isConcluded`, `isImminent`, `countsTowardStandings`, `hasLiveMatch`,
    `hasProvisionalKickoff`, `redistributable`, `retractsResult` — all read
-   correctly inside an `if`.
-2. **A function name contains a verb**, except where the domain noun *is* the
-   answer (`liveBoard`, `clubFocus`, `clubProfile`, `eventMarks`).
+   correctly inside an `if`. A function that also acts names the outcome it
+   reports: `refusedWithoutAccounts(res)` sends the 404 and returns whether it
+   did, so `if (refusedWithoutAccounts(res)) return;` reads true — where the
+   `requireAccounts` it replaced read as an order and returned the opposite.
+2. **A function is named for what it does or for what it returns.** One that
+   acts or transforms takes a verb (`computeStandings`, `parseWeather`,
+   `mergeByFreshness`). A pure accessor may be named for its answer —
+   `clubFocus`, `liveBoard`, `birthDateLabel`, `channelsFor`, `clubAddress` —
+   and that is house style rather than an exception: roughly half of the
+   exported functions in the core modules and `src/` are named that way
+   (counted 2026-09-11). What is ruled out is a name that is neither: `handle`,
+   `process`, `data`.
 3. **No `utils`, `helpers`, `common`, `manager`.** There are none; do not start.
 4. **A new domain term goes in `CONTEXT.md` in the same commit**, with its
    `_Avoid_` line.
@@ -114,18 +134,26 @@ every test pass against the bug.
    does.
 6. **A test name states the scenario and the expected outcome**, not the function.
    `tests/e2e/escalacoes.spec.ts` carries the cautionary case: a spec titled
-   *"names a goalkeeper"* passed for a year because the one fixture it opened
-   happened to be flagged correctly.
+   *"names a goalkeeper"* passed for its first week (added 2026-08-30, retitled
+   2026-09-06) because the one fixture it opened happened to be flagged
+   correctly.
 
 ## Current reality
 
 - **The bilingual boundary is convention, not enforced.** Nothing stops an
   English domain noun or a pt-BR identifier.
+- **File names are outside the bilingual rule, and mixed.** A file may carry the
+  pt-BR domain noun — `escalacao-core.ts`, `src/data/escalacoes.ts`,
+  `MeuTime.tsx` — while the identifiers inside it are English (`Lineup`,
+  `LINEUPS`, `FollowedClubStrip`), and `goals-core.ts` and `squads.ts` sit
+  beside them in English. The rule binds identifiers; renaming a file is churn
+  across imports and prose for no reader's benefit.
 - **`CONTEXT.md` is authoritative and large.** Grep it for the concept before
   inventing a word; the `_Avoid_` line often already contains the word you were
   about to pick.
-- **`src/types.ts` holds 35 interfaces and 12 type aliases** and is the single
-  source of truth for shared shapes. Extend it before adding fields anywhere.
+- **`src/types.ts` holds 35 exported interfaces and 12 type aliases** and is the
+  single source of truth for shared shapes. Extend it before adding fields
+  anywhere.
 - **The one enforced naming rule is the token vocabulary.**
   `tests/design-tokens-core.test.ts` fails a palette shade, a Tailwind radius, a
   bare type step, a `tracking-*`, a `duration-*`/`ease-*` utility, a hand-written
@@ -158,7 +186,8 @@ position, a rank, a "score" where lower is better?
 - A new `utils.ts`, `helpers.ts` or `shared/`.
 - A pt-BR identifier, or an English word on the page.
 - A term in a component that `CONTEXT.md` has never heard of.
-- A boolean named `checkX` or `validateX`.
+- A boolean named `checkX` or `validateX`, or a guard named as an order
+  (`requireX`) that returns whether it let you through.
 - A signed number standing for a movement in rank.
 - A test whose title names the function rather than the scenario.
 

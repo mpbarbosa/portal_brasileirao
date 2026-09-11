@@ -494,29 +494,29 @@ test.describe("Clube", () => {
   test("the sede points at the address on Google Maps", async ({ page }) => {
     await page.goto("/clube/palmeiras");
 
-    const sede = page.locator("main [data-sede-map]");
-    await expect(sede).toBeVisible();
+    const mapLink = page.locator("main [data-sede-map]");
+    await expect(mapLink).toBeVisible();
 
     // Google's documented Maps URLs form, carrying the club's own address as
     // the search term — the club page has no coordinate to point at, which is
     // the one thing that differs from the estádio pin on the match page.
-    const href = await sede.getAttribute("href");
+    const href = await mapLink.getAttribute("href");
     expect(href).toMatch(/^https:\/\/www\.google\.com\/maps\/search\/\?api=1&query=/);
     expect(href).toContain(encodeURIComponent("Perdizes São Paulo, SP 05005-030"));
 
     // The whole line is the target, mark and address together — not the mark
     // alone, which is what the match page does and for a reason that does not
     // apply here.
-    await expect(sede).toContainText("Rua Palestra Italia");
-    await expect(sede).toHaveAccessibleName(/^Sede: Rua Palestra Italia .*Google Maps/);
+    await expect(mapLink).toContainText("Rua Palestra Italia");
+    await expect(mapLink).toHaveAccessibleName(/^Sede: Rua Palestra Italia .*Google Maps/);
   });
 
   test("the sede opens safely in a new tab", async ({ page }) => {
     await page.goto("/clube/palmeiras");
 
-    const sede = page.locator("main [data-sede-map]");
-    await expect(sede).toHaveAttribute("target", "_blank");
-    await expect(sede).toHaveAttribute("rel", /noopener/);
+    const mapLink = page.locator("main [data-sede-map]");
+    await expect(mapLink).toHaveAttribute("target", "_blank");
+    await expect(mapLink).toHaveAttribute("rel", /noopener/);
   });
 
   test("a half-empty address shows the city, never upstream's word null", async ({ page }) => {
@@ -526,17 +526,17 @@ test.describe("Clube", () => {
     for (const slug of ["flamengo", "mirassol", "sao-paulo"]) {
       await page.goto(`/clube/${slug}`);
 
-      const sede = page.locator("main [data-sede]");
+      const addressLine = page.locator("main [data-sede]");
       // The label and the destination suffix are screen-reader text, so they
       // are named here rather than anchored around: what is being asserted is
       // that the city and the UF are the whole of the *visible* line.
-      await expect(sede).toHaveText(
+      await expect(addressLine).toHaveText(
         /^Sede: [A-ZÁ-Ú][^,]+, [A-Z]{2} — no Google Maps \(abre em nova aba\)$/,
       );
       expect(await page.locator("main").innerText()).not.toMatch(/\bnull\b/i);
       // And that the half-empty address is searched as the part that is real,
       // never with upstream's interpolated word in the query.
-      expect(await sede.locator("a").getAttribute("href")).not.toMatch(/null/i);
+      expect(await addressLine.locator("a").getAttribute("href")).not.toMatch(/null/i);
     }
   });
 

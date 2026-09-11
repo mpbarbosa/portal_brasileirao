@@ -43,7 +43,7 @@ import type { ClubCode, ClubRankHistory, Match, RankAtRound, StandingsRow } from
  * into the season has three pills, not three pills and two blanks — the same
  * rule `RankSparkline` follows by stopping at the last round with a result.
  */
-function FormaStrip({ results }: { results: FormResult[] }) {
+function FormStrip({ results }: { results: FormResult[] }) {
   if (results.length === 0) {
     // No decided match yet. An empty cell would read as a rendering fault, so
     // say it in the one character a table row has room for — `RankSparkline`'s
@@ -455,7 +455,7 @@ export function StandingsTable({
   }, [rows, matches, side]);
 
   /** One pass over the fixtures for all twenty clubs, not one per row. */
-  const forma = useMemo(() => {
+  const formByClub = useMemo(() => {
     if (!matches || matches.length === 0) return new Map<ClubCode, FormResult[]>();
     return new Map(rows.map((row) => [row.club.code, recentForm(matches, row.club.code)]));
   }, [matches, rows]);
@@ -691,7 +691,7 @@ export function StandingsTable({
                 {showCampaign && (
                   <td className={`${ROW_LINE} ${MARK_COLUMN} py-2`}>
                     {markKind === "forma" ? (
-                      <FormaStrip results={forma.get(row.club.code) ?? []} />
+                      <FormStrip results={formByClub.get(row.club.code) ?? []} />
                     ) : (
                       <RankSparkline
                         entries={campaigns.get(row.club.code) ?? []}

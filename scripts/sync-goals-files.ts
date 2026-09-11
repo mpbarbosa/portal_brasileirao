@@ -41,11 +41,11 @@ const renderLineups = (lineups: Lineup[]): string =>
     )
     .join(",");
 
-export const renderEscalacoesFile = (
-  escalacoes: Record<string, Lineup[]>,
+export const renderLineupsFile = (
+  lineupsByMatch: Record<string, Lineup[]>,
   generatedOn: string,
 ): string => {
-  const ids = Object.keys(escalacoes).sort((a, b) => Number(a) - Number(b));
+  const ids = Object.keys(lineupsByMatch).sort((a, b) => Number(a) - Number(b));
   return `import { decodeLineups } from "@/escalacao-core";
 import type { Lineup, LineupEntry } from "@/src/types";
 
@@ -70,14 +70,14 @@ import type { Lineup, LineupEntry } from "@/src/types";
  * figures are a reading taken when the encoding landed, over 252 fixtures — the
  * file grows, so measure it rather than quoting them.
  *
- * **Nothing outside this file sees a tuple.** \`ESCALACOES\` is \`Lineup[]\` exactly
+ * **Nothing outside this file sees a tuple.** \`LINEUPS\` is \`Lineup[]\` exactly
  * as it always was, which is why no component, no core module and no test
  * changed when the encoding did.
  *
  * Generated ${generatedOn}.
  */
 const ENTRIES: Record<string, LineupEntry[]> = {
-${ids.map((id) => `  ${j(id)}: [${renderLineups(escalacoes[id])}],`).join("\n")}
+${ids.map((id) => `  ${j(id)}: [${renderLineups(lineupsByMatch[id])}],`).join("\n")}
 };
 
 /**
@@ -89,14 +89,14 @@ ${ids.map((id) => `  ${j(id)}: [${renderLineups(escalacoes[id])}],`).join("\n")}
  * landed — once, at import, against a server that then answers from a 60s
  * cache.
  */
-export const ESCALACOES: Record<string, Lineup[]> = Object.fromEntries(
+export const LINEUPS: Record<string, Lineup[]> = Object.fromEntries(
   Object.entries(ENTRIES).map(([id, entries]) => [id, decodeLineups(entries)]),
 );
 `;
 };
 
 /**
- * One match per line, `renderEscalacoesFile`'s shape and for its reason.
+ * One match per line, `renderLineupsFile`'s shape and for its reason.
  *
  * The header keeps saying **safe to hand-edit**, and that is a promise this
  * encoding makes harder to keep rather than one it withdraws — so the shape of

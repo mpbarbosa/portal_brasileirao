@@ -16,7 +16,7 @@ import { SEASON_EVENTS } from "@/src/data/events";
 import { SNAPSHOT_DATE } from "@/src/data/matches";
 import type { SeasonEvent } from "@/src/types";
 
-const geral = (id: string, date: string, endDate?: string): SeasonEvent => ({
+const generalEvent = (id: string, date: string, endDate?: string): SeasonEvent => ({
   id,
   scope: "geral",
   date,
@@ -25,7 +25,7 @@ const geral = (id: string, date: string, endDate?: string): SeasonEvent => ({
   source: "https://example.test/",
 });
 
-const clube = (id: string, clubCode: string, date: string): SeasonEvent => ({
+const clubEvent = (id: string, clubCode: string, date: string): SeasonEvent => ({
   id,
   scope: "clube",
   clubCode,
@@ -37,22 +37,22 @@ const clube = (id: string, clubCode: string, date: string): SeasonEvent => ({
 // ── touchesClub / clubTimeline ────────────────────────────────────────────
 
 test("a general acontecimento touches every club", () => {
-  const event = geral("halt", "2026-06-01");
+  const event = generalEvent("halt", "2026-06-01");
   assert.equal(touchesClub(event, "1771"), true);
   assert.equal(touchesClub(event, "1783"), true);
 });
 
 test("a club acontecimento touches only its own club", () => {
-  const event = clube("tite", "1771", "2026-03-15");
+  const event = clubEvent("tite", "1771", "2026-03-15");
   assert.equal(touchesClub(event, "1771"), true);
   assert.equal(touchesClub(event, "1783"), false);
 });
 
 test("a club timeline merges the general ones in, newest first", () => {
   const events = [
-    clube("tite", "1771", "2026-03-15"),
-    geral("halt", "2026-06-01"),
-    clube("dorival", "1779", "2026-04-05"),
+    clubEvent("tite", "1771", "2026-03-15"),
+    generalEvent("halt", "2026-06-01"),
+    clubEvent("dorival", "1779", "2026-04-05"),
   ];
   assert.deepEqual(
     clubTimeline(events, "1771").map((e) => e.id),
@@ -61,7 +61,7 @@ test("a club timeline merges the general ones in, newest first", () => {
 });
 
 test("another club's acontecimentos are left out", () => {
-  const events = [clube("tite", "1771", "2026-03-15"), clube("dorival", "1779", "2026-04-05")];
+  const events = [clubEvent("tite", "1771", "2026-03-15"), clubEvent("dorival", "1779", "2026-04-05")];
   assert.deepEqual(clubTimeline(events, "1779").map((e) => e.id), ["dorival"]);
 });
 
@@ -70,8 +70,8 @@ test("a range sorts by where it starts, not by where it ends", () => {
   // END would still put the sacking first here, so the case that separates the
   // two rules is one where the range's end passes the later entry.
   const events = [
-    geral("halt", "2026-06-01", "2026-09-30"),
-    clube("zubeldia", "1765", "2026-08-13"),
+    generalEvent("halt", "2026-06-01", "2026-09-30"),
+    clubEvent("zubeldia", "1765", "2026-08-13"),
   ];
   assert.deepEqual(
     clubTimeline(events, "1765").map((e) => e.id),
@@ -80,14 +80,14 @@ test("a range sorts by where it starts, not by where it ends", () => {
 });
 
 test("two acontecimentos on one day order by id, whatever order they arrive in", () => {
-  const a = clube("alfa", "1771", "2026-03-15");
-  const b = clube("beta", "1771", "2026-03-15");
+  const a = clubEvent("alfa", "1771", "2026-03-15");
+  const b = clubEvent("beta", "1771", "2026-03-15");
   assert.deepEqual(clubTimeline([b, a], "1771").map((e) => e.id), ["alfa", "beta"]);
   assert.deepEqual(clubTimeline([a, b], "1771").map((e) => e.id), ["alfa", "beta"]);
 });
 
 test("clubTimeline does not reorder its input", () => {
-  const events = [clube("beta", "1771", "2026-01-01"), clube("alfa", "1771", "2026-05-01")];
+  const events = [clubEvent("beta", "1771", "2026-01-01"), clubEvent("alfa", "1771", "2026-05-01")];
   clubTimeline(events, "1771");
   assert.deepEqual(events.map((e) => e.id), ["beta", "alfa"]);
 });
@@ -107,21 +107,21 @@ test("a day that is not a day is null rather than a guess", () => {
 });
 
 test("only a general acontecimento is captioned; a club one says nothing", () => {
-  assert.equal(scopeLabel(geral("halt", "2026-06-01")), "Todo o Brasileirão");
-  assert.equal(scopeLabel(clube("tite", "1771", "2026-03-15")), null);
+  assert.equal(scopeLabel(generalEvent("halt", "2026-06-01")), "Todo o Brasileirão");
+  assert.equal(scopeLabel(clubEvent("tite", "1771", "2026-03-15")), null);
 });
 
 // ── eventSpan ─────────────────────────────────────────────────────────────
 
 test("an acontecimento with no end is a day, whether it is past or future", () => {
-  const past = eventSpan(clube("tite", "1771", "2026-03-15"), "2026-09-08");
+  const past = eventSpan(clubEvent("tite", "1771", "2026-03-15"), "2026-09-08");
   assert.deepEqual(past, { kind: "dia", label: "15 de março de 2026", days: null });
-  const ahead = eventSpan(clube("later", "1771", "2026-12-01"), "2026-09-08");
+  const ahead = eventSpan(clubEvent("later", "1771", "2026-12-01"), "2026-09-08");
   assert.equal(ahead?.kind, "dia");
 });
 
 test("a closed span reads from one day to the other and counts both ends", () => {
-  const span = eventSpan(geral("halt", "2026-06-01", "2026-07-15"), "2026-09-08");
+  const span = eventSpan(generalEvent("halt", "2026-06-01", "2026-07-15"), "2026-09-08");
   assert.equal(span?.kind, "periodo");
   assert.equal(span?.label, "de 1 de junho a 15 de julho de 2026");
   // 1 June to 15 July inclusive: 30 + 15.
@@ -129,7 +129,7 @@ test("a closed span reads from one day to the other and counts both ends", () =>
 });
 
 test("a span whose end has not arrived says 'desde' and never invents an end", () => {
-  const span = eventSpan(geral("halt", "2026-06-01", "2026-07-15"), "2026-06-20");
+  const span = eventSpan(generalEvent("halt", "2026-06-01", "2026-07-15"), "2026-06-20");
   assert.equal(span?.kind, "em-curso");
   assert.equal(span?.label, "desde 1 de junho");
   assert.equal(span?.days, null);
@@ -137,18 +137,18 @@ test("a span whose end has not arrived says 'desde' and never invents an end", (
 });
 
 test("a span closes on its own last day rather than the day after", () => {
-  const event = geral("halt", "2026-06-01", "2026-07-15");
+  const event = generalEvent("halt", "2026-06-01", "2026-07-15");
   assert.equal(eventSpan(event, "2026-07-14")?.kind, "em-curso");
   assert.equal(eventSpan(event, "2026-07-15")?.kind, "periodo");
 });
 
 test("an unreadable endDate costs the span and never the whole entry", () => {
-  const span = eventSpan({ ...geral("halt", "2026-06-01"), endDate: "15/07/2026" }, "2026-09-08");
+  const span = eventSpan({ ...generalEvent("halt", "2026-06-01"), endDate: "15/07/2026" }, "2026-09-08");
   assert.deepEqual(span, { kind: "dia", label: "1 de junho de 2026", days: null });
 });
 
 test("an unreadable date is null, not a rendered fragment", () => {
-  assert.equal(eventSpan(geral("bad", "junho de 2026"), "2026-09-08"), null);
+  assert.equal(eventSpan(generalEvent("bad", "junho de 2026"), "2026-09-08"), null);
 });
 
 // ── brasiliaDay ───────────────────────────────────────────────────────────

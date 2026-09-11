@@ -20,7 +20,7 @@ import {
 } from "@/escalacao-core";
 import { contestedPlayerIds, type SideMap } from "@/goals-core";
 import type { SumulaSubstitution } from "@/sumula-core";
-import { ESCALACOES } from "@/src/data/escalacoes";
+import { LINEUPS } from "@/src/data/escalacoes";
 import { PLAYER_NICKNAMES } from "@/src/data/player-nicknames";
 import { SEED_SQUADS } from "@/src/data/squads";
 import type { Lineup, Match, Squad } from "@/src/types";
@@ -212,9 +212,9 @@ test("an attached apelido is never written back to the stored encoding", () => {
 
 test("the committed sheets print only apelidos the table holds, and print at least one", () => {
   const out = withLineupNicknames(
-    ESCALACOES,
+    LINEUPS,
     SEED_SQUADS,
-    contestedPlayerIds(ESCALACOES, SEED_SQUADS),
+    contestedPlayerIds(LINEUPS, SEED_SQUADS),
     PLAYER_NICKNAMES,
   );
   const printed = Object.values(out)
@@ -697,10 +697,10 @@ test("every committed escalação decodes into a sheet lineupsReconcile accepts"
   // The end-to-end gate on the encoding, and the one that catches a swapped
   // bit: with 1 and 2 exchanged every keeper becomes a starter and this fails
   // on all 252 fixtures. Confirmed red by making that swap.
-  const ids = Object.keys(ESCALACOES);
+  const ids = Object.keys(LINEUPS);
   assert.ok(ids.length > 200, `expected the season, got ${ids.length} fixtures`);
   for (const id of ids) {
-    assert.equal(lineupsReconcile(ESCALACOES[id]), true, `${id} does not reconcile`);
+    assert.equal(lineupsReconcile(LINEUPS[id]), true, `${id} does not reconcile`);
   }
 });
 
@@ -711,7 +711,7 @@ test("no committed substitution carries one shirt without the other", () => {
   // visible here.
   let withShirts = 0;
   let withoutShirts = 0;
-  for (const lineups of Object.values(ESCALACOES)) {
+  for (const lineups of Object.values(LINEUPS)) {
     for (const lineup of lineups) {
       for (const sub of lineup.subs ?? []) {
         assert.equal(

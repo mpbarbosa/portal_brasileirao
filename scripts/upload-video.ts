@@ -228,7 +228,7 @@ const runUpload = async (
 
 const main = async (): Promise<void> => {
   const argv = process.argv.slice(2);
-  const flag = (name: string): boolean => argv.includes(`--${name}`);
+  const hasFlag = (name: string): boolean => argv.includes(`--${name}`);
   const value = (name: string): string | null => {
     const at = argv.indexOf(`--${name}`);
     return at === -1 ? null : (argv[at + 1] ?? null);
@@ -240,7 +240,7 @@ const main = async (): Promise<void> => {
   });
 
   const command = positional[0];
-  if (command === undefined || flag("help")) {
+  if (command === undefined || hasFlag("help")) {
     console.log(
       [
         "",
@@ -271,8 +271,8 @@ const main = async (): Promise<void> => {
   return runUpload(command, {
     dir: value("dir"),
     privacy: privacy as InsertBody["status"]["privacyStatus"],
-    dryRun: flag("dry-run"),
-    thumbnail: !flag("no-thumbnail"),
+    dryRun: hasFlag("dry-run"),
+    thumbnail: !hasFlag("no-thumbnail"),
   });
 };
 

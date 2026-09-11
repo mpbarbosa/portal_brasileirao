@@ -11,7 +11,7 @@ import { expect, test, type Page } from "@/tests/e2e/clock";
  */
 const pageHeading = (page: Page) => page.getByRole("main").getByRole("heading", { level: 2 });
 
-const goToJogos = async (page: Page) => {
+const goToRounds = async (page: Page) => {
   await page.getByRole("link", { name: /^Jogos/ }).click();
   await expect(page.getByRole("combobox", { name: "Rodada" })).toBeVisible();
 };
@@ -22,7 +22,7 @@ const currentRound = async (page: Page) =>
 test.describe("Jogos", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/");
-    await goToJogos(page);
+    await goToRounds(page);
   });
 
   test("opens on a round that has fixtures", async ({ page }) => {
@@ -100,7 +100,7 @@ test.describe("Jogos", () => {
     await expect(page).toHaveURL(/\/jogos\/3$/);
 
     await page.getByRole("link", { name: /^Classificação/ }).click();
-    await goToJogos(page);
+    await goToRounds(page);
 
     await expect(page).toHaveURL(/\/jogos$/);
     await expect(pageHeading(page)).toHaveText(`${current}ª rodada`);

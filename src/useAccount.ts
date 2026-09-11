@@ -48,7 +48,7 @@ const fetchAccount = async (): Promise<AccountState> => {
    * next debugs this page. The payload is one short sentence.
    *
    * **The suite cannot catch this and a stub does not either.** The 404 is
-   * `requireAccounts` refusing an installation with no accounts configured —
+   * `refusedWithoutAccounts` refusing an installation with no accounts configured —
    * production's shape, and every fresh clone's — while the e2e harness boots
    * with `ACCOUNTS_DEV_LOGIN=true`, where this endpoint answers 200 and the
    * body is consumed by `response.json()` below. Stubbing the 404 with

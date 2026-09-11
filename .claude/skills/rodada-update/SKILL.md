@@ -356,14 +356,14 @@ node --disable-warning=ExperimentalWarning --import tsx -e '
 import { SEED_MATCHES, SNAPSHOT_DATE } from "@/src/data/matches";
 import { CLUB_SCOUTS_THROUGH_ROUND } from "@/src/data/club-scouts";
 import { GOALS } from "@/src/data/goals";
-import { ESCALACOES } from "@/src/data/escalacoes";
+import { LINEUPS } from "@/src/data/escalacoes";
 import { HIGHLIGHTS } from "@/src/data/highlights";
 const played = SEED_MATCHES.filter((m) => m.status === "FINISHED" && m.homeGoals !== null);
 const n = (r) => Object.keys(r).length, sum = (r) => Object.values(r).reduce((a, v) => a + v.length, 0);
 console.log("seed        ", SNAPSHOT_DATE, "played through rodada", Math.max(...played.map((m) => m.round)), `(${played.length} fixtures)`);
 console.log("scouts      ", "through rodada", CLUB_SCOUTS_THROUGH_ROUND);
 console.log("goals       ", n(GOALS), "matches,", sum(GOALS), "gols");
-console.log("escalacoes  ", n(ESCALACOES), "matches,", sum(ESCALACOES), "sides");
+console.log("escalacoes  ", n(LINEUPS), "matches,", sum(LINEUPS), "sides");
 console.log("highlights  ", n(HIGHLIGHTS), "matches");'
 ```
 

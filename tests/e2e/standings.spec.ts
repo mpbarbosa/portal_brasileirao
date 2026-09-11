@@ -194,22 +194,22 @@ test.describe("Classificação", () => {
       (await page.locator("table tbody tr td:nth-child(2)").allInnerTexts())
         .map((cell) => cell.split("\n")[0].trim());
 
-    const completa = await clubs();
-    expect(completa).toHaveLength(20);
+    const unsplit = await clubs();
+    expect(unsplit).toHaveLength(20);
 
     await side(page, "Casa").click();
-    const casa = await clubs();
+    const home = await clubs();
     await side(page, "Fora").click();
-    const fora = await clubs();
+    const away = await clubs();
 
     // Every club is in every view — a split narrows which fixtures count, not
     // which clubs exist.
-    expect([...casa].sort()).toEqual([...completa].sort());
-    expect([...fora].sort()).toEqual([...completa].sort());
+    expect([...home].sort()).toEqual([...unsplit].sort());
+    expect([...away].sort()).toEqual([...unsplit].sort());
     // And the orders genuinely differ, or the control is doing nothing.
-    expect(casa).not.toEqual(completa);
-    expect(fora).not.toEqual(completa);
-    expect(fora).not.toEqual(casa);
+    expect(home).not.toEqual(unsplit);
+    expect(away).not.toEqual(unsplit);
+    expect(away).not.toEqual(home);
   });
 
   test("a split hides the whole-season marks rather than showing them beside partial tallies", async ({ page }) => {

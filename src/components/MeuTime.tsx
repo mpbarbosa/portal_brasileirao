@@ -104,7 +104,7 @@ export function FollowButton({
  *   match in three weeks are the same sentence; only the rail brightens. Copy
  *   that shouted when a fixture was close would be a second thing to keep true.
  */
-function ProximoJogo({
+function NextMatchLine({
   focus,
   code,
   now,
@@ -228,7 +228,7 @@ function ProximoJogo({
  * silently reverts to "you follow nobody", which would invite the reader to
  * choose again and overwrite a choice that was never lost.
  */
-export function MeuTimeStrip({
+export function FollowedClubStrip({
   state,
   matches,
   clubs,
@@ -386,7 +386,7 @@ export function MeuTimeStrip({
         <div className={row}>{contents}</div>
       )}
 
-      <ProximoJogo
+      <NextMatchLine
         focus={focus}
         code={club.code}
         now={now}

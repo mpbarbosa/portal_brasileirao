@@ -72,7 +72,7 @@ import {
   sumulaUrlFrom,
   type SumulaDocumento,
 } from "@/sumula-core";
-import { renderEscalacoesFile, renderGoalsFile } from "@/scripts/sync-goals-files";
+import { renderLineupsFile, renderGoalsFile } from "@/scripts/sync-goals-files";
 import type { Club, Goal, Lineup, Match } from "@/src/types";
 
 const ROOT = process.cwd();
@@ -316,9 +316,9 @@ const readExisting = async (): Promise<Record<string, Goal[]>> => {
 const readExistingLineups = async (): Promise<Record<string, Lineup[]>> => {
   try {
     const existing = (await import("@/src/data/escalacoes")) as {
-      ESCALACOES?: Record<string, Lineup[]>;
+      LINEUPS?: Record<string, Lineup[]>;
     };
-    return { ...(existing.ESCALACOES ?? {}) };
+    return { ...(existing.LINEUPS ?? {}) };
   } catch {
     return {};
   }
@@ -339,8 +339,8 @@ const before = Object.keys(goals).length;
  * the benefit is that the two files can never disagree about which matches are
  * covered.
  */
-const escalacoes: Record<string, Lineup[]> = replace ? {} : await readExistingLineups();
-const lineupsBefore = Object.keys(escalacoes).length;
+const lineupsByMatch: Record<string, Lineup[]> = replace ? {} : await readExistingLineups();
+const lineupsBefore = Object.keys(lineupsByMatch).length;
 const noLineup: string[] = [];
 const noSubs: string[] = [];
 const noKeeper: string[] = [];
@@ -478,7 +478,7 @@ for (const { jogo, ourId } of targets) {
     if (keeperless.length > 0) {
       noKeeper.push(`${label} — no goalkeeper among the eleven: ${keeperless.join(", ")}`);
     }
-    escalacoes[id] = withSubs ?? lineups;
+    lineupsByMatch[id] = withSubs ?? lineups;
   } else if (lineups.length > 0 || (detail.mandante?.atletas?.length ?? 0) > 0) {
     noLineup.push(
       `${label} — team sheet incomplete (` +
@@ -590,7 +590,7 @@ console.log(
 // The escalações, from the same payloads
 // ---------------------------------------------------------------------------
 
-const lineupIds = Object.keys(escalacoes).sort((a, b) => Number(a) - Number(b));
+const lineupIds = Object.keys(lineupsByMatch).sort((a, b) => Number(a) - Number(b));
 
 writeFileSync(
   path.join(ROOT, "src/data/escalacoes.ts"),
@@ -601,7 +601,7 @@ writeFileSync(
   // `Substitution.onShirt` to the type left the writer emitting the three
   // fields it already knew: a resync then produced a file identical to the one
   // it replaced, and the new field looked broken rather than unwritten.
-  renderEscalacoesFile(escalacoes, generatedOn),
+  renderLineupsFile(lineupsByMatch, generatedOn),
 );
 
 console.log(

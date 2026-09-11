@@ -6,7 +6,7 @@ import { expect, test, type Page } from "@/tests/e2e/clock";
  * a club's total. Those move with every transfer window, and a spec that
  * pins them fails the next time anyone runs `sync-seed-data`.
  */
-const goToJogadores = async (page: Page) => {
+const goToPlayers = async (page: Page) => {
   await page.getByRole("link", { name: /^Jogadores/ }).click();
   await expect(page.getByRole("heading", { level: 2, name: "Jogadores" })).toBeVisible();
 };
@@ -17,7 +17,7 @@ const firstPanel = (page: Page) => page.locator("[data-squad]").first();
 test.describe("Jogadores", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/");
-    await goToJogadores(page);
+    await goToPlayers(page);
   });
 
   test("lists one panel per club, each naming a club", async ({ page }) => {
@@ -366,7 +366,7 @@ test.describe("Jogadores", () => {
     await page.getByRole("link", { name: /^Classificação/ }).click();
     await expect(page.locator("table tbody tr")).toHaveCount(20);
 
-    await goToJogadores(page);
+    await goToPlayers(page);
     await expect(page.locator("[data-squad]").first()).toBeVisible();
   });
 });

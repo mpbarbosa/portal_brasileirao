@@ -22,7 +22,7 @@ import type { Lineup, LineupEntry } from "@/src/types";
  * figures are a reading taken when the encoding landed, over 252 fixtures — the
  * file grows, so measure it rather than quoting them.
  *
- * **Nothing outside this file sees a tuple.** `ESCALACOES` is `Lineup[]` exactly
+ * **Nothing outside this file sees a tuple.** `LINEUPS` is `Lineup[]` exactly
  * as it always was, which is why no component, no core module and no test
  * changed when the encoding did.
  *
@@ -293,6 +293,6 @@ const ENTRIES: Record<string, LineupEntry[]> = {
  * landed — once, at import, against a server that then answers from a 60s
  * cache.
  */
-export const ESCALACOES: Record<string, Lineup[]> = Object.fromEntries(
+export const LINEUPS: Record<string, Lineup[]> = Object.fromEntries(
   Object.entries(ENTRIES).map(([id, entries]) => [id, decodeLineups(entries)]),
 );

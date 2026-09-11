@@ -498,11 +498,11 @@ test.describe("Vídeos do clube no Painel", () => {
       return rect;
     };
 
-    const perfil = await box(page.getByRole("heading", { name: "Perfil" }));
+    const profile = await box(page.getByRole("heading", { name: "Perfil" }));
     const videos = await box(page.getByRole("heading", { name: "Vídeos do clube" }));
     const link = await box(page.getByRole("link", { name: /Página do/ }));
 
-    expect(videos.y).toBeGreaterThan(perfil.y);
+    expect(videos.y).toBeGreaterThan(profile.y);
     expect(link.y).toBeGreaterThan(videos.y);
   });
 

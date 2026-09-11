@@ -17,7 +17,7 @@ import { LiveView } from "@/src/components/LiveView";
 import { AccountButton, AccountView, SignInView } from "@/src/components/AccountView";
 import { PrivacyView } from "@/src/components/PrivacyView";
 import { TrafficView } from "@/src/components/TrafficView";
-import { MeuTimeStrip } from "@/src/components/MeuTime";
+import { FollowedClubStrip } from "@/src/components/MeuTime";
 import { MatchPage } from "@/src/components/MatchPage";
 import { NavBar } from "@/src/components/NavBar";
 import { PlayerOverlayCard } from "@/src/components/PlayerOverlayCard";
@@ -406,7 +406,7 @@ export function App() {
    * Read at render rather than from a ticking clock: `App` owns twenty
    * standings rows and twenty sparklines, and a clock here would re-render all
    * of them to answer a question whose answer changes once — which is exactly
-   * why `MeuTimeStrip` and `LiveView` keep their own `useNow` instead of asking
+   * why `FollowedClubStrip` and `LiveView` keep their own `useNow` instead of asking
    * for one here. It is re-evaluated on every poll, since each one sets state.
    * The one case it cannot catch is a page left open across the moment its
    * fixture comes *within* a day of kickoff, and that fails toward waiting
@@ -475,7 +475,7 @@ export function App() {
         <main>
           {route.section === "classificacao" && (
             <>
-              <MeuTimeStrip
+              <FollowedClubStrip
                 state={follow}
                 matches={matches?.matches}
                 clubs={matches?.clubs}

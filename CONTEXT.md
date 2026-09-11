@@ -1584,7 +1584,7 @@ has not filled in is still a club in the championship, and the panel says
 "elenco não informado" rather than vanishing.
 _Avoid_: "time" or "plantel" for the collection (see **Clube**), dropping a club
 whose squad is missing, and the word "escalação" — that is the eleven picked for
-one match, which the app does not carry.
+one match, a different fact the app carries separately (see **Escalação**).
 
 **Jogadores**:
 The page listing every club's **Elenco**, one collapsible panel per club, each
