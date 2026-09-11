@@ -49,13 +49,13 @@ git command, and has been swept as such.
 
 **That Node is the wrong major for this repository, and nothing here will tell
 you so.** `.nvmrc`, `package.json`'s `engines`, `REQUIRED_NODE_MAJOR` in
-`shell_scripts/01_setup_app_directory.sh` and both workflows all name **22**,
+`shell_scripts/01_setup_app_directory.sh` and every workflow that sets up Node all name **22**,
 and production runs 22.23.2. `nvm` on this machine has `v22.15.0` installed
 alongside eleven 26.x builds, so `nvm use` in the worktree is the fix. The trap
 is quiet by construction: `tsc --noEmit` is this repo's only lint gate and it
 type-checks against `@types/node`'s pinned surface whatever the shell is
 running, so a 26-only API passes the gate and throws on the host. `CLAUDE.md`,
-**One Node major, named in five places**, is the long version.
+**One Node major, named in several places**, is the long version.
 
 ## Hardware
 

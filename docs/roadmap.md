@@ -460,8 +460,8 @@ did not, so nothing further is owed here.
 So 22 was the right pin to land — it is what CI **and the host** were already
 running, and changing the runtime and the typings in one commit would have made
 a failure ambiguous — but it is not the right pin to *stay* on. The move is to
-**24**, the active LTS, and it is a deliberate five-file commit starting at
-`.nvmrc`, with `npm run test:unit` refusing anything partial. It needs the host
+**24**, the active LTS, and it is a deliberate commit across every declaration,
+starting at `.nvmrc`, with `npm run test:unit` refusing anything partial. It needs the host
 raised to 24 first, since `shell_scripts/01` requires an exact major.
 
 **Nothing will remind you.** `.github/dependabot.yml` ignores the *major* for

@@ -1,13 +1,13 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { test } from "node:test";
 
 /**
- * One Node major, named in five places, asserted here to be the same number.
+ * One Node major, named in several places, asserted here to be the same number.
  *
  * This asserts *configuration* rather than code, for the reason
- * `tests/player-photos.test.ts` asserts data: nothing else can catch it. Four
- * of the five files below are read by a different tool — npm, `actions/setup-node`,
+ * `tests/player-photos.test.ts` asserts data: nothing else can catch it. Every
+ * file below but `.nvmrc` is read by a different tool — npm, `actions/setup-node`,
  * `tsc`, a provisioning script on a host — so no compiler sees more than one of
  * them, and a disagreement is not a broken build. It is a **quieter** gate.
  *
@@ -20,7 +20,7 @@ import { test } from "node:test";
  * `node -e "require('node:quic')"` threw ERR_UNKNOWN_BUILTIN_MODULE.
  *
  * The fix for that incident was to change the numbers. The fix for the *class*
- * is this file: changing one of them now goes red until all five move together.
+ * is this file: changing one of them now goes red until all of them move together.
  */
 
 const root = new URL("../", import.meta.url);
@@ -81,8 +81,27 @@ test("the host floor is the .nvmrc major, exactly", () => {
  * worth having — the property is that there is only one number to change, which
  * is what `node-version-file` buys. A literal reintroduced here would pass any
  * equality check on the day it was written and drift on some later one.
+ *
+ * **The workflows are found, not listed.** This loop used to name two files,
+ * and `curated-data.yml` arrived reading `.nvmrc` without joining the list — so
+ * the gate that exists to stop hand-kept Node declarations drifting carried a
+ * hand-kept list that had drifted. Any workflow that sets up Node is in scope,
+ * including one added after this comment.
  */
-for (const workflow of [".github/workflows/ci.yml", ".github/workflows/sync-broadcasts.yml"]) {
+const workflowsSettingUpNode = readdirSync(new URL(".github/workflows/", root))
+  .filter((name) => /\.ya?ml$/.test(name))
+  .map((name) => `.github/workflows/${name}`)
+  .filter((workflow) => read(workflow).includes("actions/setup-node"));
+
+test("the workflow search finds the workflows that set up Node", () => {
+  // A search that matches nothing would make every case below vacuous.
+  assert.ok(
+    workflowsSettingUpNode.includes(".github/workflows/ci.yml"),
+    `ci.yml sets up Node and was not found; found ${JSON.stringify(workflowsSettingUpNode)}`,
+  );
+});
+
+for (const workflow of workflowsSettingUpNode) {
   test(`${workflow} takes its Node version from .nvmrc, not a literal`, () => {
     const yaml = read(workflow);
 
