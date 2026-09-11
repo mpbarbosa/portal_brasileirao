@@ -1,6 +1,6 @@
 /**
- * capa-core.ts
- * ------------
+ * capa-shared.ts
+ * --------------
  * What the two capa scripts share: reading a scene's own palette, and driving
  * the headless Chromium that draws the images.
  *
@@ -15,6 +15,11 @@
  * them into one parameterised renderer would be a design pretending to be a
  * loop. `thumbnail.ts`' own comment already refuses a third club for that
  * reason.
+ *
+ * **Not `capa-core.ts`, which is what it was called.** It reads files, drives
+ * Chromium and exits the process, and `-core.ts` is this repository's promise
+ * of none of those — `tests/core-purity.test.ts` holds every file carrying the
+ * suffix to it, wherever the file lives.
  */
 import { readFileSync } from "node:fs";
 import path from "node:path";

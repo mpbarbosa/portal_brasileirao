@@ -22,7 +22,7 @@
  * `generate-og-image.ts` reads its tokens out of `src/index.css`. A second
  * hand-kept copy of a colour is how the capa comes to be a shade off the video
  * it advertises; a constant renamed away fails this run rather than drawing in
- * black. That reader and the Chromium capture live in `capa-core.ts`, shared
+ * black. That reader and the Chromium capture live in `capa-shared.ts`, shared
  * with `thumbnail-pontos.ts`; the LAYOUT below is this capa's own.
  *
  * Drawn with the headless Chromium `screenshot.ts` already uses, so this adds
@@ -42,7 +42,7 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { capture, fail, readClubColours, readColours, readInk, shown as shownIn } from "./capa-core";
+import { capture, fail, readClubColours, readColours, readInk, shown as shownIn } from "./capa-shared";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(HERE, "../..");

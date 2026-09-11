@@ -175,7 +175,7 @@ const catchCode = async (
  */
 export const authorize = async (credentials: StoredCredentials): Promise<string> => {
   const state = randomBytes(16).toString("base64url");
-  const verifier = newVerifier();
+  const verifier = newVerifier(randomBytes);
   const listener = await catchCode(state);
 
   try {

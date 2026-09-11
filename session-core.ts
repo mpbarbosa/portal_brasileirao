@@ -6,12 +6,13 @@
  * `live-core.ts`, so expiry and renewal are tested at boundary instants rather
  * than by sleeping.
  *
- * `node:crypto` is used for random bytes and hashing. That is not I/O: nothing
- * is read or written, and the one function whose output cannot be asserted by
- * value (`mintToken`) is asserted by shape.
+ * `node:crypto` is used for hashing only, which is a function of its input.
+ * The randomness a token needs arrives as a parameter — `mintToken(randomBytes)`
+ * — so every function here can be asserted by value, and
+ * `tests/core-purity.test.ts` refuses a `randomBytes` import.
  */
 
-import { createHash, randomBytes, timingSafeEqual } from "node:crypto";
+import { createHash, timingSafeEqual } from "node:crypto";
 
 /**
  * The cookie name, with the `__Host-` prefix, which a browser enforces as a
@@ -36,6 +37,8 @@ export const SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000;
  */
 export const RENEW_AFTER_MS = SESSION_TTL_MS / 2;
 
+const TOKEN_BYTES = 32;
+
 export interface SessionRecord {
   /** SHA-256 of the cookie value. The cookie itself is never stored. */
   tokenHash: string;
@@ -50,8 +53,19 @@ export interface SessionRecord {
  * 256 bits, so there is nothing to guess and nothing to rate-limit against.
  * base64url rather than hex because it travels in a cookie and hex would be
  * twice the length for the same entropy.
+ *
+ * The bytes come from the caller — `node:crypto`'s `randomBytes` in the server —
+ * and a source returning any other number of bytes throws: an empty source would
+ * mint the same token for every reader, and hashing it would not make that any
+ * less true.
  */
-export const mintToken = (): string => randomBytes(32).toString("base64url");
+export const mintToken = (random: (size: number) => Uint8Array): string => {
+  const bytes = random(TOKEN_BYTES);
+  if (bytes.length !== TOKEN_BYTES) {
+    throw new Error(`mintToken: expected ${TOKEN_BYTES} random bytes, got ${bytes.length}`);
+  }
+  return Buffer.from(bytes).toString("base64url");
+};
 
 /**
  * The value stored for a token.
