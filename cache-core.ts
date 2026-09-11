@@ -1,7 +1,10 @@
 /**
- * TTL cache and circuit breaker. Both take the current time as a parameter
- * rather than reading the clock, so expiry and recovery windows are testable
- * without sleeping (tests/cache-core.test.ts).
+ * When a stored answer may be served instead of asking upstream again.
+ *
+ * Everything here takes the current time as a parameter rather than reading the
+ * clock, so expiry is testable without sleeping (tests/cache-core.test.ts). The
+ * circuit breaker that sits beside the cache in every fill is
+ * `circuit-breaker-core.ts`.
  *
  * Sizing note: the football-data free tier allows 10 calls/minute. With a
  * 60s standings TTL and a 60s (15s while live) matches TTL, the app makes at
@@ -32,9 +35,6 @@ export const PLAYER_CACHE_TTL_MS = 60 * 60 * 1000;
  */
 export const SQUADS_CACHE_TTL_MS = 6 * 60 * 60 * 1000;
 
-export const CIRCUIT_BREAKER_FAILURE_THRESHOLD = 3;
-export const CIRCUIT_BREAKER_OPEN_MS = 60 * 1000;
-
 export interface CacheEntry<T> {
   value: T;
   storedAt: number;
@@ -64,37 +64,5 @@ export class TtlCache {
 
   clear(): void {
     this.entries.clear();
-  }
-}
-
-/**
- * Opens after `threshold` consecutive failures and stays open for `openMs`, so
- * an upstream that is down gets one probe a minute instead of one per request.
- * A single success closes it.
- */
-export class CircuitBreaker {
-  private failures = 0;
-  private openUntil = 0;
-
-  constructor(
-    private readonly threshold: number = CIRCUIT_BREAKER_FAILURE_THRESHOLD,
-    private readonly openMs: number = CIRCUIT_BREAKER_OPEN_MS,
-  ) {}
-
-  isOpen(now: number): boolean {
-    return now < this.openUntil;
-  }
-
-  recordSuccess(): void {
-    this.failures = 0;
-    this.openUntil = 0;
-  }
-
-  recordFailure(now: number): void {
-    this.failures += 1;
-    if (this.failures >= this.threshold) {
-      this.openUntil = now + this.openMs;
-      this.failures = 0;
-    }
   }
 }

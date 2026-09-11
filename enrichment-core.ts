@@ -34,7 +34,8 @@
  * Takes `now` as a parameter like `cache-core.ts` and performs no I/O of its own;
  * the request is a function the caller passes in.
  */
-import { CircuitBreaker, TtlCache } from "@/cache-core";
+import { TtlCache } from "@/cache-core";
+import { CircuitBreaker } from "@/circuit-breaker-core";
 import { freshBucket, spend, type Bucket, type BucketPolicy } from "@/rate-limit-core";
 
 /**

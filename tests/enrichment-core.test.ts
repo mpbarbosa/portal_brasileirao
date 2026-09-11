@@ -2,12 +2,12 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import {
-  CircuitBreaker,
   LIVE_MATCHES_CACHE_TTL_MS,
   SCORERS_CACHE_TTL_MS,
   SQUADS_CACHE_TTL_MS,
   STANDINGS_CACHE_TTL_MS,
 } from "@/cache-core";
+import { CircuitBreaker } from "@/circuit-breaker-core";
 import {
   createEnrichmentLoader,
   ENRICHMENT_BUDGET,

@@ -17,7 +17,7 @@ clock**, **the timezone**, and **shared mutable state**.
 ### The clock is a parameter
 
 Every core module that reasons about time takes `now` as an argument.
-`cache-core.ts`, `matches-core.ts`, `next-match-core.ts`, `session-core.ts`,
+`cache-core.ts`, `circuit-breaker-core.ts`, `matches-core.ts`, `next-match-core.ts`, `session-core.ts`,
 `oauth-core.ts`, `rate-limit-core.ts`, `events-core.ts`, `player-core.ts` and
 `refresh-latency-core.ts` all do. That is not a testing convenience; it is what
 lets `TtlCache` expiry and `CircuitBreaker` recovery be tested **without

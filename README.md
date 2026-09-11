@@ -196,7 +196,8 @@ src/                    React application, shared types, seed data
 standings-core.ts       pure table computation (no I/O)
 matches-core.ts         pure round filtering and feed ordering (no I/O)
 football-data-core.ts   pure football-data.org adapter: URLs + response mapping
-cache-core.ts           TTL cache and circuit breaker
+cache-core.ts           TTL cache: when a stored answer may be served
+circuit-breaker-core.ts circuit breaker: when to stop asking a failing upstream
 server.ts               Express host: API routes, Vite in dev, static serving in prod
 tests/                  unit tests for the core modules
 ```

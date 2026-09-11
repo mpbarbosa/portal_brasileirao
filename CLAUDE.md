@@ -1301,8 +1301,10 @@ matches.
 
 ### Caching and failure handling
 
-`cache-core.ts` holds a TTL cache and a circuit breaker. Both take `now` as a parameter
-instead of reading the clock, so expiry and recovery are tested without sleeping.
+`cache-core.ts` holds the TTL cache and `circuit-breaker-core.ts` the circuit breaker —
+two modules because they answer two questions, and one first sentence naming both was
+the tell. Both take `now` as a parameter instead of reading the clock, so expiry and
+recovery are tested without sleeping.
 
 The free tier allows **10 requests/minute** — caching is what makes it viable in
 production, not a nicety. Standings cache 60s, fixtures 60s, dropping to 15s while any

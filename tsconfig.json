@@ -43,6 +43,7 @@
     "broadcast-core.ts",
     "football-data-core.ts",
     "cache-core.ts",
+    "circuit-breaker-core.ts",
     "vite.config.ts",
     "scripts",
     "playwright.config.ts"

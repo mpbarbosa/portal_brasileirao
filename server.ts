@@ -7,8 +7,8 @@ import path from "node:path";
 import "dotenv/config";
 import express from "express";
 
+import { CircuitBreaker } from "@/circuit-breaker-core";
 import {
-  CircuitBreaker,
   LIVE_MATCHES_CACHE_TTL_MS,
   MATCHES_CACHE_TTL_MS,
   PLAYER_CACHE_TTL_MS,
