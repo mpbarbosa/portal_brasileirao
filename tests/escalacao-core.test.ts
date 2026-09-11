@@ -494,19 +494,30 @@ test("lineupsReconcile ACCEPTS a sheet with no starting goalkeeper, on purpose",
 });
 
 test("nothing here infers the keeper from shirt 1", () => {
-  // Bahia's r17/554901 names 23 players and no shirt 1 at all, so the rule
-  // would not even reach that case — and where it did reach one it would be an
-  // assertion about a person, from a convention rather than a law.
-  const noOne: Lineup = {
-    clubCode: "PAL",
-    players: Array.from({ length: 23 }, (_, i) => ({
-      name: `P${i}`,
-      shirt: String(i + 4),
-      ...(i < 11 ? { starter: true as const } : {}),
-    })),
+  // Four sheets of the season leave the starting goleiro unflagged, and one
+  // carries no shirt 1 at all — so "shirt 1 is the goalkeeper" would be wrong
+  // about a real side, and a wrong (GOL) is an assertion about a person. A shirt 1
+  // who starts WITHOUT the flag must build as an ordinary starter, and the side
+  // must still be reported.
+  //
+  // The first version of this test built a Lineup by hand, with shirts 4–26, and
+  // asserted its own input — so no inference anywhere could have turned it red.
+  // This one goes through `lineupsFromAtletas`, the builder that would do it.
+  const unflagged = {
+    id: "1",
+    atletas: [
+      ...Array.from({ length: STARTERS_PER_SIDE }, (_, i) => atleta(String(i + 1), `Titular${i + 1}`)),
+      ...Array.from({ length: 5 }, (_, i) => atleta(String(20 + i), `Reserva${i + 1}`, { reserva: "true" })),
+    ],
   };
-  assert.deepEqual(sidesWithoutStartingKeeper([noOne]), ["PAL"]);
-  assert.equal(noOne.players.some((p) => p.keeper), false);});
+  const [home] = lineupsFromAtletas(unflagged, side("2", 50), SIDES);
+  const shirtOne = home.players.find((player) => player.shirt === "1");
+
+  assert.equal(shirtOne?.starter, true, "shirt 1 started");
+  assert.equal(shirtOne?.keeper, undefined, "and was not made the keeper by its number");
+  assert.equal(home.players.some((player) => player.keeper), false);
+  assert.deepEqual(sidesWithoutStartingKeeper([home]), ["PAL"]);
+});
 
 // ---------------------------------------------------------------------------
 // The storage encoding — `LineupEntry` in `src/types.ts` has the measurements
