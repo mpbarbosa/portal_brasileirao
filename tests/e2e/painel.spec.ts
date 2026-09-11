@@ -1,4 +1,4 @@
-import { expect, test, type Page } from "@/tests/e2e/fixtures";
+import { expect, test, type Page } from "@/tests/e2e/clock";
 
 /**
  * The heading naming what this page is about. Scoped to `main` for

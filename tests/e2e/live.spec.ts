@@ -20,23 +20,24 @@ import { expect, test, type Page } from "@/tests/e2e/clock";
  *
  * Two of them, because simultaneous kickoffs are the normal Brasileirao Sunday
  * and the reason "Agora" is a list rather than a single card.
+ *
+ * Prepared once and fulfilled from memory, never `route.fetch()` per request:
+ * a proxying handler came back as something other than the envelope under the
+ * suite's workers — `meu-time.spec.ts` records the case.
  */
 const withLiveMatches = async (page: Page, count = 2) => {
-  await page.route("**/api/matches*", async (route) => {
-    const response = await route.fetch();
-    const body = await response.json();
+  const body = await (await page.request.get("/api/matches")).json();
 
-    const scheduled = body.data.matches.filter(
-      (match: { status: string }) => match.status === "SCHEDULED",
-    );
-    for (const match of scheduled.slice(0, count)) {
-      match.status = "LIVE";
-      match.homeGoals = 1;
-      match.awayGoals = 0;
-    }
+  const scheduled = body.data.matches.filter(
+    (match: { status: string }) => match.status === "SCHEDULED",
+  );
+  for (const match of scheduled.slice(0, count)) {
+    match.status = "LIVE";
+    match.homeGoals = 1;
+    match.awayGoals = 0;
+  }
 
-    await route.fulfill({ response, json: body });
-  });
+  await page.route("**/api/matches*", (route) => route.fulfill({ json: body }));
 };
 
 test.describe("Ao vivo", () => {

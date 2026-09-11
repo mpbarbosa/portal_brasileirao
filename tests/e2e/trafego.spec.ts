@@ -1,4 +1,4 @@
-import { expect, test, type Page } from "@/tests/e2e/fixtures";
+import { expect, test, type Page } from "@/tests/e2e/clock";
 import type { TrafficDashboard, TrafficSnapshot } from "@/src/types";
 
 /**
