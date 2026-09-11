@@ -333,12 +333,22 @@ test.describe("Vídeos do clube", () => {
     expect(box!.height).toBeGreaterThan(50);
   });
 
-  test("the card fills the column on a phone and is capped on a desktop", async ({ page }) => {
-    // **The cap is the half that is a decision.** Uncapped, the card is the
-    // full 736px content column, the thumbnail is 414px tall, and the card
-    // grows by about 320px — enough to push a section out of the Painel's
-    // screenshot crop. At 26rem it grows by about 135 and the page is the same
-    // page.
+  test("the card is the column at every width, as the Melhores momentos frame is", async ({
+    page,
+  }) => {
+    // **The 26rem cap is gone on purpose.** It drew a club's video at a little
+    // over half the width the Partida page plays one at, and two video sections
+    // at two sizes read as two kinds of thing. What it cost is recorded in the
+    // component: the club page's screenshot crop.
+    //
+    // Measured against the rail's own content box rather than the viewport,
+    // because the `ul` carries `-mx-1 px-1` and a viewport comparison would be
+    // asserting that arithmetic rather than the width.
+    const railWidth = () =>
+      page
+        .getByRole("list", { name: /Vídeos sobre/ })
+        .evaluate((el) => el.clientWidth - parseFloat(getComputedStyle(el).paddingLeft) * 2);
+
     await page.setViewportSize({ width: 1280, height: 900 });
     await page.goto("/clube/palmeiras");
 
@@ -347,25 +357,15 @@ test.describe("Vídeos do clube", () => {
 
     const wide = await card.boundingBox();
     expect(wide).not.toBeNull();
-    // 26rem at the default root size. Asserted as a ceiling rather than an
-    // equality, since what matters is that the column's surplus does not reach
-    // the card — the rule `CAMPAIGN_COLUMN` states one table over.
-    expect(wide!.width).toBeLessThanOrEqual(416 + 1);
-    // And it is not the 176 it was: a cap that happened to bind at the old
-    // width would pass the line above and change nothing.
-    expect(wide!.width).toBeGreaterThan(300);
+    expect(Math.abs(wide!.width - (await railWidth()))).toBeLessThanOrEqual(1);
+    // And the column is a desktop column, not a cap that happened to bind at
+    // the old 416 — equal-to-the-rail passes against a rail that shrank too.
+    expect(wide!.width).toBeGreaterThan(600);
 
-    // On a phone the cap never binds and the card is the column. Measured
-    // against the rail's own content box rather than the viewport, because the
-    // `ul` carries `-mx-1 px-1` and a viewport comparison would be asserting
-    // that arithmetic rather than the width.
     await page.setViewportSize({ width: 360, height: 800 });
     const narrow = await card.boundingBox();
-    const railWidth = await page
-      .getByRole("list", { name: /Vídeos sobre/ })
-      .evaluate((el) => el.clientWidth - parseFloat(getComputedStyle(el).paddingLeft) * 2);
     expect(narrow).not.toBeNull();
-    expect(Math.abs(narrow!.width - railWidth)).toBeLessThanOrEqual(1);
+    expect(Math.abs(narrow!.width - (await railWidth()))).toBeLessThanOrEqual(1);
   });
 
   test("the play badge keeps its share of the card as the card grows", async ({ page }) => {
@@ -394,7 +394,9 @@ test.describe("Vídeos do clube", () => {
     expect(cardBox).not.toBeNull();
     expect(badgeBox).not.toBeNull();
 
-    // 11.5% today. The floor is what a later widening has to clear, and it is
+    // 11.5% today, by construction now that the disc is a percentage of the
+    // card; the fixed 48px it used to be would read 6.5% on the 736px card the
+    // uncapped rail draws. The floor is what a later widening has to clear, and it is
     // set below the current value rather than at it so that a few pixels of
     // layout drift is not a failure — what this refuses is a card that grows
     // while the badge stands still.
