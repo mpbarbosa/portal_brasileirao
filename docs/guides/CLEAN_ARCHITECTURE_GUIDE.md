@@ -158,7 +158,8 @@ without re-running the whole check.
   `selectSnapshotFiles` in `traffic-report-core.ts`; `readTrafficReports` only
   lists the directory and reads what it is told. The frozen-data note's date is
   `numericDayLabel` in `events-core.ts`, beside the app's other Brazil-local day
-  labels.
+  labels; the note itself, and whether seed data is `placeholder` or `fallback`,
+  is `envelope-core.ts` (checked by the change that moved it).
 - **Moving `firstHeaderValue` found a bypass in the sign-in rate limiter.** The
   limiter keyed its bucket on the same client-most entry of `X-Forwarded-For`,
   and nginx's `$proxy_add_x_forwarded_for` appends the address it saw to whatever

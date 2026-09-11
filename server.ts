@@ -127,7 +127,7 @@ import { jsonLdScript, structuredData } from "@/structured-data-core";
 import { withPlayerOverrides, withScorerNames, withSquadOverrides } from "@/player-core";
 import { sortSquads } from "@/squad-core";
 import { computeStandings } from "@/standings-core";
-import { numericDayLabel } from "@/events-core";
+import { buildEnvelope, seedSource, snapshotLabelFor } from "@/envelope-core";
 import { CLUBS as SEED_CLUBS } from "@/src/data/clubs";
 import { CLUB_HYMNS } from "@/src/data/club-hymns";
 import { CLUB_INSTAGRAM } from "@/src/data/club-instagram";
@@ -207,19 +207,8 @@ const WEATHER_TIMEOUT_MS = Number(process.env.WEATHER_TIMEOUT_MS ?? 4000);
 
 const providerEnabled = (): boolean => Boolean(FOOTBALL_DATA_TOKEN) && !PROVIDER_DISABLED;
 
-/** The snapshot's day as pt-BR copy writes it. `numericDayLabel` answers null only
- *  for a string that is not a day, which `sync-seed-data` never writes and a unit
- *  test checks for the shipped date; the raw string is the fallback because a
- *  note saying *which* day, badly formatted, beats one saying none. */
-const snapshotLabel = numericDayLabel(SNAPSHOT_DATE) ?? SNAPSHOT_DATE;
-
-const NOTE_LIVE = "Dados do football-data.org (Campeonato Brasileiro Série A).";
-const NOTE_WEATHER = "Condições atuais no estádio, do Open-Meteo.";
-const NOTE_TRAFFIC = "Instantâneos do log de acesso da produção.";
-const NOTE_PLACEHOLDER =
-  `Dados congelados de ${snapshotLabel} — defina FOOTBALL_DATA_TOKEN para dados ao vivo.`;
-const NOTE_FALLBACK =
-  `Dados congelados de ${snapshotLabel} — a fonte ao vivo está indisponível no momento.`;
+/** The frozen seed's day, as the fallback notes print it. See `snapshotLabelFor`. */
+const SNAPSHOT_LABEL = snapshotLabelFor(SNAPSHOT_DATE);
 
 const cache = new TtlCache();
 const breaker = new CircuitBreaker();
@@ -270,34 +259,18 @@ app.use("/api", (_req, res, next) => {
   next();
 });
 
+/** An envelope with this process's snapshot day bound in. The note and the key
+ *  order are `buildEnvelope`'s. */
 const envelope = <T>(
   data: T,
   source: ApiEnvelope<T>["source"],
   updatedAt: number,
-): ApiEnvelope<T> => ({
-  source,
-  note:
-    source === "football-data"
-      ? NOTE_LIVE
-      : source === "open-meteo"
-        ? NOTE_WEATHER
-        : source === "traffic-log"
-          // Named rather than left to fall through to NOTE_FALLBACK, which is
-          // about the provider and would read as an outage on a page that has
-          // never asked the provider anything. The traffic route builds its own
-          // envelope with a count in the note, so this branch is a floor.
-          ? NOTE_TRAFFIC
-          : source === "placeholder"
-            ? NOTE_PLACEHOLDER
-            : NOTE_FALLBACK,
-  updatedAt: new Date(updatedAt).toISOString(),
-  data,
-});
+): ApiEnvelope<T> => buildEnvelope(data, source, updatedAt, SNAPSHOT_LABEL);
 
-/** Seed fixtures, labelled by *why* they are being served: never configured
- *  (`placeholder`) versus configured but currently failing (`fallback`). */
+/** Seed data, labelled by *why* it is being served — `seedSource`'s rule, fed
+ *  this process's configuration. */
 const seedEnvelope = <T>(data: T, now: number): ApiEnvelope<T> =>
-  envelope(data, providerEnabled() ? "fallback" : "placeholder", now);
+  envelope(data, seedSource(providerEnabled()), now);
 
 const fetchFromProvider = async <T>(url: string): Promise<T> => {
   const response = await fetch(url, {

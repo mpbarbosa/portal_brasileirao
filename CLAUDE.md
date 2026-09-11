@@ -1540,8 +1540,10 @@ empty scorers list is a real answer.
 Every data endpoint returns `ApiEnvelope<T>`: `source`, a human-readable pt-BR `note`, and
 `updatedAt` alongside `data`. `source` distinguishes `football-data` (live) from
 `placeholder` (no token configured) and `fallback` (configured but failing) — the last two
-look identical to a reader but only `fallback` is worth alerting on. The UI banners the
-note for anything that isn't live. New endpoints keep this shape and degrade to local data
+look identical to a reader but only `fallback` is worth alerting on. The note, the key
+order and that `placeholder`/`fallback` choice are `envelope-core.ts` (`buildEnvelope`,
+`seedSource`); `server.ts` binds the snapshot's day and its own configuration and does
+nothing else to an envelope. The UI banners the note for anything that isn't live. New endpoints keep this shape and degrade to local data
 rather than returning a 500.
 
 Current routes: `/api/health`, `/api/clubs`, `/api/standings`, `/api/scorers`,
