@@ -144,11 +144,12 @@ test("playerPosts drops an entry whose code cannot be drawn", () => {
   // `videosFor`'s contract: the component is handed a list it can render in
   // full, so a code that will not reduce to a shortcode is dropped here rather
   // than reaching the page as a frame pointing nowhere. The file is
-  // hand-maintained, so a reel link or a profile link is the plausible mistake.
+  // hand-maintained, so a link of the wrong kind or a profile link is the
+  // plausible mistake.
   const good = { code: "Dc1GBBADkfo", account: "athleticoparanaense", summary: "Jogador do mês." };
-  // `/reels/` and not `/reel/`: the shorter spelling is refused by length
-  // whatever `instagramPostCode` does about path kinds, so a case built on it
-  // would pass for a reason unrelated to what it claims to test.
+  // `/reels/` and not `/reel/`: a `/reel/` link parses to its code — a reel is
+  // drawn through the post embed — so it would not be dropped here, and the
+  // round trip in `tests/player-posts.test.ts` is what refuses it as stored data.
   const reel = { code: "https://www.instagram.com/reels/Dc1GBBADkfo/", account: "x", summary: "y" };
   const junk = { code: "with spaces", account: "x", summary: "y" };
 

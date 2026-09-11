@@ -517,27 +517,44 @@ test("the frame address is the captioned embed and not the canonical post", () =
   assert.notEqual(instagramPostEmbedUrl("Dc1GBBADkfo"), instagramPostUrl("Dc1GBBADkfo"));
 });
 
+test("a pasted reel link yields its code, and every address it builds is a post's", () => {
+  // A reel's shortcode is a post's: `/p/<code>/embed/captioned/` rendered this
+  // one in a browser, author, badge and video, and `/p/<code>/` opened it
+  // without redirecting. So the share token goes exactly as it does for a post,
+  // and nothing built from the code says `/reel/`.
+  const pasted =
+    "https://www.instagram.com/reel/DbHq1mExfG9/?utm_source=ig_web_copy_link&stkn=MzRlODBiNWFlZA==";
+  assert.equal(instagramPostCode(pasted), "DbHq1mExfG9");
+  assert.equal(instagramPostCode("https://www.instagram.com/reel/DbHq1mExfG9"), "DbHq1mExfG9");
+  assert.equal(instagramPostUrl(pasted), "https://www.instagram.com/p/DbHq1mExfG9/");
+  assert.equal(
+    instagramPostEmbedUrl(pasted),
+    "https://www.instagram.com/p/DbHq1mExfG9/embed/captioned/",
+  );
+});
+
 test("a link that is not a post yields no post", () => {
-  // Refuses rather than guesses. A reel and a `/tv/` post have their own path
-  // kinds and nothing here has checked that `/p/` serves them, so they are out
-  // until somebody checks — widening this is a deliberate change.
-  assert.equal(instagramPostCode("https://www.instagram.com/reel/Dc1GBBADkfo/"), null);
+  // Refuses rather than guesses. `/tv/` has its own path kind and nothing here
+  // has checked that `/p/` serves it; `/reels/` answered only the login wall.
+  // Both are out until somebody checks — widening this is a deliberate change.
   assert.equal(instagramPostCode("https://www.instagram.com/tv/Dc1GBBADkfo/"), null);
-  // `/reels/` rather than `/reel/`, and the difference is the whole reason this
-  // line exists: with the kind check deleted, those two are refused anyway
-  // because "reel" and "tv" are shorter than a shortcode can be — they pass for
-  // a reason that has nothing to do with what they are. "reels" is five
-  // characters and clears the same regex, so only the kind check refuses it,
-  // and the same holds for a profile handle. Confirmed by mutation.
+  // `/reels/` is the line that matters, and not only because it is refused:
+  // with the kind check deleted, "tv" is refused anyway because it is shorter
+  // than a shortcode can be — it passes for a reason that has nothing to do with
+  // what it is. "reels" is five characters and clears the same regex, so only
+  // the kind check refuses it, and the same holds for a profile handle.
+  // Confirmed by mutation.
   assert.equal(instagramPostCode("https://www.instagram.com/reels/Dc1GBBADkfo/"), null);
   assert.equal(instagramPostCode("https://www.instagram.com/palmeiras/"), null);
+  // A path that merely begins with the letters of a kind is not that kind.
+  assert.equal(instagramPostCode("https://www.instagram.com/reel"), null);
   assert.equal(instagramPostCode("https://www.instagram.com/"), null);
   assert.equal(instagramPostCode("with spaces"), null);
   assert.equal(instagramPostCode("abc"), null);
   assert.equal(instagramPostCode(""), null);
   assert.equal(instagramPostCode(undefined), null);
   // Every caller degrades to no post rather than to a frame pointing nowhere.
-  assert.equal(instagramPostUrl("https://www.instagram.com/reel/Dc1GBBADkfo/"), null);
+  assert.equal(instagramPostUrl("https://www.instagram.com/tv/Dc1GBBADkfo/"), null);
   assert.equal(instagramPostEmbedUrl("with spaces"), null);
 });
 

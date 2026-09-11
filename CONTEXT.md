@@ -563,6 +563,9 @@ do jogador** beside it, and storing the post's **shortcode alone**: Instagram's 
 `instagramPostCode` in `club-core.ts` is what stops that reaching a public
 repository. Coverage is partial and always will be; a player with none gets no
 section rather than an empty heading.
+A **reel** is a publicação like any other: its `/reel/<code>/` link parses to the
+same shortcode and is framed through the same `/p/` embed, which renders it —
+measured in a browser, not assumed. `/reels/` and `/tv/` links are still refused.
 It is a **facade** — a labelled press target carrying a hand-written summary, and
 no frame at all until a reader presses it, which is the **Vídeos do clube** rule
 and matters more here because the third party is Meta and a card is opened dozens
@@ -583,13 +586,14 @@ own **and verified**, never merely whoever posted something true; and the post i
 from the **current season**. Both are read off the embed, which renders the badge,
 the follower count and the caption to a logged-out browser even though `curl`
 sees only the login shell.
-_Avoid_: storing the pasted permalink (it carries the share token), an `<img>`
+_Avoid_: storing the pasted permalink (it carries the share token), a separate
+kind, field or file for reels (the code and the embed are the same), an `<img>`
 from `cdninstagram.com` (the copyright the **Foto do jogador** entry refuses, and
 the addresses expire), a thumbnail preview (same copy, by another road), mounting
 the frame on render, framing `/p/<code>/` or `/embed/` rather than
 `/embed/captioned/`, a fixed frame height (a post may be 1:1, 4:5, 1.91:1, a
-carrossel or carry a long caption), copying Instagram's caption into the summary,
-calling the section "Fotos" (a post may be a video or a carrossel), taking a post
+9:16 reel, a carrossel or carry a long caption), copying Instagram's caption
+into the summary, calling the section "Fotos" (a post may be a video or a carrossel), taking a post
 from a fan page, a news outlet, a broadcaster's advert or a gossip account (all
 four were offered and refused), trusting a search result's title (it names the
 post, never the account that published it, and a **dead** shortcode looks the

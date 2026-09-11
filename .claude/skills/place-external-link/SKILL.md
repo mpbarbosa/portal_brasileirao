@@ -97,8 +97,9 @@ else, with nothing about the string changing?* If yes, record the identity too.
 
 ## 4. The parser refuses; it never salvages
 
-Follow `instagramPostCode`'s rule — it accepts `/p/` and refuses a reel, rather
-than guessing that `/p/` serves reels too. A parser that is *helpful* about a
+Follow `instagramPostCode`'s rule — it accepts `/p/`, took `/reel/` only once a
+browser had shown `/p/` serving a reel, and still refuses `/reels/` and `/tv/`
+rather than guessing that they work too. A parser that is *helpful* about a
 bad input produces a link that looks right and goes nowhere, which is worse than
 no parser.
 

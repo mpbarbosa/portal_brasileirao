@@ -356,7 +356,9 @@ export interface PlayerPhoto {
 export interface PlayerPost {
   /**
    * The post's shortcode alone — the `Dc1GBBADkfo` of
-   * `instagram.com/p/Dc1GBBADkfo/`. `instagramPostUrl` and
+   * `instagram.com/p/Dc1GBBADkfo/`. A reel is stored the same way — the code
+   * of `instagram.com/reel/<code>/`, which the `/p/` addresses serve — so
+   * nothing here records which of the two it was. `instagramPostUrl` and
    * `instagramPostEmbedUrl` derive the two addresses, so a pasted link's
    * `?utm_source=ig_web_copy_link&stkn=…` does not persist here.
    *
