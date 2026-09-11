@@ -40,7 +40,11 @@ import {
   type TeamsResponse,
 } from "@/football-data-core";
 import { withBroadcasters, withVenues } from "@/broadcast-core";
-import { createEnrichmentLoader, ENRICHMENT_BUDGET } from "@/enrichment-core";
+import {
+  createEnrichmentLoader,
+  ENRICHMENT_BUDGET,
+  enrichmentCacheControl,
+} from "@/enrichment-core";
 import { readMatchState, writeMatchState } from "@/match-state-store";
 import { contestedPlayerIds, withGoals } from "@/goals-core";
 import { withLineupNicknames, withLineups } from "@/escalacao-core";
@@ -1325,15 +1329,16 @@ app.get("/api/players/:id", async (req, res) => {
       )
     : ({ kind: "unavailable" } as const);
 
+  // What a browser may keep is `enrichmentCacheControl`'s rule: an answer for as
+  // long as the server keeps it, and a non-answer — offline, over budget, or
+  // upstream down — not at all, so the next time this card opens, it asks.
+  res.set("Cache-Control", enrichmentCacheControl(answer, PLAYER_CACHE_TTL_MS));
+
   if (answer.kind === "answered") {
-    res.set("Cache-Control", "public, max-age=3600");
     res.json(envelope(answer.value, "football-data", answer.storedAt));
     return;
   }
 
-  // Not an answer — offline, over budget, or upstream down — so nothing a
-  // browser should keep for an hour: the next time this card opens, it asks.
-  res.set("Cache-Control", "no-store");
   res.json(seedEnvelope(null, Date.now()));
 });
 

@@ -149,8 +149,14 @@ without re-running the whole check.
   the predicate the client's refresh rate already used; the order every cached
   fill takes — switched off, warm entry, open breaker, network — is `fillStep`
   beside it, called by `loadCached`, `loadMatches` and the stadium-weather route
-  (checked by the change that moved it); and `/api/matches` and `/api/players/:id` validate through
-  `parseRoundParam` and `isPersonId`. `firstHeaderValue` moved to `seo-core.ts`
+  (checked by the change that moved it); `/api/players/:id`'s `Cache-Control` is
+  `enrichmentCacheControl` (`enrichment-core.ts`), with the max-age read off the
+  loader's TTL (checked by the same change); and `/api/matches` and
+  `/api/players/:id` validate through `parseRoundParam` and `isPersonId`. Two
+  small things were looked at and left in the handler because they are a
+  constant and a flag rather than a decision: the sign-in limiter's eviction
+  threshold (`evictFull` itself is already in `rate-limit-core.ts`) and logout's
+  `todos=true`. `firstHeaderValue` moved to `seo-core.ts`
   beside `resolveOrigin`, and whether `TRUST_PROXY` lets it read the forwarded
   headers at all is `requestOrigin` there too (checked by the change that moved
   it), so `originFor` only reads the request. `decodable` moved to

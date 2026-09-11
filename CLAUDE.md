@@ -1355,7 +1355,9 @@ reaches upstream after the fix.
 
 Anything short of an answer is `null` with `Cache-Control: no-store`, so the card
 renders from what the page knew, as it does offline, and a reader refused once is
-not refused again for an hour by their own browser.
+not refused again for an hour by their own browser. That header is
+`enrichmentCacheControl`, which reads the max-age off the loader's TTL rather than
+carrying a second copy of the hour.
 
 ### The provider regresses individual records, and the app remembers
 
