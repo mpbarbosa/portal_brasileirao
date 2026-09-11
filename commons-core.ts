@@ -100,3 +100,18 @@ export const creditMatches = (
   const expected = facts.attribution?.trim() ? facts.attribution : (facts.artist ?? "");
   return fold(stored) === fold(expected);
 };
+
+/**
+ * A file's description page on Commons — where the licence, the photographer
+ * and the upload history live, and the link every Creative Commons licence in
+ * use here asks a reuser to give.
+ *
+ * Spaces become underscores because a Commons page title is written that way in
+ * a URL, and `encodeURIComponent` runs **after** the substitution so it does not
+ * percent-encode the underscores it just introduced.
+ *
+ * One builder for the stadium page, the player card and every `CREDITS.md` the
+ * syncs write, each of which used to carry its own copy of this expression.
+ */
+export const commonsFilePage = (file: string): string =>
+  `https://commons.wikimedia.org/wiki/File:${encodeURIComponent(file.replace(/ /g, "_"))}`;

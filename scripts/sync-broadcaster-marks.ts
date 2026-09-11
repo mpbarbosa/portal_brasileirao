@@ -34,7 +34,7 @@ import { mkdirSync, writeFileSync } from "node:fs";
 import path from "node:path";
 
 import { MARKS, type MarkSource } from "@/broadcast-core";
-import { publicDomain } from "@/commons-core";
+import { commonsFilePage, publicDomain } from "@/commons-core";
 import { commonsBytes, commonsFacts, pause } from "@/scripts/commons-api";
 
 const ROOT = process.cwd();
@@ -107,7 +107,7 @@ remain the property of their respective owners.
 | File | Source on Commons | Licence | Credited |
 | --- | --- | --- | --- |
 ${credits
-  .map((c) => `| \`${c.slug}.png\` | [${c.commons}](https://commons.wikimedia.org/wiki/File:${encodeURIComponent(c.commons.replace(/ /g, "_"))}) | ${c.licence} | ${c.artist} |`)
+  .map((c) => `| \`${c.slug}.png\` | [${c.commons}](${commonsFilePage(c.commons)}) | ${c.licence} | ${c.artist} |`)
   .join("\n")}
 `,
 );
