@@ -170,6 +170,21 @@
  * carries **`P12302` = `358554`**, byte-identical to what `player-sofascore.ts`
  * already records for `1327`, and a `P569` of `1996-08-30`, the date `squads.ts`
  * lists. Two curated files agreeing on one item, not one date trusted alone.
+ *
+ * ## An entry whose ids agree and whose handle Wikidata does not carry
+ *
+ * `osamuellino` (`178710`, Flamengo) arrived as a pasted link, and it is the
+ * mirror of `gabigol`: there the ids vouched for the handle because Wikidata's
+ * item carried it; here the item is found from the other side and carries **no
+ * `P2003`** at all. Reached through **`P12302` = `874705`** — what
+ * `player-sofascore.ts` already records for `178710` — item `Q67222776` has a
+ * `ptwiki` sitelink of `Samuel Lino`, the title `player-wikipedia.ts` records,
+ * and a `P569` of `1999-12-23`, the date `squads.ts` lists. That settles which
+ * person the row is. It says **nothing about the handle**, which rests on the
+ * profile alone: opened 2026-09-11, `Samuel Lino (@osamuellino)`, verified, 1M
+ * followers, and a bio reading "Jogador do **@flamengo**" — the club `squads.ts`
+ * lists `178710` under — with an invented handle beside it rendering "Profile
+ * isn't available". The division lists exactly one Samuel Lino.
  */
 export const PLAYER_INSTAGRAM: Record<string, string> = {
   "192070": "kevinviveros9",     // Kevin Viveros · Athletico-PR
@@ -221,6 +236,7 @@ export const PLAYER_INSTAGRAM: Record<string, string> = {
   "8413": "l.araujo11oficial",   // Luiz Araújo · Flamengo
   "168795": "nicodelacruz10",    // Nicolas de la Cruz · Flamengo
   "1077": "pedroguilherme",      // Pedro · Flamengo
+  "178710": "osamuellino",       // Samuel Lino · Flamengo
   "118": "saulniguez",           // Saúl · Flamengo
   "28614": "agus_cano7",         // Agustín Canobbio · Fluminense
   "245200": "facubernal_08",     // Facundo Bernal · Fluminense
