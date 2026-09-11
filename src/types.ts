@@ -544,6 +544,18 @@ export interface LineupPlayer {
   shirt: string;
   keeper?: true;
   starter?: true;
+  /**
+   * The player's **apelido**, attached at serve time by `withLineupNicknames`
+   * and **never stored**: `encodeLineups` writes no such field, so a resync
+   * cannot commit one and a change to `player-nicknames.ts` reaches every past
+   * sheet with no regeneration — `Goal.playerId`'s rule.
+   *
+   * The apelido rather than a player id, and that was measured: an id on every
+   * entry that resolves (8947 of 11548) grew the escalações in `/api/matches`
+   * from 71 to 110 KB gzipped, on every page load, to print one word on 19
+   * sheets.
+   */
+  nickname?: string;
 }
 
 /**

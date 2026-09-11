@@ -175,10 +175,10 @@ function LineupColumn({ lineup, name }: { lineup: Lineup; name: string }) {
   // Only ever non-null where the elenco has two players of one name, so this is
   // an empty answer on all but 11 of the season's 2328 rows. See its own note.
   const shirts = subShirtLabels(lineup);
-  const row = (player: { name: string; shirt: string; keeper?: true }) => (
+  const row = (player: { name: string; shirt: string; keeper?: true; nickname?: string }) => (
     <li key={`${player.shirt}-${player.name}`} className="flex gap-2">
       <span className="w-6 shrink-0 text-right tabular-nums text-ink-faint">{player.shirt}</span>
-      <span className="truncate">
+      <span className="min-w-0 truncate">
         {player.name}
         {/* The one position CBF reports at all — naming the rest would mean
             guessing. It is NOT one a team sheet always marks, which this
@@ -189,6 +189,12 @@ function LineupColumn({ lineup, name }: { lineup: Lineup; name: string }) {
             time. Do not reach for "shirt 1 is the keeper" — see that
             function for why a wrong (GOL) is worse than an absent one. */}
         {player.keeper && <span className="ml-1 text-ink-faint">(GOL)</span>}
+        {/* Under the name rather than beside it, as in the gols one section
+            up: this column is half the card, and an apelido written inline is
+            the part a truncated line would cut. */}
+        {player.nickname && (
+          <span className="block truncate text-ink-faint">{nicknameLabel(player.nickname)}</span>
+        )}
       </span>
     </li>
   );

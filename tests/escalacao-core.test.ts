@@ -15,12 +15,15 @@ import {
   startedFor,
   subShirtLabels,
   tidyLineupName,
+  withLineupNicknames,
   withLineups,
 } from "@/escalacao-core";
-import type { SideMap } from "@/goals-core";
+import { contestedPlayerIds, type SideMap } from "@/goals-core";
 import type { SumulaSubstitution } from "@/sumula-core";
 import { ESCALACOES } from "@/src/data/escalacoes";
-import type { Lineup, Match } from "@/src/types";
+import { PLAYER_NICKNAMES } from "@/src/data/player-nicknames";
+import { SEED_SQUADS } from "@/src/data/squads";
+import type { Lineup, Match, Squad } from "@/src/types";
 
 const SIDES: SideMap = {
   homeCbfId: "1",
@@ -147,6 +150,79 @@ test("withLineups attaches only where there is something to attach", () => {
   assert.equal(merged[1].lineups, undefined);
   assert.equal(lineupFor(merged[0], "PAL")?.players.length, 16);
   assert.equal(lineupFor(merged[1], "PAL"), null);
+});
+
+const santos: Squad[] = [
+  {
+    club: { code: "SAN", name: "Santos FC", shortName: "Santos" },
+    players: [
+      { id: "1327", name: "Gabriel Barbosa" },
+      { id: "2", name: "Gabriel Bontempo" },
+      { id: "3", name: "Rony" },
+    ],
+  },
+];
+
+const santosSheet = (): Record<string, Lineup[]> => ({
+  m: [
+    {
+      clubCode: "SAN",
+      players: [
+        { name: "Gabriel Barbosa", shirt: "9", starter: true },
+        { name: "Gabriel", shirt: "10", starter: true },
+        { name: "Rony", shirt: "11" },
+      ],
+    },
+  ],
+});
+
+test("withLineupNicknames attaches an apelido only where the name is exactly one player", () => {
+  const out = withLineupNicknames(santosSheet(), santos, new Map(), { "1327": "Gabigol" });
+  // A bare "Gabriel" reads as both Gabriels, so it resolves to nobody — the
+  // refusal `matchPlayerByName` exists for, and the reason no apelido is guessed.
+  assert.deepEqual(
+    out.m[0].players.map((p) => p.nickname),
+    ["Gabigol", undefined, undefined],
+  );
+});
+
+test("withLineupNicknames refuses an id the club's own sheets contest", () => {
+  const contested = new Map([["SAN", new Set(["1327"])]]);
+  const out = withLineupNicknames(santosSheet(), santos, contested, { "1327": "Gabigol" });
+  assert.equal(out.m[0].players[0].nickname, undefined);
+});
+
+test("withLineupNicknames leaves a sheet with nothing to attach as the same object", () => {
+  const lineups = santosSheet();
+  // No apelido at this club: the record comes back untouched, by identity.
+  assert.equal(withLineupNicknames(lineups, santos, new Map(), {}), lineups);
+  // An apelido that only restates the name ("RONY" for Rony) is no apelido, and
+  // one for a player this sheet names only ambiguously ("Gabriel") reaches
+  // nobody: the sheet itself is unchanged.
+  const out = withLineupNicknames(lineups, santos, new Map(), { "3": "RONY", "2": "Bontempo" });
+  assert.equal(out.m[0], lineups.m[0]);
+});
+
+test("an attached apelido is never written back to the stored encoding", () => {
+  const lineups = santosSheet();
+  const out = withLineupNicknames(lineups, santos, new Map(), { "1327": "Gabigol" });
+  assert.equal(out.m[0].players[0].nickname, "Gabigol");
+  assert.deepEqual(encodeLineups(out.m), encodeLineups(lineups.m));
+});
+
+test("the committed sheets print only apelidos the table holds, and print at least one", () => {
+  const out = withLineupNicknames(
+    ESCALACOES,
+    SEED_SQUADS,
+    contestedPlayerIds(ESCALACOES, SEED_SQUADS),
+    PLAYER_NICKNAMES,
+  );
+  const printed = Object.values(out)
+    .flat()
+    .flatMap((sheet) => sheet.players.flatMap((p) => (p.nickname ? [p.nickname] : [])));
+  const known = new Set(Object.values(PLAYER_NICKNAMES));
+  assert.ok(printed.length > 0, "no sheet carries an apelido — the join is not wired");
+  assert.deepEqual(printed.filter((n) => !known.has(n)), []);
 });
 
 test("bySection sorts by shirt as a number, not as text", () => {

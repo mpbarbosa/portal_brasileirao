@@ -43,7 +43,7 @@ import { withBroadcasters, withVenues } from "@/broadcast-core";
 import { createEnrichmentLoader, ENRICHMENT_BUDGET } from "@/enrichment-core";
 import { readMatchState, writeMatchState } from "@/match-state-store";
 import { contestedPlayerIds, withGoals } from "@/goals-core";
-import { withLineups } from "@/escalacao-core";
+import { withLineupNicknames, withLineups } from "@/escalacao-core";
 import { withHighlights } from "@/match-core";
 import {
   coachesOf,
@@ -142,6 +142,7 @@ import { HIGHLIGHTS } from "@/src/data/highlights";
 import { VENUES } from "@/src/data/venues";
 import { SEED_MATCHES, SNAPSHOT_DATE } from "@/src/data/matches";
 import { COACH_OVERRIDES } from "@/src/data/coach-overrides";
+import { PLAYER_NICKNAMES } from "@/src/data/player-nicknames";
 import { PLAYER_OVERRIDES } from "@/src/data/player-overrides";
 import { SEED_SCORERS } from "@/src/data/scorers";
 import { SEED_SQUADS } from "@/src/data/squads";
@@ -373,6 +374,19 @@ interface MatchesPayload {
 const CONTESTED_PLAYER_IDS = contestedPlayerIds(ESCALACOES, SEED_SQUADS);
 
 /**
+ * The team sheets with each player's apelido attached, resolved once here for the
+ * reason `CONTESTED_PLAYER_IDS` is: both inputs are committed files and the
+ * offline branch rebuilds the curated list per request. Read against the same
+ * `SEED_SQUADS` and refused the same contested ids as the scorers.
+ */
+const ESCALACOES_WITH_NICKNAMES = withLineupNicknames(
+  ESCALACOES,
+  SEED_SQUADS,
+  CONTESTED_PLAYER_IDS,
+  PLAYER_NICKNAMES,
+);
+
+/**
  * The curated data a fixture list is served with — channels, venues, highlights,
  * goals and team sheets, none of which any provider carries.
  *
@@ -397,7 +411,7 @@ const withCuratedData = (matches: Match[]): Match[] =>
       SEED_SQUADS,
       CONTESTED_PLAYER_IDS,
     ),
-    ESCALACOES,
+    ESCALACOES_WITH_NICKNAMES,
   );
 
 /**
