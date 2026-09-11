@@ -334,6 +334,13 @@ const trailFor = (route: Route, context: MetaContext): Array<{ name: string; pat
  * A page whose subject has not loaded gets breadcrumbs and nothing else: an
  * empty `SportsEvent` asserts a match exists with no name and no kickoff, which
  * is worse than staying quiet.
+ *
+ * **A fixture with no venue gets no Event either.** `location` is required of
+ * an Event, so a node without one is an invalid item rather than a partial one:
+ * Search Console's live test on `/partida/555110` reported it as a critical
+ * error. Placing the match at the home club's ground would state a fact the
+ * provider has not (clubs play away from home, and share grounds), so the node
+ * waits for the venue and the breadcrumbs carry the page meanwhile.
  */
 export const structuredData = (
   route: Route,
@@ -353,7 +360,7 @@ export const structuredData = (
 
   if (route.section === "partida") {
     const match = findMatch(context.matches ?? [], route.id);
-    if (match) blocks.push(eventNode(match, context.clubs ?? [], origin, description, image));
+    if (match?.venue) blocks.push(eventNode(match, context.clubs ?? [], origin, description, image));
   }
 
   if (route.section === "estadio") {
