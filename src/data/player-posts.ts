@@ -158,4 +158,18 @@ export const PLAYER_POSTS: Record<string, PlayerPost[]> = {
       summary: "Carlos Vinícius comemora a classificação do Grêmio, com a camisa tricolor.",
     },
   ],
+
+  // Gabriel Barbosa (Gabigol) · Santos. Opened 2026-09-11: `gabigol`,
+  // verificada, 11,2M seguidores, publicada às 23:34 de 30 de maio (horário de
+  // Brasília, lido do shortcode). É a noite do Santos 3x1 Vitória, em que ele
+  // marcou aos 56'. Carrossel sem legenda; o primeiro slide mostra a camisa 9 do
+  // Santos. O resumo diz a data e não afirma que as fotos são desse jogo.
+  "1327": [
+    {
+      code: "DY_IgxsFUtf",
+      account: "gabigol",
+      summary:
+        "Gabigol publica na noite do 3 a 1 do Santos sobre o Vitória, em que marcou o terceiro gol.",
+    },
+  ],
 };
