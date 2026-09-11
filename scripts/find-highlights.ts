@@ -33,11 +33,11 @@ import {
   DEFAULT_WINDOW_HOURS,
   bestPerChannel,
   KNOWN_CHANNELS,
-  watchUrl,
   type Candidate,
   type Fixture,
   type Verdict,
 } from "@/highlight-search-core";
+import { youtubeWatchUrl } from "@/club-core";
 import { hasHighlights } from "@/match-core";
 import type { Club, Match } from "@/src/types";
 
@@ -158,7 +158,7 @@ const searchYouTube = async (query: string): Promise<Candidate[]> => {
 /** The exact instant, which the results page does not carry — it only says
  *  "há 2 dias", and two of these fixtures can both be "há 9 meses". */
 const uploadedAt = async (videoId: string): Promise<string | undefined> => {
-  const html = await get(watchUrl(videoId));
+  const html = await get(youtubeWatchUrl(videoId));
   return html.match(/"uploadDate":"([^"]+)"/)?.[1];
 };
 
@@ -225,7 +225,7 @@ const entryFor = (fixture: Fixture, picked: Verdict[]): string =>
     `  // ${label(fixture)}, rodada ${fixture.match.round}.`,
     `  "${fixture.match.id}": [`,
     ...picked.map(
-      (v) => `    { url: "${watchUrl(v.candidate.videoId)}", channel: "${v.channel}" },`,
+      (v) => `    { url: "${youtubeWatchUrl(v.candidate.videoId)}", channel: "${v.channel}" },`,
     ),
     `  ],`,
   ].join("\n");

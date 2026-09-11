@@ -328,5 +328,3 @@ export const bestPerChannel = (verdicts: Verdict[]): Verdict[] => {
   // Preference order, which is also stable, so a rerun produces the same file.
   return [...best.values()].sort((a, b) => rankOf(a.channel ?? "") - rankOf(b.channel ?? ""));
 };
-
-export const watchUrl = (videoId: string): string => `https://www.youtube.com/watch?v=${videoId}`;
