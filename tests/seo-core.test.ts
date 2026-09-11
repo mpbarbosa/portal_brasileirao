@@ -4,6 +4,7 @@ import { test } from "node:test";
 import {
   canonicalPath,
   canonicalUrl,
+  firstHeaderValue,
   pageStatus,
   resolveOrigin,
   robotsTxt,
@@ -377,4 +378,15 @@ test("the jogadores page is in the sitemap, and does not claim to change daily",
   assert.ok(entry);
   assert.equal(entry.changefreq, "weekly");
   assert.equal(entry.lastmod, "2026-08-25");
+});
+
+test("a forwarded origin header is read at its client-most entry", () => {
+  assert.equal(firstHeaderValue("https"), "https");
+  assert.equal(firstHeaderValue("https, http"), "https");
+  assert.equal(firstHeaderValue(" brasileirao.example , proxy.internal"), "brasileirao.example");
+
+  // Nothing usable falls through, so the caller's own fallback applies.
+  assert.equal(firstHeaderValue(undefined), undefined);
+  assert.equal(firstHeaderValue(""), undefined);
+  assert.equal(firstHeaderValue(" , https"), undefined);
 });

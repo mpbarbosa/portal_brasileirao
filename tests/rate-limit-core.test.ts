@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { evictFull, freshBucket, spend, type Bucket, type BucketPolicy } from "@/rate-limit-core";
+import { clientKey, evictFull, freshBucket, spend, type Bucket, type BucketPolicy } from "@/rate-limit-core";
 
 const POLICY: BucketPolicy = { capacity: 5, refillMs: 60_000 };
 
@@ -56,4 +56,37 @@ test("full buckets are forgotten, so the map is not a log of every visitor", () 
   assert.equal(buckets.has("full"), false);
   assert.equal(buckets.has("refilled"), false);
   assert.equal(buckets.has("draining"), true);
+});
+
+// 203.0.113.7 plays the reader's real address throughout: what nginx saw and
+// appended. Everything before it in a header is what the client chose to send.
+const REAL = "203.0.113.7";
+
+test("the bucket key is the address our proxy appended, not one the client wrote", () => {
+  // No header from the client: nginx forwards just the address it saw.
+  assert.equal(clientKey(REAL, "127.0.0.1"), REAL);
+  // The bypass shape: a client-written entry first, nginx's own entry last.
+  assert.equal(clientKey(`1.2.3.4, ${REAL}`, "127.0.0.1"), REAL);
+  assert.equal(clientKey(`9.9.9.9, 8.8.8.8,${REAL}`, "127.0.0.1"), REAL);
+});
+
+test("rotating a forged X-Forwarded-For does not rotate the bucket", () => {
+  let bucket: Bucket | undefined;
+  const buckets = new Map<string, Bucket>();
+  for (let index = 0; index <= POLICY.capacity; index += 1) {
+    const key = clientKey(`10.0.0.${index}, ${REAL}`, "127.0.0.1");
+    const decision = spend(buckets.get(key) ?? freshBucket(POLICY, 0), POLICY, 0);
+    buckets.set(key, decision.bucket);
+    bucket = decision.bucket;
+    if (index === POLICY.capacity) assert.equal(decision.allowed, false, "a new forged address bought a new bucket");
+  }
+  assert.equal(buckets.size, 1);
+  assert.ok(bucket);
+});
+
+test("without a forwarded address the socket decides", () => {
+  assert.equal(clientKey(undefined, "198.51.100.2"), "198.51.100.2");
+  assert.equal(clientKey("", "198.51.100.2"), "198.51.100.2");
+  assert.equal(clientKey(" , ", "198.51.100.2"), "198.51.100.2");
+  assert.equal(clientKey(undefined, undefined), "unknown");
 });

@@ -73,6 +73,7 @@ import { STADIUMS } from "@/src/data/stadiums";
 import {
   canonicalUrl,
   pageStatus,
+  firstHeaderValue,
   resolveOrigin,
   robotsTxt,
   sitemapEntries,
@@ -100,6 +101,7 @@ import {
   verifyClaims,
 } from "@/oauth-core";
 import {
+  clientKey,
   evictFull,
   freshBucket,
   spend,
@@ -527,11 +529,6 @@ const loadMatches = async (): Promise<ApiEnvelope<MatchesPayload>> => {
   }
 };
 
-/** A forwarded header may carry a chain — `client, proxy1` — and only the
- *  client-most value describes the origin the reader typed. */
-const firstHeaderValue = (raw: string | undefined): string | undefined =>
-  raw?.split(",")[0]?.trim() || undefined;
-
 /** The absolute origin to build canonical and sitemap URLs from. */
 const originFor = (req: express.Request): string =>
   resolveOrigin(process.env.APP_URL, {
@@ -789,12 +786,12 @@ const sameOrigin = (req: express.Request): boolean =>
 const SIGN_IN_POLICY: BucketPolicy = { capacity: 10, refillMs: 60_000 };
 const signInBuckets = new Map<string, Bucket>();
 
-/** Keyed on the client-most forwarded address, the same rule `firstHeaderValue`
- *  already implements for the canonical origin. In memory because there is one
+/** Keyed on `clientKey` — the address our own proxy appended, never the first
+ *  entry of the header, which the client writes. In memory because there is one
  *  process; it resets on deploy, which is acceptable and is written down here
  *  rather than remembered. */
 const rateLimited = (req: express.Request, now: number): boolean => {
-  const key = firstHeaderValue(req.get("x-forwarded-for")) ?? req.ip ?? "unknown";
+  const key = clientKey(req.get("x-forwarded-for"), req.ip);
   const decision = spend(signInBuckets.get(key) ?? freshBucket(SIGN_IN_POLICY, now), SIGN_IN_POLICY, now);
   signInBuckets.set(key, decision.bucket);
   if (signInBuckets.size > 1000) evictFull(signInBuckets, SIGN_IN_POLICY, now);

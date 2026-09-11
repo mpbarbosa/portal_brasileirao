@@ -447,8 +447,15 @@ session-creation spam, and enumeration.
 An in-memory token bucket in the style of `cache-core.ts` — pure, taking `now`
 as a parameter, unit-tested without sleeping — is enough for one process, and it
 is the only shape that fits this codebase's testing rules. Key on
-`X-Forwarded-For`'s client-most value (nginx sets it; the same "a chain, take
-the first" logic `firstHeaderValue` already implements).
+the address our own proxy appended — `X-Forwarded-For`'s **last** entry, which is
+`clientKey` in `rate-limit-core.ts`.
+
+**This paragraph first said the client-most value, and that shipped.** nginx does
+not *set* the header: `$proxy_add_x_forwarded_for` appends the address it saw to
+whatever the client sent, so the first entry is written by the client, and one
+rotating it never met its own bucket. It was found by moving `firstHeaderValue`
+out of `server.ts` — reading the rule to document it is what made the question
+askable.
 
 ### 3.14 CSRF
 

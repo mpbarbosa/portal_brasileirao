@@ -1727,6 +1727,16 @@ Traps, each of which cost something to find:
   can test sign-in without a Google client or a network, keeping CI secret-free. The server
   **refuses to start** with it set when `NODE_ENV=production`, and the route is registered
   conditionally, so in production it does not exist rather than existing and declining.
+- **The sign-in rate limiter keys on the LAST `X-Forwarded-For` entry, never the
+  first.** nginx's `$proxy_add_x_forwarded_for` appends the address it saw to
+  whatever the client sent, so the first entry is the client's to write — and the
+  limiter shipped keyed on it, following `docs/accounts.md` §3.13, so rotating a
+  forged header bought a fresh bucket per request. `clientKey` in
+  `rate-limit-core.ts` is the rule. It holds for exactly **one** proxy: put a CDN
+  in front of nginx and the last entry becomes the CDN's, every reader shares one
+  bucket, and sign-in fails closed for everybody — revisit it then.
+  `firstHeaderValue` (`seo-core.ts`) still takes the first entry, which is right
+  for `X-Forwarded-Proto`/`Host` and wrong for anything keyed on who is asking.
 - `pageStatus` gained **`PRIVATE`** — 200, `index: false` — because `/conta` is a real page
   whose content differs per requester. The type always allowed it; no constructor produced
   it, because until accounts every page this app served was the same for everybody. Both

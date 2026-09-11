@@ -141,9 +141,16 @@ Last checked against the code by the change that added `withCuratedData` and `ha
   shell renders is `namesSubject` (`route-core.ts`), an exhaustive switch; the
   fixture TTL reads `hasLiveMatch`, the predicate the client's refresh rate
   already used; and `/api/matches` and `/api/players/:id` validate through
-  `parseRoundParam` and `isPersonId`. What remains is HTTP plumbing — `decodable`,
-  a `try` around `decodeURIComponent`, and `firstHeaderValue`, which takes the
-  client-most entry of a forwarded chain and is the next candidate for rule 4.
+  `parseRoundParam` and `isPersonId`. `firstHeaderValue` moved to `seo-core.ts`
+  beside `resolveOrigin`, its one remaining consumer. What remains is
+  `decodable`, a `try` around `decodeURIComponent`.
+- **Moving `firstHeaderValue` found a bypass in the sign-in rate limiter.** The
+  limiter keyed its bucket on the same client-most entry of `X-Forwarded-For`,
+  and nginx's `$proxy_add_x_forwarded_for` appends the address it saw to whatever
+  the client sent — so that entry is the client's to write, and rotating it never
+  met a bucket. The key is now `clientKey` in `rate-limit-core.ts`, the entry our
+  proxy appended. A rule inline in `server.ts` had no test to make that question
+  askable, which is rule 4's argument arriving with a security consequence.
 - **Both branches of `loadMatches` share one curated-merge chain,
   `withCuratedData`, and the seed is repaired as a live fill is.** The chain used
   to be written out twice, and `withPlayedStatus` ran in the live branch only;
