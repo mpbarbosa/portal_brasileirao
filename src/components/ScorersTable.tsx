@@ -1,5 +1,7 @@
+import { nicknameLabel, playerNickname } from "@/player-core";
 import { LINK_UNDERLINE } from "@/src/components/interaction";
 import { TableScroller } from "@/src/components/TableScroller";
+import { PLAYER_NICKNAMES } from "@/src/data/player-nicknames";
 import type { Scorer } from "@/src/types";
 
 /** Null means the upstream did not report the figure — not that it is zero. */
@@ -50,7 +52,9 @@ export function ScorersTable({ rows, onSelectPlayer }: ScorersTableProps) {
             </tr>
           </thead>
           <tbody>
-            {rows.map((row) => (
+            {rows.map((row) => {
+              const nickname = playerNickname(row.playerId, row.playerName, PLAYER_NICKNAMES);
+              return (
               <tr key={row.playerId} className="border-t border-outline-variant">
                 <td className="px-3 py-2 tabular-nums text-ink-muted">{row.position}</td>
                 <td className="px-3 py-2">
@@ -65,7 +69,14 @@ export function ScorersTable({ rows, onSelectPlayer }: ScorersTableProps) {
                   ) : (
                     <span className="block font-medium">{row.playerName}</span>
                   )}
-                  <span className="block text-body-small text-ink-faint">{row.club.shortName}</span>
+                  {/* Under the name, in the caption the club already occupies —
+                      the elenco's arrangement, so an apelido reads the same way
+                      on both pages. */}
+                  <span className="block text-body-small text-ink-faint">
+                    {[nickname && nicknameLabel(nickname), row.club.shortName]
+                      .filter(Boolean)
+                      .join(" · ")}
+                  </span>
                 </td>
                 <td className="px-2 py-2 text-right font-semibold tabular-nums">{row.goals}</td>
                 <td className="px-2 py-2 text-right tabular-nums text-ink-muted">
@@ -78,7 +89,8 @@ export function ScorersTable({ rows, onSelectPlayer }: ScorersTableProps) {
                   {count(row.playedMatches)}
                 </td>
               </tr>
-            ))}
+              );
+            })}
           </tbody>
         </table>
       </TableScroller>

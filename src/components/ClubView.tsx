@@ -15,6 +15,7 @@ import {
   standingFor,
   videosFor,
 } from "@/club-core";
+import { nicknameLabel, playerNickname } from "@/player-core";
 import { formatRoute } from "@/route-core";
 import { goalDifferenceLabel, pointsPercentageLabel } from "@/standings-core";
 import { ClubCrest } from "@/src/components/ClubCrest";
@@ -22,6 +23,7 @@ import { ClubVideos } from "@/src/components/ClubVideos";
 import { SeasonEvents } from "@/src/components/SeasonEvents";
 import { GLYPH, InstagramLink, MapPinGlyph, WikipediaLink } from "@/src/components/ClubLinks";
 import { CLUB_VIDEOS } from "@/src/data/club-videos";
+import { PLAYER_NICKNAMES } from "@/src/data/player-nicknames";
 import { SEASON_EVENTS } from "@/src/data/events";
 import { BACK_LINK, LINK_UNDERLINE, STATE_LAYER } from "@/src/components/interaction";
 import { isPlainClick } from "@/src/components/plainClick";
@@ -530,19 +532,25 @@ export function ClubView({
             Artilheiros do clube
           </h3>
           <ul className="space-y-1">
-            {clubScorers.map((scorer) => (
-              <Surface
-                as="li"
-                filled
-                key={scorer.playerId}
-                className="flex items-center justify-between px-3 py-2 text-body-medium"
-              >
-                <span>{scorer.playerName}</span>
-                <span className="tabular-nums text-ink-muted">
-                  {scorer.goals} {scorer.goals === 1 ? "gol" : "gols"}
-                </span>
-              </Surface>
-            ))}
+            {clubScorers.map((scorer) => {
+              const nickname = playerNickname(scorer.playerId, scorer.playerName, PLAYER_NICKNAMES);
+              return (
+                <Surface
+                  as="li"
+                  filled
+                  key={scorer.playerId}
+                  className="flex items-center justify-between gap-3 px-3 py-2 text-body-medium"
+                >
+                  <span>
+                    {scorer.playerName}
+                    {nickname && <span className="text-ink-muted"> {nicknameLabel(nickname)}</span>}
+                  </span>
+                  <span className="shrink-0 tabular-nums text-ink-muted">
+                    {scorer.goals} {scorer.goals === 1 ? "gol" : "gols"}
+                  </span>
+                </Surface>
+              );
+            })}
           </ul>
         </section>
       )}

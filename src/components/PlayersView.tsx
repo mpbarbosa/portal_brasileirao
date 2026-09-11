@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 
-import { ageOn } from "@/player-core";
+import { ageOn, nicknameLabel, playerNickname } from "@/player-core";
+import { PLAYER_NICKNAMES } from "@/src/data/player-nicknames";
 import { ClubCrest } from "@/src/components/ClubCrest";
 import { LINK_UNDERLINE, STATE_LAYER } from "@/src/components/interaction";
 import { Surface } from "@/src/components/Surface";
@@ -45,9 +46,13 @@ function SquadPlayer({
 }) {
   const position = playerPositionLabel(player);
   const age = ageLabel(player, now);
-  // One line, both details, so a row is the same height whether or not the
-  // provider bothered with either.
-  const caption = [position, age].filter(Boolean).join(" · ");
+  const nickname = playerNickname(player.id, player.name, PLAYER_NICKNAMES);
+  // One line, every detail, so a row is the same height whether or not the
+  // provider bothered with any of them. The apelido leads because it is the
+  // one that answers "is this who I was looking for".
+  const caption = [nickname && nicknameLabel(nickname), position, age]
+    .filter(Boolean)
+    .join(" · ");
 
   return (
     <li className="py-1">
@@ -203,7 +208,7 @@ export function PlayersView({ squads, loading, onSelectPlayer, onSelectClub }: P
 
   /** Whether a filter is actually running. A query of only spaces is not one. */
   const filtering = foldForSearch(query) !== "";
-  const shown = useMemo(() => filterSquads(squads, query), [squads, query]);
+  const shown = useMemo(() => filterSquads(squads, query, PLAYER_NICKNAMES), [squads, query]);
 
   // Hooks run before these, not after: the early returns below are conditional
   // and hooks may not be.

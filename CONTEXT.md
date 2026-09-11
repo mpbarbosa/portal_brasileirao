@@ -534,6 +534,20 @@ colour (it would then need a plate in one theme, which is a lot of chrome for on
 mark beside a word), letting the link's underline run under it — an atomic inline
 box is not decorated, which is why the glyph is `inline-block`.
 
+**Apelido do jogador**:
+The name a player is known by where it is not the one the **Elenco** lists —
+"Gabigol" for the listed "Gabriel Barbosa". Printed **beside** the listed name
+and never in its place, in pt-BR double quotes: on its own line under the name on
+the **Card do jogador**, leading the caption under the name in **Jogadores**
+and the **Artilharia**, and after the name in a club page's artilheiros. The **Jogadores** search answers to it too, since it is
+what a reader types. Curated in `src/data/player-nicknames.ts`, keyed by
+**player id**; an entry that restates the listed name is refused by the tests.
+_Avoid_: replacing the listed name with the apelido (the gols and the escalação
+carry CBF's spelling, so one player would read as two across pages), filing it
+under `player-overrides.ts`' `name` (that corrects a name that is not a name,
+and an apelido corrects nothing), keying on the name (several Gabriels), and
+"alcunha" or "nickname" in user-facing copy.
+
 **Instagram do jogador**:
 A player's own Instagram profile, shown on the **Card do jogador** under the
 club's name and rendered by the same `InstagramLink` as the **Instagram do

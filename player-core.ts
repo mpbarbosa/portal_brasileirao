@@ -379,6 +379,34 @@ export const playerInstagram = (
 ): string | null => instagramHandle(handles[id]);
 
 /**
+ * The **apelido** a player is known by, or null when none is recorded — or when
+ * the one recorded only restates the name already printed beside it.
+ *
+ * The comparison folds case and accents, so an entry reading "gabriel barbosa"
+ * against a listed "Gabriel Barbosa" is absence rather than the name twice in
+ * one row. The table is passed in, keeping this module free of I/O.
+ */
+export const playerNickname = (
+  id: string,
+  name: string,
+  nicknames: Record<string, string>,
+): string | null => {
+  const nickname = nicknames[id]?.trim();
+  if (!nickname) return null;
+  const fold = (value: string) =>
+    value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+  return fold(nickname) === fold(name) ? null : nickname;
+};
+
+/**
+ * An apelido as it is printed: in pt-BR double quotes, so "Gabigol" beside
+ * "Gabriel Barbosa" reads as what he is called rather than as a second player.
+ * One function, so the card, the elenco and the artilharia cannot come to quote
+ * it three ways.
+ */
+export const nicknameLabel = (nickname: string): string => `“${nickname}”`;
+
+/**
  * The curated Instagram posts for one player, already filtered to the ones that
  * can actually be drawn.
  *
