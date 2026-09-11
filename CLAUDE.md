@@ -3249,7 +3249,7 @@ that source and **rejected it for fixtures**, correctly and still — it carries
 scoreline, no status and no kickoff, and it is a week behind. Neither objection
 binds a season aggregate, and the same file records why in as many words.
 
-Three things about the generator are load-bearing:
+Four things about the generator are load-bearing:
 
 - **The counters are cumulative season totals and a counter follows the player
   through a transfer**, so summing the latest snapshot by club is wrong in a way
@@ -3269,6 +3269,17 @@ Three things about the generator are load-bearing:
   is the upstream numeric id*, met against a second dataset. Four more disagree
   without colliding. An unmapped abbreviation throws; a silent zero would render
   an empty Perfil for nobody's attention.
+- **A counter column the file does not carry is refused, never read as zeros.**
+  The walk used to check only the id, the club and `jogos_num`, and read any
+  other missing column as blank — so a caRtola rename of `DS` would have
+  published 0 desarmes for all twenty clubs, a plausible zero nothing
+  downstream compares with anything. `cartola-csv-core.ts` now requires every
+  column the walk reads and refuses a present cell that is not a number.
+  **Blank still reads as 0, and that is measured**: all 26 round files of 2026
+  (read 2026-09-11) carry every column, with 4,293–5,657 blank counter cells
+  each and not one non-numeric cell. The CSV half lives in that module rather
+  than in the script because the script starts a sync when it is imported, so
+  nothing inside it could be tested.
 
 **Nothing plots a scout against a rodada, and that is a measurement rather than
 a preference.** The snapshot is weekly and a midweek round falls between two of

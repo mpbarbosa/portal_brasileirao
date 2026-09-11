@@ -52,6 +52,8 @@
  * the only thing this file carries.
  */
 import { existsSync, writeFileSync } from "node:fs";
+
+import { counterValue, parseCsv, type Snapshot } from "@/cartola-csv-core";
 import path from "node:path";
 
 import { lastRoundWithResult } from "@/rank-history-core";
@@ -145,8 +147,6 @@ async function main(): Promise<void> {
 
 /* ------------------------------------------------------------------ reading */
 
-type Snapshot = Map<string, Record<string, string>>;
-
 /**
  * Every round file from 1 upward, stopping at the first that is not published.
  *
@@ -168,7 +168,11 @@ async function readSeason(): Promise<Snapshot[]> {
       throw new Error(`${url} answered ${response.status} ${response.statusText}`);
     }
 
-    snapshots.push(parseCsv(await response.text()));
+    // Every column the walk reads is required, so a rename upstream refuses the
+    // round instead of reading as zeros. `GAMES` is the denominator's source, so
+    // its absence would make every club cover no matches at all; the counters'
+    // absence would publish a division of zeros. See `cartola-csv-core.ts`.
+    snapshots.push(parseCsv(await response.text(), [GAMES, ...Object.keys(COUNTERS)]));
     // Polite rather than necessary: raw.githubusercontent does not throttle the
     // way CBF does, and 38 requests is not a reason to find out.
     await new Promise((resolve) => setTimeout(resolve, 120));
@@ -180,92 +184,7 @@ async function readSeason(): Promise<Snapshot[]> {
   return snapshots;
 }
 
-/**
- * A minimal CSV reader, quoted fields included.
- *
- * Hand-written rather than a dependency: this is the only CSV this repository
- * reads, and the app ships no parsing library. Quotes matter — a player's
- * `atletas.nome` carries commas.
- */
-function parseCsv(text: string): Snapshot {
-  const rows = splitRows(text);
-  const header = rows[0];
-  if (!header) throw new Error("Empty CSV.");
-
-  const idIndex = header.indexOf("atletas.atleta_id");
-  const clubIndex = header.indexOf("atletas.clube.id.full.name");
-  if (idIndex < 0 || clubIndex < 0) {
-    throw new Error("CSV is missing atletas.atleta_id or atletas.clube.id.full.name.");
-  }
-  // The denominator's source, so an absence is an error rather than a zero: a
-  // missing column would silently make every club cover no matches at all.
-  // Present in every season back to 2023, checked before relying on it.
-  if (header.indexOf(GAMES) < 0) {
-    throw new Error(`CSV is missing ${GAMES}, which the denominator is read from.`);
-  }
-
-  const out: Snapshot = new Map();
-  for (const row of rows.slice(1)) {
-    if (row.length <= idIndex) continue;
-    const record: Record<string, string> = {};
-    header.forEach((name, index) => {
-      record[name] = row[index] ?? "";
-    });
-    out.set(row[idIndex] ?? "", record);
-  }
-  return out;
-}
-
-function splitRows(text: string): string[][] {
-  const rows: string[][] = [];
-  let row: string[] = [];
-  let field = "";
-  let quoted = false;
-
-  for (let i = 0; i < text.length; i += 1) {
-    const char = text[i];
-
-    if (quoted) {
-      if (char === '"') {
-        if (text[i + 1] === '"') {
-          field += '"';
-          i += 1;
-        } else {
-          quoted = false;
-        }
-      } else {
-        field += char;
-      }
-      continue;
-    }
-
-    if (char === '"') quoted = true;
-    else if (char === ",") {
-      row.push(field);
-      field = "";
-    } else if (char === "\n") {
-      row.push(field);
-      rows.push(row);
-      row = [];
-      field = "";
-    } else if (char !== "\r") field += char;
-  }
-
-  if (field !== "" || row.length > 0) {
-    row.push(field);
-    rows.push(row);
-  }
-  return rows.filter((entry) => entry.some((value) => value !== ""));
-}
-
 /* --------------------------------------------------------------- accumulating */
-
-function count(record: Record<string, string> | undefined, column: string): number {
-  const raw = (record?.[column] ?? "").trim();
-  if (raw === "") return 0;
-  const value = Number(raw);
-  return Number.isFinite(value) ? value : 0;
-}
 
 /**
  * Season totals per club, by differencing consecutive snapshots — and the same
@@ -334,7 +253,7 @@ function accumulate(snapshots: Snapshot[]): {
       const entry = totals.get(club.code) ?? blank(club.code);
 
       for (const [column, field] of Object.entries(COUNTERS) as [string, CounterField][]) {
-        const delta = count(record, column) - count(before, column);
+        const delta = counterValue(record, column) - counterValue(before, column);
         // Positive only: a negative delta is a player leaving, never an action
         // being undone.
         if (delta > 0) entry[field] += delta;
@@ -349,7 +268,7 @@ function accumulate(snapshots: Snapshot[]): {
       // the counters cannot cover a match nobody played. `validate` refuses the
       // other direction rather than trusting this comment.
       if (index === 0 || before) {
-        const step = count(record, GAMES) - count(before, GAMES);
+        const step = counterValue(record, GAMES) - counterValue(before, GAMES);
         if (step > 0) stepped.set(club.code, Math.max(stepped.get(club.code) ?? 0, step));
       }
 
