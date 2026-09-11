@@ -232,12 +232,11 @@ alongside another session. CI runs alone and needs nothing.
   `tests/e2e/matches-payload.ts`. A curated record a spec needs, such as an own
   goal or a ground with a photograph, is derived from the committed data and
   fails by name when none exists.
-- **A few fixture ids are still literals, on purpose.** `tests/e2e/match-page.spec.ts`
-  opens 554975, 554976 and 554977 for the scoreline tray, the goalless match and
-  the player, and reads their expected videos out of `highlights.ts` rather than
-  writing them down; its comment argues that which fixture is chosen is the
-  subject of those assertions. They are the remaining candidates for the Drift
-  test below.
+- **A few fixture ids are still literals.** `tests/e2e/goals.spec.ts`,
+  `tests/e2e/escalacoes.spec.ts` and `tests/e2e/crest-fallback.spec.ts` open 554977,
+  and `tests/e2e/tabs-and-targets.spec.ts` opens 554951. They are the remaining
+  candidates for the Drift test below; `tests/e2e/match-page.spec.ts` no longer
+  opens any fixture by id.
 
 ## Review heuristics
 

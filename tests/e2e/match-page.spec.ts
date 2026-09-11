@@ -1,13 +1,13 @@
 import { expect, test, type Page } from "@/tests/e2e/clock";
-import { readMatches, serveMatches, upcomingFixture } from "@/tests/e2e/matches-payload";
+import { finishedFixture, readMatches, serveMatches, upcomingFixture } from "@/tests/e2e/matches-payload";
 import { SEED_MATCHES } from "@/src/data/matches";
 import { VENUES } from "@/src/data/venues";
 import { BROADCASTS } from "@/src/data/broadcasts";
-import { HIGHLIGHTS } from "@/src/data/highlights";
 import { STADIUMS } from "@/src/data/stadiums";
 import { youtubeVideoId } from "@/club-core";
 import { playsInPage } from "@/match-core";
 import { stadiumSlug } from "@/venue-core";
+import type { Highlight } from "@/src/types";
 
 /**
  * The round these tests read played fixtures from, **derived from the committed
@@ -26,6 +26,16 @@ const settled = (match: (typeof SEED_MATCHES)[number]) =>
 
 /** A round with finished matches carrying goals. */
 const PLAYED_ROUND = String(Math.max(...SEED_MATCHES.filter(settled).map((match) => match.round)));
+
+/**
+ * A fixture the seed records as played, for tests about the page itself rather
+ * than what is curated on it: the scoreline tray, the loading state. Derived
+ * rather than named — it was 554977 and 554975 — and nothing a curated sync
+ * writes can change whether a finished match is finished.
+ */
+const playedMatch = SEED_MATCHES.find(settled);
+if (!playedMatch) throw new Error("the seed holds no finished fixture with a score");
+const PLAYED_MATCH = playedMatch.id;
 
 /**
  * A curated venue whose ground has a coordinate, and a curated broadcast line —
@@ -69,6 +79,36 @@ const openUpcomingMatch = async (page: Page, { curated = false } = {}) => {
 };
 
 /**
+ * Open a finished fixture whose Melhores momentos are exactly `highlights`.
+ *
+ * **Produced, not pinned.** The highlight and player tests opened 554975 and
+ * 554977 and read their expected videos out of `highlights.ts` — honest
+ * addresses on pinned fixtures, since whether 554977 still carried two channels
+ * that embed, or 554975 one that refuses, was `find-highlights`' to change. What
+ * each test is about is the shape of the list, so the list is written here.
+ */
+const openWithHighlights = async (page: Page, highlights: Highlight[]) => {
+  const body = await readMatches(page);
+  const match = finishedFixture(body);
+  match.highlights = highlights;
+  await serveMatches(page, body);
+  await page.goto(`/partida/${match.id}`);
+};
+
+/** ge tv and UOL Esporte, both of which embed. */
+const TWO_EMBEDDABLE: Highlight[] = [
+  { url: "https://www.youtube.com/watch?v=0ceAn6TLVtE", channel: "ge tv" },
+  { url: "https://www.youtube.com/watch?v=ryRpY29ySvk", channel: "UOL Esporte" },
+];
+
+/** ge tv, then CazéTV, which YouTube refuses to play in a frame — see
+ *  `playsInPage` for what was measured. */
+const WITH_REFUSED: Highlight[] = [
+  { url: "https://www.youtube.com/watch?v=o-_hD5Q8f4Q", channel: "ge tv" },
+  { url: "https://www.youtube.com/watch?v=AgycMjd6b-I", channel: "CazéTV" },
+];
+
+/**
  * Open a finished fixture with the curated links stripped from the payload, so
  * the search fallback is what renders.
  *
@@ -106,7 +146,7 @@ const openFirstMatch = async (page: Page, round: string) => {
 
 test.describe("Página da partida", () => {
   test("the scoreline sits in a tray, not on the card's own background", async ({ page }) => {
-    await page.goto("/partida/554977");
+    await page.goto(`/partida/${PLAYED_MATCH}`);
     const tray = page.locator("[data-placar]");
     await tray.waitFor();
 
@@ -134,7 +174,7 @@ test.describe("Página da partida", () => {
         (t) => localStorage.setItem("portal-brasileirao:theme", t as string),
         theme,
       );
-      await page.goto("/partida/554977");
+      await page.goto(`/partida/${PLAYED_MATCH}`);
       await page.locator("[data-placar]").waitFor();
       return page.locator("[data-placar]").evaluate((el) => {
         const sum = (colour: string) =>
@@ -420,7 +460,7 @@ test.describe("Página da partida", () => {
       await route.continue();
     });
 
-    await page.goto("/partida/554975", { waitUntil: "commit" });
+    await page.goto(`/partida/${PLAYED_MATCH}`, { waitUntil: "commit" });
     await expect(page.getByText("Carregando página…")).toBeVisible();
     await expect(page.getByText("Partida não encontrada.")).toHaveCount(0);
 
@@ -440,9 +480,17 @@ test.describe("Página da partida", () => {
   });
 
   test("a goalless match still offers highlights", async ({ page }) => {
-    // Internacional 0 x 0 Atlético-MG. A 0-0 has chances and saves, and gating
-    // on goals hid the section from 14 of the season's finished matches.
-    await page.goto("/partida/554976");
+    // A 0-0 has chances and saves, and gating on goals hid the section from 14
+    // of the season's finished matches. Produced rather than pinned to 554976
+    // (Internacional 0 x 0 Atlético-MG): a finished fixture with no score and
+    // no scorers is the state, whichever fixture carries it.
+    const body = await readMatches(page);
+    const match = finishedFixture(body);
+    match.homeGoals = 0;
+    match.awayGoals = 0;
+    delete match.goals;
+    await serveMatches(page, body);
+    await page.goto(`/partida/${match.id}`);
 
     await expect(page.locator("main > article").getByText(/0\s*×\s*0/)).toBeVisible();
     await expect(page.getByRole("heading", { name: "Melhores momentos" })).toBeVisible();
@@ -459,8 +507,8 @@ test.describe("Página da partida", () => {
   });
 
   test("a curated match links to every channel that covered it", async ({ page }) => {
-    // Fluminense 2 x 1 Clube do Remo: ge tv and CazéTV both published one.
-    await page.goto("/partida/554975");
+    // ge tv and CazéTV both published one.
+    await openWithHighlights(page, WITH_REFUSED);
 
     await expect(page.getByRole("heading", { name: "Melhores momentos" })).toBeVisible();
 
@@ -473,7 +521,7 @@ test.describe("Página da partida", () => {
   });
 
   test("each link is labelled by its channel, not a generic verb", async ({ page }) => {
-    await page.goto("/partida/554975");
+    await openWithHighlights(page, WITH_REFUSED);
 
     // Two identical labels would give the reader nothing to choose between.
     await expect(page.getByRole("link", { name: /ge tv/ })).toBeVisible();
@@ -481,7 +529,7 @@ test.describe("Página da partida", () => {
   });
 
   test("a curated video suppresses the search fallback", async ({ page }) => {
-    await page.goto("/partida/554975");
+    await openWithHighlights(page, WITH_REFUSED);
 
     await expect(page.getByRole("link", { name: /Procurar melhores momentos/ })).toHaveCount(0);
     await expect(page.getByText(/não é um vídeo oficial/)).toHaveCount(0);
@@ -491,31 +539,25 @@ test.describe("Página da partida", () => {
    * The player, which is the half a browser is needed for: `videoEmbedUrl` is
    * unit-tested and says nothing about *when* a frame exists.
    *
-   * The expected addresses are **derived from `highlights.ts`** rather than
-   * written down — the file grows on every sync, and an id in a spec is the
-   * "which record happens to hold a value" trap `CLAUDE.md` names. The fixture
-   * ids stay literals, as their neighbours above do, because what each one is
-   * chosen for — two channels that embed, and a channel that does not — is the
-   * subject of the assertions.
+   * The fixture is **produced** with exactly the list each test is about — two
+   * channels that embed, or one that does and one that does not. These used to
+   * open 554977 and 554975 and derive the expected addresses from
+   * `highlights.ts`, which kept the addresses honest and left the fixtures
+   * pinned: whether either still carried that shape was the curated file's to
+   * change. A list written beside its assertions cannot drift out from under them.
    */
   test.describe("the player", () => {
-    /** Palmeiras 4 x 1 Vasco: ge tv and UOL Esporte, both of which embed. */
-    const TWO_EMBEDDABLE = HIGHLIGHTS["554977"] ?? [];
-    /** Fluminense 2 x 1 Remo: ge tv, then CazéTV, which YouTube refuses to
-     *  play in a frame — see `playsInPage` for what was measured. */
-    const WITH_REFUSED = HIGHLIGHTS["554975"] ?? [];
-
     const embedOf = (video: (typeof TWO_EMBEDDABLE)[number] | undefined) => {
       const id = youtubeVideoId(video?.url);
-      // A curated line whose id will not parse keeps a plain link, so these
-      // assertions would be about a channel that never had a frame. Failing
-      // here says the fixture changed, not that the page is broken.
-      if (!id) throw new Error("a fixture these tests pin no longer parses");
+      // A line whose id will not parse keeps a plain link, so these assertions
+      // would be about a channel that never had a frame. Failing here says the
+      // list above is wrong, not that the page is broken.
+      if (!id) throw new Error("a video these tests produce no longer parses");
       return new RegExp(`youtube-nocookie\\.com/embed/${id}\\b`);
     };
 
     test("the video is the section, and no channel button is left", async ({ page }) => {
-      await page.goto("/partida/554977");
+      await openWithHighlights(page, TWO_EMBEDDABLE);
       await expect(page.getByRole("heading", { name: "Melhores momentos" })).toBeVisible();
 
       const frame = page.locator("main iframe");
@@ -527,7 +569,7 @@ test.describe("Página da partida", () => {
     });
 
     test("nothing plays by itself", async ({ page }) => {
-      await page.goto("/partida/554977");
+      await openWithHighlights(page, TWO_EMBEDDABLE);
 
       // A video that started on its own would be the club page's "hino que
       // ninguém pediu", on a page a reader may have opened for the scoreline.
@@ -540,7 +582,7 @@ test.describe("Página da partida", () => {
     test("another channel swaps the video rather than adding a second player", async ({
       page,
     }) => {
-      await page.goto("/partida/554977");
+      await openWithHighlights(page, TWO_EMBEDDABLE);
       const other = page.getByRole("link", { name: new RegExp(TWO_EMBEDDABLE[1].channel) });
       // Records whether the anchor's default was prevented, read at `document`
       // so it runs after React's own root handler. See below for why the
@@ -591,9 +633,9 @@ test.describe("Página da partida", () => {
       // Named rather than searched for: if the list of refused channels ever
       // empties, this test has nothing to say and should be deleted with it,
       // not silently pass over an empty season.
-      expect(refused, "554975 no longer carries a channel that refuses embedding").toBeTruthy();
+      expect(refused, "WITH_REFUSED no longer holds a channel that refuses embedding").toBeTruthy();
 
-      await page.goto("/partida/554975");
+      await openWithHighlights(page, WITH_REFUSED);
       const link = page.getByRole("link", { name: new RegExp(refused!.channel) });
 
       await expect(link).toHaveAttribute("href", refused!.url);
