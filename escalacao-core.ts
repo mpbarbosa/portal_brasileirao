@@ -60,10 +60,13 @@ import type {
   LineupPlayerEntry,
   LineupPlayerFlags,
   Match,
+  Player,
+  Squad,
   Substitution,
   SubstitutionEntry,
 } from "@/src/types";
 import { type SideMap, tidyScorerName } from "@/goals-core";
+import { matchPlayerByName, playerNickname } from "@/player-core";
 import { type SumulaSubstitution, sumulaSubstitutionLabel } from "@/sumula-core";
 
 /** One entry of CBF's `mandante.atletas` / `visitante.atletas`. */
@@ -271,6 +274,63 @@ export const withLineups = (
   matches.map((match) =>
     lineups[match.id] ? { ...match, lineups: lineups[match.id] } : match,
   );
+
+/**
+ * Every team sheet with the **apelido** attached to the entries that have one.
+ *
+ * A sheet names players the way CBF prints them and carries no football-data
+ * id, so the apelido — keyed by that id — needs the join the gols already use:
+ * `matchPlayerByName` against the club's elenco, exactly one candidate or
+ * nothing, and no id `contested` refuses. The same refusal matters here for the
+ * same reason: an apelido printed under the wrong man is the plausible lie.
+ *
+ * Only clubs whose elenco holds a player with an apelido are read at all, and
+ * each club-and-name is resolved once, so this is cheap; `server.ts` still runs
+ * it once at boot rather than per request, since both inputs are committed
+ * files. A sheet with nothing to attach is returned as the same object.
+ */
+export const withLineupNicknames = (
+  lineups: Record<string, Lineup[]>,
+  squads: Squad[],
+  contested: ReadonlyMap<ClubCode, ReadonlySet<string>>,
+  nicknames: Record<string, string>,
+): Record<string, Lineup[]> => {
+  const nicknamed = new Set(Object.keys(nicknames));
+  const byClub = new Map<ClubCode, Player[]>(
+    squads
+      .filter((squad) => squad.players.some((player) => nicknamed.has(player.id)))
+      .map((squad) => [squad.club.code, squad.players]),
+  );
+  if (byClub.size === 0) return lineups;
+
+  const resolved = new Map<string, string | null>();
+  const nicknameFor = (clubCode: ClubCode, name: string): string | null => {
+    const key = `${clubCode}:${name}`;
+    if (!resolved.has(key)) {
+      const player = matchPlayerByName(name, byClub.get(clubCode) ?? []);
+      const id = player && !contested.get(clubCode)?.has(player.id) ? player.id : null;
+      resolved.set(key, id ? playerNickname(id, name, nicknames) : null);
+    }
+    return resolved.get(key) ?? null;
+  };
+
+  return Object.fromEntries(
+    Object.entries(lineups).map(([matchId, sheets]) => [
+      matchId,
+      sheets.map((sheet) => {
+        if (!byClub.has(sheet.clubCode)) return sheet;
+        let changed = false;
+        const players = sheet.players.map((player) => {
+          const nickname = nicknameFor(sheet.clubCode, player.name);
+          if (!nickname) return player;
+          changed = true;
+          return { ...player, nickname };
+        });
+        return changed ? { ...sheet, players } : sheet;
+      }),
+    ]),
+  );
+};
 
 /** This club's lineup, or null. The page asks by club, not by position in an array. */
 export const lineupFor = (

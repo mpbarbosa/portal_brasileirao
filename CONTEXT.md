@@ -542,7 +542,10 @@ the **Card do jogador**, leading the caption under the name in **Jogadores**
 and the **Artilharia**, after the name in a club page's artilheiros, and on its
 own line under the scorer in the **gols** of a **Partida**, where the goal
 resolved to that player's id — inline there it pushed the minute and the "(pên.)"
-out of a 152px column. The **Jogadores** search answers to it too, since it is
+out of a 152px column — and likewise under the name in the **Escalação**. A team
+sheet carries no id, so there the server resolves the name once at boot, with the
+gols' refusals, and attaches the apelido alone: an id on every entry would cost
+39 KB gzipped on every `/api/matches` to print one word. The **Jogadores** search answers to it too, since it is
 what a reader types. Curated in `src/data/player-nicknames.ts`, keyed by
 **player id**; an entry that restates the listed name is refused by the tests.
 _Avoid_: replacing the listed name with the apelido (the gols and the escalação
