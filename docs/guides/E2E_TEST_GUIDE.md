@@ -47,19 +47,24 @@ which would hang `useNow`, every transition `tests/e2e/motion.spec.ts` asserts o
 `waitUntil: "networkidle"`.
 
 **The failure this closes was live for four hours before anybody saw it.**
-`tests/e2e/meu-time.spec.ts` skips when the snapshot's soonest unplayed fixture is in the
-past, and one day that fixture slipped behind a real clock. Two specs across two
-projects went silent, the suite reported `690 passed`, and the only trace was a
-`4 skipped` line nobody reads.
+`tests/e2e/meu-time.spec.ts` then skipped when the snapshot's soonest unplayed fixture
+was in the past, and one day that fixture slipped behind a real clock. Two specs across
+two projects went silent, the suite reported `690 passed`, and the only trace was a
+`4 skipped` line nobody reads. It skips nothing now — see **Current reality**.
 
 Two follow-ons worth knowing:
 
-- **A guard that runs in Node is not covered by the page clock.** `nextScheduled`
-  compares kickoffs in the *test process*, so it takes `E2E_NOW` explicitly.
-  Freezing the page alone left all four specs still skipping.
-- **`tests/e2e/clock.spec.ts` exists because nothing else would notice the
-  fixture breaking.** Verified by removing the `setFixedTime` call: `meu-time`
-  stayed green and only `tests/e2e/clock.spec.ts` went red.
+- **Code that runs in Node is not covered by the page clock.** `upcomingFixture` in
+  `tests/e2e/matches-payload.ts` dates the fixture it produces in the *test process*,
+  so it takes `E2E_NOW` explicitly. Back when `meu-time` read the snapshot instead,
+  freezing the page alone left all four specs still skipping.
+- **`tests/e2e/clock.spec.ts` is the spec that names the cause when the fixture
+  breaks.** Removing the `setFixedTime` call once left `meu-time` green and only
+  `tests/e2e/clock.spec.ts` red. Measured again on 2026-09-11, after `meu-time` began
+  producing its fixture: the same mutation also reddens its two *Próximo jogo* specs
+  in both projects, since a kickoff a minute after the snapshot's noon is days in the
+  past to a real clock. Its LIVE spec stays green — a match under way is under way
+  whatever the clock says.
 
 ## The harness configures the app OUT of production's shape
 
@@ -220,14 +225,19 @@ alongside another session. CI runs alone and needs nothing.
 - **`tests/e2e/partida-refetch.spec.ts` takes the full clock fake knowingly**, as
   a documented exception: a 60s poll cannot be observed without moving time, and
   nothing on that route calls `useNow` or awaits `networkidle`.
-- **Some skips have nothing watching them.** `tests/e2e/match-page.spec.ts` skips
-  when the season has no round left or the next round has no curated venue yet,
-  and `tests/e2e/stadium.spec.ts` skips when no reachable stadium has a curated
-  photo. Only `meu-time`'s skips are guarded, by `E2E_NOW` and
-  `tests/e2e/clock.spec.ts`. Nothing in CI reports a skip.
-- **Some specs still pin a fixture whose curated data a sync can change** —
-  `tests/e2e/broadcasts.spec.ts` on 554972's broadcasters, `tests/e2e/goals.spec.ts`
-  on 554805's own goal and 554790's minutes. They fail the Drift test below.
+- **No spec skips itself.** `tests/e2e-fixture.test.ts` refuses a `test.skip` or
+  `test.fixme` call in any spec, because a skip reports as a count nothing in CI
+  reads. A state the frozen snapshot cannot reach on its own — a round still to
+  play, a fixture with a curated venue, a LIVE match — is produced with
+  `tests/e2e/matches-payload.ts`. A curated record a spec needs, such as an own
+  goal or a ground with a photograph, is derived from the committed data and
+  fails by name when none exists.
+- **A few fixture ids are still literals, on purpose.** `tests/e2e/match-page.spec.ts`
+  opens 554975, 554976 and 554977 for the scoreline tray, the goalless match and
+  the player, and reads their expected videos out of `highlights.ts` rather than
+  writing them down; its comment argues that which fixture is chosen is the
+  subject of those assertions. They are the remaining candidates for the Drift
+  test below.
 
 ## Review heuristics
 

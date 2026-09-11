@@ -1,10 +1,29 @@
 import { expect, test, type Page } from "@/tests/e2e/clock";
+import { SEED_MATCHES } from "@/src/data/matches";
+import { STADIUMS } from "@/src/data/stadiums";
+import { VENUES } from "@/src/data/venues";
+import { stadiumSlug } from "@/venue-core";
 
 /**
- * A round whose fixtures carry venues in the frozen snapshot. Venues are
- * curated per match, so a round with none would make every test here vacuous.
+ * A fixture that carries a curated venue, **read from the committed data**.
+ *
+ * It was `VENUED_ROUND = "24"`, a literal resting on round 24's first fixture
+ * having a venue — true when written, and one `sync-broadcasts` run from not
+ * being, the rule `match-page.spec.ts` states about its rounds. The server
+ * attaches `VENUES` to `/api/matches` itself, so the fixture found here is the
+ * one the page is handed.
  */
-const VENUED_ROUND = "24";
+const VENUED_FIXTURE = SEED_MATCHES.find((match) => VENUES[match.id]);
+
+/**
+ * Open that fixture's page, failing by name when the data offers none — a seed
+ * with no curated venue at all is a broken sync, not a state to skip past.
+ */
+const openVenuedMatch = async (page: Page) => {
+  expect(VENUED_FIXTURE, "src/data/venues.ts names no fixture in the seed").toBeTruthy();
+  await page.goto(`/partida/${VENUED_FIXTURE!.id}`);
+  await expect(page.locator("main > article")).toBeVisible();
+};
 
 /**
  * Reach a stadium page the way a reader does — through a fixture — rather than
@@ -16,12 +35,7 @@ const VENUED_ROUND = "24";
  * before. Any fixture with a venue is enough to exercise the page.
  */
 const openStadiumFromMatch = async (page: Page) => {
-  await page.goto(`/jogos/${VENUED_ROUND}`);
-
-  const match = page.locator("main ul > li a[href^='/partida/']").first();
-  await expect(match).toBeVisible();
-  await match.click();
-  await expect(page).toHaveURL(/\/partida\/\d+/);
+  await openVenuedMatch(page);
 
   const venue = page.locator("main a[href^='/estadio/']").first();
   await expect(venue).toBeVisible();
@@ -40,10 +54,7 @@ test.describe("the stadium page", () => {
   test("the venue line links only the ground, keeping city and state as text", async ({
     page,
   }) => {
-    await page.goto(`/jogos/${VENUED_ROUND}`);
-    const match = page.locator("main ul > li a[href^='/partida/']").first();
-    await expect(match).toBeVisible();
-    await match.click();
+    await openVenuedMatch(page);
 
     // The whole line still reads "stadium · city – UF"; only the first part is
     // a control. Shape, never a specific ground.
@@ -108,12 +119,15 @@ test.describe("the stadium page", () => {
 /**
  * The photograph and its credit line.
  *
- * Split into its own block because these tests must **not** assert that a
- * photo exists. `stadiums.ts` is curated, `venues.ts` grows on every sync, and
- * a ground entering the snapshot before anyone has found a freely licensed
+ * Pointed at a ground the snapshot reaches **and `stadiums.ts` has a photo
+ * for**, derived rather than named. These tests still must not assert how many
+ * grounds have one: `stadiums.ts` is curated, `venues.ts` grows on every sync,
+ * and a ground entering the snapshot before anyone has found a freely licensed
  * picture of it is the ordinary case — a test counting curated photos is the
- * mistake `broadcasts.ts` already taught this suite once. So each one finds the
- * figure or skips loudly, and asserts shape where it is there.
+ * mistake `broadcasts.ts` already taught this suite once. They used to walk to
+ * whichever ground round 24's first fixture was played at and skip when it had
+ * no photo, which reported as a skipped count and nothing else. Now they fail by
+ * name, and only when no reachable ground has a photo at all.
  *
  * Nothing here waits on the image's bytes. The file lives on Wikimedia Commons,
  * and CI deliberately has no network dependency on a third party: a red build
@@ -122,15 +136,18 @@ test.describe("the stadium page", () => {
  * the alt text, and the attribution.
  */
 test.describe("the stadium photograph", () => {
-  /** Walk the stadium pages the snapshot offers until one carries a photo. */
+  /** A slug the snapshot reaches whose ground carries a curated photograph. */
+  const PHOTOGRAPHED = SEED_MATCHES.flatMap((match) => {
+    const venue = VENUES[match.id];
+    return venue ? [stadiumSlug(venue.stadium)] : [];
+  }).find((slug) => STADIUMS[slug]?.photo);
+
   const openStadiumWithPhoto = async (page: Page) => {
-    await openStadiumFromMatch(page);
+    expect(PHOTOGRAPHED, "no ground the snapshot reaches has a photo in src/data/stadiums.ts").toBeTruthy();
+    await page.goto(`/estadio/${PHOTOGRAPHED}`);
 
     const figure = page.locator("figure[data-stadium-photo]");
-    if ((await figure.count()) === 0) {
-      test.skip(true, "no stadium reachable from this round has a curated photo");
-    }
-
+    await expect(figure).toHaveCount(1);
     return figure;
   };
 

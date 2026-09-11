@@ -34,8 +34,8 @@ export const E2E_NOW = new Date(`${SNAPSHOT_DATE}T12:00:00.000Z`);
  * is the price of not having the next date-dependent spec quietly stop running.
  *
  * The failure this closes was live and had started four hours before it was
- * found: `meu-time.spec.ts` skips when the snapshot's soonest unplayed fixture
- * is in the past, and that fixture (2026-08-29T21:30Z) had just slipped behind
+ * found: `meu-time.spec.ts` then skipped when the snapshot's soonest unplayed
+ * fixture was in the past, and that fixture (2026-08-29T21:30Z) had just slipped behind
  * a real clock reading 2026-08-30T01:27Z. Two specs across two projects went
  * quiet, the suite still said `690 passed`, and the only trace was a `4 skipped`
  * line nobody reads.

@@ -1,68 +1,72 @@
 import { expect, test, type Page } from "@/tests/e2e/clock";
+import { readMatches, serveMatches, upcomingFixture } from "@/tests/e2e/matches-payload";
 import { SEED_MATCHES } from "@/src/data/matches";
 import { VENUES } from "@/src/data/venues";
 import { BROADCASTS } from "@/src/data/broadcasts";
 import { HIGHLIGHTS } from "@/src/data/highlights";
+import { STADIUMS } from "@/src/data/stadiums";
 import { youtubeVideoId } from "@/club-core";
 import { playsInPage } from "@/match-core";
+import { stadiumSlug } from "@/venue-core";
 
 /**
- * The two rounds these tests need, **derived from the committed data rather
- * than written down** — `clock.ts`'s rule for `E2E_NOW`, one file over.
+ * The round these tests read played fixtures from, **derived from the committed
+ * data rather than written down** — `clock.ts`'s rule for `E2E_NOW`, one file
+ * over.
  *
- * They were literals, `24` and `25`, under a comment saying they were "stable
- * because the data is committed". That was true when written and false the
- * first time `sync-seed-data` ran: round 25 finished, and `an upcoming match
- * offers no highlights` opened a played fixture and found the search link it
- * asserts is absent. The comment is what stopped anyone asking — a claim that
+ * It was a literal, `24`, beside an upcoming `25`, under a comment saying they
+ * were "stable because the data is committed". That was true when written and
+ * false the first time `sync-seed-data` ran: round 25 finished, and `an upcoming
+ * match offers no highlights` opened a played fixture and found the search link
+ * it asserts is absent. The comment is what stopped anyone asking — a claim that
  * produces no work while it holds.
- *
- * Derived, a seed sync moves both without anybody remembering, which is the
- * whole of what `SNAPSHOT_DATE` buys the clock.
  */
 const settled = (match: (typeof SEED_MATCHES)[number]) =>
   match.status === "FINISHED" && match.homeGoals !== null;
 
-const lastPlayed = Math.max(...SEED_MATCHES.filter(settled).map((match) => match.round));
-
 /** A round with finished matches carrying goals. */
-const PLAYED_ROUND = String(lastPlayed);
-/** The first round with nothing played yet. */
-const UPCOMING_ROUND = String(lastPlayed + 1);
+const PLAYED_ROUND = String(Math.max(...SEED_MATCHES.filter(settled).map((match) => match.round)));
 
 /**
- * At the end of a season there is no upcoming round, and the four tests that
- * need one are skipped rather than asserting against an empty page. Not
- * reachable from today's snapshot; here because the alternative is a suite that
- * goes red in November for being correct.
+ * A curated venue whose ground has a coordinate, and a curated broadcast line —
+ * read from the committed files, and attached to whichever fixture a test
+ * produces.
  */
-const noUpcomingRound = !SEED_MATCHES.some((match) => match.round === lastPlayed + 1);
+const MAPPED_VENUE = Object.values(VENUES).find(
+  (venue) => STADIUMS[stadiumSlug(venue.stadium)]?.coordinates,
+);
+const CURATED_BROADCAST = Object.values(BROADCASTS).find((line) => line.length > 0);
 
 /**
- * The upcoming fixture the four venue tests need — **derived, not assumed to be
- * the round's first**.
+ * Open a match still to be played — **produced, never looked for**.
  *
- * `venues.ts` and `broadcasts.ts` are curated a window at a time by
- * `sync-broadcasts`, so the upcoming round is routinely only part-covered: 7 of
- * 10 for rodada 27, and the three missing are exactly those whose CBF kickoff
- * disagrees with the seed's placeholder `00:00Z`. "The round's first fixture"
- * therefore stopped meaning "a fixture with a stadium" the moment the seed
- * advanced past the broadcast window, and all four went red against a page that
- * was rendering correctly — with no curated venue it omits Estádio and Onde
- * assistir, which is the honest thing to do.
+ * These tests used to open the first fixture of the round after the last one
+ * played, and skipped when there was none. The venue tests went further and
+ * hunted that round for a fixture `sync-broadcasts` had already curated, which
+ * the upcoming round routinely is only in part — 7 of 10 for rodada 27, the
+ * three missing exactly those whose CBF kickoff disagreed with the seed. Both
+ * skips waited on states the season reaches on its own schedule, and nothing
+ * reported either: a skip is a count nobody reads.
  *
- * The assertions below are unchanged. What is derived is WHICH fixture they are
- * pointed at, so each tests the thing it is named for. Same rule as
- * `UPCOMING_ROUND` above: a literal here is a claim that produces no work while
- * it holds.
+ * With `curated`, the fixture carries a venue whose ground has a coordinate and
+ * a broadcast line, so Estádio and Onde assistir have something to render. Both
+ * come from the committed files rather than being invented, so the page is
+ * handed a ground `STADIUMS` knows.
  */
-const upcomingCurated = SEED_MATCHES.filter(
-  (match) =>
-    match.round === lastPlayed + 1 && VENUES[match.id] && (BROADCASTS[match.id]?.length ?? 0) > 0,
-).sort((a, b) => a.kickoff.localeCompare(b.kickoff))[0];
-
-/** No upcoming fixture is curated yet — the window simply has not been synced. */
-const noCuratedUpcoming = !upcomingCurated;
+const openUpcomingMatch = async (page: Page, { curated = false } = {}) => {
+  const body = await readMatches(page);
+  const target = upcomingFixture(body);
+  if (curated) {
+    expect(MAPPED_VENUE, "src/data/venues.ts names no ground with a coordinate").toBeTruthy();
+    expect(CURATED_BROADCAST, "src/data/broadcasts.ts holds no broadcast line").toBeTruthy();
+    target.venue = MAPPED_VENUE;
+    target.broadcasters = CURATED_BROADCAST;
+  }
+  await serveMatches(page, body);
+  await page.goto(`/partida/${target.id}`);
+  await expect(page.locator("main > article")).toBeVisible();
+  return target;
+};
 
 /**
  * Open a finished fixture with the curated links stripped from the payload, so
@@ -150,11 +154,12 @@ test.describe("Página da partida", () => {
   });
 
   test("a fixture in the round list links to its own page", async ({ page }) => {
-    test.skip(noUpcomingRound, "the season has no round left to play");
-    await page.goto(`/jogos/${UPCOMING_ROUND}`);
+    const body = await readMatches(page);
+    const target = upcomingFixture(body);
+    await serveMatches(page, body);
+    await page.goto(`/jogos/${target.round}`);
 
-    const link = page.locator("main ul > li a").first();
-    await expect(link).toHaveAttribute("href", /^\/partida\/\d+$/);
+    await expect(page.locator(`main ul > li a[href="/partida/${target.id}"]`)).toBeVisible();
   });
 
   test("the match page draws both clubs' campanhas", async ({ page }) => {
@@ -238,8 +243,7 @@ test.describe("Página da partida", () => {
   });
 
   test("the page shows the round and the status", async ({ page }) => {
-    test.skip(noUpcomingRound, "the season has no round left to play");
-    await openFirstMatch(page, UPCOMING_ROUND);
+    await openUpcomingMatch(page);
 
     // Scoped to the scoreboard card. The campanha section also names rounds
     // ("17º · 1ª rodada"), so an unscoped match now finds several.
@@ -251,8 +255,7 @@ test.describe("Página da partida", () => {
   });
 
   test("an upcoming match shows kickoff, stadium and where to watch", async ({ page }) => {
-    test.skip(noCuratedUpcoming, "no upcoming fixture carries curated venue data yet");
-    await page.goto(`/partida/${upcomingCurated.id}`);
+    await openUpcomingMatch(page, { curated: true });
 
     await expect(page.getByText("Data e hora")).toBeVisible();
     await expect(page.getByText("Estádio")).toBeVisible();
@@ -260,8 +263,7 @@ test.describe("Página da partida", () => {
   });
 
   test("the venue reads as stadium, city and state", async ({ page }) => {
-    test.skip(noCuratedUpcoming, "no upcoming fixture carries curated venue data yet");
-    await page.goto(`/partida/${upcomingCurated.id}`);
+    await openUpcomingMatch(page, { curated: true });
 
     const venue = page.locator("dd").filter({ hasText: "·" }).first();
     await expect(venue).toContainText(/·/);
@@ -269,8 +271,7 @@ test.describe("Página da partida", () => {
   });
 
   test("the venue carries a pin to the ground on Google Maps", async ({ page }) => {
-    test.skip(noCuratedUpcoming, "no upcoming fixture carries curated venue data yet");
-    await page.goto(`/partida/${upcomingCurated.id}`);
+    await openUpcomingMatch(page, { curated: true });
 
     const pin = page.locator("[data-stadium-map]");
     await expect(pin).toBeVisible();
@@ -295,8 +296,7 @@ test.describe("Página da partida", () => {
   });
 
   test("the pin opens safely in a new tab", async ({ page }) => {
-    test.skip(noCuratedUpcoming, "no upcoming fixture carries curated venue data yet");
-    await page.goto(`/partida/${upcomingCurated.id}`);
+    await openUpcomingMatch(page, { curated: true });
 
     const pin = page.locator("[data-stadium-map]");
     await expect(pin).toHaveAttribute("target", "_blank");
@@ -304,9 +304,8 @@ test.describe("Página da partida", () => {
   });
 
   test("an upcoming match offers no highlights", async ({ page }) => {
-    test.skip(noUpcomingRound, "the season has no round left to play");
     // It has not been played.
-    await openFirstMatch(page, UPCOMING_ROUND);
+    await openUpcomingMatch(page);
 
     await expect(page.getByRole("link", { name: /Procurar melhores momentos/ })).toHaveCount(0);
   });
@@ -360,7 +359,7 @@ test.describe("Página da partida", () => {
   });
 
   test("each club on the scoreboard links to its page", async ({ page }) => {
-    await openFirstMatch(page, UPCOMING_ROUND);
+    await openUpcomingMatch(page);
 
     // `main > article`, not a bare `article`: the scoreboard is the only
     // article in the app today, which is what made the unscoped form pass
@@ -373,7 +372,7 @@ test.describe("Página da partida", () => {
   });
 
   test("each club on the scoreboard links to its Wikipedia article", async ({ page }) => {
-    await openFirstMatch(page, UPCOMING_ROUND);
+    await openUpcomingMatch(page);
 
     const articles = page.locator("main > article a[href*='wikipedia.org']");
     await expect(articles).toHaveCount(2);
@@ -390,7 +389,7 @@ test.describe("Página da partida", () => {
   });
 
   test("the article link reads as its name and does not crowd the club link", async ({ page }) => {
-    await openFirstMatch(page, UPCOMING_ROUND);
+    await openUpcomingMatch(page);
 
     const text = (await page.locator("main > article a[href*='wikipedia.org']").first().innerText()).trim();
     expect(text).toMatch(/^Wikipédia/);

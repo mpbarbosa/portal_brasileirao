@@ -1,4 +1,5 @@
 import { E2E_NOW, expect, test, type Page } from "@/tests/e2e/clock";
+import { readMatches, serveMatches, upcomingFixture } from "@/tests/e2e/matches-payload";
 
 /**
  * **Meu time** — the device-local preference, Phase 0 of `docs/accounts.md`.
@@ -124,90 +125,63 @@ test.describe("Meu time", () => {
 /**
  * **Próximo jogo do meu time** — the alert half of the strip.
  *
- * Every club and fixture here is read out of `/api/matches` at run time rather
- * than written down. The suite boots against the frozen snapshot, which ages:
- * a spec naming Palmeiras' next opponent passes today and fails the week the
- * seed is regenerated, and one naming *any* club fails outright once the
- * snapshot's last fixture is in the past. Deriving the subject from the payload
- * is the only form of this test that cannot go stale — the same rule that
- * forbids asserting a round number or a scoreline.
+ * The fixture these tests follow is **produced** in `/api/matches` rather than
+ * found there. The suite boots against the frozen snapshot, which ages: a spec
+ * naming Palmeiras' next opponent passes today and fails the week the seed is
+ * regenerated, and one reading the snapshot's soonest unplayed fixture has
+ * nothing to read once the last round is played. This file did the second and
+ * skipped when the answer was none — which is how two specs across two projects
+ * went quiet for four hours on 2026-08-30 while the suite said `690 passed`.
+ * `upcomingFixture` dates one a minute after `E2E_NOW`, so there is always
+ * exactly one to follow.
  */
-interface Upcoming {
-  id: string;
-  homeCode: string;
-  awayCode: string;
-  homeName: string;
-  awayName: string;
-}
+const fixtureLine = (page: Page) => page.locator("[data-proximo-jogo]");
 
-/** The soonest fixture still to be played, as the app itself reports it. */
-const nextScheduled = async (page: Page): Promise<Upcoming | null> => {
-  const response = await page.request.get("/api/matches");
-  const body = await response.json();
-  const clubs: { code: string; shortName: string }[] = body.data.clubs;
+/**
+ * Serve a payload with a fixture about to kick off, follow its home side, and
+ * return what the strip should then name.
+ */
+const followUpcoming = async (page: Page) => {
+  const body = await readMatches(page);
+  const target = upcomingFixture(body);
   const name = (code: string) =>
-    clubs.find((club) => club.code === code)?.shortName ?? code;
+    body.data.clubs.find((club) => club.code === code)?.shortName ?? code;
 
-  const soonest = body.data.matches
-    .filter((match: { status: string }) => match.status === "SCHEDULED")
-    .sort(
-      (a: { kickoff: string }, b: { kickoff: string }) =>
-        Date.parse(a.kickoff) - Date.parse(b.kickoff),
-    )[0];
-
-  // `E2E_NOW`, not `Date.now()`. This guard runs in Node, where the page's
-  // frozen clock does not reach — so with a real clock it went on measuring the
-  // snapshot against today and returned null the moment the soonest unplayed
-  // fixture slipped into the past. That happened four hours before it was
-  // found: two specs across two projects went quiet while the suite reported
-  // `690 passed`, and the only trace was a `4 skipped` line.
-  if (!soonest || Date.parse(soonest.kickoff) < E2E_NOW.getTime()) return null;
+  await serveMatches(page, body);
+  await openClub(page, target.homeCode);
+  await followControl(page).click();
+  await expect(followControl(page)).toHaveAttribute("data-follow", "following");
 
   return {
-    id: soonest.id,
-    homeCode: soonest.homeCode,
-    awayCode: soonest.awayCode,
-    homeName: name(soonest.homeCode),
-    awayName: name(soonest.awayCode),
+    id: target.id as string,
+    homeName: name(target.homeCode),
+    awayName: name(target.awayCode),
   };
 };
 
-const fixtureLine = (page: Page) => page.locator("[data-proximo-jogo]");
-
 test.describe("Próximo jogo do meu time", () => {
   test("the followed club's next match is named above the table", async ({ page }) => {
-    const next = await nextScheduled(page);
-    test.skip(next === null, "o snapshot já não tem partidas a realizar");
-
-    // Follow the home side of the soonest fixture, so the strip has something
-    // to point at whatever the calendar says.
-    await openClub(page, next!.homeCode);
-    await followControl(page).click();
-    await expect(followControl(page)).toHaveAttribute("data-follow", "following");
+    const next = await followUpcoming(page);
 
     await page.goto("/");
     await expect(strip(page)).toBeVisible();
 
     const line = fixtureLine(page);
     await expect(line).toBeVisible();
-    await expect(line).toHaveAttribute("data-proximo-jogo", next!.id);
+    await expect(line).toHaveAttribute("data-proximo-jogo", next.id);
     await expect(line).toContainText("Próximo jogo");
-    await expect(line).toContainText(next!.homeName);
-    await expect(line).toContainText(next!.awayName);
+    await expect(line).toContainText(next.homeName);
+    await expect(line).toContainText(next.awayName);
     // Shape, not value: the wording is `countdownLabel`'s and the number moves.
     await expect(line).toContainText(/Começa em|Deve começar|Horário a definir/);
   });
 
   test("the fixture line opens the match page", async ({ page }) => {
-    const next = await nextScheduled(page);
-    test.skip(next === null, "o snapshot já não tem partidas a realizar");
-
-    await openClub(page, next!.homeCode);
-    await followControl(page).click();
+    const next = await followUpcoming(page);
     await page.goto("/");
 
     await fixtureLine(page).getByRole("link").click();
-    await expect(page).toHaveURL(new RegExp(`/partida/${next!.id}$`));
+    await expect(page).toHaveURL(new RegExp(`/partida/${next.id}$`));
     await expect(page.locator("main article")).toBeVisible();
   });
 
@@ -233,23 +207,18 @@ test.describe("Próximo jogo do meu time", () => {
      * `src/useAccount.ts` records where a `page.route` stub cannot settle a
      * question, and that is a different failure to this one.
      */
-    const body = await (await page.request.get("/api/matches")).json();
-    const target = body.data.matches.find(
-      (match: { status: string }) => match.status === "SCHEDULED",
-    );
-    test.skip(!target, "o snapshot já não tem partidas a realizar");
-
+    const body = await readMatches(page);
+    const target = upcomingFixture(body);
     target.status = "LIVE";
     target.homeGoals = 2;
     target.awayGoals = 1;
+    // Kicked off half an hour ago, so the record is coherent as well as live.
+    target.kickoff = new Date(E2E_NOW.getTime() - 30 * 60_000).toISOString();
     const live = { id: target.id as string, homeCode: target.homeCode as string };
 
-    // The payload is prepared once and served from memory, never proxied per
-    // request: a handler that calls `route.fetch()` re-enters the server for
-    // every navigation in the test, and under the suite's seven workers one of
-    // those came back as something other than the envelope. The body does not
-    // change between navigations, so there is nothing to fetch again.
-    await page.route("**/api/matches", (route) => route.fulfill({ json: body }));
+    // Prepared once and served from memory: `serveMatches` records why a
+    // handler proxying each request is not an option under the suite's workers.
+    await serveMatches(page, body);
 
     await openClub(page, live.homeCode);
     await followControl(page).click();

@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@/tests/e2e/clock";
+import { finishedFixture, readMatches, serveMatches } from "@/tests/e2e/matches-payload";
 
 /**
  * MD3's 48dp touch target, which is **not** the control's visible box.
@@ -162,15 +163,36 @@ test.describe("Alvos de toque na barra", () => {
  * clearances rather than trusting that.
  */
 test.describe("Alvos de toque no seletor de emissora", () => {
-  /** Botafogo 1 x 1 Fluminense: three channels, so the row holds two. */
-  const THREE_CHANNELS = "/partida/554951";
+  /**
+   * Open a finished fixture whose highlights are `channels`, in order, each on
+   * its own YouTube video — produced, so the row holds what the test says.
+   *
+   * These opened 554951 (Botafogo 1 x 1 Fluminense), whose three curated
+   * channels made the row two links. `highlights.ts` is curated by hand and by
+   * `find-highlights`, so which fixture carries three channels is exactly the
+   * curated data a spec must not depend on.
+   */
+  const openChannels = async (page: Page, channels: string[]) => {
+    const body = await readMatches(page);
+    const match = finishedFixture(body);
+    const videos = ["CT9UKBvQqXM", "4nGUP-nRuvc", "2Nl3Ra6Uu0M"];
+    match.highlights = channels.map((channel, index) => ({
+      url: `https://www.youtube.com/watch?v=${videos[index]}`,
+      channel,
+    }));
+    await serveMatches(page, body);
+    await page.goto(`/partida/${match.id}`);
+  };
+
+  /** Three channels, so the row under the frame holds two. */
+  const THREE_CHANNELS = ["ge tv", "CazéTV", "UOL Esporte"];
 
   const row = (page: Page) =>
     page.locator("main section", { hasText: "Melhores momentos" }).locator("p").last();
 
   test("each channel link carries a 48dp target it did not have", async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 812 });
-    await page.goto(THREE_CHANNELS);
+    await openChannels(page, THREE_CHANNELS);
     await expect(page.locator("main iframe")).toHaveCount(1);
 
     const links = row(page).locator("a");
@@ -196,7 +218,7 @@ test.describe("Alvos de toque no seletor de emissora", () => {
     page,
   }) => {
     await page.setViewportSize({ width: 375, height: 812 });
-    await page.goto(THREE_CHANNELS);
+    await openChannels(page, THREE_CHANNELS);
     await expect(page.locator("main iframe")).toHaveCount(1);
 
     const m = await row(page).evaluate((rowEl) => {
@@ -261,23 +283,9 @@ test.describe("Alvos de toque no seletor de emissora", () => {
   test("two short channel names still do not collide", async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 812 });
 
-    const response = await page.request.get("/api/matches");
-    const payload = await response.json();
-    for (const match of payload.data.matches) {
-      if (match.id !== "554951") continue;
-      // Two names short enough to overhang hard, and neither is a channel
-      // `playsInPage` refuses, so both keep a target.
-      match.highlights = [
-        { url: "https://www.youtube.com/watch?v=0ceAn6TLVtE", channel: "ge tv" },
-        { url: "https://www.youtube.com/watch?v=ryRpY29ySvk", channel: "ge sp" },
-        { url: "https://www.youtube.com/watch?v=o-_hD5Q8f4Q", channel: "ge rj" },
-      ];
-    }
-    await page.route("**/api/matches*", (route) =>
-      route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(payload) }),
-    );
-
-    await page.goto(THREE_CHANNELS);
+    // Two names short enough to overhang hard, and neither is a channel
+    // `playsInPage` refuses, so both keep a target.
+    await openChannels(page, ["ge tv", "ge sp", "ge rj"]);
     await expect(page.locator("main iframe")).toHaveCount(1);
     const links = row(page).locator("a");
     await expect(links).toHaveCount(2);
@@ -300,7 +308,7 @@ test.describe("Alvos de toque no seletor de emissora", () => {
 
   test("a press 4px above the box still swaps the video", async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 812 });
-    await page.goto(THREE_CHANNELS);
+    await openChannels(page, THREE_CHANNELS);
     const frame = page.locator("main iframe");
     await expect(frame).toHaveCount(1);
     const before = await frame.getAttribute("src");
