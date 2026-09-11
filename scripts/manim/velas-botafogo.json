@@ -1,5 +1,5 @@
 {
-  "snapshot": "2026-09-07",
+  "snapshot": "2026-09-11",
   "club": {
     "code": "1770",
     "name": "Botafogo",
@@ -478,14 +478,14 @@
     {
       "round": 26,
       "open": 12,
-      "close": 13,
+      "close": 14,
       "best": 12,
-      "worst": 13,
+      "worst": 14,
       "points": 1,
       "totalPoints": 31,
       "played": 25,
       "result": "E",
-      "moved": -1,
+      "moved": -2,
       "match": {
         "opponent": "Palmeiras",
         "home": true,

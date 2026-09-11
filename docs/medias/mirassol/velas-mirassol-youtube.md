@@ -14,7 +14,7 @@ Texto que acompanha [`velas-mirassol.mp4`](velas-mirassol.mp4)
   própria cena — a regra que o `scripts/manim/README.md` registra para as velas.
 
 > **Os números aqui saem de `scripts/manim/velas-mirassol.json`, rodada 26,
-> snapshot de 2026-09-07** — 16º com 28 pts, 7V 7E 12D, e a oscilação entre
+> snapshot de 2026-09-11** — 16º com 28 pts, 7V 7E 12D, e a oscilação entre
 > o 2º e o 20º, que é a faixa que o painel do vídeo imprime. Eles **envelhecem**: um `sync-seed-data` seguido de uma
 > reexportação move o vídeo, e este arquivo não é regerado por nada. Reconferir
 > antes de publicar, contra o JSON e não contra esta página.
@@ -63,12 +63,12 @@ busca, e não é como o clube aparece no vídeo nem na tabela.
 ```
 A campanha do Mirassol rodada a rodada, desenhada como vela: o corpo vai da posição em que o clube ABRIU a rodada até onde ele FECHOU, e o pavio cobre a melhor e a pior posição que ele ocupou enquanto a rodada era jogada. Embaixo, no mesmo eixo, os pontos acumulados — a barra é o total e a tampa clara é o que a rodada acrescentou.
 
-Dados até 07/09/2026 (26ª rodada):
+Dados até 11/09/2026 (26ª rodada):
 • Mirassol — 16º, 28 pts em 26 jogos
 • 7V · 7E · 12D — 29 gols pró, 40 contra, saldo -11
 • 36% de aproveitamento · oscilou entre o 2º e o 20º
 
-O Mirassol abre a temporada perto do G4 e fecha o recorte na borda do Z4: 12 posições perdidas desde o seu melhor fechamento, empatado com o Botafogo e atrás só das 18 da Chapecoense.
+O Mirassol abre a temporada perto do G4 e fecha o recorte na borda do Z4: 12 posições perdidas desde o seu melhor fechamento, a terceira maior queda da divisão, atrás das 13 do Botafogo e das 18 da Chapecoense.
 
 A amplitude total de fechamento é do 4º ao 20º, e o painel diz 2º e 20º porque conta também o que aconteceu dentro das rodadas. São 12 derrotas em 26 jogos, com invencibilidade máxima de 3 rodadas.
 

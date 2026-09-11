@@ -15,7 +15,7 @@ Texto que acompanha [`velas-vasco-da-gama.mp4`](velas-vasco-da-gama.mp4)
 - **Cortes verticais:** `velas-vasco-da-gama-45.mp4` (1080×1350, feed do Instagram) e `velas-vasco-da-gama-916.mp4` (1080×1920, Reels e YouTube Short).
 
 > **Os números aqui saem de `scripts/manim/velas-vasco-da-gama.json`, rodada 26,
-> snapshot de 2026-09-07** — 17º com 25 pts, 6V 7E 12D, e a oscilação entre
+> snapshot de 2026-09-11** — 17º com 25 pts, 6V 7E 12D, e a oscilação entre
 > o 8º e o 20º, que é a faixa que o painel do vídeo imprime. Eles **envelhecem**: um `sync-seed-data` seguido de uma
 > reexportação move o vídeo, e este arquivo não é regerado por nada. Reconferir
 > antes de publicar, contra o JSON e não contra esta página.
@@ -64,7 +64,7 @@ busca, e não é como o clube aparece no vídeo nem na tabela.
 ```
 A campanha do Vasco da Gama rodada a rodada, desenhada como vela: o corpo vai da posição em que o clube ABRIU a rodada até onde ele FECHOU, e o pavio cobre a melhor e a pior posição que ele ocupou enquanto a rodada era jogada. Embaixo, no mesmo eixo, os pontos acumulados — a barra é o total e a tampa clara é o que a rodada acrescentou.
 
-Dados até 07/09/2026 (26ª rodada):
+Dados até 11/09/2026 (26ª rodada):
 • Vasco da Gama — 17º, 25 pts em 25 jogos
 • 6V · 7E · 12D — 27 gols pró, 40 contra, saldo -13
 • 33% de aproveitamento · oscilou entre o 8º e o 20º

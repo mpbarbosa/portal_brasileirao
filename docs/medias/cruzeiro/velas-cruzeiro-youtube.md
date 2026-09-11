@@ -15,7 +15,7 @@ Texto que acompanha [`velas-cruzeiro.mp4`](velas-cruzeiro.mp4)
 - **Cortes verticais:** `velas-cruzeiro-45.mp4` (1080×1350, feed do Instagram) e `velas-cruzeiro-916.mp4` (1080×1920, Reels e YouTube Short).
 
 > **Os números aqui saem de `scripts/manim/velas-cruzeiro.json`, rodada 26,
-> snapshot de 2026-09-07** — 6º com 42 pts, 12V 6E 8D, e a oscilação entre
+> snapshot de 2026-09-11** — 6º com 42 pts, 12V 6E 8D, e a oscilação entre
 > o 5º e o 20º, que é a faixa que o painel do vídeo imprime. Eles **envelhecem**: um `sync-seed-data` seguido de uma
 > reexportação move o vídeo, e este arquivo não é regerado por nada. Reconferir
 > antes de publicar, contra o JSON e não contra esta página.
@@ -65,7 +65,7 @@ busca, e não é como o clube aparece no vídeo nem na tabela.
 ```
 A campanha do Cruzeiro rodada a rodada, desenhada como vela: o corpo vai da posição em que o clube ABRIU a rodada até onde ele FECHOU, e o pavio cobre a melhor e a pior posição que ele ocupou enquanto a rodada era jogada. Embaixo, no mesmo eixo, os pontos acumulados — a barra é o total e a tampa clara é o que a rodada acrescentou.
 
-Dados até 07/09/2026 (26ª rodada):
+Dados até 11/09/2026 (26ª rodada):
 • Cruzeiro — 6º, 42 pts em 26 jogos
 • 12V · 6E · 8D — 38 gols pró, 37 contra, saldo +1
 • 54% de aproveitamento · oscilou entre o 5º e o 20º

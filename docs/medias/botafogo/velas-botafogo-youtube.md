@@ -15,7 +15,7 @@ Texto que acompanha [`velas-botafogo.mp4`](velas-botafogo.mp4)
 - **Cortes verticais:** `velas-botafogo-45.mp4` (1080×1350, feed do Instagram) e `velas-botafogo-916.mp4` (1080×1920, Reels e YouTube Short).
 
 > **Os números aqui saem de `scripts/manim/velas-botafogo.json`, rodada 26,
-> snapshot de 2026-09-07** — 13º com 31 pts, 8V 7E 10D, e a oscilação entre
+> snapshot de 2026-09-11** — 14º com 31 pts, 8V 7E 10D, e a oscilação entre
 > o 1º e o 18º, que é a faixa que o painel do vídeo imprime. Eles **envelhecem**: um `sync-seed-data` seguido de uma
 > reexportação move o vídeo, e este arquivo não é regerado por nada. Reconferir
 > antes de publicar, contra o JSON e não contra esta página.
@@ -45,7 +45,7 @@ Texto que acompanha [`velas-botafogo.mp4`](velas-botafogo.mp4)
 Recomendado (69 caracteres):
 
 ```
-Botafogo: do 1º ao 13º, a segunda maior queda do Brasileirão em velas
+Botafogo: do 1º ao 14º, a segunda maior queda do Brasileirão em velas
 ```
 
 A queda, conferida contra os vinte clubes — e **data o recorte**, que é a única defesa contra
@@ -64,12 +64,12 @@ busca, e não é como o clube aparece no vídeo nem na tabela.
 ```
 A campanha do Botafogo rodada a rodada, desenhada como vela: o corpo vai da posição em que o clube ABRIU a rodada até onde ele FECHOU, e o pavio cobre a melhor e a pior posição que ele ocupou enquanto a rodada era jogada. Embaixo, no mesmo eixo, os pontos acumulados — a barra é o total e a tampa clara é o que a rodada acrescentou.
 
-Dados até 07/09/2026 (26ª rodada):
-• Botafogo — 13º, 31 pts em 25 jogos
+Dados até 11/09/2026 (26ª rodada):
+• Botafogo — 14º, 31 pts em 25 jogos
 • 8V · 7E · 10D — 37 gols pró, 40 contra, saldo -3
 • 41% de aproveitamento · oscilou entre o 1º e o 18º
 
-O Botafogo tem a segunda maior queda do desenho: fecha a 1ª rodada em 1º e chega à 26ª em 13º — 12 posições, atrás só das 18 da Chapecoense. Descontadas as duas primeiras rodadas, onde os empatados em nada são ordenados por nome, a campanha ainda fecha entre o 7º e o 18º, então a queda é real e não um artefato da ordenação.
+O Botafogo tem a segunda maior queda do desenho: fecha a 1ª rodada em 1º e chega à 26ª em 14º — 13 posições, atrás só das 18 da Chapecoense. Descontadas as duas primeiras rodadas, onde os empatados em nada são ordenados por nome, a campanha ainda fecha entre o 7º e o 18º, então a queda é real e não um artefato da ordenação.
 
 São 10 derrotas em 25 jogos e 6 rodadas de invencibilidade na maior sequência.
 
@@ -96,7 +96,7 @@ carregar o vídeo sozinha.
 Para Short, ou onde a descrição longa não couber.
 
 ```
-A campanha do Botafogo em velas: o corpo vai da posição de abertura à de fechamento da rodada, o pavio mostra até onde o clube subiu e desceu dentro dela, e a barra de baixo são os pontos. As réguas tracejadas marcam as saídas de Martín Anselmi e Franclim Carvalho, e a parada para a Copa. Liderou a 1ª rodada e caiu 12 posições até o 13º. Dados até a 26ª: 31 pts, 8V 7E 10D, saldo -3.
+A campanha do Botafogo em velas: o corpo vai da posição de abertura à de fechamento da rodada, o pavio mostra até onde o clube subiu e desceu dentro dela, e a barra de baixo são os pontos. As réguas tracejadas marcam as saídas de Martín Anselmi e Franclim Carvalho, e a parada para a Copa. Liderou a 1ª rodada e caiu 13 posições até o 14º. Dados até a 26ª: 31 pts, 8V 7E 10D, saldo -3.
 
 Animação em Manim, dados do Portal Brasileirão: https://brasileirao.mpbarbosa.com
 Código: https://github.com/mpbarbosa/portal_brasileirao
