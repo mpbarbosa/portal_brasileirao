@@ -23,9 +23,8 @@ const OPENING_HEIGHT = 620;
  * **The height cannot be computed here and cannot be left fixed**, which is what
  * makes this component more than an `<iframe>`. A post is 1:1, 4:5 or 1.91:1,
  * it may be a carrossel or a 9:16 reel, and `captioned` adds a caption of
- * unbounded length —
- * so a constant either clips the picture or leaves a band of dead white under
- * it. Instagram's embed page answers the question itself: it posts a `MEASURE`
+ * unbounded length — so a constant either clips the picture or leaves a band of
+ * dead white under it. Instagram's embed page answers the question itself: it posts a `MEASURE`
  * message carrying its content height, which is how its own `embed.js` sizes
  * the frame it builds.
  *
