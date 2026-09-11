@@ -3265,7 +3265,11 @@ Four things about the generator are load-bearing:
 - **A gap in the round files is refused rather than skipped.** Differencing
   rodada 6 against rodada 8 succeeds and quietly folds two rounds into one
   window, which is invisible in the output and changes every rate downstream. The
-  walk stops at the first absence.
+  walk stops at the first absence — **and a run that stops short of the committed
+  file is refused too.** Stopping at a 404 is right, but the committed round was
+  never compared with where the walk stopped, so rounds 1..19 could be written
+  over a file covering 1..25 and exit 0. `fewerRoundsRefusal` refuses that unless
+  `--allow-fewer-rounds` declares a new season, which the file does not record.
 - **The club map is hand-written and may not become a `tla` join**, however much
   it looks like one. Our Coritiba `tla` is `COR`, which is caRtola's
   **Corinthians** — the collision this file already records under *Club identity
