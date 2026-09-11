@@ -7,10 +7,12 @@ import {
   refereeRoleLabel,
 } from "@/match-core";
 import { goalLabel, goalsBySide, scorerClubCode } from "@/goals-core";
+import { nicknameLabel, playerNickname } from "@/player-core";
 import { hasScore } from "@/matches-core";
 import { bySection, lineupFor, subShirtLabels } from "@/escalacao-core";
 import { stadiumMapUrl, stadiumSlug, venueName } from "@/venue-core";
 import { STADIUMS } from "@/src/data/stadiums";
+import { PLAYER_NICKNAMES } from "@/src/data/player-nicknames";
 import { BroadcasterMark } from "@/src/components/BroadcasterMark";
 import { ClubCrest } from "@/src/components/ClubCrest";
 import { MatchHighlights } from "@/src/components/MatchHighlights";
@@ -286,7 +288,14 @@ function GoalColumn({
     <div data-goals={side}>
       <p className="sr-only">Gols do {club?.shortName ?? code}</p>
       <ul className="space-y-0.5 text-center text-body-small text-ink-muted">
-        {goals.map((goal, index) => (
+        {goals.map((goal, index) => {
+          // Looked up by the id the elencos resolved, never by CBF's spelling
+          // of the name — a scorer with no id gets no apelido, which is the
+          // same refusal that leaves him without a card.
+          const nickname = goal.playerId
+            ? playerNickname(goal.playerId, goal.scorer, PLAYER_NICKNAMES)
+            : null;
+          return (
           <li key={`${goal.scorer}-${index}`} data-goal className="truncate">
             {/* A scorer the elencos could place opens the same card the
                 Artilharia and Jogadores open; one they could not stays the
@@ -318,8 +327,18 @@ function GoalColumn({
             {goal.minute && (
               <span className="ml-1 tabular-nums text-ink-faint">{goal.minute}</span>
             )}
+            {/* On a line of its own, under the scorer, and not beside the name:
+                this column is 152px at 390dp and 117px at 320, and
+                "Gabriel Barbosa “Gabigol” (pên.) 87'" measured 205px, so an
+                apelido written inline pushed the minute and the "(pên.)" out of
+                the truncated line — the two facts the row exists to state. The
+                caption line is also how Jogadores and the Artilharia print it. */}
+            {nickname && (
+              <span className="block truncate text-ink-faint">{nicknameLabel(nickname)}</span>
+            )}
           </li>
-        ))}
+          );
+        })}
       </ul>
     </div>
   );
