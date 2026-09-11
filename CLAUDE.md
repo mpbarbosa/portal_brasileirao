@@ -782,8 +782,9 @@ what makes the logic testable without mocking HTTP.
   own name claimed each side *"names a goalkeeper"*, and it passed because 554977
   — the one fixture it opens — happens to be flagged correctly. That is the
   *which record happens to hold a value* trap this file already names for
-  `goals.spec.ts`, arriving as a test's own title. It is scoped to the fixture
-  now, and the general case is produced by stripping the flag from the payload.
+  `goals.spec.ts`, arriving as a test's own title. It now asks the payload for a
+  fixture whose starting keepers are both flagged, and the general case is
+  produced by stripping the flag from the payload.
 
   **Substitutions carry a minute, and it comes from a second source.** The
   match API knows *who* — `alteracoes`, ids that resolve against the roster —
@@ -5076,8 +5077,9 @@ Rules that follow from that:
   state with a prepared payload rather than hunting the season for a fixture in it** —
   and the minute spec did not follow it. `tests/e2e/matches-payload.ts` holds the
   helpers, and `tests/e2e-fixture.test.ts` refuses a `test.skip` or `test.fixme` in
-  any spec: a skip waiting for the data to hold a state reports as a count nobody
-  reads.
+  any spec, and a literal fixture id: a skip waiting for the data to hold a state
+  reports as a count nobody reads, and an id is a claim about which record holds
+  it.
 - **Do not pipe a test run through `head` or `tail`.** This is the ledger rule under
   **The protocol for commit, push, merge and deploy**, and it is *worse* here, because
   two things fail together:
