@@ -43,9 +43,9 @@ export const clubKey = (club: Club): string => club.slug || club.code;
  * unique, and a monogram does not need it to be).
  *
  * **It is optional upstream**, so the fallback needs its own fallback, and
- * `code` cannot be it: a club whose provider reports no `tla` gets a synthetic
- * `FD-<id>`, and "FD-" beside a club's name is a rendering artefact rather than
- * an abbreviation of anything. The initial of the short name is derived from
+ * `code` cannot be it: a club's code is the provider's numeric id (`"1783"`),
+ * and a number beside a club's name is a rendering artefact rather than an
+ * abbreviation of anything. The initial of the short name is derived from
  * what the reader can already see, which is the property that matters here —
  * the mark sits beside the club's name in text, so it carries no information
  * the reader lacks and its whole job is to hold the slot without looking

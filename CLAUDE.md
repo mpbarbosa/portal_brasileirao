@@ -599,7 +599,8 @@ what makes the logic testable without mocking HTTP.
   `goalsReconcile` is the invariant that makes this checkable rather than
   assumed — each club's goals must add up to that club's score — and
   `sync-goals.ts` checks it twice, against CBF's own scoreline and against ours,
-  writing neither a match that fails nor a run's worth of unverified data.
+  and writes only the matches that pass both — an incomplete run still writes
+  those, then exits 1 naming the ones it skipped.
 
   **The minute does not come from the match API, and that is why it took a
   second source.** CBF's `tempo_jogo` there is `"2"` on every goal and
@@ -742,8 +743,9 @@ what makes the logic testable without mocking HTTP.
 
   `lineupsReconcile` is the gate the sync writes through, and it is weaker
   than `goalsReconcile` by necessity: a lineup has no scoreline to agree with,
-  so the check is what the laws of the game guarantee — two sides, eleven
-  starters each, every player named and numbered. That is still enough to
+  so the check is what the laws of the game and a team sheet guarantee — two
+  sides, eleven starters each with a bench beyond them, every player named and
+  numbered. That is still enough to
   refuse the string-boolean failure, which is the one that produces
   plausible-looking data.
 
@@ -1257,11 +1259,16 @@ Mapping notes, all covered by tests:
   mapped (checked 2026-09-11), because the fallback is not harmless for a match in
   progress — `withPlayedStatus` repairs a SCHEDULED record carrying a score for a
   past kickoff into FINISHED.
-- Scores are read from `fullTime.home`/`away` **and** the legacy `homeTeam`/`awayTeam`
-  spelling, because the published docs disagree with the v4 payload and guessing wrong
-  silently blanks every scoreline. Note `0` is a real score — only `null` means unplayed.
-- Club codes prefer the upstream `tla` (FLA, PAL, …), which lines up with the local seed
-  codes, falling back to a synthetic `FD-<id>`.
+- Scores are read from `fullTime.home`/`away`, verified against a live v4 payload.
+  This bullet used to add a legacy `homeTeam`/`awayTeam` spelling as a second
+  source; `mapMatch` reads no such thing (checked 2026-09-11) — `homeTeam` and
+  `awayTeam` are the two clubs. Note `0` is a real score — only `null` means
+  unplayed.
+- A club's code is the upstream **numeric id** (`"1783"`), never the `tla` — see
+  **Club identity is the upstream numeric id** below; the `tla` rides along for
+  display. `clubFromTeam` falls back to the `tla` only for a team that carries no
+  id. This bullet used to say the reverse — `tla` first, then a synthetic
+  `FD-<id>` — and no code produces an `FD-<id>` (checked 2026-09-11).
 - Standings read the `TOTAL` group only, never the HOME/AWAY splits — and a
   payload with no `TOTAL` group is refused rather than served its first split, which
   would be a well-formed HOME table labelled live. Measured 2026-09-11: one group,
