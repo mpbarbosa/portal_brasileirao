@@ -1,4 +1,4 @@
-import { expect, test, type Page } from "@/tests/e2e/fixtures";
+import { expect, test, type Page } from "@/tests/e2e/clock";
 
 /**
  * Seed fixture 554977 — Palmeiras 4x1 Vasco da Gama, rodada 24 — is the match

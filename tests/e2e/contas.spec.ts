@@ -15,10 +15,19 @@ import { expect, test, type Page } from "@/tests/e2e/clock";
 
 const accountControl = (page: Page) => page.locator("[data-account]");
 
-/** Sign in as a named person, the way a test may and a reader may not. */
+/**
+ * Sign in as a named person, the way a test may and a reader may not.
+ *
+ * The subject carries the **project name**, for `contas-preferencias.spec.ts`'
+ * reason: `desktop` and `mobile` run the same test at once against one server
+ * and one database, so a fixed subject is one account shared by both. Measured
+ * here: the mobile run of "deleting an account really deletes it" read
+ * `signed-in` after its delete, because the desktop run was using — and
+ * re-creating — the same account.
+ */
 const devLogin = async (page: Page, name: string) => {
   const response = await page.request.post("/api/auth/dev-login", {
-    data: { subject: `sub-${name}`, name },
+    data: { subject: `sub-${name}-${test.info().project.name}`, name },
   });
   expect(response.ok()).toBeTruthy();
 };
@@ -161,7 +170,7 @@ test.describe("Contas", () => {
     const phone = await browser.newContext();
     const laptop = await browser.newContext();
 
-    const shared = { subject: "sub-two-devices", name: "Carla" };
+    const shared = { subject: `sub-two-devices-${test.info().project.name}`, name: "Carla" };
     expect((await phone.request.post("/api/auth/dev-login", { data: shared })).ok()).toBeTruthy();
     expect((await laptop.request.post("/api/auth/dev-login", { data: shared })).ok()).toBeTruthy();
 
@@ -190,14 +199,25 @@ test.describe("Contas", () => {
     await devLogin(page, "Diego");
     await page.goto("/conta");
 
+    // Asked through the page, never `page.request`. That one is a Node-side
+    // fetch that will not send a `Secure` `__Host-` cookie over plain http, so
+    // it answers null for a live session too — and this test used to end on
+    // exactly that call, which could not fail. Measured: signed in, the page's
+    // fetch returned the account while `page.request` returned null.
+    const me = () => page.evaluate(() => fetch("/api/account/me").then((r) => r.json()));
+    expect(await me()).not.toBeNull();
+    const cookies = await page.context().cookies();
+
     await page.locator("[data-delete-account]").click();
     await page.locator("[data-confirm-delete]").click();
 
     await expect(page.locator("[data-account]")).toHaveAttribute("data-account", "signed-out");
 
     // The session went with it, so the same cookie cannot resurrect anything.
-    const me = await page.request.get("/api/account/me");
-    expect(await me.json()).toBeNull();
+    // The delete's response clears the cookie from the jar, so it is put back
+    // first: otherwise this would ask the jar, not the server.
+    await page.context().addCookies(cookies);
+    expect(await me()).toBeNull();
   });
 
   test("a sign-in error is reported in pt-BR and says nothing useful to a prober", async ({

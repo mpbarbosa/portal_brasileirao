@@ -73,16 +73,17 @@ const noCuratedUpcoming = !upcomingCurated;
  * in the round and the walk finds nothing and throws. The fallback is a branch
  * of the component, so it is tested by producing the state that reaches it
  * rather than by hoping the season still contains one.
+ *
+ * Prepared once and fulfilled from memory, never `route.fetch()` per request:
+ * a proxying handler came back as something other than the envelope under the
+ * suite's workers — `meu-time.spec.ts` records the case.
  */
 const openMatchWithoutVideo = async (page: Page) => {
-  await page.route("**/api/matches*", async (route) => {
-    const response = await route.fetch();
-    const body = await response.json();
-    body.data.matches = body.data.matches.map(
-      ({ highlights: _dropped, ...match }: Record<string, unknown>) => match,
-    );
-    await route.fulfill({ response, json: body });
-  });
+  const body = await (await page.request.get("/api/matches")).json();
+  body.data.matches = body.data.matches.map(
+    ({ highlights: _dropped, ...match }: Record<string, unknown>) => match,
+  );
+  await page.route("**/api/matches*", (route) => route.fulfill({ json: body }));
 
   await page.goto(`/jogos/${PLAYED_ROUND}`);
   const link = page.locator("main ul > li a[href^='/partida/']").first();
