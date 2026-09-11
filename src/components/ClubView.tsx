@@ -15,7 +15,7 @@ import {
   standingFor,
   videosFor,
 } from "@/club-core";
-import { countPhrase } from "@/count-core";
+import { countNoun } from "@/count-core";
 import { nicknameLabel, playerNickname } from "@/player-core";
 import { formatRoute } from "@/route-core";
 import { goalDifferenceLabel, pointsPercentageLabel } from "@/standings-core";
@@ -496,7 +496,7 @@ export function ClubView({
                     {nickname && <span className="text-ink-muted"> {nicknameLabel(nickname)}</span>}
                   </span>
                   <span className="shrink-0 tabular-nums text-ink-muted">
-                    {countPhrase(scorer.goals, "gol", "gols")}
+                    {scorer.goals} {countNoun(scorer.goals, "gol", "gols")}
                   </span>
                 </Surface>
               );

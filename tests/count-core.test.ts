@@ -1,7 +1,13 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { countLabel, countPhrase } from "@/count-core";
+import { countLabel, countNoun, countPhrase } from "@/count-core";
+
+test("the noun alone follows the same rule, for a component that renders the number itself", () => {
+  assert.equal(countNoun(1, "gol", "gols"), "gol");
+  assert.equal(countNoun(0, "gol", "gols"), "gols");
+  assert.equal(countNoun(8, "gol", "gols"), "gols");
+});
 
 test("a count is its digits, grouped the pt-BR way", () => {
   assert.equal(countLabel(7), "7");

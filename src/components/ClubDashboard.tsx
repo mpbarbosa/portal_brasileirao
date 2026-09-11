@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 
 import { clubKey, findClub, standingFor, videosFor } from "@/club-core";
-import { countPhrase } from "@/count-core";
+import { countNoun } from "@/count-core";
 import { candlesFor, computeRankCandles, summariseCandles } from "@/rank-candles-core";
 import { lastRecordedRound, lastRoundWithResult } from "@/rank-history-core";
 import { formatRoute } from "@/route-core";
@@ -389,13 +389,13 @@ export function ClubDashboard({
                   is the lack of one. */}
               {summary.rise && (
                 <Fact term="Maior subida">
-                  {countPhrase(summary.rise.places, "posição", "posições")} ·{" "}
+                  {summary.rise.places} {countNoun(summary.rise.places, "posição", "posições")} ·{" "}
                   {summary.rise.round}ª rodada
                 </Fact>
               )}
               {summary.fall && (
                 <Fact term="Maior queda">
-                  {countPhrase(summary.fall.places, "posição", "posições")} ·{" "}
+                  {summary.fall.places} {countNoun(summary.fall.places, "posição", "posições")} ·{" "}
                   {summary.fall.round}ª rodada
                 </Fact>
               )}

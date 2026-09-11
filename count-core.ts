@@ -22,6 +22,19 @@
 export const countLabel = (value: number | null | undefined): string =>
   value === null || value === undefined ? "—" : value.toLocaleString("pt-BR");
 
+/**
+ * The noun alone, in the right number for the count: `one` for exactly one.
+ *
+ * Separate from `countPhrase` for a reason that is about pixels rather than
+ * words. A component that renders `{n} {noun}` puts the number and the word in
+ * separate text nodes, and Chromium shapes them as separate runs; collapsing
+ * the two into one string moved the "o" of "8 gols" by a fraction of a pixel in
+ * the committed `clube-palmeiras` capture. A component keeps its node structure
+ * and takes only the choice of word from here.
+ */
+export const countNoun = (value: number, one: string, many: string): string =>
+  value === 1 ? one : many;
+
 /** A count with its noun: "1 posição", "3 posições", "0 posições". */
 export const countPhrase = (value: number, one: string, many: string): string =>
-  `${countLabel(value)} ${value === 1 ? one : many}`;
+  `${countLabel(value)} ${countNoun(value, one, many)}`;
