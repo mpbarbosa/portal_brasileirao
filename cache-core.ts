@@ -1,13 +1,19 @@
 /**
- * TTL cache and circuit breaker. Both take the current time as a parameter
- * rather than reading the clock, so expiry and recovery windows are testable
- * without sleeping (tests/cache-core.test.ts).
+ * When a stored answer may be served instead of asking upstream again.
+ *
+ * Everything here takes the current time as a parameter rather than reading the
+ * clock, so expiry is testable without sleeping (tests/cache-core.test.ts). The
+ * circuit breaker that sits beside the cache in every fill is
+ * `circuit-breaker-core.ts`.
  *
  * Sizing note: the football-data free tier allows 10 calls/minute. With a
  * 60s standings TTL and a 60s (15s while live) matches TTL, the app makes at
  * most ~5 upstream calls/minute regardless of how much traffic it serves —
  * caching is what makes the free tier viable in production, not just in dev.
  */
+
+import { hasLiveMatch } from "@/live-core";
+import type { Match } from "@/src/types";
 
 /** Table only moves on a final whistle, so a minute of staleness is invisible. */
 export const STANDINGS_CACHE_TTL_MS = 60 * 1000;
@@ -31,9 +37,6 @@ export const PLAYER_CACHE_TTL_MS = 60 * 60 * 1000;
  * which is the only refresh a deploy needs.
  */
 export const SQUADS_CACHE_TTL_MS = 6 * 60 * 60 * 1000;
-
-export const CIRCUIT_BREAKER_FAILURE_THRESHOLD = 3;
-export const CIRCUIT_BREAKER_OPEN_MS = 60 * 1000;
 
 export interface CacheEntry<T> {
   value: T;
@@ -67,34 +70,56 @@ export class TtlCache {
   }
 }
 
+/** Fixture lists get the short TTL only while something is actually live —
+ *  judged by `hasLiveMatch`, the predicate the client's refresh rate reads, so
+ *  the server's cache and the page's poll cannot disagree about what live is. */
+export const matchesCacheTtl = (matches: Match[]): number =>
+  hasLiveMatch(matches) ? LIVE_MATCHES_CACHE_TTL_MS : MATCHES_CACHE_TTL_MS;
+
 /**
- * Opens after `threshold` consecutive failures and stays open for `openMs`, so
- * an upstream that is down gets one probe a minute instead of one per request.
- * A single success closes it.
+ * Which branch a cached fill takes.
+ *
+ * - `local` — answer from what this process already holds: the seed, or nothing
+ *   where there is no seed. Taken when the upstream is switched off, and when
+ *   the cache is cold and the breaker is open.
+ * - `cached` — serve the stored entry, dated by when it was stored.
+ * - `fetch` — ask upstream. What happens then (writing the cache, telling the
+ *   breaker) is the caller's, because it is I/O.
  */
-export class CircuitBreaker {
-  private failures = 0;
-  private openUntil = 0;
+export type FillStep<T> =
+  | { kind: "local" }
+  | { kind: "cached"; entry: CacheEntry<T> }
+  | { kind: "fetch" };
 
-  constructor(
-    private readonly threshold: number = CIRCUIT_BREAKER_FAILURE_THRESHOLD,
-    private readonly openMs: number = CIRCUIT_BREAKER_OPEN_MS,
-  ) {}
-
-  isOpen(now: number): boolean {
-    return now < this.openUntil;
-  }
-
-  recordSuccess(): void {
-    this.failures = 0;
-    this.openUntil = 0;
-  }
-
-  recordFailure(now: number): void {
-    this.failures += 1;
-    if (this.failures >= this.threshold) {
-      this.openUntil = now + this.openMs;
-      this.failures = 0;
-    }
-  }
+export interface FillState<T> {
+  /** Whether this upstream may be asked at all — configured and not switched off. */
+  enabled: boolean;
+  /** The cache read, deferred so a switched-off upstream never consults the cache. */
+  read: () => CacheEntry<T> | null;
+  /** Whether the breaker in front of this upstream is open, deferred so a warm
+   *  entry is served without asking. An upstream with no breaker passes `() => false`. */
+  breakerOpen: () => boolean;
 }
+
+/**
+ * The order every cached fill in `server.ts` takes: switched off, then a warm
+ * entry, then an open breaker, then the network.
+ *
+ * It was written out three times — `loadCached`, `loadMatches` around its merge,
+ * and the stadium-weather route — and the order is the rule: a warm entry is
+ * served even while the breaker is open, because it answers without asking
+ * anybody, and a switched-off upstream is not served its own stale cache.
+ *
+ * The two lookups arrive as functions so the order holds for them too: nothing
+ * is read that the step before it has already made unnecessary.
+ */
+export const fillStep = <T>({ enabled, read, breakerOpen }: FillState<T>): FillStep<T> => {
+  if (!enabled) return { kind: "local" };
+
+  const hit = read();
+  if (hit) return { kind: "cached", entry: hit };
+
+  if (breakerOpen()) return { kind: "local" };
+
+  return { kind: "fetch" };
+};

@@ -1234,8 +1234,12 @@ what makes the logic testable without mocking HTTP.
 
 - `session-core.ts`, `account-core.ts`, `oauth-core.ts`, `rate-limit-core.ts` — the
   **Conta** subsystem's judgement, all pure and all taking `now` as a parameter like
-  `cache-core.ts`. Expiry, rolling renewal, PKCE, the `id_token` claim checks and the
-  token bucket are unit-tested without a database, a browser or a Google client.
+  `cache-core.ts`. Expiry, rolling renewal and the session row (`sessionRecord`, the one
+  constructor a sign-in and a renewal share), PKCE, the sign-in transaction's cookie
+  (`encodeSignInTransaction`/`decodeSignInTransaction`), the callback's refusals in the
+  order they are checked (`readCallback`), the `id_token` claim checks and the token
+  bucket are unit-tested without a database, a browser or a Google client. Only the
+  token exchange's HTTP call stays in `server.ts`.
   `account-store.ts` is the only file that knows SQL, which is the same split
   `commons-core.ts` and `scripts/commons-api.ts` already draw.
 
@@ -1301,8 +1305,19 @@ matches.
 
 ### Caching and failure handling
 
-`cache-core.ts` holds a TTL cache and a circuit breaker. Both take `now` as a parameter
-instead of reading the clock, so expiry and recovery are tested without sleeping.
+`cache-core.ts` holds the TTL cache and `circuit-breaker-core.ts` the circuit breaker —
+two modules because they answer two questions, and one first sentence naming both was
+the tell. Both take `now` as a parameter instead of reading the clock, so expiry and
+recovery are tested without sleeping.
+
+**The order a fill takes is `fillStep` in `cache-core.ts`, and `server.ts` only does the
+I/O around it.** Switched off → local; warm entry → served; breaker open → local; else
+fetch. It was written out three times — `loadCached`, `loadMatches` around its merge, and
+`/api/stadium-weather/:slug` — and the order is the rule: a warm entry is served even
+while the breaker is open, and a switched-off upstream never reads its own cache. The
+weather route passes `breakerOpen: () => false`, which is the "no circuit breaker"
+decision above written at the call site rather than implied by an absent branch. The
+fixture TTL is `matchesCacheTtl` beside the constants it chooses between.
 
 The free tier allows **10 requests/minute** — caching is what makes it viable in
 production, not a nicety. Standings cache 60s, fixtures 60s, dropping to 15s while any
@@ -1340,7 +1355,9 @@ reaches upstream after the fix.
 
 Anything short of an answer is `null` with `Cache-Control: no-store`, so the card
 renders from what the page knew, as it does offline, and a reader refused once is
-not refused again for an hour by their own browser.
+not refused again for an hour by their own browser. That header is
+`enrichmentCacheControl`, which reads the max-age off the loader's TTL rather than
+carrying a second copy of the hour.
 
 ### The provider regresses individual records, and the app remembers
 
@@ -1529,8 +1546,10 @@ empty scorers list is a real answer.
 Every data endpoint returns `ApiEnvelope<T>`: `source`, a human-readable pt-BR `note`, and
 `updatedAt` alongside `data`. `source` distinguishes `football-data` (live) from
 `placeholder` (no token configured) and `fallback` (configured but failing) — the last two
-look identical to a reader but only `fallback` is worth alerting on. The UI banners the
-note for anything that isn't live. New endpoints keep this shape and degrade to local data
+look identical to a reader but only `fallback` is worth alerting on. The note, the key
+order and that `placeholder`/`fallback` choice are `envelope-core.ts` (`buildEnvelope`,
+`seedSource`); `server.ts` binds the snapshot's day and its own configuration and does
+nothing else to an envelope. The UI banners the note for anything that isn't live. New endpoints keep this shape and degrade to local data
 rather than returning a 500.
 
 Current routes: `/api/health`, `/api/clubs`, `/api/standings`, `/api/scorers`,
@@ -2315,7 +2334,10 @@ believing the field.
 keeps a fresh clone emitting working canonicals with no `.env`, and `resolveOrigin`
 validates the host against a strict pattern before using it — the value lands in
 `<link rel="canonical">`, so an unvalidated `Host` header lets a third party claim
-ownership of this site's content. `X-Forwarded-*` is consulted only when `TRUST_PROXY=true`.
+ownership of this site's content. `X-Forwarded-*` is consulted only when `TRUST_PROXY=true`,
+and that choice is `requestOrigin` beside `resolveOrigin` — the same origin feeds the CSRF
+same-origin check and the OAuth `redirect_uri`, so it is tested there rather than read by
+hand in a handler.
 
 **The client half must not overwrite the server half before its data lands.** `usePageMeta`
 now maintains canonical, `og:url` and robots as well as the title — an in-app navigation

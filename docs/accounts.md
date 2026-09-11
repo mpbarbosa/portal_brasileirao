@@ -411,8 +411,8 @@ listed there in the commit that adds them.
 ### 3.12 Cookies behind nginx: `req.secure` is a lie here
 
 Express's own `trust proxy` setting is **not** enabled in `server.ts`. The
-`TRUST_PROXY` env var is this app's own flag, read by hand in `originFor` and
-consulted only for the canonical origin.
+`TRUST_PROXY` env var is this app's own flag, passed by `originFor` to
+`requestOrigin` in `seo-core.ts` and consulted only for the origin.
 
 So behind nginx (which sets `X-Forwarded-Proto: https`), `req.protocol` is
 `"http"` and `req.secure` is `false`. A session cookie whose `Secure` flag is

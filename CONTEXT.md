@@ -1697,8 +1697,8 @@ the visible label for the accessible name.
 **Módulo core**:
 A root-level `*-core.ts` module holding pure logic with **no I/O** — data in, data
 out. `server.ts` performs every fetch and passes payloads in, which is what makes
-the logic testable without mocking HTTP. Current modules: `standings-core`,
-`matches-core`, `football-data-core`, `cache-core`.
+the logic testable without mocking HTTP. Among them: `standings-core`,
+`matches-core`, `football-data-core`, `cache-core`, `circuit-breaker-core`.
 _Avoid_: "service", "helper", "util" (all three invite I/O to creep in, which is
 the one thing these modules must not do).
 

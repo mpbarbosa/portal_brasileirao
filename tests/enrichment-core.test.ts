@@ -2,15 +2,17 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import {
-  CircuitBreaker,
   LIVE_MATCHES_CACHE_TTL_MS,
+  PLAYER_CACHE_TTL_MS,
   SCORERS_CACHE_TTL_MS,
   SQUADS_CACHE_TTL_MS,
   STANDINGS_CACHE_TTL_MS,
 } from "@/cache-core";
+import { CircuitBreaker } from "@/circuit-breaker-core";
 import {
   createEnrichmentLoader,
   ENRICHMENT_BUDGET,
+  enrichmentCacheControl,
   type EnrichmentLoaderOptions,
 } from "@/enrichment-core";
 import { isNoSuchResource, ProviderStatusError } from "@/football-data-core";
@@ -184,4 +186,18 @@ test("only a 404 is an absence", () => {
   }
   assert.equal(isNoSuchResource(new Error("respondeu 404")), false);
   assert.equal(isNoSuchResource(new DOMException("timeout", "TimeoutError")), false);
+});
+
+test("a browser keeps an answer as long as the server does, and never keeps a non-answer", () => {
+  assert.equal(
+    enrichmentCacheControl({ kind: "answered", value: "Memphis", storedAt: 0 }, PLAYER_CACHE_TTL_MS),
+    "public, max-age=3600",
+  );
+  // "No such person" is an answer too.
+  assert.equal(
+    enrichmentCacheControl({ kind: "answered", value: null, storedAt: 0 }, PLAYER_CACHE_TTL_MS),
+    "public, max-age=3600",
+  );
+  // A reader refused once must not be refused for an hour by their own browser.
+  assert.equal(enrichmentCacheControl({ kind: "unavailable" }, PLAYER_CACHE_TTL_MS), "no-store");
 });

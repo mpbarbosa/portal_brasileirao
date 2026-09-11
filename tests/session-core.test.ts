@@ -13,6 +13,7 @@ import {
   serialiseCookie,
   SESSION_COOKIE,
   SESSION_TTL_MS,
+  sessionRecord,
   sessionState,
   shouldRenew,
   type SessionRecord,
@@ -146,4 +147,25 @@ test("a state-changing request must come from our own origin", () => {
   // A scheme or a port is part of an origin.
   assert.equal(isSameOriginRequest("http://brasileirao.mpbarbosa.com", origin), false);
   assert.equal(isSameOriginRequest(`${origin}:8443`, origin), false);
+});
+
+test("a session row stores the token's digest and lives exactly one TTL from now", () => {
+  const token = mintToken(randomBytes);
+  const record = sessionRecord(token, "acc_1", 5_000);
+
+  assert.deepEqual(record, {
+    tokenHash: hashToken(token),
+    accountId: "acc_1",
+    createdAt: 5_000,
+    expiresAt: 5_000 + SESSION_TTL_MS,
+  });
+  assert.equal(JSON.stringify(record).includes(token), false);
+});
+
+test("a fresh session row is valid, not yet due for renewal, and expires on the instant", () => {
+  const record = sessionRecord("token", "acc_1", 5_000);
+
+  assert.equal(sessionState(record, 5_000), "valid");
+  assert.equal(shouldRenew(record, 5_000), false);
+  assert.equal(sessionState(record, 5_000 + SESSION_TTL_MS), "expired");
 });

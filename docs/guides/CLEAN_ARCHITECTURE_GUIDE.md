@@ -139,12 +139,27 @@ without re-running the whole check.
   inline in a handler rather than in a core module beside its test.
 - **The small rules that used to live only there are in core, each with a unit
   test.** The cross-origin check in front of the state-changing account routes is
-  `isSameOriginRequest` (`session-core.ts`); which routes load data before their
+  `isSameOriginRequest` (`session-core.ts`), and the session row a sign-in and a
+  renewal both write is `sessionRecord` beside it; the sign-in transaction's
+  cookie codec and the callback's ordered refusals are `oauth-core.ts`'s
+  `encodeSignInTransaction`, `decodeSignInTransaction` and `readCallback`
+  (both checked by the change that moved them); which routes load data before their
   shell renders is `namesSubject` (`route-core.ts`), an exhaustive switch; the
-  fixture TTL reads `hasLiveMatch`, the predicate the client's refresh rate
-  already used; and `/api/matches` and `/api/players/:id` validate through
-  `parseRoundParam` and `isPersonId`. `firstHeaderValue` moved to `seo-core.ts`
-  beside `resolveOrigin`, its one remaining consumer. `decodable` moved to
+  fixture TTL is `matchesCacheTtl` (`cache-core.ts`), which reads `hasLiveMatch`,
+  the predicate the client's refresh rate already used; the order every cached
+  fill takes — switched off, warm entry, open breaker, network — is `fillStep`
+  beside it, called by `loadCached`, `loadMatches` and the stadium-weather route
+  (checked by the change that moved it); `/api/players/:id`'s `Cache-Control` is
+  `enrichmentCacheControl` (`enrichment-core.ts`), with the max-age read off the
+  loader's TTL (checked by the same change); and `/api/matches` and
+  `/api/players/:id` validate through `parseRoundParam` and `isPersonId`. Two
+  small things were looked at and left in the handler because they are a
+  constant and a flag rather than a decision: the sign-in limiter's eviction
+  threshold (`evictFull` itself is already in `rate-limit-core.ts`) and logout's
+  `todos=true`. `firstHeaderValue` moved to `seo-core.ts`
+  beside `resolveOrigin`, and whether `TRUST_PROXY` lets it read the forwarded
+  headers at all is `requestOrigin` there too (checked by the change that moved
+  it), so `originFor` only reads the request. `decodable` moved to
   `route-core.ts`, beside `pathSegments` — which `pageStatus` now shares rather
   than carrying its own copy — so a request's address is decoded in exactly one
   place, and the guard, the router and the status code cannot disagree about
@@ -155,7 +170,8 @@ without re-running the whole check.
   `selectSnapshotFiles` in `traffic-report-core.ts`; `readTrafficReports` only
   lists the directory and reads what it is told. The frozen-data note's date is
   `numericDayLabel` in `events-core.ts`, beside the app's other Brazil-local day
-  labels.
+  labels; the note itself, and whether seed data is `placeholder` or `fallback`,
+  is `envelope-core.ts` (checked by the change that moved it).
 - **Moving `firstHeaderValue` found a bypass in the sign-in rate limiter.** The
   limiter keyed its bucket on the same client-most entry of `X-Forwarded-For`,
   and nginx's `$proxy_add_x_forwarded_for` appends the address it saw to whatever
