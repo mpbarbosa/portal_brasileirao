@@ -148,7 +148,10 @@ Last checked against the code by the change that added `withCuratedData` and `ha
   place, and the guard, the router and the status code cannot disagree about
   what a readable address is. (`club-core`'s Wikipédia parser keeps its own
   catch, for an article URL pasted into curated data rather than an address
-  being served.)
+  being served.) And which traffic snapshots the dashboard reads — the
+  `summary-*.txt` filter, the name order and the month-long cap — is
+  `selectSnapshotFiles` in `traffic-report-core.ts`; `readTrafficReports` only
+  lists the directory and reads what it is told.
 - **Moving `firstHeaderValue` found a bypass in the sign-in rate limiter.** The
   limiter keyed its bucket on the same client-most entry of `X-Forwarded-For`,
   and nginx's `$proxy_add_x_forwarded_for` appends the address it saw to whatever

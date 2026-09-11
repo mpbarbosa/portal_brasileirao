@@ -66,7 +66,7 @@ import {
 import { injectMeta, pageMeta, type MetaContext } from "@/page-meta-core";
 import { decodable, namesSubject, parseRoute } from "@/route-core";
 import { hasLiveMatch } from "@/live-core";
-import { buildTrafficDashboard } from "@/traffic-report-core";
+import { buildTrafficDashboard, selectSnapshotFiles } from "@/traffic-report-core";
 import { buildStadiums } from "@/venue-core";
 import { buildWeatherUrl, parseWeather } from "@/weather-core";
 import { STADIUMS } from "@/src/data/stadiums";
@@ -1430,26 +1430,17 @@ const TRAFFIC_REPORTS_DIR = process.env.TRAFFIC_REPORTS_DIR
   : path.join(process.cwd(), "traffic-reports");
 const TRAFFIC_CACHE_TTL_MS = 5 * 60 * 1000;
 
-/** A month of hourly snapshots. Past this the timeline is longer than anybody
- *  reads and the read is longer than anybody should wait. */
-const TRAFFIC_MAX_SNAPSHOTS = 720;
-
+/** The snapshots `selectSnapshotFiles` chooses — the newest month, oldest first —
+ *  read off the directory. Which files is the core module's rule; this lists and
+ *  reads. A directory nobody pruned cannot make one request read ten thousand
+ *  files: the timeline loses its oldest points rather than the page losing
+ *  everything. */
 const readTrafficReports = (): { file: string; text: string }[] => {
   try {
-    return (
-      readdirSync(TRAFFIC_REPORTS_DIR)
-        .filter((file) => /^summary-.*\.txt$/.test(file))
-        // Newest last, matching what the parser sorts to anyway — but bounded
-        // here, so a directory nobody pruned cannot make one request read ten
-        // thousand files. The timeline loses its oldest points rather than the
-        // page losing everything.
-        .sort()
-        .slice(-TRAFFIC_MAX_SNAPSHOTS)
-        .map((file) => ({
-          file,
-          text: readFileSync(path.join(TRAFFIC_REPORTS_DIR, file), "utf8"),
-        }))
-    );
+    return selectSnapshotFiles(readdirSync(TRAFFIC_REPORTS_DIR)).map((file) => ({
+      file,
+      text: readFileSync(path.join(TRAFFIC_REPORTS_DIR, file), "utf8"),
+    }));
   } catch {
     // No directory, no permission, nothing written yet. All three are a page
     // that says so, never a 500 — the rule every route here follows.
