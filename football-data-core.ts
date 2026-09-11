@@ -439,12 +439,23 @@ const tableEntryToRow = (entry: RawTableEntry, index: number): StandingsRow | nu
 
 /**
  * Read the overall table. football-data returns TOTAL/HOME/AWAY splits in one
- * response; only TOTAL is the championship table. Falls back to the first entry
- * when no type is labelled TOTAL.
+ * response; only TOTAL is the championship table, and **nothing else stands in
+ * for it**.
+ *
+ * It used to fall back to the first group when none was typed TOTAL. That is a
+ * plausible lie in exactly the shape this page can least afford: a HOME split is
+ * twenty well-formed rows in position order, so it would have been served as the
+ * Classificação under `source: "football-data"`, and `requireStandings` would
+ * have passed it for having rows. The fallback served no real payload — measured
+ * 2026-09-11, `/v4/competitions/BSA/standings` answered one group,
+ * `REGULAR_SEASON`/`TOTAL`, 20 rows — so all it ever did was answer a change of
+ * shape by trusting whichever group came first. With no TOTAL group this returns
+ * `[]`, `requireStandings` refuses it, and the reader gets the table computed
+ * from the seed, labelled fallback.
  */
 export const mapStandings = (payload: StandingsResponse): StandingsRow[] => {
   const groups = payload.standings ?? [];
-  const total = groups.find((group) => group.type === "TOTAL") ?? groups[0];
+  const total = groups.find((group) => group.type === "TOTAL");
 
   return (total?.table ?? [])
     .map(tableEntryToRow)
@@ -470,8 +481,9 @@ export const mapStandings = (payload: StandingsResponse): StandingsRow[] => {
  * than switch a guard off. It refuses only empty, for `requireFixtures`'
  * reason — no threshold for "too short" has been measured.
  *
- * `mapStandings` still returns `[]` for an empty payload, because that is a
- * faithful reading of it; the refusal is the fill's judgement. And the
+ * `mapStandings` still returns `[]` for an empty payload, and for one with no
+ * TOTAL group, because that is a faithful reading of it; the refusal is the
+ * fill's judgement. And the
  * artilharia gets no twin: before anybody has scored, an empty scorers list is
  * a real answer.
  */

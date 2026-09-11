@@ -282,10 +282,20 @@ test("reads the TOTAL table, not the home/away splits", () => {
   assert.equal(rows[0].goalDifference, 22);
 });
 
-test("falls back to the first group when nothing is labelled TOTAL", () => {
-  const rows = mapStandings({ standings: [{ type: "HOME", table: STANDINGS.standings[0].table }] });
+test("serves no table when nothing is labelled TOTAL, rather than the first split", () => {
+  // A HOME split is well-formed rows in position order. Standing in for the
+  // TOTAL table it would be a plausible Classificação labelled live, so it
+  // yields nothing and the fill refuses it — the reader gets the seed's table.
+  const splitsOnly = {
+    standings: [
+      { type: "HOME", table: STANDINGS.standings[0].table },
+      { type: "AWAY", table: STANDINGS.standings[0].table },
+    ],
+  };
 
-  assert.equal(rows[0]?.club.tla, "FLA");
+  assert.deepEqual(mapStandings(splitsOnly), []);
+  assert.deepEqual(mapStandings({ standings: [{ table: STANDINGS.standings[0].table }] }), []);
+  assert.throws(() => requireStandings(splitsOnly), /nenhuma linha/);
 });
 
 test("derives goal difference when the upstream omits it", () => {
