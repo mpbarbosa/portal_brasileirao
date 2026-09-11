@@ -31,10 +31,16 @@ import type { ClubCode, SeasonEvent } from "@/src/types";
 /** `YYYY-MM-DD`. Anything else is not a day and is treated as absent. */
 const DAY = /^(\d{4})-(\d{2})-(\d{2})$/;
 
-const MONTHS = [
+/**
+ * The month names as pt-BR writes them in a date, January first.
+ *
+ * Exported because `scripts/check-player-wikipedia.ts` reads a birth date the
+ * way an article writes one and carried its own identical copy of this list.
+ */
+export const MONTH_NAMES = [
   "janeiro", "fevereiro", "março", "abril", "maio", "junho",
   "julho", "agosto", "setembro", "outubro", "novembro", "dezembro",
-];
+] as const;
 
 /**
  * The Brazil-local calendar day of an instant, as `YYYY-MM-DD`.
@@ -126,7 +132,7 @@ export const scopeLabel = (event: SeasonEvent): string | null =>
 export const numericDayLabel = (day: string): string | null => {
   const parts = DAY.exec(day);
   if (!parts) return null;
-  if (!MONTHS[Number(parts[2]) - 1]) return null;
+  if (!MONTH_NAMES[Number(parts[2]) - 1]) return null;
   return `${parts[3]}/${parts[2]}/${parts[1]}`;
 };
 
@@ -134,7 +140,7 @@ export const numericDayLabel = (day: string): string | null => {
 export const dayLabel = (day: string): string | null => {
   const parts = DAY.exec(day);
   if (!parts) return null;
-  const month = MONTHS[Number(parts[2]) - 1];
+  const month = MONTH_NAMES[Number(parts[2]) - 1];
   if (!month) return null;
   return `${Number(parts[3])} de ${month} de ${Number(parts[1])}`;
 };
@@ -143,7 +149,7 @@ export const dayLabel = (day: string): string | null => {
 const shortDayLabel = (day: string): string | null => {
   const parts = DAY.exec(day);
   if (!parts) return null;
-  const month = MONTHS[Number(parts[2]) - 1];
+  const month = MONTH_NAMES[Number(parts[2]) - 1];
   if (!month) return null;
   return `${Number(parts[3])} de ${month}`;
 };
