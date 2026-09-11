@@ -145,7 +145,7 @@ const divisao = shell(`
 `);
 
 /** A história: quem lidera, por quanto, e sobre quantos jogos. */
-const lider = shell(`
+const leaderShot = shell(`
   <div>
     <div class="kicker">Brasileirão Série A · ${lastRound} rodadas</div>
   </div>
@@ -191,7 +191,7 @@ const variants = [
     name: "líder",
     // Do próprio número que ela imprime, então o nome não pode discordar da imagem.
     file: `${VIDEO_BASENAME}-miniatura-${leaderAt.points}-pontos.png`,
-    html: lider,
+    html: leaderShot,
     check: fitsTheFrame,
   },
 ];

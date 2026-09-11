@@ -26,7 +26,7 @@ interface Props {
  * There is deliberately **no refresh and no clock**. A reader on a stadium page
  * is not watching the weather change, the cache is fifteen minutes deep, and a
  * ticking component here would re-render the page for a number that moves once
- * an hour — the argument `MeuTimeStrip` makes for owning its own tick, run
+ * an hour — the argument `FollowedClubStrip` makes for owning its own tick, run
  * backwards. The reading's time is printed instead, so the card says how old it
  * is rather than implying it is live.
  */

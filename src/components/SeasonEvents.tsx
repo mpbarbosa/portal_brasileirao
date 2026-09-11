@@ -51,7 +51,7 @@ interface SeasonEventsProps {
    * The Brazil-local day, for `eventSpan`. Optional so callers need not thread
    * a clock through; a spec passes one to pin a span.
    *
-   * **There is no `useNow` here, unlike `MeuTimeStrip` and `LiveView`.** Those
+   * **There is no `useNow` here, unlike `FollowedClubStrip` and `LiveView`.** Those
    * tick because they print a contagem regressiva that is wrong within the
    * minute. What moves here is a day boundary, and re-rendering the section at
    * midnight to change "desde 1 de junho" into a closed range is not worth a

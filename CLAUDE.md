@@ -119,7 +119,7 @@ what makes the logic testable without mocking HTTP.
   makes the strip an *alert*, and it is one predicate rather than a comparison
   written into the component; it changes the rail's colour and never the wording,
   so there is only one sentence to keep true.
-  Rendered by `MeuTimeStrip`, which owns its own `useNow` tick for the reason
+  Rendered by `FollowedClubStrip`, which owns its own `useNow` tick for the reason
   `LiveView` does — a clock in `App` would re-render twenty rows and twenty
   sparklines twice a minute to move four words. There is deliberately **no
   `aria-live`** on the contagem regressiva: a polite region would interrupt a
@@ -1486,7 +1486,7 @@ time that TTL moves.
 
 The gate is read at render rather than from a ticking clock: `App` owns twenty
 standings rows and twenty sparklines, and a clock there would re-render all of
-them to answer a question whose answer changes once — which is why `MeuTimeStrip`
+them to answer a question whose answer changes once — which is why `FollowedClubStrip`
 and `LiveView` carry their own `useNow` instead of asking `App` for one. The one
 case it cannot catch is a page left open across the moment its fixture comes
 *within* a day of kickoff, which fails toward waiting rather than toward a wrong

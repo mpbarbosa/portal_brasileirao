@@ -619,7 +619,7 @@ export interface Lineup {
  * on disk carries, and `decodeLineups` in `escalacao-core.ts` is the only thing
  * that crosses between them. The split is `ScoutHistoryEntry`'s — a storage
  * encoding earns its keep in a generated file nobody reads and must not leak
- * into the components, which is why every consumer of `ESCALACOES` still sees
+ * into the components, which is why every consumer of `LINEUPS` still sees
  * `Lineup[]` and none of them changed when this landed.
  *
  * **Measured before choosing, on the real 252 fixtures**: as objects the file

@@ -227,12 +227,12 @@ function rawValue0(entry: ClubScouts): number {
 
 test("each pairing names its own corners, and never the other one's", () => {
   const division = spread();
-  const jogo = profileScatter(division, "DDD", SCATTER_PAIRS["ataque-defesa"]);
+  const attackDefence = profileScatter(division, "DDD", SCATTER_PAIRS["ataque-defesa"]);
   const volume = profileScatter(division, "DDD", SCATTER_PAIRS["volume-conversao"]);
 
-  assert.equal(jogo?.pair, "ataque-defesa");
+  assert.equal(attackDefence?.pair, "ataque-defesa");
   assert.equal(volume?.pair, "volume-conversao");
-  assert.match(quadrantLabel(jogo!), /goleiro/);
+  assert.match(quadrantLabel(attackDefence!), /goleiro/);
   assert.match(quadrantLabel(volume!), /converte/);
   // The failure this guards is a scatter carrying one pairing's points under
   // the other's vocabulary, which renders a complete, plausible caption about
@@ -263,9 +263,9 @@ test("each pairing carries its own name, and it is the glossary's", () => {
   // The names are `CONTEXT.md`'s. They existed before the page rendered either,
   // which is why the title lives on the pair rather than at the call site: a
   // second place to name a pairing is a second place for it to drift.
-  const jogo = profileScatter(spread(), "AAA", SCATTER_PAIRS["ataque-defesa"]);
+  const attackDefence = profileScatter(spread(), "AAA", SCATTER_PAIRS["ataque-defesa"]);
   const volume = profileScatter(spread(), "AAA", SCATTER_PAIRS["volume-conversao"]);
-  assert.equal(jogo?.title, "Ataque × defesa");
+  assert.equal(attackDefence?.title, "Ataque × defesa");
   assert.equal(volume?.title, "Volume × conversão");
 });
 
@@ -551,7 +551,7 @@ const LOG_PATH = path.join(import.meta.dirname, "..", "docs", "perfil-ataque.md"
  * Read twice rather than cached, because two reads of a small file are cheaper
  * than a cache that reintroduces the coupling it was written to remove.
  */
-const perfilLog = (): string => {
+const profileLog = (): string => {
   try {
     return readFileSync(LOG_PATH, "utf8");
   } catch (cause) {
@@ -568,7 +568,7 @@ const logRounds = (log: string): number[] =>
   [...log.matchAll(/^## Rodada (\d+)\b/gm)].map((match) => Number(match[1]));
 
 test("the perfil log is newest-first, and no rodada is written twice", () => {
-  const rounds = logRounds(perfilLog());
+  const rounds = logRounds(profileLog());
   assert.ok(rounds.length > 0, "docs/perfil-ataque.md has no `## Rodada N` entry at all");
 
   // Strictly descending covers both halves at once: out-of-order and duplicate.
@@ -592,7 +592,7 @@ test("the perfil log restates no figure the page already computes", () => {
   //
   // Scoped to the entries: the rules above them have to be able to quote a
   // shape without tripping their own gate.
-  const log = perfilLog();
+  const log = profileLog();
   const firstEntry = log.search(/^## Rodada \d+\b/m);
   assert.ok(firstEntry >= 0);
   const entries = log.slice(firstEntry);

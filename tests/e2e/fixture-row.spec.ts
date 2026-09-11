@@ -42,7 +42,7 @@ const fixtureLine = (page: Page) => rows(page).locator("a[href^='/partida/']");
 const chip = (page: Page) =>
   rows(page).getByText(/^(Encerrado|A realizar|Ao vivo|Adiado|Cancelado)$/);
 
-const openJogos = async (page: Page) => {
+const openRounds = async (page: Page) => {
   await page.goto("/jogos");
   await expect(rows(page).first()).toBeVisible();
 };
@@ -90,7 +90,7 @@ test.describe("Fixture row", () => {
     // rewritten and fails if the row is ever put back on one line: side by
     // side, the two boxes share a horizontal band.
     await page.setViewportSize({ width: 375, height: 800 });
-    await openJogos(page);
+    await openRounds(page);
 
     const line = (await fixtureLine(page).first().boundingBox())!;
     const status = (await chip(page).first().boundingBox())!;
@@ -118,7 +118,7 @@ test.describe("Fixture row", () => {
       // names are.
       await withLongNames(page);
       await page.setViewportSize({ width, height: 800 });
-      await openJogos(page);
+      await openRounds(page);
 
       const row = (await rows(page).first().boundingBox())!;
       const line = (await fixtureLine(page).first().boundingBox())!;
@@ -134,7 +134,7 @@ test.describe("Fixture row", () => {
     // as a flex item the chip is blockified. Under `align-items: stretch` it
     // measured 309px against 72px, and stopped reading as a chip at all.
     await page.setViewportSize({ width: 375, height: 800 });
-    await openJogos(page);
+    await openRounds(page);
 
     const row = (await rows(page).first().boundingBox())!;
     const status = (await chip(page).first().boundingBox())!;
@@ -154,7 +154,7 @@ test.describe("Fixture row", () => {
     // asserted: four names legitimately clip there, and pinning that count
     // would be asserting how much curated data exists.
     await page.setViewportSize({ width: 375, height: 800 });
-    await openJogos(page);
+    await openRounds(page);
 
     const overflow = await fixtureLine(page)
       .locator("span.truncate")
@@ -168,7 +168,7 @@ test.describe("Fixture row", () => {
     // Only the crests are `aria-hidden` inside the line — the names and the
     // scoreline are read out — so this counts the marks without depending on
     // whether a club resolved to an image or to its monogram fallback.
-    await openJogos(page);
+    await openRounds(page);
 
     const marks = fixtureLine(page).first().locator("[aria-hidden='true']");
     await expect(marks).toHaveCount(2);
@@ -179,7 +179,7 @@ test.describe("Fixture row", () => {
     // a later "just stack it everywhere" would be a silent restyle of four
     // sections — so the side-by-side band is asserted rather than assumed.
     await page.setViewportSize({ width: 900, height: 800 });
-    await openJogos(page);
+    await openRounds(page);
 
     const line = (await fixtureLine(page).first().boundingBox())!;
     const status = (await chip(page).first().boundingBox())!;

@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@/tests/e2e/clock";
 
-const goToArtilharia = async (page: Page) => {
+const goToScorers = async (page: Page) => {
   await page.getByRole("link", { name: /^Artilharia/ }).click();
   await expect(page.locator("table tbody tr").first()).toBeVisible();
 };
@@ -8,7 +8,7 @@ const goToArtilharia = async (page: Page) => {
 test.describe("Artilharia", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/");
-    await goToArtilharia(page);
+    await goToScorers(page);
   });
 
   test("lists scorers with the expected columns", async ({ page }) => {
@@ -127,7 +127,7 @@ test.describe("Artilharia", () => {
     await page.getByRole("link", { name: /^Classificação/ }).click();
     await expect(page.locator("table tbody tr")).toHaveCount(20);
 
-    await goToArtilharia(page);
+    await goToScorers(page);
     await expect(page.locator("table thead th").nth(1)).toHaveText(/jogador/i);
   });
 });
