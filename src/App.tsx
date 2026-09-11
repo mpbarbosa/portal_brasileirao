@@ -27,6 +27,7 @@ import { ScorersTable } from "@/src/components/ScorersTable";
 import { StadiumView } from "@/src/components/StadiumView";
 import { CampaignFacts } from "@/src/components/CampaignFacts";
 import { LeagueStats } from "@/src/components/LeagueStats";
+import { MoreBelowHint } from "@/src/components/MoreBelowHint";
 import { StandingsTable } from "@/src/components/StandingsTable";
 import { hasLiveMatch } from "@/live-core";
 import { findMatch } from "@/match-core";
@@ -506,6 +507,7 @@ export function App() {
                   onSelectClub={(key) => navigate({ section: "clube", key })}
                 />
               )}
+              <MoreBelowHint />
             </>
           )}
 
