@@ -1274,6 +1274,38 @@ match is LIVE, capping the app at roughly 5 upstream calls/minute at any traffic
 The breaker opens after 3 consecutive failures for 60s, so a downed upstream gets one
 probe a minute rather than one per request.
 
+**The player card's lookup is not behind that breaker, and must not be.**
+`/api/players/:id` takes its id from a URL anybody can type, and football-data
+answers an id nobody issued with a **404** — measured 2026-09-11 on
+`/v4/persons/99999999`. While the route went through `loadCached` that 404 was a
+failure like any other, so three requests for made-up ids opened the breaker above
+and every data route served `fallback` as its cache expired: 60 seconds per three
+requests, for every reader, renewable at will. Nothing reported it, because the e2e
+suite runs with the provider switched off and never reaches the breaker at all. It
+was reproduced by booting the server with `fetch` stubbed — three person 404s, then
+`/api/standings` answering `fallback` without asking upstream — and the same probe
+reaches upstream after the fix.
+
+`enrichment-core.ts` is the fix, and three things about it are decisions:
+
+- **A 404 is an answer** (`isNoSuchResource`), cached for the hour like a name
+  would be. A 403 or a 429 is not: that is the provider declining to answer.
+- **The loader keeps its own breaker and receives the shared one as a predicate
+  only.** It can see that upstream is down and hold off; it cannot report there,
+  because it is never handed a `CircuitBreaker` to report to. A type holds the
+  arrangement, not this paragraph.
+- **It spends from `ENRICHMENT_BUDGET`, two requests a minute.** Without it the same
+  outage returns by another road: a 404 still costs one of the ten, so a stream of
+  fresh ids spends the minute the table needs and the data routes fail on 429s
+  instead. The size is arithmetic — the caches above allow about 5.2 requests a
+  minute while a match is live, and a token bucket's worst minute is its capacity
+  plus a minute's refill — and `tests/enrichment-core.test.ts` computes that sum
+  from the TTL constants and fails past 10.
+
+Anything short of an answer is `null` with `Cache-Control: no-store`, so the card
+renders from what the page knew, as it does offline, and a reader refused once is
+not refused again for an hour by their own browser.
+
 ### The provider regresses individual records, and the app remembers
 
 **football-data serves fixture records that go backwards**, and this is not a
@@ -1471,7 +1503,9 @@ Current routes: `/api/health`, `/api/clubs`, `/api/standings`, `/api/scorers`,
 squads payload**, so it shares that cache entry and costs nothing upstream; it
 exists because the club page is built from fixtures and standings, and neither
 carries a coach),
-`/api/players/:id` (numeric id, else 400 — enrichment only, answers `null` offline;
+`/api/players/:id` (numeric id, else 400 — enrichment only, answers `null` offline, over
+budget or while upstream is down; an unknown id is a cached `null`, and the route never
+touches the shared breaker — see **Caching and failure handling**;
 note its `currentTeam` is often a national team, which is why the card prefers the
 club the page already knew),
 `/api/matches` (optional `?round=` — a non-integer or `< 1` is a 400).

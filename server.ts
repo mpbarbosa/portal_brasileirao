@@ -26,8 +26,10 @@ import {
   mapSquads,
   requireStandings,
   matchesUrl,
+  isNoSuchResource,
   isPersonId,
   personUrl,
+  ProviderStatusError,
   scorersUrl,
   standingsUrl,
   teamsUrl,
@@ -38,6 +40,7 @@ import {
   type TeamsResponse,
 } from "@/football-data-core";
 import { withBroadcasters, withVenues } from "@/broadcast-core";
+import { createEnrichmentLoader, ENRICHMENT_BUDGET } from "@/enrichment-core";
 import { readMatchState, writeMatchState } from "@/match-state-store";
 import { withGoals } from "@/goals-core";
 import { withLineups } from "@/escalacao-core";
@@ -303,7 +306,10 @@ const fetchFromProvider = async <T>(url: string): Promise<T> => {
   });
 
   if (!response.ok) {
-    throw new Error(`${url} respondeu ${response.status}`);
+    // The status travels with the error, because a 404 is an answer rather than
+    // an outage and only the caller knows what it asked for. See
+    // `isNoSuchResource`.
+    throw new ProviderStatusError(url, response.status);
   }
 
   return (await response.json()) as T;
@@ -1316,6 +1322,21 @@ app.get("/api/coaches", async (_req, res) => {
 });
 
 /**
+ * The player card's lookups: their own breaker, cache and budget, with the shared
+ * breaker only as something to read. `/api/players/:id` must never go back
+ * through `loadCached` — its id comes from a URL anybody can type, and three ids
+ * nobody issued used to open the breaker every data route sits behind. See
+ * `enrichment-core.ts`.
+ */
+const playerLookups = createEnrichmentLoader<Player>({
+  ttlMs: PLAYER_CACHE_TTL_MS,
+  budget: ENRICHMENT_BUDGET,
+  upstreamDown: (now) => breaker.isOpen(now),
+  isAbsent: isNoSuchResource,
+  onFailure: (key, cause) => console.error(`football-data (${key}) falhou:`, cause),
+});
+
+/**
  * Enrichment for the player card: shirt number, position, nationality, birth
  * date. There is no seed for this — the card is built from data already on the
  * page and this only fills gaps — so the offline answer is an honest null
@@ -1328,23 +1349,32 @@ app.get("/api/players/:id", async (req, res) => {
     return;
   }
 
-  const payload = await loadCached<Player | null>(
-    `player:${id}`,
-    PLAYER_CACHE_TTL_MS,
-    async () => {
-      const person = mapPerson(await fetchFromProvider<PersonResponse>(personUrl(id)));
-      // The name here renders nowhere — `mergePlayer` deliberately keeps the
-      // card's existing one, so that correction already arrived with the squad
-      // row or the scorer. The **nationality** does render, though: `mergePlayer`
-      // takes `extra.nationality` in preference, so without this the card would
-      // undo a correction the elenco had already applied, a second after opening.
-      return person && withPlayerOverrides(person, PLAYER_OVERRIDES);
-    },
-    () => null,
-  );
+  const answer = providerEnabled()
+    ? await playerLookups.load(
+        `player:${id}`,
+        async () => {
+          const person = mapPerson(await fetchFromProvider<PersonResponse>(personUrl(id)));
+          // The name here renders nowhere — `mergePlayer` deliberately keeps the
+          // card's existing one, so that correction already arrived with the squad
+          // row or the scorer. The **nationality** does render, though: `mergePlayer`
+          // takes `extra.nationality` in preference, so without this the card would
+          // undo a correction the elenco had already applied, a second after opening.
+          return person && withPlayerOverrides(person, PLAYER_OVERRIDES);
+        },
+        Date.now(),
+      )
+    : ({ kind: "unavailable" } as const);
 
-  res.set("Cache-Control", "public, max-age=3600");
-  res.json(payload);
+  if (answer.kind === "answered") {
+    res.set("Cache-Control", "public, max-age=3600");
+    res.json(envelope(answer.value, "football-data", answer.storedAt));
+    return;
+  }
+
+  // Not an answer — offline, over budget, or upstream down — so nothing a
+  // browser should keep for an hour: the next time this card opens, it asks.
+  res.set("Cache-Control", "no-store");
+  res.json(seedEnvelope(null, Date.now()));
 });
 
 /**
