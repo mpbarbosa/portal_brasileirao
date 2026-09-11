@@ -211,6 +211,24 @@ test("filtering keeps only matching players and drops emptied clubs", () => {
   assert.deepEqual(filterSquads(squads, "zzz"), []);
 });
 
+test("a player answers to his apelido as well as to his listed name", () => {
+  const squads = [
+    { club: club("SAN", "Santos"), players: [player("1327", "Gabriel Barbosa"), player("9", "Gabriel Bontempo")] },
+  ];
+  const nicknames = { "1327": "Gabigol" };
+
+  assert.deepEqual(
+    filterSquads(squads, "gabigol", nicknames)[0]?.players.map((p) => p.id),
+    ["1327"],
+  );
+  // The listed name still answers, and still for both Gabriels.
+  assert.equal(filterSquads(squads, "gabriel", nicknames)[0]?.players.length, 2);
+  // A match may not straddle the name and the apelido.
+  assert.deepEqual(filterSquads(squads, "barbosa gabigol", nicknames), []);
+  // Without the table the apelido is simply unknown.
+  assert.deepEqual(filterSquads(squads, "gabigol"), []);
+});
+
 test("a blank query returns the input by identity, not a copy", () => {
   // The filter costs nothing when nobody is using it, which is almost always.
   const squads = [squadOf("AAA", "João Pedro")];

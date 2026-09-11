@@ -199,15 +199,29 @@ export const foldForSearch = (value: string): string =>
  * Clubs with no match are dropped rather than rendered empty. Twenty club rows
  * announcing "0 jogadores" is a page that looks broken; a caller that wants to
  * say "nothing found" can see an empty array and say it once.
+ *
+ * A player's **apelido** answers too, from the table passed in: a reader
+ * looking for "Gabigol" does not know the elenco lists him as "Gabriel
+ * Barbosa", and a search that cannot find the name on the back of his shirt is
+ * the one query this box most needs to answer. The name and the apelido are
+ * tested separately rather than joined, so a match cannot straddle the two.
  */
-export const filterSquads = (squads: Squad[], query: string): Squad[] => {
+export const filterSquads = (
+  squads: Squad[],
+  query: string,
+  nicknames: Record<string, string> = {},
+): Squad[] => {
   const needle = foldForSearch(query);
   if (!needle) return squads;
+
+  const matches = (player: Player) =>
+    foldForSearch(player.name).includes(needle) ||
+    foldForSearch(nicknames[player.id] ?? "").includes(needle);
 
   return squads
     .map((squad) => ({
       ...squad,
-      players: squad.players.filter((player) => foldForSearch(player.name).includes(needle)),
+      players: squad.players.filter(matches),
     }))
     .filter((squad) => squad.players.length > 0);
 };

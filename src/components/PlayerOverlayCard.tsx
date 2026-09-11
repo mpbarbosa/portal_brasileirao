@@ -5,7 +5,9 @@ import {
   birthDateLabel,
   mergePlayer,
   nationalityLabel,
+  nicknameLabel,
   playerInstagram,
+  playerNickname,
   PLAYER_PHOTO_WIDTHS,
   playerPhotoPage,
   playerPhotoUrl,
@@ -19,6 +21,7 @@ import { GLYPH, InstagramLink, WikipediaLink } from "@/src/components/ClubLinks"
 import { LINK_UNDERLINE } from "@/src/components/interaction";
 import { PlayerPosts } from "@/src/components/PlayerPosts";
 import { PLAYER_INSTAGRAM } from "@/src/data/player-instagram";
+import { PLAYER_NICKNAMES } from "@/src/data/player-nicknames";
 import { PLAYER_PHOTOS } from "@/src/data/player-photos";
 import { PLAYER_POSTS } from "@/src/data/player-posts";
 import { PLAYER_SOFASCORE } from "@/src/data/player-sofascore";
@@ -283,6 +286,7 @@ export function PlayerOverlayCard({ player, scorer, onClose }: PlayerOverlayCard
   const sofascore = playerSofascore(player.id, PLAYER_SOFASCORE);
   const posts = playerPosts(player.id, PLAYER_POSTS);
   const photo = PLAYER_PHOTOS[player.id];
+  const nickname = playerNickname(player.id, enriched.name, PLAYER_NICKNAMES);
   const search = playerSearchUrls(enriched.name, club?.shortName);
 
   // Numbers get tiles, words get rows — see `Tile`. Both are filtered rather
@@ -417,7 +421,17 @@ export function PlayerOverlayCard({ player, scorer, onClose }: PlayerOverlayCard
             <h2 id="jogador-nome" className="truncate text-headline-small font-bold">
               {enriched.name}
             </h2>
-            {club && <p className="truncate text-body-medium text-ink-muted">{club.shortName}</p>}
+            {/* Its own line rather than inside the heading: the heading
+                truncates, and on a phone "Gabriel Barbosa" alone already nearly
+                fills it, so an apelido appended there is the half that would be
+                cut. */}
+            {nickname && (
+              <p className="truncate text-body-medium font-medium text-on-surface-variant">
+                <span className="sr-only">conhecido como </span>
+                {nicknameLabel(nickname)}
+              </p>
+            )}
+            {club &&<p className="truncate text-body-medium text-ink-muted">{club.shortName}</p>}
           </div>
 
           <Button ref={closeRef} size="sm" onClick={onClose} aria-label="Fechar" className="shrink-0">

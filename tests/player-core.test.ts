@@ -7,7 +7,9 @@ import {
   mappedNationalities,
   mergePlayer,
   nationalityLabel,
+  nicknameLabel,
   playerInstagram,
+  playerNickname,
   PLAYER_PHOTO_WIDTHS,
   playerPhotoPage,
   playerPhotoUrl,
@@ -25,6 +27,7 @@ import {
   withSquadOverrides,
   matchPlayerByName,
 } from "@/player-core";
+import { PLAYER_NICKNAMES } from "@/src/data/player-nicknames";
 import { PLAYER_OVERRIDES } from "@/src/data/player-overrides";
 import { SEED_SQUADS } from "@/src/data/squads";
 import type { Player } from "@/src/types";
@@ -128,6 +131,44 @@ test("playerInstagram normalises whatever form the handle was written in", () =>
   );
   // Not a plausible handle: no link at all, rather than a broken one.
   assert.equal(playerInstagram("c", { c: "não é um perfil" }), null);
+});
+
+test("playerNickname resolves a recorded apelido and ignores an unknown id", () => {
+  const nicknames = { "1327": "Gabigol" };
+
+  assert.equal(playerNickname("1327", "Gabriel Barbosa", nicknames), "Gabigol");
+  // Absence, not an error: most of the division is known by the listed name.
+  assert.equal(playerNickname("1", "Gabriel Barbosa", nicknames), null);
+});
+
+test("an apelido that only restates the name, or is blank, is no apelido", () => {
+  // Printed beside the name, a restatement would be the name twice in one row.
+  assert.equal(playerNickname("a", "João Pedro", { a: "joao pedro" }), null);
+  assert.equal(playerNickname("b", "Pedro", { b: "   " }), null);
+  assert.equal(playerNickname("c", "Pedro", { c: "  Pedrinho " }), "Pedrinho");
+});
+
+test("an apelido is printed in pt-BR double quotes", () => {
+  assert.equal(nicknameLabel("Gabigol"), "“Gabigol”");
+});
+
+test("every recorded apelido names a player still in the snapshot, and differs from his name", () => {
+  // Keyed by id, so a player who leaves the division leaves an entry nothing
+  // renders — and one that restates the listed name renders nothing either.
+  // Both are silent on the page, which is why they are refused here.
+  const names = new Map(
+    SEED_SQUADS.flatMap((squad) => squad.players.map((p) => [p.id, p.name] as const)),
+  );
+  const problems = Object.entries(PLAYER_NICKNAMES).flatMap(([id, nickname]) => {
+    const name = names.get(id);
+    if (name === undefined) return [`${id}: not in squads.ts`];
+    return playerNickname(id, name, PLAYER_NICKNAMES) === null
+      ? [`${id}: "${nickname}" restates "${name}"`]
+      : [];
+  });
+
+  assert.deepEqual(problems, []);
+  assert.ok(Object.keys(PLAYER_NICKNAMES).length > 0, "an empty table passes vacuously");
 });
 
 test("playerPosts returns the recorded posts and nothing for an unknown id", () => {
