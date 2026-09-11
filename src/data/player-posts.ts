@@ -134,6 +134,24 @@ export const PLAYER_POSTS: Record<string, PlayerPost[]> = {
     },
   ],
 
+  // John Kennedy · Fluminense. Opened 2026-09-11: um reel publicado pelo
+  // `fluminensefc` — verificada, 3M seguidores, o mesmo handle de
+  // `club-instagram.ts` — com `jkennedy`, o dele em `player-instagram.ts`, como
+  // colaborador. Datado de 8 de julho, 22:20 em Brasília (lido do `<time>` da
+  // página canônica); o vídeo é ele comemorando diante da torcida e a legenda
+  // diz que o gol foi "no Maraca". Não é jogo do Brasileirão: a divisão estava
+  // parada de 1º de junho a 15 de julho e `matches.ts` não tem jogo nesse
+  // intervalo. "O quinto do Fluzão" pode ser o quinto gol da partida ou o
+  // quinto dele, e o resumo não afirma nenhum dos dois nem nomeia a competição.
+  "157533": [
+    {
+      code: "Daja2zEs4fx",
+      account: "fluminensefc",
+      summary:
+        "John Kennedy comemora com a torcida o gol que marcou no Maracanã, num reel de 8 de julho.",
+    },
+  ],
+
   // Pedro · Flamengo. Opened 2026-09-11: `pedroguilherme`, verificada, 7,7M
   // seguidores — o mesmo handle de `player-instagram.ts`, e, como no do Carlos
   // Vinícius mais abaixo, quem publica é o próprio jogador. Um carrossel de 23
