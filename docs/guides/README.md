@@ -37,7 +37,7 @@ it after the guides are edited.)
 | [ERROR_HANDLING_GUIDE.md](./ERROR_HANDLING_GUIDE.md) | The app barely throws — it degrades inside `ApiEnvelope` and says so. Also carries fail-open versus fail-safe, and the eighteen hours production sat behind green ticks. |
 | [REST_API_GUIDE.md](./REST_API_GUIDE.md) | 20 routes, a 10 req/min budget, and the `Disallow`-versus-`noindex` incident that made every content page a soft 404. Versioning and pagination are cut, with the reasons. |
 | [UNIT_TEST_GUIDE.md](./UNIT_TEST_GUIDE.md) | `node:test`, no framework, and the trap that `test:unit` lists its 62 files explicitly — a new test simply never runs. Plus the practice of confirming a test red by mutation. |
-| [E2E_TEST_GUIDE.md](./E2E_TEST_GUIDE.md) | 40 Playwright specs against a frozen snapshot and a frozen clock. Records that the harness configures the app **out of** production's shape, and the stub that passed against the bug it named. |
+| [E2E_TEST_GUIDE.md](./E2E_TEST_GUIDE.md) | The Playwright suite, run against a frozen snapshot and a frozen clock. Records that the harness configures the app **out of** production's shape, and the stub that passed against the bug it named. |
 | [REACT_GUIDE.md](./REACT_GUIDE.md) | React 19 with no UI dependency, no data-fetching library and no component test tier. Carries the effect-declaration-order bug that only an end-to-end URL assertion could see. |
 | [MOBILE_FIRST_GUIDE.md](./MOBILE_FIRST_GUIDE.md) | The nav bar is full at MD3's five destinations, and every layout rule here was measured at 320–375 dp after something shipped broken while every spec was green. |
 

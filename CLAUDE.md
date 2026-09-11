@@ -4864,7 +4864,8 @@ enforces rather than early and carved-out.
   **Broadcaster marks are a plate, not a chip**, and deliberately so: a chip takes its
   container colour from the tonal system, and `--color-plate` must stay `#ffffff` in both
   themes or the marks that are dark artwork on transparent grounds vanish silently. Keep
-  the `data-mark` attribute — nine specs select on it precisely so markup can change.
+  the `data-mark` attribute — `tests/e2e/broadcasts.spec.ts` selects on it precisely so
+  markup can change. (This said "nine specs" while one did; count the references.)
 - **The player card sets numbers apart from words.** A **Ficha** is a figure —
   `Camisa`, `Idade`, a scorer's four tallies — set at the headline step in
   `text-primary` against a short accent rule, with the unit in its caption rather
