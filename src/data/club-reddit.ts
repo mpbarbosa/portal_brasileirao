@@ -23,7 +23,7 @@ import type { ClubCode } from "@/src/types";
  * torcedores". Nothing here is a club's own statement, and presenting one as if
  * it were is the kind of wrong that looks right.
  *
- * **Coverage is deliberately PARTIAL — fifteen clubs of twenty — and grows by
+ * **Coverage is deliberately PARTIAL — sixteen clubs of twenty — and grows by
  * hand**, like `player-instagram.ts` and `broadcasts.ts`. A club with no entry
  * renders no link rather than a guessed one, and the survey below is what that
  * rule is worth: `r/<name>` is exactly the shape somebody would be tempted to
@@ -181,19 +181,34 @@ import type { ClubCode } from "@/src/types";
  * fine" is exactly what a reader would also have said about `r/santos`, which
  * is a Mexican club. The cost of holding the line here was one paste.
  *
- * **The four combinations of the two fields all occur, which is what makes the
- * paragraph above a rule rather than an anecdote** — measured 2026-09-09Z:
+ * **This said "the four combinations of the two fields all occur", and two of
+ * its five rows did not measure what they claimed.** Measured 2026-09-09Z and
+ * corrected 2026-09-10Z:
  *
  *   Galo         title "Clube Atlético Mineiro"   desc "…uma vez até morrer!"
  *   Cruzeiro     title "Cruzeiro Esporte Clube"   desc "Discussões sobre o…"
  *   botafogo     title "/r/botafogo"  (useless)   desc "…torcida botafoguense!"
- *   Chapecoense  title "Chapecoense - Força…"     (no description)
+ *   Chapecoense  title "Chapecoense - Força…"     desc "Associação Chapecoense…"†
  *   Coritiba     (no record)*                    (no record)*
  *
  * *Not blank fields — no record at all. See the `Coritiba` paragraph below.
  *
- * `Chapecoense` is `botafogo`'s mirror — the title carries it and there is no
- * description — so neither field may be treated as the one that identifies.
+ * †**This row read `(no description)`, and the record has one.** Re-probed
+ * with controls, subredditstats' 2021-07-19 record for `r/Chapecoense` carries
+ * a description naming the Associação Chapecoense de Futebol, Chapecó and Santa
+ * Catarina. The page holds one description field and it is full, so this is not
+ * an empty `publicDescription` beside a full `description`; why the survey read
+ * none could not be reconstructed. It is a third kind of wrong absence in this
+ * file — `ecbahia` and Coritiba had **no record**, this one **was misread**.
+ *
+ * So Chapecoense was never `botafogo`'s mirror, and the "all four combinations
+ * occur" claim loses both of the rows that made it four: only **two** are
+ * observed — both fields identifying (`Galo`, `Cruzeiro`, `Chapecoense`) and a
+ * useless title beside an identifying description (`botafogo`). **The rule
+ * those rows were offered for still stands on what remains**: `botafogo`'s
+ * title identifies nothing and `Cruzeiro`'s identifies four clubs, so neither
+ * field may be treated as the one that identifies. It needed two rows, not
+ * four, and it was stated on two that were wrong.
  *
  * `P3984` is absent from **`Q270995`** (ours: Belo Horizonte, founded 1908,
  * `atletico.com.br`), read 2026-09-09Z.
@@ -251,7 +266,8 @@ import type { ClubCode } from "@/src/types";
  * Sizes at that reading: `CRFla` 95.9k, `corinthians` 66.8k, `SaoPauloFC`
  * 51.2k, `palmeiras` 44.8k, `internacional` 21.5k, `gremio` 21.2k, `SantosFC`
  * 16.8k, `vasco` 15.0k, `Cruzeiro` 2.8k, `nense` 2.2k, `botafogo` 2.1k,
- * `Galo` 1.9k, `Furacao` 390. **`ecbahia` is deliberately NOT in this list**:
+ * `Galo` 1.9k, `Furacao` 390, `Chapecoense`
+ * 326. **`ecbahia` is deliberately NOT in this list**:
  * subredditstats has no record of it — no stamp, no title — so it has no
  * reading here to quote, and the `59` the old Bahia paragraph carried came out
  * of that same empty record. Absence from this list is absence of a
@@ -270,7 +286,7 @@ import type { ClubCode } from "@/src/types";
  * verified against two controls (`crfla` -> `CRFla`, `askreddit` -> `AskReddit`)
  * before being believed.
  *
- * **THE FIVE CLUBS THAT ARE ABSENT, AND WHY — so nobody re-runs this.**
+ * **THE FOUR CLUBS THAT ARE ABSENT, AND WHY — so nobody re-runs this.**
  * Four derived addresses would have been wrong in a way no reader could see,
  * and they are the whole argument against deriving a name from a club's name:
  *
@@ -320,16 +336,15 @@ import type { ClubCode } from "@/src/types";
  * `r/Fluminense` reaches the **right** subject with nobody in it — which is the
  * one a reader would never question, because the name is correct.
  *
- * **One club** has a real, correctly-identified sub and only **one** source,
- * so it fails the bar rather than the sniff test and is the obvious candidate
- * for the second: Chapecoense (`Chapecoense`, 326), whose sub titles itself
- * "Chapecoense - Força, Chapecoense!" and carries **no description** — the
- * mirror of `botafogo`, and measured 2026-09-09Z rather than carried forward.
- * Coritiba **was** the second name in this list, on exactly the reading the
- * next paragraph refutes, and it is now above. What it cost to resolve was one
- * person opening the sub.
+ * **No club is left in this list, which held the clubs with a real sub and only
+ * one source.** Chapecoense was the last, filed here on a reading — "carries
+ * no description" — that its own record contradicts; see the dagger note in the
+ * field table above. Coritiba was the other, on the no-record reading the
+ * `ecbahia` paragraph refutes. Both are now above, and each cost one person
+ * opening the sub.
  *
- * Athletico-PR, Santos, Cruzeiro, Botafogo, Atlético-MG and now **Bahia**
+ * Athletico-PR, Santos, Cruzeiro, Botafogo, Atlético-MG, Bahia, Coritiba and
+ * now **Chapecoense**
  * stood in this list and are now above, which is what a second source looks
  * like when it arrives: one line of the survey moves and the rest stay exactly
  * where they were.
@@ -338,11 +353,11 @@ import type { ClubCode } from "@/src/types";
  * above read "Four clubs" while listing six, from the commit that wrote it —
  * a count in prose has no gate on it, which is `CLAUDE.md`'s own recurring
  * failure met inside a file that spends eighty lines on being checkable. The
- * fifteen, the five and the four here were each counted against `clubs.ts`
+ * sixteen, the four and the four here were each counted against `clubs.ts`
  * on 2026-09-10Z — recounted for this entry rather than decremented, which is
  * the same discipline stated one sentence up; none of them is safe to carry
- * forward on trust. Three entries ago they read eleven, nine and four, and only
- * the last is still right; the derivation count has now survived four recounts,
+ * forward on trust. Four entries ago they read eleven, nine and four, and only
+ * the last is still right; the derivation count has now survived five recounts,
  * which is what a genuinely stable number looks like beside two that move on
  * every entry.
  *
@@ -426,11 +441,39 @@ import type { ClubCode } from "@/src/types";
  * city — and the entry rests on the sidebar and the team sheet, not on the
  * address looking plausible.
  *
- * **Chapecoense is now the ONLY club waiting on this, which makes it the
- * cheapest open question here:** its `r/Chapecoense` (326) *is* indexed and
- * titles itself "Chapecoense - Força, Chapecoense!" with no description, so it
- * needs a second source rather than a first. One person opening it closes the
- * file's last one-source case.
+ * **`Chapecoense` closes the last open question in this file, and it is the
+ * entry that most needs its weaknesses written beside it.** The maintainer
+ * opened the sub (2026-09-10Z):
+ *
+ *   title        "Chapecoense - Força, Chapecoense!"
+ *   description  "Subreddit para torcedores e simpatizantes da Associação
+ *                 Chapecoense de Futebol (a Chape …). Seja bem vindo!"
+ *   created 29/11/2016 · Public · 11 weekly visitors · 2 weekly contributions
+ *
+ * **Identity is not in doubt, and three things carry it.** The sidebar names
+ * the Associação Chapecoense de Futebol; the 2021 record names it again, with
+ * Chapecó and Santa Catarina; and `club-wikipedia.ts` stores exactly that
+ * string for `1772`, which `clubs.ts` places in `SC`. There is one club by
+ * that name. The sub also dates from 29 November 2016, the day the 2021
+ * description records the club's air disaster.
+ *
+ * **Its most recent visible post is NOT evidence, and is recorded so nobody
+ * reads it as some.** It is this app's own chart — "dados até 2026-09-07", the
+ * snapshot date — so it says nothing independent about which club the sub is
+ * or whether anybody reads it. That is the opposite of `Coritiba`, whose top
+ * post named a player the CBF team sheet independently places at `4241`.
+ *
+ * **It is the quietest entry here, and that is stated rather than decided.**
+ * Eleven weekly visitors and two contributions, one of them possibly the post
+ * above. The measure this file has used for every entry is subscribers —
+ * 326 at the frozen reading, beside `Furacao`'s 390 — and weekly visitors is a
+ * figure no other entry was measured on; holding one club to a bar invented
+ * for it is how a rule comes to bind only where it is convenient. But of the
+ * sixteen, this is the one most likely to fall into the empty-room list below,
+ * and if it does, it should move there.
+ *
+ * **With it, no club in this file waits on a source.** The four still absent
+ * are subs that exist and hold nobody.
  */
 export const CLUB_REDDIT: Record<ClubCode, string> = {
   "1765": "nense",
@@ -441,6 +484,7 @@ export const CLUB_REDDIT: Record<ClubCode, string> = {
   "1769": "palmeiras",
   "1770": "botafogo",
   "1771": "Cruzeiro",
+  "1772": "Chapecoense",
   "1776": "SaoPauloFC",
   "1777": "ecbahia",
   "1779": "corinthians",
