@@ -40,6 +40,27 @@ const SECTIONS = new Set([
 ]);
 
 /**
+ * The client-most entry of a forwarded header — `https, http` is `https`.
+ *
+ * A proxy chain appends as a request travels, so the first entry is what the
+ * outermost hop was told: the origin the reader typed. That is the right read
+ * for `X-Forwarded-Proto` and `X-Forwarded-Host`, which feed `resolveOrigin`
+ * only under `TRUST_PROXY` and whose host that function validates before
+ * trusting it.
+ *
+ * **It is the wrong read for a client's address, and it was used as one.** The
+ * first entry of `X-Forwarded-For` is whatever the client sent — nginx appends
+ * the address it saw rather than replacing the header — so the sign-in rate
+ * limiter keyed on this was a limiter a client could step around. Anything
+ * keyed on who is asking uses `clientKey` in `rate-limit-core.ts`.
+ *
+ * Absent, empty, or a blank first entry is `undefined`, so a caller's `??`
+ * fallback applies.
+ */
+export const firstHeaderValue = (raw: string | undefined): string | undefined =>
+  raw?.split(",")[0]?.trim() || undefined;
+
+/**
  * A hostname taken from a request header, and nothing else.
  *
  * `Host` and `X-Forwarded-Host` are attacker-controlled, and this value ends up

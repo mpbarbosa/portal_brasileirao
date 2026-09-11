@@ -85,3 +85,36 @@ export const evictFull = (
     }
   }
 };
+
+/**
+ * The address a sign-in bucket is keyed on: the entry our own proxy appended to
+ * `X-Forwarded-For`, else the socket's.
+ *
+ * **The last entry, never the first.** nginx's `$proxy_add_x_forwarded_for`
+ * appends the address it saw to whatever `X-Forwarded-For` the client sent, so
+ * the header reaches this process as `<anything the client wrote>, <the real
+ * address>`. Keying on the first entry — which is what shipped, following
+ * `docs/accounts.md` §3.13 — let a client send a different header on every
+ * request and never meet its own bucket. The last entry is the one hop this
+ * deployment writes.
+ *
+ * That holds for exactly one proxy in front of the process, which is what
+ * `04_setup_nginx.sh` configures. A second hop in front of nginx — a CDN — would
+ * make the last entry the CDN's address and put every reader in one bucket: it
+ * fails closed rather than open, and it is the moment to revisit this. A request
+ * reaching the port directly, bypassing nginx, controls the whole header; that
+ * is a property of exposing the port, not of this function.
+ *
+ * Behind nginx the socket is `127.0.0.1`, so the fallback only ever decides for
+ * a request that did not come through the proxy.
+ */
+export const clientKey = (
+  forwardedFor: string | undefined,
+  socketAddress: string | undefined,
+): string => {
+  const entries = (forwardedFor ?? "")
+    .split(",")
+    .map((entry) => entry.trim())
+    .filter(Boolean);
+  return entries[entries.length - 1] ?? socketAddress ?? "unknown";
+};
