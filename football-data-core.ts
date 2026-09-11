@@ -331,6 +331,37 @@ export const mapMatch = (raw: RawMatch): Match | null => {
 export const mapMatches = (payload: MatchesResponse): Match[] =>
   (payload.matches ?? []).map(mapMatch).filter((match): match is Match => match !== null);
 
+/**
+ * The fixture list, refusing a response that carries none.
+ *
+ * A 2xx with no fixtures is a failed response, not a season without any, and
+ * treating it as data costs everything at once: `mergeByFreshness` lets the
+ * incoming list decide which fixtures exist, so an empty one wipes the held
+ * memory; `rememberMatches` persists the wipe, which switches the regression
+ * guard off for the next fill as well; and the empty payload is cached as
+ * live. Measured on production 2026-09-11 around 00:12Z — one TTL of
+ * `/api/matches` and `/api/clubs` serving zero under `source: "football-data"`,
+ * with upstream answering 380 moments later.
+ *
+ * Throwing sends the fill down the ordinary failure path: the breaker counts
+ * it, the reader gets the fallback envelope, and the memory is untouched. A
+ * body with no `matches` key and one whose every record fails `mapMatch` are
+ * refused alike, because neither can be told apart from an outage — which is
+ * also why a season genuinely listing none reads as `fallback` rather than as
+ * an empty season.
+ *
+ * It refuses NOTHING short of empty. A truncated list still drops the fixtures
+ * it omits; no threshold for "too short" has been measured, and a guessed one
+ * would refuse real answers.
+ */
+export const requireFixtures = (payload: MatchesResponse): Match[] => {
+  const matches = mapMatches(payload);
+  if (matches.length === 0) {
+    throw new Error("football-data respondeu sem nenhuma partida");
+  }
+  return matches;
+};
+
 /** Every distinct club appearing in a fixture list, so the UI can resolve names
  *  from the payload instead of depending on the local seed. */
 export const clubsFromMatches = (payload: MatchesResponse): Club[] => {

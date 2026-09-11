@@ -16,6 +16,7 @@ import {
   mapStatus,
   matchesUrl,
   personUrl,
+  requireFixtures,
   scorersUrl,
   standingsUrl,
   teamsUrl,
@@ -147,6 +148,26 @@ test("a bad fixture is skipped without losing the good ones", () => {
 test("an empty or missing matches array yields an empty list", () => {
   assert.deepEqual(mapMatches({}), []);
   assert.deepEqual(mapMatches({ matches: [] }), []);
+});
+
+test("a fixture list that names no fixture is refused, not served as a season", () => {
+  assert.throws(() => requireFixtures({}), /nenhuma partida/);
+  assert.throws(() => requireFixtures({ matches: [] }), /nenhuma partida/);
+  // Every record unmappable is the same answer as none.
+  assert.throws(
+    () => requireFixtures({ matches: [{ ...FIXTURE, id: undefined }] }),
+    /nenhuma partida/,
+  );
+});
+
+test("a fixture list with fixtures passes through exactly as mapMatches reads it", () => {
+  const payload = {
+    matches: [FIXTURE, { ...FIXTURE, id: undefined }, { ...FIXTURE, id: 400022 }],
+  };
+
+  // One surviving fixture is enough: the refusal is for empty, never for short.
+  assert.deepEqual(requireFixtures({ matches: [FIXTURE] }), mapMatches({ matches: [FIXTURE] }));
+  assert.deepEqual(requireFixtures(payload), mapMatches(payload));
 });
 
 /*
