@@ -36,6 +36,21 @@ export const goalsPerMatchLabel = (summary: Pick<LeagueSummary, "goalsPerMatch">
     : summary.goalsPerMatch.toLocaleString("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
 
 /**
+ * The host's win share as a reader sees it, `47%`, or null before any match has
+ * produced a result.
+ *
+ * A whole percentage, because a tenth of a percent of a season is noise. Through
+ * `toLocaleString` for `goalsPerMatchLabel`'s reason, so the two figures the
+ * section prints side by side come from one convention rather than one each. It
+ * rounds half away from zero, which for a share — never negative — is what the
+ * `Math.round` it replaces did.
+ */
+export const homeWinShareLabel = (summary: Pick<LeagueSummary, "homeWinShare">): string | null =>
+  summary.homeWinShare === null
+    ? null
+    : `${summary.homeWinShare.toLocaleString("pt-BR", { maximumFractionDigits: 0 })}%`;
+
+/**
  * Season totals over the fixtures that count.
  *
  * **Divided by matches *finished*, never by the fixture count.** The prototype

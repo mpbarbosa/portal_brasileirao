@@ -1,4 +1,4 @@
-import { bestAttacks, bestDefences, goalsPerMatchLabel, leagueSummary } from "@/league-stats-core";
+import { bestAttacks, bestDefences, goalsPerMatchLabel, homeWinShareLabel, leagueSummary } from "@/league-stats-core";
 import { clubKey } from "@/club-core";
 import { ClubCrest } from "@/src/components/ClubCrest";
 import { LINK_UNDERLINE } from "@/src/components/interaction";
@@ -133,7 +133,7 @@ export function LeagueStats({
         <Figure
           name="vitorias-do-mandante"
           label="Vitórias do mandante"
-          value={`${Math.round(summary.homeWinShare!)}%`}
+          value={homeWinShareLabel(summary) ?? "—"}
           hint={`${summary.homeWins} de ${summary.played}`}
         />
       </div>
