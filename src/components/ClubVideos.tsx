@@ -77,15 +77,20 @@ import type { ClubVideo } from "@/src/types";
  * one-row grid says "this is all of it". It scrolls inside its own container,
  * so the page body never scrolls sideways.
  *
- * **The card is `w-full` under a 26rem cap, and both halves were measured
- * rather than picked.** It was a flat `w-44` — 176px of card in a 736px
- * content column, so the thumbnail drew 176×99 and the one thing the rail is
- * offering was the smallest thing on the page. The **cap** is what keeps that
- * a widening rather than a redesign: uncapped at the full 736 the card grows
- * by about 320px, and at 26rem by about 135. The **`w-full`** is what makes it
- * responsive rather than a second fixed number — percentages on a flex item
- * resolve against the container's *visible* width, so on a 360dp phone the
- * card is the column and the cap never binds.
+ * **The card is the column, the size `MatchHighlights` draws its frame at.**
+ * It was a flat `w-44` — 176px of card in a 736px content column — and then
+ * `w-full` under a 26rem cap, which still drew a video at a little over half
+ * the width the Partida page plays one at. Two video sections at two sizes read
+ * as two kinds of thing, so the cap went. **`w-full` on a flex item resolves
+ * against the rail's visible width**, so each card is exactly one column wide
+ * at every viewport and the rail scrolls one video at a time, snapping to each.
+ *
+ * **What that costs is the club page's screenshot crop, and it was accepted
+ * rather than missed.** A 736px card is about 180px taller than a 416px one,
+ * which moves this section's bottom past `screenshot.ts`' `MAX_HEIGHT` — so the
+ * next re-shoot of `clube-palmeiras-{light,dark}` crops above it, the #418
+ * failure that comment records. Raising the ceiling is bounded by the estádio
+ * page, so the fix there is a decision about the capture, not about this card.
  *
  * Renders **nothing** — not an empty heading — for a club with no entries.
  * `videosFor` has already dropped anything whose id will not parse, so this
@@ -134,7 +139,7 @@ export function ClubVideos({ videos, clubName }: { videos: ClubVideo[]; clubName
           const isPlaying = embed !== null && playing === video.id;
 
           return (
-            <li key={video.id} className="w-full max-w-[26rem] shrink-0 snap-start">
+            <li key={video.id} className="w-full shrink-0 snap-start">
               {isPlaying ? (
                 /* **The player, in the box the thumbnail was in.** Same
                    `aspect-video`, same radius, same border — which is what
@@ -205,25 +210,29 @@ export function ClubVideos({ videos, clubName }: { videos: ClubVideo[]; clubName
                         video and the suffix already says what pressing it does,
                         so an announced mark would say it a third time.
 
-                        **The disc is 48px and that was read off the picture
-                        rather than derived.** It was 36 — right when the card
-                        was 176 wide, where it filled a fifth of it, and adrift
-                        once the card became 416, where it filled a twelfth.
-                        Four sizes were drawn over the real thumbnail and looked
-                        at: 36 reads as small, 56 covers the campanha's own line
-                        — it is a drawing under there, not a photograph, so a
-                        badge that overlaps it hides the thing the video is
-                        about — and 48 sits in the gap between the wordmark and
-                        the chart at both widths, 11.5% of the desktop card and
-                        14.6% of the phone's.
+                        **The disc is 11.5% of the card, never below 48px, and
+                        the proportion was read off the picture rather than
+                        derived.** It was 36 — right when the card was 176 wide,
+                        where it filled a fifth of it, and adrift once the card
+                        became 416, where it filled a twelfth. Four sizes were
+                        drawn over the real thumbnail at 416 and looked at: 36
+                        reads as small, 56 covers the campanha's own line — it
+                        is a drawing under there, not a photograph, so a badge
+                        that overlaps it hides the thing the video is about —
+                        and 48 sat in the gap between the wordmark and the
+                        chart, which is 11.5% of that card.
 
-                        **It is deliberately one size rather than a `sm:`
-                        pair.** The card reaches its 26rem cap at a viewport of
-                        about 448 and the `sm` breakpoint is 640, so a
-                        responsive pair would draw the small badge on a card
-                        already at full width for almost 200px of viewport — the
-                        "wrong at every width between them" the card's own width
-                        note refuses.
+                        **A percentage rather than a fixed size or a `sm:`
+                        pair**, because the card now tracks the viewport all the
+                        way to the column: a fixed 48 is 6.5% of a 736 card, and
+                        any breakpoint pair is wrong at every width between its
+                        two steps. The thumbnail scales uniformly with the card,
+                        so the gap the disc sits in scales with it — 11.5% keeps
+                        the measured picture at every width, and `min-w-12`
+                        holds the 48px floor on a phone, where it is about 14%.
+                        `aspect-square` rather than a height, because a
+                        percentage height would resolve against the veil's
+                        16:9 height and draw an oval.
 
                         **The veil does not change on hover, and that is the
                         token gate's doing rather than a preference.**
@@ -240,7 +249,7 @@ export function ClubVideos({ videos, clubName }: { videos: ClubVideo[]; clubName
                       aria-hidden="true"
                       className="absolute inset-0 flex items-center justify-center bg-scrim/25"
                     >
-                      <span className="flex h-12 w-12 items-center justify-center rounded-full bg-[#ff0000] transition group-hover:scale-110">
+                      <span className="flex aspect-square w-[11.5%] min-w-12 items-center justify-center rounded-full bg-[#ff0000] transition group-hover:scale-110">
                         {/* YouTube's own red is a brand colour and deliberately
                             not a token: it is not this app's palette speaking,
                             and putting it in `index.css` would offer it to
@@ -258,7 +267,11 @@ export function ClubVideos({ videos, clubName }: { videos: ClubVideo[]; clubName
                             broadcaster's mark standing in for a name. Once the
                             player is mounted there is no disc at all, because
                             then there is nothing left that leaves. */}
-                        <svg viewBox="0 0 24 24" className="h-5 w-5 translate-x-px fill-white">
+                        {/* The glyph scales with the disc for the disc's own
+                            reason — 20px in a 48px disc is 42%. `h-auto` lets the
+                            viewBox square it, since a percentage height would
+                            have nothing definite to resolve against. */}
+                        <svg viewBox="0 0 24 24" className="h-auto w-[42%] translate-x-px fill-white">
                           <path d="M8 5v14l11-7z" />
                         </svg>
                       </span>
