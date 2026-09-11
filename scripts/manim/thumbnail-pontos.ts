@@ -13,7 +13,7 @@
  *
  * The sibling `thumbnail.ts` advertises the two-club campanha; this advertises
  * the whole division's points. They share the palette reader and the capture in
- * `capa-core.ts` and **not** the layout, which is the same line `thumbnail.ts`
+ * `capa-shared.ts` and **not** the layout, which is the same line `thumbnail.ts`
  * draws when it refuses a third club: one `×` between two names and a fan of
  * twenty are two designs, not one loop with a parameter.
  *
@@ -35,7 +35,7 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { capture, fail, readClubColours, readColours, readInk, shown as shownIn } from "./capa-core";
+import { capture, fail, readClubColours, readColours, readInk, shown as shownIn } from "./capa-shared";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(HERE, "../..");

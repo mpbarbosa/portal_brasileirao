@@ -5083,8 +5083,9 @@ elsewhere: a claim that produces no work while it holds, so nothing
 distinguishes *still true* from *quietly false*.
 
 **A glob was the other candidate and is worse in both directions.** Bare
-`*-core.ts` reaches `scripts/manim/capa-core.ts`, which draws thumbnails and no
-page; `:(glob)*-core.ts` stays at the root but admits all 42, including
+`*-core.ts` reached `scripts/manim/capa-core.ts`, which draws thumbnails and no
+page (since renamed `capa-shared.ts`, for doing I/O under the one suffix here
+that promises none); `:(glob)*-core.ts` stays at the root but admits all 42, including
 `oauth-core`, `session-core` and `rate-limit-core`, which no capture can
 contain. Enumeration plus a completeness test costs one file and describes what
 it watches.

@@ -299,7 +299,7 @@ exatamente o que a contagem anterior aqui ("são três capas") não fazia.
 os primeiros segundos daqueles vídeos são um gráfico vazio. Estas são o **quadro
 final da própria cena** com o painel de resumo por cima: uma vela cheia já é a
 temporada inteira, então não há nada que um segundo layout diga melhor. É por
-isso que `capa-core.ts` não aparece aqui — o que aquele módulo divide é a leitura
+isso que `capa-shared.ts` não aparece aqui — o que aquele módulo divide é a leitura
 da paleta e a captura no Chromium, e nenhuma das duas é usada por uma capa que
 sai do próprio render.
 
@@ -428,7 +428,7 @@ dizer outra coisa.
 fora do vídeo que ela anuncia. Uma constante renomeada quebra o run em vez de
 desenhar em preto.
 
-**`capa-core.ts` é o que os dois scripts dividem**: a leitura da paleta e a
+**`capa-shared.ts` é o que os dois scripts dividem**: a leitura da paleta e a
 captura no Chromium. O que ele deliberadamente **não** tem é o desenho — um `×`
 entre dois nomes e um leque de vinte são dois layouts, e juntá-los num
 renderizador parametrizado seria um design fingindo ser um laço. É a mesma linha

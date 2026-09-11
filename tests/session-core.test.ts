@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { randomBytes } from "node:crypto";
 import { test } from "node:test";
 
 import {
@@ -24,16 +25,22 @@ const at = (expiresAt: number): SessionRecord => ({
 });
 
 test("a minted token is 256 bits, base64url, and never repeats", () => {
-  const one = mintToken();
-  const two = mintToken();
+  const one = mintToken(randomBytes);
+  const two = mintToken(randomBytes);
   assert.notEqual(one, two);
   assert.match(one, /^[A-Za-z0-9_-]+$/);
   // 32 bytes in base64url, unpadded.
   assert.equal(Buffer.from(one, "base64url").length, 32);
 });
 
+test("a token is the bytes it was handed, and refuses too few of them", () => {
+  assert.equal(mintToken((size) => new Uint8Array(size)), "A".repeat(43));
+  // An empty source would hand every reader the same session.
+  assert.throws(() => mintToken(() => new Uint8Array(0)), /expected 32 random bytes, got 0/);
+});
+
 test("the stored value is a hash, so a database read yields no session", () => {
-  const token = mintToken();
+  const token = mintToken(randomBytes);
   const stored = hashToken(token);
   assert.notEqual(stored, token);
   assert.match(stored, /^[0-9a-f]{64}$/);

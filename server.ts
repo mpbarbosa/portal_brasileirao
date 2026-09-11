@@ -1,4 +1,4 @@
-import { randomUUID } from "node:crypto";
+import { randomBytes, randomUUID } from "node:crypto";
 import { createServer as createHttpServer } from "node:http";
 import { createServer as createNetServer } from "node:net";
 import { readdirSync, readFileSync } from "node:fs";
@@ -831,7 +831,7 @@ const currentAccount = (req: express.Request, res: express.Response): Account | 
   }
 
   if (shouldRenew(session, now)) {
-    const next = mintToken();
+    const next = mintToken(randomBytes);
     accountStore.replaceSession(session.tokenHash, {
       tokenHash: hashToken(next),
       accountId: session.accountId,
@@ -851,7 +851,7 @@ const currentAccount = (req: express.Request, res: express.Response): Account | 
  *  Never adopt a session identifier from outside. */
 const beginSession = (res: express.Response, accountId: string, now: number): void => {
   if (!accountStore) return;
-  const token = mintToken();
+  const token = mintToken(randomBytes);
   accountStore.startSession({
     tokenHash: hashToken(token),
     accountId,
@@ -917,9 +917,9 @@ app.get("/api/auth/google", (req, res) => {
   }
 
   const transaction: SignInTransaction = {
-    state: mintToken(),
-    nonce: mintToken(),
-    verifier: newVerifier(),
+    state: mintToken(randomBytes),
+    nonce: mintToken(randomBytes),
+    verifier: newVerifier(randomBytes),
   };
 
   res.append(

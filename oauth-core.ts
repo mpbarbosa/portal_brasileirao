@@ -9,7 +9,7 @@
  * network or a Google client.
  */
 
-import { createHash, randomBytes } from "node:crypto";
+import { createHash } from "node:crypto";
 
 export const GOOGLE_AUTHORIZE_URL = "https://accounts.google.com/o/oauth2/v2/auth";
 export const GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token";
@@ -24,8 +24,24 @@ export const GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token";
  */
 export const SCOPES = ["openid", "email", "profile"];
 
-/** A high-entropy PKCE verifier. */
-export const newVerifier = (): string => randomBytes(32).toString("base64url");
+const VERIFIER_BYTES = 32;
+
+/**
+ * A high-entropy PKCE verifier, from bytes the caller supplies.
+ *
+ * The entropy is a parameter — `newVerifier(randomBytes)` — rather than a call
+ * made here, so this module reads nothing it was not handed: `newAccountId`'s
+ * shape in `account-core.ts`. A source that returns any other number of bytes
+ * throws rather than minting a malformed verifier, because a verifier built from
+ * nothing is one every sign-in shares.
+ */
+export const newVerifier = (random: (size: number) => Uint8Array): string => {
+  const bytes = random(VERIFIER_BYTES);
+  if (bytes.length !== VERIFIER_BYTES) {
+    throw new Error(`newVerifier: expected ${VERIFIER_BYTES} random bytes, got ${bytes.length}`);
+  }
+  return Buffer.from(bytes).toString("base64url");
+};
 
 /** S256, which is the only challenge method worth offering. */
 export const challengeFor = (verifier: string): string =>

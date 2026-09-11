@@ -18,7 +18,7 @@
  * `campanhas`, e é por isso que as velas deliberadamente não têm nenhuma.
  *
  * Compartilha com as duas irmãs o leitor de paleta e a captura do
- * `capa-core.ts`, e **não** o traçado: uma barra deitada por clube e um leque
+ * `capa-shared.ts`, e **não** o traçado: uma barra deitada por clube e um leque
  * de vinte linhas são dois desenhos, não um laço com um parâmetro. É a linha
  * que o `thumbnail.ts` já recusa quando recusa um terceiro clube.
  *
@@ -44,7 +44,7 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { capture, fail, readClubColours, readInk, shown as shownIn } from "./capa-core";
+import { capture, fail, readClubColours, readInk, shown as shownIn } from "./capa-shared";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(HERE, "../..");

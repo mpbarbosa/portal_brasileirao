@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { randomBytes } from "node:crypto";
 import { test } from "node:test";
 
 import {
@@ -54,11 +55,17 @@ test("the authorize URL asks for the code flow, PKCE, and nothing else", () => {
 });
 
 test("PKCE is S256 over the verifier, and verifiers do not repeat", () => {
-  const verifier = newVerifier();
-  assert.notEqual(newVerifier(), verifier);
+  const verifier = newVerifier(randomBytes);
+  assert.notEqual(newVerifier(randomBytes), verifier);
   assert.equal(challengeFor(verifier), challengeFor(verifier));
   assert.notEqual(challengeFor(verifier), verifier);
   assert.match(challengeFor(verifier), /^[A-Za-z0-9_-]{43}$/);
+});
+
+test("a verifier is the bytes it was handed, and refuses too few of them", () => {
+  // Fixed bytes give a fixed value, which is what the parameter buys.
+  assert.equal(newVerifier((size) => new Uint8Array(size)), "A".repeat(43));
+  assert.throws(() => newVerifier(() => new Uint8Array(16)), /expected 32 random bytes, got 16/);
 });
 
 test("claims are read out of the payload segment", () => {

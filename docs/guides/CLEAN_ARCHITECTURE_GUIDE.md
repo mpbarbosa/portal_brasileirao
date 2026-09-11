@@ -23,40 +23,70 @@ calls out at all, so there is nothing to inject. The guide's canonical rule —
 application here, and adding one would be ceremony around a function that already
 takes its inputs as arguments.
 
+The nearest thing to an injection is **entropy**, and it is a function argument
+rather than a port. Randomness is the one input that cannot be handed over as a
+value, so it arrives as a generator — `mintToken(randomBytes)`,
+`newVerifier(randomBytes)`, `newAccountId(() => randomUUID())` — which is what
+lets a test pass fixed bytes and assert the result.
+
 ## Layer reference
 
 | Layer | Where it lives | May import |
 | --- | --- | --- |
 | Shared contracts | `src/types.ts` | nothing |
-| Domain logic (pure) | root `*-core.ts` — `standings-core.ts`, `matches-core.ts`, `scouts-core.ts`, … | `src/types.ts`, other core modules |
-| Provider adapters | `football-data-core.ts` (upstream → internal), `health-core.ts` (our own API → client model), `sumula-core.ts` (PDF text → rows) | `src/types.ts` |
+| Domain logic (pure) | root `*-core.ts` — `standings-core.ts`, `matches-core.ts`, `scouts-core.ts`, … | `src/types.ts`, other core modules, `node:crypto`'s `createHash` and `timingSafeEqual` |
+| Provider adapters | `football-data-core.ts` (upstream → internal), `health-core.ts` (our own API → client model), `sumula-core.ts` (PDF text → rows) | `src/types.ts`, other core modules |
 | Persistence adapters | `account-store.ts` (SQLite), `match-state-store.ts` (JSON file) | core modules, node builtins |
 | Composition root | `server.ts` | everything |
 | Client transport | `src/api.ts` | core modules, `src/types.ts` |
-| Presentation | `src/App.tsx`, `src/components/*.tsx`, `src/use*.ts` hooks | core modules, `src/api.ts`, `src/types.ts` |
-| Committed data | `src/data/*.ts` | `src/types.ts` |
-| Workstation tools | `scripts/*.ts` | core modules, node, network |
+| Presentation | `src/App.tsx`, `src/components/*.tsx`, `src/use*.ts` hooks | core modules, `src/api.ts`, `src/types.ts`, `src/data/*.ts` |
+| Committed data | `src/data/*.ts` | `src/types.ts`, other `src/data` files, a core module's decoder |
+| Workstation tools | `scripts/*.ts`, `scripts/manim/*.ts` | core modules, node, network |
 | Host scripts | `shell_scripts/*.sh` | — |
+
+**Only the two core rows are enforced** — by `tests/core-purity.test.ts`, below.
+The other rows describe the code as it stands and are held by reading.
 
 Core modules **do** import each other, and that is not a violation: `next-match-core.ts`
 imports `clubMatches` from `club-core.ts` and `LATE_GRACE_MS` from `live-core.ts`
-rather than restating either. The rule is direction, not isolation — nothing in that
-graph reaches outward.
+rather than restating either, and `football-data-core.ts` takes `slugify` from
+`club-core.ts` rather than writing a second normaliser. The rule is direction, not
+isolation — nothing in that graph reaches outward.
+
+Two rows point inward at the core in ways worth naming. **Committed data imports a
+decoder**: `goals.ts` calls `decodeGoals` and `escalacoes.ts` calls `decodeLineups`,
+because both files are stored as tuples and the decoder is the only thing that may
+know the encoding. **Presentation imports committed data**: the Perfil reads
+`club-scouts.ts`, the player card reads the curated player files, and the club page
+reads `club-videos.ts` and `events.ts` — files that cost no request, so there is no
+route to put between them and the page.
 
 ## Required rules
 
-1. **A `*-core.ts` module performs no I/O.** No `fetch`, no `node:fs`, no
-   `node:sqlite`, no `express`. Verified mechanically:
+1. **A `*-core.ts` module performs no I/O**, and the rule is enforced as an
+   allowlist: a core module may import `src/types`, other root core modules and
+   `node:crypto`'s two deterministic functions, and nothing else.
+   `tests/core-purity.test.ts` holds **every** `*-core.ts` in the repository to
+   that, and it runs in `npm run test:unit`, which `check` runs on every push:
 
    ```sh
-   grep -ln 'from "express"\|from "node:fs"\|from "node:sqlite"\|fetch(' $(git ls-files ':(glob)*-core.ts')
+   node --import tsx --test tests/core-purity.test.ts
    ```
 
-   This must print nothing.
+   This rule shipped as a grep over `express`, `node:fs`, `node:sqlite` and
+   `fetch(`, and the grep printed nothing while three files broke the rule it
+   stated. `oauth-core.ts` and `session-core.ts` imported `randomBytes`, and
+   `scripts/manim/capa-core.ts` read files and drove Chromium outside the
+   root-only glob the grep ran over. A list of what is forbidden passes whatever
+   it did not think of; an allowlist names it. The test was confirmed red against
+   all three before they were fixed.
 
-2. **A core module reads no clock and no environment.** `now` arrives as a
-   parameter — see [REFERENTIAL_TRANSPARENCY.md](./REFERENTIAL_TRANSPARENCY.md),
-   which is the other half of this rule and carries the reasoning.
+2. **A core module reads no clock, no environment and no entropy.** `now`
+   arrives as a parameter, and so does randomness, so every function in the inner
+   layer can be asserted by value. The test refuses `Date.now()`, `new Date()`,
+   `process.*`, `Math.random()`, `crypto.randomUUID` and a `randomBytes` import.
+   See [REFERENTIAL_TRANSPARENCY.md](./REFERENTIAL_TRANSPARENCY.md), which is the
+   other half of this rule and carries the reasoning.
 
 3. **Where a subject needs both judgement and transport, split it in two.** The
    pattern is named after its first instance and repeats four times:
@@ -72,8 +102,8 @@ graph reaches outward.
    be tested with no database, no browser and no Google client.
 
 4. **Extract to a core module before logic in `server.ts` grows a branch worth
-   testing.** That file is 1 664 lines and is the composition root; it is allowed
-   to be long, and it is not allowed to be the only place a rule exists.
+   testing.** That file is the composition root; it is allowed to be long, and it
+   is not allowed to be the only place a rule exists.
 
 5. **Enrichment and correction live in core, and `server.ts` only calls them.**
    `withGoals` is in `goals-core.ts`, `withCoachOverrides` in `club-core.ts`,
@@ -94,26 +124,43 @@ graph reaches outward.
   of the split, not of the test runner.
 - The same core module is imported by `server.ts` **and** by its own test, which is
   what makes a green unit test evidence about production.
-- Two entry points already reuse the inner layer: the Express server and the 33
+- Two entry points already reuse the inner layer: the Express server and the
   workstation scripts under `scripts/`.
 
 ## Current reality
+
+Read at `7560633`, when this section was last checked against the code.
 
 - **`server.ts` is the composition root and is doing a lot of it.** Routing,
   caching, the circuit breaker, the merge chain and the SPA fallback are all
   there. That is the intended shape; the pressure to watch is a *rule* appearing
   inline in a handler rather than in a core module beside its test.
+- **A few small rules do live only there, with no unit test.** `sameOrigin` —
+  the cross-origin check in front of the four state-changing account routes — is
+  the one that matters; `needsData`, `matchesTtl`, and the `?round=` and player-id
+  validation are the others. Each is a candidate for rule 4.
+- **One correction is applied in the live branch only.** `withPlayedStatus` wraps
+  the merge in `loadMatches` and is absent from `seedMatchesPayload`. Run over the
+  seed it changes no record, at `SNAPSHOT_DATE` or at the current time, so the two
+  answers agree today. That is a property of today's snapshot rather than of the
+  code: the seed is synced from the provider whose incoherent records the function
+  repairs.
+- **The has-a-score test is written inline three times.** `MatchPage`, `LiveView`
+  and `FixtureSides`' `fixtureScore` each compare `homeGoals`/`awayGoals` with
+  null. No core predicate answers exactly that — `countsTowardStandings` also
+  requires FINISHED.
 - **`src/data/*.ts` is imported directly by both server and client.** It is
   committed data with no I/O, so it behaves as an inner layer, but nothing
   enforces that a generated file stays free of logic.
-- **There is no dependency-direction check in CI.** `tsc --noEmit` will not
-  object to a core module importing `express`; the grep in rule 1 is the only
-  gate, and nothing runs it automatically.
+- **Only the inner layer's imports are enforced.** `tsc --noEmit` does not object
+  to a component importing `server.ts` or a data file importing a component, and
+  no test does either.
 
 ## Review heuristics
 
 **Import test.** Open the file's import block. A `*-core.ts` importing anything
-but `src/types.ts` and other core modules is the violation.
+but `src/types.ts`, other core modules and `createHash`/`timingSafeEqual` is the
+violation — and `tests/core-purity.test.ts` will say so before a reviewer does.
 
 **Isolation test.** Could this function be called from a unit test with literal
 arguments? If it needs a server booted or a token set, the boundary is wrong.
@@ -121,8 +168,10 @@ arguments? If it needs a server booted or a token set, the boundary is wrong.
 **Two-branch test.** If the change adds a merge or a correction to a route, does
 it sit inside *both* the live fill and the seed fill?
 
-**Naming test.** A new root-level file whose name ends in `-core.ts` is making a
-promise. `-store.ts` is the name for the other half.
+**Naming test.** A file whose name ends in `-core.ts`, wherever it lives, is
+making a promise, and the test holds it to it. `-store.ts` is the name for the
+other half; `scripts/manim/capa-shared.ts` was `capa-core.ts` until it was
+measured against what it does.
 
 ## Positive signals
 
@@ -139,6 +188,8 @@ promise. `-store.ts` is the name for the other half.
 - A component computing a rule that a core module already answers.
 - A correction applied in one cache branch.
 - `new Date()` inside a core module.
+- A core function taking no arguments that returns something different on every
+  call.
 
 ## Related guides
 
@@ -150,8 +201,8 @@ promise. `-store.ts` is the name for the other half.
 
 ## Checklist
 
-- [ ] No `*-core.ts` imports `express`, `node:fs`, `node:sqlite`, or calls `fetch`.
-- [ ] No core module reads the clock or `process.env`.
+- [ ] `tests/core-purity.test.ts` passes: no `*-core.ts` imports outside the allowlist.
+- [ ] No core module reads the clock, `process.env` or a random source.
 - [ ] Judgement and transport are separate files where both exist.
 - [ ] Any new rule is callable from a unit test with literal arguments.
 - [ ] A merge or correction is applied in every cache branch, not one.
