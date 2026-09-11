@@ -1,6 +1,6 @@
 import type { ButtonHTMLAttributes, Ref } from "react";
 
-import { STATE_LAYER, TOUCH_TARGET } from "./interaction";
+import { STATE_LAYER, TOUCH_TARGET } from "@/src/components/interaction";
 
 /**
  * Sizes actually in use, rather than a speculative scale.

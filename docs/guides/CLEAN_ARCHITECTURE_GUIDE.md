@@ -182,9 +182,10 @@ without re-running the whole check.
   line (`countryRateSeries`) all go through it; the log's `dd/Mon/yyyy` day
   order is `chronologicalDays`; the bot share is `botShareLabel`. All live in
   `traffic-report-core.ts`, which `npm run traffic-dashboard` already imported
-  for everything else. Goals per match is `goalsPerMatchLabel`
-  (`league-stats-core.ts`), and with it no code hand-rolls the pt-BR decimal
-  comma any more.
+  for everything else. Goals per match and the host's win share are
+  `goalsPerMatchLabel` and `homeWinShareLabel` (`league-stats-core.ts`), and with
+  them no code hand-rolls the pt-BR decimal comma any more, and no import under
+  `src/` is relative.
 - **`src/data/*.ts` is imported directly by both server and client.** It is
   committed data with no I/O, so it behaves as an inner layer, but nothing
   enforces that a generated file stays free of logic.

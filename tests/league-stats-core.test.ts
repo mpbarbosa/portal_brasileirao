@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { bestAttacks, bestDefences, leagueSummary, goalsPerMatchLabel } from "@/league-stats-core";
+import { bestAttacks, bestDefences, leagueSummary, goalsPerMatchLabel, homeWinShareLabel } from "@/league-stats-core";
 import { computeStandings } from "@/standings-core";
 import type { Club, Match } from "@/src/types";
 
@@ -119,4 +119,13 @@ test("goals per match prints one pt-BR decimal, and nothing before a match", () 
   assert.equal(goalsPerMatchLabel({ goalsPerMatch: 3 }), "3,0");
   assert.equal(goalsPerMatchLabel({ goalsPerMatch: 2.649 }), "2,6");
   assert.equal(goalsPerMatchLabel({ goalsPerMatch: null }), null);
+});
+
+test("the host's win share prints a whole percentage, and nothing before a match", () => {
+  assert.equal(homeWinShareLabel({ homeWinShare: 47.4 }), "47%");
+  // Half rounds up, as the Math.round this replaced did.
+  assert.equal(homeWinShareLabel({ homeWinShare: 47.5 }), "48%");
+  assert.equal(homeWinShareLabel({ homeWinShare: 0 }), "0%");
+  assert.equal(homeWinShareLabel({ homeWinShare: 100 }), "100%");
+  assert.equal(homeWinShareLabel({ homeWinShare: null }), null);
 });
