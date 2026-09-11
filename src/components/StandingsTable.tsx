@@ -21,7 +21,7 @@ import { ZONES, type ZoneId, goalDifferenceLabel, pointsPercentageLabel, zoneAt 
 import { computeStandings, type StandingsSide } from "@/standings-core";
 import { StandingsSideControl } from "@/src/components/StandingsSideControl";
 import { markColumnLabel, markToggleLabel } from "@/standings-mark-core";
-import { Surface } from "@/src/components/Surface";
+import { TableScroller } from "@/src/components/TableScroller";
 import { useStandingsMark } from "@/src/useStandingsMark";
 import type { ClubCode, ClubRankHistory, Match, RankAtRound, StandingsRow } from "@/src/types";
 
@@ -294,6 +294,26 @@ const STICKY_POSITION = "sticky left-0 z-10 w-14 px-2";
  *  survived the first round of measurements here. */
 const STICKY_CLUB = "sticky left-14 z-10 w-0 whitespace-nowrap border-r border-outline-variant";
 
+/** The shadow the frozen pair casts once the numbers have scrolled under it.
+ *
+ *  Without it the only sign that anything is sliding beneath Clube is a 1px
+ *  border that was already there before the reader moved. It is keyed off
+ *  `data-scroll-start`, which `TableScroller` sets on the Surface, through a
+ *  **named group** rather than React state passed down: crossing the edge then
+ *  re-renders the scroller and not twenty rows of sparklines.
+ *
+ *  `scrim` because it is dark in **both** themes — an `on-surface` gradient
+ *  would be a light glow on the dark palette rather than a shadow. A pseudo on
+ *  the cell rather than `shadow-level-*`, which shades all four sides and would
+ *  darken the row separators above and below every frozen cell. The cell is
+ *  already `sticky`, which is positioned, so the pseudo needs no `relative`. */
+const FROZEN_EDGE_SHADOW = [
+  "after:pointer-events-none after:absolute after:inset-y-0 after:left-full after:w-2",
+  "after:bg-linear-to-r after:from-scrim/20 after:to-transparent",
+  "after:opacity-0 after:transition-opacity after:content-['']",
+  "group-data-[scroll-start]/scroller:after:opacity-100",
+].join(" ");
+
 /** Clube is the only column whose padding is worth a breakpoint: it is frozen,
  *  so every pixel it takes is one the numbers never get back, and only a narrow
  *  screen is short of them. Desktop keeps `px-3` — though note the column does
@@ -540,7 +560,7 @@ export function StandingsTable({
         </div>
       </div>
 
-      <Surface className="overflow-x-auto">
+      <TableScroller label="Classificação">
         {/* `border-separate` rather than the default collapse: in the collapsed
             model a cell's borders belong to the table, so they scroll out from
             under a sticky cell and the zone rail vanishes mid-scroll.
@@ -560,7 +580,7 @@ export function StandingsTable({
           <thead className="bg-surface-container-low text-label-medium uppercase text-ink-muted">
             <tr>
               <th scope="col" className={`${STICKY_POSITION} bg-surface-container-low py-2 text-left`}>#</th>
-              <th scope="col" className={`${STICKY_CLUB} ${CLUB_PADDING} bg-surface-container-low py-2 text-left`}>Clube</th>
+              <th scope="col" className={`${STICKY_CLUB} ${FROZEN_EDGE_SHADOW} ${CLUB_PADDING} bg-surface-container-low py-2 text-left`}>Clube</th>
               <th scope="col" className="px-2 py-2 text-right">P</th>
               {/* Beside the points rather than after SG: the campanha is read
                   against the total, and a narrow screen scrolls the tallies away
@@ -630,7 +650,7 @@ export function StandingsTable({
                       one pass instead of interleaving the two marks. */}
                   {movement && <span className="sr-only">, {rankMovementLabel(movement)}</span>}
                 </td>
-                <td className={`${ROW_LINE} ${STICKY_CLUB} ${CLUB_PADDING} bg-surface py-2 font-medium`}>
+                <td className={`${ROW_LINE} ${STICKY_CLUB} ${FROZEN_EDGE_SHADOW} ${CLUB_PADDING} bg-surface py-2 font-medium`}>
                   <span className="mr-2 inline-flex align-middle">
                     <ClubCrest club={row.club} size={18} />
                   </span>
@@ -704,7 +724,7 @@ export function StandingsTable({
             })}
           </tbody>
         </table>
-      </Surface>
+      </TableScroller>
 
       {/* Outside the Surface above, deliberately: that Surface *is* the scroll
           container, so a key placed within it slides off to the left the moment

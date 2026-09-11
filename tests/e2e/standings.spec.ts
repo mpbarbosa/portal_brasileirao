@@ -669,6 +669,118 @@ test.describe("Classificação", () => {
     expect(rail.x).toBeGreaterThanOrEqual(container.x - 1);
   });
 
+  /**
+   * The signs that the table goes on past the screen's right edge.
+   *
+   * Every assertion here is taken at NARROW *and* checked absent on a desktop
+   * that fits the whole table, because the failure worth catching runs both
+   * ways: a hint that never shows is the bug this exists for, and a hint that
+   * always shows says "there is more" about a table with nothing hidden.
+   */
+  const fade = (page: Page) => page.locator("[data-scroll-fade]");
+  const more = (page: Page) => page.locator("[data-scroll-more]");
+  const WIDE = { width: 1280, height: 800 };
+
+  test("a narrow table says there are more columns, until the reader reaches them", async ({ page }) => {
+    await page.setViewportSize(NARROW);
+
+    await expect(fade(page)).toHaveCSS("opacity", "1");
+    await expect(more(page)).toBeVisible();
+
+    await scrollTableRight(page);
+
+    await expect(fade(page)).toHaveCSS("opacity", "0");
+    await expect(more(page)).toBeHidden();
+  });
+
+  test("a table that fits draws no hint and adds no tab stop", async ({ page }) => {
+    await page.setViewportSize(WIDE);
+    const scroller = page.locator("table").locator("..");
+
+    // Precondition, or every assertion below passes for the wrong reason.
+    expect(
+      await scroller.evaluate((el) => el.scrollWidth <= el.clientWidth),
+    ).toBe(true);
+    await expect(fade(page)).toHaveCSS("opacity", "0");
+    await expect(more(page)).toBeHidden();
+    await expect(scroller).not.toHaveAttribute("tabindex");
+    await expect(scroller).not.toHaveAttribute("role");
+  });
+
+  test("the chevron brings the next column into view without skipping one", async ({ page }) => {
+    // The step has to be the width *beside* the frozen columns, not the box's:
+    // the numbers scroll under Clube, so a step sized to the box carries the
+    // column cut off at the right edge straight past the frozen edge unseen.
+    await page.setViewportSize(NARROW);
+    await page.emulateMedia({ reducedMotion: "reduce" });
+
+    const scroller = page.locator("table").locator("..");
+    const cutOff = await scroller.evaluate((el) => {
+      const right = el.getBoundingClientRect().left + el.clientWidth;
+      const headers = [...el.querySelectorAll("thead th")];
+      return headers.findIndex((th) => th.getBoundingClientRect().right > right + 1);
+    });
+    expect(cutOff).toBeGreaterThan(1);
+
+    await more(page).click();
+    await expect.poll(() => scroller.evaluate((el) => el.scrollLeft)).toBeGreaterThan(0);
+
+    const placed = await scroller.evaluate((el, index) => {
+      const headers = [...el.querySelectorAll("thead th")];
+      const frozenRight = headers[1].getBoundingClientRect().right;
+      const visibleRight = el.getBoundingClientRect().left + el.clientWidth;
+      const th = headers[index].getBoundingClientRect();
+      return { left: th.left, right: th.right, frozenRight, visibleRight };
+    }, cutOff);
+
+    expect(placed.left).toBeGreaterThanOrEqual(placed.frozenRight - 1);
+    expect(placed.right).toBeLessThanOrEqual(placed.visibleRight + 1);
+  });
+
+  test("a press on the column under the fade reaches the cell, not the fade", async ({ page }) => {
+    await page.setViewportSize(NARROW);
+    const box = (await fade(page).boundingBox())!;
+
+    const hit = await page.evaluate(
+      ({ x, y }) => document.elementFromPoint(x, y)?.closest("td, th")?.tagName ?? null,
+      { x: box.x + box.width / 2, y: box.y + box.height / 2 },
+    );
+
+    expect(hit).toBe("TD");
+  });
+
+  test("the frozen columns cast a shadow only once the numbers have moved", async ({ page }) => {
+    // A pseudo-element's opacity, read off the page: this is a named-group
+    // variant stacked on `after:`, and a Tailwind class that compiles is not a
+    // Tailwind class that applies.
+    await page.setViewportSize(NARROW);
+    const shadow = () =>
+      page
+        .locator("table tbody tr")
+        .first()
+        .locator("td")
+        .nth(1)
+        .evaluate((cell) => getComputedStyle(cell, "::after").opacity);
+
+    expect(await shadow()).toBe("0");
+    await scrollTableRight(page);
+    await expect.poll(shadow).toBe("1");
+  });
+
+  test("a keyboard reader can reach the hidden columns", async ({ page }) => {
+    // The chevron is hidden from assistive technology on purpose; the scroller
+    // itself is the keyboard path, and it scrolls both ways.
+    await page.setViewportSize(NARROW);
+    const scroller = page.getByRole("region", { name: "Classificação" });
+
+    // ArrowRight, not End: End scrolls in the block direction, and this
+    // scroller overflows only inline — the first version pressed End and
+    // measured a scroll that could never happen.
+    await scroller.focus();
+    await page.keyboard.press("ArrowRight");
+    await expect.poll(() => scroller.evaluate((el) => el.scrollLeft)).toBeGreaterThan(0);
+  });
+
   test("the frozen columns leave the numbers most of a narrow screen", async ({ page }) => {
     // Clube is frozen, so its width is taken off the viewport permanently
     // rather than scrolling away — which makes it the one column that must
