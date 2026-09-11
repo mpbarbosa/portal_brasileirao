@@ -4,8 +4,9 @@ Adapted for Portal Brasileirão from `doc_template_lib/code_quality/E2E_TEST_GUI
 
 ## Goal
 
-Drive the real assembled app in a browser and assert what a reader can see. 40
-Playwright specs under `tests/e2e/`, booting the real server.
+Drive the real assembled app in a browser and assert what a reader can see. Every
+spec under `tests/e2e/` boots the real server. Count the directory rather than
+trusting a number here: this guide said 40 while there were 41.
 
 ```sh
 npm run test:e2e                       # the Vite/tsx target
@@ -31,8 +32,13 @@ about the fallback path.**
 
 ### The clock is frozen too
 
-The `page` fixture in `tests/e2e/clock.ts` is why every spec imports `test` and
-`expect` from `tests/e2e/fixtures.ts` rather than from `@playwright/test`.
+The `page` fixture in `tests/e2e/clock.ts` is why specs import `test` and
+`expect` from `tests/e2e/clock.ts` rather than from `@playwright/test`.
+`clock.ts` builds on `tests/e2e/fixtures.ts`, which holds the network stubs, so
+importing from `fixtures.ts` directly gets the stubs and the **real wall clock**.
+That is right only for a spec that installs a clock of its own —
+`tests/e2e/partida-refetch.spec.ts` is the one that does.
+
 `E2E_NOW` is **derived from `SNAPSHOT_DATE`**, never written down, so a
 `sync-seed-data` run moves the data and the clock together.
 
@@ -59,8 +65,11 @@ Two follow-ons worth knowing:
 
 This is the most important paragraph in the guide.
 
-`playwright.config.ts` sets `DISABLE_FOOTBALL_DATA: "true"` **and**
-`ACCOUNTS_DEV_LOGIN: "true"`. With dev login on, `/api/account/me` answers 200 and
+`playwright.config.ts` sets `DISABLE_FOOTBALL_DATA: "true"`,
+`DISABLE_WEATHER: "true"` **and** `ACCOUNTS_DEV_LOGIN: "true"`, plus an
+`ACCOUNTS_DB` per port. With the weather switched off the clima card never
+renders unless a spec serves its own payload, as `tests/e2e/weather.spec.ts` does.
+With dev login on, `/api/account/me` answers 200 and
 its body is consumed on the way past — so the suite **never takes the 404
 branch**, and the 404 branch is production's shape and every fresh clone's.
 
@@ -70,8 +79,8 @@ reached `finished`, and `waitUntil: "networkidle"` therefore never resolved —
 breaking every screenshot capture while the page itself rendered perfectly.
 
 **A green suite says the app works in a configuration nothing ships.** Before
-trusting coverage of anything touching accounts or the provider, check which side
-of that `env` block the code under test falls on.
+trusting coverage of anything touching accounts, the provider or the weather,
+check which side of that `env` block the code under test falls on.
 
 ## A test that passes against the bug it names is worse than no test
 
@@ -98,12 +107,14 @@ a real server is what settled this.
   can name.
 - **Produce the state you need; do not hunt the season for a fixture in it.**
   `withoutGoals` in `tests/e2e/goals.spec.ts` is the pattern.
-- **`tests/e2e/fixtures.ts` stubs the crest CDN, and fulfils rather than
-  aborts.** Three assertions constrain it: two read the `referrerpolicy` off the
-  DOM and the `Referer` off the wire, so the request must still be made with the
-  real external URL; a third drives a **503** to prove the letter fallback, which
-  a global abort would raise everywhere. Verified by counting: 20 requests
-  issued, 0 served from the network.
+- **`tests/e2e/fixtures.ts` stubs every third-party host the pages reach, and
+  fulfils rather than aborts.** The crest CDN and YouTube's thumbnails get a
+  one-pixel image; YouTube's and Instagram's players get an empty document. The
+  crest stub is the one with constraints: two assertions read the
+  `referrerpolicy` off the DOM and the `Referer` off the wire, so the request
+  must still be made with the real external URL; a third drives a **503** to
+  prove the letter fallback, which a global abort would raise everywhere.
+  Verified by counting: 20 requests issued, 0 served from the network.
 
 That last one closed a gap that had been open for as long as the claim "CI needs
 no secrets" had been written: `DISABLE_FOOTBALL_DATA` takes the *API* out of the
@@ -115,8 +126,10 @@ a spec that imports `test` from `@playwright/test` directly.
 
 ## Assertion rules
 
-- **Never assert a round number or a scoreline.** The snapshot ages and
-  `currentRound` advances with the calendar. Assert shape — `/\d+ª rodada/`.
+- **Never assert the current round or a scoreline.** The snapshot ages and
+  `currentRound` advances with the calendar. Assert shape — `/\d+ª rodada/`. A
+  round the spec navigated to by address is safe: `/jogos/7` heads "7ª rodada"
+  whatever the calendar says.
 - **Never assert how much curated data exists**, or which record holds a value.
   See [UNIT_TEST_GUIDE.md](./UNIT_TEST_GUIDE.md); it broke CI twice.
 - **`allInnerTexts()` and `locator.all()` do not auto-wait**, unlike
@@ -128,7 +141,11 @@ a spec that imports `test` from `@playwright/test` directly.
 - **A poll for an absence is a race dressed as an assertion.**
   `expect.poll(...).toBeNull()` passes on the **first** null it sees, so it was
   racing an upload rather than testing it: green alone, green on a re-run, red at
-  923 specs. Assert the observable state directly.
+  923 specs. Assert the observable state directly. `tests/e2e-poll.test.ts`
+  refuses the literal shape, and lets an absence poll stand only where the same
+  read was polled *present* earlier in the file. It cannot see a matcher reached
+  through an expression — `.toBe(x ? null : x)` — and its own tests pin that
+  blind spot.
 - **`page.request` cannot carry a session.** It is a Node-side fetch with no
   notion of a potentially trustworthy origin, so it will not send a `Secure`
   `__Host-` cookie over `http://127.0.0.1` — every signed-in call answers 401
@@ -149,20 +166,20 @@ than a wrong answer. Hence `data-scatter-svg`, `data-scatter`, `data-candles` an
 `circle[data-scatter-point]`: a drawing may gain a decoration without loosening an
 assertion about what it plots.
 
-Keep `data-*` hooks for exactly this. Nine specs select broadcaster marks on
-`data-mark` precisely so the markup can change.
+Keep `data-*` hooks for exactly this. `tests/e2e/broadcasts.spec.ts` selects
+broadcaster marks on `data-mark` precisely so the markup can change.
 
 ## Two targets
 
 | Target | Boots | Runs |
 | --- | --- | --- |
-| default | `server.ts` through `tsx`, Vite in middleware mode | all 40 specs |
+| default | `server.ts` through `tsx`, Vite in middleware mode | every spec |
 | `PLAYWRIGHT_TARGET=bundle` | `dist/server.cjs` under `NODE_ENV=production` | `seo`, `page-meta`, `routing` only |
 
 The bundle target is the branch the host actually runs — `express.static`, the
 shell read once at boot, no Vite — so it is where `registerSpaFallback` and
 `injectMeta` are actually exercised. The rest would re-assert what the Vite run
-already proved.
+already proved. CI runs both.
 
 **`server.ts` refuses to start with `ACCOUNTS_DEV_LOGIN` set when `NODE_ENV` is
 production**, so the config *empties* that variable in bundle mode rather than
@@ -177,21 +194,22 @@ alongside another session. CI runs alone and needs nothing.
 
 ## Required rules
 
-1. **Import `test` and `expect` from `tests/e2e/fixtures.ts`.** Never from
-   `@playwright/test`.
+1. **Import `test` and `expect` from `tests/e2e/clock.ts`.** Never from
+   `@playwright/test`, and from `tests/e2e/fixtures.ts` only in a spec that
+   installs its own clock.
 2. **Assert shape, never a value that a sync can move.**
 3. **Prepare payloads once and fulfil from memory.**
 4. **Reach for a `data-*` hook** rather than a tag name or an element count.
 5. **Do not pipe the run through `head` or `tail`** — see
    [UNIT_TEST_GUIDE.md](./UNIT_TEST_GUIDE.md) for why the tail of a failing run
    looks like a passing one.
-6. **Before trusting a green spec touching accounts or the provider**, check
-   which side of the config's `env` block it falls on.
+6. **Before trusting a green spec touching accounts, the provider or the
+   weather**, check which side of the config's `env` block it falls on.
 7. **Confirm the spec red** against the mutation it names.
 
 ## Current reality
 
-- **40 specs, and they are the only coverage of the client at all.** There is no
+- **The Playwright specs are the only coverage of the client at all.** There is no
   component-level test tier — no jsdom, no Testing Library. A React component's
   behaviour is either asserted in a browser or not asserted.
 - **There is no integration tier for the server either.** `tests/e2e/api.spec.ts`
@@ -202,6 +220,14 @@ alongside another session. CI runs alone and needs nothing.
 - **`tests/e2e/partida-refetch.spec.ts` takes the full clock fake knowingly**, as
   a documented exception: a 60s poll cannot be observed without moving time, and
   nothing on that route calls `useNow` or awaits `networkidle`.
+- **Some skips have nothing watching them.** `tests/e2e/match-page.spec.ts` skips
+  when the season has no round left or the next round has no curated venue yet,
+  and `tests/e2e/stadium.spec.ts` skips when no reachable stadium has a curated
+  photo. Only `meu-time`'s skips are guarded, by `E2E_NOW` and
+  `tests/e2e/clock.spec.ts`. Nothing in CI reports a skip.
+- **Some specs still pin a fixture whose curated data a sync can change** —
+  `tests/e2e/broadcasts.spec.ts` on 554972's broadcasters, `tests/e2e/goals.spec.ts`
+  on 554805's own goal and 554790's minutes. They fail the Drift test below.
 
 ## Review heuristics
 
@@ -230,7 +256,8 @@ tag?
 ## Warning signs
 
 - `import { test } from "@playwright/test"`.
-- An assertion on a round number, a scoreline, or a specific fixture id.
+- `import { test } from "@/tests/e2e/fixtures"` in a spec that never installs a clock.
+- An assertion on the current round, a scoreline, or a specific fixture id.
 - `route.fetch()` inside a handler.
 - `expect.poll(...)` waiting for something to become absent.
 - `page.request` in a signed-in assertion.
@@ -247,7 +274,7 @@ tag?
 
 ## Checklist
 
-- [ ] `test`/`expect` imported from `tests/e2e/fixtures.ts`.
+- [ ] `test`/`expect` imported from `tests/e2e/clock.ts` — or from `fixtures.ts` in a spec with a clock of its own.
 - [ ] No assertion on a value a sync can move.
 - [ ] Payloads prepared once and fulfilled from memory.
 - [ ] Selectors use `data-*` hooks, not tags or element counts.
