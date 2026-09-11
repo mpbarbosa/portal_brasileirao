@@ -8,6 +8,7 @@ import {
   shortSha,
   startInstant,
 } from "@/health-core";
+import { ExternalLink } from "@/src/components/ExternalLink";
 import { LINK_UNDERLINE } from "@/src/components/interaction";
 
 /**
@@ -34,59 +35,6 @@ const instantLabel = (iso: string): string | null => {
     minute: "2-digit",
   });
 };
-
-/**
- * A link off this site, with the parts that drift when an anchor is copied
- * written down once.
- *
- * The same reasoning `ClubLinks` records, applied to the rodapé rather than to
- * a club: `target`, `rel` and the screen-reader suffix are what a second copy
- * loses, and a copy missing `rel="noopener"` is a real defect that looks
- * identical on the page. There were three outbound anchors here the moment the
- * author's links landed, which is the point at which a hand-written one is a
- * question of when rather than whether.
- *
- * It stays local rather than joining `ClubLinks`: that module is a club's
- * links, and each of its two exports knows its own address builder and its own
- * mark. This knows neither — it is the bare anchor, and the only thing the two
- * files would share is the attribute bag.
- *
- * `subject` is what the suffix says the destination is, and it is optional for
- * exactly one reason: inside the readout the `<dt>` beside the link already
- * says it, so `Fonte: football-data.org — o provedor de dados` would announce
- * the same fact twice. Everywhere else a bare domain is a bare word to a
- * screen reader and the subject is what rescues it.
- *
- * `extra` is the caller's own layout only, as it is in `ClubLinks` — the
- * rodapé's own row of links carries the touch-target floor, and the readout's
- * link must not, or a 48dp anchor inside a `<dd>` would push the whole band of
- * facts apart.
- */
-function OutboundLink({
-  href,
-  label,
-  subject,
-  extra = "",
-}: {
-  href: string;
-  label: string;
-  subject?: string;
-  extra?: string;
-}) {
-  return (
-    <a
-      href={href}
-      target="_blank"
-      rel="noopener noreferrer"
-      className={`${LINK_UNDERLINE} ${extra}`}
-    >
-      {label}
-      <span className="sr-only">
-        {subject === undefined ? " (abre em nova aba)" : ` — ${subject} (abre em nova aba)`}
-      </span>
-    </a>
-  );
-}
 
 /** One `termo: valor` pair of the readout. `id` is the e2e hook. */
 interface Item {
@@ -150,7 +98,12 @@ function HealthReadout({ health, readAt }: HealthReading) {
       // live. See `providerLabel`.
       value:
         health.provider === "football-data" ? (
-          <OutboundLink href="https://www.football-data.org/" label={provider} />
+          // No suffix: the `<dt>` beside the link already says it is the
+          // source, and "Fonte: football-data.org — o provedor de dados" would
+          // announce the same fact twice.
+          <ExternalLink href="https://www.football-data.org/" className={LINK_UNDERLINE}>
+            {provider}
+          </ExternalLink>
         ) : (
           provider
         ),
@@ -239,20 +192,22 @@ function AuthorLinks() {
   return (
     <ul className="mt-1 flex flex-wrap gap-x-4 text-body-small text-ink-muted">
       <li>
-        <OutboundLink
+        <ExternalLink
           href="https://www.mpbarbosa.com"
-          label="mpbarbosa.com"
-          subject="site pessoal e profissional do autor"
-          extra="inline-flex min-h-12 items-center"
-        />
+          suffix="site pessoal e profissional do autor"
+          className={`${LINK_UNDERLINE} inline-flex min-h-12 items-center`}
+        >
+          mpbarbosa.com
+        </ExternalLink>
       </li>
       <li>
-        <OutboundLink
+        <ExternalLink
           href="https://copa2026.mpbarbosa.com"
-          label="copa2026.mpbarbosa.com"
-          subject="o companheiro da Copa do Mundo FIFA 2026, do mesmo autor"
-          extra="inline-flex min-h-12 items-center"
-        />
+          suffix="o companheiro da Copa do Mundo FIFA 2026, do mesmo autor"
+          className={`${LINK_UNDERLINE} inline-flex min-h-12 items-center`}
+        >
+          copa2026.mpbarbosa.com
+        </ExternalLink>
       </li>
     </ul>
   );

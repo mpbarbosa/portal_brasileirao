@@ -156,7 +156,7 @@ export const totalPlayers = (squads: Squad[]): number =>
  * removed, whitespace collapsed.
  *
  * **Not `slugify`, and that is a decision rather than an oversight.** The
- * obvious reuse is the normaliser `venue-core.ts` shares with `club-core.ts` —
+ * obvious reuse is the normaliser in `slug-core.ts` that `venue-core.ts` shares —
  * one normaliser is exactly how two spellings of a thing stay agreed. But
  * `slugify` replaces punctuation with a **hyphen**, which is right for an
  * address and wrong for a substring search: the division carries

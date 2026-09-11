@@ -50,7 +50,7 @@ The other rows describe the code as it stands and are held by reading.
 Core modules **do** import each other, and that is not a violation: `next-match-core.ts`
 imports `clubMatches` from `club-core.ts` and `LATE_GRACE_MS` from `live-core.ts`
 rather than restating either, and `football-data-core.ts` takes `slugify` from
-`club-core.ts` rather than writing a second normaliser. The rule is direction, not
+`slug-core.ts` rather than writing a second normaliser. The rule is direction, not
 isolation — nothing in that graph reaches outward.
 
 Two rows point inward at the core in ways worth naming. **Committed data imports a
@@ -163,7 +163,7 @@ without re-running the whole check.
   `route-core.ts`, beside `pathSegments` — which `pageStatus` now shares rather
   than carrying its own copy — so a request's address is decoded in exactly one
   place, and the guard, the router and the status code cannot disagree about
-  what a readable address is. (`club-core`'s Wikipédia parser keeps its own
+  what a readable address is. (`wikipedia-core`'s article parser keeps its own
   catch, for an article URL pasted into curated data rather than an address
   being served.) And which traffic snapshots the dashboard reads — the
   `summary-*.txt` filter, the name order and the month-long cap — is

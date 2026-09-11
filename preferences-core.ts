@@ -352,7 +352,7 @@ export const landingRoute = (landing: LandingId | null, follow: FollowState): Ro
  * the twenty names in `clubs.ts`. That is the whole lesson: the list was one
  * grep away.
  *
- * The table itself lives in `club-core.ts`, beside `slugify` and `clubKey`: an
+ * The table itself lives in `club-core.ts`, beside `clubKey` and `findClub`: an
  * article is a property of a club's **name**, not of a reader's device-local
  * preference, and it now has four callers outside this module. This is the one
  * of the five that wants the bare "o"/"a" rather than the contracted `ofClub`.

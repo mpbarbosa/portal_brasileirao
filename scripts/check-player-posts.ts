@@ -74,7 +74,7 @@
  */
 import { chromium, type Browser, type Page } from "@playwright/test";
 
-import { instagramPostCode, instagramPostEmbedUrl } from "@/club-core";
+import { instagramPostCode, instagramPostEmbedUrl } from "@/instagram-core";
 import { PLAYER_POSTS } from "@/src/data/player-posts";
 import { SEED_SQUADS } from "@/src/data/squads";
 import type { PlayerPost } from "@/src/types";

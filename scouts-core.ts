@@ -663,6 +663,53 @@ export const TRAIL_ROUNDS = 8;
  */
 export const MIN_TRAIL_MATCHES = 5;
 
+/** A rectangle in a drawing's own fractions: 0 to 1 on both axes, y running down. */
+export interface FractionRect {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+/**
+ * The subject's quadrant as a region of the scatter, for the tint beneath it.
+ *
+ * It takes the corner `subjectQuadrant` already decided rather than comparing
+ * the medians again, for that function's reason: the tint, the label printed
+ * over it and the sentence a screen reader hears are one reading of one club,
+ * and a drawing that placed its own tint could shade a corner the caption does
+ * not name. In fractions of the box, so the component multiplies by its own size
+ * and holds no arithmetic about where a median falls — which its own comment
+ * already claimed while it did.
+ */
+export const quadrantRect = (
+  scatter: ProfileScatter,
+  corner: Pick<Quadrant, "aboveX" | "aboveY">,
+): FractionRect => {
+  const medianX = scatter.x.medianAt;
+  // The y axis runs up on the page and down in SVG, so the median's line sits
+  // `1 - medianAt` from the top.
+  const medianTop = 1 - scatter.y.medianAt;
+  return {
+    x: corner.aboveX ? medianX : 0,
+    y: corner.aboveY ? 0 : medianTop,
+    width: corner.aboveX ? 1 - medianX : medianX,
+    height: corner.aboveY ? medianTop : scatter.y.medianAt,
+  };
+};
+
+/**
+ * How far along the rastro a segment is: 0 at the oldest, 1 at the newest.
+ *
+ * There are `pointCount - 1` segments, so the last index is `pointCount - 2`.
+ * **A two-point rastro is one segment and has no ramp to sit on**: `index / 0`
+ * is not a number, and the obvious guard — `Math.max(1, …)` — silently paints
+ * that lone segment at the *oldest* opacity, the faintest thing on the drawing.
+ * A single segment is the newest one.
+ */
+export const trailSegmentAge = (index: number, pointCount: number): number =>
+  pointCount > 2 ? index / (pointCount - 2) : 1;
+
 /**
  * The subject club's rastro across the drawing it is already plotted on.
  *

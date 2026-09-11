@@ -318,6 +318,142 @@ export const countryRateSeries = (
   return points;
 };
 
+/** A point on one of the page's charts: an instant on x, a value on y. */
+export interface ChartPoint {
+  x: number;
+  y: number;
+}
+
+/**
+ * The rate chart's series: a country's line when one is chosen, else the
+ * **Visitantes** line drawn against the **Físico** one as its context.
+ *
+ * One function because the country branch lived here while the whole-deployment
+ * branch was written inside the page — one chart's two readings in two modules,
+ * with the rule that decides between them in the component.
+ *
+ * **Where no snapshot carries a visitor figure there is no pair to draw**, and
+ * the physical line is then the only honest single one — returned as `primary`
+ * with no context, never relabelled "Visitantes" to fill the slot. A snapshot
+ * missing a figure is skipped rather than drawn as zero, for `countryRateSeries`'
+ * reason. `filtered` says a country was chosen, so the page can say why a
+ * filtered line is empty rather than blaming too few snapshots.
+ */
+export const rateChartSeries = (
+  timeline: TrafficTimelinePoint[],
+  country: string,
+): { primary: ChartPoint[]; context: ChartPoint[] | null; filtered: boolean } => {
+  if (country) {
+    return { primary: countryRateSeries(timeline, country), context: null, filtered: true };
+  }
+  const series = (pick: (p: TrafficTimelinePoint) => number | null | undefined): ChartPoint[] =>
+    timeline.flatMap((p) => {
+      const y = pick(p);
+      return y == null ? [] : [{ x: p.t, y }];
+    });
+  const visitors = series((p) => p.visitorRatePerMin);
+  const physical = series((p) => p.ratePerMin);
+  return visitors.length > 0
+    ? { primary: visitors, context: physical, filtered: false }
+    : { primary: physical, context: null, filtered: false };
+};
+
+/** Where a line chart's marks go, in the box's own coordinates. */
+export interface TimelineGeometry {
+  /** The shared scale's top, for the axis label. */
+  maxY: number;
+  /** The shared time domain's ends, for the caption. */
+  minX: number;
+  maxX: number;
+  /** One instant, however many points: the caption prints one date. */
+  single: boolean;
+  /** The primary series' last point — the dot where it stands now. */
+  end: ChartPoint;
+  /** SVG path data for the primary series, and for the context behind it. */
+  d: string;
+  contextD: string | null;
+}
+
+/**
+ * The geometry of the rate chart, or null with nothing to draw.
+ *
+ * **Both series share one scale, computed over the union of both — on both
+ * axes.** On y, scaling each to its own maximum would draw the smaller as tall
+ * as the larger and reverse the one comparison the pair exists to make. On x it
+ * is not a matter of reading but of painting: the two series need not cover the
+ * same snapshots, so a domain taken from the primary alone maps an earlier
+ * context point to a negative x, and it paints **outside the card** —
+ * `RankCandles`' own bug, which every assertion about it passed.
+ *
+ * The y axis starts at zero rather than at the minimum: these are counts, and a
+ * floor at the minimum makes a flat week look like a cliff. Here rather than in
+ * the page for the reason the sparkline's geometry is in `rank-history-core.ts`:
+ * arithmetic that decides where a mark is painted is testable without a browser.
+ */
+export const timelineGeometry = (
+  points: ChartPoint[],
+  context: ChartPoint[],
+  box: { width: number; height: number; pad: number },
+): TimelineGeometry | null => {
+  if (points.length === 0) return null;
+  const all = [...points, ...context];
+  const minX = Math.min(...all.map((p) => p.x));
+  const maxX = Math.max(...all.map((p) => p.x));
+  const maxY = Math.max(...all.map((p) => p.y));
+  const spanX = maxX - minX || 1;
+  const spanY = maxY || 1;
+  const at = (p: ChartPoint): ChartPoint => ({
+    x: box.pad + ((p.x - minX) / spanX) * (box.width - box.pad * 2),
+    y: box.height - box.pad - (p.y / spanY) * (box.height - box.pad * 2),
+  });
+  const path = (series: ChartPoint[]): string =>
+    series
+      .map((p, i) => {
+        const { x, y } = at(p);
+        return `${i === 0 ? "M" : "L"}${x.toFixed(1)} ${y.toFixed(1)}`;
+      })
+      .join(" ");
+  return {
+    maxY,
+    minX,
+    maxX,
+    single: minX === maxX,
+    end: at(points[points.length - 1]),
+    d: path(points),
+    contextD: context.length > 0 ? path(context) : null,
+  };
+};
+
+/** The status classes the page aggregates codes into, in the order it draws them. */
+export const STATUS_CLASS_KEYS = ["2xx", "3xx", "4xx", "5xx", "outros"] as const;
+export type StatusClassKey = (typeof STATUS_CLASS_KEYS)[number];
+
+/** The class of one status code as the report prints it; anything unparseable is "outros". */
+export const statusClass = (code: string): StatusClassKey => {
+  const n = Number(code);
+  if (n >= 200 && n < 300) return "2xx";
+  if (n >= 300 && n < 400) return "3xx";
+  if (n >= 400 && n < 500) return "4xx";
+  if (n >= 500 && n < 600) return "5xx";
+  return "outros";
+};
+
+/**
+ * Requests per status class, summed from the report's exact codes.
+ *
+ * Aggregated because the codes are a long tail nobody reads — the question a
+ * person opens the page with is "how much of this is failing", and 404 against
+ * 410 is not that question. A class with no requests is absent from the map.
+ */
+export const statusClassTotals = (statusCodes: TrafficCountRow[]): Map<StatusClassKey, number> => {
+  const totals = new Map<StatusClassKey, number>();
+  for (const row of statusCodes) {
+    const key = statusClass(row.label);
+    totals.set(key, (totals.get(key) ?? 0) + row.count);
+  }
+  return totals;
+};
+
 /** nginx's English month abbreviations: the log's vocabulary, whatever the locale. */
 const LOG_MONTHS: Record<string, number> = {
   Jan: 0, Feb: 1, Mar: 2, Apr: 3, May: 4, Jun: 5,

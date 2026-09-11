@@ -1,8 +1,9 @@
 import { useId, useState } from "react";
 
-import { videoEmbedUrl } from "@/club-core";
+import { videoEmbedUrl } from "@/youtube-core";
 import { playsInPage } from "@/match-core";
 import { controlClasses } from "@/src/components/Button";
+import { ExternalLink } from "@/src/components/ExternalLink";
 import { LINK_UNDERLINE, TOUCH_TARGET } from "@/src/components/interaction";
 import { isPlainClick } from "@/src/components/plainClick";
 import type { Highlight } from "@/src/types";
@@ -140,21 +141,15 @@ export function MatchHighlights({
                   may be an incomplete list without that leaving anybody
                   stuck. */}
               Se não tocar aqui,{" "}
-              <a
-                href={current.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className={LINK_UNDERLINE}
-              >
+              {/* The channel rides in the accessible name because that is what
+                  this link opens — the sentence above names it in text, where a
+                  screen reader meets the anchor on its own. It is also what
+                  keeps every curated channel reachable *by name*, which is the
+                  promise `each link is labelled by its channel` has been
+                  asserting since the section was a row of pills. */}
+              <ExternalLink href={current.url} suffix={current.channel} className={LINK_UNDERLINE}>
                 abra no YouTube
-                {/* The channel rides in the accessible name because that is
-                    what this link opens — the sentence above names it in text,
-                    where a screen reader meets the anchor on its own. It is
-                    also what keeps every curated channel reachable *by name*,
-                    which is the promise `each link is labelled by its channel`
-                    has been asserting since the section was a row of pills. */}
-                <span className="sr-only"> — {current.channel} (abre em nova aba)</span>
-              </a>
+              </ExternalLink>
               .
             </p>
           ) : (
@@ -248,16 +243,10 @@ export function MatchHighlights({
         </>
       ) : (
         <>
-          <a
-            href={searchUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className={controlClasses("md", "inline-flex items-center gap-2")}
-          >
+          <ExternalLink href={searchUrl} className={controlClasses("md", "inline-flex items-center gap-2")}>
             <span aria-hidden="true">▶</span>
             Procurar melhores momentos no YouTube
-            <span className="sr-only"> (abre em nova aba)</span>
-          </a>
+          </ExternalLink>
           {/* Honest about what this is: without a curated link we do not
               know the official video, so this opens a search and says so. */}
           <p className="mt-2 text-body-small text-ink-faint">

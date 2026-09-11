@@ -580,7 +580,7 @@ that row says where to follow a player and this is one thing that was published.
 Curated in `src/data/player-posts.ts`, keyed by **player id** like the **Instagram
 do jogador** beside it, and storing the post's **shortcode alone**: Instagram's own
 "copy link" appends a `stkn` share token identifying whoever copied it, and
-`instagramPostCode` in `club-core.ts` is what stops that reaching a public
+`instagramPostCode` in `instagram-core.ts` is what stops that reaching a public
 repository. Coverage is partial and always will be; a player with none gets no
 section rather than an empty heading.
 A **reel** is a publicação like any other: its `/reel/<code>/` link parses to the
@@ -781,7 +781,7 @@ one. **Nothing is requested from the player until a card is pressed** — no
 frame, no cookie, no script. **The press count is unchanged at one**: an
 always-mounted frame carries no `autoplay`, so the reader presses YouTube's own
 button; here they press the card and `videoPressedEmbedUrl` starts it, which is
-the *only* address in `club-core.ts` carrying `autoplay` and is legitimate
+the *only* address in `youtube-core.ts` carrying `autoplay` and is legitimate
 precisely because a user gesture mounted the frame. And **the section does not
 change height** — measured at the capture viewport, 24 nodes and zero paint
 differences against the rail it replaced. That last one is load-bearing: an
@@ -921,9 +921,8 @@ _Avoid_: using it as a map key, a React `key`, or a foreign key of any kind.
 **Artigo do clube**:
 The **o** or **a** a Brazilian puts in front of a club's popular name — o
 Palmeiras, a Chapecoense — and the contracted **do**/**da** that almost every
-sentence about a club actually needs. Both come from `club-core.ts`, beside
-**slug**, because the article belongs to the *name* rather than to whatever page
-is printing it: a club relegated and promoted again keeps its article and may
+sentence about a club actually needs. Both come from `club-core.ts`, because
+the article belongs to the *name* rather than to whatever page is printing it: a club relegated and promoted again keeps its article and may
 not keep its `code`. `ofClub` is the form to reach for; `clubArticle` returns
 the bare word and has one caller, the **Meu time** control, which puts a verb in
 front of it.
@@ -1883,10 +1882,9 @@ screen-reader `subject` is no longer a nicety — it is the only thing saying
 where the link goes, and must not be trimmed to match the visible text. And
 one label is now a **substring** of the other, so every test locator is
 anchored with `^`; an unanchored `mpbarbosa.com` matches both.
-Rendered by `AuthorLinks`, through `OutboundLink`, which owns the whole anchor
-for the reason `ClubLinks` does — `target`, `rel` and the screen-reader suffix
-are what a copied link loses, and a copy missing `rel="noopener"` looks
-identical on the page. They carry MD3's 48dp floor because they are standalone
+Rendered by `AuthorLinks`, through `ExternalLink`, which owns `target`, `rel`
+and the new-tab suffix for every link that leaves the app — the parts a copied
+link loses, and a copy missing `rel="noopener"` looks identical on the page. They carry MD3's 48dp floor because they are standalone
 controls on their own line, the distinction that keeps that floor off the
 twenty club names in the **Classificação**.
 _Avoid_: "links úteis" or "parceiros" (neither is what these are — one is the

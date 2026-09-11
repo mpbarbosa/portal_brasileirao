@@ -10,7 +10,7 @@ import type { ClubCode } from "@/src/types";
  * abbreviation produces.
  *
  * The value is the article **title alone**, written with spaces because that is
- * what reads. `wikipediaUrl` in `club-core.ts` converts it to underscores and
+ * what reads. `wikipediaUrl` in `wikipedia-core.ts` converts it to underscores and
  * percent-encodes it, so the edition is written once rather than twenty times
  * and a title copied out of an edit view loses its `?action=edit`.
  *

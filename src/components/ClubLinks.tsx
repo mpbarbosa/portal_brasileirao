@@ -4,40 +4,18 @@
  * Extracted from `ClubView` when the Wikipédia link gained a second call site
  * on the match page. The rule the club view states — a glyph stays local while
  * it has one call site — is what puts this here the moment that stops being
- * true, and what keeps the other three glyphs where they are.
+ * true, and what keeps `ClubView`'s own glyphs where they are.
  *
- * The whole anchor moves, not just the mark. `target`, `rel` and the
- * screen-reader suffix are the parts that drift when a link is copied: a second
- * copy missing `rel="noopener"` is a real defect that looks identical on the
- * page, and one missing the suffix reads to a screen reader as a bare word.
+ * The whole link moves, not just the mark — the glyph, the words and the subject
+ * the screen-reader suffix names. The part every external link shares, `target`,
+ * `rel` and that the suffix announces a new tab, is `ExternalLink`'s, and the
+ * marks' attributes are `GLYPH` in `glyph.ts`.
  */
-import { instagramHandle, instagramUrl, wikipediaUrl } from "@/club-core";
+import { instagramHandle, instagramUrl } from "@/instagram-core";
+import { wikipediaUrl } from "@/wikipedia-core";
+import { ExternalLink } from "@/src/components/ExternalLink";
+import { GLYPH } from "@/src/components/glyph";
 import { LINK_UNDERLINE } from "@/src/components/interaction";
-
-/**
- * Shared attributes for the marks beside a club's links. Monochrome outlines
- * taking `currentColor`, so they warm on hover with the text and need nothing
- * of their own in either theme.
- *
- * `inline-block` is load-bearing rather than incidental: text-decoration is not
- * drawn through an atomic inline box, so each link's underline stops at its
- * icon instead of running under it.
- *
- * `aria-hidden` because the text beside the mark already names the link and the
- * screen-reader suffix already says which kind it is — an announced icon would
- * read the destination twice.
- */
-export const GLYPH = {
-  viewBox: "0 0 24 24",
-  fill: "none",
-  stroke: "currentColor",
-  strokeWidth: 2,
-  strokeLinecap: "round" as const,
-  strokeLinejoin: "round" as const,
-  "aria-hidden": true,
-  focusable: false,
-  className: "mr-1 inline-block h-[1em] w-[1em] align-[-0.125em]",
-};
 
 /** An open book: the club's article. Wikipedia's own mark is a *globe*, which
  *  would read as a second official site beside the one already there — and it
@@ -127,16 +105,14 @@ export function WikipediaLink({
   if (!href) return null;
 
   return (
-    <a
+    <ExternalLink
       href={href}
-      target="_blank"
-      rel="noopener noreferrer"
+      suffix={`verbete ${subject}`}
       className={`truncate ${LINK_UNDERLINE} ${extra}`}
     >
       <WikipediaGlyph />
       Wikipédia
-      <span className="sr-only"> — verbete {subject} (abre em nova aba)</span>
-    </a>
+    </ExternalLink>
   );
 }
 
@@ -184,15 +160,13 @@ export function InstagramLink({
   if (!href || !shown) return null;
 
   return (
-    <a
+    <ExternalLink
       href={href}
-      target="_blank"
-      rel="noopener noreferrer"
+      suffix={`Instagram ${subject}`}
       className={`truncate ${LINK_UNDERLINE} ${extra}`}
     >
       <InstagramGlyph />
       @{shown}
-      <span className="sr-only"> — Instagram {subject} (abre em nova aba)</span>
-    </a>
+    </ExternalLink>
   );
 }

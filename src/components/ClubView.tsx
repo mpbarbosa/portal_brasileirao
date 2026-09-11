@@ -15,19 +15,24 @@ import {
   standingFor,
   videosFor,
 } from "@/club-core";
+import { countNoun } from "@/count-core";
 import { nicknameLabel, playerNickname } from "@/player-core";
 import { formatRoute } from "@/route-core";
 import { goalDifferenceLabel, pointsPercentageLabel } from "@/standings-core";
 import { ClubCrest } from "@/src/components/ClubCrest";
 import { ClubVideos } from "@/src/components/ClubVideos";
+import { ExternalLink } from "@/src/components/ExternalLink";
 import { SeasonEvents } from "@/src/components/SeasonEvents";
-import { GLYPH, InstagramLink, MapPinGlyph, WikipediaLink } from "@/src/components/ClubLinks";
+import { InstagramLink, MapPinGlyph, WikipediaLink } from "@/src/components/ClubLinks";
+import { GLYPH } from "@/src/components/glyph";
+import { StatTile } from "@/src/components/StatTile";
 import { CLUB_VIDEOS } from "@/src/data/club-videos";
 import { PLAYER_NICKNAMES } from "@/src/data/player-nicknames";
 import { SEASON_EVENTS } from "@/src/data/events";
 import { BACK_LINK, LINK_UNDERLINE, STATE_LAYER } from "@/src/components/interaction";
 import { isPlainClick } from "@/src/components/plainClick";
 import { MatchList } from "@/src/components/MatchList";
+import { NotFoundScreen } from "@/src/components/NotFoundScreen";
 import { FollowButton } from "@/src/components/MeuTime";
 import { FormPill } from "@/src/components/FormPill";
 import { Surface } from "@/src/components/Surface";
@@ -80,23 +85,6 @@ interface ClubViewProps {
    * preference stored is not what this feature is for.
    */
   onToggleFollow?: (code: ClubCode) => void;
-}
-
-/**
- * One figure in the row under the club's name.
- *
- * Exported because the **Painel** opens with the same row, and the repo's rule
- * is to extract at the second call site — the same move `StarGlyph` made when
- * the Classificação became its second caller. Two copies of a tile is how one
- * of them comes to be a step off the other in padding or in ink.
- */
-export function StatTile({ label, value }: { label: string; value: string }) {
-  return (
-    <Surface filled className="px-3 py-2">
-      <p className="text-body-small text-ink-faint">{label}</p>
-      <p className="font-semibold tabular-nums">{value}</p>
-    </Surface>
-  );
 }
 
 /**
@@ -230,16 +218,7 @@ export function ClubView({
     findClub(standings.map((entry) => entry.club), key) ?? findClub(clubs ?? [], key);
 
   if (!club) {
-    return (
-      <>
-        <button type="button" onClick={onBack} className={BACK_LINK}>
-          ← Voltar
-        </button>
-        <p className="mt-4 text-body-medium text-ink-muted" role={loading ? "status" : undefined}>
-          {loading ? "Carregando página…" : "Clube não encontrado."}
-        </p>
-      </>
-    );
+    return <NotFoundScreen onBack={onBack} loading={loading} missingText="Clube não encontrado." />;
   }
 
   const code = club.code;
@@ -315,13 +294,7 @@ export function ClubView({
               wrapping line's worth of target back. */}
           {mapUrl && (
             <p data-sede className="mt-0.5 text-body-small text-ink-faint">
-              <a
-                href={mapUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className={LINK_UNDERLINE}
-                data-sede-map
-              >
+              <ExternalLink href={mapUrl} suffix="no Google Maps" className={LINK_UNDERLINE} data-sede-map>
                 <MapPinGlyph />
                 {/* The mark is aria-hidden, so without this the address is read
                     out as a bare string with nothing saying what it is — and as
@@ -329,8 +302,7 @@ export function ClubView({
                     where the line goes. */}
                 <span className="sr-only">Sede: </span>
                 {club.address}
-                <span className="sr-only"> — no Google Maps (abre em nova aba)</span>
-              </a>
+              </ExternalLink>
             </p>
           )}
           {/* Each link reads as the thing itself — a bare host, a bare handle,
@@ -338,16 +310,10 @@ export function ClubView({
               and what keeps the row from wrapping. */}
           <div className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-body-medium">
             {club.website && (
-              <a
-                href={club.website}
-                target="_blank"
-                rel="noopener noreferrer"
-                className={`truncate ${LINK_UNDERLINE}`}
-              >
+              <ExternalLink href={club.website} suffix="site oficial" className={`truncate ${LINK_UNDERLINE}`}>
                 <SiteGlyph />
                 {club.website.replace(/^https:\/\//, "").replace(/\/$/, "")}
-                <span className="sr-only"> — site oficial (abre em nova aba)</span>
-              </a>
+              </ExternalLink>
             )}
             <InstagramLink handle={club.instagram} subject="oficial do clube" />
             {/* A sub is run by SUPPORTERS, so the suffix says "comunidade de
@@ -356,20 +322,15 @@ export function ClubView({
                 is talked about; only one of them is the club talking, and a
                 screen reader is told which. */}
             {sub && subName && (
-              <a
+              <ExternalLink
                 href={sub}
-                target="_blank"
-                rel="noopener noreferrer"
+                suffix="comunidade de torcedores no Reddit"
                 className={`truncate ${LINK_UNDERLINE}`}
                 data-reddit
               >
                 <RedditGlyph />
                 r/{subName}
-                <span className="sr-only">
-                  {" "}
-                  — comunidade de torcedores no Reddit (abre em nova aba)
-                </span>
-              </a>
+              </ExternalLink>
             )}
             {/* Named for what it is rather than for its address, which is the
                 hymn's rule and not the subreddit's: `r/CRFla` is a name a
@@ -381,35 +342,24 @@ export function ClubView({
                 Instagram line's — the club is talked about here, it is not
                 talking. */}
             {chat && (
-              <a
+              <ExternalLink
                 href={chat}
-                target="_blank"
-                rel="noopener noreferrer"
+                suffix="comunidade de torcedores no Discord"
                 className={`truncate ${LINK_UNDERLINE}`}
                 data-discord
               >
                 <DiscordGlyph />
                 Discord
-                <span className="sr-only">
-                  {" "}
-                  — comunidade de torcedores no Discord (abre em nova aba)
-                </span>
-              </a>
+              </ExternalLink>
             )}
             {/* Named for what it is rather than for its address: a video id is
                 nothing a reader recognises, unlike a host or a handle. The same
                 holds for an article title, below. */}
             {hymn && (
-              <a
-                href={hymn}
-                target="_blank"
-                rel="noopener noreferrer"
-                className={`truncate ${LINK_UNDERLINE}`}
-              >
+              <ExternalLink href={hymn} suffix="no YouTube" className={`truncate ${LINK_UNDERLINE}`}>
                 <HymnGlyph />
                 Hino do clube
-                <span className="sr-only"> — no YouTube (abre em nova aba)</span>
-              </a>
+              </ExternalLink>
             )}
             <WikipediaLink title={club.wikipedia} subject="do clube" />
           </div>
@@ -546,7 +496,7 @@ export function ClubView({
                     {nickname && <span className="text-ink-muted"> {nicknameLabel(nickname)}</span>}
                   </span>
                   <span className="shrink-0 tabular-nums text-ink-muted">
-                    {scorer.goals} {scorer.goals === 1 ? "gol" : "gols"}
+                    {scorer.goals} {countNoun(scorer.goals, "gol", "gols")}
                   </span>
                 </Surface>
               );

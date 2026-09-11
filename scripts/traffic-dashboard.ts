@@ -41,6 +41,7 @@ import { createServer } from "node:http";
 import { readdirSync, readFileSync } from "node:fs";
 import { resolve, join } from "node:path";
 
+import { countLabel } from "@/count-core";
 import { botShareLabel, buildTrafficDashboard, chronologicalDays } from "@/traffic-report-core";
 import type { ApiEnvelope, TrafficCountRow, TrafficDashboard } from "@/src/types";
 
@@ -78,8 +79,6 @@ const load = async (): Promise<ApiEnvelope<TrafficDashboard>> => {
 
 const esc = (value: string): string =>
   value.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
-const fmt = (n: number | null | undefined): string =>
-  n == null ? "—" : n.toLocaleString("pt-BR");
 
 /**
  * The page's own colours, and the one place in this repository where writing a
@@ -105,7 +104,7 @@ const bars = (rows: TrafficCountRow[], max: number, color: string): string => {
       (r) => `<div class="bar">
         <div class="bar-label" title="${esc(r.label)}">${esc(r.label)}</div>
         <div class="bar-track"><div class="bar-fill" style="width:${(r.count / top) * 100}%;background:${color}"></div></div>
-        <div class="bar-count">${fmt(r.count)}</div>
+        <div class="bar-count">${countLabel(r.count)}</div>
       </div>`,
     )
     .join("");
@@ -133,7 +132,7 @@ const line = (points: { x: number; y: number }[], color: string): string => {
   const when = (ms: number) =>
     new Date(ms).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
   return `<div class="chart">
-      <div class="y-axis"><span>${fmt(Math.max(...ys))}</span><span>0</span></div>
+      <div class="y-axis"><span>${countLabel(Math.max(...ys))}</span><span>0</span></div>
       <svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" role="img" aria-label="série temporal">
         <path d="${d}" fill="none" stroke="${color}" stroke-width="2" stroke-linejoin="round"
               stroke-linecap="round" vector-effect="non-scaling-stroke" />
@@ -149,7 +148,7 @@ const hours = (byHour: Record<string, number>): string => {
   return `<div class="hours">${keys
     .map(
       (k, i) =>
-        `<div class="hour" title="${k}h · ${fmt(values[i])}"><div style="height:${
+        `<div class="hour" title="${k}h · ${countLabel(values[i])}"><div style="height:${
           values[i] === 0 ? 0 : Math.max(1, (values[i] / top) * 100)
         }%;background:${ACCENT}"></div></div>`,
     )
@@ -178,13 +177,13 @@ const statuses = (rows: TrafficCountRow[]): string => {
   return `<div class="stack">${present
     .map(
       ([key, count]) =>
-        `<div style="width:${(count / total) * 100}%;background:${STATUS[key as keyof typeof STATUS]}" title="${key} · ${fmt(count)}"></div>`,
+        `<div style="width:${(count / total) * 100}%;background:${STATUS[key as keyof typeof STATUS]}" title="${key} · ${countLabel(count)}"></div>`,
     )
     .join("")}</div>
     <div class="chips">${present
       .map(
         ([key, count]) =>
-          `<span class="chip"><i style="background:${STATUS[key as keyof typeof STATUS]}"></i>${key} · ${fmt(count)}</span>`,
+          `<span class="chip"><i style="background:${STATUS[key as keyof typeof STATUS]}"></i>${key} · ${countLabel(count)}</span>`,
       )
       .join("")}</div>`;
 };
@@ -212,12 +211,12 @@ const page = (payload: ApiEnvelope<TrafficDashboard>): string => {
       ${esc(latest.dateRange ?? "do log")}. Origem: <code>${esc(origin)}</code>.</p>
 
     <div class="kpis">
-      ${kpi("Requisições", fmt(latest.requests), "acumulado na janela")}
-      ${kpi("Endereços", fmt(latest.uniqueIps), "distintos, não visitantes")}
-      ${kpi("Ritmo médio", fmt(data.windowRatePerMin), "req/min entre instantâneos")}
-      ${kpi("Robôs", botShareLabel(latest) ?? "—", `${fmt(latest.bots)} de ${fmt(latest.requests)}`)}
-      ${kpi("Monitoramento", fmt(latest.monitorHits), "/api/health, fora do ranking")}
-      ${kpi("Instantâneos", fmt(data.snapshotCount), "na janela lida")}
+      ${kpi("Requisições", countLabel(latest.requests), "acumulado na janela")}
+      ${kpi("Endereços", countLabel(latest.uniqueIps), "distintos, não visitantes")}
+      ${kpi("Ritmo médio", countLabel(data.windowRatePerMin), "req/min entre instantâneos")}
+      ${kpi("Robôs", botShareLabel(latest) ?? "—", `${countLabel(latest.bots)} de ${countLabel(latest.requests)}`)}
+      ${kpi("Monitoramento", countLabel(latest.monitorHits), "/api/health, fora do ranking")}
+      ${kpi("Instantâneos", countLabel(data.snapshotCount), "na janela lida")}
     </div>
 
     ${panel("Tráfego acumulado", "Cada ponto é um instantâneo; a linha sobe porque cada leitura relê o log inteiro.", line(data.timeline.flatMap((p) => (p.requests === null ? [] : [{ x: p.t, y: p.requests }])), ACCENT))}
@@ -249,7 +248,7 @@ const page = (payload: ApiEnvelope<TrafficDashboard>): string => {
 
     <p class="muted small">${latest.geoSource
       ? `Geolocalização por base local (${esc(latest.geoSource)}) — nenhum endereço sai do servidor.`
-      : "Sem base GeoLite2 no servidor."} Instantâneo ${esc(latest.file)}, de ${fmt(latest.logLines)} linhas.</p>`);
+      : "Sem base GeoLite2 no servidor."} Instantâneo ${esc(latest.file)}, de ${countLabel(latest.logLines)} linhas.</p>`);
 };
 
 const kpi = (label: string, value: string, hint: string): string =>

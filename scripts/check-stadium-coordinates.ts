@@ -36,7 +36,7 @@
  *
  *   npm run check-stadium-coordinates
  */
-import { slugify } from "@/club-core";
+import { slugify } from "@/slug-core";
 import { STADIUMS } from "@/src/data/stadiums";
 import { VENUES } from "@/src/data/venues";
 

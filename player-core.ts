@@ -2,7 +2,8 @@
  * Pure player display logic. No I/O, no React — translation and age are total
  * functions over their inputs (tests/player-core.test.ts).
  */
-import { instagramHandle, instagramPostCode, wikipediaUrl } from "@/club-core";
+import { instagramHandle, instagramPostCode } from "@/instagram-core";
+import { wikipediaUrl } from "@/wikipedia-core";
 import { commonsFilePage } from "@/commons-core";
 import type {
   Player,

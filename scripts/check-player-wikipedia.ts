@@ -48,7 +48,7 @@
  *   0  every recorded article resolves and states the right birth date.
  *   1  at least one does not — the line says which and why.
  */
-import { wikipediaUrl } from "@/club-core";
+import { wikipediaUrl } from "@/wikipedia-core";
 import { MONTH_NAMES } from "@/events-core";
 import { withPlayerOverrides } from "@/player-core";
 import { PLAYER_OVERRIDES } from "@/src/data/player-overrides";

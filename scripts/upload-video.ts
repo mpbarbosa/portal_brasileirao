@@ -49,7 +49,7 @@ import {
   tokenFile,
   uploadVideo,
 } from "@/scripts/youtube-api";
-import { youtubeWatchUrl } from "@/club-core";
+import { youtubeWatchUrl } from "@/youtube-core";
 
 const die = (message: string): never => {
   console.error(`\n✗ ${message}\n`);

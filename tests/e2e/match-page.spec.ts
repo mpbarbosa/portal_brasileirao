@@ -4,7 +4,7 @@ import { SEED_MATCHES } from "@/src/data/matches";
 import { VENUES } from "@/src/data/venues";
 import { BROADCASTS } from "@/src/data/broadcasts";
 import { STADIUMS } from "@/src/data/stadiums";
-import { youtubeVideoId } from "@/club-core";
+import { youtubeVideoId } from "@/youtube-core";
 import { playsInPage } from "@/match-core";
 import { stadiumSlug } from "@/venue-core";
 import type { Highlight } from "@/src/types";

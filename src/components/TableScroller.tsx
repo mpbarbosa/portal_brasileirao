@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 
-import { GLYPH } from "@/src/components/ClubLinks";
+import { GLYPH } from "@/src/components/glyph";
 import { Surface } from "@/src/components/Surface";
 import { FOCUS_RING, ICON_LINK, TOUCH_TARGET } from "@/src/components/interaction";
 import { useScrollEdges } from "@/src/useScrollEdges";

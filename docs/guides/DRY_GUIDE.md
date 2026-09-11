@@ -19,7 +19,7 @@ picking the wrong one is the usual mistake.
   each carried their own copy of the label map *and* the colour map — identical,
   four values apiece, in two files. Two copies of a lookup table is how a new
   status renders in one place and blank in the other.
-- **`slugify`** lives in `club-core.ts` and `venue-core.ts` imports it rather
+- **`slugify`** lives in `slug-core.ts` and `venue-core.ts` imports it rather
   than writing a second normaliser, which is what makes `ARENA MRV` and
   `Arena MRV` one stadium rather than two.
 - **`countdownLabel`** lives in `live-core.ts` and `next-match-core.ts`

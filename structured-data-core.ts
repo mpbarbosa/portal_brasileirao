@@ -11,7 +11,9 @@
  * Server-injected, like the rest of `page-meta-core`: a rich-result parser is
  * not obliged to run JavaScript, and the ones that do run it late.
  */
-import { clubKey, findClub, instagramUrl, officialSiteUrl, wikipediaUrl } from "@/club-core";
+import { clubKey, findClub, officialSiteUrl } from "@/club-core";
+import { instagramUrl } from "@/instagram-core";
+import { wikipediaUrl } from "@/wikipedia-core";
 import { findMatch } from "@/match-core";
 import { findStadium } from "@/venue-core";
 import { SITE_DESCRIPTION, SITE_NAME, type MetaContext } from "@/page-meta-core";

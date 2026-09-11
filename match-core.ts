@@ -2,7 +2,7 @@
  * Pure helpers for a single match page. No I/O (tests/match-core.test.ts).
  */
 import { countsTowardStandings } from "@/standings-core";
-import { slugify } from "@/club-core";
+import { slugify } from "@/slug-core";
 import type { Club, Highlight, Match } from "@/src/types";
 
 export const findMatch = (matches: Match[], id: string): Match | null =>
@@ -101,7 +101,7 @@ const EMBED_REFUSED_CHANNELS = new Set(["cazetv"]);
  * Whether this package can be played **inside** the Partida page, as against
  * opened on YouTube.
  *
- * Slugged through `club-core`'s `slugify` rather than lowercased here: it folds
+ * Slugged through `slug-core`'s `slugify` rather than lowercased here: it folds
  * the accent in "CazéTV", and a second spelling of that fold is how a list of
  * channel names comes to miss the channel it names — the rule `venue-core.ts`
  * already reuses it under.

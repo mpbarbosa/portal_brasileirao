@@ -9,7 +9,8 @@
  *
  * Upstream docs: https://www.football-data.org/documentation/quickstart
  */
-import { slugify } from "@/club-core";
+import { slugify } from "@/slug-core";
+import { isFiniteNumber } from "@/narrow-core";
 import type {
   Club,
   Match,
@@ -278,9 +279,6 @@ export const isKnownStatus = (raw: string | undefined): boolean =>
 export const mapStatus = (raw: string | undefined): MatchStatus =>
   isKnownStatus(raw) ? STATUS_MAP[raw as string] : "SCHEDULED";
 
-const isNumber = (value: unknown): value is number =>
-  typeof value === "number" && Number.isFinite(value);
-
 /**
  * Upstream `shortName` is sometimes not what a Brazilian reader calls the club
  * ("Mineiro" for Atlético-MG). Display-only corrections keyed by the stable
@@ -321,11 +319,11 @@ export const clubFromTeam = (team: RawTeam | undefined): Club | null => {
   if (!team || !team.name) return null;
 
   const tla = team.tla?.trim() || undefined;
-  const code = isNumber(team.id) ? String(team.id) : tla;
+  const code = isFiniteNumber(team.id) ? String(team.id) : tla;
   if (!code) return null;
 
   const shortName =
-    (isNumber(team.id) ? DISPLAY_NAME_OVERRIDES[team.id] : undefined) ??
+    (isFiniteNumber(team.id) ? DISPLAY_NAME_OVERRIDES[team.id] : undefined) ??
     team.shortName?.trim() ??
     team.name;
 
@@ -368,20 +366,20 @@ export const mapReferees = (raw: RawReferee[] | undefined): Referee[] =>
 export const mapMatch = (raw: RawMatch): Match | null => {
   const home = clubFromTeam(raw.homeTeam);
   const away = clubFromTeam(raw.awayTeam);
-  if (!isNumber(raw.id) || !raw.utcDate || !home || !away) return null;
+  if (!isFiniteNumber(raw.id) || !raw.utcDate || !home || !away) return null;
 
   const fullTime = raw.score?.fullTime;
   const referees = mapReferees(raw.referees);
 
   return {
     id: String(raw.id),
-    round: isNumber(raw.matchday) ? raw.matchday : 0,
+    round: isFiniteNumber(raw.matchday) ? raw.matchday : 0,
     kickoff: raw.utcDate,
     status: mapStatus(raw.status),
     homeCode: home.code,
     awayCode: away.code,
-    homeGoals: isNumber(fullTime?.home) ? fullTime.home : null,
-    awayGoals: isNumber(fullTime?.away) ? fullTime.away : null,
+    homeGoals: isFiniteNumber(fullTime?.home) ? fullTime.home : null,
+    awayGoals: isFiniteNumber(fullTime?.away) ? fullTime.away : null,
     // Conditional for the reason `crest` is, one mapper up: upstream reports an
     // empty array for most fixtures, and a present-but-empty key would make
     // `"referees" in match` lie about what the provider actually said.
@@ -447,24 +445,24 @@ const tableEntryToRow = (entry: RawTableEntry, index: number): StandingsRow | nu
   const club = clubFromTeam(entry.team);
   if (!club) return null;
 
-  const goalsFor = isNumber(entry.goalsFor) ? entry.goalsFor : 0;
-  const goalsAgainst = isNumber(entry.goalsAgainst) ? entry.goalsAgainst : 0;
+  const goalsFor = isFiniteNumber(entry.goalsFor) ? entry.goalsFor : 0;
+  const goalsAgainst = isFiniteNumber(entry.goalsAgainst) ? entry.goalsAgainst : 0;
 
   return {
     // Trust the upstream position when present — it already encodes the
     // tie-breakers the provider applied, including ones this app can't compute.
-    position: isNumber(entry.position) ? entry.position : index + 1,
+    position: isFiniteNumber(entry.position) ? entry.position : index + 1,
     club,
-    played: isNumber(entry.playedGames) ? entry.playedGames : 0,
-    wins: isNumber(entry.won) ? entry.won : 0,
-    draws: isNumber(entry.draw) ? entry.draw : 0,
-    losses: isNumber(entry.lost) ? entry.lost : 0,
+    played: isFiniteNumber(entry.playedGames) ? entry.playedGames : 0,
+    wins: isFiniteNumber(entry.won) ? entry.won : 0,
+    draws: isFiniteNumber(entry.draw) ? entry.draw : 0,
+    losses: isFiniteNumber(entry.lost) ? entry.lost : 0,
     goalsFor,
     goalsAgainst,
-    goalDifference: isNumber(entry.goalDifference)
+    goalDifference: isFiniteNumber(entry.goalDifference)
       ? entry.goalDifference
       : goalsFor - goalsAgainst,
-    points: isNumber(entry.points) ? entry.points : 0,
+    points: isFiniteNumber(entry.points) ? entry.points : 0,
   };
 };
 
@@ -542,17 +540,17 @@ export const mapScorers = (payload: ScorersResponse): Scorer[] => {
     const club = clubFromTeam(raw.team);
     const name = raw.player?.name?.trim();
     // A scorer with no name or no goal count is not a row worth rendering.
-    if (!club || !name || !isNumber(raw.goals)) continue;
+    if (!club || !name || !isFiniteNumber(raw.goals)) continue;
 
     rows.push({
       position: rows.length + 1,
-      playerId: isNumber(raw.player?.id) ? String(raw.player.id) : name,
+      playerId: isFiniteNumber(raw.player?.id) ? String(raw.player.id) : name,
       playerName: name,
       club,
       goals: raw.goals,
-      assists: isNumber(raw.assists) ? raw.assists : null,
-      penalties: isNumber(raw.penalties) ? raw.penalties : null,
-      playedMatches: isNumber(raw.playedMatches) ? raw.playedMatches : null,
+      assists: isFiniteNumber(raw.assists) ? raw.assists : null,
+      penalties: isFiniteNumber(raw.penalties) ? raw.penalties : null,
+      playedMatches: isFiniteNumber(raw.playedMatches) ? raw.playedMatches : null,
     });
   }
 
@@ -580,7 +578,7 @@ export const mapSquads = (payload: TeamsResponse): Squad[] => {
     const players: Player[] = [];
     for (const raw of team.squad ?? []) {
       const name = raw.name?.trim();
-      if (!isNumber(raw.id) || !name) continue;
+      if (!isFiniteNumber(raw.id) || !name) continue;
 
       players.push({
         id: String(raw.id),
@@ -621,14 +619,14 @@ export type PersonResponse = RawPerson;
  */
 export const mapPerson = (raw: PersonResponse): Player | null => {
   const name = raw.name?.trim();
-  if (!isNumber(raw.id) || !name) return null;
+  if (!isFiniteNumber(raw.id) || !name) return null;
 
   const club = clubFromTeam(raw.currentTeam) ?? undefined;
 
   return {
     id: String(raw.id),
     name,
-    ...(isNumber(raw.shirtNumber) ? { shirtNumber: raw.shirtNumber } : {}),
+    ...(isFiniteNumber(raw.shirtNumber) ? { shirtNumber: raw.shirtNumber } : {}),
     ...(raw.position?.trim() ? { position: raw.position.trim() } : {}),
     ...(raw.nationality?.trim() ? { nationality: raw.nationality.trim() } : {}),
     ...(raw.dateOfBirth?.trim() ? { dateOfBirth: raw.dateOfBirth.trim() } : {}),

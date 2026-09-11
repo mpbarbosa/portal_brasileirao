@@ -8,11 +8,13 @@ broadcast-core.ts
 campaign-facts-core.ts
 campaign-plot-core.ts
 club-core.ts
+count-core.ts
 escalacao-core.ts
 events-core.ts
 goals-core.ts
 health-core.ts
 index.html
+instagram-core.ts
 league-stats-core.ts
 live-core.ts
 match-core.ts
@@ -34,3 +36,5 @@ traffic-report-core.ts
 venue-core.ts
 version-core.ts
 weather-core.ts
+wikipedia-core.ts
+youtube-core.ts

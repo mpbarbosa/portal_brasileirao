@@ -1,9 +1,7 @@
 import { bestAttacks, bestDefences, goalsPerMatchLabel, homeWinShareLabel, leagueSummary } from "@/league-stats-core";
-import { clubKey } from "@/club-core";
+import { countPhrase } from "@/count-core";
 import { ClubCrest } from "@/src/components/ClubCrest";
-import { LINK_UNDERLINE } from "@/src/components/interaction";
-import { isPlainClick } from "@/src/components/plainClick";
-import { formatRoute } from "@/route-core";
+import { ClubPageLink } from "@/src/components/ClubPageLink";
 import { Surface } from "@/src/components/Surface";
 import type { Match, StandingsRow } from "@/src/types";
 
@@ -66,17 +64,13 @@ function Leaderboard({
           <li key={row.club.code} className="flex items-center gap-2 text-body-medium">
             <ClubCrest club={row.club} size={18} />
             {onSelectClub ? (
-              <a
-                href={formatRoute({ section: "clube", key: clubKey(row.club) })}
-                onClick={(event) => {
-                  if (!isPlainClick(event)) return;
-                  event.preventDefault();
-                  onSelectClub(clubKey(row.club));
-                }}
-                className={`min-w-0 truncate rounded-x-small ${LINK_UNDERLINE}`}
+              <ClubPageLink
+                club={row.club}
+                onSelectClub={onSelectClub}
+                className="min-w-0 truncate rounded-x-small"
               >
                 {row.club.shortName}
-              </a>
+              </ClubPageLink>
             ) : (
               <span className="min-w-0 truncate">{row.club.shortName}</span>
             )}
@@ -116,7 +110,7 @@ export function LeagueStats({
           name="gols"
           label="Gols"
           value={String(summary.goals)}
-          hint={`em ${summary.played} ${summary.played === 1 ? "jogo" : "jogos"}`}
+          hint={`em ${countPhrase(summary.played, "jogo", "jogos")}`}
         />
         {/* One decimal, because the second is noise at this scale and the first
             is the whole of what separates a tight season from an open one. */}

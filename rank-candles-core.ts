@@ -22,8 +22,9 @@
  * drawing comes to disagree with the table it describes.
  */
 import { playsIn, resultFor } from "@/club-core";
+import { countPhrase } from "@/count-core";
 import { brasiliaDay, dayLabel, touchesClub } from "@/events-core";
-import { lastRoundWithResult } from "@/rank-history-core";
+import { lastRoundWithResult, round2 } from "@/rank-history-core";
 import { computeStandings, countsTowardStandings, ZONE_DEPTH } from "@/standings-core";
 import type {
   Club,
@@ -209,8 +210,6 @@ export interface CandleShape {
   openTick: Rect;
   candle: RoundCandle;
 }
-
-const round2 = (value: number): number => Math.round(value * 100) / 100;
 
 /**
  * Project a club's candles onto the box.
@@ -534,9 +533,9 @@ export const describeCandle = (candle: RoundCandle): string => {
   const moved = placesMoved(candle);
   const direction =
     moved > 0
-      ? `subiu ${moved} ${moved === 1 ? "posição" : "posições"}`
+      ? `subiu ${countPhrase(moved, "posição", "posições")}`
       : moved < 0
-        ? `caiu ${-moved} ${-moved === 1 ? "posição" : "posições"}`
+        ? `caiu ${countPhrase(-moved, "posição", "posições")}`
         : "manteve a posição";
 
   const parts = [
@@ -551,8 +550,8 @@ export const describeCandle = (candle: RoundCandle): string => {
   if (candle.worst > Math.max(candle.open, candle.close)) {
     parts.push(`caiu até ${candle.worst}º`);
   }
-  if (candle.result) {
-    parts.push(`${RESULT_WORD[candle.result]} (${candle.points} ${candle.points === 1 ? "ponto" : "pontos"})`);
+  if (candle.result && candle.points !== null) {
+    parts.push(`${RESULT_WORD[candle.result]} (${countPhrase(candle.points, "ponto", "pontos")})`);
   } else if (candle.points === null) {
     parts.push("sem jogo na rodada");
   }

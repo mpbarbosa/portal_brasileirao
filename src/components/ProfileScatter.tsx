@@ -3,7 +3,9 @@ import {
   axisFigure,
   axisPhrase,
   profileScatter,
+  quadrantRect,
   scatterTrail,
+  trailSegmentAge,
   TRAIL_ROUNDS,
   quadrantLabel,
   subjectQuadrant,
@@ -139,6 +141,7 @@ export function ProfileScatter({
   // would be three places for the picture and the caption to fall out of step.
   const corner = subjectQuadrant(scatter);
   if (!corner) return null;
+  const tint = quadrantRect(scatter, corner);
 
   // Takes the built scatter, so the rastro is placed in the drawing's own frozen
   // domain and this component has no arithmetic of its own to get wrong.
@@ -216,18 +219,10 @@ export function ProfileScatter({
                 would be a state layer, which MD3 spends on interaction and this
                 is not. */}
             <rect
-              x={corner.aboveX ? BOX.width * scatter.x.medianAt : 0}
-              y={corner.aboveY ? 0 : BOX.height * (1 - scatter.y.medianAt)}
-              width={
-                corner.aboveX
-                  ? BOX.width * (1 - scatter.x.medianAt)
-                  : BOX.width * scatter.x.medianAt
-              }
-              height={
-                corner.aboveY
-                  ? BOX.height * (1 - scatter.y.medianAt)
-                  : BOX.height * scatter.y.medianAt
-              }
+              x={BOX.width * tint.x}
+              y={BOX.height * tint.y}
+              width={BOX.width * tint.width}
+              height={BOX.height * tint.height}
               className="fill-surface-container"
               data-scatter-quadrant={corner.aboveX ? (corner.aboveY ? "both" : "xOnly") : corner.aboveY ? "yOnly" : "neither"}
             />
@@ -270,15 +265,9 @@ export function ProfileScatter({
             {trail.slice(1).map((point, index) => {
               const previous = trail[index];
               if (!previous) return null;
-              // 0 at the oldest segment, 1 at the newest. There are
-              // `length - 1` segments, so the last index is `length - 2`.
-              //
-              // A **two-point** rastro is one segment and has no ramp to sit on:
-              // `index / 0` is not a number, and the obvious guard —
-              // `Math.max(1, …)` — silently paints that lone segment at the
-              // *oldest* opacity, which is the faintest thing on the drawing.
-              // A single segment is the newest one.
-              const age = trail.length > 2 ? index / (trail.length - 2) : 1;
+              // 0 at the oldest segment, 1 at the newest; `trailSegmentAge`
+              // carries the two-point rastro, which has no ramp to sit on.
+              const age = trailSegmentAge(index, trail.length);
               return (
                 <line
                   key={point.round}

@@ -1,14 +1,13 @@
 import { useMemo, useState } from "react";
 
 import type { CampaignPlotKind } from "@/campaign-plot-core";
-import { clubKey, recentForm, type FormResult } from "@/club-core";
+import { recentForm, type FormResult } from "@/club-core";
 import { Button } from "@/src/components/Button";
 import { CampaignPlotToggle } from "@/src/components/CampaignPlotToggle";
 import { ClubCrest } from "@/src/components/ClubCrest";
+import { ClubPageLink } from "@/src/components/ClubPageLink";
 import { FormPill } from "@/src/components/FormPill";
 import { StarGlyph } from "@/src/components/MeuTime";
-import { LINK_UNDERLINE } from "@/src/components/interaction";
-import { isPlainClick } from "@/src/components/plainClick";
 import {
   lastRecordedRound,
   rankMovement,
@@ -17,7 +16,6 @@ import {
   type RankMovementDirection,
 } from "@/rank-history-core";
 import { RankSparkline } from "@/src/components/RankSparkline";
-import { formatRoute } from "@/route-core";
 import { ZONES, type ZoneId, goalDifferenceLabel, pointsPercentageLabel, zoneAt } from "@/standings-core";
 import { computeStandings, type StandingsSide } from "@/standings-core";
 import { StandingsSideControl } from "@/src/components/StandingsSideControl";
@@ -668,18 +666,9 @@ export function StandingsTable({
                       and running them together reads as one string to assistive
                       tech and to any text-based assertion. */}
                   {onSelectClub ? (
-                    <a
-                      href={formatRoute({ section: "clube", key: clubKey(row.club) })}
-                      onClick={(event) => {
-                        // Let modified clicks open a new tab, as any link should.
-                        if (!isPlainClick(event)) return;
-                        event.preventDefault();
-                        onSelectClub(clubKey(row.club));
-                      }}
-                      className={`rounded-x-small ${LINK_UNDERLINE}`}
-                    >
+                    <ClubPageLink club={row.club} onSelectClub={onSelectClub} className="rounded-x-small">
                       {row.club.shortName}
-                    </a>
+                    </ClubPageLink>
                   ) : (
                     <span>{row.club.shortName}</span>
                   )}

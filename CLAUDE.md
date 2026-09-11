@@ -543,7 +543,7 @@ what makes the logic testable without mocking HTTP.
   Identity is therefore the **slug** of that string, which is what makes `ARENA MRV` and
   `Arena MRV` one stadium rather than two — CBF's casing drifts by design, since
   `venues.ts` stores its values verbatim rather than guessing at proper names. It reuses
-  `slugify` from `club-core.ts` deliberately; a second normaliser is how two spellings of
+  `slugify` from `slug-core.ts` deliberately; a second normaliser is how two spellings of
   one ground come to disagree. Home clubs are derived from who hosted there, so the page
   needs no curated club list. A fixture whose venue slugs to nothing is skipped rather
   than bucketed under an empty key, which would collect unrelated grounds into one page.
@@ -2167,10 +2167,9 @@ off the content column's left edge.
 **The brand mark sits beside the TITLE LINE, not beside the two-line block, and
 that is arithmetic.** `BrandMark` is a filled arch — the portal — with a rising
 campanha knocked out of it, drawn in `currentColor` at `text-primary`, and it lives
-in its own file rather than in `SectionIcons.tsx`: that file exists to hold one
-`base` attribute bag (`fill: none`, `stroke: currentColor`, width 2) so a glyph
-defined beside its call site cannot drift from it, and this mark shares none of that
-contract. **Filled rather than stroked** because a favicon is read at 16px, where the
+in its own file rather than in `SectionIcons.tsx`: that file draws the app's
+standalone stroked icons from `GLYPH_STROKE` in `src/components/glyph.ts` (`fill:
+none`, `stroke: currentColor`, width 2), and this mark shares none of that contract. **Filled rather than stroked** because a favicon is read at 16px, where the
 same geometry stroked is mush — measured at 16, 24 and 28 in both themes.
 
 Below `sm` the brand's widest line is the **subtitle** at 174px against 128px of
@@ -2203,9 +2202,12 @@ bundle, the crescent drew about a third the height of the 24px icons beside it, 
 control had two optical sizes depending on which theme was on — in the one row of this
 app that had been levelled to the pixel by #173 and M9. `☀` is also emoji-presentation on
 several platforms, which would put a colour glyph in a monochrome bar. `SunIcon` and
-`MoonIcon` live in `SectionIcons.tsx` despite not being sections, because that file holds
-the one `base` attribute bag this app's glyphs share and a glyph defined beside its call
-site drifts from it — the same drift `GLYPH` was extracted to stop.
+`MoonIcon` live in `SectionIcons.tsx` despite not being sections, because that file draws
+the app's standalone icons. The stroke every hand-drawn glyph shares is `GLYPH_STROKE`
+in `src/components/glyph.ts`, where `SectionIcons`' own `base`, `ClubLinks`' `GLYPH` and
+a copy typed out by hand in `StadiumView` were merged: each of the three had a comment
+saying it existed so a glyph defined beside its call site could not drift, which only
+holds while there is one of it.
 
 The `NAV_ITEMS` entry carries its own `Icon`, which is *why* `NavBar` never changes — an
 icon looked up by id inside `NavBar` would break that promise the first time anyone added
@@ -2504,7 +2506,7 @@ looking for it. So `/sitemap.xml` is the only route a crawler has to the 19 stad
 pages, exactly as it is for the rounds — the same reason, one section further on.
 
 Club URLs use a **slug** (`/clube/flamengo`), derived from the short name by `slugify` in
-`club-core.ts`. The route carries a `key`, not a code, because the segment may be either:
+`slug-core.ts`. The route carries a `key`, not a code, because the segment may be either:
 `findClub` resolves a slug first and then a raw code, so `/clube/1783` — published before
 slugs existed — still works. The seed generator rejects duplicate slugs the same way it
 rejects duplicate codes and names; `atletico-mg` and `athletico-pr` differ by one letter
@@ -2942,7 +2944,7 @@ without opening it.
 
 `src/data/club-wikipedia.ts` holds each club's article on the **Portuguese**
 Wikipedia, hand-maintained for the same reason. It stores the title alone
-("Sociedade Esportiva Palmeiras"); `wikipediaUrl` in `club-core.ts` builds the
+("Sociedade Esportiva Palmeiras"); `wikipediaUrl` in `wikipedia-core.ts` builds the
 address. The title is not derivable from data the app holds — `name` is the
 provider's abbreviation ("SE Palmeiras"), `shortName` the popular name, and the
 article sits at the full legal one, with the club's own spelling ("Foot-Ball",
@@ -4917,15 +4919,21 @@ enforces rather than early and carved-out.
   Note these constants are plain strings, not functions taking a colour. Tailwind
   extracts class names by scanning source text, so `hover:bg-${role}/8` generates no CSS
   at all. Write a second constant rather than making one dynamic.
-- **A club's external links live in `ClubLinks`** once they have more than one
-  call site. `WikipediaLink` owns the whole anchor — glyph, label, `target`,
-  `rel` and the screen-reader suffix — because those last three are what drift
-  when a link is copied: a second copy missing `rel="noopener"` is a real defect
-  that looks identical on the page. `GLYPH` holds the shared mark attributes, so
-  an icon defined in `ClubView` cannot drift from one defined there. The other
-  three marks stay local to `ClubView` because they still have one call site
-  each; that is the rule, not an inconsistency — the Wikipédia mark moved out the
-  moment the match page became its second caller.
+- **A link that leaves the app is `ExternalLink`**, and a club's links are built
+  on it in `ClubLinks` once they have more than one call site. `ExternalLink`
+  owns `target`, `rel` and the "(abre em nova aba)" suffix — the parts that
+  drift when an anchor is copied: a copy missing `rel="noopener"` is a real
+  defect that looks identical on the page, and until it existed those three were
+  written by hand in a dozen places. `WikipediaLink` owns the rest of its anchor:
+  glyph, label and the subject the suffix names. **The facades are the
+  exception**, and deliberately: the video cards in `ClubVideos`, the "Também
+  por" row in `MatchHighlights` and the post cards in `PlayerPosts` play in place
+  on a plain click, so "abre em nova aba" would be false of them and they write
+  their own anchor. `GLYPH` in `src/components/glyph.ts` holds the shared mark
+  attributes, so an icon defined in `ClubView` cannot drift from one defined
+  anywhere else. `ClubView`'s own marks stay local because they still have one
+  call site each; that is the rule, not an inconsistency — the Wikipédia mark
+  moved out the moment the match page became its second caller.
 - **A match's status is `StatusChip`.** Both the fixture list and the match page used
   to carry their own copy of the label map *and* the colour map. Two copies of a lookup
   table is how a new status renders in one place and blank in the other.

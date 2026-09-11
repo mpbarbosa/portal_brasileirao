@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 
-import { instagramPostEmbedUrl, instagramPostUrl } from "@/club-core";
+import { instagramPostEmbedUrl, instagramPostUrl } from "@/instagram-core";
 import { InstagramGlyph } from "@/src/components/ClubLinks";
+import { ExternalLink } from "@/src/components/ExternalLink";
 import { FOCUS_RING, LINK_UNDERLINE, STATE_LAYER } from "@/src/components/interaction";
 import { isPlainClick } from "@/src/components/plainClick";
 import type { PlayerPost } from "@/src/types";
@@ -190,16 +191,14 @@ export function PlayerPosts({ posts, playerName }: { posts: PlayerPost[]; player
             {open === post.code ? (
               <div className="space-y-2">
                 <PostFrame post={post} />
-                <a
+                <ExternalLink
                   href={href}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                  suffix={`publicação de @${post.account}`}
                   className={`inline-flex min-h-12 items-center text-body-small ${LINK_UNDERLINE}`}
                 >
                   <InstagramGlyph />
                   Abrir no Instagram
-                  <span className="sr-only"> — publicação de @{post.account} (abre em nova aba)</span>
-                </a>
+                </ExternalLink>
               </div>
             ) : (
               <a

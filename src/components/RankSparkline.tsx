@@ -45,6 +45,37 @@ interface RankSparklineProps {
 }
 
 /**
+ * The two ends of a campanha, in words, for under a page-size mark.
+ *
+ * The drawing carries no axis, so its ends are named in text — which is also the
+ * only version a screen reader gets. Here because the **Partida** and the
+ * **Painel** each wrote it out, and the two copies computed the closing round
+ * two ways: one from the club's own last entry and one from the division's.
+ * The entry's own round is the honest pairing, since it is the round that
+ * position was held at. Spacing is the caller's.
+ */
+export function CampaignEnds({
+  entries,
+  className = "",
+}: {
+  entries: RankAtRound[];
+  className?: string;
+}) {
+  const first = entries[0];
+  const last = entries[entries.length - 1];
+  if (!first || !last) return null;
+
+  return (
+    <p className={`flex justify-between text-body-small tabular-nums text-ink-faint ${className}`}>
+      <span>{first.position}º · 1ª rodada</span>
+      <span>
+        {last.position}º · {last.round}ª rodada
+      </span>
+    </p>
+  );
+}
+
+/**
  * A club's campanha: its position after every round, drawn as a line or as a
  * column of bars — the reader's choice (`CampaignPlotToggle`), and one choice
  * for the whole app rather than one per page. `App` owns it; all three callers

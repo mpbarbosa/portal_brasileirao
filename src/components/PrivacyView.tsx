@@ -1,3 +1,4 @@
+import { ExternalLink } from "@/src/components/ExternalLink";
 import { BACK_LINK, LINK_UNDERLINE } from "@/src/components/interaction";
 import { Surface } from "@/src/components/Surface";
 
@@ -97,15 +98,12 @@ export function PrivacyView({ onBack }: { onBack: () => void }) {
       <p className="mt-1 text-body-medium text-ink-muted">
         Este é um projeto independente, sem vínculo com a CBF ou com os clubes.
         Para qualquer questão sobre os seus dados, abra uma issue no{" "}
-        <a
+        <ExternalLink
           href="https://github.com/mpbarbosa/portal_brasileirao/issues"
-          target="_blank"
-          rel="noopener noreferrer"
           className={LINK_UNDERLINE}
         >
           repositório do projeto
-          <span className="sr-only"> (abre em nova aba)</span>
-        </a>
+        </ExternalLink>
         .
       </p>
     </section>

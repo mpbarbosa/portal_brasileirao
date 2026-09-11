@@ -8,6 +8,7 @@
  * `/clube/flamengo` would unfurl as the generic site name.
  */
 import { findClub, ofClub, ofClubs } from "@/club-core";
+import { countPhrase } from "@/count-core";
 import { findMatch } from "@/match-core";
 import { hasScore } from "@/matches-core";
 import type { Route } from "@/route-core";
@@ -105,9 +106,8 @@ const clubDescription = (club: Club, standings: StandingsRow[] | undefined): str
   if (!row) return `Jogos, elenco e artilheiros ${ofClub(club)} no Brasileirão Série A.`;
 
   return (
-    `${club.shortName}: ${row.position}º lugar com ${row.points} ` +
-    `${row.points === 1 ? "ponto" : "pontos"} em ${row.played} ` +
-    `${row.played === 1 ? "jogo" : "jogos"} no Brasileirão Série A.`
+    `${club.shortName}: ${row.position}º lugar com ${countPhrase(row.points, "ponto", "pontos")} ` +
+    `em ${countPhrase(row.played, "jogo", "jogos")} no Brasileirão Série A.`
   );
 };
 

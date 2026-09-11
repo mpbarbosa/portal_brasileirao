@@ -1,11 +1,9 @@
+import { countLabel } from "@/count-core";
 import { nicknameLabel, playerNickname } from "@/player-core";
 import { LINK_UNDERLINE } from "@/src/components/interaction";
 import { TableScroller } from "@/src/components/TableScroller";
 import { PLAYER_NICKNAMES } from "@/src/data/player-nicknames";
 import type { Scorer } from "@/src/types";
-
-/** Null means the upstream did not report the figure — not that it is zero. */
-const count = (value: number | null) => (value === null ? "—" : String(value));
 
 interface ScorersTableProps {
   rows: Scorer[];
@@ -80,13 +78,13 @@ export function ScorersTable({ rows, onSelectPlayer }: ScorersTableProps) {
                 </td>
                 <td className="px-2 py-2 text-right font-semibold tabular-nums">{row.goals}</td>
                 <td className="px-2 py-2 text-right tabular-nums text-ink-muted">
-                  {count(row.assists)}
+                  {countLabel(row.assists)}
                 </td>
                 <td className="px-2 py-2 text-right tabular-nums text-ink-muted">
-                  {count(row.penalties)}
+                  {countLabel(row.penalties)}
                 </td>
                 <td className="px-2 py-2 text-right tabular-nums text-ink-muted">
-                  {count(row.playedMatches)}
+                  {countLabel(row.playedMatches)}
                 </td>
               </tr>
               );

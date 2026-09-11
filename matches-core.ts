@@ -38,11 +38,19 @@ export const hasScore = (
 ): match is Match & { homeGoals: number; awayGoals: number } =>
   match.homeGoals !== null && match.awayGoals !== null;
 
-/** Chronological within a round; invalid kickoff strings sort last. */
-const kickoffValue = (match: Match): number => {
+/**
+ * Kickoff as an instant, or null when the string is not a date we can use.
+ *
+ * Exported because `live-core.ts` and `next-match-core.ts` each carried an
+ * identical private copy of it.
+ */
+export const kickoffAt = (match: Match): number | null => {
   const parsed = Date.parse(match.kickoff);
-  return Number.isNaN(parsed) ? Number.POSITIVE_INFINITY : parsed;
+  return Number.isNaN(parsed) ? null : parsed;
 };
+
+/** Chronological within a round; invalid kickoff strings sort last. */
+const kickoffValue = (match: Match): number => kickoffAt(match) ?? Number.POSITIVE_INFINITY;
 
 export const compareByKickoff = (a: Match, b: Match): number =>
   kickoffValue(a) - kickoffValue(b) || a.id.localeCompare(b.id);

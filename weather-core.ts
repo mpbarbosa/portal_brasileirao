@@ -20,6 +20,7 @@
  * the data does not support. Current conditions are true when they are read, and
  * `readAt` says when that was.
  */
+import { finiteNumber } from "@/narrow-core";
 import type { WeatherKind, WeatherSnapshot } from "@/src/types";
 
 export const OPEN_METEO_BASE_URL = "https://api.open-meteo.com/v1/forecast";
@@ -114,9 +115,6 @@ export const describeWeather = (code: number): { label: string; kind: WeatherKin
  *  from a shrugged one. Used by the test that keeps the table honest. */
 export const isKnownWeatherCode = (code: number): boolean => code in WMO;
 
-const finite = (value: unknown): number | null =>
-  typeof value === "number" && Number.isFinite(value) ? value : null;
-
 /**
  * Narrow Open-Meteo's payload into a `WeatherSnapshot`.
  *
@@ -133,10 +131,10 @@ export const parseWeather = (payload: unknown, readAt: string): WeatherSnapshot 
   if (typeof current !== "object" || current === null) return null;
   const c = current as Record<string, unknown>;
 
-  const temperature = finite(c.temperature_2m);
+  const temperature = finiteNumber(c.temperature_2m);
   if (temperature === null) return null;
 
-  const code = finite(c.weather_code);
+  const code = finiteNumber(c.weather_code);
   const described = describeWeather(code ?? -1);
 
   const snapshot: WeatherSnapshot = {
@@ -146,14 +144,14 @@ export const parseWeather = (payload: unknown, readAt: string): WeatherSnapshot 
     // `is_day` arrives as 1/0 rather than a boolean, and absent means day. It
     // rides along because a clear sky is drawn differently after dark — the
     // only thing darkness changes, since "céu limpo" is true at midnight.
-    day: finite(c.is_day) !== 0,
+    day: finiteNumber(c.is_day) !== 0,
     readAt,
   };
-  const feelsLike = finite(c.apparent_temperature);
+  const feelsLike = finiteNumber(c.apparent_temperature);
   if (feelsLike !== null) snapshot.feelsLike = feelsLike;
-  const humidity = finite(c.relative_humidity_2m);
+  const humidity = finiteNumber(c.relative_humidity_2m);
   if (humidity !== null) snapshot.humidity = humidity;
-  const wind = finite(c.wind_speed_10m);
+  const wind = finiteNumber(c.wind_speed_10m);
   if (wind !== null) snapshot.windSpeed = wind;
   return snapshot;
 };

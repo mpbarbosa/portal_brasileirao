@@ -1,10 +1,13 @@
-import { clubKey, wikipediaUrl } from "@/club-core";
-import { formatRoute } from "@/route-core";
+import { wikipediaUrl } from "@/wikipedia-core";
 import { ClubCrest } from "@/src/components/ClubCrest";
+import { ClubPageLink } from "@/src/components/ClubPageLink";
+import { ExternalLink } from "@/src/components/ExternalLink";
+import { NotFoundScreen } from "@/src/components/NotFoundScreen";
+import { GLYPH } from "@/src/components/glyph";
 import { BACK_LINK, LINK_UNDERLINE } from "@/src/components/interaction";
-import { isPlainClick } from "@/src/components/plainClick";
 import { MatchList } from "@/src/components/MatchList";
 import { StadiumWeather } from "@/src/components/StadiumWeather";
+import { StatTile } from "@/src/components/StatTile";
 import { Surface } from "@/src/components/Surface";
 import {
   capacityLabel,
@@ -37,31 +40,18 @@ interface StadiumViewProps {
   onSelectClub?: (key: string) => void;
 }
 
-const stat = (label: string, value: string) => (
-  <Surface key={label} filled className="px-3 py-2">
-    <p className="text-body-small text-ink-faint">{label}</p>
-    <p className="font-semibold tabular-nums">{value}</p>
-  </Surface>
-);
-
 /**
  * An outlined stadium: a bowl seen from the side. Local to this file for the
- * reason `ClubView` keeps its own marks — one call site — and monochrome on
- * `currentColor` so it needs nothing of its own in either theme.
+ * reason `ClubView` keeps its own marks — one call site — and drawn from
+ * `GLYPH`, so it cannot drift from the marks beside every other link.
+ *
+ * It used to be called `WikipediaGlyph`, the name `ClubLinks` gives its open
+ * book, while drawing a stadium and typing the attribute bag out by hand: two
+ * glyphs under one name, and a third copy of the attributes.
  */
-function WikipediaGlyph() {
+function StadiumGlyph() {
   return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={2}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden
-      focusable={false}
-      className="mr-1 inline-block h-[1em] w-[1em] align-[-0.125em]"
-    >
+    <svg {...GLYPH}>
       <path d="M4 7h16" />
       <path d="M7 7v10" />
       <path d="M17 7v10" />
@@ -74,7 +64,7 @@ function WikipediaGlyph() {
 /**
  * The ground itself.
  *
- * Local to this file, like `WikipediaGlyph` above and for the same stated
+ * Local to this file, like `StadiumGlyph` above and for the same stated
  * reason: one call site. It moves into `src/components/` the day a second view
  * shows a stadium photograph, not before.
  *
@@ -114,23 +104,13 @@ function StadiumPhotoFigure({ slug, photo }: { slug: string; photo: StadiumPhoto
       </Surface>
       <figcaption className="mt-1.5 text-body-small text-ink-muted">
         Foto:{" "}
-        <a
-          href={stadiumPhotoPage(photo)}
-          target="_blank"
-          rel="noopener noreferrer"
-          className={LINK_UNDERLINE}
-        >
+        <ExternalLink href={stadiumPhotoPage(photo)} suffix="a foto no Wikimedia Commons" className={LINK_UNDERLINE}>
           {photo.credit}
-        </a>
+        </ExternalLink>
         {" · "}
-        <a
-          href={photo.licenseUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className={LINK_UNDERLINE}
-        >
+        <ExternalLink href={photo.licenseUrl} suffix="a licença" className={LINK_UNDERLINE}>
           {photo.license}
-        </a>
+        </ExternalLink>
         {" · via Wikimedia Commons"}
         {/* No stadium name here on purpose. The heading two elements up already
             gave it, and pt-BR would need the article agreed per ground — "da
@@ -169,16 +149,7 @@ export function StadiumView({
   const stadium = findStadium(stadiums, stadiumKey);
 
   if (!stadium) {
-    return (
-      <>
-        <button type="button" onClick={onBack} className={BACK_LINK}>
-          ← Voltar
-        </button>
-        <p className="mt-6 text-body-medium text-ink-muted">
-          {loading ? "Carregando página…" : "Estádio não encontrado."}
-        </p>
-      </>
-    );
+    return <NotFoundScreen onBack={onBack} loading={loading} missingText="Estádio não encontrado." />;
   }
 
   const fixtures = stadiumMatches(matches, stadium.slug);
@@ -202,16 +173,10 @@ export function StadiumView({
         )}
         {article && (
           <p className="mt-0.5 text-body-medium">
-            <a
-              href={article}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={LINK_UNDERLINE}
-            >
-              <WikipediaGlyph />
+            <ExternalLink href={article} suffix="artigo sobre o estádio" className={LINK_UNDERLINE}>
+              <StadiumGlyph />
               Wikipédia
-              <span className="sr-only"> — artigo sobre o estádio (abre em nova aba)</span>
-            </a>
+            </ExternalLink>
           </p>
         )}
       </header>
@@ -220,8 +185,10 @@ export function StadiumView({
 
       {(capacity || stadium.opened !== undefined) && (
         <div className="mt-4 grid grid-cols-2 gap-2">
-          {capacity && stat("Capacidade", capacity)}
-          {stadium.opened !== undefined && stat("Inaugurado", String(stadium.opened))}
+          {capacity && <StatTile label="Capacidade" value={capacity} />}
+          {stadium.opened !== undefined && (
+            <StatTile label="Inaugurado" value={String(stadium.opened)} />
+          )}
         </div>
       )}
 
@@ -234,20 +201,10 @@ export function StadiumView({
             {stadium.homeClubs.map((club) => (
               <Surface as="li" key={club.code} filled className="px-3 py-2">
                 {onSelectClub ? (
-                  <a
-                    href={formatRoute({ section: "clube", key: clubKey(club) })}
-                    onClick={(event) => {
-                      // Let the browser handle modified clicks, so middle-click
-                      // and "open in new tab" still behave.
-                      if (!isPlainClick(event)) return;
-                      event.preventDefault();
-                      onSelectClub(clubKey(club));
-                    }}
-                    className={`flex items-center gap-2 ${LINK_UNDERLINE}`}
-                  >
+                  <ClubPageLink club={club} onSelectClub={onSelectClub} className="flex items-center gap-2">
                     <ClubCrest club={club} />
                     {club.shortName}
-                  </a>
+                  </ClubPageLink>
                 ) : (
                   <span className="flex items-center gap-2">
                     <ClubCrest club={club} />

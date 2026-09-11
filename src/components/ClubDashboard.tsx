@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 
 import { clubKey, findClub, standingFor, videosFor } from "@/club-core";
+import { countNoun } from "@/count-core";
 import { candlesFor, computeRankCandles, summariseCandles } from "@/rank-candles-core";
 import { lastRecordedRound, lastRoundWithResult } from "@/rank-history-core";
 import { formatRoute } from "@/route-core";
@@ -11,12 +12,13 @@ import { ClubCrest } from "@/src/components/ClubCrest";
 import { ClubProfile } from "@/src/components/ClubProfile";
 import { ClubVideos } from "@/src/components/ClubVideos";
 import { CLUB_VIDEOS } from "@/src/data/club-videos";
-import { StatTile } from "@/src/components/ClubView";
+import { StatTile } from "@/src/components/StatTile";
 import { BACK_LINK, LINK_UNDERLINE } from "@/src/components/interaction";
 import { isPlainClick } from "@/src/components/plainClick";
 import { CandlesKey, RankCandles } from "@/src/components/RankCandles";
 import { SEASON_EVENTS } from "@/src/data/events";
-import { RankSparkline } from "@/src/components/RankSparkline";
+import { NotFoundScreen } from "@/src/components/NotFoundScreen";
+import { CampaignEnds, RankSparkline } from "@/src/components/RankSparkline";
 import { Surface } from "@/src/components/Surface";
 import type { Club, ClubCode, ClubRankHistory, Match, StandingsRow } from "@/src/types";
 
@@ -133,14 +135,12 @@ export function ClubDashboard({
 
   if (!club) {
     return (
-      <>
-        <button type="button" onClick={onBack} className={BACK_LINK}>
-          ← Voltar
-        </button>
-        <p className="mt-4 text-body-medium text-ink-muted" role={loading ? "status" : undefined}>
-          {loading ? "Carregando painel…" : "Clube não encontrado."}
-        </p>
-      </>
+      <NotFoundScreen
+        onBack={onBack}
+        loading={loading}
+        loadingText="Carregando painel…"
+        missingText="Clube não encontrado."
+      />
     );
   }
 
@@ -254,14 +254,7 @@ export function ClubDashboard({
               size="page"
               kind={plotKind}
             />
-            {/* The drawing carries no axis, so the ends are named in text —
-                which is also the only version a screen reader gets. */}
-            <p className="mt-2 flex justify-between text-body-small tabular-nums text-ink-faint">
-              <span>{campaign[0].position}º · 1ª rodada</span>
-              <span>
-                {campaign[campaign.length - 1].position}º · {campaignLastRound}ª rodada
-              </span>
-            </p>
+            <CampaignEnds entries={campaign} className="mt-2" />
           </Surface>
         </section>
       )}
@@ -396,13 +389,13 @@ export function ClubDashboard({
                   is the lack of one. */}
               {summary.rise && (
                 <Fact term="Maior subida">
-                  {summary.rise.places} {summary.rise.places === 1 ? "posição" : "posições"} ·{" "}
+                  {summary.rise.places} {countNoun(summary.rise.places, "posição", "posições")} ·{" "}
                   {summary.rise.round}ª rodada
                 </Fact>
               )}
               {summary.fall && (
                 <Fact term="Maior queda">
-                  {summary.fall.places} {summary.fall.places === 1 ? "posição" : "posições"} ·{" "}
+                  {summary.fall.places} {countNoun(summary.fall.places, "posição", "posições")} ·{" "}
                   {summary.fall.round}ª rodada
                 </Fact>
               )}
