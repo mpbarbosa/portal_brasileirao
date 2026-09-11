@@ -9,8 +9,8 @@ import express from "express";
 
 import { CircuitBreaker } from "@/circuit-breaker-core";
 import {
-  LIVE_MATCHES_CACHE_TTL_MS,
-  MATCHES_CACHE_TTL_MS,
+  fillStep,
+  matchesCacheTtl,
   PLAYER_CACHE_TTL_MS,
   SCORERS_CACHE_TTL_MS,
   SQUADS_CACHE_TTL_MS,
@@ -68,7 +68,6 @@ import {
 } from "@/matches-core";
 import { injectMeta, pageMeta, type MetaContext } from "@/page-meta-core";
 import { decodable, namesSubject, parseRoute } from "@/route-core";
-import { hasLiveMatch } from "@/live-core";
 import { buildTrafficDashboard, selectSnapshotFiles } from "@/traffic-report-core";
 import { buildStadiums } from "@/venue-core";
 import { buildWeatherUrl, parseWeather } from "@/weather-core";
@@ -319,7 +318,7 @@ const fetchFromProvider = async <T>(url: string): Promise<T> => {
 /**
  * Cache-then-network with a breaker in front: a warm entry short-circuits, an
  * open breaker skips the call entirely, and any failure degrades to the seed
- * rather than surfacing a 500.
+ * rather than surfacing a 500. The order is `fillStep`'s; this does the I/O.
  */
 const loadCached = async <T>(
   key: string,
@@ -329,18 +328,13 @@ const loadCached = async <T>(
 ): Promise<ApiEnvelope<T>> => {
   const now = Date.now();
 
-  if (!providerEnabled()) {
-    return seedEnvelope(seed(), now);
-  }
-
-  const hit = cache.read<T>(key, now);
-  if (hit) {
-    return envelope(hit.value, "football-data", hit.storedAt);
-  }
-
-  if (breaker.isOpen(now)) {
-    return seedEnvelope(seed(), now);
-  }
+  const step = fillStep({
+    enabled: providerEnabled(),
+    read: () => cache.read<T>(key, now),
+    breakerOpen: () => breaker.isOpen(now),
+  });
+  if (step.kind === "local") return seedEnvelope(seed(), now);
+  if (step.kind === "cached") return envelope(step.entry.value, "football-data", step.entry.storedAt);
 
   try {
     const value = await fetchValue();
@@ -498,27 +492,18 @@ const rememberMatches = (matches: Match[]): void => {
   }
 };
 
-/** Fixture lists get the short TTL only while something is actually live —
- *  judged by `hasLiveMatch`, the predicate the client's refresh rate reads, so
- *  the server's cache and the page's poll cannot disagree about what live is. */
-const matchesTtl = (matches: Match[]): number =>
-  hasLiveMatch(matches) ? LIVE_MATCHES_CACHE_TTL_MS : MATCHES_CACHE_TTL_MS;
-
+/** `loadCached`'s order — `fillStep` — around a fill that also merges against
+ *  the remembered fixtures, which is why it is not a call to `loadCached`. */
 const loadMatches = async (): Promise<ApiEnvelope<MatchesPayload>> => {
   const now = Date.now();
 
-  if (!providerEnabled()) {
-    return seedEnvelope(seedMatchesPayload(), now);
-  }
-
-  const hit = cache.read<MatchesPayload>("matches", now);
-  if (hit) {
-    return envelope(hit.value, "football-data", hit.storedAt);
-  }
-
-  if (breaker.isOpen(now)) {
-    return seedEnvelope(seedMatchesPayload(), now);
-  }
+  const step = fillStep({
+    enabled: providerEnabled(),
+    read: () => cache.read<MatchesPayload>("matches", now),
+    breakerOpen: () => breaker.isOpen(now),
+  });
+  if (step.kind === "local") return seedEnvelope(seedMatchesPayload(), now);
+  if (step.kind === "cached") return envelope(step.entry.value, "football-data", step.entry.storedAt);
 
   try {
     const raw = await fetchFromProvider<MatchesResponse>(matchesUrl());
@@ -559,7 +544,7 @@ const loadMatches = async (): Promise<ApiEnvelope<MatchesPayload>> => {
     };
 
     breaker.recordSuccess();
-    const entry = cache.write("matches", payload, matchesTtl(matches), Date.now());
+    const entry = cache.write("matches", payload, matchesCacheTtl(matches), Date.now());
     return envelope(entry.value, "football-data", entry.storedAt);
   } catch (cause) {
     breaker.recordFailure(Date.now());
@@ -1433,16 +1418,24 @@ app.get("/api/stadium-weather/:slug", async (req, res) => {
 
   const now = Date.now();
   const point = facts.coordinates;
-  if (!point || WEATHER_DISABLED) {
-    res.json(envelope<WeatherSnapshot | null>(null, "fallback", now));
+  const key = `weather:${slug}`;
+  const step = fillStep<WeatherSnapshot | null>({
+    enabled: Boolean(point) && !WEATHER_DISABLED,
+    read: () => cache.read<WeatherSnapshot | null>(key, now),
+    // No breaker: one upstream's outage must not open the other's, and a
+    // fifteen-minute cache already caps what a hard-down Open-Meteo costs.
+    breakerOpen: () => false,
+  });
+
+  if (step.kind === "cached") {
+    res.set("Cache-Control", "public, max-age=300");
+    res.json(envelope(step.entry.value, "open-meteo", step.entry.storedAt));
     return;
   }
-
-  const key = `weather:${slug}`;
-  const hit = cache.read<WeatherSnapshot | null>(key, now);
-  if (hit) {
-    res.set("Cache-Control", "public, max-age=300");
-    res.json(envelope(hit.value, "open-meteo", hit.storedAt));
+  // `!point` is already `local`; it is restated so the compiler knows the fetch
+  // below has a coordinate to ask about.
+  if (step.kind === "local" || !point) {
+    res.json(envelope<WeatherSnapshot | null>(null, "fallback", now));
     return;
   }
 
@@ -1460,8 +1453,7 @@ app.get("/api/stadium-weather/:slug", async (req, res) => {
     res.set("Cache-Control", "public, max-age=300");
     res.json(envelope(snapshot, "open-meteo", now));
   } catch {
-    // No breaker: one upstream's outage must not open the other's, and a
-    // fifteen-minute cache already caps what a hard-down Open-Meteo costs.
+    // No breaker to tell — see `breakerOpen` above.
     res.json(envelope<WeatherSnapshot | null>(null, "fallback", now));
   }
 });

@@ -1306,6 +1306,15 @@ two modules because they answer two questions, and one first sentence naming bot
 the tell. Both take `now` as a parameter instead of reading the clock, so expiry and
 recovery are tested without sleeping.
 
+**The order a fill takes is `fillStep` in `cache-core.ts`, and `server.ts` only does the
+I/O around it.** Switched off → local; warm entry → served; breaker open → local; else
+fetch. It was written out three times — `loadCached`, `loadMatches` around its merge, and
+`/api/stadium-weather/:slug` — and the order is the rule: a warm entry is served even
+while the breaker is open, and a switched-off upstream never reads its own cache. The
+weather route passes `breakerOpen: () => false`, which is the "no circuit breaker"
+decision above written at the call site rather than implied by an absent branch. The
+fixture TTL is `matchesCacheTtl` beside the constants it chooses between.
+
 The free tier allows **10 requests/minute** — caching is what makes it viable in
 production, not a nicety. Standings cache 60s, fixtures 60s, dropping to 15s while any
 match is LIVE, capping the app at roughly 5 upstream calls/minute at any traffic level.

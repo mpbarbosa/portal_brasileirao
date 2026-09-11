@@ -141,8 +141,11 @@ without re-running the whole check.
   test.** The cross-origin check in front of the state-changing account routes is
   `isSameOriginRequest` (`session-core.ts`); which routes load data before their
   shell renders is `namesSubject` (`route-core.ts`), an exhaustive switch; the
-  fixture TTL reads `hasLiveMatch`, the predicate the client's refresh rate
-  already used; and `/api/matches` and `/api/players/:id` validate through
+  fixture TTL is `matchesCacheTtl` (`cache-core.ts`), which reads `hasLiveMatch`,
+  the predicate the client's refresh rate already used; the order every cached
+  fill takes — switched off, warm entry, open breaker, network — is `fillStep`
+  beside it, called by `loadCached`, `loadMatches` and the stadium-weather route
+  (checked by the change that moved it); and `/api/matches` and `/api/players/:id` validate through
   `parseRoundParam` and `isPersonId`. `firstHeaderValue` moved to `seo-core.ts`
   beside `resolveOrigin`, its one remaining consumer. `decodable` moved to
   `route-core.ts`, beside `pathSegments` — which `pageStatus` now shares rather
