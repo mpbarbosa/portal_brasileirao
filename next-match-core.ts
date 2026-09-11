@@ -37,7 +37,7 @@
  * status rather than on a clock, so it did not have to become this.
  */
 import { clubMatches } from "@/club-core";
-import { LATE_GRACE_MS } from "@/live-core";
+import { DAY, LATE_GRACE_MS } from "@/live-core";
 import { kickoffAt } from "@/matches-core";
 import type { ClubCode, Match } from "@/src/types";
 
@@ -108,9 +108,6 @@ export const clubFocus = (
 
   return next ? { kind: "next", match: next } : { kind: "none" };
 };
-
-/** A day, for the imminence test below. */
-const DAY = 24 * 60 * 60 * 1000;
 
 /**
  * Whether the fixture is close enough that a reader would want to be told now.

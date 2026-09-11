@@ -19,7 +19,8 @@ import type { Match } from "@/src/types";
 
 const MINUTE = 60_000;
 const HOUR = 60 * MINUTE;
-const DAY = 24 * HOUR;
+/** A day in milliseconds. Exported for `next-match-core.ts`, which carried its own. */
+export const DAY = 24 * HOUR;
 
 /**
  * How long a fixture keeps its place under "A seguir" after its kickoff
