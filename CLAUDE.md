@@ -4696,6 +4696,27 @@ enforces rather than early and carved-out.
   the **gap to the next column** rather than about any column's width — which is what
   `the campanha column is no wider than the mark it holds` measures, at a desktop width,
   since a narrow screen sits near the table's `min-w` and has little surplus to misplace.
+  **The scroll itself was invisible, and `TableScroller` is what says it exists.** On a
+  reader's phone (a 720px-wide capture, 2026-09-11) the screen edge fell exactly on
+  Campanha's right edge, so the visible half read as the whole table and J, V, E, D, SG
+  and % were never found. Where the edge lands depends on the device width — at 360px in
+  the suite it cuts Campanha — which is why no hint may rely on a column showing cut. Three signs, each driven by
+  `useScrollEdges`: a fade at the right edge and a chevron in the header row while
+  there is more to the right, and a shadow along the frozen pair once the reader has
+  moved. Four things about it are load-bearing. **The overlays sit outside the Surface**,
+  in a wrapper, because the Surface is the scroll container and anything inside it
+  scrolls away. **The chevron steps by a column, never by pixels** — it
+  aligns the column cut off at the right edge with the frozen edge. The numbers slide
+  under Clube, so any pixel step carries some column past that edge without it ever
+  being whole on screen; the first version stepped by the visible strip with a floor,
+  and at 380px the floor slid Campanha 65px under Clube (measured by the spec's own
+  failure, 239.4 against 174.5). It measures the sticky cells
+  rather than taking a constant, since `STICKY_CLUB` is `w-0`. **The shadow is a named-group variant
+  (`group-data-[scroll-start]/scroller:after:`), not a prop**, so crossing the edge
+  re-renders the scroller and not twenty rows of sparklines. And **the chevron is
+  `aria-hidden` with `tabIndex={-1}`**: the Surface becomes a focusable, labelled region
+  while it overflows, which is the keyboard path and scrolls both ways; on a screen that
+  fits there is no region, no tab stop and no hint, and a spec asserts that half too.
 - **Elevation comes from the MD3 level scale.** `shadow-level-0` …
   `shadow-level-5`, defined in `src/index.css`. A bare `shadow`, `shadow-lg` or
   `shadow-xl` is a regression, and the gate above catches it. Each level is

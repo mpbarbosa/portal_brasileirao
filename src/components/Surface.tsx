@@ -1,4 +1,4 @@
-import type { ComponentPropsWithoutRef, ElementType, ReactNode } from "react";
+import type { ComponentPropsWithoutRef, ElementType, ReactNode, Ref } from "react";
 
 interface SurfaceProps extends Omit<ComponentPropsWithoutRef<"div">, "className"> {
   children: ReactNode;
@@ -25,6 +25,13 @@ interface SurfaceProps extends Omit<ComponentPropsWithoutRef<"div">, "className"
    * already untyped against the element in the same way.
    */
   href?: string;
+  /**
+   * React 19 passes refs as ordinary props, so no `forwardRef` — it reaches the
+   * element through `...rest` like everything else. Declared because
+   * `ComponentPropsWithoutRef` removes it by name, and `TableScroller` has to
+   * read the scroll position of the Surface it renders.
+   */
+  ref?: Ref<HTMLDivElement>;
 }
 
 /**
