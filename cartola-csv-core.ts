@@ -88,6 +88,32 @@ export const counterValue = (
   return value;
 };
 
+/**
+ * Why a run must not be written when it read fewer rounds than the committed
+ * file already covers — or null when it may be.
+ *
+ * `readSeason` stops at the first round file answering 404, which is right: a gap
+ * must never be skipped. But the committed file's round was never compared with
+ * where it stopped, so a run that met a 404 early — a withdrawn file, a transient
+ * error, a reorganised upstream repository — wrote rounds 1..19 over a file
+ * covering 1..25 and exited 0. Every rate on the Perfil would move back six
+ * rounds and nothing about the output would look wrong.
+ *
+ * **A shorter run is legitimate once a year, at the start of a season, and the
+ * committed file does not record its season** — so that case is an explicit flag
+ * rather than a guess. A null committed round is a first run.
+ */
+export const fewerRoundsRefusal = (
+  read: number,
+  committed: number | null,
+  allowed: boolean,
+): string | null =>
+  committed !== null && read < committed && !allowed
+    ? `This run read ${read} round(s) but the committed file covers ${committed}. ` +
+      "Refusing to write a shorter season over a longer one; if this is a new season, " +
+      "re-run with --allow-fewer-rounds."
+    : null;
+
 function splitRows(text: string): string[][] {
   const rows: string[][] = [];
   let row: string[] = [];

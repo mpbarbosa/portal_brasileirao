@@ -16,6 +16,7 @@
  *
  * Usage:  npx tsx scripts/sync-cartola-scouts.ts
  *         npx tsx scripts/sync-cartola-scouts.ts --season 2026
+ *         npx tsx scripts/sync-cartola-scouts.ts --season 2027 --allow-fewer-rounds  # a new season
  *
  * ## Two properties of the source that decide the whole shape of this script
  *
@@ -53,7 +54,7 @@
  */
 import { existsSync, writeFileSync } from "node:fs";
 
-import { counterValue, parseCsv, type Snapshot } from "@/cartola-csv-core";
+import { counterValue, fewerRoundsRefusal, parseCsv, type Snapshot } from "@/cartola-csv-core";
 import path from "node:path";
 
 import { lastRoundWithResult } from "@/rank-history-core";
@@ -139,6 +140,14 @@ async function main(): Promise<void> {
 
   const snapshots = await readSeason();
   console.log(`Read ${snapshots.length} snapshots for ${season} (rodada 1..${snapshots.length}).`);
+
+  // Before anything is accumulated or written: see `fewerRoundsRefusal`.
+  const refusal = fewerRoundsRefusal(
+    snapshots.length,
+    previousRound,
+    process.argv.includes("--allow-fewer-rounds"),
+  );
+  if (refusal) throw new Error(refusal);
 
   const { totals, history } = accumulate(snapshots);
   validate(totals, history, snapshots.length);

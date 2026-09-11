@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { counterValue, parseCsv } from "@/cartola-csv-core";
+import { counterValue, fewerRoundsRefusal, parseCsv } from "@/cartola-csv-core";
 
 const HEADER = "atletas.atleta_id,atletas.clube.id.full.name,atletas.nome,atletas.jogos_num,G,DS";
 
@@ -60,4 +60,17 @@ test("a present cell that is not a number is refused", () => {
 test("reading a column the record does not have is refused", () => {
   // parseCsv only guarantees the columns it was asked for.
   assert.throws(() => counterValue({ G: "1" }, "DS"), /DS is not a column of this file/);
+});
+
+test("a run that read fewer rounds than the committed file covers is refused", () => {
+  // Rounds 1..19 written over a file covering 1..25, exit 0: the case this closes.
+  assert.match(fewerRoundsRefusal(19, 25, false) ?? "", /read 19 round\(s\) but the committed file covers 25/);
+  assert.match(fewerRoundsRefusal(24, 25, false) ?? "", /--allow-fewer-rounds/);
+});
+
+test("the same round, a later one, a first run and a declared new season all write", () => {
+  assert.equal(fewerRoundsRefusal(25, 25, false), null);
+  assert.equal(fewerRoundsRefusal(26, 25, false), null);
+  assert.equal(fewerRoundsRefusal(3, null, false), null);
+  assert.equal(fewerRoundsRefusal(3, 38, true), null);
 });
