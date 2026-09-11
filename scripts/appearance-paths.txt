@@ -8,6 +8,7 @@ broadcast-core.ts
 campaign-facts-core.ts
 campaign-plot-core.ts
 club-core.ts
+count-core.ts
 escalacao-core.ts
 events-core.ts
 goals-core.ts

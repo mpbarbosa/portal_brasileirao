@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 
+import { countPhrase } from "@/count-core";
 import { ageOn, nicknameLabel, playerNickname } from "@/player-core";
 import { PLAYER_NICKNAMES } from "@/src/data/player-nicknames";
 import { ClubCrest } from "@/src/components/ClubCrest";
@@ -29,9 +30,6 @@ const ageLabel = (player: Player, now: Date): string | null => {
   const age = ageOn(player.dateOfBirth, now);
   return age === null ? null : `${age} anos`;
 };
-
-const plural = (count: number, one: string, many: string) =>
-  `${count} ${count === 1 ? one : many}`;
 
 function SquadPlayer({
   player,
@@ -145,7 +143,7 @@ function SquadPanel({
             <span className="ml-auto text-body-small font-normal text-ink-faint">
               {squad.players.length === 0
                 ? "elenco não informado"
-                : plural(squad.players.length, "jogador", "jogadores")}
+                : countPhrase(squad.players.length, "jogador", "jogadores")}
             </span>
           </h3>
         </summary>
@@ -256,14 +254,14 @@ export function PlayersView({ squads, loading, onSelectPlayer, onSelectClub }: P
             <>Nenhum jogador encontrado para “{query.trim()}”.</>
           ) : (
             <>
-              {plural(totalPlayers(shown), "jogador", "jogadores")} em{" "}
-              {plural(shown.length, "clube", "clubes")}.
+              {countPhrase(totalPlayers(shown), "jogador", "jogadores")} em{" "}
+              {countPhrase(shown.length, "clube", "clubes")}.
             </>
           )
         ) : (
           <>
-            {plural(totalPlayers(squads), "jogador", "jogadores")} em{" "}
-            {plural(squads.length, "clube", "clubes")}. Escolha um clube para ver o elenco.
+            {countPhrase(totalPlayers(squads), "jogador", "jogadores")} em{" "}
+            {countPhrase(squads.length, "clube", "clubes")}. Escolha um clube para ver o elenco.
           </>
         )}
       </p>

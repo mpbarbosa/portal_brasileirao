@@ -1,4 +1,5 @@
 import { brasiliaDay, clubTimeline, eventSpan, scopeLabel, sourceHost } from "@/events-core";
+import { ExternalLink } from "@/src/components/ExternalLink";
 import { LINK_UNDERLINE } from "@/src/components/interaction";
 import { Surface } from "@/src/components/Surface";
 import type { ClubCode, SeasonEvent } from "@/src/types";
@@ -108,16 +109,14 @@ export function SeasonEvents({ events, clubCode, today }: SeasonEventsProps) {
 
               {host && (
                 <p className="mt-0.5 text-body-small">
-                  <a
+                  <ExternalLink
                     href={event.source}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                    suffix="reportagem"
                     className={LINK_UNDERLINE}
                     data-event-source
                   >
                     {host}
-                    <span className="sr-only"> — reportagem (abre em nova aba)</span>
-                  </a>
+                  </ExternalLink>
                 </p>
               )}
             </Surface>

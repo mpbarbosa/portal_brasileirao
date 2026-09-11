@@ -8,6 +8,7 @@ import {
   valueLabel,
   type ProfileRow,
 } from "@/scouts-core";
+import { ExternalLink } from "@/src/components/ExternalLink";
 import { LINK_UNDERLINE } from "@/src/components/interaction";
 import { ProfileScatter, ScatterKey } from "@/src/components/ProfileScatter";
 import { Surface } from "@/src/components/Surface";
@@ -103,14 +104,13 @@ export function ClubProfile({ clubCode }: ClubProfileProps) {
           <ScatterKey className="mt-1.5" />
           <p className="mt-1.5">
             Médias por jogo até a {CLUB_SCOUTS_THROUGH_ROUND}ª rodada. Números de{" "}
-            <a
+            <ExternalLink
               href="https://github.com/henriquepgomide/caRtola"
-              target="_blank"
-              rel="noopener noreferrer"
+              suffix="a fonte dos números"
               className={LINK_UNDERLINE}
             >
               caRtola
-            </a>
+            </ExternalLink>
             .
           </p>
         </div>

@@ -14,6 +14,7 @@
  * keeps for a fact the provider did not send.
  */
 
+import { finiteNumber } from "@/narrow-core";
 import type { Health } from "@/src/types";
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
@@ -22,9 +23,6 @@ const isRecord = (value: unknown): value is Record<string, unknown> =>
 /** A non-empty string, or nothing. `""` is an absent value, not a short one. */
 const text = (value: unknown): string | null =>
   typeof value === "string" && value.trim() !== "" ? value.trim() : null;
-
-const finite = (value: unknown): number | null =>
-  typeof value === "number" && Number.isFinite(value) ? value : null;
 
 /**
  * Narrow an unknown `/api/health` body.
@@ -45,7 +43,7 @@ export const parseHealth = (value: unknown): Health | null => {
     status,
     sha: text(value.sha),
     builtAt: text(value.builtAt),
-    uptime: finite(value.uptime),
+    uptime: finiteNumber(value.uptime),
     provider: text(value.provider),
   };
 };

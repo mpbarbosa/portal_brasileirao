@@ -38,6 +38,7 @@
  */
 import { clubMatches } from "@/club-core";
 import { LATE_GRACE_MS } from "@/live-core";
+import { kickoffAt } from "@/matches-core";
 import type { ClubCode, Match } from "@/src/types";
 
 /**
@@ -65,12 +66,6 @@ export const opponentOf = (match: Match, code: ClubCode): ClubCode =>
 
 /** Whether the followed club is at home — the difference between × and a trip. */
 export const isHome = (match: Match, code: ClubCode): boolean => match.homeCode === code;
-
-/** Kickoff as an instant, or null when the string is not a date we can use. */
-const kickoffAt = (match: Match): number | null => {
-  const parsed = Date.parse(match.kickoff);
-  return Number.isNaN(parsed) ? null : parsed;
-};
 
 /**
  * The one fixture worth putting in front of somebody who follows this club.

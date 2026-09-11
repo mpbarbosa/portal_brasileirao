@@ -4,8 +4,9 @@
  * The **escalação**: who each club put on the pitch, and who sat on the bench.
  *
  * Pure, like every other `*-core.ts` — CBF's arrays in, our rows out. The
- * fetching is `scripts/sync-escalacoes.ts`'s problem, and production never calls
- * CBF; the rule `goals-core.ts` states applies here unchanged.
+ * fetching is `scripts/sync-goals.ts`'s problem — the same run that writes
+ * `goals.ts`, since one request per match carries both — and production never
+ * calls CBF; the rule `goals-core.ts` states applies here unchanged.
  *
  * **Why this exists at all, when the app already has a squad per club.**
  * `squads.ts` is an *elenco* — everyone under contract. An escalação is a claim

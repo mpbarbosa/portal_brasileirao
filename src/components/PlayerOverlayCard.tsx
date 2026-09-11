@@ -17,7 +17,10 @@ import {
   positionLabel,
 } from "@/player-core";
 import { Button } from "@/src/components/Button";
-import { GLYPH, InstagramLink, WikipediaLink } from "@/src/components/ClubLinks";
+import { countLabel } from "@/count-core";
+import { InstagramLink, WikipediaLink } from "@/src/components/ClubLinks";
+import { ExternalLink } from "@/src/components/ExternalLink";
+import { GLYPH } from "@/src/components/glyph";
 import { LINK_UNDERLINE } from "@/src/components/interaction";
 import { PlayerPosts } from "@/src/components/PlayerPosts";
 import { PLAYER_INSTAGRAM } from "@/src/data/player-instagram";
@@ -105,9 +108,7 @@ function NewsGlyph() {
  *
  * Local rather than in `ClubLinks` because it has one caller, which is the rule
  * that file states — the Wikipédia anchor moved out the moment the match page
- * became its second. It is one component used twice rather than two anchors, so
- * `target`, `rel` and the screen-reader suffix are written once: a second copy
- * missing `rel="noopener"` is a real defect that looks identical on the page.
+ * became its second. The new-tab contract is `ExternalLink`'s.
  */
 function SearchLink({
   href,
@@ -121,11 +122,10 @@ function SearchLink({
   children: ReactNode;
 }) {
   return (
-    <a href={href} target="_blank" rel="noopener noreferrer" className={LINK_UNDERLINE}>
+    <ExternalLink href={href} suffix={suffix} className={LINK_UNDERLINE}>
       {children}
       {label}
-      <span className="sr-only"> — {suffix} (abre em nova aba)</span>
-    </a>
+    </ExternalLink>
   );
 }
 
@@ -142,8 +142,8 @@ function SearchLink({
  * The place second: `ClubLinks` holds the links a *club* carries, and a mark
  * moves there when it gains a second call site. This one has one and no club
  * has a Sofascore page, so it stays local exactly as the search and news marks
- * below it do. It still takes `GLYPH` from there, so it cannot drift from the
- * marks printed beside it — that is the part that must not be copied.
+ * below it do. It still takes `GLYPH` from `glyph.ts`, so it cannot drift from
+ * the marks printed beside it — that is the part that must not be copied.
  */
 function SofascoreGlyph() {
   return (
@@ -168,16 +168,12 @@ function SofascoreLink({ href }: { href: string | null }) {
   if (!href) return null;
 
   return (
-    <a href={href} target="_blank" rel="noopener noreferrer" className={`truncate ${LINK_UNDERLINE}`}>
+    <ExternalLink href={href} suffix="estatísticas do jogador" className={`truncate ${LINK_UNDERLINE}`}>
       <SofascoreGlyph />
       Sofascore
-      <span className="sr-only"> — estatísticas do jogador (abre em nova aba)</span>
-    </a>
+    </ExternalLink>
   );
 }
-
-const countOrDash = (value: number | null | undefined) =>
-  value === null || value === undefined ? "—" : String(value);
 
 /**
  * Modal card for one player.
@@ -471,9 +467,9 @@ export function PlayerOverlayCard({ player, scorer, onClose }: PlayerOverlayCard
                 numbers rather than the small grey treatment they had. */}
             <dl className="grid grid-cols-4 gap-3">
               <Tile label="Gols" value={String(scorer.goals)} />
-              <Tile label="Assist." value={countOrDash(scorer.assists)} />
-              <Tile label="Pênaltis" value={countOrDash(scorer.penalties)} />
-              <Tile label="Jogos" value={countOrDash(scorer.playedMatches)} />
+              <Tile label="Assist." value={countLabel(scorer.assists)} />
+              <Tile label="Pênaltis" value={countLabel(scorer.penalties)} />
+              <Tile label="Jogos" value={countLabel(scorer.playedMatches)} />
             </dl>
           </section>
         )}
@@ -537,23 +533,13 @@ export function PlayerOverlayCard({ player, scorer, onClose }: PlayerOverlayCard
              crowd the player's name off the card on a phone. */
           <p className="border-t border-outline-variant pt-4 text-body-small text-ink-faint">
             Foto:{" "}
-            <a
-              href={playerPhotoPage(photo)}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={LINK_UNDERLINE}
-            >
+            <ExternalLink href={playerPhotoPage(photo)} suffix="a foto no Wikimedia Commons" className={LINK_UNDERLINE}>
               {photo.credit}
-            </a>
+            </ExternalLink>
             {" · "}
-            <a
-              href={photo.licenseUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={LINK_UNDERLINE}
-            >
+            <ExternalLink href={photo.licenseUrl} suffix="a licença" className={LINK_UNDERLINE}>
               {photo.license}
-            </a>
+            </ExternalLink>
             {" · via Wikimedia Commons"}
           </p>
         )}

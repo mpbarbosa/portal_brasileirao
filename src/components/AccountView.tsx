@@ -2,7 +2,7 @@ import { useRef, useState } from "react";
 
 import { firstName, initials } from "@/account-core";
 import { Button } from "@/src/components/Button";
-import { GLYPH } from "@/src/components/ClubLinks";
+import { GLYPH } from "@/src/components/glyph";
 import {
   BACK_LINK,
   FOCUS_RING,

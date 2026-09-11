@@ -12,7 +12,8 @@
  * fifteen minutes and keeps drifting. A page that says "73'" when the truth is
  * "somewhere in the second half" is worse than one that says "bola rolando".
  */
-import { compareByKickoff } from "@/matches-core";
+import { countPhrase } from "@/count-core";
+import { compareByKickoff, kickoffAt } from "@/matches-core";
 import { countsTowardStandings } from "@/standings-core";
 import type { Match } from "@/src/types";
 
@@ -52,12 +53,6 @@ export interface BoardLimits {
  * the page into the fixture list, which is what `/jogos` already is.
  */
 export const DEFAULT_BOARD_LIMITS: Required<BoardLimits> = { upcoming: 6, recent: 6 };
-
-/** Kickoff as an instant, or null when the string is not a date we can use. */
-const kickoffAt = (match: Match): number | null => {
-  const parsed = Date.parse(match.kickoff);
-  return Number.isNaN(parsed) ? null : parsed;
-};
 
 /** Whether anything is being played. Drives how often the page refetches. */
 export const hasLiveMatch = (matches: Match[]): boolean =>
@@ -101,9 +96,6 @@ export const liveBoard = (
   return { live, upcoming, recent };
 };
 
-const plural = (value: number, one: string, many: string): string =>
-  `${value} ${value === 1 ? one : many}`;
-
 /**
  * The **contagem regressiva** to a kickoff, in words.
  *
@@ -121,15 +113,15 @@ export const countdownLabel = (kickoff: string, now: number): string => {
   if (remaining <= 0) return "Deve começar a qualquer momento";
 
   if (remaining >= DAY) {
-    return `Começa em ${plural(Math.floor(remaining / DAY), "dia", "dias")}`;
+    return `Começa em ${countPhrase(Math.floor(remaining / DAY), "dia", "dias")}`;
   }
 
   const minutes = Math.ceil(remaining / MINUTE);
-  if (minutes < 60) return `Começa em ${plural(minutes, "minuto", "minutos")}`;
+  if (minutes < 60) return `Começa em ${countPhrase(minutes, "minuto", "minutos")}`;
 
   const hours = Math.floor(minutes / 60);
   const rest = minutes % 60;
   return rest === 0
-    ? `Começa em ${plural(hours, "hora", "horas")}`
+    ? `Começa em ${countPhrase(hours, "hora", "horas")}`
     : `Começa em ${hours}h${String(rest).padStart(2, "0")}`;
 };

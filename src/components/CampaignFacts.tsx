@@ -1,9 +1,6 @@
 import { campaignFacts, type CampaignFact } from "@/campaign-facts-core";
-import { clubKey } from "@/club-core";
 import { ClubCrest } from "@/src/components/ClubCrest";
-import { LINK_UNDERLINE } from "@/src/components/interaction";
-import { isPlainClick } from "@/src/components/plainClick";
-import { formatRoute } from "@/route-core";
+import { ClubPageLink } from "@/src/components/ClubPageLink";
 import { Surface } from "@/src/components/Surface";
 import type { Club, ClubRankHistory, StandingsRow } from "@/src/types";
 
@@ -52,17 +49,13 @@ function Fact({
             <li key={holder.clubCode} className="flex min-w-0 items-center gap-1.5 text-body-medium">
               {club && <ClubCrest club={club} size={18} />}
               {club && onSelectClub ? (
-                <a
-                  href={formatRoute({ section: "clube", key: clubKey(club) })}
-                  onClick={(event) => {
-                    if (!isPlainClick(event)) return;
-                    event.preventDefault();
-                    onSelectClub(clubKey(club));
-                  }}
-                  className={`min-w-0 truncate rounded-x-small ${LINK_UNDERLINE}`}
+                <ClubPageLink
+                  club={club}
+                  onSelectClub={onSelectClub}
+                  className="min-w-0 truncate rounded-x-small"
                 >
                   {holder.shortName}
-                </a>
+                </ClubPageLink>
               ) : (
                 // A club the payload does not carry keeps its name and loses
                 // the link, rather than the fact losing the club.

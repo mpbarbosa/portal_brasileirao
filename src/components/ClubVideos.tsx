@@ -6,6 +6,7 @@ import {
   videoThumbnailUrl,
   videoWatchUrl,
 } from "@/club-core";
+import { ExternalLink } from "@/src/components/ExternalLink";
 import { FOCUS_RING, LINK_UNDERLINE } from "@/src/components/interaction";
 import { isPlainClick } from "@/src/components/plainClick";
 import type { ClubVideo } from "@/src/types";
@@ -329,16 +330,14 @@ export function ClubVideos({ videos, clubName }: { videos: ClubVideo[]; clubName
                     country it is not licensed in — and what YouTube draws then
                     is its own error card, with no way forward inside it. */
                 <p className="mt-1.5 text-body-small">
-                  <a
+                  <ExternalLink
                     href={watch}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                    suffix="no YouTube"
                     data-club-video-out={video.id}
                     className={`line-clamp-3 text-on-surface ${LINK_UNDERLINE}`}
                   >
                     {video.title}
-                    <span className="sr-only"> — no YouTube (abre em nova aba)</span>
-                  </a>
+                  </ExternalLink>
                   <span className="block text-body-small text-ink-faint">{video.channel}</span>
                 </p>
               )}

@@ -1,14 +1,16 @@
 import { useEffect, useMemo, useState } from "react";
 
+import { countLabel } from "@/count-core";
 import { BACK_LINK } from "@/src/components/interaction";
 import { Surface } from "@/src/components/Surface";
-import { botShareLabel, chronologicalDays, countryRateSeries } from "@/traffic-report-core";
-import type {
-  TrafficCountRow,
-  TrafficDashboard,
-  TrafficSnapshot,
-  TrafficTimelinePoint,
-} from "@/src/types";
+import {
+  botShareLabel,
+  chronologicalDays,
+  rateChartSeries,
+  statusClassTotals,
+  timelineGeometry,
+} from "@/traffic-report-core";
+import type { TrafficCountRow, TrafficDashboard, TrafficSnapshot } from "@/src/types";
 
 /**
  * `/trafego` — this deployment's own nginx access log, read back as charts.
@@ -38,8 +40,6 @@ import type {
  *   a proxy actually counts.
  */
 
-const NUMBER = new Intl.NumberFormat("pt-BR");
-const fmt = (n: number | null | undefined): string => (n == null ? "—" : NUMBER.format(n));
 
 /**
  * **Every mark on this page is one tone, and the status classes are the single
@@ -182,7 +182,7 @@ function Bars({ rows, max = 12 }: { rows: TrafficCountRow[]; max?: number }) {
             </div>
           </div>
           <span className="shrink-0 text-body-small tabular-nums text-ink-muted">
-            {fmt(row.count)}
+            {countLabel(row.count)}
           </span>
         </li>
       ))}
@@ -202,6 +202,9 @@ function Bars({ rows, max = 12 }: { rows: TrafficCountRow[]; max?: number }) {
  * container scales its type with it, so a label sized for a desktop is six
  * pixels tall on a phone.
  */
+const TIMELINE_BOX = { width: 720, height: 200 };
+const TIMELINE_PAD = 6;
+
 function TimeLine({
   points,
   label,
@@ -228,53 +231,12 @@ function TimeLine({
    *  snapshots"; a filtered series has a different reason and must give it. */
   empty?: string;
 }) {
-  const box = { width: 720, height: 200 };
-  const pad = 6;
-
-  const drawn = useMemo(() => {
-    if (points.length === 0) return null;
-    // **Both series share one scale, computed over the union of both — on both
-    // axes.** On y, scaling each to its own maximum would draw the smaller as
-    // tall as the larger and reverse the one comparison the pair exists to
-    // make. On x it is not a matter of reading but of painting: the two series
-    // need not cover the same snapshots, since `readRatePerMin` is null
-    // wherever a summary carries no monitor figure and `ratePerMin` is not. A
-    // domain taken from the primary alone therefore maps an earlier context
-    // point to a negative x, and it paints **outside the card** — `RankCandles`'
-    // own bug, which every assertion about it passed.
-    const all = [...points, ...(context?.points ?? [])];
-    const minX = Math.min(...all.map((p) => p.x));
-    const maxX = Math.max(...all.map((p) => p.x));
-    const maxY = Math.max(...all.map((p) => p.y));
-    // The y axis starts at zero rather than at the minimum: these are counts,
-    // and a floor at the minimum makes a flat week look like a cliff.
-    const spanX = maxX - minX || 1;
-    const spanY = maxY || 1;
-    const at = (p: { x: number; y: number }) => ({
-      x: pad + ((p.x - minX) / spanX) * (box.width - pad * 2),
-      y: box.height - pad - (p.y / spanY) * (box.height - pad * 2),
-    });
-    const path = (series: { x: number; y: number }[]) =>
-      series
-        .map((p, i) => {
-          const { x, y } = at(p);
-          return `${i === 0 ? "M" : "L"}${x.toFixed(1)} ${y.toFixed(1)}`;
-        })
-        .join(" ");
-    return {
-      maxY,
-      first: new Date(minX),
-      last: new Date(maxX),
-      // One snapshot and many snapshots are the same instant on the timeline,
-      // so the two endpoints collapse and one label is the honest caption.
-      // Read off the shared domain rather than off `points.length`, or a lone
-      // primary point beside a long context prints one date for a span.
-      single: minX === maxX,
-      last_: at(points[points.length - 1]),
-      d: path(points),
-      contextD: context && context.points.length > 0 ? path(context.points) : null,
-    };
-  }, [points, context]);
+  // The shared scale, the zero floor and the one-instant caption are
+  // `timelineGeometry`'s, beside the series it draws.
+  const drawn = useMemo(
+    () => timelineGeometry(points, context?.points ?? [], { ...TIMELINE_BOX, pad: TIMELINE_PAD }),
+    [points, context],
+  );
 
   if (!drawn) {
     return (
@@ -291,11 +253,11 @@ function TimeLine({
     <figure className="m-0">
       <div className="flex items-stretch gap-2">
         <div className="flex flex-col justify-between text-label-small text-ink-faint">
-          <span className="tabular-nums">{fmt(drawn.maxY)}</span>
+          <span className="tabular-nums">{countLabel(drawn.maxY)}</span>
           <span className="tabular-nums">0</span>
         </div>
         <svg
-          viewBox={`0 0 ${box.width} ${box.height}`}
+          viewBox={`0 0 ${TIMELINE_BOX.width} ${TIMELINE_BOX.height}`}
           // `grow min-w-0` and deliberately not `w-full`: inside this flex row
           // `w-full` is 100% of the container rather than of what the y-axis
           // gutter leaves, which is how RankCandles came to paint outside its
@@ -341,12 +303,12 @@ function TimeLine({
               user units under `preserveAspectRatio="none"`, so it is an ellipse
               at most widths; that is a mark, not a measurement, and matching the
               line's own non-uniform scaling is what keeps it on the line. */}
-          <circle cx={drawn.last_.x} cy={drawn.last_.y} r={3} fill="currentColor" />
+          <circle cx={drawn.end.x} cy={drawn.end.y} r={3} fill="currentColor" />
         </svg>
       </div>
       <figcaption className="mt-1 flex justify-between text-label-small text-ink-faint">
-        <span>{day(drawn.first)}</span>
-        {drawn.single ? null : <span>{day(drawn.last)}</span>}
+        <span>{day(new Date(drawn.minX))}</span>
+        {drawn.single ? null : <span>{day(new Date(drawn.maxX))}</span>}
       </figcaption>
     </figure>
   );
@@ -366,7 +328,7 @@ function Hours({ byHour }: { byHour: Record<string, number> }) {
           <div
             key={hour}
             className="flex h-full flex-1 items-end rounded-x-small bg-surface-container-high"
-            title={`${hour}h · ${fmt(values[i])} requisições`}
+            title={`${hour}h · ${countLabel(values[i])} requisições`}
           >
             <div
               className="w-full rounded-x-small bg-primary transition-[height]"
@@ -402,21 +364,8 @@ const STATUS_CLASSES = [
   { key: "outros", label: "Outros", tone: "bg-outline" },
 ] as const;
 
-const statusClass = (code: string): string => {
-  const n = Number(code);
-  if (n >= 200 && n < 300) return "2xx";
-  if (n >= 300 && n < 400) return "3xx";
-  if (n >= 400 && n < 500) return "4xx";
-  if (n >= 500 && n < 600) return "5xx";
-  return "outros";
-};
-
 function Statuses({ statusCodes }: { statusCodes: TrafficCountRow[] }) {
-  const byClass = new Map<string, number>();
-  for (const row of statusCodes) {
-    const key = statusClass(row.label);
-    byClass.set(key, (byClass.get(key) ?? 0) + row.count);
-  }
+  const byClass = statusClassTotals(statusCodes);
   const total = [...byClass.values()].reduce((sum, n) => sum + n, 0);
   const present = STATUS_CLASSES.filter((c) => (byClass.get(c.key) ?? 0) > 0);
 
@@ -432,7 +381,7 @@ function Statuses({ statusCodes }: { statusCodes: TrafficCountRow[] }) {
             key={c.key}
             className={c.tone}
             style={{ width: `${((byClass.get(c.key) ?? 0) / total) * 100}%` }}
-            title={`${c.label} · ${fmt(byClass.get(c.key))}`}
+            title={`${c.label} · ${countLabel(byClass.get(c.key))}`}
           />
         ))}
       </div>
@@ -441,7 +390,7 @@ function Statuses({ statusCodes }: { statusCodes: TrafficCountRow[] }) {
           <li key={c.key} className="flex items-center gap-1.5 text-body-small text-ink-muted">
             <span className={`inline-block h-2 w-2 rounded-full ${c.tone}`} aria-hidden="true" />
             {c.label}
-            <span className="tabular-nums text-on-surface">{fmt(byClass.get(c.key))}</span>
+            <span className="tabular-nums text-on-surface">{countLabel(byClass.get(c.key))}</span>
           </li>
         ))}
       </ul>
@@ -450,7 +399,7 @@ function Statuses({ statusCodes }: { statusCodes: TrafficCountRow[] }) {
         {statusCodes.map((row, i) => (
           <span key={row.label}>
             {i > 0 ? " · " : ""}
-            <span className="tabular-nums">{row.label}</span> ({fmt(row.count)})
+            <span className="tabular-nums">{row.label}</span> ({countLabel(row.count)})
           </span>
         ))}
       </p>
@@ -516,28 +465,18 @@ export function TrafficView({ onBack }: { onBack: () => void }) {
    * as zero** — the report ranks and truncates, so "not in the top twenty" is
    * not "no traffic", and drawing it as a zero would invent a collapse. Same
    * rule for a snapshot with no monitor figure, which is one written before
-   * `12_traffic_report.sh` counted them. Both rules are `traffic-report-core`'s —
-   * `countryRateSeries` beside the payload's own rates — so the clamp and the
-   * skip cannot drift between what the page draws and what the payload says.
+   * `12_traffic_report.sh` counted them. Every one of those rules is
+   * `rateChartSeries`' in `traffic-report-core`, beside the payload's own rates,
+   * so the clamp, the skip and the choice of pair cannot drift between what the
+   * page draws and what the payload says. The page adds only the label.
    */
   const rate = useMemo(() => {
-    if (!country) {
-      const series = (pick: (p: TrafficTimelinePoint) => number | null) =>
-        timeline.filter((p) => pick(p) != null).map((p) => ({ x: p.t, y: pick(p) as number }));
-      const visitors = series((p) => p.visitorRatePerMin);
-      const physical = series((p) => p.ratePerMin);
-      // Where no snapshot carries a visitor figure there is no pair to draw,
-      // and the physical line is then the only honest single one — labelled as
-      // physical, never relabelled "Visitantes" to fill the slot.
-      return visitors.length > 0
-        ? {
-            primary: visitors,
-            context: { points: physical, label: LABEL_PHYSICAL },
-            filtered: false,
-          }
-        : { primary: physical, context: undefined, filtered: false };
-    }
-    return { primary: countryRateSeries(timeline, country), context: undefined, filtered: true };
+    const series = rateChartSeries(timeline, country);
+    return {
+      primary: series.primary,
+      context: series.context ? { points: series.context, label: LABEL_PHYSICAL } : undefined,
+      filtered: series.filtered,
+    };
   }, [timeline, country]);
 
   const heading = (
@@ -624,21 +563,21 @@ export function TrafficView({ onBack }: { onBack: () => void }) {
       </p>
 
       <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
-        <Kpi label="Requisições" value={fmt(latest.requests)} hint="acumulado na janela" />
-        <Kpi label="Endereços" value={fmt(latest.uniqueIps)} hint="distintos, não visitantes" />
+        <Kpi label="Requisições" value={countLabel(latest.requests)} hint="acumulado na janela" />
+        <Kpi label="Endereços" value={countLabel(latest.uniqueIps)} hint="distintos, não visitantes" />
         <Kpi
           label="Ritmo médio"
-          value={fmt(payload.data.windowRatePerMin)}
+          value={countLabel(payload.data.windowRatePerMin)}
           hint="req/min entre instantâneos"
         />
         <Kpi
           label="Robôs"
           value={botShareLabel(latest) ?? "—"}
-          hint={`${fmt(latest.bots)} de ${fmt(latest.requests)}`}
+          hint={`${countLabel(latest.bots)} de ${countLabel(latest.requests)}`}
         />
         <Kpi
           label="Visitantes"
-          value={fmt(latest.visitorHits)}
+          value={countLabel(latest.visitorHits)}
           hint="acessos causados por um navegador"
         />
       </div>
@@ -782,7 +721,7 @@ export function TrafficView({ onBack }: { onBack: () => void }) {
         {latest.geoSource
           ? `Geolocalização por base local (${latest.geoSource}) — nenhum endereço sai do servidor.`
           : "Sem base de geolocalização no servidor, então não há seções de país nem de cidade — rode shell_scripts/14_install_geoip.sh no host para tê-las."}{" "}
-        Instantâneo {latest.file}, de {fmt(latest.logLines)} linhas de log.
+        Instantâneo {latest.file}, de {countLabel(latest.logLines)} linhas de log.
         {/* The credit is a condition of the licence, not a courtesy: DB-IP's
             Lite editions are CC BY 4.0 and permit this use only while it is
             shown. It is rendered verbatim from what the report read out of the

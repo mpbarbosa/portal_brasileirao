@@ -4,7 +4,7 @@ import { useMemo } from "react";
 import { followLabel, type FollowState } from "@/preferences-core";
 import { Button } from "@/src/components/Button";
 import { ClubCrest } from "@/src/components/ClubCrest";
-import { GLYPH } from "@/src/components/ClubLinks";
+import { GLYPH } from "@/src/components/glyph";
 import { FOCUS_RING, STATE_LAYER } from "@/src/components/interaction";
 import { isPlainClick } from "@/src/components/plainClick";
 import { Surface } from "@/src/components/Surface";

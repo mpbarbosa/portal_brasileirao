@@ -3,6 +3,7 @@
  * campaign behind a single table row. Pure: clubs and matches in, history out
  * (tests/rank-history-core.test.ts).
  */
+import { countPhrase } from "@/count-core";
 import { countsTowardStandings, computeStandings } from "@/standings-core";
 import type { Club, ClubRankHistory, Match, RankAtRound } from "@/src/types";
 
@@ -182,7 +183,7 @@ export const rankMovementLabel = (movement: RankMovement): string => {
   if (movement.direction === "same") return "manteve a posição";
 
   const verb = movement.direction === "up" ? "subiu" : "caiu";
-  const places = movement.places === 1 ? "1 posição" : `${movement.places} posições`;
+  const places = countPhrase(movement.places, "posição", "posições");
   return `${verb} ${places}`;
 };
 
@@ -226,7 +227,11 @@ export interface SparklinePoint {
   position: number;
 }
 
-const round2 = (value: number): number => Math.round(value * 100) / 100;
+/**
+ * A drawing coordinate to two decimals, so SVG attributes stay short and stable.
+ * Exported for `rank-candles-core.ts`, which carried an identical private copy.
+ */
+export const round2 = (value: number): number => Math.round(value * 100) / 100;
 
 /**
  * Project a campanha onto the box. The y axis is **inverted** — position 1 sits

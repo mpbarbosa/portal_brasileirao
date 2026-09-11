@@ -17,13 +17,15 @@ import { BroadcasterMark } from "@/src/components/BroadcasterMark";
 import { ClubCrest } from "@/src/components/ClubCrest";
 import { MatchHighlights } from "@/src/components/MatchHighlights";
 import { MapPinGlyph, WikipediaLink } from "@/src/components/ClubLinks";
-import { clubKey } from "@/club-core";
 import { BACK_LINK, ICON_LINK, STATE_LAYER, LINK_UNDERLINE } from "@/src/components/interaction";
 import { isPlainClick } from "@/src/components/plainClick";
 import { lastRecordedRound } from "@/rank-history-core";
 import type { CampaignPlotKind } from "@/campaign-plot-core";
 import { CampaignPlotToggle } from "@/src/components/CampaignPlotToggle";
-import { RankSparkline } from "@/src/components/RankSparkline";
+import { ClubPageLink } from "@/src/components/ClubPageLink";
+import { ExternalLink } from "@/src/components/ExternalLink";
+import { NotFoundScreen } from "@/src/components/NotFoundScreen";
+import { CampaignEnds, RankSparkline } from "@/src/components/RankSparkline";
 import { formatRoute } from "@/route-core";
 import { StatusChip } from "@/src/components/StatusChip";
 import { Surface } from "@/src/components/Surface";
@@ -90,9 +92,6 @@ function Campaign({
   lastRound: number;
   kind: CampaignPlotKind;
 }) {
-  const first = entries[0];
-  const last = entries[entries.length - 1];
-
   return (
     <div>
       <p className="mb-1 text-body-small font-medium">{club?.shortName ?? code}</p>
@@ -103,12 +102,7 @@ function Campaign({
         size="page"
         kind={kind}
       />
-      <p className="mt-1 flex justify-between text-body-small tabular-nums text-ink-faint">
-        <span>{first.position}º · 1ª rodada</span>
-        <span>
-          {last.position}º · {last.round}ª rodada
-        </span>
-      </p>
+      <CampaignEnds entries={entries} className="mt-1" />
     </div>
   );
 }
@@ -131,17 +125,13 @@ function Side({ club, code, onNavigate }: { club: Club | null; code: string; onN
     <div className="flex min-w-0 flex-1 flex-col items-center gap-2 text-center">
       {club && <ClubCrest club={club} size={56} fallback="mark" />}
       {club ? (
-        <a
-          href={formatRoute({ section: "clube", key: clubKey(club) })}
-          onClick={(event) => {
-            if (!isPlainClick(event)) return;
-            event.preventDefault();
-            onNavigate(formatRoute({ section: "clube", key: clubKey(club) }));
-          }}
-          className={`truncate font-semibold ${LINK_UNDERLINE}`}
+        <ClubPageLink
+          club={club}
+          onSelectClub={(key) => onNavigate(formatRoute({ section: "clube", key }))}
+          className="truncate font-semibold"
         >
           {label}
-        </a>
+        </ClubPageLink>
       ) : (
         <span className="truncate font-semibold">{label}</span>
       )}
@@ -370,16 +360,7 @@ export function MatchPage({
   onSelectPlayer,
 }: MatchPageProps) {
   if (!match) {
-    return (
-      <>
-        <button type="button" onClick={onBack} className={BACK_LINK}>
-          ← Voltar
-        </button>
-        <p className="mt-4 text-body-medium text-ink-muted" role={loading ? "status" : undefined}>
-          {loading ? "Carregando página…" : "Partida não encontrada."}
-        </p>
-      </>
-    );
+    return <NotFoundScreen onBack={onBack} loading={loading} missingText="Partida não encontrada." />;
   }
 
   const { home, away } = clubsOf(match, clubs);
@@ -591,18 +572,10 @@ export function MatchPage({
                   nothing else — `aria-hidden` on the mark means a link with no
                   text at all would be announced as its own URL. */}
               {mapUrl && (
-                <a
-                  href={mapUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={ICON_LINK}
-                  data-stadium-map
-                >
+                <ExternalLink href={mapUrl} className={ICON_LINK} data-stadium-map>
                   <MapPinGlyph />
-                  <span className="sr-only">
-                    Ver {venueName(venue, STADIUMS)} no Google Maps (abre em nova aba)
-                  </span>
-                </a>
+                  <span className="sr-only">Ver {venueName(venue, STADIUMS)} no Google Maps</span>
+                </ExternalLink>
               )}
               <a
                 href={formatRoute({ section: "estadio", key: stadiumSlug(venue.stadium) })}
