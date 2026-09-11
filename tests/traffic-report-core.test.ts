@@ -441,6 +441,53 @@ test("a rotation that shrinks the cumulative total reports no rate, never a nega
   assert.equal(built.data.windowRatePerMin, 0);
 });
 
+/** A summary whose Totals carry no readable count — an older or hand-edited one. */
+const uncounted = (generated: string): string =>
+  summary({ generated }).replace(/^Requests:.*\n/m, "").replace(/^Unique IPs:.*\n/m, "");
+
+test("a snapshot whose count did not parse is null on the timeline, never a zero", () => {
+  const built = buildTrafficDashboard(
+    [
+      { file: "a.txt", text: summary({ generated: "2026-09-03T14:00:00+00:00", requests: 100 }) },
+      { file: "b.txt", text: uncounted("2026-09-03T15:00:00+00:00") },
+      { file: "c.txt", text: summary({ generated: "2026-09-03T16:00:00+00:00", requests: 1300 }) },
+    ],
+    "2026-09-03T16:30:00Z",
+  );
+  const [first, missing, after] = built.data.timeline;
+  assert.equal(first.requests, 100);
+  assert.equal(missing.requests, null);
+  assert.equal(missing.uniqueIps, null);
+  // Read as 0, the missing reading drew a collapse into it and the next
+  // snapshot's whole cumulative 1300 as one hour's spike out of it.
+  assert.equal(missing.ratePerMin, null);
+  assert.equal(after.ratePerMin, null);
+  // The window still spans the snapshots that do carry a count: 1200 in 120 minutes.
+  assert.equal(built.data.windowRatePerMin, 10);
+});
+
+test("the window skips an uncounted first or last snapshot rather than reading it as zero", () => {
+  const built = buildTrafficDashboard(
+    [
+      { file: "a.txt", text: uncounted("2026-09-03T13:00:00+00:00") },
+      { file: "b.txt", text: summary({ generated: "2026-09-03T14:00:00+00:00", requests: 100 }) },
+      { file: "c.txt", text: summary({ generated: "2026-09-03T15:00:00+00:00", requests: 700 }) },
+      { file: "d.txt", text: uncounted("2026-09-03T16:00:00+00:00") },
+    ],
+    "2026-09-03T16:30:00Z",
+  );
+  assert.equal(built.data.windowRatePerMin, 10);
+
+  const oneCounted = buildTrafficDashboard(
+    [
+      { file: "a.txt", text: uncounted("2026-09-03T13:00:00+00:00") },
+      { file: "b.txt", text: summary({ generated: "2026-09-03T14:00:00+00:00", requests: 100 }) },
+    ],
+    "2026-09-03T14:30:00Z",
+  );
+  assert.equal(oneCounted.data.windowRatePerMin, null);
+});
+
 test("one snapshot has no window to average over", () => {
   const built = buildTrafficDashboard([{ file: "a.txt", text: summary() }], "2026-09-03T15:00:00Z");
   assert.equal(built.data.snapshotCount, 1);

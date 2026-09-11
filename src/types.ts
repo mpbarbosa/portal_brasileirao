@@ -1408,9 +1408,13 @@ export interface TrafficSnapshot {
 export interface TrafficTimelinePoint {
   /** The snapshot's `generated` instant in epoch milliseconds. */
   t: number;
-  /** Cumulative, as above. */
-  requests: number;
-  uniqueIps: number;
+  /**
+   * Cumulative, as above — or null where that snapshot's summary carried no
+   * readable count. Never 0 in its place: zero is a reading, and a false zero
+   * in a cumulative series draws a collapse and then a spike.
+   */
+  requests: number | null;
+  uniqueIps: number | null;
   /**
    * Requests per minute since the previous snapshot, or null for the first one
    * and for any pair whose stamps do not separate. Null means "not measurable",

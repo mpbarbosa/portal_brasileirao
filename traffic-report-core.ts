@@ -402,7 +402,13 @@ export const buildTrafficDashboard = (
       const minutes = (snap.generatedMs - previous.generatedMs) / 60000;
       // Clamped at zero and null where the stamps do not separate: see
       // `ratePerMinute`, which all three rates here go through.
-      ratePerMin = ratePerMinute(previous.requests ?? 0, snap.requests ?? 0, minutes);
+      // Both endpoints must carry a count, for the visitor rate's reason below:
+      // a summary whose Requests line did not parse has no answer, and reading
+      // it as 0 draws a quiet hour after it or the whole cumulative total as a
+      // spike before it — neither of which happened.
+      if (snap.requests != null && previous.requests != null) {
+        ratePerMin = ratePerMinute(previous.requests, snap.requests, minutes);
+      }
 
       // The same difference over the requests a browser on this site caused.
       // Both endpoints must carry a visitor figure or this is **null** rather
@@ -421,18 +427,28 @@ export const buildTrafficDashboard = (
 
     return {
       t: snap.generatedMs,
-      requests: snap.requests ?? 0,
-      uniqueIps: snap.uniqueIps ?? 0,
+      requests: snap.requests,
+      uniqueIps: snap.uniqueIps,
       ratePerMin,
       visitorRatePerMin,
       countries,
     };
   });
 
-  const first = snaps[0];
   const latest = snaps[snaps.length - 1];
-  const windowMinutes = (latest.generatedMs - first.generatedMs) / 60000;
-  const windowRatePerMin = ratePerMinute(first.requests ?? 0, latest.requests ?? 0, windowMinutes);
+  // Between the earliest and latest snapshots CARRYING a count, never the first
+  // and last as such: either may be the summary whose Requests line did not
+  // parse, and reading it as 0 is a false quiet or a false spike. Null when
+  // fewer than two carry one.
+  const counted = snaps.filter(
+    (snap): snap is ParsedSnapshot & { requests: number } => snap.requests != null,
+  );
+  const from = counted[0];
+  const to = counted[counted.length - 1];
+  const windowRatePerMin =
+    counted.length >= 2
+      ? ratePerMinute(from.requests, to.requests, (to.generatedMs - from.generatedMs) / 60000)
+      : null;
 
   return {
     source: "traffic-log",

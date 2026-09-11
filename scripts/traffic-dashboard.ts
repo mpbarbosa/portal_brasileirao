@@ -220,7 +220,7 @@ const page = (payload: ApiEnvelope<TrafficDashboard>): string => {
       ${kpi("Instantâneos", fmt(data.snapshotCount), "na janela lida")}
     </div>
 
-    ${panel("Tráfego acumulado", "Cada ponto é um instantâneo; a linha sobe porque cada leitura relê o log inteiro.", line(data.timeline.map((p) => ({ x: p.t, y: p.requests })), ACCENT))}
+    ${panel("Tráfego acumulado", "Cada ponto é um instantâneo; a linha sobe porque cada leitura relê o log inteiro.", line(data.timeline.flatMap((p) => (p.requests === null ? [] : [{ x: p.t, y: p.requests }])), ACCENT))}
     ${panel("Ritmo de requisições", "A diferença entre instantâneos, dividida pelo tempo entre eles.", line(data.timeline.filter((p) => p.ratePerMin != null).map((p) => ({ x: p.t, y: p.ratePerMin as number })), ACCENT))}
 
     <div class="grid">

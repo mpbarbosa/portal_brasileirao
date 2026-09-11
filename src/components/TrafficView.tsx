@@ -649,7 +649,7 @@ export function TrafficView({ onBack }: { onBack: () => void }) {
           caption="Cada ponto é um instantâneo. A linha sobe porque cada leitura relê o log inteiro — não é o movimento da hora."
         >
           <TimeLine
-            points={timeline.map((p) => ({ x: p.t, y: p.requests }))}
+            points={timeline.flatMap((p) => (p.requests === null ? [] : [{ x: p.t, y: p.requests }]))}
             label="Requisições acumuladas, instantâneo a instantâneo"
           />
         </Panel>
