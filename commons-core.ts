@@ -57,15 +57,30 @@ export const deedFor = (license: string): string | null => {
  * CC BY-SA both allow that provided the credit travels with the image, which
  * is what `StadiumPhoto` makes a required field and what the page renders.
  *
- * The broadcaster marks take the stricter rule — public domain only — because
- * a mark is drawn without a credit line beside it. That is the right rule for
- * marks and the wrong one here; the obligation is met differently, not avoided.
+ * The broadcaster marks take the stricter rule — public domain only, which is
+ * `publicDomain` below — because a mark is drawn without a credit line beside
+ * it. That is the right rule for marks and the wrong one here; the obligation
+ * is met differently, not avoided.
  *
  * Anything unrecognised is refused. A licence this cannot name is one nobody
  * has checked, and a NonCommercial or NoDerivatives file would otherwise be
  * copied into a public directory on the strength of not matching a blocklist.
  */
 export const redistributable = (license: string): boolean => deedFor(license) !== null;
+
+/**
+ * Whether Commons calls a file public domain — the rule the broadcaster marks
+ * are vendored under, since a mark carries no credit line to meet any other
+ * licence's obligation.
+ *
+ * Deliberately **not** a case `redistributable` admits: on Commons "public
+ * domain" is an umbrella over many tags and names no deed a photograph's
+ * reuser could rely on. It is right for a plain wordmark, which is not
+ * original enough to attract copyright, and that is the only thing it is used
+ * for. It lived inline in `sync-broadcaster-marks.ts` until that script was
+ * moved onto the shared Commons client.
+ */
+export const publicDomain = (license: string): boolean => /public domain/i.test(license);
 
 /**
  * Whether a stored credit still says what Commons says.

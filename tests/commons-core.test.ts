@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { creditMatches, deedFor, fold, plain, redistributable } from "@/commons-core";
+import { creditMatches, deedFor, fold, plain, publicDomain, redistributable } from "@/commons-core";
 
 test("Commons' HTML fields are compared as the plain text the page shows", () => {
   assert.equal(plain('<a href="/wiki/User:X" title="X">Erica Ramalho</a>'), "Erica Ramalho");
@@ -64,4 +64,12 @@ test("the artist is what is owed when no attribution was dictated", () => {
   assert.equal(creditMatches("Erica Ramalho/Portal da Copa", facts), true);
   assert.equal(creditMatches("Érica Ramalho / Portal da Copa", facts), true);
   assert.equal(creditMatches("Somebody Else", facts), false);
+});
+
+test("the marks' rule takes public domain and nothing else Commons names", () => {
+  assert.equal(publicDomain("Public domain"), true);
+  assert.equal(publicDomain("public domain"), true);
+  for (const license of ["CC0", "CC BY 2.0", "CC BY-SA 4.0", "unknown", ""]) {
+    assert.equal(publicDomain(license), false, license);
+  }
 });

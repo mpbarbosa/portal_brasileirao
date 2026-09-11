@@ -46,7 +46,7 @@
  *   1  at least one does not — the line says which and why.
  */
 import { creditMatches, deedFor, fold } from "@/commons-core";
-import { commonsFacts, userAgent } from "@/scripts/commons-api";
+import { commonsFacts, commonsFileUrl, userAgent } from "@/scripts/commons-api";
 import { STADIUMS } from "@/src/data/stadiums";
 import { buildStadiums, PHOTO_WIDTHS } from "@/venue-core";
 import type { Club, Match, StadiumPhoto } from "@/src/types";
@@ -65,7 +65,7 @@ const thumbnailRenders = async (photo: StadiumPhoto): Promise<string | null> => 
   // Commons directly, not `stadiumPhotoUrl` — since the photographs were
   // vendored that builds a path on *our* origin, and asking it here would check
   // our copy while claiming to check the source.
-  const source = `https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(photo.file)}?width=${PHOTO_WIDTHS[0]}`;
+  const source = commonsFileUrl(photo.file, PHOTO_WIDTHS[0]);
   const response = await fetch(source, {
     headers: { "User-Agent": userAgent("check-stadium-photos") },
     signal: AbortSignal.timeout(20_000),
