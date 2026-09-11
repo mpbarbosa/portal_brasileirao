@@ -66,6 +66,63 @@ test.describe("Artilharia", () => {
     await expect(page.getByText(/G gols · A assistências/)).toBeVisible();
   });
 
+  /**
+   * The table fits a phone, and says so if it ever stops fitting.
+   *
+   * It used to carry `min-w-[32rem]` and scroll on every phone, with G, A, P
+   * and J off to the right and nothing on the page saying they existed. These
+   * cases hold both halves: the widths a reader actually has show every column
+   * with no hint, and a table forced to overflow gets `TableScroller`'s fade
+   * and chevron — which is the wiring, produced rather than hunted for, since
+   * no real width overflows today.
+   */
+  const fade = (page: Page) => page.locator("[data-scroll-fade]");
+  const more = (page: Page) => page.locator("[data-scroll-more]");
+  const scroller = (page: Page) => page.locator("table").locator("..");
+
+  for (const width of [320, 360, 375]) {
+    test(`every column fits a ${width}px phone, so there is nothing to hint at`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 800 });
+
+      const geometry = await scroller(page).evaluate((el) => {
+        const visibleRight = el.getBoundingClientRect().left + el.clientLeft + el.clientWidth;
+        return {
+          overflow: el.scrollWidth - el.clientWidth,
+          cut: [...el.querySelectorAll("thead th")]
+            .filter((th) => th.getBoundingClientRect().right > visibleRight + 1)
+            .map((th) => th.textContent?.trim()),
+        };
+      });
+
+      expect(geometry.cut).toEqual([]);
+      expect(geometry.overflow).toBeLessThanOrEqual(0);
+      await expect(fade(page)).toHaveCSS("opacity", "0");
+      await expect(more(page)).toBeHidden();
+    });
+  }
+
+  test("a table that does overflow says so, and its key stays put", async ({ page }) => {
+    await page.setViewportSize({ width: 360, height: 800 });
+    await page.locator("table").evaluate((table) => {
+      table.style.minWidth = "40rem";
+    });
+
+    await expect(fade(page)).toHaveCSS("opacity", "1");
+    await expect(more(page)).toBeVisible();
+
+    // The key lives outside the scroller: scrolling the table must not carry it
+    // off to the left.
+    const key = page.getByText(/G gols · A assistências/);
+    const before = (await key.boundingBox())!;
+    await scroller(page).evaluate((el) => {
+      el.scrollLeft = el.scrollWidth;
+    });
+
+    await expect(fade(page)).toHaveCSS("opacity", "0");
+    await expect(more(page)).toBeHidden();
+    expect(Math.abs((await key.boundingBox())!.x - before.x)).toBeLessThan(1);
+  });
+
   test("switching away and back keeps the table", async ({ page }) => {
     await page.getByRole("link", { name: /^Classificação/ }).click();
     await expect(page.locator("table tbody tr")).toHaveCount(20);
