@@ -4,13 +4,13 @@ import type { Scorer } from "@/src/types";
  * GENERATED FILE — do not edit by hand.
  * Regenerate with: npx tsx scripts/sync-seed-data.ts
  *
- * Frozen top-scorer table, taken 2026-09-07 from football-data.org. Serves
+ * Frozen top-scorer table, taken 2026-09-11 from football-data.org. Serves
  * as the offline fallback, so it goes stale the moment anyone scores.
  */
 export const SEED_SCORERS: Scorer[] = [
   { position: 1, playerId: "192070", playerName: "Kevin Viveros", club: { code: "1768", name: "CA Paranaense", shortName: "Athletico-PR", tla: "CAP" }, goals: 17, assists: 3, penalties: 3, playedMatches: 24 },
   { position: 2, playerId: "1077", playerName: "Pedro", club: { code: "1783", name: "CR Flamengo", shortName: "Flamengo", tla: "FLA" }, goals: 15, assists: 6, penalties: null, playedMatches: 25 },
-  { position: 3, playerId: "37833", playerName: "Carlos Vinícius", club: { code: "1767", name: "Grêmio FBPA", shortName: "Grêmio", tla: "FBP" }, goals: 10, assists: 1, penalties: 1, playedMatches: 21 },
+  { position: 3, playerId: "37833", playerName: "Carlos Vinícius", club: { code: "1767", name: "Grêmio FBPA", shortName: "Grêmio", tla: "FBP" }, goals: 10, assists: 1, penalties: 1, playedMatches: 22 },
   { position: 4, playerId: "1327", playerName: "Gabriel Barbosa", club: { code: "6685", name: "Santos FC", shortName: "Santos", tla: "SAN" }, goals: 10, assists: 2, penalties: 2, playedMatches: 19 },
   { position: 5, playerId: "157533", playerName: "John Kennedy", club: { code: "1765", name: "Fluminense FC", shortName: "Fluminense", tla: "FLU" }, goals: 9, assists: 1, penalties: null, playedMatches: 19 },
   { position: 6, playerId: "178710", playerName: "Samuel Lino", club: { code: "1783", name: "CR Flamengo", shortName: "Flamengo", tla: "FLA" }, goals: 9, assists: 7, penalties: null, playedMatches: 25 },
