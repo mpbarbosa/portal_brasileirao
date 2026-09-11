@@ -14,6 +14,7 @@ events-core.ts
 goals-core.ts
 health-core.ts
 index.html
+instagram-core.ts
 league-stats-core.ts
 live-core.ts
 match-core.ts
@@ -35,3 +36,5 @@ traffic-report-core.ts
 venue-core.ts
 version-core.ts
 weather-core.ts
+wikipedia-core.ts
+youtube-core.ts

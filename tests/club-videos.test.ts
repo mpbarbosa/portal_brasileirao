@@ -1,13 +1,13 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
+import { videosFor } from "@/club-core";
 import {
   videoThumbnailHdUrl,
   videoThumbnailUrl,
-  videosFor,
   videoWatchUrl,
   youtubeVideoId,
-} from "@/club-core";
+} from "@/youtube-core";
 import { CLUBS_BY_CODE } from "@/src/data/clubs";
 import { CLUB_VIDEOS } from "@/src/data/club-videos";
 

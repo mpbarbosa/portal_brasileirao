@@ -1,6 +1,6 @@
 import { useId, useState } from "react";
 
-import { videoEmbedUrl } from "@/club-core";
+import { videoEmbedUrl } from "@/youtube-core";
 import { playsInPage } from "@/match-core";
 import { controlClasses } from "@/src/components/Button";
 import { ExternalLink } from "@/src/components/ExternalLink";

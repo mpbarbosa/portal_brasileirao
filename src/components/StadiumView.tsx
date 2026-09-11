@@ -1,4 +1,4 @@
-import { wikipediaUrl } from "@/club-core";
+import { wikipediaUrl } from "@/wikipedia-core";
 import { ClubCrest } from "@/src/components/ClubCrest";
 import { ClubPageLink } from "@/src/components/ClubPageLink";
 import { ExternalLink } from "@/src/components/ExternalLink";

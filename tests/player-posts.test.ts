@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { instagramHandle, instagramPostCode } from "@/club-core";
+import { instagramHandle, instagramPostCode } from "@/instagram-core";
 import { PLAYER_POSTS } from "@/src/data/player-posts";
 import { SEED_SQUADS } from "@/src/data/squads";
 

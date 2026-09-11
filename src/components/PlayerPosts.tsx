@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 
-import { instagramPostEmbedUrl, instagramPostUrl } from "@/club-core";
+import { instagramPostEmbedUrl, instagramPostUrl } from "@/instagram-core";
 import { InstagramGlyph } from "@/src/components/ClubLinks";
 import { ExternalLink } from "@/src/components/ExternalLink";
 import { FOCUS_RING, LINK_UNDERLINE, STATE_LAYER } from "@/src/components/interaction";

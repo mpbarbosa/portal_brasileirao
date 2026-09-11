@@ -2,7 +2,8 @@
  * Pure broadcast attachment. No I/O — the curated map goes in, matches carrying
  * their channels come out (tests/broadcast-core.test.ts).
  */
-import { findClub, slugify } from "@/club-core";
+import { findClub } from "@/club-core";
+import { slugify } from "@/slug-core";
 import type { Club, Match, Venue } from "@/src/types";
 
 /**

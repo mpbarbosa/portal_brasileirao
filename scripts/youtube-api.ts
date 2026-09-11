@@ -25,7 +25,7 @@ import { readFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { dirname, join } from "node:path";
 import { randomBytes } from "node:crypto";
-import { youtubeWatchUrl } from "@/club-core";
+import { youtubeWatchUrl } from "@/youtube-core";
 import { GOOGLE_AUTHORIZE_URL, GOOGLE_TOKEN_URL, newVerifier, challengeFor } from "@/oauth-core";
 
 /**

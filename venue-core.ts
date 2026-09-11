@@ -16,7 +16,7 @@
  * at proper names. `slugify` is the same function club URLs use, deliberately:
  * a second normaliser is how `atletico-mg` and `atlético-mg` come to disagree.
  */
-import { slugify } from "@/club-core";
+import { slugify } from "@/slug-core";
 import { commonsFilePage } from "@/commons-core";
 import { compareByKickoff } from "@/matches-core";
 import type { Club, Match, Stadium, StadiumFacts, StadiumPhoto, Venue } from "@/src/types";

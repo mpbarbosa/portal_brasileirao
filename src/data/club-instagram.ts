@@ -10,7 +10,7 @@ import type { ClubCode } from "@/src/types";
  * abbreviation produces.
  *
  * The value is the handle alone. The profile URL is derived by `instagramUrl`
- * in `club-core.ts`, so the origin is written once rather than twenty times,
+ * in `instagram-core.ts`, so the origin is written once rather than twenty times,
  * and a pasted URL with Instagram's `?hl=pt-br` locale hint normalises to the
  * canonical address instead of persisting the noise.
  *

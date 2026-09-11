@@ -7,7 +7,7 @@
  * Dudus, and the division fields several Gabriels and more than one Pedro.
  *
  * The value is the **article title alone** ("Memphis Depay"), exactly as
- * `club-wikipedia.ts` stores one. `wikipediaUrl` in `club-core.ts` builds the
+ * `club-wikipedia.ts` stores one. `wikipediaUrl` in `wikipedia-core.ts` builds the
  * address, so the edition is written once and a pasted link's `?action=` or
  * `#Carreira` does not persist. The title is not derivable from the name the
  * app holds: the provider gives the popular name and the article often sits at

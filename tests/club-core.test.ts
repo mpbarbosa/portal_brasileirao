@@ -22,11 +22,6 @@ import {
   findClub,
   hasClubArticle,
   hymnUrl,
-  instagramHandle,
-  instagramPostCode,
-  instagramPostEmbedUrl,
-  instagramPostUrl,
-  instagramUrl,
   redditUrl,
   subredditName,
   lastFixture,
@@ -38,13 +33,7 @@ import {
   recentForm,
   resultFor,
   scorersFor,
-  slugify,
   standingFor,
-  videoEmbedUrl,
-  videoPressedEmbedUrl,
-  videoWatchUrl,
-  wikipediaUrl,
-  youtubeVideoId,
   withClubDetails,
   withCoachOverrides,
   withHymns,
@@ -53,6 +42,7 @@ import {
   withWikipedia,
 } from "@/club-core";
 import type { Match, Scorer, StandingsRow } from "@/src/types";
+import { wikipediaUrl } from "@/wikipedia-core";
 
 const match = (overrides: Partial<Match> & Pick<Match, "id">): Match => ({
   round: 1,
@@ -218,31 +208,6 @@ test("standing and scorers are looked up by club code", () => {
 
   assert.deepEqual(scorersFor(all, "A").map((s) => s.playerName), ["Um", "Três"]);
   assert.deepEqual(scorersFor(all, "Z"), []);
-});
-
-test("slugify makes a name URL-safe and readable", () => {
-  assert.equal(slugify("Flamengo"), "flamengo");
-  assert.equal(slugify("São Paulo"), "sao-paulo");
-  assert.equal(slugify("Grêmio"), "gremio");
-  assert.equal(slugify("Vitória"), "vitoria");
-  assert.equal(slugify("Clube do Remo"), "clube-do-remo");
-});
-
-test("slugify keeps Atlético-MG and Athletico-PR apart", () => {
-  // The H is the only thing distinguishing two real Série A clubs.
-  assert.equal(slugify("Atlético-MG"), "atletico-mg");
-  assert.equal(slugify("Athletico-PR"), "athletico-pr");
-  assert.notEqual(slugify("Atlético-MG"), slugify("Athletico-PR"));
-});
-
-test("slugify collapses punctuation without leaving stray hyphens", () => {
-  assert.equal(slugify("  A. B./C  "), "a-b-c");
-  assert.equal(slugify("--Santos--"), "santos");
-});
-
-test("a name with nothing alphanumeric yields no slug", () => {
-  assert.equal(slugify("!!!"), "");
-  assert.equal(slugify(""), "");
 });
 
 const club = (code: string, shortName: string, slug?: string) => ({
@@ -463,102 +428,6 @@ test("every detail the club page reads survives one merge", () => {
   assert.deepEqual(merged, known[0]);
 });
 
-test("a handle becomes the canonical profile address", () => {
-  assert.equal(instagramUrl("palmeiras"), "https://www.instagram.com/palmeiras/");
-  assert.equal(instagramUrl("@palmeiras"), "https://www.instagram.com/palmeiras/");
-});
-
-test("a pasted profile URL is reduced to the handle", () => {
-  // What a person actually copies out of the address bar. The locale hint is
-  // Instagram's, means nothing to the next reader, and should not be stored.
-  assert.equal(
-    instagramUrl("https://www.instagram.com/palmeiras/?hl=pt-br"),
-    "https://www.instagram.com/palmeiras/",
-  );
-  assert.equal(instagramUrl("instagram.com/ecbahia"), "https://www.instagram.com/ecbahia/");
-});
-
-test("anything that is not a handle yields no link", () => {
-  // Renders as no link at all, rather than a broken one.
-  assert.equal(instagramUrl("with spaces"), null);
-  assert.equal(instagramUrl("https://www.instagram.com/"), null);
-  assert.equal(instagramUrl("a".repeat(31)), null);
-  assert.equal(instagramUrl(""), null);
-  assert.equal(instagramUrl(undefined), null);
-});
-
-test("a post shortcode becomes the canonical post address", () => {
-  assert.equal(instagramPostUrl("Dc1GBBADkfo"), "https://www.instagram.com/p/Dc1GBBADkfo/");
-  assert.equal(
-    instagramPostUrl("https://www.instagram.com/p/Dc1GBBADkfo/"),
-    "https://www.instagram.com/p/Dc1GBBADkfo/",
-  );
-});
-
-test("a pasted post link loses its share token", () => {
-  // Exactly what Instagram's own "copy link" puts on the clipboard. `stkn`
-  // identifies the account that copied it, so storing the raw URL would commit
-  // somebody's share token — which is why `instagramPostCode` exists at all
-  // rather than the data file holding permalinks.
-  const pasted =
-    "https://www.instagram.com/p/Dc1GBBADkfo/?utm_source=ig_web_copy_link&stkn=MzRlODBiNWFlZA==";
-  assert.equal(instagramPostCode(pasted), "Dc1GBBADkfo");
-  assert.equal(instagramPostUrl(pasted), "https://www.instagram.com/p/Dc1GBBADkfo/");
-});
-
-test("the frame address is the captioned embed and not the canonical post", () => {
-  // Not interchangeable: `/p/<code>/` answers `X-Frame-Options: DENY` and
-  // cannot be framed at all, and `/embed/` (uncaptioned) misreports its own
-  // height by a factor of three, so a frame sized from its MEASURE clips the
-  // picture. Both were measured in a browser; see `instagramPostEmbedUrl`.
-  assert.equal(
-    instagramPostEmbedUrl("Dc1GBBADkfo"),
-    "https://www.instagram.com/p/Dc1GBBADkfo/embed/captioned/",
-  );
-  assert.notEqual(instagramPostEmbedUrl("Dc1GBBADkfo"), instagramPostUrl("Dc1GBBADkfo"));
-});
-
-test("a pasted reel link yields its code, and every address it builds is a post's", () => {
-  // A reel's shortcode is a post's: `/p/<code>/embed/captioned/` rendered this
-  // one in a browser, author, badge and video, and `/p/<code>/` opened it
-  // without redirecting. So the share token goes exactly as it does for a post,
-  // and nothing built from the code says `/reel/`.
-  const pasted =
-    "https://www.instagram.com/reel/DbHq1mExfG9/?utm_source=ig_web_copy_link&stkn=MzRlODBiNWFlZA==";
-  assert.equal(instagramPostCode(pasted), "DbHq1mExfG9");
-  assert.equal(instagramPostCode("https://www.instagram.com/reel/DbHq1mExfG9"), "DbHq1mExfG9");
-  assert.equal(instagramPostUrl(pasted), "https://www.instagram.com/p/DbHq1mExfG9/");
-  assert.equal(
-    instagramPostEmbedUrl(pasted),
-    "https://www.instagram.com/p/DbHq1mExfG9/embed/captioned/",
-  );
-});
-
-test("a link that is not a post yields no post", () => {
-  // Refuses rather than guesses. `/tv/` has its own path kind and nothing here
-  // has checked that `/p/` serves it; `/reels/` answered only the login wall.
-  // Both are out until somebody checks — widening this is a deliberate change.
-  assert.equal(instagramPostCode("https://www.instagram.com/tv/Dc1GBBADkfo/"), null);
-  // `/reels/` is the line that matters, and not only because it is refused:
-  // with the kind check deleted, "tv" is refused anyway because it is shorter
-  // than a shortcode can be — it passes for a reason that has nothing to do with
-  // what it is. "reels" is five characters and clears the same regex, so only
-  // the kind check refuses it, and the same holds for a profile handle.
-  // Confirmed by mutation.
-  assert.equal(instagramPostCode("https://www.instagram.com/reels/Dc1GBBADkfo/"), null);
-  assert.equal(instagramPostCode("https://www.instagram.com/palmeiras/"), null);
-  // A path that merely begins with the letters of a kind is not that kind.
-  assert.equal(instagramPostCode("https://www.instagram.com/reel"), null);
-  assert.equal(instagramPostCode("https://www.instagram.com/"), null);
-  assert.equal(instagramPostCode("with spaces"), null);
-  assert.equal(instagramPostCode("abc"), null);
-  assert.equal(instagramPostCode(""), null);
-  assert.equal(instagramPostCode(undefined), null);
-  // Every caller degrades to no post rather than to a frame pointing nowhere.
-  assert.equal(instagramPostUrl("https://www.instagram.com/tv/Dc1GBBADkfo/"), null);
-  assert.equal(instagramPostEmbedUrl("with spaces"), null);
-});
-
 test("a subreddit name becomes the canonical community address", () => {
   assert.equal(redditUrl("CRFla"), "https://www.reddit.com/r/CRFla/");
   assert.equal(redditUrl("r/CRFla"), "https://www.reddit.com/r/CRFla/");
@@ -659,77 +528,6 @@ test("a hymn link is the video id, however it was pasted", () => {
   );
 });
 
-/**
- * The player address, whose only caller is **Melhores momentos** on the Partida
- * page — tested here beside `hymnUrl` because what it must not do is disagree
- * with the watch address about which video it is. Two spellings of one video is
- * how a reader comes to press play on one package and be handed another.
- */
-test("the embed address is the same video, on the privacy-enhanced host", () => {
-  assert.equal(
-    videoEmbedUrl("DiKvx0gRfaQ"),
-    "https://www.youtube-nocookie.com/embed/DiKvx0gRfaQ?playsinline=1&rel=0",
-  );
-  // Curated highlights are stored as full watch URLs, not as bare ids — the
-  // opposite of `club-hymns.ts` — so this is the shape the caller actually
-  // hands it, and asserting only the bare id would test a case the app has.
-  assert.equal(
-    videoEmbedUrl("https://www.youtube.com/watch?v=DiKvx0gRfaQ"),
-    "https://www.youtube-nocookie.com/embed/DiKvx0gRfaQ?playsinline=1&rel=0",
-  );
-  // The id both ways round: the frame and the link the same control carries
-  // must name one video, and they read the id through one parser to guarantee
-  // it. A `&t=` or a `&list=` in the curated line reaches neither.
-  const pasted = "https://youtu.be/DiKvx0gRfaQ?t=42";
-  assert.equal(youtubeVideoId(pasted), youtubeVideoId(videoEmbedUrl(pasted) ?? ""));
-
-  // **The absence of `autoplay` is the assertion, not an omission from this
-  // test.** The frame renders with the section rather than on a click, so a
-  // video that started by itself would be the "hino que ninguém pediu" the
-  // club page refuses a player over. Adding the parameter back breaks nothing
-  // a person would see in a test run, which is exactly why it is pinned here.
-  assert.doesNotMatch(videoEmbedUrl("DiKvx0gRfaQ") ?? "", /autoplay/);
-  // iOS Safari takes a video fullscreen without this, which is the leaving of
-  // the page that the whole section was changed to stop.
-  assert.match(videoEmbedUrl("DiKvx0gRfaQ") ?? "", /[?&]playsinline=1(&|$)/);
-});
-
-test("the pressed address is the same player, plus the reader's own autoplay", () => {
-  const id = "DiKvx0gRfaQ";
-
-  // **Same origin, same parameters, one addition.** The two are built from one
-  // `embedAddress` precisely so they cannot drift into two spellings of
-  // YouTube — `videoWatchUrl`'s stated rule, applied to the third address.
-  assert.equal(videoPressedEmbedUrl(id), `${videoEmbedUrl(id)}&autoplay=1`);
-  assert.match(videoPressedEmbedUrl(id) ?? "", /[?&]playsinline=1(&|$|&)/);
-  assert.match(videoPressedEmbedUrl(id) ?? "", /[?&]rel=0(&|$)/);
-
-  // **And the split is the whole point: `videoEmbedUrl` must stay silent.**
-  // That is the address a section may mount unasked, and the one the club page
-  // spent three years refusing a player over. Two named functions rather than
-  // a boolean parameter, for `serialiseDevicePreferences`' reason — a flag at a
-  // call site is easy to pass wrong and impossible to see in a diff — and this
-  // pair of assertions is what makes collapsing them back go red.
-  assert.doesNotMatch(videoEmbedUrl(id) ?? "", /autoplay/);
-  assert.match(videoPressedEmbedUrl(id) ?? "", /[?&]autoplay=1(&|$)/);
-
-  // It degrades exactly as its two siblings do, so a caller that has no embed
-  // to mount also has no half-built address to mount.
-  for (const raw of ["short", "not a url/", "", undefined]) {
-    assert.equal(videoPressedEmbedUrl(raw), null, `esperava null para ${String(raw)}`);
-  }
-});
-
-test("the embed address refuses what the watch address refuses", () => {
-  // The two degrade together, and the caller relies on it: an entry with no
-  // embed keeps the plain link-out, so a parser that answered for one and not
-  // the other would render a control that announces a player and opens a tab.
-  for (const raw of ["short", "https://www.youtube.com/watch?v=nope", "not a url/", "", undefined]) {
-    assert.equal(videoEmbedUrl(raw), null, `esperava null para ${String(raw)}`);
-    assert.equal(videoWatchUrl(raw), null, `esperava null para ${String(raw)}`);
-  }
-});
-
 test("anything that is not a video id yields no link", () => {
   // Renders as no link at all, rather than one that lands on YouTube's 404.
   assert.equal(hymnUrl("short"), null);
@@ -765,61 +563,6 @@ test("every club in the division has a hymn", () => {
   const missing = CLUBS.filter((entry) => !hymnUrl(CLUB_HYMNS[entry.code]));
 
   assert.deepEqual(missing.map((entry) => entry.shortName), []);
-});
-
-test("an article link is the title, however it was pasted", () => {
-  assert.equal(
-    wikipediaUrl("Sociedade Esportiva Palmeiras"),
-    "https://pt.wikipedia.org/wiki/Sociedade_Esportiva_Palmeiras",
-  );
-  // Underscores are what the address uses; either spelling names one article.
-  assert.equal(
-    wikipediaUrl("Sociedade_Esportiva_Palmeiras"),
-    "https://pt.wikipedia.org/wiki/Sociedade_Esportiva_Palmeiras",
-  );
-  // What a person copies from the address bar, from a section, or from the
-  // edit view. None of the three belongs in the file.
-  assert.equal(
-    wikipediaUrl("https://pt.wikipedia.org/wiki/Sociedade_Esportiva_Palmeiras"),
-    "https://pt.wikipedia.org/wiki/Sociedade_Esportiva_Palmeiras",
-  );
-  assert.equal(
-    wikipediaUrl("https://pt.wikipedia.org/wiki/Sociedade_Esportiva_Palmeiras#História"),
-    "https://pt.wikipedia.org/wiki/Sociedade_Esportiva_Palmeiras",
-  );
-  assert.equal(
-    wikipediaUrl("https://pt.wikipedia.org/wiki/Santos_Futebol_Clube?action=edit"),
-    "https://pt.wikipedia.org/wiki/Santos_Futebol_Clube",
-  );
-});
-
-test("an accented title is encoded, not transliterated", () => {
-  // The opposite of a club slug: stripping the accent there keeps the address
-  // typeable, but "Gremio Foot-Ball Porto Alegrense" is simply not an article.
-  assert.equal(
-    wikipediaUrl("Grêmio Foot-Ball Porto Alegrense"),
-    "https://pt.wikipedia.org/wiki/Gr%C3%AAmio_Foot-Ball_Porto_Alegrense",
-  );
-  // Already-encoded input survives a round trip rather than being encoded twice.
-  assert.equal(
-    wikipediaUrl("https://pt.wikipedia.org/wiki/Gr%C3%AAmio_Foot-Ball_Porto_Alegrense"),
-    "https://pt.wikipedia.org/wiki/Gr%C3%AAmio_Foot-Ball_Porto_Alegrense",
-  );
-});
-
-test("anything that is not a pt article yields no link", () => {
-  // Renders as no link at all, rather than one that lands on a 404. Another
-  // edition is not rewritten: the pt title is rarely the en one, so an "en."
-  // link rewritten to "pt." would look right and resolve to nothing.
-  assert.equal(wikipediaUrl("https://en.wikipedia.org/wiki/Santos_FC"), null);
-  assert.equal(wikipediaUrl("https://pt.wikipedia.org/w/index.php?title=Santos_Futebol_Clube"), null);
-  assert.equal(wikipediaUrl("https://example.com/wiki/Santos_Futebol_Clube"), null);
-  // Characters Wikipedia forbids in a title.
-  assert.equal(wikipediaUrl("Santos [Futebol] Clube"), null);
-  assert.equal(wikipediaUrl("not a url/"), null);
-  assert.equal(wikipediaUrl("   "), null);
-  assert.equal(wikipediaUrl(""), null);
-  assert.equal(wikipediaUrl(undefined), null);
 });
 
 test("curated articles attach to the club list by code", () => {
@@ -1001,16 +744,6 @@ test("the curated Discord entries are not empty, and no two clubs share a server
 
   assert.ok(entries.length > 0);
   assert.equal(new Set(guilds).size, guilds.length);
-});
-
-test("instagramHandle keeps only the handle, whatever was written down", () => {
-  // The handle and the URL must never disagree about which profile they mean,
-  // which is why the link component prints this rather than the raw value.
-  assert.equal(instagramHandle("@palmeiras"), "palmeiras");
-  assert.equal(instagramHandle("https://www.instagram.com/palmeiras/?hl=pt-br"), "palmeiras");
-  assert.equal(instagramHandle("  ecbahia  "), "ecbahia");
-  assert.equal(instagramHandle("não é um perfil"), null);
-  assert.equal(instagramHandle(undefined), null);
 });
 
 test("the coach printed on a club page prefers the live map to the frozen one", () => {

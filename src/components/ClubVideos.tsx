@@ -5,7 +5,7 @@ import {
   videoThumbnailHdUrl,
   videoThumbnailUrl,
   videoWatchUrl,
-} from "@/club-core";
+} from "@/youtube-core";
 import { ExternalLink } from "@/src/components/ExternalLink";
 import { FOCUS_RING, LINK_UNDERLINE } from "@/src/components/interaction";
 import { isPlainClick } from "@/src/components/plainClick";

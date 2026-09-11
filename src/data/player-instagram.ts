@@ -10,7 +10,7 @@
  * the page — both render as a plausible link.
  *
  * The value is the handle alone. The profile URL is derived by `instagramUrl`
- * in `club-core.ts`, reused rather than reimplemented for the same reason
+ * in `instagram-core.ts`, reused rather than reimplemented for the same reason
  * `venue-core.ts` reuses `slugify`: a second normaliser is how two spellings of
  * one address come to disagree.
  *

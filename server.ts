@@ -47,7 +47,6 @@ import { withLineupNicknames, withLineups } from "@/escalacao-core";
 import { withHighlights } from "@/match-core";
 import {
   coachesOf,
-  slugify,
   withClubDetails,
   withCoachOverrides,
   withDiscord,
@@ -56,6 +55,7 @@ import {
   withReddit,
   withWikipedia,
 } from "@/club-core";
+import { slugify } from "@/slug-core";
 import {
   compareForFeed,
   currentRound,

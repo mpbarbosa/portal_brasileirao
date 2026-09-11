@@ -90,7 +90,7 @@ const isRound = (value: string): boolean => /^[1-9]\d*$/.test(value);
  * and the server's SPA-fallback guard all ask through here, so what counts as a
  * readable address cannot come to differ between the page, its status code and
  * the guard in front of both — which is how a request ends up a 404 in one and
- * a 500 in another. `club-core`'s Wikipédia parser keeps its own catch, and
+ * a 500 in another. `wikipedia-core`'s article parser keeps its own catch, and
  * rightly: it decodes an article URL pasted into curated data, not an address
  * being served.
  */

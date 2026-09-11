@@ -11,7 +11,8 @@
  * `rel` and that the suffix announces a new tab, is `ExternalLink`'s, and the
  * marks' attributes are `GLYPH` in `glyph.ts`.
  */
-import { instagramHandle, instagramUrl, wikipediaUrl } from "@/club-core";
+import { instagramHandle, instagramUrl } from "@/instagram-core";
+import { wikipediaUrl } from "@/wikipedia-core";
 import { ExternalLink } from "@/src/components/ExternalLink";
 import { GLYPH } from "@/src/components/glyph";
 import { LINK_UNDERLINE } from "@/src/components/interaction";

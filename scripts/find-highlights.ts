@@ -37,7 +37,7 @@ import {
   type Fixture,
   type Verdict,
 } from "@/highlight-search-core";
-import { youtubeWatchUrl } from "@/club-core";
+import { youtubeWatchUrl } from "@/youtube-core";
 import { hasHighlights } from "@/match-core";
 import type { Club, Match } from "@/src/types";
 

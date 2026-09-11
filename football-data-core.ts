@@ -9,7 +9,7 @@
  *
  * Upstream docs: https://www.football-data.org/documentation/quickstart
  */
-import { slugify } from "@/club-core";
+import { slugify } from "@/slug-core";
 import { isFiniteNumber } from "@/narrow-core";
 import type {
   Club,
