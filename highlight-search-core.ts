@@ -156,13 +156,25 @@ export const parseTitle = (title: string): ParsedTitle | null => {
   };
 };
 
-/** Whether a title's club text names the club we mean. */
+/**
+ * Whether a title's club text names the club we mean.
+ *
+ * **The title has to contain one of the club's names, never the other way
+ * round.** It used to accept a name that *contained* the title's text as well,
+ * so a bare "ATLÉTICO" passed as Atlético-MG — exactly the fragment
+ * `CLUB_ALIASES` says it refuses, since Atlético-GO carries it too and
+ * Athletico-PR is one letter off. The titles this was built against name a club
+ * in full or by an alias (`ATLÉTICO-MG`, `ATLÉTICO MINEIRO`, `REMO`), so the
+ * reverse direction admitted nothing but fragments. A title that really does
+ * name a club by a fragment is now held for a person rather than accepted, which
+ * is the direction a wrong melhores-momentos link should fail in.
+ */
 export const namesClub = (text: string, code: string, shortName: string): boolean => {
   const found = normalize(text);
   if (!found) return false;
 
   const wanted = [normalize(shortName), ...(CLUB_ALIASES[code] ?? [])];
-  return wanted.some((name) => found.includes(name) || name.includes(found));
+  return wanted.some((name) => found.includes(name));
 };
 
 export const namesOtherCompetition = (title: string, parsed?: ParsedTitle | null): string | null => {
