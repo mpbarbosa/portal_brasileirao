@@ -76,6 +76,15 @@ test("a club is recognised through the spelling each channel uses", () => {
   assert.equal(namesClub("RED BULL BRAGANTINO", "4286", "Bragantino"), true);
 });
 
+test("a title naming a club only by a fragment of its name is not accepted", () => {
+  // "ATLÉTICO" is Atlético-MG's and Atlético-GO's, and one letter off
+  // Athletico-PR's — the bare prefix CLUB_ALIASES says it refuses.
+  assert.equal(namesClub("ATLÉTICO", "1766", "Atlético-MG"), false);
+  assert.equal(namesClub("SÃO", "1776", "São Paulo"), false);
+  // A title that adds words to a full name still names the club.
+  assert.equal(namesClub("SÃO PAULO FC", "1776", "São Paulo"), true);
+});
+
 test("clubs that look alike are kept apart", () => {
   // COR is both of these upstream, which is why club identity is the numeric id.
   assert.equal(namesClub("CORITIBA", "1779", "Corinthians"), false);
