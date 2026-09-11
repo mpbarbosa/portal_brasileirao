@@ -41,7 +41,7 @@ import { createServer } from "node:http";
 import { readdirSync, readFileSync } from "node:fs";
 import { resolve, join } from "node:path";
 
-import { buildTrafficDashboard } from "@/traffic-report-core";
+import { botShareLabel, buildTrafficDashboard, chronologicalDays } from "@/traffic-report-core";
 import type { ApiEnvelope, TrafficCountRow, TrafficDashboard } from "@/src/types";
 
 const args = process.argv.slice(2);
@@ -189,19 +189,6 @@ const statuses = (rows: TrafficCountRow[]): string => {
       .join("")}</div>`;
 };
 
-const MONTHS: Record<string, number> = {
-  Jan: 0, Feb: 1, Mar: 2, Apr: 3, May: 4, Jun: 5,
-  Jul: 6, Aug: 7, Sep: 8, Oct: 9, Nov: 10, Dec: 11,
-};
-const chronological = (rows: TrafficCountRow[]): TrafficCountRow[] =>
-  rows.slice().sort((a, b) => {
-    const key = (label: string) => {
-      const m = label.match(/(\d+)\/(\w+)\/(\d+)/);
-      return m ? Date.UTC(Number(m[3]), MONTHS[m[2]] ?? 0, Number(m[1])) : 0;
-    };
-    return key(a.label) - key(b.label);
-  });
-
 const page = (payload: ApiEnvelope<TrafficDashboard>): string => {
   const { data } = payload;
   const latest = data.latest;
@@ -218,8 +205,6 @@ const page = (payload: ApiEnvelope<TrafficDashboard>): string => {
   }
 
   const read = new Date(latest.generated).toLocaleString("pt-BR");
-  const botShare =
-    latest.requests && latest.bots != null ? ((latest.bots / latest.requests) * 100).toFixed(1) : null;
   const cities = latest.citiesByVisitor.length > 0 || latest.citiesByVolume.length > 0;
 
   return shell(`<h1>Tráfego</h1>
@@ -230,7 +215,7 @@ const page = (payload: ApiEnvelope<TrafficDashboard>): string => {
       ${kpi("Requisições", fmt(latest.requests), "acumulado na janela")}
       ${kpi("Endereços", fmt(latest.uniqueIps), "distintos, não visitantes")}
       ${kpi("Ritmo médio", fmt(data.windowRatePerMin), "req/min entre instantâneos")}
-      ${kpi("Robôs", botShare == null ? "—" : `${botShare.replace(".", ",")}%`, `${fmt(latest.bots)} de ${fmt(latest.requests)}`)}
+      ${kpi("Robôs", botShareLabel(latest) ?? "—", `${fmt(latest.bots)} de ${fmt(latest.requests)}`)}
       ${kpi("Monitoramento", fmt(latest.monitorHits), "/api/health, fora do ranking")}
       ${kpi("Instantâneos", fmt(data.snapshotCount), "na janela lida")}
     </div>
@@ -256,8 +241,8 @@ const page = (payload: ApiEnvelope<TrafficDashboard>): string => {
     </div>` : ""}
 
     <div class="grid">
-      ${panel("Requisições por dia", "A janela inteira, dia a dia.", bars(chronological(latest.byDay), 31, ACCENT))}
-      ${panel("Endereços por dia", "Só as contagens saem do servidor.", bars(chronological(latest.uniqueIpsByDay), 31, ACCENT))}
+      ${panel("Requisições por dia", "A janela inteira, dia a dia.", bars(chronologicalDays(latest.byDay), 31, ACCENT))}
+      ${panel("Endereços por dia", "Só as contagens saem do servidor.", bars(chronologicalDays(latest.uniqueIpsByDay), 31, ACCENT))}
     </div>
 
     ${panel("De onde vêm", "Sem as visitas diretas, que o nginx registra como “-”.", bars(latest.referrers, 12, ACCENT))}

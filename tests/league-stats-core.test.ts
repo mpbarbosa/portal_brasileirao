@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { bestAttacks, bestDefences, leagueSummary } from "@/league-stats-core";
+import { bestAttacks, bestDefences, leagueSummary, goalsPerMatchLabel } from "@/league-stats-core";
 import { computeStandings } from "@/standings-core";
 import type { Club, Match } from "@/src/types";
 
@@ -112,4 +112,11 @@ test("asking for fewer than the table holds returns that many", () => {
 
   assert.equal(bestAttacks(rows, 1).length, 1);
   assert.equal(bestDefences(rows, 10).length, 2);
+});
+
+test("goals per match prints one pt-BR decimal, and nothing before a match", () => {
+  assert.equal(goalsPerMatchLabel({ goalsPerMatch: 2.6 }), "2,6");
+  assert.equal(goalsPerMatchLabel({ goalsPerMatch: 3 }), "3,0");
+  assert.equal(goalsPerMatchLabel({ goalsPerMatch: 2.649 }), "2,6");
+  assert.equal(goalsPerMatchLabel({ goalsPerMatch: null }), null);
 });

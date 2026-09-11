@@ -22,6 +22,20 @@ export interface LeagueSummary {
 }
 
 /**
+ * Goals per match as a reader sees it, `2,6`, or null before any match has
+ * produced one.
+ *
+ * One decimal, because the second is noise at this scale and the first is the
+ * whole of what separates a tight season from an open one. The pt-BR comma goes
+ * through `toLocaleString`, the convention `scouts-core`'s `valueLabel` states,
+ * rather than the `.toFixed(1).replace(".", ",")` the component hand-rolled.
+ */
+export const goalsPerMatchLabel = (summary: Pick<LeagueSummary, "goalsPerMatch">): string | null =>
+  summary.goalsPerMatch === null
+    ? null
+    : summary.goalsPerMatch.toLocaleString("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+
+/**
  * Season totals over the fixtures that count.
  *
  * **Divided by matches *finished*, never by the fixture count.** The prototype
