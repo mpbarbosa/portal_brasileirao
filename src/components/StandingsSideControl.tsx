@@ -1,5 +1,5 @@
 import type { StandingsSide } from "@/standings-core";
-import { FOCUS_RING, STATE_LAYER } from "@/src/components/interaction";
+import { FOCUS_RING, STATE_LAYER, TOUCH_TARGET } from "@/src/components/interaction";
 
 /**
  * The Completa / Casa / Fora control above the Classificação.
@@ -35,11 +35,26 @@ export function StandingsSideControl({
   onSelect: (side: StandingsSide) => void;
 }) {
   return (
+    /* **No `overflow-hidden` on the group, and the end caps live on the end
+       segments instead.** The clip was how the selected fill and the veil took
+       the pill's shape, and it also clipped the two things that must reach
+       outside a segment: the `FOCUS_RING` outline, offset 2px, and the 48dp
+       `TOUCH_TARGET` — an overflow clip applies to hit testing as well as to
+       paint, so a target inside it is 32px tall to a thumb whatever its
+       computed `::before` says. The segments measured 85x32, 57x32 and 53x32 on
+       production at `e4bee8a`, the one control on the home page under the
+       floor. A segment's `rounded-*-full` is the group's inner radius, so the
+       shape is the same — **the pixels are not quite**: a fill painted against
+       its own radius antialiases its edge differently from one cut by a clip,
+       and at the captures' scale factors (1.5 and 2) that moved a one-device-
+       pixel hairline by up to 18%, measured against production. Invisible to
+       a reader, visible to a byte comparison, so it cost a re-shoot rather
+       than a trailer. */
     <div
       role="radiogroup"
       aria-label="Recortar a classificação"
       data-side-control
-      className="inline-flex overflow-hidden rounded-full border border-outline"
+      className="inline-flex rounded-full border border-outline"
     >
       {SIDES.map(({ side: value, label, hint }, index) => {
         const selected = value === side;
@@ -54,6 +69,9 @@ export function StandingsSideControl({
             onClick={() => onSelect(value)}
             className={[
               "relative px-3 py-1.5 text-label-large font-medium transition",
+              index === 0 ? "rounded-l-full" : "",
+              index === SIDES.length - 1 ? "rounded-r-full" : "",
+              TOUCH_TARGET,
               index > 0 ? "border-l border-outline" : "",
               // The selected segment is MD3's `secondary-container`, the same
               // pairing the account avatar uses and one the contrast gate

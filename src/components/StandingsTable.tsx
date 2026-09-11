@@ -320,6 +320,21 @@ const FROZEN_EDGE_SHADOW = [
  *  surplus at every width, not just this one. */
 const CLUB_PADDING = "px-2 sm:px-3";
 
+/** The state (UF) beside the club name — the first thing the frozen pair gives
+ *  up, and only on the narrowest phones.
+ *
+ *  The pair's content is a fixed ~223px, so its share of the container only
+ *  rises as the screen narrows: 0.646 at 380dp, 0.685 at 360 and **0.781 at
+ *  320**, measured on the frozen snapshot at `3997154` — over the 70% the
+ *  "frozen columns leave the numbers" spec guards, at a width that spec never
+ *  measured. Hiding the state alone brings 320 to 0.701, a pixel over, so the
+ *  crest gives 4px of its margin as well (`CREST_GAP`). Both return at 360,
+ *  where nothing needed them to go. The state is what a reader loses least by:
+ *  the club page carries it, and no two clubs in the division share a name for
+ *  it to tell apart. */
+const STATE_LABEL = "ml-2 hidden text-body-small text-ink-faint min-[360px]:inline";
+const CREST_GAP = "mr-1 min-[360px]:mr-2";
+
 /** The campanha column, which takes its content width and no more.
  *
  *  Auto layout hands a table's surplus width to its widest column, and with
@@ -650,7 +665,7 @@ export function StandingsTable({
                   {movement && <span className="sr-only">, {rankMovementLabel(movement)}</span>}
                 </td>
                 <td className={`${ROW_LINE} ${STICKY_CLUB} ${FROZEN_EDGE_SHADOW} ${CLUB_PADDING} bg-surface py-2 font-medium`}>
-                  <span className="mr-2 inline-flex align-middle">
+                  <span className={`${CREST_GAP} inline-flex align-middle`}>
                     <ClubCrest club={row.club} size={18} />
                   </span>
                   {row.club.code === followedCode && (
@@ -673,7 +688,7 @@ export function StandingsTable({
                     <span>{row.club.shortName}</span>
                   )}
                   {row.club.state && (
-                    <span className="ml-2 text-body-small text-ink-faint">{row.club.state}</span>
+                    <span className={STATE_LABEL}>{row.club.state}</span>
                   )}
                 </td>
                 <td className={`${ROW_LINE} px-2 py-2 text-right font-semibold tabular-nums`}>{row.points}</td>

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 
 import { countLabel } from "@/count-core";
+import { controlClasses } from "@/src/components/Button";
 import { BACK_LINK } from "@/src/components/interaction";
 import { Surface } from "@/src/components/Surface";
 import {
@@ -604,10 +605,13 @@ export function TrafficView({ onBack }: { onBack: () => void }) {
             latest.countriesByVolume.length > 0 ? (
               <label className="flex items-center gap-2 text-body-small text-ink-muted">
                 <span>País</span>
+                {/* `controlClasses`, like the round picker: a picker is a
+                    control, and this one measured 133x26 at 375dp with
+                    hand-written chrome and no touch target. */}
                 <select
                   value={country}
                   onChange={(event) => setCountry(event.target.value)}
-                  className="rounded-x-small border border-outline-variant bg-surface-container px-2 py-1 text-body-small"
+                  className={controlClasses("sm")}
                 >
                   <option value="">Todos</option>
                   {latest.countriesByVolume.map((row) => (
