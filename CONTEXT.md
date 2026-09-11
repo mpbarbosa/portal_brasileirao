@@ -15,6 +15,16 @@ tie-breakers. Rendered by `StandingsTable` and served by `/api/standings` as
 _Avoid_: "tabela" (ambiguous — reads as the HTML `<table>` element as often as the
 league table), "ranking" (not the Brazilian football word), "leaderboard".
 
+**Seta de mais conteúdo**:
+The floating arrow at the foot of the **Classificação** saying the page goes on
+below the table — `MoreBelowHint`, shown by `useMoreBelow` only while the reader
+is at the very top *and* the page has more below the fold. It leaves at the first
+scrolled pixel and a press moves the page most of a screen down. A notice, not a
+navigation control.
+_Avoid_: "voltar ao topo" (the opposite arrow, which this app does not have),
+"FAB" (MD3's floating action button is an action and sits in the corner; this
+sits centred and only says *continue*), "scroll hint" in pt-BR copy.
+
 **Variação**:
 Which way a club moved between the previous **Rodada** and the current one, and
 by how many places — a triangle at the right edge of the position cell in the

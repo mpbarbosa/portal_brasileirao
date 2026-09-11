@@ -137,6 +137,15 @@ export function MoonIcon({ className }: IconProps) {
   );
 }
 
+/** The **Seta de mais conteúdo**: a shaft and its head, pointing down the page. */
+export function ArrowDownIcon({ className }: IconProps) {
+  return (
+    <svg {...base} className={className}>
+      <path d="M12 4v16M5 13l7 7 7-7" />
+    </svg>
+  );
+}
+
 /**
  * The line kind of the **Campanha** mark, for the column's plot-kind toggle.
  *

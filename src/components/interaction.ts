@@ -162,11 +162,26 @@ export const ICON_LINK = [
  *
  * A second constant rather than a parameterised one, for the extraction reason
  * at the top of this file: `hover:bg-${role}/8` generates no CSS whatsoever.
+ *
+ * **The veil is an `::after` layer, never the element's own background**, and
+ * the first version of this constant is why. `hover:bg-on-primary-container/8`
+ * does not lay 8% over the fill — it *replaces* the `bg-primary-container` it
+ * was meant to tint, so on hover the control's container became an 8% wash and
+ * whatever sat behind it showed through. Measured in the page: at rest
+ * `rgb(0, 82, 53)`, on hover `oklab(… / 0.08)`. `STATE_LAYER` gets away with
+ * the direct form only because the controls it serves have no fill of their
+ * own to lose. It went unseen on the Entrar pill, over a header nearly the same
+ * colour, and surfaced on the Seta de mais conteúdo, which floats over a table.
+ *
+ * The owner must be positioned (`relative`, or `fixed`) and pill-shaped: the
+ * layer is `rounded-full` because both controls that take it are pills, and
+ * `before:` is left to `TOUCH_TARGET`, which both also carry.
  */
 export const STATE_LAYER_ON_PRIMARY_CONTAINER = [
-  "transition",
-  "hover:bg-on-primary-container/8",
-  "focus-visible:bg-on-primary-container/10",
-  "active:bg-on-primary-container/10",
+  "after:pointer-events-none after:absolute after:inset-0 after:rounded-full after:content-['']",
+  "after:transition",
+  "hover:after:bg-on-primary-container/8",
+  "focus-visible:after:bg-on-primary-container/10",
+  "active:after:bg-on-primary-container/10",
   FOCUS_RING,
 ].join(" ");
