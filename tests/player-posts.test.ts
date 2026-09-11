@@ -12,13 +12,23 @@ import { SEED_SQUADS } from "@/src/data/squads";
  * nothing written on it, while an empty `account` is a post whose provenance
  * the card cannot state.
  *
- * **There is no `check-player-posts` script and there cannot be one.** Instagram
- * answers the identical JavaScript shell for a real shortcode and an invented
- * one — measured, 620 681 bytes against 620 686, same title — so a checker would
- * confirm nothing while looking exactly like `check-hymns`, which confirms
- * something. `src/data/player-instagram.ts` records the same limit for handles.
- * Every entry is opened in a browser instead; what is left for a gate is the
- * shape, which is what this file holds.
+ * **No HTTP client can check an entry, and a browser can.** Instagram answers
+ * the identical JavaScript shell for a real shortcode and an invented one —
+ * measured, 620 681 bytes against 620 686, same title — so a script reporting
+ * "200 OK" would confirm nothing while looking exactly like `check-hymns`, which
+ * confirms something. `src/data/player-instagram.ts` records the same limit for
+ * handles. This paragraph used to conclude that there could therefore be no
+ * `check-player-posts` at all, and that was too strong: the `/embed/captioned/`
+ * page renders client-side, so a real engine reads what curl cannot.
+ * `npm run check-player-posts` drives Chromium over every entry and checks that
+ * the post still exists, that it is still published by the recorded `account`,
+ * and that the account is still verified. `src/data/player-posts.ts` carries
+ * the full argument.
+ *
+ * That checker talks to somebody else's server, so it runs in the monthly
+ * `curated-data.yml` rather than here. What is left for a unit test is the
+ * shape, which is what this file holds — plus a keyed player who has left the
+ * division, which needs no network and which the checker does not ask about.
  */
 
 /**
