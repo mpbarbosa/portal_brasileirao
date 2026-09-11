@@ -119,15 +119,26 @@ test("a match is a SportsEvent with a kickoff, a venue and both clubs", () => {
   assert.equal((event?.awayTeam as Record<string, unknown>).name, "Botafogo FR");
 });
 
-test("a match with no known venue omits the location rather than inventing one", () => {
+test("a match with no known venue emits no Event, rather than one Google rejects", () => {
+  // `location` is required of an Event. Omitting it was the first answer here,
+  // "rather than inventing one", and it traded an invented venue for an invalid
+  // item: Search Console's live test on /partida/555110 (2026-09-11) reported
+  // Eventos "1 item inválido", critical `O campo "location" não foi encontrado`,
+  // on a round-38 fixture the provider has not placed yet. 120 of the 380
+  // fixtures had no venue that day, three finished ones among them. The page
+  // keeps its breadcrumbs and stops asserting an Event it cannot complete: the
+  // rule that dropped `superEvent`, applied to the fixture itself.
   const { venue: _venue, ...noVenue } = MATCH;
-  const event = ofType(
-    structuredData({ section: "partida", id: "554970" }, { clubs: CLUBS, matches: [noVenue] }, ORIGIN),
-    "SportsEvent",
-  );
+  for (const status of ["SCHEDULED", "POSTPONED", "FINISHED"] as const) {
+    const blocks = structuredData(
+      { section: "partida", id: "554970" },
+      { clubs: CLUBS, matches: [{ ...noVenue, status }] },
+      ORIGIN,
+    );
 
-  assert.ok(event);
-  assert.ok(!("location" in event));
+    assert.equal(ofType(blocks, "SportsEvent"), undefined, status);
+    assert.ok(ofType(blocks, "BreadcrumbList"), status);
+  }
 });
 
 test("only the fixtures that did not go ahead get a status of their own", () => {

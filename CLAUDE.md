@@ -2370,6 +2370,22 @@ Inventing structure to satisfy a validator is the `maximumAttendeeCapacity` mist
 another costume. The node is dropped instead, and **the league association is not lost**:
 both teams carry `memberOf` the competition, which is where membership actually belongs.
 
+**A fixture with no venue emits no Event at all, for the same reason.** `location` is
+required of an Event, and a missing venue used to be answered by omitting the field
+("rather than inventing one"), which traded an invented stadium for an invalid item.
+Search Console's live test on `/partida/555110` (2026-09-11), a round-38 fixture the
+provider has not placed, reported Eventos **1 item inválido**, critical `O campo "location"
+não foi encontrado`. On that day's payload **120 of 380** fixtures had no venue: 114
+scheduled, 3 postponed, 3 finished. Putting them at the home club's ground is the invented
+structure the paragraph above rejects (clubs play away from home and share grounds), so
+`structuredData` emits the Event only once `match.venue` exists, and the page keeps its
+breadcrumbs meanwhile.
+
+**It also keeps every fictional midnight out of the markup, but only by coincidence of the
+data.** The 80 fixtures `withKickoffPrecision` marks date-only all lacked a venue that day,
+so none emitted a `startDate` of `00:00Z`. A round that gains its venues before its kickoff
+times would bring that back: `startDate` has no date-only branch.
+
 `organizer` (the CBF) and `image` (the page's own preview card, passed in from
 `page-meta-core` rather than rebuilt, so the two cannot disagree) answer two of Google's
 recommended fields. **Three stay absent on purpose** — `endDate`, because no source here

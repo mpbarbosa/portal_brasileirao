@@ -117,7 +117,10 @@ test.describe("Canônico", () => {
 test.describe("Dados estruturados", () => {
   test("a fixture page describes itself as a SportsEvent", async ({ page, request }) => {
     const body = await (await request.get("/api/matches")).json();
-    const match = body.data.matches[0];
+    // A fixture the provider has placed. One with no venue emits no Event at
+    // all (structured-data-core.ts), so taking the first fixture would make this
+    // depend on how the feed happens to sort on the day the snapshot is read.
+    const match = body.data.matches.find((entry: { venue?: unknown }) => entry.venue);
 
     await page.goto(`/partida/${match.id}`);
 
