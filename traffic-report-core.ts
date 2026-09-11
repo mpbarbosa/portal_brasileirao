@@ -276,6 +276,94 @@ export const selectSnapshotFiles = (names: string[], max: number = MAX_SNAPSHOTS
   max <= 0 ? [] : names.filter((name) => SNAPSHOT_FILE.test(name)).sort().slice(-max);
 
 /**
+ * Requests per minute between two cumulative readings, or null where the two
+ * instants do not separate.
+ *
+ * **Clamped at zero.** Every count here is cumulative over nginx's whole log
+ * window, and logrotate drops the oldest lines, so a total legitimately goes
+ * *down* across a rotation — the honest answer there is "no measurable rate",
+ * never a negative one. Null and zero stay different readings: an interval that
+ * cannot be measured is not an hour that served nobody.
+ *
+ * One function because the dashboard's three rates and the page's per-country
+ * line each wrote it out, and the clamp is exactly the part a copy drops.
+ */
+export const ratePerMinute = (before: number, after: number, minutes: number): number | null =>
+  minutes > 0 ? Math.max(0, Math.round((after - before) / minutes)) : null;
+
+/**
+ * One country's rate between consecutive snapshots, as chart points.
+ *
+ * **A country absent from a snapshot is skipped, never counted as zero** — the
+ * report ranks and truncates its geo sections, so "not in the top twenty" is not
+ * "no traffic", and drawing it as zero would invent a collapse. A pair whose
+ * instants do not separate is skipped for the reason `ratePerMinute` answers
+ * null for it.
+ *
+ * These counts include monitoring (see `TrafficTimelinePoint.countries`), so the
+ * line is comparable with `ratePerMin` and not with the visitor rate.
+ */
+export const countryRateSeries = (
+  timeline: TrafficTimelinePoint[],
+  country: string,
+): { x: number; y: number }[] => {
+  const points: { x: number; y: number }[] = [];
+  for (let i = 1; i < timeline.length; i++) {
+    const before = timeline[i - 1].countries[country];
+    const after = timeline[i].countries[country];
+    if (before == null || after == null) continue;
+    const rate = ratePerMinute(before, after, (timeline[i].t - timeline[i - 1].t) / 60000);
+    if (rate !== null) points.push({ x: timeline[i].t, y: rate });
+  }
+  return points;
+};
+
+/** nginx's English month abbreviations: the log's vocabulary, whatever the locale. */
+const LOG_MONTHS: Record<string, number> = {
+  Jan: 0, Feb: 1, Mar: 2, Apr: 3, May: 4, Jun: 5,
+  Jul: 6, Aug: 7, Sep: 8, Oct: 9, Nov: 10, Dec: 11,
+};
+
+const logDayValue = (label: string): number => {
+  const m = label.match(/(\d+)\/(\w+)\/(\d+)/);
+  return m ? Date.UTC(Number(m[3]), LOG_MONTHS[m[2]] ?? 0, Number(m[1])) : 0;
+};
+
+/**
+ * Day rows (`byDay`, `uniqueIpsByDay`) in calendar order, as a new array.
+ *
+ * The labels are nginx's `03/Sep/2026`, with an English month abbreviation
+ * whatever the host's locale — so the table above is the log's vocabulary and
+ * not a translated one: this is parsing a log, not writing for a reader. A label
+ * that does not parse sorts first rather than throwing.
+ *
+ * It lived in the page and again in `scripts/traffic-dashboard.ts`: two copies
+ * of a parser's rule outside the parser, in a module both already import.
+ */
+export const chronologicalDays = (rows: TrafficCountRow[]): TrafficCountRow[] =>
+  rows.slice().sort((a, b) => logDayValue(a.label) - logDayValue(b.label));
+
+/**
+ * The share of requests whose user agent declared a bot, 0–100, or null where it
+ * cannot be computed: no requests counted, or no bot figure in the summary.
+ */
+export const botShare = (snapshot: { bots?: number | null; requests?: number | null }): number | null =>
+  snapshot.requests && snapshot.bots != null ? (snapshot.bots / snapshot.requests) * 100 : null;
+
+/**
+ * The bot share as a reader sees it, `12,3%`: one decimal with the pt-BR comma,
+ * through `toLocaleString` — the convention `scouts-core`'s `valueLabel` states —
+ * rather than the `.toFixed(1).replace(".", ",")` the page and the local window
+ * each hand-rolled. Null where `botShare` is.
+ */
+export const botShareLabel = (snapshot: { bots?: number | null; requests?: number | null }): string | null => {
+  const share = botShare(snapshot);
+  return share === null
+    ? null
+    : `${share.toLocaleString("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%`;
+};
+
+/**
  * Build the `/api/traffic-dashboard` payload from every summary the caller
  * read: a cross-snapshot timeline plus the latest snapshot.
  *
@@ -312,24 +400,19 @@ export const buildTrafficDashboard = (
     if (i > 0) {
       const previous = snaps[i - 1];
       const minutes = (snap.generatedMs - previous.generatedMs) / 60000;
-      if (minutes > 0) {
-        const delta = (snap.requests ?? 0) - (previous.requests ?? 0);
-        // Clamped at zero: log rotation drops the oldest lines, so a cumulative
-        // total legitimately goes *down* across a rotation and the honest
-        // answer is "no measurable rate", never a negative one.
-        ratePerMin = Math.max(0, Math.round(delta / minutes));
+      // Clamped at zero and null where the stamps do not separate: see
+      // `ratePerMinute`, which all three rates here go through.
+      ratePerMin = ratePerMinute(previous.requests ?? 0, snap.requests ?? 0, minutes);
 
-        // The same difference over the requests a browser on this site caused.
-        // Both endpoints must carry a visitor figure or this is **null** rather
-        // than a fallback to the total: a summary written before the report
-        // counted them has no answer, and quietly drawing the total in its
-        // place puts two different quantities in one line — which is the very
-        // confusion this series exists to end. Same rule `countries` follows
-        // one field down, for the same reason.
-        if (snap.visitorHits != null && previous.visitorHits != null) {
-          const visitorDelta = (snap.visitorHits ?? 0) - (previous.visitorHits ?? 0);
-          visitorRatePerMin = Math.max(0, Math.round(visitorDelta / minutes));
-        }
+      // The same difference over the requests a browser on this site caused.
+      // Both endpoints must carry a visitor figure or this is **null** rather
+      // than a fallback to the total: a summary written before the report
+      // counted them has no answer, and quietly drawing the total in its
+      // place puts two different quantities in one line — which is the very
+      // confusion this series exists to end. Same rule `countries` follows
+      // one field down, for the same reason.
+      if (snap.visitorHits != null && previous.visitorHits != null) {
+        visitorRatePerMin = ratePerMinute(previous.visitorHits, snap.visitorHits, minutes);
       }
     }
 
@@ -349,10 +432,7 @@ export const buildTrafficDashboard = (
   const first = snaps[0];
   const latest = snaps[snaps.length - 1];
   const windowMinutes = (latest.generatedMs - first.generatedMs) / 60000;
-  const windowRatePerMin =
-    windowMinutes > 0
-      ? Math.max(0, Math.round(((latest.requests ?? 0) - (first.requests ?? 0)) / windowMinutes))
-      : null;
+  const windowRatePerMin = ratePerMinute(first.requests ?? 0, latest.requests ?? 0, windowMinutes);
 
   return {
     source: "traffic-log",

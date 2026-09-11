@@ -2,11 +2,17 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import {
+  botShare,
+  botShareLabel,
   buildTrafficDashboard,
+  chronologicalDays,
+  countryRateSeries,
   MAX_SNAPSHOTS,
   parseSummary,
+  ratePerMinute,
   selectSnapshotFiles,
 } from "@/traffic-report-core";
+import type { TrafficTimelinePoint } from "@/src/types";
 
 /**
  * A summary in the shape `shell_scripts/12_traffic_report.sh` writes. Taken
@@ -531,4 +537,60 @@ test("choosing snapshots does not reorder the caller's list", () => {
   const names = ["summary-20260901-100000.txt", "summary-20260901-090000.txt"];
   selectSnapshotFiles(names);
   assert.deepEqual(names, ["summary-20260901-100000.txt", "summary-20260901-090000.txt"]);
+});
+
+test("a rate between two cumulative readings is clamped at zero, and null where the instants do not separate", () => {
+  assert.equal(ratePerMinute(100, 160, 30), 2);
+  assert.equal(ratePerMinute(100, 100, 30), 0);
+  // Log rotation: the cumulative total legitimately falls.
+  assert.equal(ratePerMinute(500, 120, 60), 0);
+  assert.equal(ratePerMinute(100, 160, 0), null);
+  assert.equal(ratePerMinute(100, 160, -5), null);
+});
+
+test("a country's line skips the snapshots it is absent from rather than drawing a zero", () => {
+  const minute = 60_000;
+  const point = (t: number, countries: Record<string, number>): TrafficTimelinePoint => ({
+    t,
+    requests: 0,
+    uniqueIps: 0,
+    ratePerMin: null,
+    visitorRatePerMin: null,
+    countries,
+  });
+  const timeline = [
+    point(0, { Brazil: 100 }),
+    point(10 * minute, { Brazil: 200 }),
+    // Out of the top twenty here: neither the pair into it nor out of it is drawn.
+    point(20 * minute, {}),
+    point(30 * minute, { Brazil: 400 }),
+    // Same instant as the one before: not measurable.
+    point(30 * minute, { Brazil: 900 }),
+  ];
+  assert.deepEqual(countryRateSeries(timeline, "Brazil"), [{ x: 10 * minute, y: 10 }]);
+  assert.deepEqual(countryRateSeries(timeline, "Portugal"), []);
+});
+
+test("day rows follow the calendar the log label names, not the label's spelling", () => {
+  const rows = [
+    { label: "01/Oct/2026", count: 1 },
+    { label: "30/Sep/2026", count: 2 },
+    { label: "31/Dec/2025", count: 3 },
+    { label: "02/Sep/2026", count: 4 },
+  ];
+  assert.deepEqual(
+    chronologicalDays(rows).map((row) => row.label),
+    ["31/Dec/2025", "02/Sep/2026", "30/Sep/2026", "01/Oct/2026"],
+  );
+  assert.equal(rows[0].label, "01/Oct/2026", "the caller's rows are not reordered");
+});
+
+test("the bot share prints one pt-BR decimal, and nothing it cannot compute", () => {
+  assert.equal(botShare({ bots: 1, requests: 4 }), 25);
+  assert.equal(botShareLabel({ bots: 123, requests: 1000 }), "12,3%");
+  assert.equal(botShareLabel({ bots: 1, requests: 3 }), "33,3%");
+  assert.equal(botShareLabel({ bots: 1000, requests: 1000 }), "100,0%");
+  assert.equal(botShareLabel({ bots: 0, requests: 1000 }), "0,0%");
+  assert.equal(botShareLabel({ bots: 5, requests: 0 }), null);
+  assert.equal(botShareLabel({ bots: null, requests: 1000 }), null);
 });

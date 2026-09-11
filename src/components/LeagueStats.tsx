@@ -1,4 +1,4 @@
-import { bestAttacks, bestDefences, leagueSummary } from "@/league-stats-core";
+import { bestAttacks, bestDefences, goalsPerMatchLabel, leagueSummary } from "@/league-stats-core";
 import { clubKey } from "@/club-core";
 import { ClubCrest } from "@/src/components/ClubCrest";
 import { LINK_UNDERLINE } from "@/src/components/interaction";
@@ -124,7 +124,7 @@ export function LeagueStats({
         />
         {/* One decimal, because the second is noise at this scale and the first
             is the whole of what separates a tight season from an open one. */}
-        <Figure name="gols-por-jogo" label="Gols por jogo" value={summary.goalsPerMatch!.toFixed(1).replace(".", ",")} />
+        <Figure name="gols-por-jogo" label="Gols por jogo" value={goalsPerMatchLabel(summary) ?? "—"} />
         {/* "Vitórias do mandante", never "aproveitamento dos mandantes" — which
             is what the proposal called it. **Aproveitamento** is a defined term
             in CONTEXT.md meaning points taken over points available, and reusing

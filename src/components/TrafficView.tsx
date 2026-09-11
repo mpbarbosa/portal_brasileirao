@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 
 import { BACK_LINK } from "@/src/components/interaction";
 import { Surface } from "@/src/components/Surface";
+import { botShareLabel, chronologicalDays, countryRateSeries } from "@/traffic-report-core";
 import type {
   TrafficCountRow,
   TrafficDashboard,
@@ -457,19 +458,6 @@ function Statuses({ statusCodes }: { statusCodes: TrafficCountRow[] }) {
   );
 }
 
-/** Order the `03/Sep/2026` day labels chronologically. nginx writes an English
- *  month abbreviation whatever the locale, so the table is that vocabulary and
- *  not a translated one — it is parsing a log, not writing for a reader. */
-const MONTHS: Record<string, number> = {
-  Jan: 0, Feb: 1, Mar: 2, Apr: 3, May: 4, Jun: 5,
-  Jul: 6, Aug: 7, Sep: 8, Oct: 9, Nov: 10, Dec: 11,
-};
-const dayOrder = (label: string): number => {
-  const m = label.match(/(\d+)\/(\w+)\/(\d+)/);
-  return m ? Date.UTC(Number(m[3]), MONTHS[m[2]] ?? 0, Number(m[1])) : 0;
-};
-const chronological = (rows: TrafficCountRow[]): TrafficCountRow[] =>
-  rows.slice().sort((a, b) => dayOrder(a.label) - dayOrder(b.label));
 
 // ── The page ────────────────────────────────────────────────────────────────
 
@@ -528,7 +516,9 @@ export function TrafficView({ onBack }: { onBack: () => void }) {
    * as zero** — the report ranks and truncates, so "not in the top twenty" is
    * not "no traffic", and drawing it as a zero would invent a collapse. Same
    * rule for a snapshot with no monitor figure, which is one written before
-   * `12_traffic_report.sh` counted them.
+   * `12_traffic_report.sh` counted them. Both rules are `traffic-report-core`'s —
+   * `countryRateSeries` beside the payload's own rates — so the clamp and the
+   * skip cannot drift between what the page draws and what the payload says.
    */
   const rate = useMemo(() => {
     if (!country) {
@@ -547,16 +537,7 @@ export function TrafficView({ onBack }: { onBack: () => void }) {
           }
         : { primary: physical, context: undefined, filtered: false };
     }
-    const points: { x: number; y: number }[] = [];
-    for (let i = 1; i < timeline.length; i++) {
-      const before = timeline[i - 1].countries[country];
-      const after = timeline[i].countries[country];
-      if (before == null || after == null) continue;
-      const minutes = (timeline[i].t - timeline[i - 1].t) / 60000;
-      if (minutes <= 0) continue;
-      points.push({ x: timeline[i].t, y: Math.max(0, Math.round((after - before) / minutes)) });
-    }
-    return { primary: points, context: undefined, filtered: true };
+    return { primary: countryRateSeries(timeline, country), context: undefined, filtered: true };
   }, [timeline, country]);
 
   const heading = (
@@ -608,7 +589,6 @@ export function TrafficView({ onBack }: { onBack: () => void }) {
   }
 
   const read = new Date(latest.generated);
-  const botShare = latest.requests && latest.bots != null ? (latest.bots / latest.requests) * 100 : null;
   // Both geo blocks are conditional, and the country one has to be for the same
   // reason the city one already was: without a GeoLite2 database on the host
   // there is nothing to draw, and two cards reading "Sem dados." side by side
@@ -653,7 +633,7 @@ export function TrafficView({ onBack }: { onBack: () => void }) {
         />
         <Kpi
           label="Robôs"
-          value={botShare == null ? "—" : `${botShare.toFixed(1).replace(".", ",")}%`}
+          value={botShareLabel(latest) ?? "—"}
           hint={`${fmt(latest.bots)} de ${fmt(latest.requests)}`}
         />
         <Kpi
@@ -780,13 +760,13 @@ export function TrafficView({ onBack }: { onBack: () => void }) {
 
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
           <Panel title="Requisições por dia" caption="A janela inteira, dia a dia.">
-            <Bars rows={chronological(latest.byDay)} max={31} />
+            <Bars rows={chronologicalDays(latest.byDay)} max={31} />
           </Panel>
           <Panel
             title="Endereços por dia"
             caption="Endereços distintos por dia. Só as contagens saem do servidor."
           >
-            <Bars rows={chronological(latest.uniqueIpsByDay)} max={31} />
+            <Bars rows={chronologicalDays(latest.uniqueIpsByDay)} max={31} />
           </Panel>
         </div>
 

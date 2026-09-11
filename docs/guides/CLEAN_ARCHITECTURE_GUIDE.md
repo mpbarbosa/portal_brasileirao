@@ -129,7 +129,9 @@ route to put between them and the page.
 
 ## Current reality
 
-Last checked against the code by the change that added `withCuratedData` and `hasScore`.
+Re-validated in full against the code at `314d528` on 2026-09-11. A bullet added after
+that was checked by the change that added it — say which, rather than moving this line
+without re-running the whole check.
 
 - **`server.ts` is the composition root and is doing a lot of it.** Routing,
   caching, the circuit breaker, the merge chain and the SPA fallback are all
@@ -173,6 +175,16 @@ Last checked against the code by the change that added `withCuratedData` and `ha
   `withGoals`, `pageMeta` and two rules inside `matches-core` itself. The saldo's
   sign, which the Classificação and the club page each wrote out, is
   `goalDifferenceLabel` in `standings-core.ts`.
+- **The traffic page and the local window no longer keep copies of the
+  parser's rules.** The per-minute rate between two cumulative readings —
+  clamped at zero, null where the instants do not separate — is
+  `ratePerMinute`, and the dashboard's three rates and the page's per-country
+  line (`countryRateSeries`) all go through it; the log's `dd/Mon/yyyy` day
+  order is `chronologicalDays`; the bot share is `botShareLabel`. All live in
+  `traffic-report-core.ts`, which `npm run traffic-dashboard` already imported
+  for everything else. Goals per match is `goalsPerMatchLabel`
+  (`league-stats-core.ts`), and with it no code hand-rolls the pt-BR decimal
+  comma any more.
 - **`src/data/*.ts` is imported directly by both server and client.** It is
   committed data with no I/O, so it behaves as an inner layer, but nothing
   enforces that a generated file stays free of logic.
