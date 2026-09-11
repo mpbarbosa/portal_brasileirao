@@ -4804,6 +4804,16 @@ enforces rather than early and carved-out.
   `aria-hidden` with `tabIndex={-1}`**: the Surface becomes a focusable, labelled region
   while it overflows, which is the keyboard path and scrolls both ways; on a screen that
   fits there is no region, no tab stop and no hint, and a spec asserts that half too.
+  **The Artilharia wraps its table in the same component, and there the measurement
+  said the scroll itself was the defect.** It carried `min-w-[32rem]`, so on every
+  phone a 512px table sat in a 286–378px box with G, A, P and J off to the right;
+  without it the table fits at 320, 360, 375 and 412px, and the cost is wrapping —
+  one name at 360 and 375, six at 320, none at 412 (2026-09-11, frozen snapshot).
+  So the minimum width went and `TableScroller` stayed as the fallback, drawing
+  nothing while the table fits. **Ask whether a table needs to scroll before
+  telling the reader that it does**: a hint on a scroll nobody needed is a
+  well-made sign pointing at a wall. Its column key moved below and outside the
+  scroller, where the Classificação keeps its zone key.
 - **Elevation comes from the MD3 level scale.** `shadow-level-0` …
   `shadow-level-5`, defined in `src/index.css`. A bare `shadow`, `shadow-lg` or
   `shadow-xl` is a regression, and the gate above catches it. Each level is
