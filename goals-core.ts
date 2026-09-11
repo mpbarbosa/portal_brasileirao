@@ -16,7 +16,7 @@
  */
 import { hasScore } from "@/matches-core";
 import { matchPlayerByName } from "@/player-core";
-import type { ClubCode, Goal, GoalEntry, GoalKind, Match, Player, Squad } from "@/src/types";
+import type { ClubCode, Goal, GoalEntry, GoalKind, Lineup, Match, Player, Squad } from "@/src/types";
 
 /**
  * One row of CBF's `registros` array, which carries **goals and cards in the
@@ -318,12 +318,15 @@ export const encodeGoals = (goals: Goal[]): GoalEntry[] =>
  * A scorer the elencos cannot place — a departed player, an unresolvable
  * spelling, two players of one name — simply carries no id, and the page
  * renders the name it always did. See `matchPlayerByName` for why that refusal
- * is preferred to a guess.
+ * is preferred to a guess. So does a scorer whose id two shirts on the club's
+ * own team sheets both read as: `contested` is those ids, computed once from the
+ * season's team sheets by `contestedPlayerIds`, which explains why.
  */
 export const withGoals = (
   matches: Match[],
   goals: Record<string, Goal[]>,
   squads: Squad[],
+  contested: ReadonlyMap<ClubCode, ReadonlySet<string>>,
 ): Match[] => {
   const byClub = new Map<string, Player[]>(
     squads.map((squad) => [squad.club.code, squad.players]),
@@ -347,10 +350,83 @@ export const withGoals = (
       goals: scored.map((goal) => {
         const club = scorerClubCode(goal, match.homeCode, match.awayCode);
         const player = matchPlayerByName(goal.scorer, byClub.get(club) ?? []);
-        return player ? { ...goal, playerId: player.id } : goal;
+        if (!player || contested.get(club)?.has(player.id)) return goal;
+        return { ...goal, playerId: player.id };
       }),
     };
   });
+};
+
+/**
+ * The player ids that two different people on one club's own team sheets both
+ * resolve to, by club — ids no scorer may be given.
+ *
+ * **`matchPlayerByName`'s "exactly one candidate" is only as good as the list
+ * the candidates are counted in**, and that list is football-data's elenco,
+ * which is incomplete. A player it does not list leaves his namesake as the only
+ * candidate, and the rule then resolves, confidently, to the wrong man. Measured
+ * 2026-09-11: CBF prints Flamengo's "Jorge" (21) and "Carrascal" (15) on the same
+ * sheets, the elenco lists Jorge Carrascal and no other Jorge, and so both names
+ * resolved to him — two penalties opened Carrascal's card, and in 554874 he was
+ * not on the sheet at all.
+ *
+ * The team sheets are a second source that can see the player the elenco omits,
+ * because **two shirts on one sheet are two people**. An id both of them read as
+ * is refused for every goal at that club. Nothing here decides which of the two
+ * the id really belongs to — "Carrascal" is very probably Carrascal, and that is
+ * a guess of exactly the kind this join exists to refuse. Measured the same day:
+ * five ids contested across the season, 18 of 549 links removed, most of them
+ * probably right. That is the price, and it is paid on purpose.
+ *
+ * Shirts rather than names decide "a different entry", because CBF prints two
+ * players "Gabriel" as readily as it prints two different names; a sheet lists
+ * each shirt once, and `lineupsReconcile` refuses a sheet with an unnumbered
+ * player.
+ *
+ * **Read across the whole season, never only the goal's own fixture**, and that
+ * is load-bearing rather than thorough: in 554874 the sheet held a single
+ * "Jorge", so a check scoped to that match finds no contest and links him again.
+ *
+ * One resolution per club and name rather than per appearance — a season is
+ * about 500 sheets but about 850 distinct names. The whole pass still measured
+ * 33ms, which is why `withGoals` takes the result rather than the sheets:
+ * `server.ts` computes it once at boot, because the offline branch of
+ * `loadMatches` rebuilds the curated fixture list on every request.
+ */
+export const contestedPlayerIds = (
+  lineups: Record<string, Lineup[]>,
+  squads: Squad[],
+): Map<ClubCode, Set<string>> => {
+  const byClub = new Map<string, Player[]>(
+    squads.map((squad) => [squad.club.code, squad.players]),
+  );
+  const resolved = new Map<string, string | null>();
+  const contested = new Map<ClubCode, Set<string>>();
+
+  for (const sheets of Object.values(lineups)) {
+    for (const sheet of sheets) {
+      const shirtFor = new Map<string, string>();
+      for (const entry of sheet.players) {
+        const key = `${sheet.clubCode}:${entry.name}`;
+        let id = resolved.get(key);
+        if (id === undefined) {
+          id = matchPlayerByName(entry.name, byClub.get(sheet.clubCode) ?? [])?.id ?? null;
+          resolved.set(key, id);
+        }
+        if (id === null) continue;
+
+        const held = shirtFor.get(id);
+        if (held !== undefined && held !== entry.shirt) {
+          const ids = contested.get(sheet.clubCode) ?? new Set<string>();
+          ids.add(id);
+          contested.set(sheet.clubCode, ids);
+        }
+        shirtFor.set(id, entry.shirt);
+      }
+    }
+  }
+
+  return contested;
 };
 
 /**
