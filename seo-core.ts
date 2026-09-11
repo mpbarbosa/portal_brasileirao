@@ -18,7 +18,7 @@ import { findMatch } from "@/match-core";
 import { findStadium } from "@/venue-core";
 import { roundsOf } from "@/matches-core";
 import type { MetaContext } from "@/page-meta-core";
-import { formatRoute, type Route } from "@/route-core";
+import { formatRoute, pathSegments, type Route } from "@/route-core";
 import type { Match, Stadium } from "@/src/types";
 
 /** Sections that name a real page. Anything else is a 404, not a redirect to
@@ -190,17 +190,6 @@ const FOUND: PageStatus = { status: 200, index: true, reason: "ok" };
 const PRIVATE: PageStatus = { status: 200, index: false, reason: "private" };
 const missing = (reason: StatusReason): PageStatus => ({ status: 404, index: false, reason });
 
-/** `decodeURIComponent` throws on a malformed escape like `%E0%A4%A`, and a
- *  crawler will find one. Null means "not a path we can read" — a 404, never an
- *  exception escaping into the request handler. */
-const decodeSegments = (pathname: string): string[] | null => {
-  try {
-    return pathname.split("/").filter(Boolean).map(decodeURIComponent);
-  } catch {
-    return null;
-  }
-};
-
 const ROUND_PATTERN = /^[1-9]\d*$/;
 
 /**
@@ -214,7 +203,7 @@ const ROUND_PATTERN = /^[1-9]\d*$/;
  * Absence of proof is a 200 here, deliberately.
  */
 export const pageStatus = (pathname: string, context: MetaContext = {}): PageStatus => {
-  const segments = decodeSegments(pathname);
+  const segments = pathSegments(pathname);
   if (segments === null) return missing("malformed-path");
 
   const [first, second, ...rest] = segments;

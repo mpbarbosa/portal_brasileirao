@@ -142,8 +142,11 @@ Last checked against the code by the change that added `withCuratedData` and `ha
   fixture TTL reads `hasLiveMatch`, the predicate the client's refresh rate
   already used; and `/api/matches` and `/api/players/:id` validate through
   `parseRoundParam` and `isPersonId`. `firstHeaderValue` moved to `seo-core.ts`
-  beside `resolveOrigin`, its one remaining consumer. What remains is
-  `decodable`, a `try` around `decodeURIComponent`.
+  beside `resolveOrigin`, its one remaining consumer. `decodable` moved to
+  `route-core.ts`, beside `pathSegments` — which `pageStatus` now shares rather
+  than carrying its own copy — so the app catches a malformed percent-escape in
+  exactly one place, and the guard, the router and the status code cannot
+  disagree about what a readable address is.
 - **Moving `firstHeaderValue` found a bypass in the sign-in rate limiter.** The
   limiter keyed its bucket on the same client-most entry of `X-Forwarded-For`,
   and nginx's `$proxy_add_x_forwarded_for` appends the address it saw to whatever

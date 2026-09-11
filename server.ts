@@ -64,7 +64,7 @@ import {
   roundsOf,
 } from "@/matches-core";
 import { injectMeta, pageMeta, type MetaContext } from "@/page-meta-core";
-import { namesSubject, parseRoute } from "@/route-core";
+import { decodable, namesSubject, parseRoute } from "@/route-core";
 import { hasLiveMatch } from "@/live-core";
 import { buildTrafficDashboard } from "@/traffic-report-core";
 import { buildStadiums } from "@/venue-core";
@@ -648,29 +648,6 @@ const renderShell = async (
   );
 };
 
-/** Whether a URL survives percent-decoding. Both the router and Vite decode
- *  what they are handed, and neither is prepared for a malformed escape. */
-const decodable = (value: string): boolean => {
-  try {
-    decodeURIComponent(value);
-    return true;
-  } catch {
-    return false;
-  }
-};
-
-/**
- * Register the SPA fallback, and the guard that has to come before it.
- *
- * `app.get("/{*splat}")` matches through a wildcard **parameter**, and Express
- * percent-decodes parameters while matching — so `/clube/%` throws `URIError`
- * inside the router and Express answers its own 400 error page before any
- * handler runs. Express 5 did not change that: `decodeParam` in
- * path-to-regexp v8 still throws, verified by removing this guard and watching
- * `/clube/%` answer 400 from Express rather than 404 from the app. A crawler will send one of those eventually. The guard decodes
- * first and, when it cannot, hands the request to the same renderer as any
- * other address that names nothing: the app, and a 404.
- */
 /* ------------------------------------------------------------------ *
  * Contas
  *
@@ -1164,6 +1141,18 @@ app.delete("/api/account", (req, res) => {
   res.status(204).end();
 });
 
+/**
+ * Register the SPA fallback, and the guard that has to come before it.
+ *
+ * `app.get("/{*splat}")` matches through a wildcard **parameter**, and Express
+ * percent-decodes parameters while matching — so `/clube/%` throws `URIError`
+ * inside the router and Express answers its own 400 error page before any
+ * handler runs. Express 5 did not change that: `decodeParam` in
+ * path-to-regexp v8 still throws, verified by removing this guard and watching
+ * `/clube/%` answer 400 from Express rather than 404 from the app. A crawler will send one of those eventually. The guard decodes
+ * first and, when it cannot, hands the request to the same renderer as any
+ * other address that names nothing: the app, and a 404.
+ */
 const registerSpaFallback = (shellFor: (req: express.Request) => Promise<string>): void => {
   const serve: express.RequestHandler = async (req, res, next) => {
     try {

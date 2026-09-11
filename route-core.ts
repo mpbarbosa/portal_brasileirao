@@ -82,22 +82,51 @@ export const HOME: Route = { section: "classificacao" };
 const isRound = (value: string): boolean => /^[1-9]\d*$/.test(value);
 
 /**
- * Split and percent-decode a pathname, treating an undecodable one as empty.
+ * A percent-decoded string, or null where it cannot be decoded.
  *
  * `decodeURIComponent` throws `URIError` on a malformed escape — `/clube/%`,
- * `/clube/%E0%A4%A` — and a crawler will eventually send one. Left to throw,
- * that surfaces as a 500 from the SPA handler, which is both the wrong answer
- * and the one shape of failure this module exists to rule out: every path is
- * supposed to resolve to something. It resolves to the table, and `pageStatus`
- * in `seo-core` is what gives it a 404 rather than an indexable duplicate.
+ * `/clube/%E0%A4%A` — and a crawler will eventually send one. This is the one
+ * place in the app that catches it. The router, `pageStatus` in `seo-core` and
+ * the server's SPA-fallback guard all ask through here, so what counts as a
+ * readable address cannot come to differ between the page, its status code and
+ * the guard in front of both — which is how a request ends up a 404 in one and
+ * a 500 in another.
  */
-const decodeSegments = (pathname: string): string[] => {
-  const raw = pathname.split("/").filter(Boolean);
+const decodeOrNull = (value: string): string | null => {
   try {
-    return raw.map(decodeURIComponent);
+    return decodeURIComponent(value);
   } catch {
-    return [];
+    return null;
   }
+};
+
+/**
+ * Whether a URL survives percent-decoding.
+ *
+ * The server's question rather than the router's: Express decodes a wildcard
+ * parameter while matching and Vite decodes the URL it resolves a shell from,
+ * and neither is prepared for a malformed escape, so the guard asks this before
+ * handing a request to either.
+ */
+export const decodable = (value: string): boolean => decodeOrNull(value) !== null;
+
+/**
+ * A pathname's segments, percent-decoded — or null when any one is malformed.
+ *
+ * All or nothing, because a route read from the segments that did decode would
+ * be a different address from the one requested. The two callers then part
+ * company on purpose: `parseRoute` resolves an unreadable path to the table,
+ * since every path is supposed to land somewhere, and `pageStatus` calls the
+ * same null a 404, so that table is not an indexable duplicate.
+ */
+export const pathSegments = (pathname: string): string[] | null => {
+  const decoded: string[] = [];
+  for (const raw of pathname.split("/").filter(Boolean)) {
+    const segment = decodeOrNull(raw);
+    if (segment === null) return null;
+    decoded.push(segment);
+  }
+  return decoded;
 };
 
 /**
@@ -105,7 +134,8 @@ const decodeSegments = (pathname: string): string[] => {
  * rather than erroring: a stale or mistyped link should land somewhere useful.
  */
 export const parseRoute = (pathname: string): Route => {
-  const [first, second] = decodeSegments(pathname);
+  // An unreadable path resolves to the table; `pageStatus` is what 404s it.
+  const [first, second] = pathSegments(pathname) ?? [];
 
   switch (first) {
     case undefined:
