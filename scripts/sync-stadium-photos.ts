@@ -43,7 +43,7 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import path from "node:path";
 
-import { creditMatches, deedFor, redistributable } from "@/commons-core";
+import { commonsFilePage, creditMatches, deedFor, redistributable } from "@/commons-core";
 import { commonsBytes, commonsFacts, pause } from "@/scripts/commons-api";
 import { STADIUMS } from "@/src/data/stadiums";
 import { PHOTO_WIDTHS } from "@/venue-core";
@@ -133,7 +133,7 @@ licence and credit from Commons so this table cannot drift from what is served.
 ${credits
   .map(
     (c) =>
-      `| \`${c.slug}-*.jpg\` | ${c.name} | [${c.file}](https://commons.wikimedia.org/wiki/File:${encodeURIComponent(c.file.replace(/ /g, "_"))}) | [${c.license}](${deedFor(c.license) ?? ""}) | ${c.credit} |`,
+      `| \`${c.slug}-*.jpg\` | ${c.name} | [${c.file}](${commonsFilePage(c.file)}) | [${c.license}](${deedFor(c.license) ?? ""}) | ${c.credit} |`,
   )
   .join("\n")}
 `,

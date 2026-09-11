@@ -148,13 +148,13 @@ git ls-tree --name-only origin/main docs/screenshots/ | wc -l
   `CLAUDE.md` is the authority and is very large; this guide set exists partly to
   give principles a home that is citable in review. Where the two disagree,
   `CLAUDE.md` is authoritative and this file should be corrected.
-- **Agreement gates exist, and most cross-file facts still have none.** Beside
-  the Node gate, `tests/appearance-paths.test.ts`, `tests/e2e-fixture.test.ts`
-  and the seed-reach case in `tests/scouts-core.test.ts` each hold a property
-  across files that no import connects. Still ungated: the deploy directory
-  written into the shell scripts, the AWS identifiers written into the
-  workflows, and the rehearsal and curated-data checker lists in the workflows
-  against the scripts they run.
+- **Agreement gates exist, and some cross-file facts still have none.** Beside
+  the Node gate, `tests/appearance-paths.test.ts`, `tests/e2e-fixture.test.ts`,
+  the seed-reach case in `tests/scouts-core.test.ts` and
+  `tests/workflow-lists.test.ts` — the rehearsal and curated-data checker lists
+  in the workflows against the scripts they run — each hold a property across
+  files that no import connects. Still ungated: the deploy directory written
+  into the shell scripts, and the AWS identifiers written into the workflows.
 
 ## Review heuristics
 

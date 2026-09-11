@@ -25,6 +25,7 @@ import { readFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { dirname, join } from "node:path";
 import { randomBytes } from "node:crypto";
+import { youtubeWatchUrl } from "@/club-core";
 import { GOOGLE_AUTHORIZE_URL, GOOGLE_TOKEN_URL, newVerifier, challengeFor } from "@/oauth-core";
 
 /**
@@ -335,7 +336,7 @@ export const setThumbnail = async (token: string, videoId: string, png: string):
  */
 export const oembed = async (videoId: string): Promise<{ status: number; payload: unknown }> => {
   const target = `https://www.youtube.com/oembed?url=${encodeURIComponent(
-    `https://www.youtube.com/watch?v=${videoId}`,
+    youtubeWatchUrl(videoId),
   )}&format=json`;
   const response = await fetch(target);
   if (!response.ok) return { status: response.status, payload: null };

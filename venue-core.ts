@@ -17,6 +17,7 @@
  * a second normaliser is how `atletico-mg` and `atlético-mg` come to disagree.
  */
 import { slugify } from "@/club-core";
+import { commonsFilePage } from "@/commons-core";
 import { compareByKickoff } from "@/matches-core";
 import type { Club, Match, Stadium, StadiumFacts, StadiumPhoto, Venue } from "@/src/types";
 
@@ -84,13 +85,10 @@ export const stadiumPhotoUrl = (slug: string, width: number): string =>
  * upload history actually live.
  *
  * Every Creative Commons licence in use here asks that the reuser point back at
- * the work, and this is that link. Spaces become underscores because a Commons
- * page title is written that way in a URL; `encodeURIComponent` then handles
- * the accents, and deliberately runs **after** the substitution so it does not
- * percent-encode the underscores it just introduced.
+ * the work, and this is that link — built by `commonsFilePage`, which the
+ * player card and the photo syncs' `CREDITS.md` share.
  */
-export const stadiumPhotoPage = (photo: StadiumPhoto): string =>
-  `https://commons.wikimedia.org/wiki/File:${encodeURIComponent(photo.file.replace(/ /g, "_"))}`;
+export const stadiumPhotoPage = (photo: StadiumPhoto): string => commonsFilePage(photo.file);
 
 /** Fixtures played at one stadium, in kickoff order. */
 export const stadiumMatches = (matches: Match[], slug: string): Match[] =>

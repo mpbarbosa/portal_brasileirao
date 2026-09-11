@@ -49,6 +49,7 @@
  *   1  at least one does not — the line says which and why.
  */
 import { wikipediaUrl } from "@/club-core";
+import { MONTH_NAMES } from "@/events-core";
 import { withPlayerOverrides } from "@/player-core";
 import { PLAYER_OVERRIDES } from "@/src/data/player-overrides";
 import { PLAYER_WIKIPEDIA } from "@/src/data/player-wikipedia";
@@ -58,18 +59,13 @@ import type { Player } from "@/src/types";
 const API = "https://pt.wikipedia.org/w/api.php";
 const AGENT = "portal-brasileirao/1.0 (https://brasileirao.mpbarbosa.com)";
 
-const MONTHS = [
-  "janeiro", "fevereiro", "março", "abril", "maio", "junho",
-  "julho", "agosto", "setembro", "outubro", "novembro", "dezembro",
-];
-
 /**
  * Every way pt-BR writes one date. The first of the month is an ordinal, and
  * articles disagree on whether it carries the period.
  */
 const writtenDates = (iso: string): string[] => {
   const [year, month, day] = iso.split("-");
-  const name = MONTHS[Number(month) - 1];
+  const name = MONTH_NAMES[Number(month) - 1];
   const forms = Number(day) === 1 ? ["1", "1º", "1.º"] : [String(Number(day))];
   return forms.map((form) => `${form} de ${name} de ${year}`);
 };

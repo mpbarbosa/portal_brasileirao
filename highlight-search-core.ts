@@ -15,6 +15,7 @@
  * publishing none — the page already degrades to an honest search — so a
  * candidate has to earn acceptance rather than merely fail to look wrong.
  */
+import { markKey } from "@/broadcast-core";
 import type { Match } from "@/src/types";
 
 export interface KnownChannel {
@@ -96,14 +97,16 @@ const OTHER_COMPETITIONS = [
   "AMISTOSO",
 ];
 
-/** Accents, case and punctuation all vary between channels; none of it carries
- *  meaning here. */
-export const normalize = (value: string): string =>
-  value
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toUpperCase()
-    .replace(/[^A-Z0-9]/g, "");
+/**
+ * Accents, case and punctuation all vary between channels and in how a title
+ * spells a club; none of it carries meaning here.
+ *
+ * It **is** `markKey`, the fold the broadcaster marks are looked up by, rather
+ * than a copy of it: the two were character-for-character identical, and a
+ * second copy of a fold is how one of them comes to treat a character the
+ * other does not.
+ */
+export const normalize = markKey;
 
 export interface Candidate {
   videoId: string;
@@ -328,5 +331,3 @@ export const bestPerChannel = (verdicts: Verdict[]): Verdict[] => {
   // Preference order, which is also stable, so a rerun produces the same file.
   return [...best.values()].sort((a, b) => rankOf(a.channel ?? "") - rankOf(b.channel ?? ""));
 };
-
-export const watchUrl = (videoId: string): string => `https://www.youtube.com/watch?v=${videoId}`;

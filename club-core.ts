@@ -624,13 +624,22 @@ export const youtubeVideoId = (raw: string | undefined): string | null => {
   return /^[A-Za-z0-9_-]{11}$/.test(id) ? id : null;
 };
 
-/** The canonical watch address for a video id, or null if there is no id to
- *  build one from. The origin is written **here and nowhere else**, so the
- *  hymn link and the Vídeos rail cannot come to point at two spellings of
- *  YouTube. */
+/**
+ * The watch address for a video id already known to be one.
+ *
+ * The origin is written **here and nowhere else**, so the hymn link, the
+ * Vídeos rail, the highlight search and the YouTube scripts cannot come to
+ * point at two spellings of YouTube. That sentence sat on `videoWatchUrl` below
+ * while `highlight-search-core.ts` and two scripts each wrote the origin out
+ * again; it is true now because they build through this.
+ */
+export const youtubeWatchUrl = (id: string): string => `https://www.youtube.com/watch?v=${id}`;
+
+/** The canonical watch address for whatever a person pasted, or null if there
+ *  is no id to build one from. */
 export const videoWatchUrl = (raw: string | undefined): string | null => {
   const id = youtubeVideoId(raw);
-  return id && `https://www.youtube.com/watch?v=${id}`;
+  return id && youtubeWatchUrl(id);
 };
 
 /**

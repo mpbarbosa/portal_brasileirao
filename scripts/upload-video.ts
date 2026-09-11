@@ -49,6 +49,7 @@ import {
   tokenFile,
   uploadVideo,
 } from "@/scripts/youtube-api";
+import { youtubeWatchUrl } from "@/club-core";
 
 const die = (message: string): never => {
   console.error(`\n✗ ${message}\n`);
@@ -200,7 +201,7 @@ const runUpload = async (
 
   console.log(`… enviando ${megabytes(bytes)} (videos.insert custa 1600 das 10.000 unidades/dia)`);
   const videoId = await uploadVideo(token, body, paths.mp4);
-  console.log(`\n✓ no ar como https://www.youtube.com/watch?v=${videoId}`);
+  console.log(`\n✓ no ar como ${youtubeWatchUrl(videoId)}`);
 
   if (options.thumbnail) {
     try {

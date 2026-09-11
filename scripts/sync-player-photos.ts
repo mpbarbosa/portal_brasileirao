@@ -42,7 +42,7 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import path from "node:path";
 
-import { creditMatches, deedFor, redistributable } from "@/commons-core";
+import { commonsFilePage, creditMatches, deedFor, redistributable } from "@/commons-core";
 import { PLAYER_PHOTO_WIDTHS } from "@/player-core";
 import { commonsBytes, commonsFacts, pause } from "@/scripts/commons-api";
 import { PLAYER_PHOTOS } from "@/src/data/player-photos";
@@ -161,7 +161,7 @@ this table cannot drift from what is served.
 ${credits
   .map(
     (c) =>
-      `| \`${c.id}-*.jpg\` | ${c.name} | ${c.club} | [${c.file}](https://commons.wikimedia.org/wiki/File:${encodeURIComponent(c.file.replace(/ /g, "_"))}) | ${c.license} | ${c.credit} |`,
+      `| \`${c.id}-*.jpg\` | ${c.name} | ${c.club} | [${c.file}](${commonsFilePage(c.file)}) | ${c.license} | ${c.credit} |`,
   )
   .join("\n")}
 `,

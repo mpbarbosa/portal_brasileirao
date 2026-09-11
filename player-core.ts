@@ -3,6 +3,7 @@
  * functions over their inputs (tests/player-core.test.ts).
  */
 import { instagramHandle, instagramPostCode, wikipediaUrl } from "@/club-core";
+import { commonsFilePage } from "@/commons-core";
 import type {
   Player,
   PlayerOverride,
@@ -484,14 +485,10 @@ export const playerPhotoUrl = (id: string, width: number): string =>
 /**
  * The file's description page — where the licence, the photographer and the
  * upload history live. Every Creative Commons licence in use asks the reuser to
- * point back at the work, and this is that link.
- *
- * Spaces become underscores because a Commons page title is written that way in
- * a URL, and `encodeURIComponent` runs **after** the substitution so it does not
- * percent-encode the underscores it just introduced.
+ * point back at the work, and this is that link — built by `commonsFilePage`,
+ * which the stadium page and the photo syncs' `CREDITS.md` share.
  */
-export const playerPhotoPage = (photo: PlayerPhoto): string =>
-  `https://commons.wikimedia.org/wiki/File:${encodeURIComponent(photo.file.replace(/ /g, "_"))}`;
+export const playerPhotoPage = (photo: PlayerPhoto): string => commonsFilePage(photo.file);
 
 /**
  * Month abbreviations, written down rather than taken from `Intl`.

@@ -2799,7 +2799,8 @@ CI*.
 
 **A monthly workflow now runs every one of them, and it still is not CI.**
 `.github/workflows/curated-data.yml` runs the curated-data checkers — count the
-`for c in` line rather than a number here — on the
+`for c in` line rather than a number here (`tests/workflow-lists.test.ts`
+holds it to `package.json`'s `check-*` scripts) — on the
 first of the month and reports into an **issue** — opening one, commenting while
 the failure persists, and closing it when everything resolves again. The job is
 **always green**, which is the whole design: a rotted third-party link is data
@@ -5160,7 +5161,8 @@ in two parallel jobs:
 
 - **check** — `tsc --noEmit`, unit tests, build, then boots `dist/server.cjs` and
   smoke-tests it, then shellchecks the deploy scripts and **runs the rehearsals**
-  — count the `rehearse-` steps in the workflow rather than a number here. The boot step is the one that catches a runtime
+  — count the `rehearse-` steps in the workflow rather than a number here;
+  `tests/workflow-lists.test.ts` fails when a script is not among them. The boot step is the one that catches a runtime
   dependency stranded in `devDependencies`; the rehearsals are the only thing
   that catches a script which no longer does what it says. The two host-script
   ones gate the deploy because `shell_scripts/` is packaged into the payload by
@@ -5303,10 +5305,13 @@ wrong answer came from the commit's own author.** `b957cc9` adds the club's
 subreddit to the link row on the club page — markup and a component, not a
 fixture id — so *"this cannot reach a paint"* is plainly false as a statement
 about the app, and its message says in as many words that it moves pixels in
-`clube-*`. It moves them on **Flamengo's** page. `club-reddit.ts` holds one
-entry, `"1783"`, the anchor renders only under `sub && subName`, and the
-committed capture is `/clube/palmeiras`, code `1769` — so nothing in the set of
-twenty can change. The paragraph above generalises: *reaches paint* and
+`clube-*`. It moved them on **Flamengo's** page. At that commit `club-reddit.ts`
+held one entry, `"1783"`, the anchor renders only under `sub && subName`, and
+the committed capture is `/clube/palmeiras`, code `1769` — so nothing in the set
+of twenty could change. **That is a reading of that commit, not of the file
+now:** Palmeiras has had a subreddit since, so the same edit today does reach
+`clube-palmeiras-*`, and the command below is how to tell rather than this
+paragraph, which said *holds one entry* for as long as it took the file to grow. The paragraph above generalises: *reaches paint* and
 *reaches a captured frame* are different questions, and only the second is the
 one the gate is asking.
 
