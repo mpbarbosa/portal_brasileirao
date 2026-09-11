@@ -159,6 +159,17 @@
  * this file already records that exact name plus exact date is not a unique
  * key here, so a second Carlos Vinícius arriving in a transfer window is the
  * case that would need this re-read rather than trusted.
+ *
+ * ## A handle whose bio names no club
+ *
+ * `gabigol` (`1327`, Santos) arrived with a Publicação somebody pasted, and it
+ * is the one entry here the bio cannot vouch for: opened 2026-09-11, the
+ * profile reads `Gabriel B. (@gabigol)`, verified, 11.1M followers, and a bio of
+ * a sponsor handle and a company link — no club at all. So the identity rests
+ * on `flacolopez_10`'s stronger join instead. Wikidata's item for this `P2003`
+ * carries **`P12302` = `358554`**, byte-identical to what `player-sofascore.ts`
+ * already records for `1327`, and a `P569` of `1996-08-30`, the date `squads.ts`
+ * lists. Two curated files agreeing on one item, not one date trusted alone.
  */
 export const PLAYER_INSTAGRAM: Record<string, string> = {
   "192070": "kevinviveros9",     // Kevin Viveros · Athletico-PR
@@ -238,6 +249,7 @@ export const PLAYER_INSTAGRAM: Record<string, string> = {
   "119594": "mauriciomp7",       // Mauricio · Palmeiras
   "140647": "ramon.sosa17",      // Ramón Sosa · Palmeiras
   "181439": "vitor_roque9",      // Vítor Roque · Palmeiras
+  "1327": "gabigol",             // Gabriel Barbosa · Santos
   "99380": "gabrielbrazao1",     // Gabriel Brazão · Santos
   "139933": "gabrielmenino00",   // Gabriel Menino · Santos
   "1086": "luanperes94",         // Luan Peres · Santos
