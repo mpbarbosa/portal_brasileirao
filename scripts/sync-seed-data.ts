@@ -21,7 +21,7 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 
-import { clubAddress, officialSiteUrl } from "@/club-core";
+import { clubAddress, duplicateClubKeys, officialSiteUrl } from "@/club-core";
 import {
   clubFromTeam,
   mapMatch,
@@ -113,16 +113,11 @@ const clubs: SeedClub[] = rawTeams
   .sort((a, b) => a.shortName.localeCompare(b.shortName, "pt-BR"));
 
 // Validate the output rather than trusting it. A display-name override keyed to
-// the wrong id renames the wrong club, which reads as perfectly plausible data.
-const duplicatesOf = (key: "code" | "shortName" | "slug") =>
-  clubs.map((club) => club[key]).filter((value, i, all) => value && all.indexOf(value) !== i);
-
-for (const key of ["code", "shortName", "slug"] as const) {
-  const dupes = duplicatesOf(key);
-  if (dupes.length) {
-    console.error(`Error: duplicate club ${key}:`, dupes);
-    process.exit(1);
-  }
+// the wrong id renames the wrong club, which reads as perfectly plausible data —
+// see `duplicateClubKeys`, where the refusal is tested.
+for (const { key, values } of duplicateClubKeys(clubs)) {
+  console.error(`Error: duplicate club ${key}:`, values);
+  process.exit(1);
 }
 
 if (clubs.length === 0) {

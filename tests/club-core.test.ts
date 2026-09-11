@@ -18,6 +18,7 @@ import {
   crestMonogram,
   discordInvite,
   discordUrl,
+  duplicateClubKeys,
   findClub,
   hasClubArticle,
   hymnUrl,
@@ -1199,4 +1200,38 @@ test("every coach override names a club in this division, and changes something"
       `${code}: the override equals the seed's own value, so upstream has fixed it`,
     );
   }
+});
+
+test("duplicateClubKeys names a code, short name or slug two clubs share", () => {
+  const two = [
+    { code: "1783", shortName: "Flamengo", slug: "flamengo" },
+    { code: "1769", shortName: "Palmeiras", slug: "palmeiras" },
+  ];
+  assert.deepEqual(duplicateClubKeys(two), []);
+
+  // An override keyed to the wrong id: a second, perfectly plausible Flamengo.
+  assert.deepEqual(
+    duplicateClubKeys([...two, { code: "1770", shortName: "Flamengo", slug: "flamengo" }]),
+    [
+      { key: "shortName", values: ["Flamengo"] },
+      { key: "slug", values: ["flamengo"] },
+    ],
+  );
+  assert.deepEqual(duplicateClubKeys([...two, { code: "1783", shortName: "Outro", slug: "outro" }]), [
+    { key: "code", values: ["1783"] },
+  ]);
+});
+
+test("duplicateClubKeys does not call two absent slugs a duplicate", () => {
+  assert.deepEqual(
+    duplicateClubKeys([
+      { code: "1", shortName: "A" },
+      { code: "2", shortName: "B" },
+    ]),
+    [],
+  );
+});
+
+test("the committed club list has no duplicate code, short name or slug", () => {
+  assert.deepEqual(duplicateClubKeys(CLUBS), []);
 });
