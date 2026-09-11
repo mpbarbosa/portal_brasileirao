@@ -1064,3 +1064,26 @@ export const withClubDetails = (clubs: Club[], known: Club[]): Club[] => {
     };
   });
 };
+
+/**
+ * The keys more than one club shares — an empty list when every code, short name
+ * and slug is unique.
+ *
+ * `sync-seed-data` refuses to write a seed where this is non-empty, for the
+ * reason stated there: a display-name override keyed to the wrong id renames the
+ * wrong club, which reads as perfectly plausible data, and two clubs sharing a
+ * slug share a URL. It lived inline in that script, after its top-level
+ * requests, so no test could reach it. An absent slug is not a duplicate of
+ * another absent slug.
+ */
+export const duplicateClubKeys = (
+  clubs: Pick<Club, "code" | "shortName" | "slug">[],
+): { key: "code" | "shortName" | "slug"; values: string[] }[] =>
+  (["code", "shortName", "slug"] as const)
+    .map((key) => ({
+      key,
+      values: clubs
+        .map((club) => club[key])
+        .filter((value, i, all): value is string => Boolean(value) && all.indexOf(value) !== i),
+    }))
+    .filter((entry) => entry.values.length > 0);

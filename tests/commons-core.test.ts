@@ -47,6 +47,15 @@ test("we may host what we can credit, and nothing we cannot name", () => {
   assert.equal(redistributable("CC BY-ND 4.0"), false);
   assert.equal(redistributable("Fair use"), false);
   assert.equal(redistributable(""), false);
+
+  // "Public domain" is the second commonest tag among candidate photographs, and
+  // the refusal to think hardest about before widening: on Commons it is an
+  // umbrella over dozens of country-specific and contested tags, with no single
+  // deed a reuser could rely on. Refused until a named rule exists — and now
+  // asserted, because nothing asserted it before.
+  assert.equal(redistributable("Public domain"), false);
+  assert.equal(redistributable("public domain"), false);
+  assert.equal(redistributable("PD-self"), false);
 });
 
 test("the dictated attribution outranks the recorded artist", () => {

@@ -63,6 +63,42 @@ export const computeRankHistory = (clubs: Club[], matches: Match[]): ClubRankHis
 };
 
 /**
+ * Why a computed history cannot be written — an empty list when it can.
+ *
+ * Two properties, both invisible once the history is drawn as a line: every club
+ * has an entry for every round up to `lastRound`, and each round's positions are
+ * exactly 1..N — a permutation, so no position is missing or held twice. A
+ * repeated position means the table and the history disagree, and a sparkline
+ * draws it without complaint.
+ *
+ * It lived inline in `scripts/sync-rank-history.ts`, which runs when it is
+ * imported, so neither refusal was ever tested. Problems are returned rather than
+ * thrown so the script keeps its own wording and exit code, and all of them are
+ * reported at once.
+ */
+export const rankHistoryProblems = (history: ClubRankHistory[], lastRound: number): string[] => {
+  const problems: string[] = [];
+
+  for (const club of history) {
+    if (club.entries.length !== lastRound) {
+      problems.push(`${club.shortName} has ${club.entries.length} of ${lastRound} rounds.`);
+    }
+  }
+
+  const expected = history.map((_, index) => index + 1).join(",");
+  for (let round = 1; round <= lastRound; round += 1) {
+    const positions = history
+      .map((club) => club.entries[round - 1]?.position)
+      .sort((a, b) => (a ?? 0) - (b ?? 0));
+    if (positions.join(",") !== expected) {
+      problems.push(`round ${round} positions are not 1..${history.length}: ${positions.join(",")}`);
+    }
+  }
+
+  return problems;
+};
+
+/**
  * The club's position after a given round, or null when the round is outside
  * the recorded history — a caller asking about round 38 in August gets an
  * absence rather than the last known position, which would read as a result.

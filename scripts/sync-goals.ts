@@ -55,11 +55,7 @@ import {
 } from "@/escalacao-core";
 import { joinMatch, SERIE_A_CATEGORIA_ID, type CbfFixture } from "@/broadcast-core";
 import {
-  cbfScore,
-  goalsFromRegistros,
-  goalsReconcile,
-  isKnownGoalResult,
-  GOAL_TIPO,
+  assessCbfGoals,
   type CbfRegistro,
 } from "@/goals-core";
 import {
@@ -392,65 +388,21 @@ for (const { jogo, ourId } of targets) {
     continue;
   }
 
-  const registros = detail.registros ?? [];
-
-  // Check the vocabulary *before* trusting any of it. A `resultado` this
-  // build has never seen might be an own goal, and an own goal counts for the
-  // club that did not score it — so an unrecognised code is a reason to skip
-  // the match, not to shrug and file the goal as ordinary.
-  const strange = registros.filter(
-    (registro) =>
-      (registro.tipo ?? "").trim().toUpperCase() === GOAL_TIPO &&
-      !isKnownGoalResult(registro.resultado),
+  // Every refusal between CBF's payload and a recorded goal list, in the order the
+  // rule needs them — the vocabulary first, then a score, then CBF against itself,
+  // then CBF against us. See `assessCbfGoals`, where each branch is tested.
+  const verdict = assessCbfGoals(
+    detail.registros ?? [],
+    { home: detail.mandante?.gols, away: detail.visitante?.gols },
+    { homeCbfId, awayCbfId, homeCode: ours.homeCode, awayCode: ours.awayCode },
+    { homeGoals: ours.homeGoals, awayGoals: ours.awayGoals },
   );
-  if (strange.length > 0) {
-    for (const registro of strange) {
-      unknownCodes.set(String(registro.resultado), label);
-    }
-    unreconciled.push(
-      `${label} — unknown resultado ${strange.map((r) => JSON.stringify(r.resultado)).join(", ")}`,
-    );
+  if (!verdict.ok) {
+    for (const code of verdict.unknownCodes) unknownCodes.set(code, label);
+    unreconciled.push(`${label} — ${verdict.reason}`);
     continue;
   }
-
-  const scored = goalsFromRegistros(registros, {
-    homeCbfId,
-    awayCbfId,
-    homeCode: ours.homeCode,
-    awayCode: ours.awayCode,
-  });
-
-  // Two checks, each catching a different failure.
-  //
-  // The first is CBF against itself: do the goals it lists add up to the score
-  // it reports? This is what would catch an own goal filed under the club that
-  // scored it rather than the club it counts for.
-  //
-  // `cbfScore` and never `Number()`: a null or blank score is 0 to `Number`, and
-  // a 0-0 read out of nothing passes both checks against a real 0-0 of ours.
-  const cbfHome = cbfScore(detail.mandante?.gols);
-  const cbfAway = cbfScore(detail.visitante?.gols);
-  if (cbfHome === null || cbfAway === null) {
-    unreconciled.push(
-      `${label} — CBF reports no score (${JSON.stringify(detail.mandante?.gols)} x ${JSON.stringify(detail.visitante?.gols)})`,
-    );
-    continue;
-  }
-  if (!goalsReconcile(scored, ours.homeCode, ours.awayCode, cbfHome, cbfAway)) {
-    unreconciled.push(
-      `${label} — CBF lists ${scored.length} goal(s) against its own ${cbfHome}x${cbfAway}`,
-    );
-    continue;
-  }
-
-  // The second is CBF against us: a disagreement here means the join picked the
-  // wrong fixture, which would attach one match's goals to another.
-  if (cbfHome !== ours.homeGoals || cbfAway !== ours.awayGoals) {
-    unreconciled.push(
-      `${label} — CBF says ${cbfHome}x${cbfAway}, we have ${ours.homeGoals}x${ours.awayGoals}`,
-    );
-    continue;
-  }
+  const scored = verdict.goals;
 
   /**
    * The escalação, recorded here and not further down, because everything below

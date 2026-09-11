@@ -1,21 +1,57 @@
 import { expect, test } from "@/tests/e2e/clock";
+import { readMatches, serveMatches, type MatchesPayload } from "@/tests/e2e/matches-payload";
+import type { Lineup } from "@/src/types";
 
 /**
  * The **escalações** on a Partida page.
  *
- * Fixture 554977 — Palmeiras 4x1 Vasco, rodada 24 — is the one the capture set
- * already opens and the one `goals.spec.ts` uses, so it is the fixture most
- * likely to keep working: the same sync run that gave it scorers gave it team
- * sheets, and the two cannot come apart because one script writes both files.
+ * The fixture is **read off the payload the server built**, never named. These
+ * specs opened 554977 — Palmeiras 4x1 Vasco — on the argument that the fixture
+ * the capture set photographs was the one most likely to keep working. It did,
+ * and that is the trap the goalkeeper spec below records: an assertion that
+ * holds because one record happens to be flagged correctly is a claim about that
+ * record, and `sync-goals` rewrites `src/data/escalacoes.ts` a window at a time.
  *
- * The suite boots with `DISABLE_FOOTBALL_DATA=true`, so everything here reads
- * the frozen snapshot merged with `src/data/escalacoes.ts`.
+ * So the specs ask the payload for a fixture with the shape they need — two
+ * team sheets of eleven starters and a bench, both starting goalkeepers flagged,
+ * a substitution whose two players are on the sheet — and fail by name when
+ * none has it. The suite boots with `DISABLE_FOOTBALL_DATA=true`, so the payload
+ * is the frozen snapshot merged with `src/data/escalacoes.ts`.
  */
-const MATCH = "554977";
+const fullSheet = (lineup: Lineup) =>
+  lineup.players.filter((player) => player.starter).length === 11 &&
+  lineup.players.length >= 15 &&
+  lineup.players.some((player) => player.starter && player.keeper);
+
+const namesItsFirstChange = (lineup: Lineup) => {
+  const first = lineup.subs?.[0];
+  return (
+    !!first &&
+    lineup.players.some((player) => player.name === first.on) &&
+    lineup.players.some((player) => player.name === first.off)
+  );
+};
+
+const sheetFixture = (body: MatchesPayload) => {
+  const match = body.data.matches.find((candidate) => {
+    const lineups = candidate.lineups as Lineup[] | undefined;
+    return (
+      lineups?.length === 2 && lineups.every(fullSheet) && lineups.some(namesItsFirstChange)
+    );
+  });
+  if (!match) {
+    throw new Error(
+      "no fixture in /api/matches has two full team sheets, both starting keepers flagged " +
+        "and a substitution between two players on the sheet",
+    );
+  }
+  return match;
+};
 
 test.describe("Escalações", () => {
   test("the section is closed on arrival and opens to two team sheets", async ({ page }) => {
-    await page.goto(`/partida/${MATCH}`);
+    const match = sheetFixture(await readMatches(page));
+    await page.goto(`/partida/${match.id}`);
 
     const section = page.locator("details", { has: page.getByRole("heading", { name: "Escalações" }) });
     await expect(section).toBeVisible();
@@ -41,7 +77,8 @@ test.describe("Escalações", () => {
   test("each side lists exactly eleven starters, and this fixture names a goalkeeper", async ({
     page,
   }) => {
-    await page.goto(`/partida/${MATCH}`);
+    const match = sheetFixture(await readMatches(page));
+    await page.goto(`/partida/${match.id}`);
     await page.getByRole("heading", { name: "Escalações" }).click();
 
     const sheets = page.locator("[data-lineup]");
@@ -55,11 +92,12 @@ test.describe("Escalações", () => {
       const starters = sheet.locator("ul").first().locator("li");
       await expect(starters).toHaveCount(11);
       await expect(sheet.locator("[data-bench] li").first()).toBeVisible();
-      // **True of 554977, and NOT a property of a team sheet** — which is what
-      // this test asserted, and what its own name claimed, until it was
-      // measured: 4 of the season's 486 sides name no goalkeeper at all,
-      // because CBF flagged the reserve and left the starter as `"false"`.
-      // Scoped to the fixture on purpose; the general case is the test below.
+      // **True of the fixture `sheetFixture` picks, and NOT a property of a
+      // team sheet** — which is what this test asserted, and what its own name
+      // claimed, until it was measured: 4 of the season's 486 sides name no
+      // goalkeeper at all, because CBF flagged the reserve and left the starter
+      // as `"false"`. The fixture is chosen for having both flags; the general
+      // case is the test below.
       await expect(sheet.getByText("(GOL)").first()).toBeVisible();
     }
   });
@@ -83,28 +121,14 @@ test.describe("Escalações", () => {
      * page's contract is therefore the one it already keeps everywhere else: an
      * absent value renders as nothing, never as a dash or a guess.
      */
-    const response = await page.request.get("/api/matches");
-    const body = await response.json();
-    body.data.matches = body.data.matches.map((match: Record<string, unknown>) => ({
-      ...match,
-      lineups: Array.isArray(match.lineups)
-        ? match.lineups.map((lineup: Record<string, unknown>) => ({
-            ...lineup,
-            players: (lineup.players as Record<string, unknown>[]).map(
-              ({ keeper: _dropped, ...player }) => player,
-            ),
-          }))
-        : match.lineups,
-    }));
-    await page.route("**/api/matches*", (route) =>
-      route.fulfill({
-        status: 200,
-        contentType: "application/json",
-        body: JSON.stringify(body),
-      }),
-    );
+    const body = await readMatches(page);
+    const match = sheetFixture(body);
+    for (const lineup of match.lineups as Lineup[]) {
+      for (const player of lineup.players) delete player.keeper;
+    }
+    await serveMatches(page, body);
 
-    await page.goto(`/partida/${MATCH}`);
+    await page.goto(`/partida/${match.id}`);
     await page.getByRole("heading", { name: "Escalações" }).click();
 
     const sheets = page.locator("[data-lineup]");
@@ -121,12 +145,13 @@ test.describe("Escalações", () => {
   });
 
   test("substitutions print a minute, a name and who they replaced", async ({ page }) => {
-    await page.goto(`/partida/${MATCH}`);
+    const match = sheetFixture(await readMatches(page));
+    await page.goto(`/partida/${match.id}`);
     await page.getByRole("heading", { name: "Escalações" }).click();
 
     const subs = page.locator("[data-subs] li");
-    // Both sides made changes in this fixture; the count comes from CBF's own
-    // `alteracoes`, which the sync refuses to write unless the súmula agrees.
+    // The fixture is chosen for carrying a change; the count comes from CBF's
+    // own `alteracoes`, which the sync refuses to write unless the súmula agrees.
     await expect(subs.first()).toBeVisible();
 
     // A minute, or the word for the one moment that has none. Asserted as a
@@ -149,25 +174,17 @@ test.describe("Escalações", () => {
      * had one. A sync widening coverage from six matches to 34 gave it one, and
      * the spec went red for a reason that has nothing to do with what it tests.
      *
-     * That is `goals.spec.ts`'s lesson one file over, which its own header
-     * states: never depend on *which* record happens to lack a value, because
-     * every sync moves it. Strip `lineups` from the payload and the branch is
-     * reached rather than found.
+     * That is `goals.spec.ts`'s lesson one file over: never depend on *which*
+     * record happens to lack a value, because every sync moves it. Strip
+     * `lineups` from a fixture that has them and the branch is reached rather
+     * than found.
      */
-    const response = await page.request.get("/api/matches");
-    const body = await response.json();
-    body.data.matches = body.data.matches.map(
-      ({ lineups: _lineups, ...match }: Record<string, unknown>) => match,
-    );
-    await page.route("**/api/matches*", (route) =>
-      route.fulfill({
-        status: 200,
-        contentType: "application/json",
-        body: JSON.stringify(body),
-      }),
-    );
+    const body = await readMatches(page);
+    const match = sheetFixture(body);
+    delete match.lineups;
+    await serveMatches(page, body);
 
-    await page.goto(`/partida/${MATCH}`);
+    await page.goto(`/partida/${match.id}`);
     await expect(page.locator("main article")).toBeVisible();
     // Nothing renders — no heading, no empty panel, and no dash standing in for
     // a value nobody has.
@@ -194,28 +211,18 @@ test.describe("Escalações", () => {
      * exactly how that spec's "minuteless fixture" broke.
      */
     const LABELS = ["7'", "Intervalo", "45+2'", "90+8'"];
-    const response = await page.request.get("/api/matches");
-    const body = await response.json();
-    body.data.matches = body.data.matches.map((match: Record<string, unknown>) =>
-      match.id === MATCH && Array.isArray(match.lineups)
-        ? {
-            ...match,
-            lineups: match.lineups.map((lineup: Record<string, unknown>) => ({
-              ...lineup,
-              subs: LABELS.map((minute, index) => ({
-                minute,
-                on: (lineup.players as { name: string }[])[index].name,
-                off: (lineup.players as { name: string }[])[index + 11].name,
-              })),
-            })),
-          }
-        : match,
-    );
-    await page.route("**/api/matches*", (route) =>
-      route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(body) }),
-    );
+    const body = await readMatches(page);
+    const match = sheetFixture(body);
+    for (const lineup of match.lineups as Lineup[]) {
+      lineup.subs = LABELS.map((minute, index) => ({
+        minute,
+        on: lineup.players[index].name,
+        off: lineup.players[index + 11].name,
+      }));
+    }
+    await serveMatches(page, body);
 
-    await page.goto(`/partida/${MATCH}`);
+    await page.goto(`/partida/${match.id}`);
     await page.getByRole("heading", { name: "Escalações" }).click();
 
     const list = page.locator("[data-subs]").first();
@@ -271,37 +278,27 @@ test.describe("Escalações", () => {
      * committed before `Substitution.onShirt` existed. A resync would fill that
      * field in and silently retire this assertion otherwise.
      */
-    const response = await page.request.get("/api/matches");
-    const body = await response.json();
+    const body = await readMatches(page);
+    const match = sheetFixture(body);
 
     let onShirt = "";
     let offShirt = "";
-    for (const match of body.data.matches) {
-      if (match.id !== MATCH) continue;
-      for (const lineup of match.lineups ?? []) {
-        if (!lineup.subs?.length || onShirt) continue;
-        const [first] = lineup.subs;
-        const entering = lineup.players.find((p: { name: string }) => p.name === first.on);
-        const leaving = lineup.players.find((p: { name: string }) => p.name === first.off);
-        if (!entering || !leaving) continue;
-        onShirt = entering.shirt;
-        offShirt = leaving.shirt;
-        entering.name = "Homônimo";
-        leaving.name = "Homônimo";
-        lineup.subs = [{ on: "Homônimo", off: "Homônimo", minute: first.minute }];
-      }
+    for (const lineup of match.lineups as Lineup[]) {
+      if (!namesItsFirstChange(lineup) || onShirt) continue;
+      const [first] = lineup.subs!;
+      const entering = lineup.players.find((player) => player.name === first.on)!;
+      const leaving = lineup.players.find((player) => player.name === first.off)!;
+      onShirt = entering.shirt;
+      offShirt = leaving.shirt;
+      entering.name = "Homônimo";
+      leaving.name = "Homônimo";
+      lineup.subs = [{ on: "Homônimo", off: "Homônimo", minute: first.minute }];
     }
     expect(onShirt, "the fixture should carry a substitution to rewrite").not.toBe("");
 
-    await page.route("**/api/matches*", (route) =>
-      route.fulfill({
-        status: 200,
-        contentType: "application/json",
-        body: JSON.stringify(body),
-      }),
-    );
+    await serveMatches(page, body);
 
-    await page.goto(`/partida/${MATCH}`);
+    await page.goto(`/partida/${match.id}`);
     await page.getByRole("heading", { name: "Escalações" }).click();
 
     // Both numbers, and in the order the row is said: who came on, then who
@@ -318,5 +315,4 @@ test.describe("Escalações", () => {
       await expect(other).not.toHaveText(/^(\d{1,3}(\+\d{1,2})?'|Intervalo)\s*\d+\s/);
     }
   });
-
 });

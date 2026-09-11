@@ -304,6 +304,72 @@ export const cbfScore = (value: unknown): number | null => {
   return /^\d+$/.test(digits) ? Number(digits) : null;
 };
 
+/** What `assessCbfGoals` concluded about one CBF match. */
+export type CbfGoalsVerdict =
+  | { ok: true; goals: Goal[] }
+  | { ok: false; reason: string; unknownCodes: string[] };
+
+/**
+ * Whether one CBF match's goals may be recorded against our fixture — the goals
+ * when they may, the reason when they may not.
+ *
+ * Every refusal `scripts/sync-goals.ts` makes between CBF's payload and a written
+ * goal list, **in the order it makes them**, because the order is part of the
+ * rule: the vocabulary is checked before any goal is trusted, since an unknown
+ * `resultado` might be an own goal that counts for the other side. Then CBF must
+ * report a score (`cbfScore`), its goals must add up to it (`goalsReconcile`, CBF
+ * against itself), and that score must be ours (CBF against us — the check that
+ * proves the join picked this fixture). The predicates were tested; the sequence
+ * lived inline in a script that talks to CBF when it is imported, so nothing
+ * tested that the script actually refused.
+ *
+ * `unknownCodes` carries the codes a refusal found, for the script's report of
+ * vocabulary to add; every other refusal carries none.
+ */
+export const assessCbfGoals = (
+  registros: CbfRegistro[],
+  gols: { home: unknown; away: unknown },
+  sides: SideMap,
+  ours: { homeGoals: number; awayGoals: number },
+): CbfGoalsVerdict => {
+  const strange = registros.filter(
+    (registro) =>
+      (registro.tipo ?? "").trim().toUpperCase() === GOAL_TIPO &&
+      !isKnownGoalResult(registro.resultado),
+  );
+  if (strange.length > 0) {
+    return {
+      ok: false,
+      reason: `unknown resultado ${strange.map((r) => JSON.stringify(r.resultado)).join(", ")}`,
+      unknownCodes: strange.map((r) => String(r.resultado)),
+    };
+  }
+
+  const goals = goalsFromRegistros(registros, sides);
+
+  const home = cbfScore(gols.home);
+  const away = cbfScore(gols.away);
+  if (home === null || away === null) {
+    return {
+      ok: false,
+      reason: `CBF reports no score (${JSON.stringify(gols.home)} x ${JSON.stringify(gols.away)})`,
+      unknownCodes: [],
+    };
+  }
+  if (!goalsReconcile(goals, sides.homeCode, sides.awayCode, home, away)) {
+    return { ok: false, reason: `CBF lists ${goals.length} goal(s) against its own ${home}x${away}`, unknownCodes: [] };
+  }
+  if (home !== ours.homeGoals || away !== ours.awayGoals) {
+    return {
+      ok: false,
+      reason: `CBF says ${home}x${away}, we have ${ours.homeGoals}x${ours.awayGoals}`,
+      unknownCodes: [],
+    };
+  }
+
+  return { ok: true, goals };
+};
+
 /**
  * Attach synced goals to the matches whose own scoreline still agrees with them.
  *

@@ -149,3 +149,44 @@ test("the skip rule fires on a call and not on prose about one", () => {
   assert.equal(skipsItself('// which is what a `test.skip` here would do.\ntest("x", async () => {});'), false);
   assert.equal(skipsItself('test("x", async () => {});'), false);
 });
+
+/**
+ * No spec opens a fixture by a literal id.
+ *
+ * An id in a spec is a claim about which record holds a value — the trap
+ * `CLAUDE.md` names under **End-to-end tests** — and the ones this suite held
+ * broke or went quiet on syncs: 554977 as the minuteless fixture, 554972's
+ * broadcasters, round 24's venues. A spec produces the fixture it needs in a
+ * prepared payload (`tests/e2e/matches-payload.ts`), or reads one with the
+ * right shape off the payload the server built.
+ *
+ * Matched as a quoted or path-prefixed six-digit number starting 55, the shape
+ * of every fixture id in the seed (554740 to 555110 when this landed), after
+ * comments are stripped — so a spec can go on recording which id it used to
+ * pin. Only `*.spec.ts` is swept; the README captures depict particular
+ * fixtures and are images, not assertions.
+ */
+export const pinsFixtureId = (source: string): boolean =>
+  /["'`/]55\d{4}\b/.test(stripComments(source));
+
+test("no end-to-end spec opens a fixture by a literal id", () => {
+  const offenders = specs().filter((name) =>
+    pinsFixtureId(readFileSync(path.join(E2E, name), "utf8")),
+  );
+
+  assert.deepEqual(
+    offenders,
+    [],
+    `these specs name a fixture by id, which is a claim about which record holds a value: ${offenders.join(", ")}. ` +
+      "Produce the fixture with a prepared payload (tests/e2e/matches-payload.ts), or read one off /api/matches.",
+  );
+});
+
+test("the id rule fires on a pinned fixture and not on prose or other numbers", () => {
+  assert.equal(pinsFixtureId('await page.goto("/partida/554977");'), true);
+  assert.equal(pinsFixtureId('const MATCH = "554977";'), true);
+  assert.equal(pinsFixtureId("await page.goto(`/partida/554951`);"), true);
+  assert.equal(pinsFixtureId('// It opened 554977 by name.\nawait page.goto(`/partida/${id}`);'), false);
+  assert.equal(pinsFixtureId("const WIDTH = 551234;"), false);
+  assert.equal(pinsFixtureId('const url = "https://www.youtube.com/watch?v=0ceAn6TLVtE";'), false);
+});
