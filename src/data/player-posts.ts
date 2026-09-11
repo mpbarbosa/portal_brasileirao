@@ -145,4 +145,17 @@ export const PLAYER_POSTS: Record<string, PlayerPost[]> = {
         "O Palmeiras celebra as 200 partidas de Flaco López pelo clube — o 5º estrangeiro a chegar lá.",
     },
   ],
+
+  // Carlos Vinícius · Grêmio. Opened 2026-09-11: publicado pela própria conta
+  // dele, `carlosvinicius95`, verificada, 676 mil seguidores — o mesmo handle
+  // que `player-instagram.ts` registra —, em 4 de setembro. Um carrossel dele
+  // com a camisa do Grêmio, comemorando a classificação do clube. O primeiro
+  // post aqui publicado pelo jogador e não pelo clube.
+  "37833": [
+    {
+      code: "Dc2foWLjsoh",
+      account: "carlosvinicius95",
+      summary: "Carlos Vinícius comemora a classificação do Grêmio, com a camisa tricolor.",
+    },
+  ],
 };
