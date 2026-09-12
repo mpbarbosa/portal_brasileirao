@@ -1565,8 +1565,12 @@ note its `currentTeam` is often a national team, which is why the card prefers t
 club the page already knew),
 `/api/matches` (optional `?round=` — a non-integer or `< 1` is a 400).
 `/api/traffic-dashboard` (the traffic snapshots on this host, parsed — see
-**Tráfego** below; `Disallow`ed in `robots.txt` and cached 5 minutes, because
-the timer that writes its input runs hourly).
+**Tráfego** below; cached 5 minutes, because the timer that writes its input
+runs hourly). **It is NOT `Disallow`ed**, and this bullet said it was: `robotsTxt`
+disallows `/trafego`, the *page*, and the payload is crawlable and `noindex`ed
+like every other content route — which is the rule, since a fetch of it has no
+side effect. Read the page's unlisted-not-private paragraph below as being about
+the page alone.
 
 ### Tráfego — the access log, and the two windows onto it
 
