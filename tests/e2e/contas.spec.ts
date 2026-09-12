@@ -165,6 +165,76 @@ test.describe("Contas", () => {
     expect(await response.json()).toBeNull();
   });
 
+  /**
+   * The CSRF check, asserted where it is WIRED rather than where it is written.
+   *
+   * `isSameOriginRequest` is thoroughly unit-tested — `tests/session-core.test.ts`
+   * carries seven cases including the literal `"null"` a sandboxed frame sends, a
+   * wrong scheme and a wrong port. What nothing covered is that the four routes
+   * which change something actually *call* it. Measured before writing this:
+   * deleting the `if (!sameOrigin(req))` block from **all four** and running the
+   * account specs gave **102 passed**. A predicate with tests and no wiring is a
+   * rule nobody runs.
+   *
+   * Each route is asserted separately and deliberately, rather than one standing
+   * in for the family: the check is four independent copies, so a spec that
+   * tested one would stay green while another lost it.
+   *
+   * No session is needed and none is established — the origin check runs **before**
+   * the cookie is read and before the 401, which is itself the right order and is
+   * what makes this testable with `page.request`, whose Node-side fetch cannot
+   * carry a `__Host-` cookie over http anyway.
+   */
+  test("a forged Origin is refused on every route that changes something", async ({ page }) => {
+    const mutating = [
+      { method: "post" as const, path: "/api/auth/logout" },
+      { method: "post" as const, path: "/api/auth/dev-login" },
+      { method: "put" as const, path: "/api/account/preferences" },
+      { method: "delete" as const, path: "/api/account" },
+    ];
+
+    for (const { method, path } of mutating) {
+      const response = await page.request[method](path, {
+        headers: { Origin: "https://invasor.example" },
+        data: {},
+      });
+
+      expect(response.status(), `${method.toUpperCase()} ${path} did not refuse a forged Origin`).toBe(403);
+      // pt-BR, and a real status code rather than a cheerful envelope — the
+      // documented exception to the envelope rule.
+      expect((await response.json()).error).toContain("Origem");
+    }
+  });
+
+  test("the Origin a sandboxed frame sends is refused too", async ({ page }) => {
+    // A frame with `sandbox` and no `allow-same-origin` sends the **string**
+    // `"null"`, which is not our origin and must not be read as "no Origin".
+    const response = await page.request.post("/api/auth/logout", {
+      headers: { Origin: "null" },
+    });
+
+    expect(response.status()).toBe(403);
+  });
+
+  test("an ABSENT Origin is allowed, which is the decision and not the bug", async ({ page }) => {
+    // The known-negative for the two tests above: without it they pass against a
+    // route that refuses everything, and the 403 stops being about the Origin.
+    //
+    // It is also the half worth writing down, because it reads like a hole. Not
+    // every browser sends `Origin` on a same-origin form post, so refusing an
+    // absent one would break real clients; the cookie's `SameSite=Lax` is what
+    // covers that case, and this check is the second lock rather than the only
+    // one. A token scheme is only worth it if this app ever needs
+    // `SameSite=None`.
+    //
+    // Signed out and with no session to end, so the route does its work and
+    // answers 204 — the point being only that it is NOT 403.
+    const response = await page.request.post("/api/auth/logout");
+
+    expect(response.status()).not.toBe(403);
+    expect(response.status()).toBe(204);
+  });
+
   test("signing out everywhere ends the other sessions too", async ({ browser }) => {
     // Two contexts are two browsers: the same account, two devices.
     const phone = await browser.newContext();
