@@ -247,17 +247,23 @@ degraded payload.
   `{ error }` as a pt-BR string, discriminated by status code. The only client is
   ours and it branches on the code, so a taxonomy would have one consumer.
 - **Field naming is camelCase throughout**, matching `src/types.ts`.
-- **Four of the rules above are untested, and the two refusals are the ones that
-  matter.** `tests/e2e/api.spec.ts` drives health, standings, clubs, coaches, the
-  SPA fallthrough and `/api/matches` including both its 400s; `/api/squads` is
-  reached once, from `coaches.spec.ts`. Nothing anywhere asserts the
-  **`/api/players/:id` 400** or the **`/api/stadium-weather/:slug` 404**, and
-  `/api/scorers` and `/api/traffic-dashboard` are never requested against the real
-  server at all — their pages are, which is a different claim. `weather.spec.ts`
-  reaches that route only through `page.route` stubs, so the *Trust test* below
-  rests on a branch the suite has never executed: a fulfilled stub settles
-  Playwright's own accounting and cannot reproduce a failure of the route it
-  replaced. A new refusal here earns a case in `api.spec.ts`, not a stub.
+- **Two of the rules above are untested, and the two refusals no longer are.**
+  `tests/e2e/api.spec.ts` drives health, standings, clubs, coaches, the SPA
+  fallthrough, `/api/matches` including both its 400s, and — since the cases were
+  added — the **`/api/players/:id` 400** and the **`/api/stadium-weather/:slug`
+  404**, each paired with the answer beside it, because a route that refused
+  *everything* would pass a refusal-only spec. `/api/squads` is reached once, from
+  `coaches.spec.ts`. **`/api/scorers` and `/api/traffic-dashboard` are still never
+  requested against the real server** — their pages are, which is a different
+  claim.
+- **A refusal earns a case in `api.spec.ts`, not a stub.** `weather.spec.ts`
+  reaches that route only through `page.route`, which is right for serving a
+  prepared payload and cannot test a refusal at all: a fulfilled stub settles
+  Playwright's own accounting, so it cannot reproduce a failure of the route it
+  replaced — the trap `CLAUDE.md` records about a spec that passed against the
+  very bug it named. The three mutations the new cases were confirmed against are
+  the guard each one is about: drop `isPersonId`, drop the `!facts` refusal, drop
+  the `slugify` on the incoming slug.
 - **Rate limiting is one route, not a surface.** `rateLimited` has exactly **one**
   call site — `/api/auth/google`, where a sign-in begins. `callback`, `logout`,
   `dev-login` and all three `/api/account/*` routes are unlimited, as are every

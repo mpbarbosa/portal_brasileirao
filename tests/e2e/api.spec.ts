@@ -1,4 +1,5 @@
 import { expect, test } from "@/tests/e2e/clock";
+import { STADIUMS } from "@/src/data/stadiums";
 
 /** The envelope contract every data endpoint must honour. */
 const expectEnvelope = (body: Record<string, unknown>) => {
@@ -123,6 +124,91 @@ test.describe("API", () => {
       expect(typeof coach).toBe("string");
       expect(coach.trim().length).toBeGreaterThan(0);
     }
+  });
+
+  /**
+   * The two refusals nothing asserted until this landed.
+   *
+   * `docs/guides/REST_API_GUIDE.md` states both as rules and its *Trust test*
+   * rests on the second, and neither had a case anywhere: `weather.spec.ts`
+   * reaches that route only through `page.route`, and a fulfilled stub settles
+   * Playwright's own accounting, so it cannot exercise the route it replaced.
+   *
+   * **Each asserts the refusal AND the answer beside it**, because a route that
+   * refused *everything* would pass a refusal-only spec. That pairing is the
+   * whole design here — the 400 has to be about the shape of the id, and the
+   * 404 about this slug rather than about the endpoint being broken.
+   */
+  test("/api/players/:id refuses a non-numeric id, and answers null for a numeric one", async ({
+    request,
+  }) => {
+    const refused = await request.get("/api/players/nao-sou-um-numero");
+    expect(refused.status()).toBe(400);
+
+    const error = await refused.json();
+    // Names what it rejected, which is the difference between a 400 a caller
+    // can act on and one they have to guess at.
+    expect(String(error.error)).toMatch(/num[eé]ric/i);
+    // A refusal is not an answer: no envelope to mistake for a degraded one.
+    expect(error).not.toHaveProperty("source");
+    expect(error).not.toHaveProperty("data");
+
+    // The known-negative, and the guide's "answers null offline" in one: an id
+    // that is well-formed is NOT refused, even though no such player exists and
+    // the provider is switched off for this suite. Enrichment is allowed to be
+    // absent, so the honest answer is an envelope carrying null — never a 404,
+    // which would say the route itself was wrong.
+    const allowed = await request.get("/api/players/1");
+    expect(allowed.status()).toBe(200);
+
+    const body = await allowed.json();
+    expectEnvelope(body);
+    expect(body.data).toBeNull();
+    // Refused once is not refused for an hour by the reader's own browser.
+    expect(allowed.headers()["cache-control"]).toContain("no-store");
+  });
+
+  test("/api/stadium-weather/:slug refuses a slug that names no ground", async ({ request }) => {
+    const refused = await request.get("/api/stadium-weather/estadio-que-nao-existe");
+    // A 404 and not an empty envelope: the request is well formed and asks for
+    // something that does not exist, which is a different answer from a ground
+    // we know about whose weather we could not read.
+    expect(refused.status()).toBe(404);
+
+    const error = await refused.json();
+    expect(String(error.error).length).toBeGreaterThan(0);
+    expect(error).not.toHaveProperty("source");
+
+    // The known-negative: a real ground answers 200. Read off `STADIUMS` rather
+    // than typed, so this cannot rot when the curated list grows — and it is
+    // what separates "this slug names nothing" from "the route 404s everything".
+    const [known] = Object.keys(STADIUMS);
+    expect(known, "src/data/stadiums.ts is empty").toBeTruthy();
+
+    const answered = await request.get(`/api/stadium-weather/${known}`);
+    expect(answered.status()).toBe(200);
+
+    const body = await answered.json();
+    expectEnvelope(body);
+    // `DISABLE_WEATHER` is on for this suite, so the designed degradation is
+    // what comes back — null data under a `fallback` source, never a 5xx.
+    expect(body.source).toBe("fallback");
+    expect(body.data).toBeNull();
+  });
+
+  /**
+   * The slug is re-slugified before it is looked up, so a ground is reachable
+   * as a reader would type it — and this is the other half of the *Trust test*:
+   * what arrives is normalised into a key, never used to build a request.
+   */
+  test("/api/stadium-weather/:slug resolves a hand-typed slug rather than 404-ing on it", async ({
+    request,
+  }) => {
+    const [known] = Object.keys(STADIUMS);
+    const shouted = String(known).toUpperCase();
+    expect(shouted).not.toBe(known);
+
+    expect((await request.get(`/api/stadium-weather/${shouted}`)).status()).toBe(200);
   });
 
   test("an unknown route falls through to the SPA rather than the API", async ({ request }) => {
