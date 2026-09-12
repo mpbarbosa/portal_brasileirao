@@ -1,0 +1,9 @@
+{
+    // This is a Node project: server.ts loads .env itself via `dotenv/config`,
+    // and the Python under scripts/manim reads none of its variables. Point the
+    // Python extensions at no env file, so they neither inject .env's tokens into
+    // terminals (where dotenv would then refuse to override stale values, and
+    // tests would stop seeing the unset-variable path) nor nag that injection is
+    // off ("An environment file is configured but ... python.terminal.useEnvFile").
+    "python.envFile": ""
+}
