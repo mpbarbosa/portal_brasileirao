@@ -376,12 +376,27 @@ test("a round outside the history has no movement rather than the last one", () 
   assert.equal(rankMovement({ clubCode: "AAA", shortName: "AAA", entries: [] }, 2), null);
 });
 
+/**
+ * A property, and its blind spot — which is the half worth knowing, because a
+ * property reads as stronger coverage than a list of cases and this one is not.
+ *
+ * **Flipping the direction comparison in `rankMovement` — `from > to ? "up"`
+ * to `"down"` — leaves this test GREEN.** Swapping the two labels swaps which
+ * total is which, and the totals are equal, so the sum this asserts on is
+ * exactly the quantity the mutation preserves. Confirmed by running it: the
+ * property passed, and of the 1401 tests in `test:unit` **one** went red —
+ * `a movement reads as a direction and a count, never a signed position`, two
+ * tests below. That case is therefore not a duplicate of this one and must not
+ * be tidied into it; it is the only thing in the repository defending which way
+ * the arrow points.
+ *
+ * What the property does catch is a movement computed against the wrong round,
+ * or against a table from a different source — a per-club assertion sees
+ * neither, because each row still looks plausible on its own.
+ */
 test("every place climbed is a place someone else fell", () => {
   // Positions at a round are a permutation of 1..N, so the two totals must
-  // agree exactly. This is the property that catches a movement computed
-  // against the wrong round, or against a table from a different source — a
-  // per-club assertion cannot see either, because each row still looks
-  // plausible on its own.
+  // agree exactly.
   const history = computeRankHistory(CLUBS, SEASON);
   const movements = history.map((club) => rankMovement(club, 2));
 

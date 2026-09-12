@@ -1,8 +1,14 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { COMPETITION, jsonLdScript, structuredData, teamNode } from "@/structured-data-core";
-import type { Club, Match } from "@/src/types";
+import {
+  COMPETITION,
+  jsonLdScript,
+  stadiumNode,
+  structuredData,
+  teamNode,
+} from "@/structured-data-core";
+import type { Club, Match, Stadium } from "@/src/types";
 
 const ORIGIN = "https://site.test";
 
@@ -75,6 +81,48 @@ test("the addresses that identify the club are linked as sameAs", () => {
     "https://www.instagram.com/flamengo/",
     "https://pt.wikipedia.org/wiki/Clube_de_Regatas_do_Flamengo",
   ]);
+});
+
+/**
+ * The rest of the node, which nothing asserted.
+ *
+ * `teamNode` was called five times in this file and every assertion read
+ * `sameAs`, so `name`, `alternateName`, `url`, `logo`, `sport` and `memberOf`
+ * were emitted onto 20 club pages with no case over any of them — confirmed by
+ * mutation: changing `sport` to a nonsense string left this whole file green.
+ * Execution is not assertion, and a coverage run cannot tell the two apart.
+ */
+test("a club node says what it is, where it lives and what it belongs to", () => {
+  const team = teamNode(FLAMENGO, ORIGIN, false);
+
+  assert.equal(team["@type"], "SportsTeam");
+  assert.equal(team["@context"], "https://schema.org", "un-nested, it carries its own context");
+  assert.equal(team.name, "Clube de Regatas do Flamengo");
+  assert.equal(team.alternateName, "Flamengo");
+  assert.equal(team.url, `${ORIGIN}/clube/flamengo`);
+  assert.equal(team.logo, "https://crests.football-data.org/1783.png");
+  assert.equal(team.sport, "Futebol");
+  assert.equal((team.memberOf as { name?: string }).name, COMPETITION);
+});
+
+test("nested in a fixture, the club node drops its own @context", () => {
+  // Two @context keys in one graph is the failure this argument exists for:
+  // the fixture node already carries it, and a nested copy is not wrong so much
+  // as redundant in a way parsers report.
+  const nested = teamNode(FLAMENGO, ORIGIN);
+  assert.ok(!("@context" in nested));
+  assert.equal(nested["@type"], "SportsTeam");
+});
+
+test("a club curated down to nothing asserts no crest and no addresses", () => {
+  // Botafogo here carries no website, instagram, wikipedia or crest — the
+  // ordinary state of a club nobody has curated. `compact` has to leave those
+  // keys out rather than emit empty ones.
+  const team = teamNode(BOTAFOGO, ORIGIN, false);
+  assert.ok(!("logo" in team), "no crest is not an empty crest");
+  assert.ok(!("sameAs" in team), "no addresses is not an empty list");
+  assert.equal(team.name, "Botafogo FR");
+  assert.equal(team.url, `${ORIGIN}/clube/botafogo`);
 });
 
 test("the hymn is not a sameAs, however it looks in the header", () => {
@@ -329,4 +377,112 @@ test("/trafego's breadcrumb stops at the site root", () => {
     trail.map((step) => step.name),
     ["Classificação", "Tráfego"],
   );
+});
+
+/**
+ * `stadiumNode` — the ground as a thing in its own right, on the 24 estádio
+ * pages.
+ *
+ * It had **no case at all** until this block: `structuredData` reaches it only
+ * on the estádio route, and every assertion here went through a fixture route
+ * instead, so the whole function and its three absence branches were uncovered.
+ * Found by running `node --test --experimental-test-coverage` over `test:unit`,
+ * where this module was the thinnest in the repository at 70% branch.
+ *
+ * The optional fields are the point. `capacity` and `opened` are absent for
+ * real grounds — two of the nineteen state no year of inauguration — and an
+ * emitted `maximumAttendeeCapacity` of nothing is not a blank, it is a claim
+ * that the ground seats nobody. Mutations confirmed red, each on its own:
+ * dropping `compact` from the node, emitting `foundingDate` unconditionally,
+ * and letting `sameAs` through as `[undefined]`.
+ */
+const MARACANA: Stadium = {
+  slug: "maracana",
+  name: "Maracanã",
+  officialName: "Estádio Jornalista Mário Filho",
+  city: "Rio de Janeiro",
+  state: "RJ",
+  capacity: 78838,
+  opened: 1950,
+  wikipedia: "Estádio do Maracanã",
+  homeClubs: [FLAMENGO, BOTAFOGO],
+  matchCount: 12,
+};
+
+/** A ground curated down to what `venue-core` can always derive: the slug, the
+ *  name and where it is. Everything else is an absence, which is the state the
+ *  real file carries for the grounds nobody has read an article for. */
+const BARE: Stadium = {
+  slug: "arena-teste",
+  name: "Arena Teste",
+  city: "Curitiba",
+  state: "PR",
+  homeClubs: [BOTAFOGO],
+  matchCount: 1,
+};
+
+test("a fully curated ground asserts every fact it was given", () => {
+  const node = stadiumNode(MARACANA, ORIGIN);
+  assert.equal(node["@type"], "StadiumOrArena");
+  assert.equal(node["@context"], "https://schema.org");
+  assert.equal(node.name, "Maracanã");
+  assert.equal(node.alternateName, "Estádio Jornalista Mário Filho");
+  assert.equal(node.url, `${ORIGIN}/estadio/maracana`);
+  assert.equal(node.maximumAttendeeCapacity, 78838);
+  assert.deepEqual(node.address, {
+    "@type": "PostalAddress",
+    addressLocality: "Rio de Janeiro",
+    addressRegion: "RJ",
+    addressCountry: "BR",
+  });
+});
+
+test("the year of inauguration is a string, because schema wants a date", () => {
+  // The number is what was verified, so the year is all that is asserted — but
+  // schema.org reads `foundingDate` as a date, and a bare 1950 is not one.
+  const node = stadiumNode(MARACANA, ORIGIN);
+  assert.equal(node.foundingDate, "1950");
+  assert.equal(typeof node.foundingDate, "string");
+});
+
+test("an uncurated fact is omitted, never emitted empty", () => {
+  // The whole reason this node runs through `compact`. A capacity of nothing
+  // asserts a ground that seats nobody, and `foundingDate: undefined` survives
+  // `JSON.stringify` as a missing key only by luck of the serialiser — the
+  // absence has to be real in the object a caller inspects.
+  const node = stadiumNode(BARE, ORIGIN);
+  assert.ok(!("maximumAttendeeCapacity" in node), "capacity is not asserted");
+  assert.ok(!("foundingDate" in node), "no year is asserted");
+  assert.ok(!("alternateName" in node), "no official name is asserted");
+  assert.ok(!("sameAs" in node), "an empty sameAs is not an assertion of none");
+  // What it does still say is everything `venue-core` can always derive.
+  assert.equal(node.name, "Arena Teste");
+  assert.equal(node.url, `${ORIGIN}/estadio/arena-teste`);
+});
+
+test("zero is a capacity and is not an absence", () => {
+  // `compact` drops "", null and undefined. It must not drop 0, which is the
+  // 0-0 trap this repository keeps meeting: a falsy value that is a real
+  // reading. No ground reports it, so only a fixture can reach the branch.
+  const node = stadiumNode({ ...MARACANA, capacity: 0 }, ORIGIN);
+  assert.equal(node.maximumAttendeeCapacity, 0);
+  assert.ok("maximumAttendeeCapacity" in node);
+});
+
+test("with no origin the ground still has a name but claims no address", () => {
+  // `url` answers undefined on an empty origin rather than emitting a
+  // root-relative path, for the reason the canonical tag does: a consumer
+  // resolves it against its own host and lands somewhere else entirely.
+  const node = stadiumNode(MARACANA, "");
+  assert.ok(!("url" in node), "no url is better than one rooted at the reader");
+  assert.equal(node.name, "Maracanã");
+});
+
+test("the Wikipédia article is carried as an address, not as a title", () => {
+  // `wikipedia` stores the title alone; the node has to publish something a
+  // crawler can follow, and through the one shared `wikipediaUrl`.
+  const sameAs = stadiumNode(MARACANA, ORIGIN).sameAs as string[];
+  assert.equal(sameAs.length, 1);
+  assert.match(sameAs[0], /^https:\/\/pt\.wikipedia\.org\/wiki\//);
+  assert.ok(!sameAs[0].endsWith("/"), "the title survives into the address");
 });
