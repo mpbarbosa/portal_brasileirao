@@ -17,7 +17,6 @@ import {
   positionLabel,
 } from "@/player-core";
 import { Button } from "@/src/components/Button";
-import { countLabel } from "@/count-core";
 import { InstagramLink, WikipediaLink } from "@/src/components/ClubLinks";
 import { ExternalLink } from "@/src/components/ExternalLink";
 import { GLYPH } from "@/src/components/glyph";
@@ -29,6 +28,7 @@ import { PLAYER_PHOTOS } from "@/src/data/player-photos";
 import { PLAYER_POSTS } from "@/src/data/player-posts";
 import { PLAYER_SOFASCORE } from "@/src/data/player-sofascore";
 import { PLAYER_WIKIPEDIA } from "@/src/data/player-wikipedia";
+import { drainBody } from "@/src/drainBody";
 import type { Player, Scorer } from "@/src/types";
 
 interface PlayerOverlayCardProps {
@@ -176,6 +176,27 @@ function SofascoreLink({ href }: { href: string | null }) {
 }
 
 /**
+ * A scorer's season figures as tiles — **the ones the provider reported, and
+ * no others**. Goals are always there; assists, penalties and matches are
+ * `null` where upstream did not count them, which is neither zero nor a value,
+ * so the tile is left out rather than printed as a dash. The grid keeps its
+ * four columns, so a missing figure leaves an empty slot at the end of the row
+ * instead of stretching the tiles that remain.
+ *
+ * The artilharia **table** still prints a dash in that cell, and that is not an
+ * inconsistency: a table's columns are fixed, and a blank cell there reads as a
+ * rendering fault, where a card is built from whatever is present.
+ */
+const scorerTiles = (scorer: Scorer): Array<{ label: string; value: string }> => [
+  { label: "Gols", value: String(scorer.goals) },
+  ...(scorer.assists !== null ? [{ label: "Assist.", value: String(scorer.assists) }] : []),
+  ...(scorer.penalties !== null ? [{ label: "Pênaltis", value: String(scorer.penalties) }] : []),
+  ...(scorer.playedMatches !== null
+    ? [{ label: "Jogos", value: String(scorer.playedMatches) }]
+    : []),
+];
+
+/**
  * Modal card for one player.
  *
  * It renders from data the caller already holds, then fills in shirt number,
@@ -193,20 +214,34 @@ function SofascoreLink({ href }: { href: string | null }) {
  * in it.
  */
 export function PlayerOverlayCard({ player, scorer, onClose }: PlayerOverlayCardProps) {
-  const [enriched, setEnriched] = useState<Player>(player);
+  /**
+   * What `/api/players/:id` answered, **kept with the id it answered for**, and
+   * the card derived from it at render.
+   *
+   * The effect used to open with `setEnriched(player)` — state copied from a
+   * prop inside an effect. That costs a second render to undo, and between the
+   * two the card would paint the previous player's shirt, age and nationality
+   * under the new player's name. Keyed by id, an answer about somebody else
+   * simply does not apply, and there is nothing to reset.
+   */
+  const [enrichment, setEnrichment] = useState<{ id: Player["id"]; data: Player | null } | null>(
+    null,
+  );
+  const enriched = enrichment?.id === player.id ? mergePlayer(player, enrichment.data) : player;
   const closeRef = useRef<HTMLButtonElement>(null);
   const dialogRef = useRef<HTMLDialogElement>(null);
 
   useEffect(() => {
-    setEnriched(player);
-
     let cancelled = false;
     void (async () => {
       try {
         const response = await fetch(`/api/players/${encodeURIComponent(player.id)}`);
-        if (!response.ok) return;
+        if (!response.ok) {
+          await drainBody(response);
+          return;
+        }
         const body = (await response.json()) as { data: Player | null };
-        if (!cancelled) setEnriched((current) => mergePlayer(current, body.data));
+        if (!cancelled) setEnrichment({ id: player.id, data: body.data });
       } catch {
         // Enrichment is optional — the card is already useful without it.
       }
@@ -215,7 +250,7 @@ export function PlayerOverlayCard({ player, scorer, onClose }: PlayerOverlayCard
     return () => {
       cancelled = true;
     };
-  }, [player]);
+  }, [player.id]);
 
   /**
    * Open as a *modal* dialog rather than rendering a fixed overlay.
@@ -466,10 +501,9 @@ export function PlayerOverlayCard({ player, scorer, onClose }: PlayerOverlayCard
                 artilharia at all — so they take the same tiles as the identity
                 numbers rather than the small grey treatment they had. */}
             <dl className="grid grid-cols-4 gap-3">
-              <Tile label="Gols" value={String(scorer.goals)} />
-              <Tile label="Assist." value={countLabel(scorer.assists)} />
-              <Tile label="Pênaltis" value={countLabel(scorer.penalties)} />
-              <Tile label="Jogos" value={countLabel(scorer.playedMatches)} />
+              {scorerTiles(scorer).map((tile) => (
+                <Tile key={tile.label} {...tile} />
+              ))}
             </dl>
           </section>
         )}

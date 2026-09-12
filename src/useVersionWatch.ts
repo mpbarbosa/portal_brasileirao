@@ -148,7 +148,13 @@ export const useVersionWatch = (reading: HealthReading | undefined): void => {
     window.location.reload();
   };
 
-  // The reading App already holds. Runs on mount and on every refresh of it.
+  // The reading App already holds — and **no dependency list, deliberately**.
+  // This runs after every render of `App`, not only when the reading changes,
+  // and that is what retries a check `canInterrupt` deferred: closing the player
+  // card is an `App` state change, so the render that removes the dialog is the
+  // one that reloads, with no request. `[reading]` would leave that reload
+  // waiting for the five-minute interval. Each run costs one `querySelector`
+  // and one `sessionStorage` read.
   useEffect(() => {
     consider(reading);
   });

@@ -31,14 +31,22 @@ interface Props {
  * is rather than implying it is live.
  */
 export function StadiumWeather({ slug }: Props) {
-  const [weather, setWeather] = useState<WeatherSnapshot | null>(null);
+  // The reading is kept with the slug it was read for, and the card derives
+  // from that, rather than the effect clearing state when the slug changes.
+  // Clearing it there cost a second render, and between the two a page moving
+  // from one ground to another painted the previous ground's weather under the
+  // next one's name. A reading about another ground now simply does not apply.
+  const [reading, setReading] = useState<{
+    slug: string;
+    weather: WeatherSnapshot | null;
+  } | null>(null);
+  const weather = reading?.slug === slug ? reading.weather : null;
 
   useEffect(() => {
     let live = true;
-    setWeather(null);
     fetchStadiumWeather(slug)
       .then((envelope) => {
-        if (live) setWeather(envelope.data);
+        if (live) setReading({ slug, weather: envelope.data });
       })
       // A weather card is a nicety; it is never a reason to surface an error on
       // a page that has already rendered the ground.

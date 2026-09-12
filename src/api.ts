@@ -1,4 +1,5 @@
 import { parseHealth } from "@/health-core";
+import { drainBody } from "@/src/drainBody";
 import type {
   ApiEnvelope,
   Club,
@@ -23,6 +24,7 @@ export interface MatchesPayload {
 const getJson = async <T>(url: string): Promise<ApiEnvelope<T>> => {
   const response = await fetch(url);
   if (!response.ok) {
+    await drainBody(response);
     throw new Error(`${url} respondeu ${response.status}`);
   }
   return (await response.json()) as ApiEnvelope<T>;
@@ -70,7 +72,10 @@ export interface HealthReading {
 export const fetchHealth = async (): Promise<HealthReading> => {
   const response = await fetch("/api/health");
   const readAt = Date.now();
-  if (!response.ok) return { health: null, readAt };
+  if (!response.ok) {
+    await drainBody(response);
+    return { health: null, readAt };
+  }
 
   return { health: parseHealth(await response.json()), readAt };
 };
