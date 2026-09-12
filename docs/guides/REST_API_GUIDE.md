@@ -32,6 +32,25 @@ The API-design consequence is the one worth repeating here: **a data endpoint
 degrades rather than failing.** A 500 from `/api/standings` is a defect; a
 `source: "fallback"` envelope carrying the frozen seed is the designed behaviour.
 
+**The envelope governs an ANSWER, and a refusal is not one** — which is the half
+the rule above leaves out, and there are two shapes of refusal rather than one:
+
+- **A malformed request** gets a status code and `{ error }` in pt-BR:
+  `/api/matches?round=abc` and `/api/players/xyz` are both 400. §*Request
+  validation* below owns this.
+- **A well-formed request for something that does not exist** gets the same
+  shape: `/api/stadium-weather/alguma-coisa` is a **404 `{ error: "Estádio não
+  encontrado." }`**. That is neither an envelope nor one of the two written-down
+  exceptions, and it went unstated here for the reason such things do — the rule
+  it breaks is about successful responses, so nothing in the guide was pointed at
+  it. Read the exception list as covering *routes*, and this as covering
+  *requests a route declines*.
+
+The line between the two is what the envelope is for: **a failure of the
+upstream degrades, a failure of the request refuses.** `/api/stadium-weather`
+does both, one per branch — an unknown slug is a 404, and a ground we know about
+whose weather we could not read is a `fallback` envelope carrying `null`.
+
 ## Current routes
 
 | Route | Notes |
@@ -44,9 +63,10 @@ degrades rather than failing.** A 500 from `/api/standings` is a defect; a
 | `GET /api/coaches` | A **projection of the squads payload** — same cache entry, zero upstream cost. |
 | `GET /api/players/:id` | Numeric id, else **400**. Enrichment only; answers `null` offline. |
 | `GET /api/matches` | Optional `?round=`; a non-integer or `< 1` is **400**. |
-| `GET /api/stadium-weather/:slug` | Slug resolved against `STADIUMS`. |
+| `GET /api/stadium-weather/:slug` | Slug resolved against `STADIUMS`; an unknown one is a **404**, not an empty envelope. |
 | `GET /api/traffic-dashboard` | This host's own nginx snapshots. |
-| `GET /api/auth/google`, `GET /api/auth/callback`, `POST /api/auth/logout`, `POST /api/auth/dev-login` | OAuth flow, not resources. |
+| `GET /api/auth/google`, `GET /api/auth/callback`, `POST /api/auth/logout` | OAuth flow, not resources. Only `google` is rate limited. |
+| `POST /api/auth/dev-login` | **Does not exist in production.** Registered inside `if (ACCOUNTS_DEV_LOGIN)`, and the server refuses to boot with it set under `NODE_ENV=production` — a stronger statement than a route that exists and declines. |
 | `GET /api/account/me`, `PUT /api/account/preferences`, `DELETE /api/account` | Plain JSON, real status codes, `{ error }` in pt-BR. |
 | `GET /robots.txt`, `GET /sitemap.xml` | Generated from `seo-core.ts`. |
 | `GET /{*splat}` | SPA catch-all. **Must stay registered after the API routes.** |
@@ -62,23 +82,69 @@ The free tier allows **10 requests a minute**. Caching is what makes production
 viable at any traffic level, so a cache decision belongs in the route's design
 rather than after it:
 
-- Standings and fixtures: 60s, dropping to 15s while any match is LIVE.
+- Standings: a flat 60s.
+- Fixtures: 60s, **dropping to 15s while any match is LIVE**. The drop is
+  `matchesCacheTtl` and belongs to the fixtures alone — standings never take it,
+  and the one sentence that covered both routes read as though they did.
+- Scorers: 5 minutes.
+- Squads and coaches: 6 hours, one entry, shared. The longest TTL in the app,
+  because an elenco is the most static thing it serves.
+- Player enrichment: 1 hour, on its own loader with its own breaker and a
+  two-requests-a-minute budget — see `enrichment-core.ts`.
 - Weather: 15 minutes **per ground**.
 - Traffic dashboard: 5 minutes (its input is written hourly).
-- Squads and coaches: one entry, shared.
 
 That caps the app at roughly five upstream calls a minute however many readers
 arrive. **A crawler cannot spend a budget a reader would not** — which is the
 argument that made the whole content API crawlable.
+
+### There are TWO caches, and only one of them is about the budget
+
+The TTLs above protect the **upstream**. Every content route but one also sets a
+client-facing `Cache-Control`, which protects **this host**, and the two are
+chosen separately — so a route needs both decided, not one.
+
+| Route | Server TTL | `Cache-Control` |
+| --- | --- | --- |
+| `/api/standings` | 60s | `max-age=60` |
+| `/api/matches` | 60s / 15s live | `max-age=30` |
+| `/api/clubs` | the fixtures entry | **none** |
+| `/api/scorers` | 5 min | `max-age=300` |
+| `/api/squads`, `/api/coaches` | 6 h | `max-age=3600` |
+| `/api/stadium-weather/:slug` | 15 min | `max-age=300` |
+| `/api/traffic-dashboard` | 5 min | `max-age=300` |
+| `/api/players/:id` | 1 h | `enrichmentCacheControl` — the TTL for an answer, `no-store` for a non-answer |
+| `/api/health` | — | **none** |
+
+Three things in that table are worth knowing before copying a row:
+
+- **`/api/clubs` sets none**, alone among the content routes. It is a projection
+  of the fixtures payload, which sets `max-age=30`, so the obvious value is that
+  one — the omission is not a written-down decision, and nothing can see it,
+  because the checklist below only ever asked about the server half.
+- **`/api/matches` is a fixed 30s against a server TTL that halves to 15s while a
+  match is live.** So in exactly the window the short TTL exists for, a browser
+  may hold a copy twice as stale as the server's. The client polls an unsettled
+  fixture for this reason — see `isAwaitingResult` — but the header does not
+  follow the TTL, and a reader refreshing by hand can land on the older copy.
+- **`/api/health` sets none, and it is the one payload where that has a
+  consequence.** `useVersionWatch` polls it to decide whether the open page is
+  running a stale bundle. nginx carries no `proxy_cache` (only `/assets/` gets
+  headers), so this is browser heuristic freshness and not a cache we operate —
+  low risk in practice, and unstated, on the endpoint whose whole job is telling
+  a client it is out of date.
 
 ## Two rules about route ORDER, both of which failed silently
 
 - **The SPA catch-all must be registered after the API routes**, or `/api/*` is
   swallowed by it.
 - **The `X-Robots-Tag: noindex` middleware is mounted immediately after
-  `const app = express()`** — line 239, with the header set at line 256 — because
-  `app.use` applies only to what follows it, and `/api/auth` and `/api/account`
-  are registered several hundred lines further down.
+  `const app = express()`**, before any route, because `app.use` applies only to
+  what follows it, and `/api/auth` and `/api/account` are registered several
+  hundred lines further down. Grep for `X-Robots-Tag` rather than trusting a
+  line number: this paragraph carried `line 239, with the header set at line
+  256`, which was exact the day it was written and was off by eight the next —
+  the mount is a `const` declaration away from whatever lands above it.
 
 ## `Disallow` and `noindex` are not two strengths of one knob
 
@@ -137,12 +203,29 @@ degraded payload.
 - **`PUT /api/account/preferences` replaces the whole set**, which is why the
   wire serialiser writes every key while the device serialiser writes only some.
   A partial upload would clear a preference every time another one changed.
+- **Every mutating account route checks `sameOrigin(req)` and answers 403
+  `{ error: "Origem inválida." }`.** Four call sites, and they are exactly the
+  four routes that change something — `logout`, `dev-login`, the preferences
+  `PUT` and the account `DELETE`. `GET /api/account/me` takes no such check
+  because reading is not a thing another origin can make a browser do usefully
+  here. The rule itself is `isSameOriginRequest`'s; the route only reads the
+  request. A cookie-authenticated mutation with no origin check is a CSRF, and
+  `SameSite` is a mitigation rather than the check.
+- **Every account response sets `private, no-store` and `Vary: Cookie`**
+  (`noStore`, eight call sites). Its comment carries the reason and it is the
+  better half of the rule: *"there is no shared cache in front of this"* is a
+  fact about an nginx config file that certbot and `04_setup_nginx.sh` both
+  rewrite, so it is nobody's to guarantee. A personal payload says so itself
+  rather than relying on the deployment staying the shape it is today.
 
 ## Required rules
 
 1. **A new data endpoint returns `ApiEnvelope<T>` and degrades to local data.**
    If it cannot, it is an exception and must be written down as one.
-2. **Decide its cache TTL in the same change**, against the 10/min budget.
+2. **Decide BOTH caches in the same change** — the server TTL against the 10/min
+   budget, and the client `Cache-Control` against how stale a reader may be. They
+   are different questions and `/api/clubs` is what answering only the first
+   looks like.
 3. **Prefer a projection of an existing cached payload** to a new upstream call.
 4. **Validate route parameters into a 400**; do not clamp or coerce.
 5. **Never accept a coordinate, URL or host from the client** where an id you own
@@ -164,15 +247,32 @@ degraded payload.
   `{ error }` as a pt-BR string, discriminated by status code. The only client is
   ours and it branches on the code, so a taxonomy would have one consumer.
 - **Field naming is camelCase throughout**, matching `src/types.ts`.
-- **There is no rate limiting on the read routes.** `rate-limit-core.ts` exists
-  and is applied to the auth surface; the cache is what protects the read side,
-  and it protects the *upstream* rather than this host.
+- **Four of the rules above are untested, and the two refusals are the ones that
+  matter.** `tests/e2e/api.spec.ts` drives health, standings, clubs, coaches, the
+  SPA fallthrough and `/api/matches` including both its 400s; `/api/squads` is
+  reached once, from `coaches.spec.ts`. Nothing anywhere asserts the
+  **`/api/players/:id` 400** or the **`/api/stadium-weather/:slug` 404**, and
+  `/api/scorers` and `/api/traffic-dashboard` are never requested against the real
+  server at all — their pages are, which is a different claim. `weather.spec.ts`
+  reaches that route only through `page.route` stubs, so the *Trust test* below
+  rests on a branch the suite has never executed: a fulfilled stub settles
+  Playwright's own accounting and cannot reproduce a failure of the route it
+  replaced. A new refusal here earns a case in `api.spec.ts`, not a stub.
+- **Rate limiting is one route, not a surface.** `rateLimited` has exactly **one**
+  call site — `/api/auth/google`, where a sign-in begins. `callback`, `logout`,
+  `dev-login` and all three `/api/account/*` routes are unlimited, as are every
+  read route. "Applied to the auth surface" is how this paragraph used to read and
+  it claimed six routes' worth of protection for one. The read side is protected
+  by the cache, which protects the *upstream* rather than this host.
 
 ## Review heuristics
 
 **Envelope test.** Envelope, or a written-down exception?
 
 **Budget test.** How many upstream requests does this add per minute at peak?
+
+**Staleness test.** What `Cache-Control` does it send, and is a reader allowed to
+hold it for longer than the server will?
 
 **Projection test.** Does a cached payload already contain this?
 
@@ -185,7 +285,7 @@ fetchable, and `noindex`ed rather than `Disallow`ed.
 
 ## Positive signals
 
-- A new route's diff includes its TTL and its `seo-core.ts` treatment.
+- A new route's diff includes both cache decisions and its `seo-core.ts` treatment.
 - A page's data need is met by widening an existing payload.
 - A 400 names the parameter it rejected.
 - Identifiers travel with the data that uses them.
@@ -197,6 +297,9 @@ fetchable, and `noindex`ed rather than `Disallow`ed.
 - A parameter interpolated into an outbound URL or a path.
 - `Disallow` on a payload a page needs to render.
 - A route registered after the catch-all, or before the robots middleware.
+- A route with a server TTL and no `Cache-Control`, or a `Cache-Control` longer
+  than the TTL behind it.
+- A refusal branch — a 400, a 404 — with no case in `tests/e2e/api.spec.ts`.
 - A client resolving names against `src/data/clubs.ts` rather than the payload.
 
 ## Related guides
@@ -209,7 +312,8 @@ fetchable, and `noindex`ed rather than `Disallow`ed.
 ## Checklist
 
 - [ ] Returns `ApiEnvelope<T>`, or is a documented exception.
-- [ ] Cache TTL chosen against the 10 req/min budget.
+- [ ] Server cache TTL chosen against the 10 req/min budget.
+- [ ] Client `Cache-Control` chosen, and not quietly longer than that TTL.
 - [ ] Reuses an existing cached payload where one would serve.
 - [ ] Route parameters validated into a 400, not coerced.
 - [ ] No client-supplied coordinate, host or path reaches an outbound call.
