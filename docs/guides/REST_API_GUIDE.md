@@ -258,13 +258,34 @@ degraded payload.
   `/api/auth/google` and `/api/auth/callback` are named in no spec, which is
   defensible — a sign-in is exercised through `dev-login`, and asserting a
   redirect by path would test the spelling of a URL rather than the flow.
-  **`POST /api/auth/logout` is the one with no coverage by any route**: nothing in
-  the suite requests it, and nothing clicks the control either — searched by path,
-  by handler (`signOut`) and by every label the button carries. So the rate-limit
-  row below and the `sameOrigin` row above both describe a route whose 403 branch,
-  whose `?todos=true` variant and whose session revocation have never run in a
-  test. Recorded rather than fixed: it wants a spec of its own that signs in,
-  signs out and proves the session is gone, which is not a shape assertion.
+  `POST /api/auth/logout` **is covered**, through the UI: `contas.spec.ts` and
+  `contas-preferencias.spec.ts` click `[data-sign-out='this']` three times
+  between them, and `contas.spec.ts` clicks `[data-sign-out='all']` once, which
+  exercises the `?todos=true` branch and proves revocation across two browser
+  contexts — the operation a JWT cannot perform.
+
+  **An earlier version of this bullet said that route had no coverage at all, and
+  it was wrong.** The searches behind it looked for the path, the handler
+  (`signOut`) and every **label** the button carries; the specs select by
+  `data-sign-out`, a data attribute none of the three covered. Three searches
+  agreeing is not corroboration when they share a blind spot — a selector is a
+  fourth way to reach a route, and an empty result is not evidence of absence.
+  Kept here rather than quietly deleted, because the mistake is the reusable part.
+- **The real gap was the CSRF check's WIRING, and it is now closed.**
+  `isSameOriginRequest` is thoroughly unit-tested — seven cases, including the
+  literal `"null"` a sandboxed frame sends — while nothing asserted that the four
+  mutating routes *call* it. Measured: deleting the `if (!sameOrigin(req))` block
+  from all four left **102 account specs passing**. A predicate with tests and no
+  wiring is a rule nobody runs. `contas.spec.ts` now forges an `Origin` against
+  each of the four separately, because the check is four independent copies and a
+  spec covering one would stay green while another lost it.
+- **An absent `Origin` is allowed, and the spec says so on purpose.** It reads like
+  a hole and is the decision: not every browser sends `Origin` on a same-origin
+  form post, so refusing an absent one breaks real clients, and `SameSite=Lax` is
+  what covers that case. Without that case the two refusal tests above would pass
+  against a route that refused everything, and the 403 would stop being about the
+  origin. Mutating the predicate to demand an `Origin` reddens it — and sixteen
+  other specs, which is how load-bearing the allowance is.
 - **What the last two cases assert is a COUPLING, not a value**, which is the only
   kind of shape assertion worth the line. A count of scorers or the name of
   whoever leads them are facts about when `sync-seed-data` ran; that the positions
