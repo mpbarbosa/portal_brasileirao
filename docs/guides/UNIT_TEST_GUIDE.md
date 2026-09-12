@@ -202,8 +202,8 @@ way check the exit status of **the test command itself**.
 
 ## Current reality
 
-- **Every test file is listed**, and the suite is green — 1401 tests, 0 failures,
-  3.3 s (measured 2026-09-12 at `b243995` — it is not *one* second). About half
+- **Every test file is listed**, and the suite is green — 1410 tests, 0 failures,
+  3.3 s (measured 2026-09-12 at `5eb3597` — it is not *one* second). About half
   of that is `tests/check-screenshots.test.ts` alone, 1.6 s run on its own,
   because it builds real git histories; the rest of the files are ~0.13 s each,
   which is mostly `tsx` starting up.
@@ -211,15 +211,34 @@ way check the exit status of **the test command itself**.
 - **57 root core modules, and 56 have a same-named test file.** The exception is
   `brand-core.ts`, tested by `tests/brand-mark.test.ts` — so the convention is the
   filename, not the coverage.
-- **Where the thinness is, by test lines against source lines** — a proxy, since
-  nothing here measures coverage: `youtube-core.ts` 0.39, `cartola-csv-core.ts`
-  0.49, `md3-color-core.ts` 0.54. The largest module is `scouts-core.ts` (852
-  lines, 0.72), then `club-core.ts` (711) and `season-sim-core.ts` (686).
-  This guide used to name the last two as *the two largest* and as the thin ones,
-  and was wrong both times: `club-core.ts` carries **more** test than source
-  (971 to 711) and is the best-covered large module in the repository.
-- **There is no coverage measurement.** No `c8`, no threshold, no report. Coverage
-  is argued case by case in review.
+- **47 of the 57 core modules are at 100% line coverage**, measured rather than
+  estimated (see below). The thinnest is `structured-data-core.ts` — 95.00 lines,
+  **73.85 branch** — then `page-meta-core.ts` 95.88 and `highlight-search-core.ts`
+  97.30/81.58. The largest module is `scouts-core.ts` (852 lines), then
+  `club-core.ts` (711) and `season-sim-core.ts` (686).
+- **This bullet has now been wrong twice, both times from a proxy.** It first named
+  `season-sim-core.ts` and `club-core.ts` as the two largest and the thin ones;
+  the correction then ranked thinness by **test lines over source lines** and named
+  `youtube-core.ts`, `cartola-csv-core.ts` and `md3-color-core.ts`. A real coverage
+  run puts those three at **100.00, 100.00 and 99.08** — among the best covered in
+  the repository. A file-length ratio measures how much was typed, not what was
+  reached; do not rank coverage with it, and do not trust the ranking above without
+  re-running the command.
+- **There is no coverage *gate*** — no `c8`, no threshold, no report in CI, and
+  coverage is argued case by case in review. But it is **one flag away**, which the
+  paragraph this replaces did not say, and is worth running before claiming a module
+  is thin:
+
+  ```sh
+  node -e 'const s=require("./package.json").scripts["test:unit"];console.log(s.replace("--test","--test --experimental-test-coverage"))' | sh
+  ```
+
+  Read the percentages and **not** the uncovered-line list: under `tsx` the line
+  numbers come back offset, so a line it names may be running perfectly. And read
+  even a 100% as what it is — `teamNode` in `structured-data-core.ts` was called by
+  five tests with only its `sameAs` asserted, so changing `sport` to a nonsense
+  string left the file green. **Execution is not assertion, and coverage cannot
+  tell the two apart.** Mutation can; that is what §Confirm the test red is for.
 - **There is no mocking library and no need for one**, because the units take
   their inputs as arguments. Where a double is needed it is a literal object or a
   small function.
