@@ -37,16 +37,29 @@ npm run lint                                          # tsc --noEmit — the onl
 this: the file exists, it passes when run by hand, and it is simply never
 executed by anything.
 
-Check it rather than remembering it — currently 62 files, 62 listed:
+Check it rather than remembering it. **Do not trust a count written here** —
+this line read *62 files, 62 listed* while there were 79 of each, and a number
+in prose has no gate on it. Run the command; a clean `diff` is the whole answer:
 
 ```sh
 diff <(git ls-files 'tests/*.test.ts' | sed 's|tests/||' | LC_ALL=C sort) \
      <(node -e 'process.stdout.write(require("./package.json").scripts["test:unit"].split(/\s+/).filter(w=>w.endsWith(".test.ts")).map(w=>w.replace("tests/","")).join("\n")+"\n")' | LC_ALL=C sort)
 ```
 
-`LC_ALL=C` on both sides is not decoration: without it the shell's collation and
-`Array.prototype.sort` disagree about `match-core` versus `matches-core`, and the
-command reports a difference in a suite that is in sync.
+`LC_ALL=C` on **both** sides is what makes the two orderings comparable. Read it
+as a pairing rather than as a flag: the command as written pipes each side through
+the shell's own `sort` and calls `Array.prototype.sort` nowhere, so dropping the
+flag from both sides changes nothing — measured, no difference reported. It earns
+its place the moment one side sorts somewhere else, which is how this check is
+usually re-written.
+
+The disagreement is real and this guide named the wrong pair for it. C, en_US.UTF-8
+and `Array.prototype.sort` **all** put `match-core.test.ts` before
+`matches-core.test.ts`; what they split on is `match-state-store.test.ts`, which
+en_US files *after* `matches-core.test.ts` (its collation ignores the hyphen) while
+C and JS — both code-unit order — file it *before*. So C and `Array.prototype.sort`
+agree with each other and en_US is the outlier, which is the opposite of what the
+sentence this replaces claimed.
 
 ## Confirm the test red before believing it
 
@@ -70,7 +83,17 @@ rigour — it has caught tests that could not fail:
   simpler than this repository can be too simple to contain the bug.**
 
 So: break the code on purpose, watch the named test go red, then fix it. Record
-what you mutated in the test file — nine test files here already do.
+what you mutated **in the test file**, which is where the next reader is standing.
+13 of the 79 files do; recount rather than citing that, for the reason the file
+count above gives:
+
+```sh
+git grep -lEi 'mutation|mutated|confirmed red' -- 'tests/*.test.ts' | wc -l
+```
+
+The gap is not evenly spread, and one instance is worth naming because this guide
+is half of it: the blind spot in the permutation property below is written down
+*here* and in `CLAUDE.md`, and **not** in `tests/rank-history-core.test.ts`.
 
 **And know which of your tests can go red, and when.** When `retractsResult`
 landed, only two of its eight cases failed with the rule switched off; the other
@@ -98,8 +121,14 @@ This broke CI **twice**:
   `sync-goals` gave it one.
 
 Assert the **shape** of a rendered line, or **produce the state with a prepared
-payload**. The same file already had the answer: `withoutGoals` constructs the
-condition instead of hunting the season for a fixture in it.
+payload**. That spec now constructs the condition rather than hunting the season
+for a fixture in it — `openWithGoals` serves a payload whose goals have had their
+minute dropped, so the minuteless state exists because the test made it.
+(There is no `withoutGoals`; this guide named one for months.)
+
+**It is a gate now, not only a habit.** `tests/e2e-fixture.test.ts` refuses a spec
+that opens a fixture by a literal id, so *which record happens to hold a value* is
+checked by a test rather than caught in review.
 
 ## Tests that are gates over files rather than over functions
 
@@ -111,7 +140,8 @@ compiler can:
 | `tests/node-version.test.ts` | The five Node declarations disagreeing |
 | `tests/appearance-paths.test.ts` | A root core module `src/` imports being unwatched — and the list keeping dead entries |
 | `tests/design-tokens-core.test.ts` | A palette shade, Tailwind radius, bare type step, `tracking-*`, `duration-*`, hand-written `hover:`, or bare `shadow-*` under `src/` |
-| `tests/e2e-fixture.test.ts` | A spec importing `test` from `@playwright/test` instead of the hermetic fixture |
+| `tests/core-purity.test.ts` | Any root `*-core.ts` reaching I/O, the clock, the environment or entropy — the premise this whole suite rests on |
+| `tests/e2e-fixture.test.ts` | A spec importing `test` from `@playwright/test`, skipping itself, opening a fixture by a **literal id**, or not installing its own clock |
 | `tests/player-photos.test.ts` | A photograph with an empty credit — the compiler accepts `""`, the page shows a missing attribution |
 | `tests/youtube-upload-core.test.ts` | A real `docs/medias/**/*-youtube.md` exceeding YouTube's limits |
 | `tests/button-classes.test.ts`, `tests/scatter-corner.test.ts` | A class string no browser spec can reach |
@@ -172,9 +202,22 @@ way check the exit status of **the test command itself**.
 
 ## Current reality
 
-- **62 test files, all listed.** Coverage is concentrated on the core modules and
-  is genuinely thin in a few places — `season-sim-core.ts` and `club-core.ts` are
-  the two largest modules.
+- **Every test file is listed**, and the suite is green — 1401 tests, 0 failures,
+  3.3 s (measured 2026-09-12 at `b243995` — it is not *one* second). About half
+  of that is `tests/check-screenshots.test.ts` alone, 1.6 s run on its own,
+  because it builds real git histories; the rest of the files are ~0.13 s each,
+  which is mostly `tsx` starting up.
+  Run the `diff` above for the count rather than reading one here.
+- **57 root core modules, and 56 have a same-named test file.** The exception is
+  `brand-core.ts`, tested by `tests/brand-mark.test.ts` — so the convention is the
+  filename, not the coverage.
+- **Where the thinness is, by test lines against source lines** — a proxy, since
+  nothing here measures coverage: `youtube-core.ts` 0.39, `cartola-csv-core.ts`
+  0.49, `md3-color-core.ts` 0.54. The largest module is `scouts-core.ts` (852
+  lines, 0.72), then `club-core.ts` (711) and `season-sim-core.ts` (686).
+  This guide used to name the last two as *the two largest* and as the thin ones,
+  and was wrong both times: `club-core.ts` carries **more** test than source
+  (971 to 711) and is the best-covered large module in the repository.
 - **There is no coverage measurement.** No `c8`, no threshold, no report. Coverage
   is argued case by case in review.
 - **There is no mocking library and no need for one**, because the units take
