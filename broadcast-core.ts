@@ -93,6 +93,22 @@ export const kickoffToIso = (data: string, hora: string): string | null => {
 };
 
 /**
+ * CBF's `24/08/2026` as an ISO calendar day, `2026-08-24`, or null.
+ *
+ * **This is deliberately not `kickoffToIso` followed by a slice, and not
+ * `brasiliaDay` either — a calendar day here never becomes an instant at all.**
+ * CBF states the local day; reading it back out of a UTC instant is a round trip
+ * whose only possible outcome is the day it started from or a bug, and it was
+ * the bug: `joinMatch` sliced the instant, so every kickoff from 21:00 BRT
+ * onward answered the day after the one CBF printed. `events-core.ts`'s rule,
+ * reached from the side where no bridge is owed.
+ */
+const cbfDay = (data: string): string | null => {
+  const date = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(data.trim());
+  return date ? `${date[3]}-${date[2]}-${date[1]}` : null;
+};
+
+/**
  * CBF spells some clubs structurally differently from our provider — a regional
  * suffix versus the full state name, or a sponsor prefix — so no amount of
  * prefix matching connects them. These are stated outright.
@@ -176,7 +192,15 @@ export const joinMatch = (
   const exact = atHome.filter((match) => Date.parse(match.kickoff) === wanted);
   if (exact.length === 1) return exact[0].id;
 
-  const day = kickoff.slice(0, 10);
+  // The two sides carry a calendar day in two different frames, and the
+  // asymmetry is the whole of this join. CBF's is local, and is read straight
+  // off `fixture.data` rather than out of the instant built from it. Ours is a
+  // date-only fixture, which `withKickoffPrecision` defines as UTC midnight and
+  // `kickoffLabel` renders with an explicit `timeZone: "UTC"` — so slicing is
+  // right on this side and `brasiliaDay` would be wrong, shifting it a day back.
+  const day = cbfDay(fixture.data);
+  if (day === null) return null;
+
   const sameDay = atHome.filter(
     (match) => hasProvisionalKickoff(match) && match.kickoff.slice(0, 10) === day,
   );

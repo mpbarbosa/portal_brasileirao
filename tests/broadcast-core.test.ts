@@ -261,6 +261,55 @@ test("a fixture whose time is not yet confirmed still joins by date", () => {
   assert.equal(id, "555010");
 });
 
+test("a provisional fixture joins from an evening kickoff, which crosses the UTC day", () => {
+  // The `brasiliaDay` trap met from the CBF side. `kickoffToIso` turns CBF's
+  // local date and hour into a UTC **instant**, so 21:30 BRT is `T00:30:00Z` on
+  // the NEXT day — and reading a calendar day off that instant answers the day
+  // after the one CBF stated. Our provisional fixture sits at `T00:00:00Z` on
+  // the stated day, so the two never met and the join returned null for the
+  // commonest Série A kickoff slot, across the ~98 fixtures still provisional.
+  //
+  // The hours the cases either side of this one use — 16:00 and 20:00 — both
+  // stay inside the same UTC day, so every one of them passed against the bug.
+  // They are in the loop to keep it that way, and because they also fail the
+  // over-correction: reading the provisional side through `brasiliaDay` too
+  // would shift `T00:00:00Z` back to the 23rd and break the afternoon instead.
+  const provisional: Match[] = [
+    { ...match("555010"), kickoff: "2026-10-24T00:00:00Z", homeCode: "1770" },
+  ];
+
+  for (const hora of ["16:00", "20:00", "21:00", "21:30", "22:00"]) {
+    assert.equal(
+      joinMatch(provisional, CLUBS, {
+        data: "24/10/2026",
+        hora,
+        mandante: { nome: "Botafogo" },
+      }),
+      "555010",
+      `hora=${hora}`,
+    );
+  }
+});
+
+test("an evening kickoff never joins the NEXT day's provisional fixture", () => {
+  // The dangerous half of the same bug, and the reason it is worth a test of its
+  // own: slicing the instant does not merely miss, it lands on the following
+  // calendar day. Where that day holds a provisional fixture for the same home
+  // club, the miss becomes a wrong join and channels attach to another match.
+  const provisional: Match[] = [
+    { ...match("555011"), kickoff: "2026-10-25T00:00:00Z", homeCode: "1770" },
+  ];
+
+  assert.equal(
+    joinMatch(provisional, CLUBS, {
+      data: "24/10/2026",
+      hora: "21:30",
+      mandante: { nome: "Botafogo" },
+    }),
+    null,
+  );
+});
+
 test("an exact instant wins over a same-day provisional fixture", () => {
   const mixed: Match[] = [
     { ...match("exact"), kickoff: "2026-08-24T23:00:00Z", homeCode: "1770" },
