@@ -247,15 +247,43 @@ degraded payload.
   `{ error }` as a pt-BR string, discriminated by status code. The only client is
   ours and it branches on the code, so a taxonomy would have one consumer.
 - **Field naming is camelCase throughout**, matching `src/types.ts`.
-- **Two of the rules above are untested, and the two refusals no longer are.**
-  `tests/e2e/api.spec.ts` drives health, standings, clubs, coaches, the SPA
-  fallthrough, `/api/matches` including both its 400s, and — since the cases were
-  added — the **`/api/players/:id` 400** and the **`/api/stadium-weather/:slug`
-  404**, each paired with the answer beside it, because a route that refused
-  *everything* would pass a refusal-only spec. `/api/squads` is reached once, from
-  `coaches.spec.ts`. **`/api/scorers` and `/api/traffic-dashboard` are still never
-  requested against the real server** — their pages are, which is a different
-  claim.
+- **Every DATA route in the table above is now requested against the real
+  server.** `tests/e2e/api.spec.ts` drives health, standings, clubs, coaches,
+  scorers, the traffic dashboard, the SPA fallthrough, `/api/matches` with both
+  its 400s, the **`/api/players/:id` 400** and the **`/api/stadium-weather/:slug`
+  404**; `/api/squads` is reached from `coaches.spec.ts`. Each refusal is paired
+  with the answer beside it, because a route that refused *everything* would pass
+  a refusal-only spec.
+- **The OAuth routes are the exception, and one of them is not covered at all.**
+  `/api/auth/google` and `/api/auth/callback` are named in no spec, which is
+  defensible — a sign-in is exercised through `dev-login`, and asserting a
+  redirect by path would test the spelling of a URL rather than the flow.
+  **`POST /api/auth/logout` is the one with no coverage by any route**: nothing in
+  the suite requests it, and nothing clicks the control either — searched by path,
+  by handler (`signOut`) and by every label the button carries. So the rate-limit
+  row below and the `sameOrigin` row above both describe a route whose 403 branch,
+  whose `?todos=true` variant and whose session revocation have never run in a
+  test. Recorded rather than fixed: it wants a spec of its own that signs in,
+  signs out and proves the session is gone, which is not a shape assertion.
+- **What the last two cases assert is a COUPLING, not a value**, which is the only
+  kind of shape assertion worth the line. A count of scorers or the name of
+  whoever leads them are facts about when `sync-seed-data` ran; that the positions
+  are a dense 1..N, that goals never rise down the list, that every scorer's club
+  resolves against `/api/clubs`, and that `timeline.length` equals
+  `snapshotCount` are properties of the payload that cannot drift with the data.
+  Two measurements shaped them and are worth knowing before copying: a scorer's
+  nullable fields are **genuinely null for somebody**, so a null-or-number check
+  is not vacuous; and **club codes are not unique** across the artilharia — two
+  scorers share a club — so the uniqueness assertion the standings spec makes
+  would be *wrong* here rather than merely absent.
+- **One known bound, stated rather than left to be discovered.** The suite's cwd
+  has no `traffic-reports/` directory, so that route answers its empty shape and
+  the populated branches of its spec are guarded and therefore vacuous *there* —
+  `tests/traffic-report-core.test.ts` covers them against the output of a real run
+  of the shell script. What the end-to-end case adds is the half no unit test
+  reaches: that the route exists, is wired to the parser, and answers an envelope.
+  It deliberately does not pin `source: "fallback"`, which is a fact about whether
+  a directory exists beside the server rather than about the route.
 - **A refusal earns a case in `api.spec.ts`, not a stub.** `weather.spec.ts`
   reaches that route only through `page.route`, which is right for serving a
   prepared payload and cannot test a refusal at all: a fulfilled stub settles
