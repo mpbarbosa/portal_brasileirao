@@ -2864,10 +2864,11 @@ by club code and storing an **invite and the guild it opens** — `discordUrl` i
 rendered. Hand-maintained and partial like `club-reddit.ts`, whose rule it takes
 whole: a server is the torcida's and not the club's, so the screen-reader suffix
 says "comunidade de torcedores" and the link is not filed beside the Site
-oficial. **Three entries as of 2026-09-10** — Flamengo's **FlaDiscord**,
-Palmeiras' and Athletico-PR's — and every one `expires_at: null`. Count the file
-rather than this sentence: it said *one* for as long as it took the second entry
-to land, which is the number-in-prose failure this file keeps recording.
+oficial. **Four entries as of 2026-09-13** — Flamengo's **FlaDiscord**,
+Palmeiras', Athletico-PR's and Fluminense's **Flucord** — and every one
+`expires_at: null`. Count the file rather than this sentence: it said *one* for
+as long as it took the second entry to land, which is the number-in-prose
+failure this file keeps recording.
 
 **An invite code and never a guild id, and both halves of that were measured.**
 What a person pastes is `discord.com/channels/<guild>/@home`, because it is what

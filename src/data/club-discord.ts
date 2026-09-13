@@ -55,6 +55,14 @@ import type { ClubCode, ClubDiscord } from "@/src/types";
  * invite code is minted rather than derived from the club's name.
  */
 export const CLUB_DISCORD: Record<ClubCode, ClubDiscord> = {
+  // Flucord — "Maior servidor não oficial sobre o Fluminense Football Club no
+  // discord!", 4 053 membros, sem expiração. Vanity, **confirmada por DUAS
+  // ligações independentes**: o convite recebido (um código cunhado por um
+  // membro) e a vanity própria da guild, `discord.gg/fluminense`, resolvem
+  // ambas para a guild `964558466712735764` — a força de prova do Flamengo, e
+  // não a da Palmeiras, que não teve uma segunda ligação a confirmar a
+  // primeira.
+  "1765": { invite: "fluminense", guild: "964558466712735764" },
   // FlaDiscord — "O maior servidor não oficial do Flamengo, sendo a casa da
   // torcida no Discord", 49 862 membros, sem expiração. A vanity, so the code
   // is a word rather than the usual eight characters.
