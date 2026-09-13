@@ -77,9 +77,7 @@ test.describe("Alvos de toque", () => {
 test.describe("Abas do topo", () => {
   const tabs = (page: Page) => page.locator('header nav[aria-label="Seções"] a');
 
-  test("the current destination is primary over an indicator, not a filled chip", async ({
-    page,
-  }) => {
+  test("the current destination is boxed, not merely coloured", async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 800 });
     await page.goto("/jogos");
 
@@ -88,39 +86,36 @@ test.describe("Abas do topo", () => {
 
     const style = await current.evaluate((el) => {
       const own = getComputedStyle(el);
-      const indicator = getComputedStyle(el, "::after");
-      return {
-        colour: own.color,
-        background: own.backgroundColor,
-        indicatorHeight: indicator.height,
-        indicatorColour: indicator.backgroundColor,
-      };
+      return { colour: own.color, background: own.backgroundColor, borderColour: own.borderColor };
     });
-    const primary = await page.evaluate(() =>
-      getComputedStyle(document.documentElement).getPropertyValue("--color-primary").trim(),
+    const [onSurface, surface, outline] = await Promise.all(
+      ["--color-on-surface", "--color-surface", "--color-outline"].map((name) =>
+        page.evaluate(
+          (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim(),
+          name,
+        ),
+      ),
     );
 
-    // The label takes `primary`; the chip's fill is gone. Comparing against the
-    // token rather than a literal keeps this honest across both themes and any
-    // future retoning — the same discipline `theme.spec.ts` uses.
-    expect(style.colour).toBe(await hexToRgb(page, primary));
-    expect(style.background, "a tab has no container fill").toMatch(/rgba?\(0, 0, 0, 0\)|transparent/);
-
-    // MD3's indicator is 3dp.
-    expect(style.indicatorHeight).toBe("3px");
-    expect(style.indicatorColour).toBe(await hexToRgb(page, primary));
+    // The underline indicator gave way to a bordered box: the active tab
+    // takes `on-surface` ink over a `surface` fill with an `outline` border —
+    // comparing against the tokens rather than literals keeps this honest
+    // across both themes, the same discipline `theme.spec.ts` uses.
+    expect(style.colour).toBe(await hexToRgb(page, onSurface));
+    expect(style.background).toBe(await hexToRgb(page, surface));
+    expect(style.borderColour).toBe(await hexToRgb(page, outline));
   });
 
-  test("the other destinations carry no indicator", async ({ page }) => {
+  test("the other destinations carry no box", async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 800 });
     await page.goto("/jogos");
 
     const others = tabs(page).and(page.locator(":not([aria-current='page'])"));
-    const heights = await others.evaluateAll((els) =>
-      els.map((el) => getComputedStyle(el, "::after").height),
+    const borders = await others.evaluateAll((els) =>
+      els.map((el) => getComputedStyle(el).borderColor),
     );
-    expect(heights.length).toBe(4);
-    for (const h of heights) expect(h).not.toBe("3px");
+    expect(borders.length).toBe(4);
+    for (const b of borders) expect(b).toMatch(/rgba?\(0, 0, 0, 0\)|transparent/);
   });
 
   test("no destination wraps, at any width the bar is shown", async ({ page }) => {

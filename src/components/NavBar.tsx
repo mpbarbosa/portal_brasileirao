@@ -146,37 +146,21 @@ export function NavBar({
   };
 
   /**
-   * Desktop: destinations inline in the header, drawn as MD3 primary tabs.
+   * Desktop: destinations inline in the header, drawn as a bordered menu bar
+   * rather than MD3 primary tabs — the underline indicator gave way to a boxed
+   * active state, uppercase labels and a bordered container around the whole
+   * row.
    *
-   * They were a **filled chip** until M9 — `on-surface` ground with
-   * `inverse-on-surface` text, which is an inverse-surface pairing MD3 uses for
-   * selection nowhere. The bottom navigation bar in this same component already
-   * used the right idiom, so the app stated "selected" two different ways at two
-   * breakpoints and a reader crossing the `sm` breakpoint met both.
-   *
-   * MD3 marks the active tab with the **label in `primary` over a 3dp
-   * indicator**, and that is what this is: the indicator is an `after`
-   * pseudo-element rather than a border, so it can be inset from the tab's own
-   * padding and take MD3's rounded top edge — a `border-b` would run the full
-   * box and square off.
-   *
-   * **The appearance is MD3's; the semantics stay navigation.** No `role="tab"`,
+   * **The appearance changed; the semantics did not.** No `role="tab"`,
    * because these are links that change the address, and a tab role promises a
    * `tabpanel` relationship and arrow-key selection that do not exist here.
    * `aria-current="page"` is the right announcement and it is what was already
    * there.
-   *
-   * The active tab keeps the state layer now, where the chip could not take one
-   * — a veil of `on-surface` over an `on-surface` ground is invisible. So the
-   * ring no longer has to be composed separately for this one entry, though
-   * `STATE_LAYER` carries it for both.
    */
   const tabClass = (id: SectionId) =>
     [
       // MD3's tab height is 48dp, which is also the touch-target floor — these
-      // are `sm:` and up, and a tablet at 768 is a touch device. `inline-flex`
-      // so the label centres against the taller box and the indicator sits
-      // clear of it.
+      // are `sm:` and up, and a tablet at 768 is a touch device.
       //
       // **`whitespace-nowrap` is redundant today and kept deliberately.** The
       // header has been tight since the fifth section landed, and the trailing
@@ -185,26 +169,12 @@ export function NavBar({
       // first; the `inline-flex` this height needs turned out to prevent the
       // wrap on its own, because a flex item does not shrink below its
       // min-content width.
-      //
-      // Measured, all three ways: with **neither**, "Ao vivo" wraps at 640 and
-      // the spec goes red; with **either one alone**, it does not. So a green
-      // run after deleting one of them is not evidence that it was unnecessary
-      // — it is evidence the other is still there. Kept as the statement of
-      // intent that survives someone changing the display mode.
-      "relative inline-flex min-h-12 items-center whitespace-nowrap",
-      // `px-3` at every width, where this used to be `px-2` until `lg`.
-      //
-      // The padding was the thing that gave way while the tabs shared a line
-      // with the brand and the trailing controls, and giving way was not enough
-      // — see the note on the row below for the arithmetic. On a row of their
-      // own the five tabs measure 481px against 608px at the narrowest width
-      // they are shown, so there is no longer a shortage to spend the padding
-      // on, and `px-3` is the same 12dp the label sat in at `lg` before.
-      "rounded-small px-3 py-2 text-body-medium font-medium",
+      "inline-flex min-h-12 items-center whitespace-nowrap",
+      "rounded-x-small border px-3 py-2 text-body-medium font-bold uppercase",
       STATE_LAYER,
       id === current
-        ? "text-primary after:absolute after:inset-x-2 after:bottom-0 after:h-[3px] after:rounded-t-full after:bg-primary"
-        : "text-on-surface-variant",
+        ? "border-outline bg-surface text-on-surface"
+        : "border-transparent text-on-surface-variant",
     ].join(" ");
 
   return (
@@ -348,18 +318,18 @@ export function NavBar({
             allows. The cost is 32px of sticky chrome above `sm`; below it the
             bottom navigation bar is unchanged and this row does not render.
 
-            Left-aligned rather than stretched to fill: the indicator is an
-            `after` inset from the tab's own padding, so an equal-width tab
-            would draw a 131px rule under "Jogos". MD3's primary-tab indicator
-            hugs its label, which is what content-sized tabs give for free. */}
-        {/* `-ml-3` cancels the first tab's own `px-3`, so the first *label*
-            starts on the same left edge as the wordmark above it rather than
-            12px inside it — the two are both the leading edge of this bar, and
-            an eye reads them as one column or as a mistake. The tab's state
-            layer does extend those 12px further left, which is what a tab's
-            container is supposed to do; 4px of the container's `px-4` is left
-            over, so nothing overflows. */}
-        <nav className="-ml-3 hidden gap-1 sm:flex" aria-label="Seções">
+            Left-aligned rather than stretched to fill, and content-sized
+            rather than equal-width — five items of very different lengths
+            ("Jogos" against "Classificação") would otherwise carry a lot of
+            empty padding on the short ones. */}
+        {/* Bordered box around the whole row, each item boxed only when
+            active — a menu-bar look rather than MD3's underline-indicator
+            tabs. `bg-surface-container-low` sits one step above the page so
+            the box reads as its own element under the header. */}
+        <nav
+          className="hidden gap-1 rounded-small border border-outline-variant bg-surface-container-low p-1 sm:flex"
+          aria-label="Seções"
+        >
           {/* No `title` on the destinations — a tooltip never appears on touch,
               and it competes with the visible label for the accessible name,
               which breaks "click <label>" voice control. */}
