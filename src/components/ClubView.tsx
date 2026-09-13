@@ -188,9 +188,9 @@ function DiscordGlyph() {
  *  particular drawing. Local, like the three above it, because it has one call
  *  site; the rule that moved the Wikipédia mark into `ClubLinks` is a second
  *  caller, not a hunch that there might be one. */
-function PanelGlyph() {
+function PanelGlyph({ className }: { className?: string } = {}) {
   return (
-    <svg {...GLYPH}>
+    <svg {...GLYPH} className={className ?? GLYPH.className}>
       <path d="M6 4v16M12 4v16M18 4v16" />
       <path d="M4 9h4v7H4zM10 6h4v6h-4zM16 11h4v6h-4z" />
     </svg>
@@ -464,7 +464,18 @@ export function ClubView({
           most of the largest control on the page inert. `min-h-12` is the touch
           floor, which applies here and not to the club names in the table
           below — this is a standalone control on its own line rather than a
-          link inside content. */}
+          link inside content.
+
+          The chevron alone reads as ambiguous beside a bold title and a
+          caption: that pairing is also how a section intro is written on this
+          page (compare "Últimos resultados" below it), so nothing here said
+          *control* rather than *heading*. The leading glyph now sits in a
+          filled `primary-container` disc — the MD3 shape for a navigable list
+          item's leading icon, and unlike every other glyph on this page, which
+          sits bare beside underlined text because it decorates a sentence
+          rather than opening a screen. The trailing chevron and the "Abrir"
+          label both take `text-primary`, so the one row on the page that
+          leads somewhere else is the one row coloured like it does. */}
       {onOpenPanel && (
         <Surface
           as="a"
@@ -476,10 +487,12 @@ export function ClubView({
             event.preventDefault();
             onOpenPanel(clubKey(club));
           }}
-          className={`mt-4 flex min-h-12 items-center gap-2 px-3 py-2 ${STATE_LAYER}`}
+          className={`mt-4 flex min-h-12 items-center gap-3 px-3 py-2 ${STATE_LAYER}`}
           data-panel-link={club.code}
         >
-          <PanelGlyph />
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary-container text-on-primary-container">
+            <PanelGlyph className="h-5 w-5" />
+          </span>
           <span className="min-w-0 grow">
             <span className="block font-medium text-on-surface">Painel do clube</span>
             {/* Names the whole campanha rather than only the velas, since the
@@ -490,9 +503,12 @@ export function ClubView({
               A campanha inteira: onde cada rodada terminou e o que houve dentro dela
             </span>
           </span>
-          <svg {...GLYPH} className="ml-auto h-5 w-5 shrink-0 text-ink-muted">
-            <path d="m9.5 5.5 6.5 6.5-6.5 6.5" />
-          </svg>
+          <span className="ml-auto flex shrink-0 items-center gap-0.5 text-label-large font-medium text-primary">
+            Abrir
+            <svg {...GLYPH} className="h-5 w-5 shrink-0 text-primary">
+              <path d="m9.5 5.5 6.5 6.5-6.5 6.5" />
+            </svg>
+          </span>
         </Surface>
       )}
 
