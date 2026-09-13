@@ -1393,4 +1393,46 @@ export const HIGHLIGHTS: Record<string, Highlight[]> = {
     { url: "https://www.youtube.com/watch?v=EBeO68umuBg", channel: "ge tv" },
     { url: "https://www.youtube.com/watch?v=pd2Ane_7RJ8", channel: "UOL Esporte" },
   ],
+  // Palmeiras 2 x 0 São Paulo, rodada 27.
+  "555008": [
+    { url: "https://www.youtube.com/watch?v=isA8GtW3KYo", channel: "ge tv" },
+    { url: "https://www.youtube.com/watch?v=XeIfQS_6L-8", channel: "UOL Esporte" },
+  ],
+  // Mirassol 2 x 2 Vitória, rodada 27.
+  "555007": [
+    { url: "https://www.youtube.com/watch?v=v-TnCvXG8BQ", channel: "ge tv" },
+  ],
+  // Santos 2 x 1 Cruzeiro, rodada 27.
+  "555009": [
+    { url: "https://www.youtube.com/watch?v=YucOK3VQ_kQ", channel: "ge tv" },
+    { url: "https://www.youtube.com/watch?v=sd2Tqy4hDTQ", channel: "UOL Esporte" },
+  ],
+  // Botafogo 1 x 1 Bragantino, rodada 27.
+  "555002": [
+    { url: "https://www.youtube.com/watch?v=4cVuCTARqkQ", channel: "ge tv" },
+    { url: "https://www.youtube.com/watch?v=99lLO_8-_Io", channel: "CazéTV" },
+    { url: "https://www.youtube.com/watch?v=YKGBd4SKAI8", channel: "UOL Esporte" },
+  ],
+  // Chapecoense 1 x 2 Internacional, rodada 27.
+  "555003": [
+    { url: "https://www.youtube.com/watch?v=zj9Kh54kHBo", channel: "ge tv" },
+    { url: "https://www.youtube.com/watch?v=2yI-YnMO1v0", channel: "CazéTV" },
+    { url: "https://www.youtube.com/watch?v=j77wlWVhfKQ", channel: "UOL Esporte" },
+  ],
+  // Coritiba 3 x 3 Athletico-PR, rodada 27.
+  "555004": [
+    { url: "https://www.youtube.com/watch?v=GKrVwyx13V8", channel: "ge tv" },
+    { url: "https://www.youtube.com/watch?v=ZUzsIAWJlDA", channel: "CazéTV" },
+    { url: "https://www.youtube.com/watch?v=rV62JNDm3hY", channel: "UOL Esporte" },
+  ],
+  // Atlético-MG 3 x 1 Fluminense, rodada 27.
+  "555000": [
+    { url: "https://www.youtube.com/watch?v=3riutY42AGo", channel: "ge tv" },
+    { url: "https://www.youtube.com/watch?v=j_ncjkTSYNg", channel: "UOL Esporte" },
+  ],
+  // Grêmio 1 x 2 Vasco da Gama, rodada 27.
+  "555006": [
+    { url: "https://www.youtube.com/watch?v=xg3Vx6ks8mM", channel: "ge tv" },
+    { url: "https://www.youtube.com/watch?v=jFc0Mk2xQ4I", channel: "UOL Esporte" },
+  ],
 };
