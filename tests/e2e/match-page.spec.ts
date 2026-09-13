@@ -343,6 +343,76 @@ test.describe("Página da partida", () => {
     await expect(pin).toHaveAttribute("rel", /noopener/);
   });
 
+  /**
+   * **Clima no estádio**, on the fixture rather than on the ground's own page.
+   *
+   * Current conditions describe a match only while it is being played — a
+   * forecast for a kickoff still to come would be the same overreach
+   * `live-core.ts` already refuses for a match minute. So the card is gated on
+   * `status === "LIVE"` and nothing else the venue tests above already cover.
+   */
+  test("shows the weather at the ground while the match is live", async ({ page }) => {
+    await page.route("**/api/stadium-weather/**", (route) =>
+      route.fulfill({
+        json: {
+          source: "open-meteo",
+          note: "Condições atuais no estádio, do Open-Meteo.",
+          updatedAt: "2026-08-29T21:00:00.000Z",
+          data: {
+            temperature: 23.4,
+            label: "Pancadas de chuva",
+            kind: "rain",
+            day: true,
+            readAt: "2026-08-29T21:00:00.000Z",
+          },
+        },
+      }),
+    );
+
+    const body = await readMatches(page);
+    const target = upcomingFixture(body);
+    expect(MAPPED_VENUE, "src/data/venues.ts names no ground with a coordinate").toBeTruthy();
+    target.venue = MAPPED_VENUE;
+    target.status = "LIVE";
+    await serveMatches(page, body);
+    await page.goto(`/partida/${target.id}`);
+
+    await expect(page.getByRole("heading", { name: "Clima no estádio" })).toBeVisible();
+  });
+
+  test("stays absent from a scheduled or a finished match at the same ground", async ({
+    page,
+  }) => {
+    await page.route("**/api/stadium-weather/**", (route) =>
+      route.fulfill({
+        json: {
+          source: "open-meteo",
+          note: "Condições atuais no estádio, do Open-Meteo.",
+          updatedAt: "2026-08-29T21:00:00.000Z",
+          data: {
+            temperature: 23.4,
+            label: "Pancadas de chuva",
+            kind: "rain",
+            day: true,
+            readAt: "2026-08-29T21:00:00.000Z",
+          },
+        },
+      }),
+    );
+
+    // SCHEDULED, and it already carries a mapped venue via `curated: true`.
+    await openUpcomingMatch(page, { curated: true });
+    await expect(page.getByRole("heading", { name: "Clima no estádio" })).toHaveCount(0);
+
+    // A finished match at a curated ground stays silent too — the game is over.
+    const body = await readMatches(page);
+    const finished = finishedFixture(body);
+    finished.venue = MAPPED_VENUE;
+    await serveMatches(page, body);
+    await page.goto(`/partida/${finished.id}`);
+    await expect(page.getByRole("heading", { name: "Clima no estádio" })).toHaveCount(0);
+  });
+
   test("an upcoming match offers no highlights", async ({ page }) => {
     // It has not been played.
     await openUpcomingMatch(page);
