@@ -18,14 +18,13 @@ import {
 import { countNoun } from "@/count-core";
 import { nicknameLabel, playerNickname } from "@/player-core";
 import { formatRoute } from "@/route-core";
-import { goalDifferenceLabel, pointsPercentageLabel } from "@/standings-core";
+import { goalDifferenceLabel, pointsPercentageLabel, zoneAt } from "@/standings-core";
 import { ClubCrest } from "@/src/components/ClubCrest";
 import { ClubVideos } from "@/src/components/ClubVideos";
 import { ExternalLink } from "@/src/components/ExternalLink";
 import { SeasonEvents } from "@/src/components/SeasonEvents";
 import { InstagramLink, MapPinGlyph, WikipediaLink } from "@/src/components/ClubLinks";
 import { GLYPH } from "@/src/components/glyph";
-import { StatTile } from "@/src/components/StatTile";
 import { CLUB_VIDEOS } from "@/src/data/club-videos";
 import { PLAYER_NICKNAMES } from "@/src/data/player-nicknames";
 import { SEASON_EVENTS } from "@/src/data/events";
@@ -198,6 +197,48 @@ function PanelGlyph() {
   );
 }
 
+/**
+ * One figure in the header's key-facts row: a caps label beside its value, in
+ * a pill rather than a boxed tile.
+ *
+ * Local rather than `StatTile`, deliberately: that component already serves
+ * the Painel and the stadium page, and restyling it would restyle those two
+ * pages as well as this one. This is the club page's own idiom for the same
+ * five facts, and it stays here until a second caller asks for it.
+ */
+function FactPill({ label, value }: { label: string; value: string }) {
+  return (
+    <p className="flex items-center gap-1.5 rounded-full border border-outline-variant bg-surface-container-low px-3 py-1.5 text-body-small">
+      <span className="uppercase text-label-small text-ink-faint">{label}</span>
+      <span className="font-semibold tabular-nums text-on-surface">{value}</span>
+    </p>
+  );
+}
+
+/**
+ * The club's qualification or relegation standing, as a pill beside its name.
+ *
+ * Reuses `zoneAt` rather than restating the CBF's bands: the rail on the
+ * Classificação and this pill must never disagree about who is in G4 and who
+ * is in Z4. A club in neither band still gets a pill — `{position}º colocado`,
+ * neutral in tone — so the header is not silent about the one club whose
+ * position genuinely means nothing yet.
+ */
+function ZonePill({ position, total }: { position: number; total: number }) {
+  const zone = zoneAt(position, total);
+  const tone = zone
+    ? zone.id === "z4"
+      ? "bg-negative/20 text-error"
+      : "bg-positive/20 text-primary"
+    : "bg-surface-container text-on-surface-variant";
+
+  return (
+    <p className={`mt-1 inline-flex w-fit items-center rounded-full px-2.5 py-1 text-label-medium font-medium ${tone}`}>
+      {zone ? `${zone.term} · ${zone.competition}` : `${position}º colocado`}
+    </p>
+  );
+}
+
 export function ClubView({
   clubKey: key,
   loading = false,
@@ -251,16 +292,32 @@ export function ClubView({
         ← Voltar
       </button>
 
-      <header className="mt-3 flex items-center gap-3">
-        <ClubCrest club={club} size={44} fallback="mark" />
+      <Surface as="header" filled className="mt-3 flex items-start gap-3 p-4 sm:p-5">
+        <span className="flex shrink-0 items-center justify-center rounded-medium border border-outline-variant bg-surface-container p-2">
+          {/* 44px, matching `ClubDashboard`'s header exactly — the Painel is
+              one click away and `crest-fallback.spec.ts` pins both pages to
+              the same size so a missing crest cannot be held two different
+              ways a click apart. The tile around it is new; the crest's own
+              box is not. */}
+          <ClubCrest club={club} size={44} fallback="mark" />
+        </span>
         {/* `min-w-0` on the growing half, so the truncating lines inside it
             shorten instead of pushing the control off the row. */}
         <div className="min-w-0 grow">
-          <h2 className="truncate text-title-large font-bold">{club.shortName}</h2>
-          <p className="truncate text-body-medium text-ink-muted">
-            {club.name}
-            {club.state ? ` · ${club.state}` : ""}
-          </p>
+          {/* The code and the state, in caps, ahead of the name a reader
+              already knows how to say — the same order a scoreboard states a
+              club in before it spells the name out. Either half may be
+              absent (a club the provider carries no `tla` for, or one whose
+              state never resolved), so the line itself is optional rather
+              than printing a lone middot. */}
+          {(club.tla || club.state) && (
+            <p className="truncate text-label-medium uppercase text-ink-muted">
+              {[club.tla, club.state].filter(Boolean).join(" · ")}
+            </p>
+          )}
+          <h2 className="truncate text-headline-small font-bold">{club.shortName}</h2>
+          <p className="truncate text-body-medium text-ink-muted">{club.name}</p>
+          {row && <ZonePill position={row.position} total={standings.length} />}
           {/* Identity, not a statistic: who the club is under, printed beside
               its name rather than in a tile with the tallies. The label is what
               recedes and the name is what is read, which is why the two carry
@@ -373,14 +430,14 @@ export function ClubView({
             onToggle={() => onToggleFollow(club.code)}
           />
         )}
-      </header>
+      </Surface>
 
       {row && (
-        <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-5">
-          <StatTile label="Posição" value={`${row.position}º`} />
-          <StatTile label="Pontos" value={String(row.points)} />
-          <StatTile label="Jogos" value={String(row.played)} />
-          <StatTile
+        <div className="mt-4 flex flex-wrap gap-2">
+          <FactPill label="Posição" value={`${row.position}º`} />
+          <FactPill label="Pontos" value={String(row.points)} />
+          <FactPill label="Jogos" value={String(row.played)} />
+          <FactPill
             label="Saldo"
             value={goalDifferenceLabel(row.goalDifference)}
           />
@@ -389,7 +446,7 @@ export function ClubView({
               many, and how much of what was available that is. The em dash is
               the same absence the table's % column renders — a club yet to play
               has no aproveitamento, where 0% is a club that has taken nothing. */}
-          <StatTile label="Aproveitamento" value={pointsPercentageLabel(row) ?? "—"} />
+          <FactPill label="Aproveitamento" value={pointsPercentageLabel(row) ?? "—"} />
         </div>
       )}
 
