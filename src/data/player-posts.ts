@@ -273,4 +273,21 @@ export const PLAYER_POSTS: Record<string, PlayerPost[]> = {
         "Samuel Lino agradece à torcida pela tarde no Maracanã, na noite dos 3 a 0 sobre o Botafogo em que fez dois gols.",
     },
   ],
+
+  // Felipe Longo · Corinthians. Opened 2026-09-13: publicado pela própria
+  // conta dele, `felipelongo05` — verificada, 203 mil seguidores, o mesmo
+  // handle de `player-instagram.ts` —, marcado na Neo Química Arena, às
+  // 23:38 de 5 de fevereiro em Brasília (lido do `<time datetime>` da
+  // página canônica). A legenda agradece à torcida por "mais uma partida" e
+  // pela "vitória do grupo", sem nomear o adversário, o placar ou a
+  // competição; `matches.ts` não tem jogo do Corinthians nessa data, então o
+  // resumo não afirma que é uma partida do Brasileirão.
+  "249314": [
+    {
+      code: "DUZmVoAjDb0",
+      account: "felipelongo05",
+      summary:
+        "Felipe Longo agradece à torcida por mais uma partida e pela vitória do grupo, na Neo Química Arena.",
+    },
+  ],
 };
