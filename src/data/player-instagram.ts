@@ -204,9 +204,62 @@
  * handle beside it rendering "Profile isn't available". The division lists
  * exactly one player named `Luciano`; Luciano Juba and Luciano Acosta are other
  * names, not namesakes.
+ *
+ * ## A division-wide sweep, and what it measured that a one-at-a-time pass cannot
+ *
+ * Following #604 (Felipe Longo), a session ran the same `P2003` join across
+ * every uncovered player in `squads.ts` at once rather than one name at a
+ * time: query Wikidata for every professional footballer carrying an
+ * Instagram username, born in the same year range as the uncovered roster,
+ * then join locally on **exact date of birth**. 13,173 candidates came back
+ * worldwide; joined against 856 uncovered players, 55 shared a date of birth
+ * with exactly one of them, and 50 survived the five this file already knew
+ * were wrong (`carlos_f20`, `opatrickalan`, `r.junior.07`, `_allansoouza`,
+ * `joaopaulo34` — above).
+ *
+ * **Handles rot fast, and a bulk pass is the first thing that can measure
+ * it.** Of the 25 candidates where both name tokens agreed with the
+ * Wikidata label, 11 answered *"Profile isn't available"* — a handle
+ * Wikidata still records as current, dead on Instagram's side, at 44%. A
+ * one-entry-at-a-time check never sees this rate; only asking the same
+ * question of two dozen rows at once does.
+ *
+ * **Three of those 25 name matches were the wrong person, caught only by
+ * reading the bio, and none of them is recorded here.** `gabriel_mec__`
+ * names Gabriel Mec correctly and bios `@fcporto` — he plays for FC Porto,
+ * not this division's Grêmio player of the same name. `riquelme.06` reads
+ * `Jogador profissional do @intermiamicf` — Inter Miami, not Palmeiras.
+ * `hernandezdiego16` bios `@sportrecife` — Sport Club do Recife, not Clube
+ * do Remo, an easy pair to confuse by name alone since both are read as
+ * "o Remo" locally. A session re-running this join will meet all three
+ * again and should read this paragraph before adding them.
+ *
+ * The eleven entries below are what survived: opened, verified where
+ * Instagram shows a badge, and bio-corroborated against the club
+ * `squads.ts` records for the player. `matheus_franca04` (Matheus França)
+ * and `rodrigor09` (Rodrigo Rodrigues) are the two held to a weaker
+ * standard — neither bio names a club — and rest instead on a verified
+ * badge plus an uncommon full name with no rival candidate at the same
+ * date of birth.
+ *
+ * ## Three handles that arrived pasted, not joined
+ *
+ * `voronov_maksym06`, `mycaelmoreira` and `matheuss_s012` were pasted
+ * directly by the user rather than found through the join above, and all
+ * three are Athletico-PR's younger goalkeepers — `278568` Maksym Voronov,
+ * `187426` Mycael and `249158` Matheus Soares. Two of the three carry **no
+ * verified badge** (Voronov, Soares), short of every other entry's bar;
+ * what stands in for it is goalkeeper-training photography consistent with
+ * the position `squads.ts` records for each, a Ukrainian flag in Voronov's
+ * bio matching his recorded nationality, and a follower count in the low
+ * thousands typical of a young reserve nobody has verified yet rather than
+ * of an impostor account courting attention. Mycael alone is verified.
  */
 export const PLAYER_INSTAGRAM: Record<string, string> = {
   "192070": "kevinviveros9",     // Kevin Viveros · Athletico-PR
+  "278568": "voronov_maksym06",  // Maksym Voronov · Athletico-PR
+  "249158": "matheuss_s012",     // Matheus Soares · Athletico-PR
+  "187426": "mycaelmoreira",     // Mycael · Athletico-PR
   "1662": "goleirosantosoficial", // Santos · Athletico-PR
   "8606": "stevenmendozaoficial", // Stiven Mendoza · Athletico-PR
   "1182": "7_dudu",              // Dudu · Atlético-MG
@@ -220,11 +273,15 @@ export const PLAYER_INSTAGRAM: Record<string, string> = {
   "15904": "alextelles13",       // Alex Telles · Botafogo
   "2096": "allanmarques91",      // Allan · Botafogo
   "250493": "alvaro_montoro10",  // Alvaro Montoro · Botafogo
+  "154595": "criistian_medina",  // Cristian Medina · Botafogo
   "1580": "edenilson",           // Edenilson · Botafogo
+  "77": "tucucorrea",            // Joaquín Correa · Botafogo
   "12653": "jr.santos.oficial",  // Júnior Santos · Botafogo
   "286833": "kadirbarria_18",    // Kadir Barría · Botafogo
   "160792": "mateoponte_04",     // Mateo Ponte · Botafogo
   "7838": "yannickbolasie",      // Yannick Bolasie · Chapecoense
+  "180287": "braiancufre",       // Braian Cufré · Clube do Remo
+  "169720": "jandirbreno",       // Jája Silva · Clube do Remo
   "119621": "jl_carvalho",       // João Lucas · Clube do Remo
   "168807": "vitorfbueno",       // Vitor Bueno · Clube do Remo
   "3789": "carrillo",            // André Carrillo · Corinthians
@@ -240,8 +297,10 @@ export const PLAYER_INSTAGRAM: Record<string, string> = {
   "249479": "jp_chermont",       // João Pedro Chermont · Coritiba
   "16154": "pedrorocha32",       // Pedro Rocha · Coritiba
   "1572": "rodrigomoledo13",     // Rodrigo Moledo · Coritiba
+  "19958": "rodrigor09",         // Rodrigo Rodrigues · Coritiba
   "1266": "fabriciobruno96",     // Fabrício Bruno · Cruzeiro
   "1815": "gersonsantoss",       // Gerson · Cruzeiro
+  "181633": "kaikibrunos",       // Kaiki Bruno · Cruzeiro
   "91310": "kaiojorge",          // Kaio Jorge · Cruzeiro
   "178822": "matheuscunha_01",   // Matheus Cunha · Cruzeiro
   "2028": "alxsndro12",          // Alex Sandro · Flamengo
@@ -275,6 +334,7 @@ export const PLAYER_INSTAGRAM: Record<string, string> = {
   "58": "gabimercado25",         // Gabriel Mercado · Internacional
   "30386": "chinorochet93",      // Sergio Rochet · Internacional
   "272": "gabrielpires.oficial", // Gabriel · Mirassol
+  "12818": "eulucasoliveira96",  // Lucas Oliveira · Mirassol
   "1181": "victorluis",          // Victor Luis · Mirassol
   "33153": "andreaspereira",     // Andreas Pereira · Palmeiras
   "115222": "bruno_fuchs",       // Bruno Fuchs · Palmeiras
@@ -285,6 +345,7 @@ export const PLAYER_INSTAGRAM: Record<string, string> = {
   "119594": "mauriciomp7",       // Mauricio · Palmeiras
   "140647": "ramon.sosa17",      // Ramón Sosa · Palmeiras
   "181439": "vitor_roque9",      // Vítor Roque · Palmeiras
+  "28708": "christiaan_oliva",   // Christian Oliva · Santos
   "1327": "gabigol",             // Gabriel Barbosa · Santos
   "99380": "gabrielbrazao1",     // Gabriel Brazão · Santos
   "139933": "gabrielmenino00",   // Gabriel Menino · Santos
@@ -292,9 +353,12 @@ export const PLAYER_INSTAGRAM: Record<string, string> = {
   "8491": "neymarjr",            // Neymar · Santos
   "2295": "tomasrincon8",        // Tomás Rincón · Santos
   "3244": "cedricsoares41",      // Cédric · São Paulo
+  "276282": "luccamalencar",     // Lucca Marques · São Paulo
   "42901": "lucianoneves10",     // Luciano · São Paulo
   "85523": "marcosantonio",      // Marcos Antônio · São Paulo
   "169542": "pablo_maia02",      // Pablo Maia · São Paulo
+  "1832": "rafael.toloi2",       // Rafael Tolói · São Paulo
+  "176241": "matheus_franca04",  // Matheus França · Vasco da Gama
   "171304": "nmmoreira_79",      // Nuno Moreira · Vasco da Gama
   "179017": "robertrenan03",     // Robert · Vasco da Gama
   "77470": "cacazagueiro",       // Cacá · Vitória
