@@ -1435,4 +1435,9 @@ export const HIGHLIGHTS: Record<string, Highlight[]> = {
     { url: "https://www.youtube.com/watch?v=xg3Vx6ks8mM", channel: "ge tv" },
     { url: "https://www.youtube.com/watch?v=jFc0Mk2xQ4I", channel: "UOL Esporte" },
   ],
+  // Flamengo 2 x 1 Corinthians, rodada 27.
+  "555005": [
+    { url: "https://www.youtube.com/watch?v=5syvt8cQk-4", channel: "ge tv" },
+    { url: "https://www.youtube.com/watch?v=8C4x_xQy5wU", channel: "UOL Esporte" },
+  ],
 };
