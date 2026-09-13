@@ -17,6 +17,7 @@ import { BroadcasterMark } from "@/src/components/BroadcasterMark";
 import { ClubCrest } from "@/src/components/ClubCrest";
 import { MatchHighlights } from "@/src/components/MatchHighlights";
 import { MapPinGlyph, WikipediaLink } from "@/src/components/ClubLinks";
+import { MatchEvents } from "@/src/components/MatchEvents";
 import { BACK_LINK, ICON_LINK, STATE_LAYER, LINK_UNDERLINE } from "@/src/components/interaction";
 import { isPlainClick } from "@/src/components/plainClick";
 import { lastRecordedRound } from "@/rank-history-core";
@@ -541,6 +542,22 @@ export function MatchPage({
           )}
         />
       )}
+
+      {/* `hasScorers`, not `scorers` directly — a match with goals attached but
+          no score is exactly the state a fixture played after the seed snapshot
+          sits in (see the scoreboard's own `GoalColumn` gating above), and this
+          section must not print a scorer the scoreline itself is not showing. */}
+      <MatchEvents
+        home={home}
+        away={away}
+        homeCode={match.homeCode}
+        awayCode={match.awayCode}
+        homeGoals={hasScorers ? scorers.home : []}
+        awayGoals={hasScorers ? scorers.away : []}
+        homeLineup={homeLineup}
+        awayLineup={awayLineup}
+        onSelectGoal={openScorer}
+      />
 
       <dl className="mt-4 space-y-3 text-body-medium">
         <div>
