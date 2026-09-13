@@ -254,6 +254,85 @@
  * bio matching his recorded nationality, and a follower count in the low
  * thousands typical of a young reserve nobody has verified yet rather than
  * of an impostor account courting attention. Mycael alone is verified.
+ *
+ * ## The same sweep's weaker rows: single-token name matches
+ *
+ * The 25 candidates above shared both name tokens with the Wikidata label.
+ * A further 24 shared only one — a bare first name, most of them — and are
+ * far riskier: a first name alone is the shallowest evidence this file
+ * accepts anywhere, and every entry below had to clear the bar some other
+ * way, never on the name alone.
+ *
+ * **Six more wrong-person or wrong-club catches, all from this weaker
+ * batch, none of them recorded here.** `evertongaldinoo` names Everton
+ * correctly and bios `Jogador do @vilanovafc` — Vila Nova, not this
+ * division's Mirassol player of the same name. `gilbertomjr02` bios
+ * `Atleta do @athleticoparanaense` — Athletico-PR, not Bahia's Gilberto.
+ * `yurilara5` bios `@jubiloiwata.official` — Júbilo Iwata in Japan, not
+ * Mirassol's Yuri. `_leo06` and `rafaelalexandresilva` are each a
+ * different, unrelated footballer entirely — display names "Leonardo
+ * Pinheiro" and "Rafael Alexandre" against our "Léo" (Athletico-PR) and
+ * "Rafael Thyere" (Chapecoense), caught only because the display name did
+ * not match the Wikidata label it was supposed to. `arturvictor` bios
+ * nothing but its "accounts you might like" are a cluster of Botafogo
+ * players, not São Paulo's Artur Guimaraes, which is corroboration in the
+ * wrong direction rather than none. Three more were refused before being
+ * opened at all, on the name alone: `ibrahimacisse_09` (Ibrahima Cissé)
+ * for our Mamady Cissé, `agussantanna22` (Agustín Sant'Anna) for our Ariel
+ * Sant'Anna, and `jhesquerda` (João Henrique Mendes da Silva) for our
+ * Wendel Silva — each a different first name sharing only a surname, and
+ * "Silva" shares nothing at all.
+ *
+ * **Ten survived, and none of them rests on the name by itself.** Six carry
+ * an explicit bio match to the club `squads.ts` records: `pumitaa_4`
+ * (`Jugador Profesional @vascodagama`), `zericardo_99` (`@clubedoremo`),
+ * `nadsonjuan_09` (`@santosfc`) and `isa_matos02` (`Atleta: @vasco_feminino`
+ * — see below). The other four rest on fame plus an exact date-of-birth
+ * match with no rival candidate: `bernard` is Bernard Anício Caldeira
+ * Duarte, `willianborges88` is Willian Borges da Silva (born 1988-08-09,
+ * the exact date `squads.ts` records), `arthurhmelo` is Arthur Melo — three
+ * of the most recognisable names to have played in this division, at
+ * 895K, 10.6M and 4.6M followers respectively, where a bare first name
+ * being wrong would mean a different, equally famous person with the same
+ * uncommon full name and the same day of birth. `walacesouza08` and
+ * `99alesson` sit one step below that: verified, no bio naming the club,
+ * but a kit colour in the profile photo consistent with it — Bahia's
+ * stripes for `eve_stum` (see next), Mirassol's yellow-green for
+ * `99alesson`.
+ *
+ * **`eve_stum` is Everaldo Stum, and the display name is the trap this
+ * entry almost failed on.** The account now shows only "Eve", not
+ * "Everaldo Stum" — Instagram display names change, unlike a handle — and
+ * a name check alone would have refused it exactly as `_leo06` and
+ * `rafaelalexandresilva` above were refused for the same shape of mismatch.
+ * What held here and not there: the handle itself derives unmistakably
+ * from "Everaldo Stum" where "_leo06" and "rafaelalexandresilva" derive
+ * from names that are not our players' at all, the account is verified,
+ * and the profile photo is a striped kit in Bahia's colours. A changed
+ * display name is not evidence of anything by itself; it is the derivation
+ * and the photo that carry this entry.
+ *
+ * **`isa_matos02` is Isabela Matos, and the entry she sits under is odd for
+ * a reason this file cannot fix.** `squads.ts` lists `287686` inside Vasco
+ * da Gama's men's squad, born 2002-08-12 — and her own bio reads `Atleta:
+ * @vasco_feminino`, Vasco's **women's** team. That is football-data's
+ * classification, not a guess made here: the provider's team payload is
+ * what `sync-seed-data` freezes verbatim, and a women's player appearing in
+ * a men's Série A squad list is a data anomaly upstream, not a card this
+ * app declines to render. The handle is genuinely hers — name, age and the
+ * "Isa Matos" short form all agree, and her bio names the club her own way
+ * — so the entry stands regardless of which squad `squads.ts` filed her
+ * under.
+ *
+ * **Held rather than refused, for the reason `player-wikipedia.ts` gives
+ * that word:** `maiconroque` (Maicon, Coritiba) and `gabriel` (Gabriel,
+ * Bragantino) each match a candidate's name with nothing to corroborate
+ * it — no bio naming the club, no fame clearing the bar the way Willian or
+ * Arthur Melo did — and `gabriel` besides is a bare five-letter handle,
+ * the kind a very famous unrelated Gabriel is far more likely to hold than
+ * this division's Bragantino squad player. `fernandosantos_99` (Fernando,
+ * Bragantino) answered a login wall rather than a profile, which is
+ * neither a refusal nor a confirmation.
  */
 export const PLAYER_INSTAGRAM: Record<string, string> = {
   "192070": "kevinviveros9",     // Kevin Viveros · Athletico-PR
@@ -262,12 +341,14 @@ export const PLAYER_INSTAGRAM: Record<string, string> = {
   "187426": "mycaelmoreira",     // Mycael · Athletico-PR
   "1662": "goleirosantosoficial", // Santos · Athletico-PR
   "8606": "stevenmendozaoficial", // Stiven Mendoza · Athletico-PR
+  "16476": "bernard",            // Bernard · Atlético-MG
   "1182": "7_dudu",              // Dudu · Atlético-MG
   "7569": "cassierrajr",         // Mateo Cassierra · Atlético-MG
   "1447": "maycon",              // Maycon · Atlético-MG
   "123350": "reinier.jesus",     // Reinier · Atlético-MG
   "46266": "tomascuello28",      // Tomás Cuello · Atlético-MG
   "178854": "victorhg_10_",      // Victor Hugo Gomes · Atlético-MG
+  "39954": "eve_stum",           // Everaldo · Bahia
   "1548": "evertonri",           // Éverton Ribeiro · Bahia
   "1547": "jeanlucas8_",         // Jean Lucas · Bahia
   "15904": "alextelles13",       // Alex Telles · Botafogo
@@ -284,6 +365,7 @@ export const PLAYER_INSTAGRAM: Record<string, string> = {
   "169720": "jandirbreno",       // Jája Silva · Clube do Remo
   "119621": "jl_carvalho",       // João Lucas · Clube do Remo
   "168807": "vitorfbueno",       // Vitor Bueno · Clube do Remo
+  "73778": "zericardo_99",       // Zé Ricardo · Clube do Remo
   "3789": "carrillo",            // André Carrillo · Corinthians
   "179054": "brenobidon",        // Bidon · Corinthians
   "249314": "felipelongo05",     // Felipe Longo · Corinthians
@@ -303,6 +385,7 @@ export const PLAYER_INSTAGRAM: Record<string, string> = {
   "181633": "kaikibrunos",       // Kaiki Bruno · Cruzeiro
   "91310": "kaiojorge",          // Kaio Jorge · Cruzeiro
   "178822": "matheuscunha_01",   // Matheus Cunha · Cruzeiro
+  "6532": "walacesouza08",       // Walace · Cruzeiro
   "2028": "alxsndro12",          // Alex Sandro · Flamengo
   "1074": "ayrtonlucas",         // Ayrton Lucas · Flamengo
   "7881": "daniluiz2",           // Danilo Luiz da Silva · Flamengo
@@ -325,14 +408,17 @@ export const PLAYER_INSTAGRAM: Record<string, string> = {
   "157533": "jkennedy",          // John Kennedy · Fluminense
   "179177": "martinelli.08",     // Martinelli · Fluminense
   "23333": "yefersonsoteldo1006", // Yeferson Soteldo · Fluminense
+  "1148": "arthurhmelo",         // Arthur · Grêmio
   "37833": "carlosvinicius95",   // Carlos Vinícius · Grêmio
   "3219": "kichanpavon",         // Cristian Pavón · Grêmio
   "147442": "ericknoriega34",    // Erick Noriega · Grêmio
   "116177": "furacaotete",       // Tetê · Grêmio
   "1138": "wkannemann",          // Walter Kannemann · Grêmio
+  "3230": "willianborges88",     // Willian · Grêmio
   "1129": "alerrandro_souza00",  // Alerrandro · Internacional
   "58": "gabimercado25",         // Gabriel Mercado · Internacional
   "30386": "chinorochet93",      // Sergio Rochet · Internacional
+  "95982": "99alesson",          // Alesson · Mirassol
   "272": "gabrielpires.oficial", // Gabriel · Mirassol
   "12818": "eulucasoliveira96",  // Lucas Oliveira · Mirassol
   "1181": "victorluis",          // Victor Luis · Mirassol
@@ -350,6 +436,7 @@ export const PLAYER_INSTAGRAM: Record<string, string> = {
   "99380": "gabrielbrazao1",     // Gabriel Brazão · Santos
   "139933": "gabrielmenino00",   // Gabriel Menino · Santos
   "1086": "luanperes94",         // Luan Peres · Santos
+  "292398": "nadsonjuan_09",     // Nadson Maia · Santos
   "8491": "neymarjr",            // Neymar · Santos
   "2295": "tomasrincon8",        // Tomás Rincón · Santos
   "3244": "cedricsoares41",      // Cédric · São Paulo
@@ -358,6 +445,8 @@ export const PLAYER_INSTAGRAM: Record<string, string> = {
   "85523": "marcosantonio",      // Marcos Antônio · São Paulo
   "169542": "pablo_maia02",      // Pablo Maia · São Paulo
   "1832": "rafael.toloi2",       // Rafael Tolói · São Paulo
+  "287686": "isa_matos02",       // Isabela Matos · Vasco da Gama
+  "28564": "pumitaa_4",          // José Rodríguez · Vasco da Gama
   "176241": "matheus_franca04",  // Matheus França · Vasco da Gama
   "171304": "nmmoreira_79",      // Nuno Moreira · Vasco da Gama
   "179017": "robertrenan03",     // Robert · Vasco da Gama
