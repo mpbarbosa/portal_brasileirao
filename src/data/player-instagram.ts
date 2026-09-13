@@ -333,8 +333,46 @@
  * this division's Bragantino squad player. `fernandosantos_99` (Fernando,
  * Bragantino) answered a login wall rather than a profile, which is
  * neither a refusal nor a confirmation.
+ *
+ * ## A third method, and why it added exactly one row
+ *
+ * The two sweeps above join on `P2003` starting from *occupation* —
+ * "association football player" — which requires Wikidata to have tagged
+ * the item that way. `P54`, "member of sports team", is the complementary
+ * property: resolve each of the 20 clubs' Wikidata items (from the titles
+ * already in `club-wikipedia.ts`) and ask who has ever been listed as a
+ * member of that specific team, joined locally on exact club **and** exact
+ * date of birth. It is a smaller pool per club than the occupation query —
+ * 1,566 candidates worldwide, against 13,173 — but every one of them is
+ * pre-filtered to a club this app actually has, which is evidence the
+ * occupation query cannot offer on its own.
+ *
+ * **It mostly reproduced the first sweep rather than extending it**, which
+ * is itself worth knowing before running it again: of 7 exact club+date
+ * matches, `opatrickalan`, `carlos_f20`, `riquelme.06` and
+ * `murilocerqueira35` were already known — three already refused, one
+ * already dead — and `gustavo19luiz` had already been added. One,
+ * `bruno_fuchs` for Internacional's Vitinho, is a same-birthdate
+ * coincidence with a wholly different name and was refused unopened. Only
+ * `dudukogitzki` (Dudu, Athletico-PR) was new, and it earns its place on
+ * the bio alone — `@athleticoparanaense`, verified, the kit in the photos
+ * in the club's own colours.
+ *
+ * **Loosening the join to club-only, scored by name overlap with no date
+ * requirement, was tried and produced 269 rows of near-total noise.**
+ * `P54` accumulates a player's *entire* career at a club across decades,
+ * so a common surname collides constantly with the wrong generation:
+ * Corinthians' `Guilherme` (born 2007) matched `guilherme`, a Corinthians
+ * player born **1991** — sixteen years apart, on a first name alone. That
+ * shape repeats across nearly every one of the 269, which is why none of
+ * them appear here: without a date to anchor it, a name-only join against
+ * a club's full historical roster is not a lead, it is a coincidence
+ * generator. Reject candidates whose age gap from a real teammate reads
+ * more than a couple of years apart on sight; do not open them looking for
+ * corroboration that will not be there.
  */
 export const PLAYER_INSTAGRAM: Record<string, string> = {
+  "211606": "dudukogitzki",      // Dudu · Athletico-PR
   "192070": "kevinviveros9",     // Kevin Viveros · Athletico-PR
   "278568": "voronov_maksym06",  // Maksym Voronov · Athletico-PR
   "249158": "matheuss_s012",     // Matheus Soares · Athletico-PR
