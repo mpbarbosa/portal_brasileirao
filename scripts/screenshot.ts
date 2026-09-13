@@ -455,6 +455,33 @@ const settle = async (page: Page) => {
       });
   }
 
+  /**
+   * Walk the page once, so a lazy `<img>` far below the crop has actually been
+   * asked to load before the wait below checks for it.
+   *
+   * A cropped route is photographed at a fixed viewport — never scrolled — so
+   * a lazy image's only chance to load is Chromium's own near-viewport margin,
+   * and that margin is not a page property: it is computed from the browser's
+   * *perceived connection speed*, which localhost and a real network answer
+   * differently. Measured on `/clube/palmeiras` (a leader's Jogos disputados
+   * runs to 27 rows): against `http://127.0.0.1` every one of 108 images
+   * completed with no scroll at all; against production, four images roughly
+   * 4200px down — two crests and two broadcaster marks in the season's last
+   * row — sat `complete: false` for 20 extra seconds and never resolved. Same
+   * page, same near-identical height (4379px against 4461px), two different
+   * verdicts, on a network property the script does not control and cannot
+   * read in advance. Scrolling costs nothing on the pages the margin already
+   * covers and is the only thing that reaches the pages it does not.
+   */
+  await page.evaluate(async () => {
+    const step = Math.max(1, window.innerHeight - 100);
+    for (let y = 0; y <= document.body.scrollHeight; y += step) {
+      window.scrollTo(0, y);
+      await new Promise((resolve) => requestAnimationFrame(resolve));
+    }
+    window.scrollTo(0, 0);
+  });
+
   // Every image actually decoded, rather than a fixed wait and a hope. Crests
   // and broadcaster marks are lazy, so this is the difference between a shot
   // with badges and a shot with holes.
