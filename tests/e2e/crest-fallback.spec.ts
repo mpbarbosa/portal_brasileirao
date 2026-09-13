@@ -142,22 +142,23 @@ test("the mark draws where the monogram would have nothing to draw", async ({ pa
   await expect(page.locator('main article [data-crest-fallback="mark"]')).toHaveCount(2);
 });
 
-test("Ao vivo: the 40px live card takes the mark, the 20px rows keep letters", async ({
+test("Ao vivo: the 56px live card takes the mark, the 20px rows keep letters", async ({
   page,
 }) => {
   // Both halves on one page, which is the whole of the scoping decision. The
-  // live card is 40px and can hold a picture; the *A seguir* and *Últimos
-  // resultados* rows below go through `FixtureSides` at 20px, which is
-  // classificação size. Asserting only the first would let someone put the mark
-  // on `FixtureSides` too — and that would carry it onto Jogos, the club page
-  // and the estádio page, none of which was asked for.
+  // live card is 56px, the same tile `MatchPage`'s own scoreboard draws, and
+  // can hold a picture; the *A seguir* and *Últimos resultados* rows below go
+  // through `FixtureSides` at 20px, which is classificação size. Asserting
+  // only the first would let someone put the mark on `FixtureSides` too — and
+  // that would carry it onto Jogos, the club page and the estádio page, none
+  // of which was asked for.
   await withoutCrests(page, { goLive: true });
   await page.goto("/ao-vivo");
 
   const live = page.locator('main [data-live-match] [data-crest-fallback="mark"]');
   await expect(live.first()).toBeVisible();
   expect(await live.first().evaluate((el) => el.getBoundingClientRect().width)).toBeCloseTo(
-    40,
+    56,
     0,
   );
 

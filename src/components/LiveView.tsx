@@ -3,6 +3,8 @@ import { countdownLabel, liveBoard } from "@/live-core";
 import { hasScore } from "@/matches-core";
 import { BroadcasterMark } from "@/src/components/BroadcasterMark";
 import { ClubCrest } from "@/src/components/ClubCrest";
+import { ClubPageLink } from "@/src/components/ClubPageLink";
+import { WikipediaLink } from "@/src/components/ClubLinks";
 import { LINK_UNDERLINE } from "@/src/components/interaction";
 import { isPlainClick } from "@/src/components/plainClick";
 import { MatchList } from "@/src/components/MatchList";
@@ -21,52 +23,87 @@ import type { Club, Match } from "@/src/types";
  */
 const TICK_MS = 30_000;
 
-/** One club's side of a live scoreboard: crest above the name, centred. */
-function Side({ club, code }: { club: Club | null; code: string }) {
+/**
+ * One club's side of a live scoreboard: crest in a bordered tile, the name
+ * beneath it as a link to the club's page, and its Wikipédia article — the
+ * same idiom `MatchPage`'s own `Side` draws, at the same 56px, so a reader
+ * moving from a live card to the fixture it links to meets one scoreboard
+ * rather than two. The *A seguir* and *Últimos resultados* rows below stay on
+ * `FixtureSides` at 20px, classificação size, where the arch is mush and three
+ * letters read — that boundary is unchanged, only where it sits moved: every
+ * crest here takes the mark, at the match page's own size rather than a third
+ * one of its own.
+ */
+function Side({
+  club,
+  code,
+  onSelectClub,
+}: {
+  club: Club | null;
+  code: string;
+  onSelectClub: (key: string) => void;
+}) {
+  const label = club?.shortName ?? code;
+
   return (
-    <div className="flex min-w-0 flex-1 flex-col items-center gap-1.5 text-center">
-      {/* `fallback="mark"` like the club and match pages: at 40px a failed
-          crest can hold its slot with a picture, and this card is the one thing
-          the page exists to show. The *A seguir* and *Últimos resultados* rows
-          below stay on letters — they go through `FixtureSides` at 20px, which
-          is classificação size, where the arch is mush and three letters read.
-          Every crest here at 40px and up takes the mark; every one at 24px and
-          down keeps its letters. */}
-      {club && <ClubCrest club={club} size={40} fallback="mark" />}
-      <span className="truncate text-body-medium font-semibold">{club?.shortName ?? code}</span>
+    <div className="flex min-w-0 flex-1 flex-col items-center gap-2 text-center">
+      {club && (
+        <span className="flex items-center justify-center rounded-medium border border-outline-variant bg-surface-container-low p-2">
+          <ClubCrest club={club} size={56} fallback="mark" />
+        </span>
+      )}
+      {club ? (
+        <ClubPageLink club={club} onSelectClub={onSelectClub} className="truncate font-semibold">
+          {label}
+        </ClubPageLink>
+      ) : (
+        <span className="truncate font-semibold">{label}</span>
+      )}
+      {club && <WikipediaLink title={club.wikipedia} subject="do clube" extra="text-body-small" />}
     </div>
   );
 }
 
 /**
- * A match in progress, at the size the page's whole point deserves.
+ * A match in progress, drawn as the same scoreboard `MatchPage` opens on.
  *
  * Deliberately *not* a `MatchList` row: everything below the fold on this page
  * is a row, and a live match that looked like one would be indistinguishable
- * from the fixture that kicks off tomorrow. The card is the difference.
+ * from the fixture that kicks off tomorrow. The card is the difference, and it
+ * now shares its whole shape with the Partida page's own scoreboard — the
+ * bordered crest tile, the sized score tray, the round line above — rather
+ * than a smaller, differently-sized card that happened to show the same
+ * fixture. A reader following "Ver a partida" from here lands on a scoreboard
+ * they have already seen once, not a new drawing of one.
  *
- * The mark is a pulsing dot **plus the words "Bola rolando"** — the dot alone
- * says nothing to a screen reader and nothing at all to a reader who cannot
- * separate its colour from the chip beside it. `prefers-reduced-motion` stops
- * the pulse globally (src/index.css); the words are what carry the fact.
+ * The round-and-status header keeps its own mark rather than adopting
+ * `StatusChip`: the pulsing dot **plus the words "Bola rolando"** says more
+ * than the chip's generic "Ao vivo" would, and the dot alone says nothing to a
+ * screen reader and nothing at all to a reader who cannot separate its colour
+ * from the chip beside it. `prefers-reduced-motion` stops the pulse globally
+ * (src/index.css); the words are what carry the fact. It is stacked and
+ * centred above the score, like `MatchPage`'s own round-plus-`StatusChip`
+ * pair, rather than pinned to opposite corners.
  */
 function LiveMatchCard({
   match,
   clubs,
   onSelectMatch,
+  onSelectClub,
 }: {
   match: Match;
   clubs: Club[];
   onSelectMatch: (id: string) => void;
+  onSelectClub: (key: string) => void;
 }) {
   const { home, away } = clubsOf(match, clubs);
   const path = formatRoute({ section: "partida", id: match.id });
   const played = hasScore(match);
 
   return (
-    <Surface as="li" filled className="p-4" data-live-match={match.id}>
-      <div className="flex items-center justify-between gap-2 text-body-small text-ink-faint">
-        <span>{match.round}ª rodada</span>
+    <Surface as="li" filled className="p-5 sm:p-6" data-live-match={match.id}>
+      <div className="flex flex-col items-center gap-1.5 text-center">
+        <span className="text-body-small text-ink-faint">{match.round}ª rodada</span>
         <span className="inline-flex items-center gap-1.5 text-primary">
           <span
             aria-hidden="true"
@@ -76,21 +113,23 @@ function LiveMatchCard({
         </span>
       </div>
 
-      <div className="mt-3 flex items-center justify-between gap-3">
-        <Side club={home} code={match.homeCode} />
-        <p className="shrink-0 text-headline-small font-bold tabular-nums">
+      <div className="mt-5 flex items-center justify-center gap-3 sm:gap-6">
+        <Side club={home} code={match.homeCode} onSelectClub={onSelectClub} />
+
+        <div className="shrink-0 rounded-medium bg-surface-container-lowest px-4 py-3 text-center sm:px-6">
           {played ? (
-            <>
+            <p className="text-display-large font-bold tabular-nums">
               {match.homeGoals} <span className="text-ink-ghost">×</span> {match.awayGoals}
-            </>
+            </p>
           ) : (
-            <span className="text-ink-ghost">×</span>
+            <p className="text-headline-medium font-bold text-ink-ghost">×</p>
           )}
-        </p>
-        <Side club={away} code={match.awayCode} />
+        </div>
+
+        <Side club={away} code={match.awayCode} onSelectClub={onSelectClub} />
       </div>
 
-      <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
+      <div className="mt-4 flex flex-wrap items-center justify-center gap-3 border-t border-outline-variant pt-3">
         <a
           href={path}
           onClick={(event) => {
@@ -125,6 +164,8 @@ interface LiveViewProps {
   /** Whether the first load is still in flight — see `App`. */
   loading?: boolean;
   onSelectMatch: (id: string) => void;
+  /** Opens a club's own page, from a live card's crest or name. */
+  onSelectClub: (key: string) => void;
   /** Where "ver todos os jogos" goes. */
   onBrowseRounds: () => void;
 }
@@ -149,6 +190,7 @@ export function LiveView({
   clubs,
   loading = false,
   onSelectMatch,
+  onSelectClub,
   onBrowseRounds,
 }: LiveViewProps) {
   const now = useNow(TICK_MS);
@@ -188,6 +230,7 @@ export function LiveView({
                   match={match}
                   clubs={clubList}
                   onSelectMatch={onSelectMatch}
+                  onSelectClub={onSelectClub}
                 />
               ))}
             </ul>
