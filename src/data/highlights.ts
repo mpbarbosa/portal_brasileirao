@@ -1419,4 +1419,10 @@ export const HIGHLIGHTS: Record<string, Highlight[]> = {
     { url: "https://www.youtube.com/watch?v=2yI-YnMO1v0", channel: "CazéTV" },
     { url: "https://www.youtube.com/watch?v=j77wlWVhfKQ", channel: "UOL Esporte" },
   ],
+  // Coritiba 3 x 3 Athletico-PR, rodada 27.
+  "555004": [
+    { url: "https://www.youtube.com/watch?v=GKrVwyx13V8", channel: "ge tv" },
+    { url: "https://www.youtube.com/watch?v=ZUzsIAWJlDA", channel: "CazéTV" },
+    { url: "https://www.youtube.com/watch?v=rV62JNDm3hY", channel: "UOL Esporte" },
+  ],
 };
