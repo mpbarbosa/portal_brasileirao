@@ -229,6 +229,7 @@ export const PLAYER_INSTAGRAM: Record<string, string> = {
   "168807": "vitorfbueno",       // Vitor Bueno · Clube do Remo
   "3789": "carrillo",            // André Carrillo · Corinthians
   "179054": "brenobidon",        // Bidon · Corinthians
+  "249314": "felipelongo05",     // Felipe Longo · Corinthians
   "33145": "gpaulista5",         // Gabriel Paulista · Corinthians
   "82991": "hugosouza",          // Hugo Souza · Corinthians
   "3325": "jesselingard",        // Jesse Lingard · Corinthians
