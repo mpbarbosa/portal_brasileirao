@@ -1413,4 +1413,10 @@ export const HIGHLIGHTS: Record<string, Highlight[]> = {
     { url: "https://www.youtube.com/watch?v=99lLO_8-_Io", channel: "CazéTV" },
     { url: "https://www.youtube.com/watch?v=YKGBd4SKAI8", channel: "UOL Esporte" },
   ],
+  // Chapecoense 1 x 2 Internacional, rodada 27.
+  "555003": [
+    { url: "https://www.youtube.com/watch?v=zj9Kh54kHBo", channel: "ge tv" },
+    { url: "https://www.youtube.com/watch?v=2yI-YnMO1v0", channel: "CazéTV" },
+    { url: "https://www.youtube.com/watch?v=j77wlWVhfKQ", channel: "UOL Esporte" },
+  ],
 };
