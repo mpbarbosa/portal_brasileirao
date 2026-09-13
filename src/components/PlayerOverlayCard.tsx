@@ -82,6 +82,30 @@ function GroupLabel({ children }: { children: ReactNode }) {
   return <h3 className="mb-2 text-label-medium uppercase text-ink-faint">{children}</h3>;
 }
 
+/**
+ * The shirt number a second time, as a small solid chip rather than a value —
+ * see **Marca da camisa** in `CONTEXT.md`. `aria-hidden` because the `Camisa`
+ * Ficha already announces the same number to a screen reader; `data-shirt-mark`
+ * names it for `tests/e2e/player-card.spec.ts`.
+ *
+ * One component with two call sites rather than two markups: it sits pinned to
+ * a player's photograph where one exists, and beside the name where it does
+ * not — a player with no curated photograph is the common case, not the
+ * exception, so the badge needs a second home rather than vanishing with the
+ * picture. `className` carries whichever positioning the call site needs.
+ */
+function ShirtBadge({ value, className = "" }: { value: number; className?: string }) {
+  return (
+    <span
+      aria-hidden="true"
+      data-shirt-mark=""
+      className={`flex size-6 shrink-0 items-center justify-center rounded-x-small bg-primary text-label-small font-bold tabular-nums text-on-primary ${className}`}
+    >
+      {value}
+    </span>
+  );
+}
+
 /** A magnifier: the plain web search. */
 function SearchGlyph() {
   return (
@@ -379,79 +403,59 @@ export function PlayerOverlayCard({ player, scorer, onClose }: PlayerOverlayCard
       //
       // Padding lives on the two inner blocks, not here, so the header band's
       // rule can run the full width of the card.
-      className="mx-auto mt-auto mb-4 flex max-h-[88dvh] w-full max-w-lg flex-col overflow-y-auto rounded-x-large border border-outline bg-surface-container-low text-on-surface shadow-level-3 backdrop:bg-scrim/70 backdrop:backdrop-blur-sm sm:my-auto"
+      className="mx-auto mt-auto mb-4 flex max-h-[88dvh] w-full max-w-lg flex-col overflow-y-auto rounded-x-large border border-outline border-t-4 border-t-primary bg-surface-container-low text-on-surface shadow-level-3 backdrop:bg-scrim/70 backdrop:backdrop-blur-sm sm:my-auto"
     >
-      <header className="relative overflow-hidden border-b border-outline-variant px-5 py-4">
-        {enriched.shirtNumber !== undefined && (
-          /* The shirt, once, very large and nearly invisible — the one piece of
-             decoration on the card. It is not a second copy of the `Camisa`
-             tile competing with it: at this size and this opacity it reads as
-             the card's ground rather than as a value, which is exactly why it
-             can carry a number that is also printed below.
+      <header className="border-b border-outline-variant px-5 py-4">
+        <div className="mb-3 flex items-center justify-between gap-3">
+          <p className="text-label-small uppercase text-ink-faint">Cartão do jogador</p>
+          <Button ref={closeRef} size="sm" onClick={onClose} className="shrink-0">
+            Fechar
+          </Button>
+        </div>
 
-             Absent for every player until the person endpoint answers, because
-             the competition's team payload carries no shirt number at all — so
-             this is invisible in the frozen snapshot and present on the live
-             site. `aria-hidden` because the tile already says it. */
-          <span
-            aria-hidden="true"
-            /* Named, so a spec can measure this box against the close
-               button's without selecting on `header > span` — the header has
-               gained an element before now, and it will again. */
-            data-shirt-mark=""
-            /* Bottom edge, and to the LEFT of the close button — the two
-               constraints are what fix this position, and there is no corner
-               that satisfies both. The header is 101px tall — measured, and
-               the same with a photograph as without, since the 64px portrait
-               plus its padding is shorter than the three lines beside it; the
-               close button ends 64px down it; and this numeral's box is 57 at
-               `leading-none`. 64 + 57 > 101, so a top-right corner either sits
-               behind the button or hangs out of the header — and it did the
-               second, `-bottom-5` putting 20px of the glyph under
-               `overflow-hidden`. A digit cut in half by the header's own rule
-               is exactly the "rendering fault" this comment used to warn about
-               for the corner above it, arriving at the corner below.
-
-               `right-20` is that arithmetic: 20 for the header's own `px-5`
-               plus 48 for the button is 68, so 80 clears it by 12dp. Keep the
-               two in step if the button's size ever changes — this is
-               `STICKY_CLUB`'s pairing, and `tests/e2e/player-card.spec.ts`
-               measures both boxes rather than trusting the sum written here.
-
-               It stays as far right as that clearance allows, because what it
-               passes behind on the way left is the player's name: on a narrow
-               card a long name truncates into this band, and a ground is the
-               one thing that may sit under text. */
-            className="pointer-events-none absolute bottom-0 right-20 select-none text-display-large font-black leading-none tabular-nums text-primary/10"
-          >
-            {enriched.shirtNumber}
-          </span>
-        )}
-
-        <div className="relative flex items-start gap-4">
+        <div className="flex items-start gap-4">
           {photo && (
-            /* Square and cropped rather than letterboxed: these arrive at
-               whatever shape their photographer framed, mostly portrait, and a
-               row of cards should not shift about. `object-top` because a
-               head-and-shoulders portrait keeps the face high in the frame —
-               centring the crop cuts foreheads. */
-            <img
-              src={playerPhotoUrl(player.id, PLAYER_PHOTO_WIDTHS[0])}
-              srcSet={PLAYER_PHOTO_WIDTHS.map((w) => `${playerPhotoUrl(player.id, w)} ${w}w`).join(", ")}
-              sizes="64px"
-              alt={photo.alt}
-              width={64}
-              height={64}
-              decoding="async"
-              className="size-16 shrink-0 rounded-medium border border-outline-variant object-cover object-top"
-            />
+            /* `relative` is what the shirt badge below positions against —
+               the corner of the photograph, not the header. Square and
+               cropped rather than letterboxed: these arrive at whatever shape
+               their photographer framed, mostly portrait, and a row of cards
+               should not shift about. `object-top` because a head-and-shoulders
+               portrait keeps the face high in the frame — centring the crop
+               cuts foreheads. */
+            <div className="relative shrink-0">
+              <img
+                src={playerPhotoUrl(player.id, PLAYER_PHOTO_WIDTHS[0])}
+                srcSet={PLAYER_PHOTO_WIDTHS.map((w) => `${playerPhotoUrl(player.id, w)} ${w}w`).join(", ")}
+                sizes="80px"
+                alt={photo.alt}
+                width={80}
+                height={80}
+                decoding="async"
+                className="size-20 rounded-medium border border-outline-variant object-cover object-top"
+              />
+              {enriched.shirtNumber !== undefined && (
+                <ShirtBadge
+                  value={enriched.shirtNumber}
+                  className="absolute -bottom-1.5 -right-1.5 ring-2 ring-surface-container-low"
+                />
+              )}
+            </div>
           )}
 
           <div className="min-w-0 flex-1">
-            <p className="text-label-small uppercase text-ink-faint">Jogador</p>
-            <h2 id="jogador-nome" className="truncate text-headline-small font-bold">
-              {enriched.name}
-            </h2>
+            <div className="flex items-center gap-2">
+              <h2 id="jogador-nome" className="truncate text-headline-small font-bold">
+                {enriched.name}
+              </h2>
+              {/* Photo coverage is 70 curated players against ~950 in the
+                  division, while the enrichment gives most opened cards a
+                  shirt number — so a player with no photograph to pin the
+                  badge to is the common case, not the exception, and the
+                  badge needs a second home rather than silently vanishing. */}
+              {!photo && enriched.shirtNumber !== undefined && (
+                <ShirtBadge value={enriched.shirtNumber} />
+              )}
+            </div>
             {/* Its own line rather than inside the heading: the heading
                 truncates, and on a phone "Gabriel Barbosa" alone already nearly
                 fills it, so an apelido appended there is the half that would be
@@ -462,12 +466,21 @@ export function PlayerOverlayCard({ player, scorer, onClose }: PlayerOverlayCard
                 {nicknameLabel(nickname)}
               </p>
             )}
-            {club &&<p className="truncate text-body-medium text-ink-muted">{club.shortName}</p>}
+            {(nationality || club) && (
+              /* Nationality and club on one line — the identity a reader
+                 wants at a glance, ahead of the Linha do cartão below where
+                 Nacionalidade is read again on its own. Nationality stays
+                 plain text rather than its own node: wrapping it exactly as
+                 the club is wrapped would give an exact-text lookup for
+                 "Brasil" two matching elements the moment this line and the
+                 row below both carry it. */
+              <p className="truncate text-body-medium text-ink-muted">
+                {nationality}
+                {nationality && club && " · "}
+                {club && <span>{club.shortName}</span>}
+              </p>
+            )}
           </div>
-
-          <Button ref={closeRef} size="sm" onClick={onClose} aria-label="Fechar" className="shrink-0">
-            <span aria-hidden="true">✕</span>
-          </Button>
         </div>
       </header>
 
