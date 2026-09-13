@@ -1407,4 +1407,10 @@ export const HIGHLIGHTS: Record<string, Highlight[]> = {
     { url: "https://www.youtube.com/watch?v=YucOK3VQ_kQ", channel: "ge tv" },
     { url: "https://www.youtube.com/watch?v=sd2Tqy4hDTQ", channel: "UOL Esporte" },
   ],
+  // Botafogo 1 x 1 Bragantino, rodada 27.
+  "555002": [
+    { url: "https://www.youtube.com/watch?v=4cVuCTARqkQ", channel: "ge tv" },
+    { url: "https://www.youtube.com/watch?v=99lLO_8-_Io", channel: "CazéTV" },
+    { url: "https://www.youtube.com/watch?v=YKGBd4SKAI8", channel: "UOL Esporte" },
+  ],
 };
