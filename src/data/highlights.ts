@@ -1393,4 +1393,18 @@ export const HIGHLIGHTS: Record<string, Highlight[]> = {
     { url: "https://www.youtube.com/watch?v=EBeO68umuBg", channel: "ge tv" },
     { url: "https://www.youtube.com/watch?v=pd2Ane_7RJ8", channel: "UOL Esporte" },
   ],
+  // Palmeiras 2 x 0 São Paulo, rodada 27.
+  "555008": [
+    { url: "https://www.youtube.com/watch?v=isA8GtW3KYo", channel: "ge tv" },
+    { url: "https://www.youtube.com/watch?v=XeIfQS_6L-8", channel: "UOL Esporte" },
+  ],
+  // Mirassol 2 x 2 Vitória, rodada 27.
+  "555007": [
+    { url: "https://www.youtube.com/watch?v=v-TnCvXG8BQ", channel: "ge tv" },
+  ],
+  // Santos 2 x 1 Cruzeiro, rodada 27.
+  "555009": [
+    { url: "https://www.youtube.com/watch?v=YucOK3VQ_kQ", channel: "ge tv" },
+    { url: "https://www.youtube.com/watch?v=sd2Tqy4hDTQ", channel: "UOL Esporte" },
+  ],
 };
