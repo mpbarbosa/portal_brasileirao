@@ -294,7 +294,12 @@ export function ClubView({
 
       <Surface as="header" filled className="mt-3 flex items-start gap-3 p-4 sm:p-5">
         <span className="flex shrink-0 items-center justify-center rounded-medium border border-outline-variant bg-surface-container p-2">
-          <ClubCrest club={club} size={48} fallback="mark" />
+          {/* 44px, matching `ClubDashboard`'s header exactly — the Painel is
+              one click away and `crest-fallback.spec.ts` pins both pages to
+              the same size so a missing crest cannot be held two different
+              ways a click apart. The tile around it is new; the crest's own
+              box is not. */}
+          <ClubCrest club={club} size={44} fallback="mark" />
         </span>
         {/* `min-w-0` on the growing half, so the truncating lines inside it
             shorten instead of pushing the control off the row. */}
