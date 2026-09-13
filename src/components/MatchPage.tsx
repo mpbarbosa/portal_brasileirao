@@ -117,13 +117,24 @@ function Campaign({
  * pull the eye off the middle of the card. The club's other three links stay on
  * the club page, one tap away through the name above — repeating all four
  * beside each side would put eight external links around a scoreline.
+ *
+ * The crest sits inside a bordered tile rather than floating on the card's own
+ * background — the same tonal-panel idiom `data-placar` uses for the score, so
+ * the two visually pair as one scoreboard rather than a crest and a number that
+ * happen to share a row. The tile is padding and a border around the crest, not
+ * a second crest: `ClubCrest` still renders at its own `size`, which is what
+ * `crest-fallback.spec.ts` measures — wrapping it changes nothing that spec reads.
  */
 function Side({ club, code, onNavigate }: { club: Club | null; code: string; onNavigate: (p: string) => void }) {
   const label = club?.shortName ?? code;
 
   return (
     <div className="flex min-w-0 flex-1 flex-col items-center gap-2 text-center">
-      {club && <ClubCrest club={club} size={56} fallback="mark" />}
+      {club && (
+        <span className="flex items-center justify-center rounded-medium border border-outline-variant bg-surface-container-low p-2">
+          <ClubCrest club={club} size={56} fallback="mark" />
+        </span>
+      )}
       {club ? (
         <ClubPageLink
           club={club}
@@ -441,13 +452,17 @@ export function MatchPage({
 
       {/* `as="article"` on purpose: this is the page's main card, and rendering
           it as a bare div would change the document outline. */}
-      <Surface as="article" filled className="mt-3 p-5">
-        <div className="flex items-center justify-between gap-2 text-body-small text-ink-faint">
-          <span>{match.round}ª rodada</span>
+      <Surface as="article" filled className="mt-3 p-5 sm:p-6">
+        {/* Round and status stacked and centred, rather than pinned to opposite
+            corners: the two describe one thing — where this fixture stands —
+            and reading them as a pair above the scoreline is what a reader
+            checking a result wants first. */}
+        <div className="flex flex-col items-center gap-1.5 text-center">
+          <span className="text-body-small text-ink-faint">{match.round}ª rodada</span>
           <StatusChip status={match.status} />
         </div>
 
-        <div className="mt-4 flex items-center justify-between gap-3">
+        <div className="mt-5 flex items-center justify-center gap-3 sm:gap-6">
           <Side club={home} code={match.homeCode} onNavigate={onNavigate} />
 
           {/* The one number the whole page exists for, in a tray of its own.
@@ -478,18 +493,31 @@ export function MatchPage({
               `rounded-small` because it is a panel, not because it is nested —
               the shape rule in `src/index.css` says a step is chosen by what a
               thing is, and warns against reading depth into it. */}
-          <div className="shrink-0 rounded-small bg-surface-container-lowest px-4 py-2 text-center" data-placar>
+          <div
+            className="shrink-0 rounded-medium bg-surface-container-lowest px-4 py-3 text-center sm:px-6"
+            data-placar
+          >
             {played ? (
-              <p className="text-headline-medium font-bold tabular-nums">
+              <p className="text-display-large font-bold tabular-nums">
                 {match.homeGoals} <span className="text-ink-ghost">×</span> {match.awayGoals}
               </p>
             ) : (
-              <p className="text-headline-small font-bold text-ink-ghost">×</p>
+              <p className="text-headline-medium font-bold text-ink-ghost">×</p>
             )}
           </div>
 
           <Side club={away} code={match.awayCode} onNavigate={onNavigate} />
         </div>
+
+        {/* The kickoff, directly under the score: the fact a reader checking a
+            finished score reaches for next is *when*, and it is one glance
+            rather than a scroll to "Data e hora" below. `kickoffLabelLong` is
+            called again there for the detail list's own row — one function,
+            two renderings, never two copies of the format, which is the trap
+            `kickoff.ts`'s own comment names. */}
+        <p className="mt-3 text-center text-body-small text-ink-faint first-letter:uppercase">
+          {kickoffLabelLong(match)}
+        </p>
 
         {/* Inside the scoreboard card rather than in a section of its own: these
             names are what the numbers above are made of, and a heading between
