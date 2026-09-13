@@ -9,8 +9,10 @@ import { LINK_UNDERLINE } from "@/src/components/interaction";
 import { isPlainClick } from "@/src/components/plainClick";
 import { MatchList } from "@/src/components/MatchList";
 import { formatRoute } from "@/route-core";
+import { StadiumWeather } from "@/src/components/StadiumWeather";
 import { Surface } from "@/src/components/Surface";
 import { useNow } from "@/src/useNow";
+import { stadiumSlug } from "@/venue-core";
 import type { Club, Match } from "@/src/types";
 
 /**
@@ -128,6 +130,13 @@ function LiveMatchCard({
 
         <Side club={away} code={match.awayCode} onSelectClub={onSelectClub} />
       </div>
+
+      {/* Every card here is already live by construction — `board.live` holds
+          nothing else — so there is no status to gate on, unlike `MatchPage`.
+          Current conditions at the ground are exactly right for a match being
+          played right now; see `weather-core.ts` for why this app never shows
+          a forecast instead. */}
+      {match.venue && <StadiumWeather slug={stadiumSlug(match.venue.stadium)} />}
 
       <div className="mt-4 flex flex-wrap items-center justify-center gap-3 border-t border-outline-variant pt-3">
         <a

@@ -1,4 +1,7 @@
 import { expect, test, type Page } from "@/tests/e2e/clock";
+import { STADIUMS } from "@/src/data/stadiums";
+import { VENUES } from "@/src/data/venues";
+import { stadiumSlug } from "@/venue-core";
 
 /**
  * The **Ao vivo** page, against the frozen snapshot.
@@ -39,6 +42,29 @@ const withLiveMatches = async (page: Page, count = 2) => {
 
   await page.route("**/api/matches*", (route) => route.fulfill({ json: body }));
 };
+
+/** A curated venue whose ground has a coordinate, read from the committed files. */
+const MAPPED_VENUE = Object.values(VENUES).find(
+  (venue) => STADIUMS[stadiumSlug(venue.stadium)]?.coordinates,
+);
+
+const stubWeather = (page: Page) =>
+  page.route("**/api/stadium-weather/**", (route) =>
+    route.fulfill({
+      json: {
+        source: "open-meteo",
+        note: "Condições atuais no estádio, do Open-Meteo.",
+        updatedAt: "2026-08-29T21:00:00.000Z",
+        data: {
+          temperature: 23.4,
+          label: "Pancadas de chuva",
+          kind: "rain",
+          day: true,
+          readAt: "2026-08-29T21:00:00.000Z",
+        },
+      },
+    }),
+  );
 
 test.describe("Ao vivo", () => {
   test("is reachable from the navigation and owns its address", async ({ page }) => {
@@ -153,5 +179,57 @@ test.describe("Ao vivo", () => {
       expect(text).not.toMatch(/\b\d{1,3}'/);
       expect(text).not.toMatch(/\b\d{1,3}\s*min\b/);
     }
+  });
+
+  /**
+   * **Clima no estádio**, on a card that is already live by construction.
+   *
+   * Unlike the match page, no status gate is needed here — every card under
+   * "Agora" holds a `LIVE` fixture — so the only condition worth asserting is
+   * the ground itself: present, and it shows; absent, and it stays silent.
+   */
+  test("a live card shows the weather at its own ground", async ({ page }) => {
+    expect(MAPPED_VENUE, "src/data/venues.ts names no ground with a coordinate").toBeTruthy();
+    await stubWeather(page);
+
+    const body = await (await page.request.get("/api/matches")).json();
+    const scheduled = body.data.matches.filter(
+      (match: { status: string }) => match.status === "SCHEDULED",
+    );
+    const target = scheduled[0];
+    target.status = "LIVE";
+    target.homeGoals = 1;
+    target.awayGoals = 0;
+    target.venue = MAPPED_VENUE;
+    await page.route("**/api/matches*", (route) => route.fulfill({ json: body }));
+
+    await page.goto("/ao-vivo");
+
+    const card = page.locator("[data-live-match]").first();
+    await expect(card.getByRole("heading", { name: "Clima no estádio" })).toBeVisible();
+  });
+
+  test("a live card with no curated ground shows no weather", async ({ page }) => {
+    await stubWeather(page);
+
+    const body = await (await page.request.get("/api/matches")).json();
+    const scheduled = body.data.matches.filter(
+      (match: { status: string }) => match.status === "SCHEDULED",
+    );
+    const target = scheduled[0];
+    target.status = "LIVE";
+    target.homeGoals = 1;
+    target.awayGoals = 0;
+    // No curated venue for most fixtures, by construction (see `venue-core.ts`)
+    // — set explicitly instead of assuming, so this does not depend on which
+    // scheduled fixture happens to be first in the snapshot.
+    delete target.venue;
+    await page.route("**/api/matches*", (route) => route.fulfill({ json: body }));
+
+    await page.goto("/ao-vivo");
+
+    const card = page.locator("[data-live-match]").first();
+    await expect(card).toBeVisible();
+    await expect(card.getByRole("heading", { name: "Clima no estádio" })).toHaveCount(0);
   });
 })

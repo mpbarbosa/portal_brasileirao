@@ -29,6 +29,7 @@ import { NotFoundScreen } from "@/src/components/NotFoundScreen";
 import { CampaignEnds, RankSparkline } from "@/src/components/RankSparkline";
 import { formatRoute } from "@/route-core";
 import { StatusChip } from "@/src/components/StatusChip";
+import { StadiumWeather } from "@/src/components/StadiumWeather";
 import { Surface } from "@/src/components/Surface";
 import type {
   Club,
@@ -662,6 +663,14 @@ export function MatchPage({
           </div>
         )}
       </dl>
+
+      {/* Weather is worth a reader's attention only while the match is being
+          played — a forecast for kickoff would be the same overreach
+          `live-core.ts` already refuses for a match minute, and current
+          conditions for a fixture already over describe nothing anybody is
+          about to sit through. `StadiumWeather` renders nothing on its own
+          when the ground has no coordinate or the reading fails. */}
+      {venue && match.status === "LIVE" && <StadiumWeather slug={stadiumSlug(venue.stadium)} />}
 
       {homeLineup && awayLineup && (
         <section className="mt-6">
