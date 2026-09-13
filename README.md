@@ -75,10 +75,10 @@ position is printed under the name only when it says something the heading did n
 
 *A match page, light and dark. **Gols** names who scored and for which club, from CBF's own
 match feed — the club a goal *counts for* rather than the scorer's club, which is the whole of
-what puts an own goal on the right side of a scoreboard. It is also what pushed the campanha
-and the melhores momentos below this capture's crop — and goal coverage has since reached the
-second fixture too, so that page's own Gols band has now evicted its melhores momentos in the
-same way. The campanhas are the only one of the two any capture still shows.
+what puts an own goal on the right side of a scoreboard. It is also what pushed the Escalações
+and the Campanha below this capture's crop — melhores momentos itself stays inside it — and
+goal coverage has since reached the second fixture too, where the Escalações and Campanha fall
+outside its own crop the same way. Neither capture shows either of the two.
 Both clubs' campanhas are stacked rather than overlaid, so
 they share one scale and their rounds line up — the app has no series palette, and inventing
 a hue pair would be the only place colour carried meaning no token defines. **Melhores
