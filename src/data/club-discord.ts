@@ -88,7 +88,17 @@ export const CLUB_DISCORD: Record<ClubCode, ClubDiscord> = {
   // Furacão! … vive o Athletico 24h", "AQUI É FURACÃO" — e o escudo. *Furacão*
   // é do Athletico-PR e de mais ninguém; *rubro-negro* sozinho não servia,
   // porque o Flamengo também é.
-  "1768": { invite: "cYyWz3RR4k", guild: "1395888999276613632" },
+  //
+  // **O convite original (`cYyWz3RR4k`) expirou** — `check-club-discord`
+  // passou a reportar "Invite is expired." em 2026-09-13, apesar do
+  // `expires_at: null` registado quando foi guardado: um convite de listagem
+  // pode ser trocado pelo próprio servidor a qualquer momento, sem aviso a
+  // quem o guardou. Substituído pelo convite corrente da MESMA listagem do
+  // Disboard (`AthletiCord #600`, etiqueta `furacão`, bump há 2 dias em
+  // 2026-09-13): `2cgqNvYvBU`, confirmado a resolver para a mesma guild
+  // `1395888999276613632` via `api/v10/invites`, 617 membros,
+  // `expires_at: null`.
+  "1768": { invite: "2cgqNvYvBU", guild: "1395888999276613632" },
   "1769": { invite: "palmeiras", guild: "794150101504491530" },
   // Palmeiras • ＯＢＳＥＳＳÃＯ — 20 010 membros, sem expiração. Vanity, como a
   // do Flamengo.
