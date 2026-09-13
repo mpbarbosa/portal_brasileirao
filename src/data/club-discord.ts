@@ -110,5 +110,12 @@ export const CLUB_DISCORD: Record<ClubCode, ClubDiscord> = {
   // Palmeiras é o espaço ideal para os palmeirenses se reunirem…". Nomeia o
   // clube pelo nome legal E diz **não oficial**, que é precisamente o sufixo
   // "comunidade de torcedores" que a ligação carrega.
+  //
+  // EC Bahia — vanity, 10 286 membros, sem expiração. Mesma forma de prova que
+  // a do Palmeiras: só veio o convite, então o que estabelece o servidor certo
+  // é ele próprio a dizê-lo — "O servidor não-oficial do Esporte Clube Bahia. O
+  // time mais vencedor e popular da região Nordeste do Brasil." Nomeia o clube
+  // pelo nome legal E diz **não-oficial**, o mesmo par que o Palmeiras dá.
+  "1777": { invite: "bahia", guild: "1297362681409568798" },
   "1783": { invite: "flamengo", guild: "956003357129076746" },
 };
