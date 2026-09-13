@@ -529,6 +529,7 @@ export function App() {
               clubs={matches?.clubs}
               loading={loading}
               onSelectMatch={(id) => navigate({ section: "partida", id })}
+              onSelectClub={(key) => navigate({ section: "clube", key })}
               onBrowseRounds={() => navigate({ section: "jogos", round: null })}
             />
           )}

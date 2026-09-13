@@ -11,12 +11,12 @@ interface ClubCrestProps {
   /**
    * What stands in when there is no crest.
    *
-   * `"monogram"` everywhere by default. `"mark"` is for the two places that
-   * render a crest big enough to read a picture in — the club page at 44px and
-   * the match page at 56px — and the reasoning is in the component comment
+   * `"monogram"` everywhere by default. `"mark"` is for the three places that
+   * render a crest big enough to read a picture in — the club page at 44px,
+   * and the match page and `LiveView`'s scoreboard card both at 56px, sharing
+   * one bordered-tile idiom — and the reasoning is in the component comment
    * below. It is an explicit prop rather than a size threshold because the
-   * threshold would silently recruit call sites nobody looked at: `LiveView` is
-   * 40px and sits four pixels under any line you would draw.
+   * threshold would silently recruit call sites nobody looked at.
    */
   fallback?: "monogram" | "mark";
 }
@@ -26,7 +26,7 @@ interface ClubCrestProps {
  *
  * Checked against the rendered mark at every size this component is asked for,
  * with the CDN failing: 18px in the classificação, 20 in the Meu time strip, 24
- * on Jogadores, 40 on Ao vivo, 44 on the club page, 56 on the match page — so
+ * on Jogadores, 44 on the club page, 56 on Ao vivo and on the match page — so
  * 8px through 24px of type. **18 is the size that decides it**, and it is also
  * the one that matters most: twenty of them, all at once, is what a CDN outage
  * looks like. Three letters sit inside the disc there with a little room; a
