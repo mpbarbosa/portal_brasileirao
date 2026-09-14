@@ -17,8 +17,10 @@ import type { StadiumFacts } from "@/src/types";
  * — rather than recalled. That is the same rule the hymn list follows, and for
  * a sharper reason: a plausible capacity is indistinguishable from a correct
  * one to anyone reading the page, so an unverified number would never be
- * caught. Two stadiums' articles state no inauguration year; `opened` is absent
- * for them rather than guessed.
+ * caught. One stadium's article states no inauguration year (Cícero de Souza
+ * Marques — its infobox only names a 2025 remodelling); `opened` is absent for
+ * it rather than guessed. Nubank Parque's used to be the second such case, and
+ * is not any more — see its own entry for what changed and when.
  *
  * `name` is the popular name, properly cased — what a reader would say out
  * loud. `officialName` is carried only where it genuinely differs, so the page
@@ -315,9 +317,17 @@ export const STADIUMS: Record<string, StadiumFacts> = {
   },
   "nubank-parque": {
     // Allianz Parque until 2026; CBF already uses the new name, and so does the
-    // article. No inauguration year in its infobox.
+    // article.
+    //
+    // **Updated 2026-09-14**: this used to say the infobox carried no
+    // inauguration year. It now reads `{{dtlink|19|11|2014}}` — checked the
+    // raw wikitext directly, clean and unambiguous, no competing date the way
+    // several other grounds here carry a renovation date alongside the
+    // original. Matches the stadium's well-known 2014-11-19 opening as
+    // Allianz Parque.
     name: "Nubank Parque",
     capacity: 43723,
+    opened: 2014,
     wikipedia: "Nubank Parque",
     coordinates: [-23.527556, -46.678417],
     photo: {
