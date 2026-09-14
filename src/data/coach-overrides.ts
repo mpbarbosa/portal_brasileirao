@@ -26,6 +26,20 @@ import type { ClubCode } from "@/src/types";
  * that added it rather than summarised here, where it would go stale.
  */
 export const COACH_OVERRIDES: Record<ClubCode, string> = {
+  // Fluminense. Served as "Luis Zubeldía", demitido em 2026-08-13 — ver
+  // `events.ts`'s `fluminense-zubeldia`. Marcão (Marco Aurélio de Oliveira),
+  // auxiliar permanente do clube desde 2014, assumiu interinamente no dia
+  // seguinte e foi **efetivado** — não apenas interino — em 2026-08-22, no
+  // Maracanã, logo depois da vitória de virada por 2x1 sobre o Remo pela 24ª
+  // rodada. Confirmado por múltiplas fontes de imprensa independentes, todas
+  // nomeando a mesma data e o mesmo anúncio do presidente Mattheus Montenegro:
+  // Gazeta Esportiva ("Fluminense oficializa Marcão"), Folha do Leste
+  // ("Fluminense efetiva Marcão"), CNN Brasil, Goal.com. `events.ts` só
+  // registava a fase interina; a efetivação é um acontecimento mais recente
+  // que este ficheiro escolhe não duplicar lá — a correcção aqui já é a
+  // resposta que interessa a um leitor do cartão do clube.
+  "1765": "Marcão",
+
   // Grêmio. Served as "Jéssica Lima", who is not the men's first-team técnico.
   //
   // **Updated 2026-09-14, and this is the file's own predicted failure mode
@@ -51,12 +65,46 @@ export const COACH_OVERRIDES: Record<ClubCode, string> = {
   // Maurício Barbieri, from 2024-12-16.
   "1768": "Odair Hellmann",
 
-  // Vasco is DELIBERATELY ABSENT, and the reason belongs here rather than in a
-  // commit nobody re-reads. It is served as "Possato", which no source
-  // corroborates — but the sources do not corroborate each other either:
-  // en.wikipedia says Pedro Emanuel, Wikidata's preferred P286 says Fábio
-  // Carille (from 2024-12-19), and pt.wikipedia's infobox carries no coach
-  // field at all. Doubt that the provider is right is not the same as knowing
-  // what is right, and this file may only hold the second. Absence of a source
-  // is not evidence of an error — `player-overrides.ts`' rule, met again.
+  // Botafogo. Served as "Franclim Carvalho", demitido em 2026-08-18 — ver
+  // `events.ts`'s `botafogo-franclim`. Rodrigo Bellão, treinador do sub-20 do
+  // clube, assumiu interinamente o time principal. Confirmado por
+  // pt.wikipedia's infobox (`| treinador = [[Rodrigo Bellão]]`, com citação da
+  // própria ge.globo da demissão de Franclim) e por imprensa independente
+  // datada de setembro de 2026: ESPN ("Rodrigo Bellão ganha prestígio..."),
+  // gazetabotafogo.com ("respaldado pela diretoria... técnico interino... até
+  // 19/9"), FogãoNET. **A interinidade tem uma data de revisão próxima
+  // (19/9)** — a mais frágil das cinco correcções desta leva, e a mais
+  // provável de precisar de outra em breve.
+  "1770": "Rodrigo Bellão",
+
+  // Chapecoense. Served as "Fábio Matias", demitido em 2026-05-25 — ver
+  // `events.ts`'s `chapecoense-fabio-matias`. Rafael Lacerda foi anunciado
+  // cinco dias depois, em 2026-05-30, com contrato até o fim de 2026.
+  // Confirmado pelo próprio site do clube ("Fechado com a Chape: Rafael
+  // Lacerda é o novo técnico") e por imprensa independente da mesma data:
+  // Gazeta Esportiva, ClicRDC, esportegoiano.com.
+  "1772": "Rafael Lacerda",
+
+  // Vasco. Served as "Possato", corroborated by nothing. **This entry used to
+  // be deliberately absent** because the three sources this file checks
+  // disagreed with each other: en.wikipedia said Pedro Emanuel, Wikidata's
+  // preferred P286 said Fábio Carille (from 2024-12-19), and pt.wikipedia's
+  // infobox carried no coach field at all. That is resolved now, not by one
+  // of the three catching up but by a fourth: Vasco's own site announced
+  // Pedro Emanuel on 2026-07-10 ("Pedro Emanuel é o novo técnico do Vasco da
+  // Gama"), matching en.wikipedia's claim and corroborated independently by
+  // NETVASCO, Super Rádio Tupi, Golo FM and Diário do Rio de Janeiro, all
+  // naming the same date. Doubt that the provider was right was never
+  // evidence of what was right — this is what changed.
+  "1780": "Pedro Emanuel",
+
+  // Internacional. Served as "Leonardo Ramos" — a real person at the club,
+  // but the sub-20 técnico, not the first team's. A different kind of
+  // mistake from the other four here: not a stale name but the wrong squad
+  // entirely. Paulo Pezzolano is the men's first-team técnico, announced
+  // 2025-12-18/19, contract until December 2026 — confirmed by the club's own
+  // site ("Paulo Pezzolano é o novo técnico do Internacional") and
+  // independently by ESPN and O Tempo, both dated the same week, and matching
+  // pt.wikipedia's infobox. No announcement of a further change was found.
+  "6684": "Paulo Pezzolano",
 };
