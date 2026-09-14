@@ -1,5 +1,5 @@
 {
-  "snapshot": "2026-09-11",
+  "snapshot": "2026-09-13",
   "club": {
     "code": "1765",
     "name": "Fluminense",
@@ -498,6 +498,25 @@
         "goalsFor": 1,
         "goalsAgainst": 0,
         "result": "V"
+      }
+    },
+    {
+      "round": 27,
+      "open": 4,
+      "close": 4,
+      "best": 4,
+      "worst": 4,
+      "points": 0,
+      "totalPoints": 45,
+      "played": 27,
+      "result": "D",
+      "moved": 0,
+      "match": {
+        "opponent": "Atlético-MG",
+        "home": false,
+        "goalsFor": 1,
+        "goalsAgainst": 3,
+        "result": "D"
       }
     }
   ],

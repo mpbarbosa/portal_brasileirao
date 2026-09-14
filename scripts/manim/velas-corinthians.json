@@ -1,5 +1,5 @@
 {
-  "snapshot": "2026-09-11",
+  "snapshot": "2026-09-13",
   "club": {
     "code": "1779",
     "name": "Corinthians",
@@ -495,6 +495,25 @@
       "match": {
         "opponent": "Chapecoense",
         "home": true,
+        "goalsFor": 1,
+        "goalsAgainst": 2,
+        "result": "D"
+      }
+    },
+    {
+      "round": 27,
+      "open": 12,
+      "close": 13,
+      "best": 12,
+      "worst": 13,
+      "points": 0,
+      "totalPoints": 32,
+      "played": 27,
+      "result": "D",
+      "moved": -1,
+      "match": {
+        "opponent": "Flamengo",
+        "home": false,
         "goalsFor": 1,
         "goalsAgainst": 2,
         "result": "D"

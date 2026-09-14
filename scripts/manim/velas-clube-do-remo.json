@@ -1,5 +1,5 @@
 {
-  "snapshot": "2026-09-11",
+  "snapshot": "2026-09-13",
   "club": {
     "code": "4287",
     "name": "Clube do Remo",
@@ -499,6 +499,19 @@
         "goalsAgainst": 1,
         "result": "D"
       }
+    },
+    {
+      "round": 27,
+      "open": 19,
+      "close": 19,
+      "best": 19,
+      "worst": 19,
+      "points": null,
+      "totalPoints": 23,
+      "played": 26,
+      "result": null,
+      "moved": 0,
+      "match": null
     }
   ],
   "events": [

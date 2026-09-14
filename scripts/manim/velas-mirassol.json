@@ -1,5 +1,5 @@
 {
-  "snapshot": "2026-09-11",
+  "snapshot": "2026-09-13",
   "club": {
     "code": "4364",
     "name": "Mirassol",
@@ -498,6 +498,25 @@
         "goalsFor": 2,
         "goalsAgainst": 1,
         "result": "V"
+      }
+    },
+    {
+      "round": 27,
+      "open": 16,
+      "close": 15,
+      "best": 15,
+      "worst": 16,
+      "points": 1,
+      "totalPoints": 29,
+      "played": 27,
+      "result": "E",
+      "moved": 1,
+      "match": {
+        "opponent": "Vitória",
+        "home": true,
+        "goalsFor": 2,
+        "goalsAgainst": 2,
+        "result": "E"
       }
     }
   ],

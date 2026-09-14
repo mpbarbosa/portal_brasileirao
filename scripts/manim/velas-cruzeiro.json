@@ -1,5 +1,5 @@
 {
-  "snapshot": "2026-09-11",
+  "snapshot": "2026-09-13",
   "club": {
     "code": "1771",
     "name": "Cruzeiro",
@@ -498,6 +498,25 @@
         "goalsFor": 3,
         "goalsAgainst": 1,
         "result": "V"
+      }
+    },
+    {
+      "round": 27,
+      "open": 6,
+      "close": 6,
+      "best": 6,
+      "worst": 6,
+      "points": 0,
+      "totalPoints": 42,
+      "played": 27,
+      "result": "D",
+      "moved": 0,
+      "match": {
+        "opponent": "Santos",
+        "home": false,
+        "goalsFor": 1,
+        "goalsAgainst": 2,
+        "result": "D"
       }
     }
   ],

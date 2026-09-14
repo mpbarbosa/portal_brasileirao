@@ -1,5 +1,5 @@
 {
-  "snapshot": "2026-09-11",
+  "snapshot": "2026-09-13",
   "club": {
     "code": "1767",
     "name": "Grêmio",
@@ -491,6 +491,25 @@
         "home": false,
         "goalsFor": 0,
         "goalsAgainst": 1,
+        "result": "D"
+      }
+    },
+    {
+      "round": 27,
+      "open": 15,
+      "close": 16,
+      "best": 15,
+      "worst": 16,
+      "points": 0,
+      "totalPoints": 28,
+      "played": 26,
+      "result": "D",
+      "moved": -1,
+      "match": {
+        "opponent": "Vasco da Gama",
+        "home": true,
+        "goalsFor": 1,
+        "goalsAgainst": 2,
         "result": "D"
       }
     }

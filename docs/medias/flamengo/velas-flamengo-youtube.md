@@ -14,8 +14,8 @@ Texto que acompanha [`velas-flamengo.mp4`](velas-flamengo.mp4)
   própria cena — a regra que o `scripts/manim/README.md` registra para as velas.
 - **Cortes verticais:** `velas-flamengo-45.mp4` (1080×1350, feed do Instagram) e `velas-flamengo-916.mp4` (1080×1920, Reels e YouTube Short).
 
-> **Os números aqui saem de `scripts/manim/velas-flamengo.json`, rodada 26,
-> snapshot de 2026-09-11** — 1º com 54 pts, 16V 6E 4D, e a oscilação entre
+> **Os números aqui saem de `scripts/manim/velas-flamengo.json`, rodada 27,
+> snapshot de 2026-09-13** — 1º com 57 pts, 17V 6E 4D, e a oscilação entre
 > o 1º e o 15º, que é a faixa que o painel do vídeo imprime. Eles **envelhecem**: um `sync-seed-data` seguido de uma
 > reexportação move o vídeo, e este arquivo não é regerado por nada. Reconferir
 > antes de publicar, contra o JSON e não contra esta página.
@@ -52,18 +52,18 @@ Texto que acompanha [`velas-flamengo.mp4`](velas-flamengo.mp4)
 
 ## Título
 
-Recomendado (71 caracteres):
+Recomendado (65 caracteres):
 
 ```
-Flamengo assume a ponta na 26ª: a campanha em velas do Brasileirão 2026
+Flamengo lidera o Brasileirão na 27ª: a campanha em velas de 2026
 ```
 
-A virada, que é o assunto do vídeo e envelhece na próxima rodada — e **data o recorte**, que é a única defesa contra
+A liderança mantida, que é o assunto do vídeo e envelhece na próxima rodada — e **data o recorte**, que é a única defesa contra
 alguém assistir daqui a três meses e achar que os números estão errados.
 
 | | título | caracteres | ângulo |
 |---|---|---|---|
-| 2 | `Flamengo em velas: 54 pontos, 16V 6E 4D até a 26ª rodada` | 56 | o número duro, data o recorte |
+| 2 | `Flamengo em velas: 57 pontos, 17V 6E 4D até a 27ª rodada` | 56 | o número duro, data o recorte |
 | 3 | `A campanha do líder do Brasileirão em candlestick \| Flamengo 2026` | 65 | 'líder' envelhece mais rápido que qualquer número aqui |
 
 **Os apelidos não estão em nenhum deles, e estão nas tags**: é como o torcedor
@@ -74,14 +74,14 @@ busca, e não é como o clube aparece no vídeo nem na tabela.
 ```
 A campanha do Flamengo rodada a rodada, desenhada como vela: o corpo vai da posição em que o clube ABRIU a rodada até onde ele FECHOU, e o pavio cobre a melhor e a pior posição que ele ocupou enquanto a rodada era jogada. Embaixo, no mesmo eixo, os pontos acumulados — a barra é o total e a tampa clara é o que a rodada acrescentou.
 
-Dados até 11/09/2026 (26ª rodada):
-• Flamengo — 1º, 54 pts em 26 jogos
-• 16V · 6E · 4D — 51 gols pró, 21 contra, saldo +30
-• 69% de aproveitamento · oscilou entre o 1º e o 15º
+Dados até 13/09/2026 (27ª rodada):
+• Flamengo — 1º, 57 pts em 27 jogos
+• 17V · 6E · 4D — 53 gols pró, 22 contra, saldo +31
+• 70% de aproveitamento · oscilou entre o 1º e o 15º
 
-O vídeo termina no quadro em que a campanha vira. O Flamengo fechou 26 rodadas com apenas 2 delas em 1º — e é na última vela do desenho que ele assume a ponta, por um ponto.
+O vídeo termina com o Flamengo na ponta há duas rodadas. O time fechou 27 rodadas com apenas 3 delas em 1º — assumiu a ponta na 26ª, por um ponto sobre o Palmeiras, e a manteve na 27ª, vencendo de novo e seguindo um ponto à frente.
 
-A campanha que chega lá é a segunda menos derrotada da divisão, 4 derrotas em 26 jogos, atrás só das 3 do Palmeiras. Fecha entre o 1º e o 15º, e o 15º está na 1ª rodada, onde os clubes empatados em nada são ordenados por NOME — é alfabeto e não futebol.
+A campanha que chega lá é a segunda menos derrotada da divisão, 4 derrotas em 27 jogos, atrás só das 3 do Palmeiras. Fecha entre o 1º e o 15º, e o 15º está na 1ª rodada, onde os clubes empatados em nada são ordenados por NOME — é alfabeto e não futebol.
 
 As duas réguas tracejadas que cruzam o desenho são acontecimentos de fora de campo, e cada uma cai na FRONTEIRA entre duas rodadas em vez de sobre uma: a demissão de Filipe Luís depois da 3ª rodada, e a paralisação para a Copa do Mundo depois da 18ª. Quando a primeira aparece, o Flamengo tinha 4 pontos em 3 jogos e vinha de fechar em 11º.
 
@@ -106,7 +106,7 @@ carregar o vídeo sozinha.
 Para Short, ou onde a descrição longa não couber.
 
 ```
-A campanha do Flamengo em velas: o corpo vai da posição de abertura à de fechamento da rodada, o pavio mostra até onde o clube subiu e desceu dentro dela, e a barra de baixo são os pontos. As réguas tracejadas marcam a demissão de Filipe Luís e a parada para a Copa. Assumiu a ponta na 26ª rodada e o desenho registra a troca. Dados até a 26ª: 54 pts, 16V 6E 4D, saldo +30.
+A campanha do Flamengo em velas: o corpo vai da posição de abertura à de fechamento da rodada, o pavio mostra até onde o clube subiu e desceu dentro dela, e a barra de baixo são os pontos. As réguas tracejadas marcam a demissão de Filipe Luís e a parada para a Copa. Assumiu a ponta na 26ª rodada e chegou à 27ª ainda na liderança. Dados até a 27ª: 57 pts, 17V 6E 4D, saldo +31.
 
 Animação em Manim, dados do Portal Brasileirão: https://brasileirao.mpbarbosa.com
 Código: https://github.com/mpbarbosa/portal_brasileirao
@@ -120,7 +120,7 @@ Medido sobre o bloco como está — separado por `, `, que é o que se cola.
 309 caracteres, 23 tags.
 
 ```
-brasileirão, brasileirao 2026, campeonato brasileiro, série a, serie a, flamengo, mengão, mengao, rubro-negro, fla, crf, campanha do flamengo, campanha rodada a rodada, candlestick, gráfico de velas, futebol brasileiro, visualização de dados, dataviz, manim, python, portal brasileirão, rodada 26, filipe luís
+brasileirão, brasileirao 2026, campeonato brasileiro, série a, serie a, flamengo, mengão, mengao, rubro-negro, fla, crf, campanha do flamengo, campanha rodada a rodada, candlestick, gráfico de velas, futebol brasileiro, visualização de dados, dataviz, manim, python, portal brasileirão, rodada 27, filipe luís
 ```
 
 `filipe luís` entra porque o vídeo agora **marca** a saída dele, e é assim que

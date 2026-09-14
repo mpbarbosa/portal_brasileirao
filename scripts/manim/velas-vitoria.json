@@ -1,5 +1,5 @@
 {
-  "snapshot": "2026-09-11",
+  "snapshot": "2026-09-13",
   "club": {
     "code": "1782",
     "name": "Vitória",
@@ -498,6 +498,25 @@
         "goalsFor": 1,
         "goalsAgainst": 0,
         "result": "V"
+      }
+    },
+    {
+      "round": 27,
+      "open": 11,
+      "close": 12,
+      "best": 11,
+      "worst": 12,
+      "points": 1,
+      "totalPoints": 33,
+      "played": 27,
+      "result": "E",
+      "moved": -1,
+      "match": {
+        "opponent": "Mirassol",
+        "home": false,
+        "goalsFor": 2,
+        "goalsAgainst": 2,
+        "result": "E"
       }
     }
   ],

@@ -14,8 +14,8 @@ Texto que acompanha [`velas-corinthians.mp4`](velas-corinthians.mp4)
   própria cena — a regra que o `scripts/manim/README.md` registra para as velas.
 - **Cortes verticais:** `velas-corinthians-45.mp4` (1080×1350, feed do Instagram) e `velas-corinthians-916.mp4` (1080×1920, Reels e YouTube Short).
 
-> **Os números aqui saem de `scripts/manim/velas-corinthians.json`, rodada 26,
-> snapshot de 2026-09-11** — 12º com 32 pts, 8V 8E 10D, e a oscilação entre
+> **Os números aqui saem de `scripts/manim/velas-corinthians.json`, rodada 27,
+> snapshot de 2026-09-13** — 13º com 32 pts, 8V 8E 11D, e a oscilação entre
 > o 3º e o 19º, que é a faixa que o painel do vídeo imprime. Eles **envelhecem**: um `sync-seed-data` seguido de uma
 > reexportação move o vídeo, e este arquivo não é regerado por nada. Reconferir
 > antes de publicar, contra o JSON e não contra esta página.
@@ -45,7 +45,7 @@ Texto que acompanha [`velas-corinthians.mp4`](velas-corinthians.mp4)
 Recomendado (66 caracteres):
 
 ```
-Corinthians em velas: do 5º ao 17º até a 26ª rodada do Brasileirão
+Corinthians em velas: do 5º ao 17º até a 27ª rodada do Brasileirão
 ```
 
 A amplitude de fechamento, que é o que a campanha tem — e **data o recorte**, que é a única defesa contra
@@ -54,7 +54,7 @@ alguém assistir daqui a três meses e achar que os números estão errados.
 | | título | caracteres | ângulo |
 |---|---|---|---|
 | 2 | `A campanha do Corinthians rodada a rodada \| Brasileirão 2026 em candlestick` | 75 | genérico e buscável |
-| 3 | `Corinthians: 32 pontos, 8V 8E 10D e saldo +0` | 44 | o número duro |
+| 3 | `Corinthians: 32 pontos, 8V 8E 11D e saldo -1` | 44 | o número duro |
 
 **Os apelidos não estão em nenhum deles, e estão nas tags**: é como o torcedor
 busca, e não é como o clube aparece no vídeo nem na tabela.
@@ -64,14 +64,14 @@ busca, e não é como o clube aparece no vídeo nem na tabela.
 ```
 A campanha do Corinthians rodada a rodada, desenhada como vela: o corpo vai da posição em que o clube ABRIU a rodada até onde ele FECHOU, e o pavio cobre a melhor e a pior posição que ele ocupou enquanto a rodada era jogada. Embaixo, no mesmo eixo, os pontos acumulados — a barra é o total e a tampa clara é o que a rodada acrescentou.
 
-Dados até 11/09/2026 (26ª rodada):
-• Corinthians — 12º, 32 pts em 26 jogos
-• 8V · 8E · 10D — 27 gols pró, 27 contra, saldo +0
-• 41% de aproveitamento · oscilou entre o 3º e o 19º
+Dados até 13/09/2026 (27ª rodada):
+• Corinthians — 13º, 32 pts em 27 jogos
+• 8V · 8E · 11D — 28 gols pró, 29 contra, saldo -1
+• 40% de aproveitamento · oscilou entre o 3º e o 19º
 
 O Corinthians passou a temporada fechando rodadas entre o 5º e o 17º sem se fixar em lugar nenhum: nem G4, nem Z4, nem uma sequência que dê forma à campanha. No desenho isso é uma sucessão de corpos de altura média em direções alternadas — o oposto da fileira quieta de quem lidera.
 
-O painel diz 3º e 19º, contando o que aconteceu dentro das rodadas. São 10 derrotas em 26 jogos e 6 rodadas de invencibilidade na maior série.
+O painel diz 3º e 19º, contando o que aconteceu dentro das rodadas. São 11 derrotas em 27 jogos e 6 rodadas de invencibilidade na maior série.
 
 As réguas tracejadas que cruzam o desenho são acontecimentos de fora de campo, e cada uma cai na FRONTEIRA entre duas rodadas em vez de sobre uma: a demissão de Dorival Júnior depois da 10ª rodada, e a paralisação para a Copa do Mundo depois da 18ª rodada. Quando a primeira aparece, o clube vinha de fechar a 10ª em 16º com 10 pts.
 
@@ -96,7 +96,7 @@ carregar o vídeo sozinha.
 Para Short, ou onde a descrição longa não couber.
 
 ```
-A campanha do Corinthians em velas: o corpo vai da posição de abertura à de fechamento da rodada, o pavio mostra até onde o clube subiu e desceu dentro dela, e a barra de baixo são os pontos. As réguas tracejadas marcam a saída de Dorival Júnior e a parada para a Copa. Fecha entre o 5º e o 17º sem nunca decidir a temporada. Dados até a 26ª: 32 pts, 8V 8E 10D, saldo +0.
+A campanha do Corinthians em velas: o corpo vai da posição de abertura à de fechamento da rodada, o pavio mostra até onde o clube subiu e desceu dentro dela, e a barra de baixo são os pontos. As réguas tracejadas marcam a saída de Dorival Júnior e a parada para a Copa. Fecha entre o 5º e o 17º sem nunca decidir a temporada. Dados até a 27ª: 32 pts, 8V 8E 11D, saldo -1.
 
 Animação em Manim, dados do Portal Brasileirão: https://brasileirao.mpbarbosa.com
 Código: https://github.com/mpbarbosa/portal_brasileirao
@@ -110,7 +110,7 @@ Medido sobre o bloco como está — separado por `, `, que é o que se cola.
 319 caracteres, 23 tags.
 
 ```
-brasileirão, brasileirao 2026, campeonato brasileiro, série a, serie a, corinthians, timão, timao, coringão, coringao, sccp, campanha do corinthians, campanha rodada a rodada, candlestick, gráfico de velas, futebol brasileiro, visualização de dados, dataviz, manim, python, portal brasileirão, rodada 26, dorival júnior
+brasileirão, brasileirao 2026, campeonato brasileiro, série a, serie a, corinthians, timão, timao, coringão, coringao, sccp, campanha do corinthians, campanha rodada a rodada, candlestick, gráfico de velas, futebol brasileiro, visualização de dados, dataviz, manim, python, portal brasileirão, rodada 27, dorival júnior
 ```
 
 `dorival júnior` entra porque o vídeo agora **marca** essa saída, e é assim que o torcedor

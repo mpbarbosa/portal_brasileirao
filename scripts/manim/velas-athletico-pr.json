@@ -1,5 +1,5 @@
 {
-  "snapshot": "2026-09-11",
+  "snapshot": "2026-09-13",
   "club": {
     "code": "1768",
     "name": "Athletico-PR",
@@ -498,6 +498,25 @@
         "goalsFor": 1,
         "goalsAgainst": 3,
         "result": "D"
+      }
+    },
+    {
+      "round": 27,
+      "open": 3,
+      "close": 3,
+      "best": 3,
+      "worst": 3,
+      "points": 1,
+      "totalPoints": 46,
+      "played": 27,
+      "result": "E",
+      "moved": 0,
+      "match": {
+        "opponent": "Coritiba",
+        "home": false,
+        "goalsFor": 3,
+        "goalsAgainst": 3,
+        "result": "E"
       }
     }
   ],

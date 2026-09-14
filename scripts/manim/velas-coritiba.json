@@ -1,5 +1,5 @@
 {
-  "snapshot": "2026-09-11",
+  "snapshot": "2026-09-13",
   "club": {
     "code": "4241",
     "name": "Coritiba",
@@ -498,6 +498,25 @@
         "goalsFor": 1,
         "goalsAgainst": 2,
         "result": "D"
+      }
+    },
+    {
+      "round": 27,
+      "open": 7,
+      "close": 8,
+      "best": 7,
+      "worst": 8,
+      "points": 1,
+      "totalPoints": 38,
+      "played": 27,
+      "result": "E",
+      "moved": -1,
+      "match": {
+        "opponent": "Athletico-PR",
+        "home": true,
+        "goalsFor": 3,
+        "goalsAgainst": 3,
+        "result": "E"
       }
     }
   ],

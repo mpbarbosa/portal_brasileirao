@@ -1,5 +1,5 @@
 {
-  "snapshot": "2026-09-11",
+  "snapshot": "2026-09-13",
   "clubs": [
     {
       "code": "1769",
@@ -368,6 +368,20 @@
             "goalsFor": 0,
             "goalsAgainst": 0,
             "result": "E"
+          }
+        },
+        {
+          "round": 27,
+          "position": 2,
+          "points": 56,
+          "played": 27,
+          "match": {
+            "opponent": "São Paulo",
+            "opponentTla": "PAU",
+            "home": true,
+            "goalsFor": 2,
+            "goalsAgainst": 0,
+            "result": "V"
           }
         }
       ]
@@ -738,6 +752,20 @@
             "home": false,
             "goalsFor": 1,
             "goalsAgainst": 0,
+            "result": "V"
+          }
+        },
+        {
+          "round": 27,
+          "position": 1,
+          "points": 57,
+          "played": 27,
+          "match": {
+            "opponent": "Corinthians",
+            "opponentTla": "COR",
+            "home": true,
+            "goalsFor": 2,
+            "goalsAgainst": 1,
             "result": "V"
           }
         }

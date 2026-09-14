@@ -1,5 +1,5 @@
 {
-  "snapshot": "2026-09-11",
+  "snapshot": "2026-09-13",
   "club": {
     "code": "6685",
     "name": "Santos",
@@ -491,6 +491,25 @@
         "home": false,
         "goalsFor": 3,
         "goalsAgainst": 2,
+        "result": "V"
+      }
+    },
+    {
+      "round": 27,
+      "open": 13,
+      "close": 10,
+      "best": 10,
+      "worst": 13,
+      "points": 3,
+      "totalPoints": 35,
+      "played": 26,
+      "result": "V",
+      "moved": 3,
+      "match": {
+        "opponent": "Cruzeiro",
+        "home": true,
+        "goalsFor": 2,
+        "goalsAgainst": 1,
         "result": "V"
       }
     }

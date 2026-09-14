@@ -14,8 +14,8 @@ Texto que acompanha [`velas-botafogo.mp4`](velas-botafogo.mp4)
   própria cena — a regra que o `scripts/manim/README.md` registra para as velas.
 - **Cortes verticais:** `velas-botafogo-45.mp4` (1080×1350, feed do Instagram) e `velas-botafogo-916.mp4` (1080×1920, Reels e YouTube Short).
 
-> **Os números aqui saem de `scripts/manim/velas-botafogo.json`, rodada 26,
-> snapshot de 2026-09-11** — 14º com 31 pts, 8V 7E 10D, e a oscilação entre
+> **Os números aqui saem de `scripts/manim/velas-botafogo.json`, rodada 27,
+> snapshot de 2026-09-13** — 14º com 32 pts, 8V 8E 10D, e a oscilação entre
 > o 1º e o 18º, que é a faixa que o painel do vídeo imprime. Eles **envelhecem**: um `sync-seed-data` seguido de uma
 > reexportação move o vídeo, e este arquivo não é regerado por nada. Reconferir
 > antes de publicar, contra o JSON e não contra esta página.
@@ -53,7 +53,7 @@ alguém assistir daqui a três meses e achar que os números estão errados.
 
 | | título | caracteres | ângulo |
 |---|---|---|---|
-| 2 | `Botafogo em velas: 31 pontos em 25 jogos, 8V 7E 10D` | 51 | o número duro, com o denominador certo |
+| 2 | `Botafogo em velas: 32 pontos em 26 jogos, 8V 8E 10D` | 51 | o número duro, com o denominador certo |
 | 3 | `A campanha do Botafogo rodada a rodada \| Brasileirão 2026 em candlestick` | 72 | genérico e buscável |
 
 **Os apelidos não estão em nenhum deles, e estão nas tags**: é como o torcedor
@@ -64,14 +64,14 @@ busca, e não é como o clube aparece no vídeo nem na tabela.
 ```
 A campanha do Botafogo rodada a rodada, desenhada como vela: o corpo vai da posição em que o clube ABRIU a rodada até onde ele FECHOU, e o pavio cobre a melhor e a pior posição que ele ocupou enquanto a rodada era jogada. Embaixo, no mesmo eixo, os pontos acumulados — a barra é o total e a tampa clara é o que a rodada acrescentou.
 
-Dados até 11/09/2026 (26ª rodada):
-• Botafogo — 14º, 31 pts em 25 jogos
-• 8V · 7E · 10D — 37 gols pró, 40 contra, saldo -3
+Dados até 13/09/2026 (27ª rodada):
+• Botafogo — 14º, 32 pts em 26 jogos
+• 8V · 8E · 10D — 38 gols pró, 41 contra, saldo -3
 • 41% de aproveitamento · oscilou entre o 1º e o 18º
 
-O Botafogo tem a segunda maior queda do desenho: fecha a 1ª rodada em 1º e chega à 26ª em 14º — 13 posições, atrás só das 18 da Chapecoense. Descontadas as duas primeiras rodadas, onde os empatados em nada são ordenados por nome, a campanha ainda fecha entre o 7º e o 18º, então a queda é real e não um artefato da ordenação.
+O Botafogo tem a segunda maior queda do desenho: fecha a 1ª rodada em 1º e chega à 27ª em 14º — 13 posições, atrás só das 18 da Chapecoense. Descontadas as duas primeiras rodadas, onde os empatados em nada são ordenados por nome, a campanha ainda fecha entre o 7º e o 18º, então a queda é real e não um artefato da ordenação.
 
-São 10 derrotas em 25 jogos e 6 rodadas de invencibilidade na maior sequência.
+São 10 derrotas em 26 jogos e 6 rodadas de invencibilidade na maior sequência.
 
 As réguas tracejadas que cruzam o desenho são acontecimentos de fora de campo, e cada uma cai na FRONTEIRA entre duas rodadas em vez de sobre uma: a demissão de Martín Anselmi depois da 8ª rodada, a paralisação para a Copa do Mundo depois da 18ª rodada, e a demissão de Franclim Carvalho depois da 23ª rodada. Quando a primeira aparece, o clube vinha de fechar a 8ª em 15º com 7 pts.
 
@@ -96,7 +96,7 @@ carregar o vídeo sozinha.
 Para Short, ou onde a descrição longa não couber.
 
 ```
-A campanha do Botafogo em velas: o corpo vai da posição de abertura à de fechamento da rodada, o pavio mostra até onde o clube subiu e desceu dentro dela, e a barra de baixo são os pontos. As réguas tracejadas marcam as saídas de Martín Anselmi e Franclim Carvalho, e a parada para a Copa. Liderou a 1ª rodada e caiu 13 posições até o 14º. Dados até a 26ª: 31 pts, 8V 7E 10D, saldo -3.
+A campanha do Botafogo em velas: o corpo vai da posição de abertura à de fechamento da rodada, o pavio mostra até onde o clube subiu e desceu dentro dela, e a barra de baixo são os pontos. As réguas tracejadas marcam as saídas de Martín Anselmi e Franclim Carvalho, e a parada para a Copa. Liderou a 1ª rodada e caiu 13 posições até o 14º. Dados até a 27ª: 32 pts, 8V 8E 10D, saldo -3.
 
 Animação em Manim, dados do Portal Brasileirão: https://brasileirao.mpbarbosa.com
 Código: https://github.com/mpbarbosa/portal_brasileirao
@@ -110,7 +110,7 @@ Medido sobre o bloco como está — separado por `, `, que é o que se cola.
 319 caracteres, 23 tags.
 
 ```
-brasileirão, brasileirao 2026, campeonato brasileiro, série a, serie a, botafogo, fogão, fogao, glorioso, alvinegro carioca, campanha do botafogo, campanha rodada a rodada, candlestick, gráfico de velas, futebol brasileiro, visualização de dados, dataviz, manim, python, portal brasileirão, rodada 26, anselmi, franclim
+brasileirão, brasileirao 2026, campeonato brasileiro, série a, serie a, botafogo, fogão, fogao, glorioso, alvinegro carioca, campanha do botafogo, campanha rodada a rodada, candlestick, gráfico de velas, futebol brasileiro, visualização de dados, dataviz, manim, python, portal brasileirão, rodada 27, anselmi, franclim
 ```
 
 `anselmi` e `franclim` entram porque o vídeo agora **marca** essa saída, e é assim que o torcedor
