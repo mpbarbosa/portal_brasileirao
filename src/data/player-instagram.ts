@@ -263,20 +263,17 @@
  * accepts anywhere, and every entry below had to clear the bar some other
  * way, never on the name alone.
  *
- * **Six more wrong-person or wrong-club catches, all from this weaker
+ * **Four wrong-person or wrong-club catches, all from this weaker
  * batch, none of them recorded here.** `evertongaldinoo` names Everton
  * correctly and bios `Jogador do @vilanovafc` — Vila Nova, not this
- * division's Mirassol player of the same name. `gilbertomjr02` bios
- * `Atleta do @athleticoparanaense` — Athletico-PR, not Bahia's Gilberto.
- * `yurilara5` bios `@jubiloiwata.official` — Júbilo Iwata in Japan, not
- * Mirassol's Yuri. `_leo06` and `rafaelalexandresilva` are each a
- * different, unrelated footballer entirely — display names "Leonardo
- * Pinheiro" and "Rafael Alexandre" against our "Léo" (Athletico-PR) and
- * "Rafael Thyere" (Chapecoense), caught only because the display name did
- * not match the Wikidata label it was supposed to. `arturvictor` bios
- * nothing but its "accounts you might like" are a cluster of Botafogo
- * players, not São Paulo's Artur Guimaraes, which is corroboration in the
- * wrong direction rather than none. Three more were refused before being
+ * division's Mirassol player of the same name, and no Wikipedia article
+ * exists to say otherwise. `yurilara5` bios `@jubiloiwata.official` —
+ * Júbilo Iwata in Japan, not Mirassol's Yuri, same absence of a second
+ * source. `_leo06` and `rafaelalexandresilva` are each a different,
+ * unrelated footballer entirely — display names "Leonardo Pinheiro" and
+ * "Rafael Alexandre" against our "Léo" (Athletico-PR) and "Rafael Thyere"
+ * (Chapecoense), caught only because the display name did not match the
+ * Wikidata label it was supposed to. Three more were refused before being
  * opened at all, on the name alone: `ibrahimacisse_09` (Ibrahima Cissé)
  * for our Mamady Cissé, `agussantanna22` (Agustín Sant'Anna) for our Ariel
  * Sant'Anna, and `jhesquerda` (João Henrique Mendes da Silva) for our
@@ -324,17 +321,63 @@
  * — so the entry stands regardless of which squad `squads.ts` filed her
  * under.
  *
- * **Held rather than refused, for the reason `player-wikipedia.ts` gives
- * that word:** `maiconroque` (Maicon, Coritiba) and `gabriel` (Gabriel,
- * Bragantino) each match a candidate's name with nothing to corroborate
- * it — no bio naming the club, no fame clearing the bar the way Willian or
- * Arthur Melo did — and `gabriel` besides is a bare five-letter handle,
- * the kind a very famous unrelated Gabriel is far more likely to hold than
- * this division's Bragantino squad player. `fernandosantos_99` (Fernando,
- * Bragantino) answered a login wall rather than a profile, which is
- * neither a refusal nor a confirmation.
+ * ## A fourth method: querying identities already established elsewhere
  *
- * ## A third method, and why it added exactly one row
+ * The three sweeps above all resolve identity and find a handle in the
+ * same step — a name-and-date join against Wikidata, which is exactly
+ * where a wrong-person match sneaks in. `player-wikipedia.ts` has already
+ * done that resolution once, independently, for 297 of this file's
+ * uncovered players — its own checker verifies the article against
+ * `squads.ts`'s birth date before the title is ever committed. So this
+ * pass skips the join: resolve each of those 297 titles to a Wikidata
+ * QID directly (the MediaWiki API takes 50 titles a request, so this is
+ * six requests rather than 297), then query `P2003` on exactly those
+ * QIDs. Nothing is matched by name a second time.
+ *
+ * **27 of the 297 carry an Instagram username, and all but five were
+ * already known from the two sweeps above** — refused handles
+ * (`carlos_f20`, `opatrickalan`, `joaopaulo34`, `_allansoouza`,
+ * `matheuzinho.02`, `r.junior.07`), dead ones, or entries already added.
+ * `fernandosantos_99`, `carlinhos_l9` (Carlinhos, Clube do Remo),
+ * `maiconroque`, `gabriel` and `renatokayzer` are the five genuinely new
+ * survivors, each opened and verified the same way as every other entry
+ * here.
+ *
+ * **The identity behind this pass is stronger than a name match, and
+ * that changed two verdicts from the sweeps above — which is the real
+ * finding of this round, worth more than the five new rows.**
+ * `gilbertomjr02` was refused earlier for bio-ing `@athleticoparanaense`
+ * while `squads.ts` lists Gilberto (`1073`) at Bahia — read at the time as
+ * a different person. Opening his Wikipedia article (reached from this
+ * pass, since `1073` carries a `player-wikipedia.ts` entry) shows a full
+ * transfer history: Bahia 2023–2026, **Athletico Paranaense 2026–**. He
+ * is the same Gilberto; the bio was right and `squads.ts`'s frozen
+ * snapshot had not caught the move. `arturvictor` was refused for a
+ * different-looking reason — no bio, and its "accounts you might like"
+ * clustered around Botafogo rather than São Paulo's Artur Guimaraes — and
+ * his article resolves that identically: *"atua como ponta-direita no
+ * São Paulo, emprestado pelo Botafogo"*. Botafogo is not a wrong
+ * club, it is the parent club he is on loan from, which is exactly why
+ * his own social circle includes it. `gabriel_mec__`, refused in the
+ * first sweep for bio-ing `@fcporto` against Grêmio's Gabriel Mec, turns
+ * out to be the same shape again — his article states outright:
+ * Grêmio 2025–2026, **Porto 2026–**. All three now stand in the data
+ * below.
+ *
+ * **The general lesson: "the bio names a different club" is evidence of
+ * a transfer at least as often as it is evidence of a wrong person, and
+ * the two look identical from the bio alone.** A name match with no
+ * further check cannot tell them apart, which is exactly why the first
+ * two sweeps' "wrong-club catches" erred toward caution — refusing three
+ * matches that were actually correct. What resolves it is a THIRD
+ * source with a career history: `squads.ts` is a snapshot, an Instagram
+ * bio is whatever the player last set it to, and only a Wikipedia
+ * article states the transfer that reconciles them. Where no such
+ * article exists — `evertongaldinoo`, `yurilara5`, `hernandezdiego16`,
+ * `riquelme.06` above — the bio mismatch is still the best evidence
+ * available, and it still means refuse.
+ *
+ * ## A fifth method, and why it added exactly one row
  *
  * The two sweeps above join on `P2003` starting from *occupation* —
  * "association football player" — which requires Wikidata to have tagged
@@ -388,6 +431,7 @@ export const PLAYER_INSTAGRAM: Record<string, string> = {
   "178854": "victorhg_10_",      // Victor Hugo Gomes · Atlético-MG
   "39954": "eve_stum",           // Everaldo · Bahia
   "1548": "evertonri",           // Éverton Ribeiro · Bahia
+  "1073": "gilbertomjr02",       // Gilberto · Bahia
   "1547": "jeanlucas8_",         // Jean Lucas · Bahia
   "15904": "alextelles13",       // Alex Telles · Botafogo
   "2096": "allanmarques91",      // Allan · Botafogo
@@ -398,8 +442,11 @@ export const PLAYER_INSTAGRAM: Record<string, string> = {
   "12653": "jr.santos.oficial",  // Júnior Santos · Botafogo
   "286833": "kadirbarria_18",    // Kadir Barría · Botafogo
   "160792": "mateoponte_04",     // Mateo Ponte · Botafogo
+  "11198": "fernandosantos_99",  // Fernando · Bragantino
+  "1445": "gabriel",             // Gabriel · Bragantino
   "7838": "yannickbolasie",      // Yannick Bolasie · Chapecoense
   "180287": "braiancufre",       // Braian Cufré · Clube do Remo
+  "12960": "carlinhos_l9",       // Carlinhos · Clube do Remo
   "169720": "jandirbreno",       // Jája Silva · Clube do Remo
   "119621": "jl_carvalho",       // João Lucas · Clube do Remo
   "168807": "vitorfbueno",       // Vitor Bueno · Clube do Remo
@@ -415,6 +462,7 @@ export const PLAYER_INSTAGRAM: Record<string, string> = {
   "1325": "yurialberto",         // Yuri Alberto · Corinthians
   "169022": "brenolopesoficial", // Breno Lopes · Coritiba
   "249479": "jp_chermont",       // João Pedro Chermont · Coritiba
+  "30539": "maiconroque",        // Maicon · Coritiba
   "16154": "pedrorocha32",       // Pedro Rocha · Coritiba
   "1572": "rodrigomoledo13",     // Rodrigo Moledo · Coritiba
   "19958": "rodrigor09",         // Rodrigo Rodrigues · Coritiba
@@ -450,6 +498,7 @@ export const PLAYER_INSTAGRAM: Record<string, string> = {
   "37833": "carlosvinicius95",   // Carlos Vinícius · Grêmio
   "3219": "kichanpavon",         // Cristian Pavón · Grêmio
   "147442": "ericknoriega34",    // Erick Noriega · Grêmio
+  "276279": "gabriel_mec__",     // Gabriel Mec · Grêmio (transferido ao Porto em 2026)
   "116177": "furacaotete",       // Tetê · Grêmio
   "1138": "wkannemann",          // Walter Kannemann · Grêmio
   "3230": "willianborges88",     // Willian · Grêmio
@@ -477,6 +526,7 @@ export const PLAYER_INSTAGRAM: Record<string, string> = {
   "292398": "nadsonjuan_09",     // Nadson Maia · Santos
   "8491": "neymarjr",            // Neymar · Santos
   "2295": "tomasrincon8",        // Tomás Rincón · Santos
+  "1192": "arturvictor",         // Artur Guimaraes · São Paulo
   "3244": "cedricsoares41",      // Cédric · São Paulo
   "276282": "luccamalencar",     // Lucca Marques · São Paulo
   "42901": "lucianoneves10",     // Luciano · São Paulo
@@ -490,4 +540,5 @@ export const PLAYER_INSTAGRAM: Record<string, string> = {
   "179017": "robertrenan03",     // Robert · Vasco da Gama
   "77470": "cacazagueiro",       // Cacá · Vitória
   "166758": "kike_saverio",      // Kike Saverio · Vitória
+  "12837": "renatokayzer",       // Renato Kayzer · Vitória
 };
