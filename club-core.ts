@@ -432,9 +432,15 @@ export const discordInvite = (raw: string | null | undefined): string | null => 
   // `discord.gg/956…`, a link that looks minted and resolves to nothing.
   if (/^[0-9]{17,20}$/.test(code)) return null;
 
-  // Discord's own rule: a minted code is alphanumeric, a vanity URL may carry
-  // hyphens, and both sit inside 2–32 characters.
-  return /^[A-Za-z0-9-]{2,32}$/.test(code) ? code : null;
+  // Discord's own rule for a MINTED code is alphanumeric inside 2–32
+  // characters, and that bound stood here until a real one broke it: the
+  // vanity Discord issues for a large Discoverable community embeds the
+  // guild's own snowflake — `cruzeiro-e-c-1k-1168068145848799313`, 35
+  // characters — confirmed by the invite API returning it as the guild's own
+  // `vanity_url_code`, not merely accepted as a code. The snowflake-only
+  // refusal above still catches a bare id lifted out of a `channels/` URL,
+  // because this shape is never *all* digits; only the ceiling had to move.
+  return (/^[A-Za-z0-9-]{2,32}$/.test(code) || /^(?=.{33,60}$)[A-Za-z0-9]+(?:-[A-Za-z0-9]+)*-[0-9]{17,20}$/.test(code)) ? code : null;
 };
 
 /**
