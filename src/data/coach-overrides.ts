@@ -27,9 +27,23 @@ import type { ClubCode } from "@/src/types";
  */
 export const COACH_OVERRIDES: Record<ClubCode, string> = {
   // Grêmio. Served as "Jéssica Lima", who is not the men's first-team técnico.
-  // pt.wikipedia's infobox and Wikidata P286 (preferred, current, from
-  // 2025-12-12) both name Luís Castro.
-  "1767": "Luís Castro",
+  //
+  // **Updated 2026-09-14, and this is the file's own predicted failure mode
+  // arriving.** Grêmio demitiu Luís Castro em 2026-09-13, um dia depois da
+  // derrota por 2x1 contra o Vasco na Arena, com o coordenador técnico Luiz
+  // Felipe Scolari (Felipão) assumindo o comando interinamente — confirmado
+  // por cinco fontes de imprensa independentes, todas datadas de 2026-09-13
+  // (VAVEL, Jornal do Comércio, Portal do Gremista, aRede, portalgilbertosilva).
+  // pt.wikipedia's infobox already reads `[[Felipão (treinador de
+  // futebol)|Luiz Felipe Scolari]] (interino)` — checked the raw wikitext
+  // directly. **Wikidata's P286 has NOT caught up**: it still ranks Castro's
+  // claim `preferred` with no end date, exactly the lag this file's own header
+  // comment already names ("Wikidata's P286 keeps a superseded claim ranked
+  // preferred for years"). That is source staleness rather than a genuine
+  // disagreement about who holds the job today, so it does not trigger the
+  // "where they disagree, the provider stands" clause — the provider (still
+  // serving "Jéssica Lima") is not a candidate answer either way.
+  "1767": "Luiz Felipe Scolari",
 
   // Athletico-PR. Served as "João Eduardo Louro Baptista Cr" — a different
   // person, and cut short. pt.wikipedia and en.wikipedia both name Odair
