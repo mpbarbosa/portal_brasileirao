@@ -440,7 +440,7 @@ export const discordInvite = (raw: string | null | undefined): string | null => 
   // `vanity_url_code`, not merely accepted as a code. The snowflake-only
   // refusal above still catches a bare id lifted out of a `channels/` URL,
   // because this shape is never *all* digits; only the ceiling had to move.
-  return /^[A-Za-z0-9-]{2,60}$/.test(code) ? code : null;
+  return (/^[A-Za-z0-9-]{2,32}$/.test(code) || /^(?=.{33,60}$)[A-Za-z0-9]+(?:-[A-Za-z0-9]+)*-[0-9]{17,20}$/.test(code)) ? code : null;
 };
 
 /**
