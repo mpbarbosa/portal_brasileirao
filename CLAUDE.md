@@ -2864,11 +2864,23 @@ by club code and storing an **invite and the guild it opens** — `discordUrl` i
 rendered. Hand-maintained and partial like `club-reddit.ts`, whose rule it takes
 whole: a server is the torcida's and not the club's, so the screen-reader suffix
 says "comunidade de torcedores" and the link is not filed beside the Site
-oficial. **Four entries as of 2026-09-13** — Flamengo's **FlaDiscord**,
-Palmeiras', Athletico-PR's and Fluminense's **Flucord** — and every one
-`expires_at: null`. Count the file rather than this sentence: it said *one* for
-as long as it took the second entry to land, which is the number-in-prose
+oficial. **Five entries as of 2026-09-13** — Flamengo's **FlaDiscord**,
+Palmeiras', Athletico-PR's, Fluminense's **Flucord** and Cruzeiro's — and every
+one `expires_at: null`. Count the file rather than this sentence: it said *one*
+for as long as it took the second entry to land, which is the number-in-prose
 failure this file keeps recording.
+
+**`discordInvite`'s upper length bound moved from 32 to 60, and it took a real
+invite to find the old one wrong.** Cruzeiro's entry is a Discord-minted vanity
+for a large Discoverable community — `cruzeiro-e-c-1k-1168068145848799313`, 35
+characters — confirmed as genuine by the invite API returning it as the guild's
+own `vanity_url_code`, not merely accepting it as a code. "Discord mints codes
+of 7–10 characters and vanities are words" (the reasoning behind the 32-cap and
+behind the snowflake refusal below it) is still right about an ordinary vanity
+and was never true of this shape. The snowflake-only refusal is unaffected —
+`^[0-9]{17,20}$` matches only an all-digit value, and this one is not — so
+raising the ceiling widens what a legitimate code may look like without
+reopening the bare-guild-id hole.
 
 **An invite code and never a guild id, and both halves of that were measured.**
 What a person pastes is `discord.com/channels/<guild>/@home`, because it is what

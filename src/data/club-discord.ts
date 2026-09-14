@@ -100,6 +100,14 @@ export const CLUB_DISCORD: Record<ClubCode, ClubDiscord> = {
   // `expires_at: null`.
   "1768": { invite: "2cgqNvYvBU", guild: "1395888999276613632" },
   "1769": { invite: "palmeiras", guild: "794150101504491530" },
+  // Cruzeiro E.C. #1,7k — 1 682 membros, sem expiração. **Vanity** (o próprio
+  // `vanity_url_code` retornado pela API é igual ao código do convite), o que
+  // por si só implica sem expiração e sem limite de usos — nenhuma das duas
+  // condições precisou de confirmação à parte, ao contrário de um convite
+  // cunhado. Corroborado pela própria descrição do servidor: "Servidor não
+  // oficial do Cruzeiro Esporte Clube!" — nomeia o clube e diz **não oficial**,
+  // exatamente o par que o sufixo "comunidade de torcedores" carrega.
+  "1771": { invite: "cruzeiro-e-c-1k-1168068145848799313", guild: "1168068145848799313" },
   // Palmeiras • ＯＢＳＥＳＳÃＯ — 20 010 membros, sem expiração. Vanity, como a
   // do Flamengo.
   //

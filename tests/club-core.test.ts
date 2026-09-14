@@ -697,6 +697,17 @@ test("discordInvite refuses a bare guild id, which is not an invite code", () =>
   assert.equal(discordInvite("12345678"), "12345678");
 });
 
+test("discordInvite accepts a large-community vanity embedding the guild snowflake", () => {
+  // Discord mints these for a Discoverable community past a member
+  // threshold: name, letter separators, a member-count suffix and the guild's
+  // own id, all in one vanity_url_code — confirmed live against the API for
+  // Cruzeiro's server (35 characters). It is not all-digits, so the
+  // snowflake-only refusal above does not (and must not) catch it.
+  const code = "cruzeiro-e-c-1k-1168068145848799313";
+  assert.equal(discordInvite(code), code);
+  assert.equal(discordInvite(`https://discord.com/invite/${code}`), code);
+});
+
 test("discordUrl builds the short form, from the parsed code and not the raw value", () => {
   // `discord.gg` rather than `discord.com/invite`: the two resolve to the same
   // place, and the short one is what Discord's own copy button produces, so
