@@ -219,10 +219,17 @@ export function ClubDashboard({
       </header>
 
       {summary && (
-        <div className="mt-4 grid grid-cols-3 gap-2">
+        <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
           <StatTile label="Posição" value={row ? `${row.position}º` : `${candles[candles.length - 1].close}º`} />
           <StatTile label="Pontos" value={String(summary.points)} />
           <StatTile label="Rodadas" value={String(summary.rounds)} />
+          <StatTile
+            label="Média de pontos por partida"
+            value={(summary.points / summary.rounds).toLocaleString("pt-BR", {
+              minimumFractionDigits: 1,
+              maximumFractionDigits: 1,
+            })}
+          />
         </div>
       )}
 
