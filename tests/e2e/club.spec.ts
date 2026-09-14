@@ -364,25 +364,25 @@ test.describe("Clube", () => {
     // file would leave every assertion above passing on whichever club still
     // had an entry.
     //
-    // **This named PALMEIRAS, then FLUMINENSE, and now Mirassol** — which is
-    // the cost of picking the subject of a negative assertion out of a curated
-    // file that grows: it goes red on the commit that widens coverage —
-    // correctly, and confirmed by running it both times — and no club here is
-    // guaranteed to stay absent for ever. Three subjects is enough to stop the
-    // next move reading as an accident: budget for it rather than for a club
-    // that stays absent.
+    // **This named PALMEIRAS, then FLUMINENSE, then MIRASSOL, and now
+    // Vitória** — which is the cost of picking the subject of a negative
+    // assertion out of a curated file that grows: it goes red on the commit
+    // that widens coverage — correctly, and confirmed by running it each
+    // time — and no club here is guaranteed to stay absent for ever. Four
+    // subjects is enough to stop the next move reading as an accident: budget
+    // for it rather than for a club that stays absent.
     //
-    // Mirassol is the safest available on the criterion this comment has used
+    // Vitória is the safest available on the criterion this comment has used
     // throughout — absent by the BAR rather than by nobody looking — and its
     // absence is the most durable kind the survey in `club-reddit.ts` records.
-    // Fluminense left because the club's community turned out to be at another
-    // address (`r/nense`), which a second source can deliver at any time; the
-    // clubs still absent for a MISSING second source (Chapecoense, Coritiba)
-    // are therefore the wrong pick, and so is Bahia, whose two sources merely
-    // disagree. `r/Mirassol` has ONE member, so nothing but that room filling
-    // up can move it, and no source can supply that.
-    await page.goto("/clube/mirassol");
-    await expect(pageHeading(page)).toContainText("Mirassol");
+    // Fluminense and Mirassol left because each club's community turned out to
+    // be at another address (`r/nense`, `r/mirassolfc`), which a second source
+    // can deliver at any time; the three clubs still filed under that bar
+    // (Bragantino, Remo, Vitória) are subs that exist and hold nobody, which
+    // no second source can fix. `r/vitoria` has the fewest of the three —
+    // TWO members — so nothing but that room filling up can move it.
+    await page.goto("/clube/vitoria");
+    await expect(pageHeading(page)).toContainText("Vitória");
     await expect(redditLink(page)).toHaveCount(0);
   });
 

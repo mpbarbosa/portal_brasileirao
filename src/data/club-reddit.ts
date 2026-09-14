@@ -23,7 +23,7 @@ import type { ClubCode } from "@/src/types";
  * torcedores". Nothing here is a club's own statement, and presenting one as if
  * it were is the kind of wrong that looks right.
  *
- * **Coverage is deliberately PARTIAL — sixteen clubs of twenty — and grows by
+ * **Coverage is deliberately PARTIAL — seventeen clubs of twenty — and grows by
  * hand**, like `player-instagram.ts` and `broadcasts.ts`. A club with no entry
  * renders no link rather than a guessed one, and the survey below is what that
  * rule is worth: `r/<name>` is exactly the shape somebody would be tempted to
@@ -320,8 +320,8 @@ import type { ClubCode } from "@/src/types";
  * crest, a league table and supporters posting about a match — everything a
  * reader arrives expecting to find, and none of it this club's.
  *
- * Four clubs have a sub that exists and is not a community: Bragantino (49
- * members), Remo (5), Mirassol (1), Vitória (2). Linking a room
+ * Three clubs have a sub that exists and is not a community: Bragantino (49
+ * members), Remo (5), Vitória (2). Linking a room
  * with one person in it is worse than the absence, which at least says nothing.
  *
  * **Fluminense stood in that list and is now above, and it is the one club
@@ -335,6 +335,22 @@ import type { ClubCode } from "@/src/types";
  * subject loudly, `r/santos` reaches the wrong subject plausibly, and
  * `r/Fluminense` reaches the **right** subject with nobody in it — which is the
  * one a reader would never question, because the name is correct.
+ *
+ * **Mirassol is the second club to leave that list for the Fluminense reason,
+ * and not for lack of an entry.** `r/Mirassol` (1 member, at the frozen
+ * reading above) is the same dead room it always was; the club's actual
+ * community sits at a different address, `r/mirassolfc`, found because the
+ * maintainer posts there. subredditstats' own description of `mirassolfc`
+ * reads "O Mirassol Futebol Clube é um clube brasileiro de futebol da cidade
+ * de Mirassol" — the club's official name and city, matching Wikidata
+ * (`Q2622870`, founded 1925, no `P3984`) read 2026-09-13Z. Its
+ * `lastSubredditInfoUpdate` is 2023-01-04, which is the sub's OWN creation
+ * day — so the `subscriberCount` of **1** subredditstats reports is a
+ * crawler catching a brand-new community in its first minutes, not the dead
+ * room the number resembles; read live the same day, the sub is public with
+ * 16 weekly visitors, 3 weekly contributions and an active post. The
+ * maintainer's own presence there is the second source, in `CRFla`'s and
+ * `Furacao`'s pairing.
  *
  * **No club is left in this list, which held the clubs with a real sub and only
  * one source.** Chapecoense was the last, filed here on a reading — "carries
@@ -490,6 +506,7 @@ export const CLUB_REDDIT: Record<ClubCode, string> = {
   "1779": "corinthians",
   "1780": "vasco",
   "1783": "CRFla",
+  "4364": "mirassolfc",
   "6684": "internacional",
   "6685": "SantosFC",
 };
