@@ -326,6 +326,18 @@ export interface CandleSummary {
   /** Points after the last recorded round, and how many rounds that is. */
   points: number;
   rounds: number;
+  /**
+   * Matches the club has actually played, which is **not** `rounds` and is the
+   * only honest denominator for a per-match rate.
+   *
+   * A rodada is a position in the calendar; a club with a postponed fixture
+   * reaches round 27 having played 26. Measured on the shipped season:
+   * Chapecoense sits on 17 points from 26 matches through round 27, so dividing
+   * by `rounds` reports 0,6 a game where the truth is 0,7 — and it agrees with
+   * `rounds` for the other nineteen clubs, which is exactly the shape that
+   * passes every reading somebody happens to take.
+   */
+  played: number;
 }
 
 /**
@@ -359,7 +371,15 @@ export const summariseCandles = (candles: RoundCandle[]): CandleSummary | null =
   }
 
   const last = candles[candles.length - 1];
-  return { best, worst, rise, fall, points: last.totalPoints, rounds: last.round };
+  return {
+    best,
+    worst,
+    rise,
+    fall,
+    points: last.totalPoints,
+    rounds: last.round,
+    played: last.played,
+  };
 };
 
 /**

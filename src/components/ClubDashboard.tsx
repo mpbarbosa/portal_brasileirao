@@ -5,6 +5,7 @@ import { countNoun } from "@/count-core";
 import { candlesFor, computeRankCandles, summariseCandles } from "@/rank-candles-core";
 import { lastRecordedRound, lastRoundWithResult } from "@/rank-history-core";
 import { formatRoute } from "@/route-core";
+import { pointsPerMatchLabel } from "@/standings-core";
 import type { CampaignPlotKind } from "@/campaign-plot-core";
 import { controlClasses } from "@/src/components/Button";
 import { CampaignPlotToggle } from "@/src/components/CampaignPlotToggle";
@@ -223,12 +224,20 @@ export function ClubDashboard({
           <StatTile label="Posição" value={row ? `${row.position}º` : `${candles[candles.length - 1].close}º`} />
           <StatTile label="Pontos" value={String(summary.points)} />
           <StatTile label="Rodadas" value={String(summary.rounds)} />
+          {/* `summary.played` and deliberately **not** `summary.rounds`, which
+              is the tile immediately to the left: a club with a postponed
+              fixture reaches round 27 having played 26, and dividing by the
+              round would report it as worse than it is under a label that says
+              *partida*. `CandleSummary.played` carries the measurement.
+
+              Through `pointsPerMatchLabel` rather than dividing here, so this
+              tile and the club page's **Média** pill cannot come to round or
+              punctuate one quantity two ways. */}
           <StatTile
             label="Média de pontos por partida"
-            value={(summary.points / summary.rounds).toLocaleString("pt-BR", {
-              minimumFractionDigits: 1,
-              maximumFractionDigits: 1,
-            })}
+            value={
+              pointsPerMatchLabel({ points: summary.points, played: summary.played }) ?? "—"
+            }
           />
         </div>
       )}

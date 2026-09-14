@@ -47,7 +47,7 @@ test.describe("Clube", () => {
     // Scoped to main: "Jogos" is also a nav entry, so an unscoped lookup
     // matches the menu as well as the stat tile.
     const main = page.locator("main");
-    for (const label of ["Posição", "Pontos", "Jogos", "Saldo", "Aproveitamento"]) {
+    for (const label of ["Posição", "Pontos", "Jogos", "Saldo", "Aproveitamento", "Média"]) {
       await expect(main.getByText(label, { exact: true })).toBeVisible();
     }
     // Leader of the table.
@@ -56,6 +56,10 @@ test.describe("Clube", () => {
     // it. An em dash here would mean a club with no game played, which the
     // frozen season does not contain.
     await expect(main.getByText(/^\d{1,3}%$/)).toBeVisible();
+    // The média beside it, one decimal with a pt-BR comma. Shape for the same
+    // reason, and the comma is half of what is asserted: a default locale
+    // would render "2.1" here and nothing else on the page would look wrong.
+    await expect(main.getByText(/^\d,\d$/)).toBeVisible();
   });
 
   test("each forma pill is named in words, not left as a letter", async ({ page }) => {
