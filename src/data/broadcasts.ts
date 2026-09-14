@@ -275,6 +275,7 @@ export const BROADCASTS: Record<string, string[]> = {
   "555004": ["Premiere", "SporTV"],
   "555005": ["GE TV", "Globo", "Premiere"],
   "555006": ["Premiere"],
+  "555007": ["Premiere"],
   "555008": ["Premiere"],
   "555009": ["Premiere", "SporTV"],
 };
