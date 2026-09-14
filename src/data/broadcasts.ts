@@ -13,7 +13,7 @@
  * are not unique across competitions (one day's page showed `ATH` as both
  * Athletic Club in Série B and Athletico-PR in Série A).
  *
- * Last synced 2026-09-07.
+ * Last synced 2026-09-14.
  */
 export const BROADCASTS: Record<string, string[]> = {
   "554740": ["Premiere", "SporTV"],
@@ -269,7 +269,7 @@ export const BROADCASTS: Record<string, string[]> = {
   "554998": ["Premiere"],
   "554999": ["Premiere", "SporTV"],
   "555000": ["Premiere"],
-  "555001": ["Premiere", "SporTV"],
+  "555001": ["Premiere"],
   "555002": ["Amazon Prime"],
   "555003": ["Premiere", "Record", "YouTube", "Cazé TV"],
   "555004": ["Premiere", "SporTV"],
@@ -278,4 +278,34 @@ export const BROADCASTS: Record<string, string[]> = {
   "555007": ["Premiere"],
   "555008": ["Premiere"],
   "555009": ["Premiere", "SporTV"],
+  "555010": ["Premiere"],
+  "555011": ["Premiere"],
+  "555012": ["Globo", "Premiere"],
+  "555013": ["Premiere", "SporTV"],
+  "555014": ["Premiere"],
+  "555015": ["Premiere", "Record", "YouTube", "Cazé TV"],
+  "555016": ["Premiere"],
+  "555017": ["Premiere", "SporTV"],
+  "555018": ["Amazon Prime"],
+  "555019": ["GE TV", "Globo", "Premiere"],
+  "555020": ["Premiere"],
+  "555021": ["Amazon Prime"],
+  "555022": ["Premiere"],
+  "555023": ["Premiere", "SporTV"],
+  "555024": ["Globo", "Premiere"],
+  "555025": ["Premiere", "Record", "YouTube", "Cazé TV"],
+  "555026": ["GE TV", "Globo", "Premiere"],
+  "555027": ["Premiere"],
+  "555028": ["Premiere"],
+  "555029": ["Premiere"],
+  "555030": ["Premiere"],
+  "555031": ["Premiere"],
+  "555032": ["Premiere", "SporTV"],
+  "555033": ["Premiere"],
+  "555034": ["Amazon Prime"],
+  "555035": ["Globo", "Premiere"],
+  "555036": ["Globo", "Premiere"],
+  "555037": ["Globo", "Premiere"],
+  "555038": ["Premiere", "SporTV"],
+  "555039": ["Premiere", "Record", "YouTube", "Cazé TV"],
 };

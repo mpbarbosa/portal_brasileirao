@@ -11,7 +11,7 @@ import type { Venue } from "@/src/types";
  * `Sao Paulo` without the tilde) and correcting them would mean guessing at
  * proper names.
  *
- * Last synced 2026-09-07.
+ * Last synced 2026-09-14.
  */
 export const VENUES: Record<string, Venue> = {
   "554740": { stadium: "ARENA MRV", city: "Belo Horizonte", state: "MG" },
@@ -268,10 +268,41 @@ export const VENUES: Record<string, Venue> = {
   "554998": { stadium: "Morumbi", city: "Sao Paulo", state: "SP" },
   "554999": { stadium: "Manoel Barradas", city: "Salvador", state: "BA" },
   "555000": { stadium: "ARENA MRV", city: "Belo Horizonte", state: "MG" },
+  "555001": { stadium: "Arena Fonte Nova", city: "Salvador", state: "BA" },
   "555002": { stadium: "Nilton Santos", city: "Rio de Janeiro", state: "RJ" },
   "555003": { stadium: "Arena Condá", city: "Chapeco", state: "SC" },
   "555004": { stadium: "Couto Pereira", city: "Curitiba", state: "PR" },
   "555006": { stadium: "Arena do Grêmio", city: "Porto Alegre", state: "RS" },
   "555008": { stadium: "Nubank Parque", city: "Sao Paulo", state: "SP" },
   "555009": { stadium: "Vila Belmiro", city: "Santos", state: "SP" },
+  "555010": { stadium: "Arena da Baixada", city: "Curitiba", state: "PR" },
+  "555011": { stadium: "ARENA MRV", city: "Belo Horizonte", state: "MG" },
+  "555012": { stadium: "Neo Química Arena", city: "Sao Paulo", state: "SP" },
+  "555013": { stadium: "Maracanã", city: "Rio de Janeiro", state: "RJ" },
+  "555014": { stadium: "Arena do Grêmio", city: "Porto Alegre", state: "RS" },
+  "555015": { stadium: "José Maria de Campos Maia", city: "Mirassol", state: "SP" },
+  "555016": { stadium: "Mangueirão", city: "Belem", state: "PA" },
+  "555017": { stadium: "Morumbi", city: "Sao Paulo", state: "SP" },
+  "555018": { stadium: "São Januário", city: "Rio de Janeiro", state: "RJ" },
+  "555019": { stadium: "Manoel Barradas", city: "Salvador", state: "BA" },
+  "555020": { stadium: "Arena da Baixada", city: "Curitiba", state: "PR" },
+  "555021": { stadium: "Nilton Santos", city: "Rio de Janeiro", state: "RJ" },
+  "555022": { stadium: "Cícero de Souza Marques", city: "Braganca Paulista", state: "SP" },
+  "555023": { stadium: "Mineirão", city: "Belo Horizonte", state: "MG" },
+  "555024": { stadium: "Maracanã", city: "Rio de Janeiro", state: "RJ" },
+  "555025": { stadium: "Beira-Rio", city: "Porto Alegre", state: "RS" },
+  "555026": { stadium: "Nubank Parque", city: "Sao Paulo", state: "SP" },
+  "555027": { stadium: "Mangueirão", city: "Belem", state: "PA" },
+  "555028": { stadium: "Vila Belmiro", city: "Santos", state: "SP" },
+  "555029": { stadium: "Manoel Barradas", city: "Salvador", state: "BA" },
+  "555030": { stadium: "ARENA MRV", city: "Belo Horizonte", state: "MG" },
+  "555031": { stadium: "Arena Fonte Nova", city: "Salvador", state: "BA" },
+  "555032": { stadium: "Cícero de Souza Marques", city: "Braganca Paulista", state: "SP" },
+  "555033": { stadium: "Arena Condá", city: "Chapeco", state: "SC" },
+  "555034": { stadium: "Couto Pereira", city: "Curitiba", state: "PR" },
+  "555035": { stadium: "Maracanã", city: "Rio de Janeiro", state: "RJ" },
+  "555036": { stadium: "Arena do Grêmio", city: "Porto Alegre", state: "RS" },
+  "555037": { stadium: "Nubank Parque", city: "Sao Paulo", state: "SP" },
+  "555038": { stadium: "Morumbi", city: "Sao Paulo", state: "SP" },
+  "555039": { stadium: "São Januário", city: "Rio de Janeiro", state: "RJ" },
 };
