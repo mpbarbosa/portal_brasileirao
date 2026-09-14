@@ -7,6 +7,8 @@ import {
   compareRows,
   computeStandings,
   countsTowardStandings,
+  pointsPerMatch,
+  pointsPerMatchLabel,
   pointsPercentage,
   pointsPercentageLabel,
   zoneAt,
@@ -146,6 +148,41 @@ test("the aproveitamento label is a whole percentage", () => {
   // The tightest non-perfect campaign a 38-round season allows still rounds
   // short of 100, so the rounding cannot claim a club dropped nothing.
   assert.equal(pointsPercentageLabel({ points: 112, played: 38 }), "98%");
+});
+
+test("a média de pontos is the aproveitamento in another unit", () => {
+  assert.equal(pointsPerMatch({ points: 9, played: 3 }), 3);
+  assert.equal(pointsPerMatch({ points: 0, played: 5 }), 0);
+  // The relationship the two functions' comments both claim, asserted rather
+  // than stated: pontos/jogos is exactly three times pontos/(jogos × 3). A
+  // change to either that breaks this makes one of the club page's two pills
+  // wrong, and nothing on the page would look amiss.
+  for (const row of [
+    { points: 57, played: 27 },
+    { points: 12, played: 6 },
+    { points: 0, played: 5 },
+    { points: 112, played: 38 },
+  ]) {
+    assert.ok(Math.abs(pointsPerMatch(row)! - (pointsPercentage(row)! * 3) / 100) < 1e-9);
+  }
+});
+
+test("a club that has played nothing has no média, not zero", () => {
+  // The branch that matters: 0/0 is NaN, which reaches a page as "NaN" where
+  // every other unreported figure here renders an em dash.
+  assert.equal(pointsPerMatch({ points: 0, played: 0 }), null);
+  assert.equal(pointsPerMatchLabel({ points: 0, played: 0 }), null);
+  assert.equal(pointsPerMatchLabel({ points: 0, played: 5 }), "0,0");
+});
+
+test("the média label is one decimal with a pt-BR comma", () => {
+  assert.equal(pointsPerMatchLabel({ points: 57, played: 27 }), "2,1");
+  assert.equal(pointsPerMatchLabel({ points: 17, played: 27 }), "0,6");
+  // A whole value still prints its decimal, so a column of them aligns.
+  assert.equal(pointsPerMatchLabel({ points: 9, played: 3 }), "3,0");
+  // No full stop anywhere: the separator is the comma, never a thousands mark
+  // sneaking in from a default locale.
+  assert.ok(!pointsPerMatchLabel({ points: 57, played: 27 })!.includes("."));
 });
 
 // ---------------------------------------------------------------- as zonas

@@ -18,7 +18,12 @@ import {
 import { countNoun } from "@/count-core";
 import { nicknameLabel, playerNickname } from "@/player-core";
 import { formatRoute } from "@/route-core";
-import { goalDifferenceLabel, pointsPercentageLabel, zoneAt } from "@/standings-core";
+import {
+  goalDifferenceLabel,
+  pointsPerMatchLabel,
+  pointsPercentageLabel,
+  zoneAt,
+} from "@/standings-core";
 import { ClubCrest } from "@/src/components/ClubCrest";
 import { ClubVideos } from "@/src/components/ClubVideos";
 import { ExternalLink } from "@/src/components/ExternalLink";
@@ -441,12 +446,21 @@ export function ClubView({
             label="Saldo"
             value={goalDifferenceLabel(row.goalDifference)}
           />
-          {/* Last of the five, reading left to right as the sentence a reader
+          {/* Fifth of the six, reading left to right as the sentence a reader
               would say: it is where the club sits, what it took, out of how
               many, and how much of what was available that is. The em dash is
               the same absence the table's % column renders — a club yet to play
               has no aproveitamento, where 0% is a club that has taken nothing. */}
           <FactPill label="Aproveitamento" value={pointsPercentageLabel(row) ?? "—"} />
+          {/* **The same quantity as the pill before it, in the units football
+              is usually discussed in** — `pointsPerMatch` says so at its
+              definition, and the two are one number divided by 3. That is a
+              deliberate pairing rather than drift: a reader who thinks in
+              "70% de aproveitamento" and one who thinks in "2,1 por jogo" are
+              both served, and the Painel carries the média alone because it has
+              no percentage. Last of the six, because it is the derived reading
+              of the four figures to its left. */}
+          <FactPill label="Média" value={pointsPerMatchLabel(row) ?? "—"} />
         </div>
       )}
 

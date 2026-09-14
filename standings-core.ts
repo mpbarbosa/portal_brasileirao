@@ -304,3 +304,47 @@ export const pointsPercentageLabel = (
   const share = pointsPercentage(row);
   return share === null ? null : `${Math.round(share)}%`;
 };
+
+/**
+ * **Média de pontos por partida** — `pontos / jogos`.
+ *
+ * **This is the aproveitamento above in different units, not a second fact**, and
+ * that is worth stating at the definition because the club page renders both:
+ * `pointsPercentage` divides by `jogos × 3`, so the two differ by exactly the
+ * constant 3 and a club reading 70% reads 2,1 here. Nothing derives one from the
+ * other — both read the same two fields, for the reason `pointsPercentage` is
+ * derived rather than stored — but a change to either that does not hold that
+ * relationship is a bug in one of them.
+ *
+ * It exists beside the percentage because the **Painel** carries no
+ * aproveitamento and its tiles (Posição, Pontos, Rodadas) reported totals with
+ * no rate at all, and because points-per-match is what most football coverage
+ * quotes where a Brazilian reader is quoted a percentage. Two renderings of one
+ * quantity is a deliberate editorial choice rather than drift.
+ *
+ * **No games played is an absence, never a zero** — `pointsPercentage`' rule, and
+ * the one branch that matters: `0 / 0` is `NaN`, which reaches a page as the
+ * literal "NaN" where every other unreported figure here renders an em dash.
+ */
+export const pointsPerMatch = (row: Pick<StandingsRow, "points" | "played">): number | null =>
+  row.played === 0 ? null : row.points / row.played;
+
+/**
+ * The média as it reaches the page: one decimal, pt-BR comma, or null where no
+ * game has been played.
+ *
+ * One decimal rather than the percentage's zero, because the whole range is
+ * 0 to 3 — rounding to whole points would put more than half the division on
+ * "1" and report the leader and the fourth-placed club as the same number.
+ * `toLocaleString` rather than a hand-rolled replace, for `valueLabel`'s reason
+ * in `scouts-core.ts`: the app renders rates that way already, and a second
+ * convention shows `2.1` beside `9,5` on one page.
+ */
+export const pointsPerMatchLabel = (
+  row: Pick<StandingsRow, "points" | "played">,
+): string | null => {
+  const rate = pointsPerMatch(row);
+  return rate === null
+    ? null
+    : rate.toLocaleString("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+};

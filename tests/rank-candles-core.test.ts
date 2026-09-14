@@ -491,6 +491,22 @@ test("an empty season has no summary", () => {
   assert.equal(summariseCandles([]), null);
 });
 
+test("the summary reports matches played apart from rounds elapsed", () => {
+  // A club that sat out round 2 — a postponed fixture — reaches round 3 having
+  // played two. The Painel divides its points by `played` and captions the
+  // tile beside it with `rounds`, and reading either for the other is the
+  // failure this pins: it is invisible for every club whose calendar is whole.
+  const summary = summariseCandles([
+    candle({ round: 1, played: 1, totalPoints: 3 }),
+    candle({ round: 2, played: 1, totalPoints: 3, points: null, result: null }),
+    candle({ round: 3, played: 2, totalPoints: 4 }),
+  ]);
+
+  assert.equal(summary?.rounds, 3);
+  assert.equal(summary?.played, 2);
+  assert.equal(summary?.points, 4);
+});
+
 test("a candle says where it went, and only mentions the pavio when it adds something", () => {
   const plain = describeCandle(candle({ round: 7, open: 5, close: 3, best: 3, worst: 5 }));
   assert.match(plain, /7ª rodada: 5º → 3º, subiu 2 posições/);
