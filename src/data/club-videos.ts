@@ -85,19 +85,19 @@ export const CLUB_VIDEOS: Record<ClubCode, ClubVideo[]> = {
   // and what the Painel already shows this club on its own page. So it appears
   // under one code, and that is the file working as much as the repetition is.
   "1765": [
-    // **The 26ª render, REPLACING `doMq2ELvtrc` (the 25ª)** — the same
-    // substitution Palmeiras took one entry down, for the same reason and on
-    // the same grounds: the two are one drawing at two moments, and a club page
-    // offering both would ask a reader to pick a rodada, which is not a question
-    // the section poses anywhere else. `89d3cb2` redrew this along with the
-    // other 130 artefactos.
+    // **The 27ª render, REPLACING `Vdz1qJwHYYc` (the 26ª)**, which itself
+    // replaced the 25ª (`doMq2ELvtrc`) — the same substitution Palmeiras took
+    // one entry down, for the same reason and on the same grounds: the two are
+    // one drawing at two moments, and a club page offering both would ask a
+    // reader to pick a rodada, which is not a question the section poses
+    // anywhere else.
     //
-    // The superseded video is still on the channel — nothing here can unlist it,
-    // since this app holds only `youtube.upload` and `videos.update` refuses
-    // that scope. It is a Studio action.
+    // The superseded videos are still on the channel — nothing here can unlist
+    // them, since this app holds only `youtube.upload` and `videos.update`
+    // refuses that scope. It is a Studio action.
     {
-      id: "Vdz1qJwHYYc",
-      title: "Fluminense: 3º ao 6º em 26 rodadas, a campanha mais confinada da Série A",
+      id: "bqiwNjdp0KE",
+      title: "Fluminense: 3º ao 6º em 27 rodadas, a campanha mais confinada da Série A",
       channel: "Marcelo Barbosa",
     },
   ],
@@ -109,20 +109,21 @@ export const CLUB_VIDEOS: Record<ClubCode, ClubVideo[]> = {
   // it is the club's own season; the comparação is about a pair this club
   // happens to be half of.
   //
-  // **The velas is the 26ª render and REPLACES the 25ª (`xc8kDALBFnM`)**, which
-  // `89d3cb2` redrew along with the other 130 artefactos. It is a replacement
-  // rather than a second entry because the two are one drawing at two moments:
-  // a club page offering both would be asking a reader to pick a rodada, which
-  // is not a question the section poses anywhere else. The superseded video is
-  // still on the channel — nothing here can unlist it, since this app holds
-  // only `youtube.upload` and `videos.update` refuses that scope.
+  // **The velas is the 27ª render, REPLACING `vYD1n_TiXYA` (the 26ª)**, which
+  // itself replaced the 25ª (`xc8kDALBFnM`). Same substitution rule as
+  // Fluminense above: the two are one drawing at two moments, and a club page
+  // offering both would be asking a reader to pick a rodada, which is not a
+  // question the section poses anywhere else. The superseded videos are still
+  // on the channel — nothing here can unlist them, since this app holds only
+  // `youtube.upload` and `videos.update` refuses that scope.
   //
   // Note the title carries no rodada, unlike the five below. That is the copy
-  // in `velas-palmeiras-youtube.md` as `89d3cb2` rewrote it, not a transcription
-  // choice: this file only ever writes oEmbed's own string.
+  // in `velas-palmeiras-youtube.md` as it stands, not a transcription choice:
+  // this file only ever writes oEmbed's own string, and the 27ª's oEmbed
+  // returned this exact title unchanged from the 26ª's.
   "1769": [
     {
-      id: "vYD1n_TiXYA",
+      id: "mVabGcXrGek",
       title: "Palmeiras liderou 19 rodadas e perdeu a ponta: a campanha em velas",
       channel: "Marcelo Barbosa",
     },
@@ -138,10 +139,13 @@ export const CLUB_VIDEOS: Record<ClubCode, ClubVideo[]> = {
   // and sits under this code only; the comparação is about a pair this club
   // happens to be half of, and repeats under Palmeiras above. The velas leads
   // because it is the club's own season.
+  // REPLACING `vU4ntqwfm2M` (the 26ª) with the 27ª render — Flamengo held the
+  // lead through the round the 26ª ended on and still holds it a round later,
+  // which the title now says.
   "1783": [
     {
-      id: "vU4ntqwfm2M",
-      title: "Flamengo assume a ponta na 26ª: a campanha em velas do Brasileirão 2026",
+      id: "jEIhdQ9BjD0",
+      title: "Flamengo lidera o Brasileirão na 27ª: a campanha em velas de 2026",
       channel: "Marcelo Barbosa",
     },
     {
@@ -288,34 +292,37 @@ export const CLUB_VIDEOS: Record<ClubCode, ClubVideo[]> = {
   ],
 
   // Grêmio — 1767, and the one title in the file that names a number of JOGOS
-  // rather than of rodadas, because this club has two fixtures in arrears: 24
-  // played inside 26 rodadas. The velas draws that as two rounds the club did
-  // not play, which `rank-candles-core.ts` renders hollow rather than grey.
+  // rather than of rodadas, because this club has one fixture in arrears (it
+  // had two at the 26ª): 26 played inside 27 rodadas. The velas draws that as
+  // a round the club did not play, which `rank-candles-core.ts` renders hollow
+  // rather than grey. REPLACING `KwEJKDlZhEA` (the 26ª) with the 27ª render.
   "1767": [
     {
-      id: "KwEJKDlZhEA",
-      title: "Grêmio em velas: 28 pontos em 24 jogos, com partidas em atraso",
+      id: "l4Xk1gXeeXc",
+      title: "Grêmio em velas: 28 pontos em 26 jogos, com partida em atraso",
       channel: "Marcelo Barbosa",
     },
   ],
 
   // Internacional — 6684, a code outside the 17xx block like Bragantino's and
   // Clube do Remo's, and upstream's rather than ours to tidy. Ten empates is
-  // the most of any club in this batch, which is the fact its title leads with.
+  // the most of any club in this batch, which is the fact its title leads
+  // with. REPLACING `1ogVcWlYPYk` (the 26ª) with the 27ª render.
   "6684": [
     {
-      id: "1ogVcWlYPYk",
-      title: "Internacional: 10 empates e 5 vitórias em 26 jogos, a campanha em velas",
+      id: "03FAincqshA",
+      title: "Internacional: 10 empates e 6 vitórias em 27 jogos, a campanha em velas",
       channel: "Marcelo Barbosa",
     },
   ],
 
   // Mirassol — 4364. Its title states a subtraction rather than a range: the
-  // club's best fechamento was 4º and it ends 16º, and 12 is that difference.
+  // club's best fechamento was 4º and it ends 15º, and 11 is that difference.
+  // REPLACING `GXk_VFdV8Uw` (the 26ª) with the 27ª render.
   "4364": [
     {
-      id: "GXk_VFdV8Uw",
-      title: "Mirassol: do 4º ao 16º, 12 posições perdidas | Brasileirão em velas",
+      id: "CsVBZfPCbWU",
+      title: "Mirassol: do 4º ao 15º, 11 posições perdidas | Brasileirão em velas",
       channel: "Marcelo Barbosa",
     },
   ],
