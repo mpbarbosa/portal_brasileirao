@@ -1,5 +1,5 @@
 {
-  "snapshot": "2026-09-11",
+  "snapshot": "2026-09-13",
   "club": {
     "code": "4286",
     "name": "Bragantino",
@@ -492,6 +492,25 @@
         "goalsFor": 2,
         "goalsAgainst": 3,
         "result": "D"
+      }
+    },
+    {
+      "round": 27,
+      "open": 9,
+      "close": 9,
+      "best": 9,
+      "worst": 9,
+      "points": 1,
+      "totalPoints": 36,
+      "played": 26,
+      "result": "E",
+      "moved": 0,
+      "match": {
+        "opponent": "Botafogo",
+        "home": false,
+        "goalsFor": 1,
+        "goalsAgainst": 1,
+        "result": "E"
       }
     }
   ],

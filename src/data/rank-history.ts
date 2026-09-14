@@ -4,9 +4,9 @@ import type { ClubRankHistory } from "@/src/types";
  * GENERATED FILE — do not edit by hand.
  * Regenerate with: npx tsx scripts/sync-rank-history.ts
  *
- * Every club's position in the classificação after each of rounds 1–26,
- * derived from the seed fixtures in src/data/matches.ts (snapshot 2026-09-11).
- * Written 2026-09-11.
+ * Every club's position in the classificação after each of rounds 1–27,
+ * derived from the seed fixtures in src/data/matches.ts (snapshot 2026-09-13).
+ * Written 2026-09-13.
  *
  * Positions come from `computeStandings` applied round by round, so they honour
  * the same CBF tie-breakers as the live table and count only FINISHED matches.
@@ -47,6 +47,7 @@ export const RANK_HISTORY: ClubRankHistory[] = [
       { round: 24, position: 3, points: 44, played: 24 },
       { round: 25, position: 3, points: 45, played: 25 },
       { round: 26, position: 3, points: 45, played: 26 },
+      { round: 27, position: 3, points: 46, played: 27 },
     ],
   },
   {
@@ -79,6 +80,7 @@ export const RANK_HISTORY: ClubRankHistory[] = [
       { round: 24, position: 9, points: 33, played: 23 },
       { round: 25, position: 8, points: 36, played: 24 },
       { round: 26, position: 8, points: 36, played: 25 },
+      { round: 27, position: 7, points: 39, played: 26 },
     ],
   },
   {
@@ -111,6 +113,7 @@ export const RANK_HISTORY: ClubRankHistory[] = [
       { round: 24, position: 6, points: 37, played: 24 },
       { round: 25, position: 5, points: 40, played: 25 },
       { round: 26, position: 5, points: 43, played: 26 },
+      { round: 27, position: 5, points: 43, played: 26 },
     ],
   },
   {
@@ -143,6 +146,7 @@ export const RANK_HISTORY: ClubRankHistory[] = [
       { round: 24, position: 11, points: 30, played: 23 },
       { round: 25, position: 12, points: 30, played: 24 },
       { round: 26, position: 14, points: 31, played: 25 },
+      { round: 27, position: 14, points: 32, played: 26 },
     ],
   },
   {
@@ -175,6 +179,7 @@ export const RANK_HISTORY: ClubRankHistory[] = [
       { round: 24, position: 7, points: 35, played: 23 },
       { round: 25, position: 9, points: 35, played: 24 },
       { round: 26, position: 9, points: 35, played: 25 },
+      { round: 27, position: 9, points: 36, played: 26 },
     ],
   },
   {
@@ -207,6 +212,7 @@ export const RANK_HISTORY: ClubRankHistory[] = [
       { round: 24, position: 20, points: 14, played: 23 },
       { round: 25, position: 20, points: 14, played: 24 },
       { round: 26, position: 20, points: 17, played: 25 },
+      { round: 27, position: 20, points: 17, played: 26 },
     ],
   },
   {
@@ -239,6 +245,7 @@ export const RANK_HISTORY: ClubRankHistory[] = [
       { round: 24, position: 18, points: 23, played: 24 },
       { round: 25, position: 19, points: 23, played: 25 },
       { round: 26, position: 19, points: 23, played: 26 },
+      { round: 27, position: 19, points: 23, played: 26 },
     ],
   },
   {
@@ -271,6 +278,7 @@ export const RANK_HISTORY: ClubRankHistory[] = [
       { round: 24, position: 10, points: 32, played: 24 },
       { round: 25, position: 10, points: 32, played: 25 },
       { round: 26, position: 12, points: 32, played: 26 },
+      { round: 27, position: 13, points: 32, played: 27 },
     ],
   },
   {
@@ -303,6 +311,7 @@ export const RANK_HISTORY: ClubRankHistory[] = [
       { round: 24, position: 8, points: 34, played: 24 },
       { round: 25, position: 7, points: 37, played: 25 },
       { round: 26, position: 7, points: 37, played: 26 },
+      { round: 27, position: 8, points: 38, played: 27 },
     ],
   },
   {
@@ -335,6 +344,7 @@ export const RANK_HISTORY: ClubRankHistory[] = [
       { round: 24, position: 5, points: 39, played: 24 },
       { round: 25, position: 6, points: 39, played: 25 },
       { round: 26, position: 6, points: 42, played: 26 },
+      { round: 27, position: 6, points: 42, played: 27 },
     ],
   },
   {
@@ -367,6 +377,7 @@ export const RANK_HISTORY: ClubRankHistory[] = [
       { round: 24, position: 2, points: 48, played: 24 },
       { round: 25, position: 2, points: 51, played: 25 },
       { round: 26, position: 1, points: 54, played: 26 },
+      { round: 27, position: 1, points: 57, played: 27 },
     ],
   },
   {
@@ -399,6 +410,7 @@ export const RANK_HISTORY: ClubRankHistory[] = [
       { round: 24, position: 4, points: 41, played: 24 },
       { round: 25, position: 4, points: 42, played: 25 },
       { round: 26, position: 4, points: 45, played: 26 },
+      { round: 27, position: 4, points: 45, played: 27 },
     ],
   },
   {
@@ -431,6 +443,7 @@ export const RANK_HISTORY: ClubRankHistory[] = [
       { round: 24, position: 15, points: 25, played: 23 },
       { round: 25, position: 15, points: 28, played: 24 },
       { round: 26, position: 15, points: 28, played: 25 },
+      { round: 27, position: 16, points: 28, played: 26 },
     ],
   },
   {
@@ -463,6 +476,7 @@ export const RANK_HISTORY: ClubRankHistory[] = [
       { round: 24, position: 16, points: 25, played: 24 },
       { round: 25, position: 18, points: 25, played: 25 },
       { round: 26, position: 18, points: 25, played: 26 },
+      { round: 27, position: 18, points: 28, played: 27 },
     ],
   },
   {
@@ -495,6 +509,7 @@ export const RANK_HISTORY: ClubRankHistory[] = [
       { round: 24, position: 17, points: 24, played: 24 },
       { round: 25, position: 16, points: 25, played: 25 },
       { round: 26, position: 16, points: 28, played: 26 },
+      { round: 27, position: 15, points: 29, played: 27 },
     ],
   },
   {
@@ -527,6 +542,7 @@ export const RANK_HISTORY: ClubRankHistory[] = [
       { round: 24, position: 1, points: 51, played: 24 },
       { round: 25, position: 1, points: 52, played: 25 },
       { round: 26, position: 2, points: 53, played: 26 },
+      { round: 27, position: 2, points: 56, played: 27 },
     ],
   },
   {
@@ -559,6 +575,7 @@ export const RANK_HISTORY: ClubRankHistory[] = [
       { round: 24, position: 14, points: 26, played: 23 },
       { round: 25, position: 14, points: 29, played: 24 },
       { round: 26, position: 13, points: 32, played: 25 },
+      { round: 27, position: 10, points: 35, played: 26 },
     ],
   },
   {
@@ -591,6 +608,7 @@ export const RANK_HISTORY: ClubRankHistory[] = [
       { round: 24, position: 13, points: 27, played: 23 },
       { round: 25, position: 11, points: 30, played: 24 },
       { round: 26, position: 10, points: 33, played: 25 },
+      { round: 27, position: 11, points: 33, played: 26 },
     ],
   },
   {
@@ -623,6 +641,7 @@ export const RANK_HISTORY: ClubRankHistory[] = [
       { round: 24, position: 19, points: 22, played: 23 },
       { round: 25, position: 17, points: 25, played: 24 },
       { round: 26, position: 17, points: 25, played: 25 },
+      { round: 27, position: 17, points: 28, played: 26 },
     ],
   },
   {
@@ -655,6 +674,7 @@ export const RANK_HISTORY: ClubRankHistory[] = [
       { round: 24, position: 12, points: 29, played: 24 },
       { round: 25, position: 13, points: 29, played: 25 },
       { round: 26, position: 11, points: 32, played: 26 },
+      { round: 27, position: 12, points: 33, played: 27 },
     ],
   },
 ];
@@ -664,4 +684,4 @@ export const RANK_HISTORY_BY_CODE = new Map(
 );
 
 /** The last round the history covers. */
-export const RANK_HISTORY_LAST_ROUND = 26;
+export const RANK_HISTORY_LAST_ROUND = 27;

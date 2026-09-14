@@ -14,9 +14,9 @@ Texto que acompanha [`velas-santos.mp4`](velas-santos.mp4)
   própria cena — a regra que o `scripts/manim/README.md` registra para as velas.
 - **Cortes verticais:** `velas-santos-45.mp4` (1080×1350, feed do Instagram) e `velas-santos-916.mp4` (1080×1920, Reels e YouTube Short).
 
-> **Os números aqui saem de `scripts/manim/velas-santos.json`, rodada 26,
-> snapshot de 2026-09-11** — 13º com 32 pts, 8V 8E 9D, e a oscilação entre
-> o 12º e o 20º, que é a faixa que o painel do vídeo imprime. Eles **envelhecem**: um `sync-seed-data` seguido de uma
+> **Os números aqui saem de `scripts/manim/velas-santos.json`, rodada 27,
+> snapshot de 2026-09-13** — 10º com 35 pts, 9V 8E 9D, e a oscilação entre
+> o 10º e o 20º, que é a faixa que o painel do vídeo imprime. Eles **envelhecem**: um `sync-seed-data` seguido de uma
 > reexportação move o vídeo, e este arquivo não é regerado por nada. Reconferir
 > antes de publicar, contra o JSON e não contra esta página.
 >
@@ -28,7 +28,7 @@ Texto que acompanha [`velas-santos.mp4`](velas-santos.mp4)
 > duas diferem para 15 dos 20 clubes. O painel conta as posições ocupadas
 > enquanto a rodada era jogada — o pavio —, então ele é sempre igual ou mais
 > largo que o intervalo entre o melhor e o pior FECHAMENTO. Este clube fecha
-> entre o 13º e o 18º e o painel diz 12º e 20º.
+> entre o 10º e o 18º e o painel diz 10º e 20º.
 >
 > **O saldo e o aproveitamento vêm do `computeStandings`**, a mesma função que
 > monta a tabela do site, e não somados à mão a partir do JSON.
@@ -42,19 +42,19 @@ Texto que acompanha [`velas-santos.mp4`](velas-santos.mp4)
 
 ## Título
 
-Recomendado (69 caracteres):
+Recomendado (58 caracteres):
 
 ```
-Santos em velas: 13º ao 18º em 26 rodadas, uma campanha sem movimento
+Santos rompe a faixa estreita e chega ao 10º na 27ª rodada
 ```
 
-A amplitude medida, sem superlativo que não se sustente — e **data o recorte**, que é a única defesa contra
+A ruptura do padrão, medida — e **data o recorte**, que é a única defesa contra
 alguém assistir daqui a três meses e achar que os números estão errados.
 
 | | título | caracteres | ângulo |
 |---|---|---|---|
 | 2 | `A campanha do Santos rodada a rodada \| Brasileirão 2026 em candlestick` | 70 | genérico e buscável |
-| 3 | `Santos: 32 pontos em 25 jogos, 8V 8E 9D` | 39 | o número duro, com o denominador certo |
+| 3 | `Santos: 35 pontos em 26 jogos, 9V 8E 9D` | 39 | o número duro, com o denominador certo |
 
 **Os apelidos não estão em nenhum deles, e estão nas tags**: é como o torcedor
 busca, e não é como o clube aparece no vídeo nem na tabela.
@@ -64,14 +64,14 @@ busca, e não é como o clube aparece no vídeo nem na tabela.
 ```
 A campanha do Santos rodada a rodada, desenhada como vela: o corpo vai da posição em que o clube ABRIU a rodada até onde ele FECHOU, e o pavio cobre a melhor e a pior posição que ele ocupou enquanto a rodada era jogada. Embaixo, no mesmo eixo, os pontos acumulados — a barra é o total e a tampa clara é o que a rodada acrescentou.
 
-Dados até 11/09/2026 (26ª rodada):
-• Santos — 13º, 32 pts em 25 jogos
-• 8V · 8E · 9D — 37 gols pró, 38 contra, saldo -1
-• 43% de aproveitamento · oscilou entre o 12º e o 20º
+Dados até 13/09/2026 (27ª rodada):
+• Santos — 10º, 35 pts em 26 jogos
+• 9V · 8E · 9D — 39 gols pró, 39 contra, saldo +0
+• 45% de aproveitamento · oscilou entre o 10º e o 20º
 
-O Santos não subiu nem caiu: 26 rodadas fechadas entre o 13º e o 18º, uma das faixas mais estreitas da divisão — só o Fluminense e o Clube do Remo fecham numa faixa menor, e a do Bahia tem o mesmo tamanho. O desenho é uma faixa horizontal de corpos curtos no meio do quadro.
+O Santos passou 26 rodadas fechando entre o 13º e o 18º, uma das faixas mais estreitas da divisão — e rompeu esse padrão na 27ª: um 2x1 sobre o Cruzeiro levou o clube ao 10º, seu melhor fechamento no recorte, alargando a faixa para o 10º-18º. Só o Fluminense, o Clube do Remo e a Bahia fecham hoje em faixas menores.
 
-O painel diz 12º e 20º porque o pavio desce mais fundo do que qualquer fechamento. São 9 derrotas em 25 jogos, e há jogo em atraso: 25 contra 26 rodadas.
+O painel diz 10º e 20º porque o pavio desce mais fundo do que qualquer fechamento. São 9 derrotas em 26 jogos, e há jogo em atraso: 26 contra 27 rodadas.
 
 As réguas tracejadas que cruzam o desenho são acontecimentos de fora de campo, e cada uma cai na FRONTEIRA entre duas rodadas em vez de sobre uma: a demissão de Juan Pablo Vojvoda depois da 7ª rodada, e a paralisação para a Copa do Mundo depois da 18ª rodada. Quando a primeira aparece, o clube vinha de fechar a 7ª em 15º com 6 pts.
 
@@ -96,7 +96,7 @@ carregar o vídeo sozinha.
 Para Short, ou onde a descrição longa não couber.
 
 ```
-A campanha do Santos em velas: o corpo vai da posição de abertura à de fechamento da rodada, o pavio mostra até onde o clube subiu e desceu dentro dela, e a barra de baixo são os pontos. As réguas tracejadas marcam a saída de Juan Pablo Vojvoda e a parada para a Copa. Fechou 26 rodadas inteiras entre o 13º e o 18º. Dados até a 26ª: 32 pts, 8V 8E 9D, saldo -1.
+A campanha do Santos em velas: o corpo vai da posição de abertura à de fechamento da rodada, o pavio mostra até onde o clube subiu e desceu dentro dela, e a barra de baixo são os pontos. As réguas tracejadas marcam a saída de Juan Pablo Vojvoda e a parada para a Copa. Fechou 26 rodadas entre o 13º e o 18º até subir ao 10º na 27ª. Dados até a 27ª: 35 pts, 9V 8E 9D, saldo +0.
 
 Animação em Manim, dados do Portal Brasileirão: https://brasileirao.mpbarbosa.com
 Código: https://github.com/mpbarbosa/portal_brasileirao
@@ -110,7 +110,7 @@ Medido sobre o bloco como está — separado por `, `, que é o que se cola.
 299 caracteres, 21 tags.
 
 ```
-brasileirão, brasileirao 2026, campeonato brasileiro, série a, serie a, santos, peixe, alvinegro praiano, santos fc, campanha do santos, campanha rodada a rodada, candlestick, gráfico de velas, futebol brasileiro, visualização de dados, dataviz, manim, python, portal brasileirão, rodada 26, vojvoda
+brasileirão, brasileirao 2026, campeonato brasileiro, série a, serie a, santos, peixe, alvinegro praiano, santos fc, campanha do santos, campanha rodada a rodada, candlestick, gráfico de velas, futebol brasileiro, visualização de dados, dataviz, manim, python, portal brasileirão, rodada 27, vojvoda
 ```
 
 `vojvoda` entra porque o vídeo agora **marca** essa saída, e é assim que o torcedor

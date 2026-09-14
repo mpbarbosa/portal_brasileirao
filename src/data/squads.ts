@@ -5,8 +5,8 @@ import type { Squad } from "@/src/types";
  * GENERATED FILE — do not edit by hand.
  * Regenerate with: npx tsx scripts/sync-seed-data.ts
  *
- * Frozen elencos (20 clubs, 949 players), taken
- * 2026-09-11 from football-data.org. The offline fallback behind
+ * Frozen elencos (20 clubs, 950 players), taken
+ * 2026-09-13 from football-data.org. The offline fallback behind
  * `/api/squads`, so it goes stale the moment a transfer window opens.
  *
  * Clubs are referenced through `CLUBS_BY_CODE` rather than restated, so this
@@ -960,6 +960,7 @@ export const SEED_SQUADS: Squad[] = [
     { id: "276795", name: "Carlos Renê", position: "Offence", nationality: "Brazil", dateOfBirth: "2003-10-07" },
     { id: "290931", name: "Cauan", position: "Midfield", nationality: "Brazil", dateOfBirth: "2006-10-03" },
     { id: "127239", name: "Claudinho", position: "Defence", nationality: "Brazil", dateOfBirth: "2000-09-24" },
+    { id: "301048", name: "Darlan Dutra", nationality: "Brazil", dateOfBirth: "2003-07-03" },
     { id: "276225", name: "Davi Barbosa", position: "Goalkeeper", nationality: "Brazil", dateOfBirth: "2006-03-02" },
     { id: "250521", name: "Diego Tarzia", position: "Offence", nationality: "Argentina", dateOfBirth: "2003-04-26" },
     { id: "179171", name: "Dudu", position: "Midfield", nationality: "Brazil", dateOfBirth: "1999-06-05" },

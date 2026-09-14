@@ -14,8 +14,8 @@ Texto que acompanha [`velas-athletico-pr.mp4`](velas-athletico-pr.mp4)
   própria cena — a regra que o `scripts/manim/README.md` registra para as velas.
 - **Cortes verticais:** `velas-athletico-pr-45.mp4` (1080×1350, feed do Instagram) e `velas-athletico-pr-916.mp4` (1080×1920, Reels e YouTube Short).
 
-> **Os números aqui saem de `scripts/manim/velas-athletico-pr.json`, rodada 26,
-> snapshot de 2026-09-11** — 3º com 45 pts, 13V 6E 7D, e a oscilação entre
+> **Os números aqui saem de `scripts/manim/velas-athletico-pr.json`, rodada 27,
+> snapshot de 2026-09-13** — 3º com 46 pts, 13V 7E 7D, e a oscilação entre
 > o 2º e o 13º, que é a faixa que o painel do vídeo imprime. Eles **envelhecem**: um `sync-seed-data` seguido de uma
 > reexportação move o vídeo, e este arquivo não é regerado por nada. Reconferir
 > antes de publicar, contra o JSON e não contra esta página.
@@ -45,7 +45,7 @@ Texto que acompanha [`velas-athletico-pr.mp4`](velas-athletico-pr.mp4)
 Recomendado (62 caracteres):
 
 ```
-Athletico-PR: 10 rodadas invicto e o 3º lugar até a 26ª rodada
+Athletico-PR: 10 rodadas invicto e o 3º lugar até a 27ª rodada
 ```
 
 A invencibilidade, a segunda maior da divisão — e **data o recorte**, que é a única defesa contra
@@ -54,7 +54,7 @@ alguém assistir daqui a três meses e achar que os números estão errados.
 | | título | caracteres | ângulo |
 |---|---|---|---|
 | 2 | `A campanha do Athletico-PR rodada a rodada \| Brasileirão 2026 em candlestick` | 76 | genérico e buscável |
-| 3 | `Athletico-PR em velas: 45 pontos, 13V 6E 7D e saldo +10` | 55 | o número duro |
+| 3 | `Athletico-PR em velas: 46 pontos, 13V 7E 7D e saldo +10` | 55 | o número duro |
 
 **Os apelidos não estão em nenhum deles, e estão nas tags**: é como o torcedor
 busca, e não é como o clube aparece no vídeo nem na tabela.
@@ -64,14 +64,14 @@ busca, e não é como o clube aparece no vídeo nem na tabela.
 ```
 A campanha do Athletico-PR rodada a rodada, desenhada como vela: o corpo vai da posição em que o clube ABRIU a rodada até onde ele FECHOU, e o pavio cobre a melhor e a pior posição que ele ocupou enquanto a rodada era jogada. Embaixo, no mesmo eixo, os pontos acumulados — a barra é o total e a tampa clara é o que a rodada acrescentou.
 
-Dados até 11/09/2026 (26ª rodada):
-• Athletico-PR — 3º, 45 pts em 26 jogos
-• 13V · 6E · 7D — 38 gols pró, 28 contra, saldo +10
-• 58% de aproveitamento · oscilou entre o 2º e o 13º
+Dados até 13/09/2026 (27ª rodada):
+• Athletico-PR — 3º, 46 pts em 27 jogos
+• 13V · 7E · 7D — 41 gols pró, 31 contra, saldo +10
+• 57% de aproveitamento · oscilou entre o 2º e o 13º
 
 O Athletico-PR nunca liderou e nunca chegou perto do Z4: fecha a temporada inteira entre o 3º e o 12º. O painel do vídeo diz 2º e 13º porque conta também as posições ocupadas DENTRO das rodadas — é o pavio, e a diferença entre os dois números é exatamente o que esta cena existe para mostrar.
 
-São 10 rodadas sem perder na maior série, atrás só das 14 do Palmeiras, contra 7 derrotas em 26 jogos.
+São 10 rodadas sem perder na maior série, atrás só das 14 do Palmeiras, contra 7 derrotas em 27 jogos.
 
 A régua tracejada que cruza o desenho é o acontecimento de fora de campo que tocou os vinte clubes: a paralisação para a Copa do Mundo depois da 18ª rodada. Ela cai na FRONTEIRA entre duas rodadas em vez de sobre uma, porque é isso que ela separa — o que veio antes dela e o que veio depois. Aqui o clube parou em 4º com 30 pts.
 
@@ -96,7 +96,7 @@ carregar o vídeo sozinha.
 Para Short, ou onde a descrição longa não couber.
 
 ```
-A campanha do Athletico-PR em velas: o corpo vai da posição de abertura à de fechamento da rodada, o pavio mostra até onde o clube subiu e desceu dentro dela, e a barra de baixo são os pontos. A régua tracejada marca a parada para a Copa. 10 rodadas de invencibilidade, a segunda maior da série a. Dados até a 26ª: 45 pts, 13V 6E 7D, saldo +10.
+A campanha do Athletico-PR em velas: o corpo vai da posição de abertura à de fechamento da rodada, o pavio mostra até onde o clube subiu e desceu dentro dela, e a barra de baixo são os pontos. A régua tracejada marca a parada para a Copa. 10 rodadas de invencibilidade, a segunda maior da série a. Dados até a 27ª: 46 pts, 13V 7E 7D, saldo +10.
 
 Animação em Manim, dados do Portal Brasileirão: https://brasileirao.mpbarbosa.com
 Código: https://github.com/mpbarbosa/portal_brasileirao
@@ -110,7 +110,7 @@ Medido sobre o bloco como está — separado por `, `, que é o que se cola.
 310 caracteres, 21 tags.
 
 ```
-brasileirão, brasileirao 2026, campeonato brasileiro, série a, serie a, athletico-pr, furacão, furacao, cap, athletico paranaense, campanha do athletico-pr, campanha rodada a rodada, candlestick, gráfico de velas, futebol brasileiro, visualização de dados, dataviz, manim, python, portal brasileirão, rodada 26
+brasileirão, brasileirao 2026, campeonato brasileiro, série a, serie a, athletico-pr, furacão, furacao, cap, athletico paranaense, campanha do athletico-pr, campanha rodada a rodada, candlestick, gráfico de velas, futebol brasileiro, visualização de dados, dataviz, manim, python, portal brasileirão, rodada 27
 ```
 
 Nenhuma tag nova: o único acontecimento que o vídeo marca é a paralisação

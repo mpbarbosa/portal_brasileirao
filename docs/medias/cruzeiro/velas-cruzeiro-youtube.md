@@ -14,8 +14,8 @@ Texto que acompanha [`velas-cruzeiro.mp4`](velas-cruzeiro.mp4)
   própria cena — a regra que o `scripts/manim/README.md` registra para as velas.
 - **Cortes verticais:** `velas-cruzeiro-45.mp4` (1080×1350, feed do Instagram) e `velas-cruzeiro-916.mp4` (1080×1920, Reels e YouTube Short).
 
-> **Os números aqui saem de `scripts/manim/velas-cruzeiro.json`, rodada 26,
-> snapshot de 2026-09-11** — 6º com 42 pts, 12V 6E 8D, e a oscilação entre
+> **Os números aqui saem de `scripts/manim/velas-cruzeiro.json`, rodada 27,
+> snapshot de 2026-09-13** — 6º com 42 pts, 12V 6E 9D, e a oscilação entre
 > o 5º e o 20º, que é a faixa que o painel do vídeo imprime. Eles **envelhecem**: um `sync-seed-data` seguido de uma
 > reexportação move o vídeo, e este arquivo não é regerado por nada. Reconferir
 > antes de publicar, contra o JSON e não contra esta página.
@@ -46,7 +46,7 @@ Texto que acompanha [`velas-cruzeiro.mp4`](velas-cruzeiro.mp4)
 Recomendado (57 caracteres):
 
 ```
-Cruzeiro: do 20º ao 6º em 26 rodadas, a campanha em velas
+Cruzeiro: do 20º ao 6º em 27 rodadas, a campanha em velas
 ```
 
 A subida, medida do pior fechamento até o atual — e **data o recorte**, que é a única defesa contra
@@ -54,7 +54,7 @@ alguém assistir daqui a três meses e achar que os números estão errados.
 
 | | título | caracteres | ângulo |
 |---|---|---|---|
-| 2 | `Cruzeiro em velas: 15 posições de amplitude real, a maior da Série A` | 68 | a amplitude descontada a ordenação alfabética das duas primeiras rodadas |
+| 2 | `Cruzeiro em velas: 15 posições de amplitude real, entre as maiores da Série A` | 77 | a amplitude descontada a ordenação alfabética das duas primeiras rodadas |
 | 3 | `A campanha do Cruzeiro rodada a rodada \| Brasileirão 2026 em candlestick` | 72 | genérico e buscável |
 
 **Os apelidos não estão em nenhum deles, e estão nas tags**: é como o torcedor
@@ -65,16 +65,16 @@ busca, e não é como o clube aparece no vídeo nem na tabela.
 ```
 A campanha do Cruzeiro rodada a rodada, desenhada como vela: o corpo vai da posição em que o clube ABRIU a rodada até onde ele FECHOU, e o pavio cobre a melhor e a pior posição que ele ocupou enquanto a rodada era jogada. Embaixo, no mesmo eixo, os pontos acumulados — a barra é o total e a tampa clara é o que a rodada acrescentou.
 
-Dados até 11/09/2026 (26ª rodada):
-• Cruzeiro — 6º, 42 pts em 26 jogos
-• 12V · 6E · 8D — 38 gols pró, 37 contra, saldo +1
-• 54% de aproveitamento · oscilou entre o 5º e o 20º
+Dados até 13/09/2026 (27ª rodada):
+• Cruzeiro — 6º, 42 pts em 27 jogos
+• 12V · 6E · 9D — 39 gols pró, 39 contra, saldo +0
+• 52% de aproveitamento · oscilou entre o 5º e o 20º
 
 O Cruzeiro esteve em 20º e fecha o recorte em 6º — 14 posições ganhas desde o fundo da campanha. Nas velas isso é uma escada, e é o desenho oposto ao de quem lidera.
 
-Uma ressalva que a maioria dos clubes não precisa dar, e que aqui vale a favor: a amplitude do Cruzeiro NÃO vem das duas primeiras rodadas, onde os empatados em nada são ordenados por nome. Descontadas elas, ele oscila 15 posições — a maior faixa real da divisão.
+Uma ressalva que a maioria dos clubes não precisa dar, e que aqui vale a favor: a amplitude do Cruzeiro NÃO vem das duas primeiras rodadas, onde os empatados em nada são ordenados por nome. Descontadas elas, ele oscila 15 posições — atrás apenas de Chapecoense e Mirassol, e empatado com o Bragantino pela terceira maior faixa real da divisão.
 
-O preço está nas 8 derrotas em 26 jogos, o número alto de quem começou mal, e a barra de pontos embaixo muda de inclinação e não volta.
+O preço está nas 9 derrotas em 27 jogos, o número alto de quem começou mal, e a barra de pontos embaixo muda de inclinação e não volta.
 
 As duas réguas tracejadas que cruzam o desenho são acontecimentos de fora de campo, e cada uma cai na FRONTEIRA entre duas rodadas em vez de sobre uma: a saída de Tite depois da 6ª rodada, e a paralisação para a Copa do Mundo depois da 18ª. A primeira é a explicação da escada — o clube estava em 19º quando ela aparece.
 
@@ -99,7 +99,7 @@ carregar o vídeo sozinha.
 Para Short, ou onde a descrição longa não couber.
 
 ```
-A campanha do Cruzeiro em velas: o corpo vai da posição de abertura à de fechamento da rodada, o pavio mostra até onde o clube subiu e desceu dentro dela, e a barra de baixo são os pontos. As réguas tracejadas marcam a saída de Tite e a parada para a Copa. Do 20º ao 6º: 14 posições de subida. Dados até a 26ª: 42 pts, 12V 6E 8D, saldo +1.
+A campanha do Cruzeiro em velas: o corpo vai da posição de abertura à de fechamento da rodada, o pavio mostra até onde o clube subiu e desceu dentro dela, e a barra de baixo são os pontos. As réguas tracejadas marcam a saída de Tite e a parada para a Copa. Do 20º ao 6º: 14 posições de subida. Dados até a 27ª: 42 pts, 12V 6E 9D, saldo +0.
 
 Animação em Manim, dados do Portal Brasileirão: https://brasileirao.mpbarbosa.com
 Código: https://github.com/mpbarbosa/portal_brasileirao
@@ -113,7 +113,7 @@ Medido sobre o bloco como está — separado por `, `, que é o que se cola.
 286 caracteres, 21 tags.
 
 ```
-brasileirão, brasileirao 2026, campeonato brasileiro, série a, serie a, cruzeiro, raposa, cabuloso, cec, campanha do cruzeiro, campanha rodada a rodada, candlestick, gráfico de velas, futebol brasileiro, visualização de dados, dataviz, manim, python, portal brasileirão, rodada 26, tite
+brasileirão, brasileirao 2026, campeonato brasileiro, série a, serie a, cruzeiro, raposa, cabuloso, cec, campanha do cruzeiro, campanha rodada a rodada, candlestick, gráfico de velas, futebol brasileiro, visualização de dados, dataviz, manim, python, portal brasileirão, rodada 27, tite
 ```
 
 `tite` entra porque o vídeo agora **marca** a saída dele, e é assim que o

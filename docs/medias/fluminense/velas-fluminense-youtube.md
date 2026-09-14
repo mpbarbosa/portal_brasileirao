@@ -14,8 +14,8 @@ Texto que acompanha [`velas-fluminense.mp4`](velas-fluminense.mp4)
   própria cena — a regra que o `scripts/manim/README.md` registra para as velas.
 - **Cortes verticais:** `velas-fluminense-45.mp4` (1080×1350, feed do Instagram) e `velas-fluminense-916.mp4` (1080×1920, Reels e YouTube Short).
 
-> **Os números aqui saem de `scripts/manim/velas-fluminense.json`, rodada 26,
-> snapshot de 2026-09-11** — 4º com 45 pts, 12V 9E 5D, e a oscilação entre
+> **Os números aqui saem de `scripts/manim/velas-fluminense.json`, rodada 27,
+> snapshot de 2026-09-13** — 4º com 45 pts, 12V 9E 6D, e a oscilação entre
 > o 2º e o 12º, que é a faixa que o painel do vídeo imprime. Eles **envelhecem**: um `sync-seed-data` seguido de uma
 > reexportação move o vídeo, e este arquivo não é regerado por nada. Reconferir
 > antes de publicar, contra o JSON e não contra esta página.
@@ -45,7 +45,7 @@ Texto que acompanha [`velas-fluminense.mp4`](velas-fluminense.mp4)
 Recomendado (72 caracteres):
 
 ```
-Fluminense: 3º ao 6º em 26 rodadas, a campanha mais confinada da Série A
+Fluminense: 3º ao 6º em 27 rodadas, a campanha mais confinada da Série A
 ```
 
 A amplitude de fechamento, a menor da divisão — e **data o recorte**, que é a única defesa contra
@@ -53,7 +53,7 @@ alguém assistir daqui a três meses e achar que os números estão errados.
 
 | | título | caracteres | ângulo |
 |---|---|---|---|
-| 2 | `Fluminense em velas: 45 pontos, 12V 9E 5D até a 26ª rodada` | 58 | o número duro |
+| 2 | `Fluminense em velas: 45 pontos, 12V 9E 6D até a 27ª rodada` | 58 | o número duro |
 | 3 | `O que a vela mostra e a linha não: Fluminense do 3º ao 6º \| Brasileirão` | 71 | o argumento da cena, com este clube como o melhor exemplo |
 
 **Os apelidos não estão em nenhum deles, e estão nas tags**: é como o torcedor
@@ -64,16 +64,16 @@ busca, e não é como o clube aparece no vídeo nem na tabela.
 ```
 A campanha do Fluminense rodada a rodada, desenhada como vela: o corpo vai da posição em que o clube ABRIU a rodada até onde ele FECHOU, e o pavio cobre a melhor e a pior posição que ele ocupou enquanto a rodada era jogada. Embaixo, no mesmo eixo, os pontos acumulados — a barra é o total e a tampa clara é o que a rodada acrescentou.
 
-Dados até 11/09/2026 (26ª rodada):
-• Fluminense — 4º, 45 pts em 26 jogos
-• 12V · 9E · 5D — 40 gols pró, 32 contra, saldo +8
-• 58% de aproveitamento · oscilou entre o 2º e o 12º
+Dados até 13/09/2026 (27ª rodada):
+• Fluminense — 4º, 45 pts em 27 jogos
+• 12V · 9E · 6D — 41 gols pró, 35 contra, saldo +6
+• 56% de aproveitamento · oscilou entre o 2º e o 12º
 
-É a campanha mais confinada da Série A no fechamento das rodadas: em 26 rodadas o Fluminense nunca fechou acima do 3º nem abaixo do 6º. Quatro posições — a menor amplitude da divisão, conferida contra os vinte clubes.
+É a campanha mais confinada da Série A no fechamento das rodadas: em 27 rodadas o Fluminense nunca fechou acima do 3º nem abaixo do 6º. Quatro posições — a menor amplitude da divisão, conferida contra os vinte clubes.
 
 O painel do vídeo diz 2º e 12º, e a diferença não é erro: ali entram as posições ocupadas DENTRO de cada rodada, que é o que o pavio desenha. Um clube pode passar pelo 12º num sábado à noite e fechar o domingo em 6º — e essa distância é a razão de a vela existir ao lado da linha.
 
-São 5 derrotas em 26 jogos, o terceiro menor número da divisão, e 9 rodadas de invencibilidade na maior sequência.
+São 6 derrotas em 27 jogos, o quarto menor número da divisão, e 9 rodadas de invencibilidade na maior sequência.
 
 As réguas tracejadas que cruzam o desenho são acontecimentos de fora de campo, e cada uma cai na FRONTEIRA entre duas rodadas em vez de sobre uma: a paralisação para a Copa do Mundo depois da 18ª rodada, e a demissão de Luis Zubeldía depois da 22ª rodada. Quando a primeira aparece, o clube vinha de fechar a 18ª em 3º com 31 pts.
 
@@ -98,7 +98,7 @@ carregar o vídeo sozinha.
 Para Short, ou onde a descrição longa não couber.
 
 ```
-A campanha do Fluminense em velas: o corpo vai da posição de abertura à de fechamento da rodada, o pavio mostra até onde o clube subiu e desceu dentro dela, e a barra de baixo são os pontos. As réguas tracejadas marcam a saída de Luis Zubeldía e a parada para a Copa. Fechou 26 rodadas sem sair do 3º ao 6º. Dados até a 26ª: 45 pts, 12V 9E 5D, saldo +8.
+A campanha do Fluminense em velas: o corpo vai da posição de abertura à de fechamento da rodada, o pavio mostra até onde o clube subiu e desceu dentro dela, e a barra de baixo são os pontos. As réguas tracejadas marcam a saída de Luis Zubeldía e a parada para a Copa. Fechou 27 rodadas sem sair do 3º ao 6º. Dados até a 27ª: 45 pts, 12V 9E 6D, saldo +6.
 
 Animação em Manim, dados do Portal Brasileirão: https://brasileirao.mpbarbosa.com
 Código: https://github.com/mpbarbosa/portal_brasileirao
@@ -112,7 +112,7 @@ Medido sobre o bloco como está — separado por `, `, que é o que se cola.
 310 caracteres, 22 tags.
 
 ```
-brasileirão, brasileirao 2026, campeonato brasileiro, série a, serie a, fluminense, flu, tricolor carioca, fluzão, fluzao, campanha do fluminense, campanha rodada a rodada, candlestick, gráfico de velas, futebol brasileiro, visualização de dados, dataviz, manim, python, portal brasileirão, rodada 26, zubeldía
+brasileirão, brasileirao 2026, campeonato brasileiro, série a, serie a, fluminense, flu, tricolor carioca, fluzão, fluzao, campanha do fluminense, campanha rodada a rodada, candlestick, gráfico de velas, futebol brasileiro, visualização de dados, dataviz, manim, python, portal brasileirão, rodada 27, zubeldía
 ```
 
 `zubeldía` entra porque o vídeo agora **marca** essa saída, e é assim que o torcedor

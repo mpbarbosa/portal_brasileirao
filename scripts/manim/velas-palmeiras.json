@@ -1,5 +1,5 @@
 {
-  "snapshot": "2026-09-11",
+  "snapshot": "2026-09-13",
   "club": {
     "code": "1769",
     "name": "Palmeiras",
@@ -498,6 +498,25 @@
         "goalsFor": 0,
         "goalsAgainst": 0,
         "result": "E"
+      }
+    },
+    {
+      "round": 27,
+      "open": 2,
+      "close": 2,
+      "best": 1,
+      "worst": 2,
+      "points": 3,
+      "totalPoints": 56,
+      "played": 27,
+      "result": "V",
+      "moved": 0,
+      "match": {
+        "opponent": "São Paulo",
+        "home": true,
+        "goalsFor": 2,
+        "goalsAgainst": 0,
+        "result": "V"
       }
     }
   ],

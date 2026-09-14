@@ -1,5 +1,5 @@
 {
-  "snapshot": "2026-09-11",
+  "snapshot": "2026-09-13",
   "club": {
     "code": "1770",
     "name": "Botafogo",
@@ -491,6 +491,25 @@
         "home": true,
         "goalsFor": 0,
         "goalsAgainst": 0,
+        "result": "E"
+      }
+    },
+    {
+      "round": 27,
+      "open": 14,
+      "close": 14,
+      "best": 14,
+      "worst": 14,
+      "points": 1,
+      "totalPoints": 32,
+      "played": 26,
+      "result": "E",
+      "moved": 0,
+      "match": {
+        "opponent": "Bragantino",
+        "home": true,
+        "goalsFor": 1,
+        "goalsAgainst": 1,
         "result": "E"
       }
     }

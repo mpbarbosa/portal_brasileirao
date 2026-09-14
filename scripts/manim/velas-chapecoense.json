@@ -1,5 +1,5 @@
 {
-  "snapshot": "2026-09-11",
+  "snapshot": "2026-09-13",
   "club": {
     "code": "1772",
     "name": "Chapecoense",
@@ -492,6 +492,25 @@
         "goalsFor": 2,
         "goalsAgainst": 1,
         "result": "V"
+      }
+    },
+    {
+      "round": 27,
+      "open": 20,
+      "close": 20,
+      "best": 20,
+      "worst": 20,
+      "points": 0,
+      "totalPoints": 17,
+      "played": 26,
+      "result": "D",
+      "moved": 0,
+      "match": {
+        "opponent": "Internacional",
+        "home": true,
+        "goalsFor": 1,
+        "goalsAgainst": 2,
+        "result": "D"
       }
     }
   ],

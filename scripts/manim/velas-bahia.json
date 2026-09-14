@@ -1,5 +1,5 @@
 {
-  "snapshot": "2026-09-11",
+  "snapshot": "2026-09-13",
   "club": {
     "code": "1777",
     "name": "Bahia",
@@ -499,6 +499,19 @@
         "goalsAgainst": 2,
         "result": "V"
       }
+    },
+    {
+      "round": 27,
+      "open": 5,
+      "close": 5,
+      "best": 5,
+      "worst": 5,
+      "points": null,
+      "totalPoints": 43,
+      "played": 26,
+      "result": null,
+      "moved": 0,
+      "match": null
     }
   ],
   "events": [
