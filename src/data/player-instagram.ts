@@ -344,7 +344,7 @@
  * here.
  *
  * **The identity behind this pass is stronger than a name match, and
- * that changed two verdicts from the sweeps above — which is the real
+ * that changed three verdicts from the sweeps above — which is the real
  * finding of this round, worth more than the five new rows.**
  * `gilbertomjr02` was refused earlier for bio-ing `@athleticoparanaense`
  * while `squads.ts` lists Gilberto (`1073`) at Bahia — read at the time as
