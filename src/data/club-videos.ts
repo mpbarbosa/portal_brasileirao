@@ -164,56 +164,67 @@ export const CLUB_VIDEOS: Record<ClubCode, ClubVideo[]> = {
   // Athletico-PR. Not Atlético-MG below: `athletico-pr` and `atletico-mg` differ
   // by one letter and are two real clubs, which is the collision `slugify` is
   // documented against — here the codes keep them apart, 1768 against 1766.
+  // REPLACING `bPUhuQ7w7Pw` (the 26ª) with the 27ª render — the round-26
+  // upload of `worktree-replace-velas-videos` (2026-09-11) never made it into
+  // this file before round-27 superseded it, so this entry skips straight
+  // from whatever it held before to the 27ª.
   "1768": [
     {
-      id: "bPUhuQ7w7Pw",
-      title: "Athletico-PR: 10 rodadas invicto e o 3º lugar até a 26ª rodada",
+      id: "Blritj12rmU",
+      title: "Athletico-PR: 10 rodadas invicto e o 3º lugar até a 27ª rodada",
       channel: "Marcelo Barbosa",
     },
   ],
 
-  // Atlético-MG.
+  // Atlético-MG. REPLACING `tEvdFjdFKRU` (the 26ª, itself never registered)
+  // with the 27ª render.
   "1766": [
     {
-      id: "tEvdFjdFKRU",
-      title: "Atlético-MG em velas: fecha entre o 8º e o 17º até a 26ª rodada",
+      id: "a4NvONbQrag",
+      title: "Atlético-MG em velas: fecha entre o 7º e o 17º até a 27ª rodada",
       channel: "Marcelo Barbosa",
     },
   ],
 
-  // Bahia.
+  // Bahia. REPLACING `wmT_kLbpKn4` (the 26ª, itself never registered) with the
+  // 27ª render.
   "1777": [
     {
-      id: "wmT_kLbpKn4",
+      id: "Lc0NIBaAr_w",
       title: "Bahia em velas: 10 empates, o maior número do Brasileirão até a 26ª",
       channel: "Marcelo Barbosa",
     },
   ],
 
-  // Botafogo. Its title carries no rodada either, for `velas-palmeiras`' reason.
+  // Botafogo. Its title carries no rodada either, for `velas-palmeiras`'
+  // reason. REPLACING `X-Ly45in7qc` (the 26ª, itself never registered) with
+  // the 27ª render.
   "1770": [
     {
-      id: "X-Ly45in7qc",
-      title: "Botafogo: do 1º ao 13º, a segunda maior queda do Brasileirão em velas",
+      id: "cGHpyZcFyqI",
+      title: "Botafogo: do 1º ao 14º, a segunda maior queda do Brasileirão em velas",
       channel: "Marcelo Barbosa",
     },
   ],
 
   // Bragantino. Code 4286 rather than a 17xx like its neighbours — the club
   // entered the division later, and the id is upstream's, never ours to tidy.
+  // REPLACING `wPcIydfzJZU` (the 26ª, itself never registered) with the 27ª
+  // render.
   "4286": [
     {
-      id: "wPcIydfzJZU",
-      title: "Bragantino liderou na 2ª e fechou em 9º: a campanha em velas até a 26ª",
+      id: "md8895JaaSQ",
+      title: "Bragantino liderou na 2ª e fechou em 9º: a campanha em velas até a 27ª",
       channel: "Marcelo Barbosa",
     },
   ],
 
-  // Chapecoense.
+  // Chapecoense. REPLACING `dsqz7J0pcgA` (the 26ª, itself never registered)
+  // with the 27ª render.
   "1772": [
     {
-      id: "dsqz7J0pcgA",
-      title: "Chapecoense: 14 derrotas em 25 jogos, a campanha em velas até a 26ª",
+      id: "K6DdI6YDJtc",
+      title: "Chapecoense: 15 derrotas em 26 jogos, a campanha em velas até a 27ª",
       channel: "Marcelo Barbosa",
     },
   ],
