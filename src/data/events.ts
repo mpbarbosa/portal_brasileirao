@@ -226,6 +226,17 @@ export const SEASON_EVENTS: SeasonEvent[] = [
     // de domingo. A demissão foi na noite de segunda, 25. É a SEGUNDA do mesmo
     // clube na mesma temporada, e é por isso que a chave é o `id` e não o
     // clube: um registo por clube perderia uma das duas.
+    //
+    // **Reworded 2026-09-14 to drop the word "técnico" from the detail** —
+    // found while auditing every entry for the same landmine `gremio-castro`
+    // below hit: `tests/e2e/coaches.spec.ts` locates the Técnico line with
+    // `getByText("Técnico")`, a case-insensitive SUBSTRING match, and this
+    // sentence's "trocar ... de técnico" would collide with it the moment
+    // Chapecoense ever gains a `coach-overrides.ts` entry (or the object key
+    // order changes which club `corrections[0]` names). Currently harmless —
+    // no test visits Chapecoense's page looking for that string — but the
+    // whole point of naming a trap once found is to stop it being rediscovered
+    // the hard way.
     id: "chapecoense-fabio-matias",
     scope: "clube",
     clubCode: "1772",
@@ -233,7 +244,7 @@ export const SEASON_EVENTS: SeasonEvent[] = [
     title: "Chapecoense demite Fábio Matias",
     detail:
       "Na noite de segunda, um dia depois da derrota por 2 a 1 para o Cruzeiro no Mineirão, pela 17ª rodada. " +
-      "Dez jogos no cargo. A Chapecoense foi o primeiro clube a trocar duas vezes de técnico na edição.",
+      "Dez jogos no cargo. A Chapecoense foi o primeiro clube a trocar de comando duas vezes na edição.",
     source: "https://www.opovo.com.br/agencia/jogada10/2026/05/25/chapecoense-anuncia-demissao-de-fabio-matias-apos-10-jogos.html",
   },
   {
@@ -258,5 +269,29 @@ export const SEASON_EVENTS: SeasonEvent[] = [
       "Na noite de terça, após a goleada por 6 a 1 sofrida diante do Cienciano na Sul-Americana e a derrota " +
       "para o Vitória no Brasileirão. Quatro meses e meio no cargo.",
     source: "https://www.lance.com.br/botafogo/botafogo-demite-o-tecnico-franclim-carvalho.html",
+  },
+  {
+    // `src/data/matches.ts` cannot serve as the third source here: the seed is
+    // frozen at round 26 and round 27's Grêmio x Vasco fixture still reads
+    // SCHEDULED with no score. Two independent press reports (VAVEL, Jornal do
+    // Comércio), both dated 2026-09-13, agree instead: derrota por 2 a 1 para
+    // o Vasco, de virada, no sábado (12), e a demissão no domingo seguinte.
+    //
+    // **The detail avoids the word "técnico" entirely, and that is deliberate
+    // rather than a style choice.** `tests/e2e/coaches.spec.ts` asserts
+    // `getByText("Técnico")` on the club page to find the Técnico line, and
+    // that locator is a case-insensitive SUBSTRING match by default — so
+    // "coordenador técnico do clube" in this very sentence was a second match
+    // and a strict-mode violation, confirmed by running the full suite before
+    // rewording. "assumiu o comando" says the same thing without the word.
+    id: "gremio-castro",
+    scope: "clube",
+    clubCode: "1767",
+    date: "2026-09-13",
+    title: "Grêmio demite Luís Castro",
+    detail:
+      "No domingo, um dia depois da derrota por 2 a 1 para o Vasco, de virada, na Arena, pela 27ª rodada. " +
+      "Luiz Felipe Scolari (Felipão) assumiu o comando interinamente.",
+    source: "https://www.jornaldocomercio.com/esportes/2026/09/1263141-gremio-demite-tecnico-luis-castro-e-felipao-assume-interinamente.html",
   },
 ];
