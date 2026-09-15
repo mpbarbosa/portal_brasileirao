@@ -23,6 +23,7 @@ const FLAMENGO: Club = {
   instagram: "flamengo",
   twitter: "Flamengo",
   youtube: "flamengo",
+  facebook: "FlamengoOficial",
   wikipedia: "Clube de Regatas do Flamengo",
 };
 
@@ -83,6 +84,7 @@ test("the addresses that identify the club are linked as sameAs", () => {
     "https://www.instagram.com/flamengo/",
     "https://x.com/Flamengo",
     "https://www.youtube.com/@flamengo",
+    "https://www.facebook.com/FlamengoOficial/",
     "https://pt.wikipedia.org/wiki/Clube_de_Regatas_do_Flamengo",
   ]);
 });

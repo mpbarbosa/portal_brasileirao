@@ -5,6 +5,7 @@ import { COACH_OVERRIDES } from "@/src/data/coach-overrides";
 import { CLUBS } from "@/src/data/clubs";
 import { CLUB_HYMNS } from "@/src/data/club-hymns";
 import { CLUB_DISCORD } from "@/src/data/club-discord";
+import { CLUB_FACEBOOK } from "@/src/data/club-facebook";
 import { CLUB_REDDIT } from "@/src/data/club-reddit";
 import { CLUB_TWITTER } from "@/src/data/club-twitter";
 import { CLUB_YOUTUBE } from "@/src/data/club-youtube";
@@ -21,6 +22,9 @@ import {
   crestMonogram,
   discordInvite,
   discordUrl,
+  facebookHandle,
+  facebookUrl,
+  isFacebookPageId,
   duplicateClubKeys,
   findClub,
   hasClubArticle,
@@ -41,6 +45,7 @@ import {
   twitterUrl,
   withClubDetails,
   withCoachOverrides,
+  withFacebook,
   withHymns,
   withInstagram,
   withReddit,
@@ -636,6 +641,100 @@ test("every curated YouTube channel is usable, names a club in the seed, and is 
   // channel, and a handle-keyed set would call that two.
   const channels = Object.values(CLUB_YOUTUBE).map((entry) => entry.channel);
   assert.equal(new Set(channels).size, channels.length, "one channel is recorded for two clubs");
+});
+
+test("a Facebook username becomes the canonical page address", () => {
+  assert.equal(facebookUrl("FlamengoOficial"), "https://www.facebook.com/FlamengoOficial/");
+  assert.equal(facebookUrl("@FlamengoOficial"), "https://www.facebook.com/FlamengoOficial/");
+});
+
+test("a pasted Facebook address is reduced to the username", () => {
+  // Chapecoense's own site links the locale host; a tab, a post under the page
+  // and a tracking suffix are what an address bar carries.
+  assert.equal(facebookHandle("https://pt-br.facebook.com/AChapeF"), "AChapeF");
+  assert.equal(facebookHandle("https://www.facebook.com/FlamengoOficial/videos"), "FlamengoOficial");
+  assert.equal(facebookHandle("https://m.facebook.com/santosfc/posts/123456789?mibextid=abc"), "santosfc");
+  assert.equal(facebookHandle("facebook.com/RedBullBragantino?locale=pt_BR"), "RedBullBragantino");
+  // Full stops are legal inside a username.
+  assert.equal(facebookHandle("se.palmeiras"), "se.palmeiras");
+});
+
+test("a Facebook username's casing survives, because the username is what the link says", () => {
+  assert.equal(facebookHandle("ClubeDoRemo"), "ClubeDoRemo");
+  assert.equal(facebookHandle("https://www.facebook.com/ClubeDoRemo/"), "ClubeDoRemo");
+});
+
+test("Facebook's own routes are refused, though each passes the username rule", () => {
+  assert.equal(facebookHandle("https://www.facebook.com/groups/flamengo"), null);
+  assert.equal(facebookHandle("https://www.facebook.com/watch/?v=123"), null);
+  assert.equal(facebookHandle("https://www.facebook.com/login/?next=%2FFlamengoOficial"), null);
+  assert.equal(facebookHandle("MARKETPLACE"), null);
+  // A page with no username. "profile" is not a route; only the .php rule refuses it.
+  assert.equal(facebookHandle("https://www.facebook.com/profile.php?id=100044205950532"), null);
+});
+
+test("a page id is refused as a username, because it would confirm itself", () => {
+  assert.equal(facebookHandle("100044205950532"), null);
+  assert.equal(facebookHandle("https://www.facebook.com/100044205950532"), null);
+  // Digits inside a username are ordinary.
+  assert.equal(facebookHandle("vasco1898"), "vasco1898");
+});
+
+test("anything that is not a Facebook username yields no link", () => {
+  assert.equal(facebookUrl("with spaces"), null);
+  assert.equal(facebookUrl("https://www.facebook.com/"), null);
+  // The floor is five characters, and underscores are X's rather than Facebook's.
+  assert.equal(facebookUrl("fla"), null);
+  assert.equal(facebookUrl("clube_fla"), null);
+  // Another host's address is not a Facebook page — including one pasted with no
+  // scheme, whose host would otherwise pass as a dotted username.
+  assert.equal(facebookUrl("https://www.instagram.com/flamengo/"), null);
+  assert.equal(facebookUrl("instagram.com/flamengo"), null);
+  assert.equal(facebookUrl("facebook.com"), null);
+  assert.equal(facebookUrl(""), null);
+  assert.equal(facebookUrl(undefined), null);
+});
+
+test("curated Facebook pages attach their username to the club list by code", () => {
+  const clubs = [club("1783", "Flamengo", "flamengo"), club("9999", "Outro", "outro")];
+
+  const [flamengo, outro] = withFacebook(clubs, {
+    "1783": { handle: "FlamengoOficial", page: "100044205950532" },
+  });
+
+  assert.equal(flamengo.facebook, "FlamengoOficial");
+  assert.equal(outro.facebook, undefined);
+  // The id is evidence for the checker, and nothing a page renders.
+  assert.ok(!Object.values(flamengo).includes("100044205950532"));
+});
+
+test("the Facebook username rides along into live payloads", () => {
+  // `withClubDetails` again: left out there, the link renders in every suite and
+  // vanishes on the deployed site.
+  const known = [{ ...club("1783", "Flamengo", "flamengo"), facebook: "FlamengoOficial" }];
+
+  const [merged] = withClubDetails([club("1783", "Flamengo", "flamengo")], known);
+
+  assert.equal(merged.facebook, "FlamengoOficial");
+  assert.equal(withClubDetails([club("1783", "Flamengo", "flamengo")], [])[0].facebook, undefined);
+});
+
+test("every curated Facebook page is usable, names a club in the seed, and is claimed once", () => {
+  for (const [code, entry] of Object.entries(CLUB_FACEBOOK)) {
+    assert.ok(CLUBS.some((known) => known.code === code), `${code} is not a club in the seed`);
+    assert.equal(
+      facebookHandle(entry.handle),
+      entry.handle,
+      `${code}: "${entry.handle}" does not survive the parser unchanged`,
+    );
+    assert.ok(isFacebookPageId(entry.page), `${code}: "${entry.page}" is not a page id`);
+  }
+  // On the id, and on the folded username: Facebook resolves a username
+  // case-insensitively, so two casings are one page.
+  const pages = Object.values(CLUB_FACEBOOK).map((entry) => entry.page);
+  assert.equal(new Set(pages).size, pages.length, "one page is recorded for two clubs");
+  const folded = Object.values(CLUB_FACEBOOK).map((entry) => entry.handle.toLowerCase());
+  assert.equal(new Set(folded).size, folded.length, "one username is recorded for two clubs");
 });
 
 test("a hymn link is the video id, however it was pasted", () => {

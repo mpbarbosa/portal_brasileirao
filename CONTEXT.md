@@ -576,6 +576,25 @@ refuses them), taking the channel whose handle is the club's name without
 checking what the club links, reusing the hymn's quavers, trusting a status code
 alone (an invented `/channel/UC…` address answers 200).
 
+**Facebook do clube**:
+The club's official Facebook page, linked from its page right after the
+**YouTube do clube** and shown as an "f" inside a circle followed by the page's
+username (`@FlamengoOficial`). The mark is drawn inline in `ClubView` as an
+outline taking `currentColor`, where Facebook's own is a fixed blue disc.
+Hand-curated in `src/data/club-facebook.ts`, keyed by club code; each entry
+stores the **username** and the numeric **page id** the page stated, and
+`check-club-facebook` compares ids. `facebookUrl` builds
+`https://www.facebook.com/<username>/`. **Official**, so the screen-reader
+suffix reads "Facebook oficial do clube". Where the club's website or
+link-in-bio page links a page, that link decided.
+_Avoid_: taking the page whose username is the club's name without checking
+(`facebook.com/flamengo` is a person's page), trusting one club pointer without
+opening the page it names (Athletico-PR's website links an abandoned page),
+trusting Wikidata alone (it names a supporters' page for Palmeiras), storing a
+`profile.php?id=…` address or a page id as the username, reading a 200 as proof
+a page exists (an invented username answers 200 too), sending the checker with a
+browser User-Agent (Facebook answers it 400).
+
 **Apelido do jogador**:
 The name a player is known by where it is not the one the **Elenco** lists —
 "Gabigol" for the listed "Gabriel Barbosa". Printed **beside** the listed name

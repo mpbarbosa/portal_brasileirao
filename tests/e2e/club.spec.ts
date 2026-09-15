@@ -283,6 +283,7 @@ test.describe("Clube", () => {
         // A prefix and not a substring: `*='x.com'` would also match a site
         // whose host merely ends in those letters.
         ":not([href^='https://x.com/'])",
+        ":not([href^='https://www.facebook.com/'])",
       ].join(""),
     );
   const instagramLink = (page: Page) => page.locator("main header a[href*='instagram.com']");
@@ -292,6 +293,7 @@ test.describe("Clube", () => {
   const hymnLink = (page: Page) => page.locator("main header a[href*='youtube.com/watch']");
   const youtubeLink = (page: Page) =>
     page.locator("main header a[href^='https://www.youtube.com/@']");
+  const facebookLink = (page: Page) => page.locator("main header a[href^='https://www.facebook.com/']");
   const wikipediaLink = (page: Page) => page.locator("main header a[href*='wikipedia.org']");
   const redditLink = (page: Page) => page.locator("main header a[href*='reddit.com']");
 
@@ -360,6 +362,19 @@ test.describe("Clube", () => {
     await expect(channel).toHaveAttribute("rel", /noopener/);
     await expect(channel).toHaveAccessibleName(/YouTube oficial do clube/);
     expect((await channel.innerText()).trim()).toMatch(/^@[A-Za-z0-9._-]{3,30}/);
+  });
+
+  test("the club page links to its Facebook page, as an official channel", async ({ page }) => {
+    await openClubAt(page, 1);
+
+    const facebook = facebookLink(page);
+    await expect(facebook).toBeVisible();
+    // The page's canonical address — never profile.php, a tab or a share suffix.
+    await expect(facebook).toHaveAttribute("href", /^https:\/\/www\.facebook\.com\/[A-Za-z0-9.]{5,50}\/$/);
+    await expect(facebook).toHaveAttribute("target", "_blank");
+    await expect(facebook).toHaveAttribute("rel", /noopener/);
+    await expect(facebook).toHaveAccessibleName(/Facebook oficial do clube/);
+    expect((await facebook.innerText()).trim()).toMatch(/^@[A-Za-z0-9.]{5,50}/);
   });
 
   /* The subreddit is curated for a handful of clubs rather than all twenty, so
