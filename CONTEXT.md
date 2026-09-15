@@ -557,6 +557,25 @@ logged-out browser shows `x.com/i/flow/login`, and `/home` or `/search` answer
 account is the club's or still in good standing (a suspended account answers 200
 too, which is why Chapecoense's entry is `ChapecoenseReal`).
 
+**YouTube do clube**:
+The club's official YouTube channel, linked from its page right after the **X
+do clube** and shown as a play button in a rounded screen followed by the bare
+handle (`@BotafogoTV`). The mark is drawn inline in `ClubView` as an outline
+taking `currentColor`, and it is deliberately not the **Hino do clube**'s
+quavers: two links on one host, one naming a song and one naming where the club
+publishes. Hand-curated in `src/data/club-youtube.ts`, keyed by club code, and
+each entry stores the **handle** and the **channel id** its page stated — a
+handle can change hands, and `check-club-youtube` catches that by comparing
+ids. `youtubeChannelUrl` builds `https://www.youtube.com/@<handle>`.
+**Official**, so the screen-reader suffix reads "YouTube oficial do clube".
+Where the club's website or link-in-bio page links a channel, that link decided;
+the obvious handle was wrong for Mirassol and for Coritiba.
+_Avoid_: storing `/channel/UC…`, `/c/…` or `/user/…` addresses (each opens the
+right channel but is not the handle the page prints, and `youtubeChannelHandle`
+refuses them), taking the channel whose handle is the club's name without
+checking what the club links, reusing the hymn's quavers, trusting a status code
+alone (an invented `/channel/UC…` address answers 200).
+
 **Apelido do jogador**:
 The name a player is known by where it is not the one the **Elenco** lists —
 "Gabigol" for the listed "Gabriel Barbosa". Printed **beside** the listed name

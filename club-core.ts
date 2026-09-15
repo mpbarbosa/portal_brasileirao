@@ -19,6 +19,7 @@ import type {
   ClubCode,
   ClubDiscord,
   ClubVideo,
+  ClubYouTube,
   FormResult,
   Match,
   Scorer,
@@ -539,6 +540,15 @@ export const withTwitter = (clubs: Club[], handles: Record<string, string>): Clu
     return twitter && !club.twitter ? { ...club, twitter } : club;
   });
 
+/** Attach curated YouTube channel handles to a club list, keyed by code. Only
+ *  the **handle** travels onto the club; the channel id beside it in the curated
+ *  file is evidence for `check-club-youtube`, for `withDiscord`'s reason. */
+export const withYouTube = (clubs: Club[], channels: Record<string, ClubYouTube>): Club[] =>
+  clubs.map((club) => {
+    const youtube = channels[club.code]?.handle;
+    return youtube && !club.youtube ? { ...club, youtube } : club;
+  });
+
 /** Attach curated hymn video ids to a club list, keyed by code. */
 export const withHymns = (clubs: Club[], hymns: Record<string, string>): Club[] =>
   clubs.map((club) => {
@@ -737,6 +747,7 @@ export const withClubDetails = (clubs: Club[], known: Club[]): Club[] => {
     const website = club.website ?? source?.website;
     const instagram = club.instagram ?? source?.instagram;
     const twitter = club.twitter ?? source?.twitter;
+    const youtube = club.youtube ?? source?.youtube;
     const reddit = club.reddit ?? source?.reddit;
     const discord = club.discord ?? source?.discord;
     const hymn = club.hymn ?? source?.hymn;
@@ -750,6 +761,7 @@ export const withClubDetails = (clubs: Club[], known: Club[]): Club[] => {
       ...(website ? { website } : {}),
       ...(instagram ? { instagram } : {}),
       ...(twitter ? { twitter } : {}),
+      ...(youtube ? { youtube } : {}),
       ...(reddit ? { reddit } : {}),
       ...(discord ? { discord } : {}),
       ...(hymn ? { hymn } : {}),

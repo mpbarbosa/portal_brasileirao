@@ -207,3 +207,59 @@ export const videoThumbnailHdUrl = (raw: string | undefined): string | null => {
   const id = youtubeVideoId(raw);
   return id && `https://img.youtube.com/vi/${id}/maxresdefault.jpg`;
 };
+
+/**
+ * A channel's **handle** alone, without the `@`, from whatever was written down.
+ *
+ * Accepts a bare handle, an `@handle`, or a pasted `youtube.com/@handle` link —
+ * with a tab such as `/videos` after it, or on `m.youtube.com` — and keeps only
+ * the handle, for `youtubeVideoId`'s reason: the curated file should not collect
+ * whatever a person's address bar happened to carry.
+ *
+ * **The older `/channel/UC…`, `/c/…` and `/user/…` addresses are refused**, not
+ * converted. Each still opens a channel, but none of them is the handle, and the
+ * page prints the handle: storing one would put a link on the club page whose
+ * words and address name the channel two different ways. Club websites still
+ * link those forms — measured 2026-09-15, Santos's links `/c/santosfc` and
+ * Chapecoense's `/channel/UC5of5voGUqec9K9JqL9al4Q` — so the refusal is what
+ * sends the curator to the channel page for the handle.
+ *
+ * Returns null for anything that is not a plausible handle — YouTube's rule is
+ * 3 to 30 letters, digits, underscores, hyphens and full stops.
+ */
+export const youtubeChannelHandle = (raw: string | null | undefined): string | null => {
+  const value = raw?.trim();
+  if (!value) return null;
+
+  let segment = value;
+  if (value.includes("/")) {
+    let url: URL;
+    try {
+      url = new URL(/^https?:\/\//i.test(value) ? value : `https://${value}`);
+    } catch {
+      return null;
+    }
+    if (!/(^|\.)youtube\.com$/i.test(url.hostname)) return null;
+    segment = url.pathname.split("/").filter(Boolean)[0] ?? "";
+    if (!segment.startsWith("@")) return null;
+  }
+
+  const handle = segment.replace(/^@/, "");
+  return /^[A-Za-z0-9._-]{3,30}$/.test(handle) ? handle : null;
+};
+
+/**
+ * The address for a channel, built from the normalised handle — so the link and
+ * the `@handle` printed beside it cannot come to name two channels.
+ */
+export const youtubeChannelUrl = (raw: string | null | undefined): string | null => {
+  const handle = youtubeChannelHandle(raw);
+  return handle && `https://www.youtube.com/@${handle}`;
+};
+
+/**
+ * Whether a value is shaped like a channel's own id: `UC` and 22 characters of
+ * the URL-safe alphabet. Shape only — `check-club-youtube` is what asks YouTube
+ * which channel a handle actually opens.
+ */
+export const isYoutubeChannelId = (value: string): boolean => /^UC[A-Za-z0-9_-]{22}$/.test(value);

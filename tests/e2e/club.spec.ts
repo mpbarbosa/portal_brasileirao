@@ -287,7 +287,11 @@ test.describe("Clube", () => {
     );
   const instagramLink = (page: Page) => page.locator("main header a[href*='instagram.com']");
   const xLink = (page: Page) => page.locator("main header a[href^='https://x.com/']");
-  const hymnLink = (page: Page) => page.locator("main header a[href*='youtube.com']");
+  // The watch path and not the host: the club's channel is on youtube.com too,
+  // so a host-wide locator resolves to both links.
+  const hymnLink = (page: Page) => page.locator("main header a[href*='youtube.com/watch']");
+  const youtubeLink = (page: Page) =>
+    page.locator("main header a[href^='https://www.youtube.com/@']");
   const wikipediaLink = (page: Page) => page.locator("main header a[href*='wikipedia.org']");
   const redditLink = (page: Page) => page.locator("main header a[href*='reddit.com']");
 
@@ -343,6 +347,19 @@ test.describe("Clube", () => {
     // Official like the Instagram line, and unlike the supporters' subreddit.
     await expect(x).toHaveAccessibleName(/X oficial do clube/);
     expect((await x.innerText()).trim()).toMatch(/^@[A-Za-z0-9_]{1,15}/);
+  });
+
+  test("the club page links to its YouTube channel, as an official channel", async ({ page }) => {
+    await openClubAt(page, 1);
+
+    const channel = youtubeLink(page);
+    await expect(channel).toBeVisible();
+    // The handle address, never an older /channel/, /c/ or /user/ form.
+    await expect(channel).toHaveAttribute("href", /^https:\/\/www\.youtube\.com\/@[A-Za-z0-9._-]{3,30}$/);
+    await expect(channel).toHaveAttribute("target", "_blank");
+    await expect(channel).toHaveAttribute("rel", /noopener/);
+    await expect(channel).toHaveAccessibleName(/YouTube oficial do clube/);
+    expect((await channel.innerText()).trim()).toMatch(/^@[A-Za-z0-9._-]{3,30}/);
   });
 
   /* The subreddit is curated for a handful of clubs rather than all twenty, so

@@ -2990,6 +2990,30 @@ all satisfy the handle rule, and a logged-out browser is redirected to
 `x.com/i/flow/login?…` — the address bar somebody copies from. Without the
 refusal that paste stores the handle `i` and the checker calls it live.
 
+`src/data/club-youtube.ts` holds each club's **official YouTube channel**, keyed
+by club code and storing a **handle and the channel id** — `ClubYouTube`, which
+is `ClubDiscord`'s shape for `ClubDiscord`'s reason. `youtubeChannelUrl` in
+`youtube-core.ts` builds `https://www.youtube.com/@<handle>`, and only the handle
+travels onto the club.
+
+```sh
+npm run check-club-youtube    # every handle still opens the channel it was written against
+```
+
+**This checker is exact, like Discord's and unlike X's, and that was measured on
+2026-09-15.** A handle nobody holds answers **404**; a real one answers 200 with
+the channel's own id in the page (`"externalId"`), so the run compares ids and
+catches a handle that has changed hands. **A 200 is not enough on its own**: an
+invented `/channel/UC…` address also answers 200, with no id in it — so a 200
+without an id is reported as inconclusive rather than passed.
+
+**Which channel is official was decided by what the club links, and the obvious
+handle lost twice.** Mirassol's site links `@CanalMirassolFC`, a different
+channel from `@mirassolfc`; `@Coritiba` is three videos, while the club
+publishes as `@coritibaoficial`. Club sites and bios also link older `/c/` and
+`/user/` forms of the right channel — `youtubeChannelHandle` refuses those, so
+resolve each to its handle rather than pasting it.
+
 `src/data/player-instagram.ts` holds players' own Instagram accounts, keyed by
 **player id** and hand-maintained for the same reason `club-instagram.ts` is: no
 provider carries a social account at any tier. Coverage is deliberately

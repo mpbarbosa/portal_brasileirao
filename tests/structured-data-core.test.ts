@@ -22,6 +22,7 @@ const FLAMENGO: Club = {
   website: "https://www.flamengo.com.br/",
   instagram: "flamengo",
   twitter: "Flamengo",
+  youtube: "flamengo",
   wikipedia: "Clube de Regatas do Flamengo",
 };
 
@@ -81,6 +82,7 @@ test("the addresses that identify the club are linked as sameAs", () => {
     "https://www.flamengo.com.br/",
     "https://www.instagram.com/flamengo/",
     "https://x.com/Flamengo",
+    "https://www.youtube.com/@flamengo",
     "https://pt.wikipedia.org/wiki/Clube_de_Regatas_do_Flamengo",
   ]);
 });
@@ -133,7 +135,11 @@ test("the hymn is not a sameAs, however it looks in the header", () => {
   // identifies it, and asserting otherwise claims the club *is* the video.
   const team = teamNode({ ...FLAMENGO, hymn: "gESWI9ZlXzo" }, ORIGIN, false);
 
-  assert.equal((team.sameAs as string[]).some((entry) => entry.includes("youtube")), false);
+  // On the video and not on the host: the club's own YouTube channel IS an
+  // address that identifies it and sits in sameAs, so "nothing on youtube.com"
+  // stopped meaning "not the hymn" the day the channel arrived.
+  assert.equal((team.sameAs as string[]).some((entry) => entry.includes("gESWI9ZlXzo")), false);
+  assert.equal((team.sameAs as string[]).some((entry) => entry.includes("/watch")), false);
 });
 
 test("fields the club does not have are omitted, never emitted empty", () => {

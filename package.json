@@ -25,6 +25,7 @@
     "measure-refresh-latency": "tsx scripts/measure-refresh-latency.ts",
     "check-club-discord": "tsx scripts/check-club-discord.ts",
     "check-club-twitter": "tsx scripts/check-club-twitter.ts",
+    "check-club-youtube": "tsx scripts/check-club-youtube.ts",
     "check-hymns": "tsx scripts/check-hymns.ts",
     "check-player-wikipedia": "tsx scripts/check-player-wikipedia.ts",
     "check-player-photos": "tsx scripts/check-player-photos.ts",

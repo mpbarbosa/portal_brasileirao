@@ -20,6 +20,7 @@ import {
 import { countNoun } from "@/count-core";
 import { nicknameLabel, playerNickname } from "@/player-core";
 import { formatRoute } from "@/route-core";
+import { youtubeChannelHandle, youtubeChannelUrl } from "@/youtube-core";
 import {
   goalDifferenceLabel,
   pointsPerMatchLabel,
@@ -213,6 +214,25 @@ function XGlyph() {
   );
 }
 
+/**
+ * A play button inside a rounded screen: the club's YouTube channel.
+ *
+ * YouTube's own mark is this shape in a fixed red, so drawn as an outline it
+ * takes `currentColor` like the X mark beside it. It is deliberately **not** the
+ * hymn's quavers further along the row: those name a song, and this names the
+ * place the club publishes, so two links on one host get two different marks.
+ *
+ * Local, like the marks around it, because it has one call site.
+ */
+function YouTubeGlyph() {
+  return (
+    <svg {...GLYPH}>
+      <rect x="2.5" y="5" width="19" height="14" rx="4" />
+      <path d="M10 9.5v5l4.5-2.5Z" />
+    </svg>
+  );
+}
+
 /** Three candles: the **Painel**. It draws the mark the page it opens is made
  *  of, rather than a generic chart glyph — the row's whole promise is that
  *  particular drawing. Local, like the three above it, because it has one call
@@ -312,6 +332,8 @@ export function ClubView({
   // so they cannot diverge.
   const xUrl = twitterUrl(club.twitter);
   const xHandle = twitterHandle(club.twitter);
+  const ytUrl = youtubeChannelUrl(club.youtube);
+  const ytHandle = youtubeChannelHandle(club.youtube);
   const coach = coachOf(club, coaches);
   const mapUrl = clubMapUrl(club.address);
   const videos = videosFor(CLUB_VIDEOS, code);
@@ -417,6 +439,19 @@ export function ClubView({
               >
                 <XGlyph />
                 @{xHandle}
+              </ExternalLink>
+            )}
+            {/* Official too, and printed as the handle for the X line's reason —
+                where the hymn further along, on the same host, is named for
+                the song it plays. */}
+            {ytUrl && ytHandle && (
+              <ExternalLink
+                href={ytUrl}
+                suffix="YouTube oficial do clube"
+                className={`truncate ${LINK_UNDERLINE}`}
+              >
+                <YouTubeGlyph />
+                @{ytHandle}
               </ExternalLink>
             )}
             {/* A sub is run by SUPPORTERS, so the suffix says "comunidade de
