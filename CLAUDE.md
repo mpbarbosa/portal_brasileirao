@@ -5418,7 +5418,7 @@ re-shoot of all 28 (#629). A number in prose has no gate on it — this one has 
 wrong three times, and the last two times it was wrong in a paragraph telling you it
 would be.
 
-**Ten of the twenty classified below can no longer be relied on to come back byte-identical, and this
+**Ten of the twenty-eight can no longer be relied on to come back byte-identical, and this
 paragraph has now said fewer than the truth five times.** Six vary for three unrelated
 reasons on three different clocks; the other four vary because somebody else's server
 decides to. **Four of those five understatements were the count rising underneath the
@@ -5473,12 +5473,27 @@ one is the sharpest: the
 Classificação pair moves only when something shipped, the estádio pair when Open-Meteo is
 re-read, while Ao vivo moves while you are looking at it. **Two refreshes of one build are
 expected to disagree on those six images**, and *may* disagree on the four partida ones.
-Disagreeing on any of the other ten of those twenty is a real difference and worth reading.
+Disagreeing on any of the other eighteen is a real difference and worth reading.
 
-**The eight clube captures added on 2026-09-13 are in neither set.** Nobody has shot
-them twice against one build, so a difference in one of them is *unclassified* — neither
-expected noise nor a known-real change. Place them by measuring, the way the six stable
-images below were found, not by reading `ClubView` and predicting.
+**The eight clube captures added on 2026-09-13 are stable, and that was measured rather
+than read off `ClubView`.** They were shot three times from production against one build,
+`bb2b1d1`, with the live sha read before and after every run: twice back to back
+(17:28:10–17:29:46Z on 2026-09-15) and once sixteen minutes later (17:45:01–17:46:06Z),
+long enough for a 15-minute cache to turn over. All 24 comparisons came back
+byte-identical. The instrument could have said otherwise — every capture logged a fresh
+write, and the first run differed from the committed images by #635's share button — so
+identity here is not a stale file copied three times.
+
+Opening the frames says why. The desktop crop ends at *Artilheiros do clube*, above the
+thumbnails `ClubVideos` hotlinks from `img.youtube.com`, and the mobile one at the
+*Últimos resultados* heading, so neither holds a thumbnail, a countdown, a weather reading
+or the Rodapé. **So the set is ten volatile and eighteen stable.** Two things the
+measurement does not reach. **A matchday**: the position, the points and *Próximo jogo*
+follow live standings and move mid-build while a club plays — the exposure `jogos` and
+`classificacao-mobile` already carry and are counted stable with. And **the crop**: it
+stops at the last section fitting in 1080 CSS px, so a section removed above the club
+page's lists could pull the video thumbnails into frame and put these images in the
+partida pairs' set. Re-measure then, rather than trusting this paragraph.
 
 **That "twelve" has now been wrong twice, and the second time is the instructive one
 because the repair itself looked like it closed.** The first was staleness from the era of
