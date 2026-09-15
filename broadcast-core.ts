@@ -240,22 +240,36 @@ export const withVenues = (
 /**
  * Broadcaster marks, keyed by a normalised channel name.
  *
- * `commons` records where the artwork came from; `slug` is what the app serves.
- * They are downloaded once by `scripts/sync-broadcaster-marks.ts` and served
- * from our own origin, **not** hotlinked.
+ * `slug` is what the app serves; `fifa` or `commons` records where the artwork
+ * came from. They are downloaded once by `scripts/sync-broadcaster-marks.ts`
+ * and served from our own origin, **not** hotlinked.
+ *
+ * **Two sources, and the channel decides which.** Where FIFA's broadcast guide
+ * names a channel, the mark is the logo FIFA serves for it — the same picture
+ * copa2026.mpbarbosa.com shows under "Onde ver o jogo", so a reader of both apps
+ * sees one Globo rather than two. That covers Globo, Globoplay, SporTV, ge tv,
+ * CazéTV and SBT, and it is why SBT has a mark at all. The ids were read out of
+ * `../agora_na_copa_2026/src/matches.json`, which stores FIFA's own `Logo` field,
+ * rather than guessed at. Premiere, Prime Video and YouTube did not carry the
+ * Copa, so FIFA has no logo for them and they keep their Commons marks.
+ *
+ * **The FIFA files come with no licence, and that is the trade this makes.**
+ * The Commons marks are public domain; these are the broadcasters' own current
+ * logos, shown only to identify who is showing a match, with the trademarks
+ * remaining their owners'. It was chosen to match the Copa app, not because the
+ * files turned out to be free — so do not cite this map as evidence that a
+ * broadcaster's artwork may be copied elsewhere in the app.
  *
  * Hotlinking was the first attempt and it fails in production: Commons answers
  * a browser's third or fourth request with 429, so a reader sees some marks and
  * empty plates where the rest should be. Commons is an archive, not a CDN, and
- * throttling is the correct behaviour on their side. Redistributing is fine
- * precisely because each of these is public domain — a plain wordmark is not
- * original enough to copyright — which is also why Commons is the source rather
- * than a broadcaster's own site, where no licence comes with the file.
+ * throttling is the correct behaviour on their side. FIFA's extranet is no more
+ * a CDN than Commons is, so its files are vendored the same way.
  *
  * A name with no entry here is not a gap to apologise for — `BroadcasterMark`
  * renders it as its own wordmark instead. That path is load-bearing, and today
- * exactly one curated channel takes it: **Record**, on 3 of the 30 fixtures that
- * carry channels. The other seven all have marks.
+ * exactly one curated channel takes it: **Record**, which neither FIFA's guide
+ * nor Commons can supply.
  *
  * **Record has no free mark, and this is the record of looking rather than a
  * guess** — the search is tedious enough to be worth not repeating. Commons has
@@ -267,45 +281,58 @@ export const withVenues = (
  * restrito`), which is fair use there and not redistributable here.
  *
  * The one CC0 file, `Logotipo da Rede Record 1981.svg`, is a **trap and not a
- * fallback.** The rule below — prefer an older public-domain version, as SporTV
- * and Globo do — does not reach it: that logo is rainbow arcs over a blocky
- * wordmark, against the silver sphere Record uses now, and its own uploader
- * describes it as the mark "since 1982". Shipping it would not be a dated logo,
- * it would be a different one. Leave Record as a wordmark.
+ * fallback.** Preferring an older public-domain version of a mark — which is
+ * what SporTV and Globo carried before FIFA's logos replaced them — does not
+ * reach it: that logo is rainbow arcs over a blocky wordmark, against the
+ * silver sphere Record uses now, and its own uploader describes it as the mark
+ * "since 1982". Shipping it would not be a dated logo, it would be a different
+ * one. Leave Record as a wordmark.
  *
  * The same reasoning covers any channel CBF may add — ESPN/Disney+, Band and
  * SportyNet are the usual candidates, though none has yet appeared in
  * `broadcasts.ts`. A wordmark is the correct answer, not a placeholder.
  */
-export interface MarkSource {
-  /** Served as `/marks/<slug>.png`. */
-  slug: string;
-  /** Wikimedia Commons file title, read only by the sync script. */
-  commons: string;
-}
+export type MarkSource =
+  | {
+      /** Served as `/marks/<slug>.png`. */
+      slug: string;
+      /** FIFA's TV-station id, read only by the sync script — see `fifaStationLogoUrl`. */
+      fifa: number;
+    }
+  | {
+      /** Served as `/marks/<slug>.png`. */
+      slug: string;
+      /** Wikimedia Commons file title, read only by the sync script. */
+      commons: string;
+    };
+
+/** Where FIFA's broadcast guide serves a station's logo. Read by the sync, never by the page. */
+export const fifaStationLogoUrl = (id: number): string =>
+  `https://extranets.fifa.com/TvStationPhotos/${id}.png`;
 
 /*
  * A note on choosing files, because search results are not evidence. Commons
  * offers a purple "GE TV" and a yellow "Logo GE TV" — both are a different
- * channel, not Globo's green `ge` — and its "SBT logo.png" is a Ukrainian
- * localisation union. Every entry below was looked at before it was trusted.
+ * channel — and its "SBT logo.png" is a Ukrainian localisation union; FIFA's
+ * guide also lists stations nobody here carries (NSPORTS is 892). Every entry
+ * below was opened and looked at before it was trusted.
  *
- * Where the current mark is only available under CC BY-SA — SporTV's flat
- * wordmark, Globo's 2025 raster — the older public-domain version is used
- * instead. A slightly dated logo is a smaller cost than an attribution
- * obligation the page does not discharge.
+ * Where a Commons mark's current version is only available under CC BY-SA, the
+ * older public-domain version is used instead. A slightly dated logo is a
+ * smaller cost than an attribution obligation the page does not discharge.
  */
 export const MARKS: Record<string, MarkSource> = {
-  GLOBO: { slug: "globo", commons: "TV Globo 2025.svg" },
-  GLOBOPLAY: { slug: "globoplay", commons: "Globoplay logo 2020.svg" },
+  GLOBO: { slug: "globo", fifa: 25 },
+  GLOBOPLAY: { slug: "globoplay", fifa: 30 },
+  SPORTV: { slug: "sportv", fifa: 26 },
+  CAZETV: { slug: "caze-tv", fifa: 451 },
+  GETV: { slug: "ge", fifa: 914 },
+  GE: { slug: "ge", fifa: 914 },
+  SBT: { slug: "sbt", fifa: 901 },
   PREMIERE: { slug: "premiere", commons: "Premiere FC logo.png" },
-  SPORTV: { slug: "sportv", commons: "SporTV logo 2016.png" },
   AMAZONPRIME: { slug: "prime-video", commons: "Prime Video logo (2024).svg" },
   PRIMEVIDEO: { slug: "prime-video", commons: "Prime Video logo (2024).svg" },
   YOUTUBE: { slug: "youtube", commons: "YouTube Logo 2017.svg" },
-  CAZETV: { slug: "caze-tv", commons: "CazéTV wordmark.svg" },
-  GETV: { slug: "ge", commons: "Ge.globo logo.svg" },
-  GE: { slug: "ge", commons: "Ge.globo logo.svg" },
 };
 
 /**
@@ -346,15 +373,6 @@ export const broadcasterMarkUrl = (name: string): string | null => {
  * silently never match, which a test also covers.
  */
 export const WORDMARK_ONLY: Record<string, string> = {
-  SBT:
-    "the current network logo on Commons is CC0 (`Logotipo do SBT (2025).png`), " +
-    "and this sync requires the licence to read \"public domain\" — which " +
-    "`CC0` does not, whatever its deed says. The two files that do read that " +
-    "way are unusable rather than merely imperfect: the monochrome SVG is " +
-    "`fill=\"#fff\"`, which is invisible on `plate` (#ffffff in both themes), " +
-    "and its .jpg sibling has no transparency at all. Widening the licence " +
-    "test to admit CC0 is the change that would earn a mark here; do that " +
-    "deliberately, not as a side effect of adding a channel",
   RECORD:
     "no free national logo exists on Commons — see the note on MARKS above for " +
     "where that was searched, and why the CC0 1982 logo is not a fallback",

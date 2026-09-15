@@ -10,7 +10,7 @@ pattern that earns a 429.
 photographs are their copyright; a public profile licenses nothing. Every file
 here carries a licence that says what a reuser may do.
 
-Like `public/stadiums/` and unlike `public/marks/`, these are **not** public
+Like `public/stadiums/` and unlike the Commons files in `public/marks/`, these are **not** public
 domain. Each is used under the licence named below, which requires the
 photographer to be credited wherever the picture appears. That credit renders
 inside the player card as a condition of showing the photograph, and

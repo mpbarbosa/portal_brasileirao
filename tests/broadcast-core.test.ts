@@ -1,4 +1,6 @@
 import assert from "node:assert/strict";
+import { existsSync } from "node:fs";
+import path from "node:path";
 import { test } from "node:test";
 
 import {
@@ -14,6 +16,7 @@ import {
   withVenues,
   markKey,
   broadcasterMarkUrl,
+  fifaStationLogoUrl,
   MARKS,
   WORDMARK_ONLY,
 } from "@/broadcast-core";
@@ -425,6 +428,27 @@ test("an unknown broadcaster yields no mark rather than a guess", () => {
   assert.equal(broadcasterMarkUrl("SportyNet"), null);
   assert.equal(broadcasterMarkUrl("Record"), null);
   assert.equal(broadcasterMarkUrl(""), null);
+});
+
+test("SBT has a mark now that the marks come from FIFA's guide", () => {
+  // It was a wordmark while every mark had to be public domain on Commons;
+  // FIFA's guide carries SBT, so it takes the logo the Copa app shows.
+  assert.equal(broadcasterMarkUrl("SBT"), "/marks/sbt.png");
+  assert.ok("fifa" in MARKS.SBT);
+});
+
+test("a FIFA mark is read from the station logo the Copa app shows", () => {
+  assert.equal(fifaStationLogoUrl(25), "https://extranets.fifa.com/TvStationPhotos/25.png");
+});
+
+test("every mark is vendored under public/marks", () => {
+  // The SPA catch-all answers 200 with the HTML shell for a file that is not
+  // there, so a mark named in MARKS and never synced renders an empty plate
+  // with nothing red anywhere.
+  for (const mark of Object.values(MARKS)) {
+    const file = path.join(process.cwd(), "public/marks", `${mark.slug}.png`);
+    assert.ok(existsSync(file), `public/marks/${mark.slug}.png is missing — run npm run sync-marks`);
+  }
 });
 
 test("every curated channel is either marked or recorded as a wordmark", () => {

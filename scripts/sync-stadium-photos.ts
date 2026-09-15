@@ -122,7 +122,7 @@ Downloaded from Wikimedia Commons by \`scripts/sync-stadium-photos.ts\` and
 served from this app's own origin rather than hotlinked — Commons rate-limits
 third-party embedding, and rightly so.
 
-Unlike \`public/marks/\`, these are **not** public domain. Each is used under the
+Unlike the Commons files in \`public/marks/\`, these are **not** public domain. Each is used under the
 licence named below, which requires the photographer to be credited wherever the
 picture appears. That credit renders beneath the image on every stadium page as
 a condition of showing it, and \`npm run check-stadium-photos\` re-reads each
