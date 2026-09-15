@@ -7,6 +7,8 @@ import { CLUB_HYMNS } from "@/src/data/club-hymns";
 import { CLUB_DISCORD } from "@/src/data/club-discord";
 import { CLUB_REDDIT } from "@/src/data/club-reddit";
 import { CLUB_TWITTER } from "@/src/data/club-twitter";
+import { CLUB_YOUTUBE } from "@/src/data/club-youtube";
+import { isYoutubeChannelId, youtubeChannelHandle } from "@/youtube-core";
 import { CLUB_WIKIPEDIA } from "@/src/data/club-wikipedia";
 import {
   clubAddress,
@@ -44,6 +46,7 @@ import {
   withReddit,
   withTwitter,
   withWikipedia,
+  withYouTube,
 } from "@/club-core";
 import type { Match, Scorer, StandingsRow } from "@/src/types";
 import { wikipediaUrl } from "@/wikipedia-core";
@@ -593,6 +596,46 @@ test("every curated X handle is usable, names a club in the seed, and is claimed
   // Folded, because X resolves a handle case-insensitively: two casings are one account.
   const folded = Object.values(CLUB_TWITTER).map((handle) => handle.toLowerCase());
   assert.equal(new Set(folded).size, folded.length, "one X account is recorded for two clubs");
+});
+
+test("curated YouTube channels attach their handle to the club list by code", () => {
+  const clubs = [club("1770", "Botafogo", "botafogo"), club("9999", "Outro", "outro")];
+
+  const [botafogo, outro] = withYouTube(clubs, {
+    "1770": { handle: "BotafogoTV", channel: "UCFxjZDrLCOCHkUCu632AmMQ" },
+  });
+
+  assert.equal(botafogo.youtube, "BotafogoTV");
+  assert.equal(outro.youtube, undefined);
+  // The id is evidence for the checker, and nothing a page renders.
+  assert.ok(!Object.values(botafogo).includes("UCFxjZDrLCOCHkUCu632AmMQ"));
+});
+
+test("the YouTube handle rides along into live payloads", () => {
+  // `withClubDetails` again: left out there, the link renders in every suite and
+  // vanishes on the deployed site.
+  const known = [{ ...club("1770", "Botafogo", "botafogo"), youtube: "BotafogoTV" }];
+
+  const [merged] = withClubDetails([club("1770", "Botafogo", "botafogo")], known);
+
+  assert.equal(merged.youtube, "BotafogoTV");
+  assert.equal(withClubDetails([club("1770", "Botafogo", "botafogo")], [])[0].youtube, undefined);
+});
+
+test("every curated YouTube channel is usable, names a club in the seed, and is claimed once", () => {
+  for (const [code, entry] of Object.entries(CLUB_YOUTUBE)) {
+    assert.ok(CLUBS.some((known) => known.code === code), `${code} is not a club in the seed`);
+    assert.equal(
+      youtubeChannelHandle(entry.handle),
+      entry.handle,
+      `${code}: "${entry.handle}" does not survive the parser unchanged`,
+    );
+    assert.ok(isYoutubeChannelId(entry.channel), `${code}: "${entry.channel}" is not a channel id`);
+  }
+  // On the id, for `check-club-discord`'s reason: two handles can open one
+  // channel, and a handle-keyed set would call that two.
+  const channels = Object.values(CLUB_YOUTUBE).map((entry) => entry.channel);
+  assert.equal(new Set(channels).size, channels.length, "one channel is recorded for two clubs");
 });
 
 test("a hymn link is the video id, however it was pasted", () => {

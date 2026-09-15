@@ -40,6 +40,15 @@ export interface Club {
    */
   twitter?: string;
   /**
+   * The club's official YouTube channel, stored as the **handle alone**, without
+   * the `@` ("BotafogoTV"). The address is derived by `youtubeChannelUrl`.
+   *
+   * Only the handle travels onto the club: the channel id beside it in
+   * `src/data/club-youtube.ts` is evidence for `check-club-youtube`, which is
+   * `withDiscord`'s rule for the guild id.
+   */
+  youtube?: string;
+  /**
    * The club's subreddit, stored as the **name alone** ("CRFla") in the casing
    * the community uses. The address is derived by `redditUrl`, so a pasted link
    * loses its `?rdt=…` share suffix instead of persisting it.
@@ -259,6 +268,24 @@ export interface Venue {
  * form — "Arne Müseler / www.arne-mueseler.com" — and that form is the one with
  * legal force, so it is copied verbatim rather than reduced to a name.
  */
+/**
+ * A club's official YouTube channel, as `src/data/club-youtube.ts` records it.
+ *
+ * Two fields for `ClubDiscord`'s reason: the handle is what a reader follows,
+ * and the channel id is which channel that is. A channel can change its handle,
+ * after which the old one can be claimed by another channel, so a recorded
+ * `@handle` opening somebody else is a failure mode rather than a hypothesis —
+ * and `check-club-youtube` catches it by comparing the id the handle's own page
+ * states against this one.
+ */
+export interface ClubYouTube {
+  /** The handle alone, without the `@` — `youtubeChannelUrl` builds the address. */
+  handle: string;
+  /** The channel's own id (`UC` and 22 characters), as the handle's page stated
+   *  it when the entry was written. */
+  channel: string;
+}
+
 /**
  * A club's supporters' Discord, as `src/data/club-discord.ts` records it.
  *

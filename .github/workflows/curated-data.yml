@@ -31,7 +31,8 @@ on:
     # 06:00 UTC on the 1st. Monthly because these are third-party links that rot
     # over months, not hours, and each run spends someone else's rate limit:
     # ~169 Wikipedia articles, 70 Commons files, 19 stadium photographs, 20
-    # YouTube lookups, 20 X profiles and one Instagram embed per curated post.
+    # YouTube lookups, 20 X profiles, 20 YouTube channels and one Instagram embed
+    # per curated post.
     - cron: "0 6 1 * *"
   workflow_dispatch:
 
@@ -91,7 +92,7 @@ jobs:
           failed=""
           : > report.md
 
-          for c in check-hymns check-club-discord check-club-twitter check-stadium-photos check-stadium-coordinates check-player-wikipedia check-player-photos check-player-posts; do
+          for c in check-hymns check-club-discord check-club-twitter check-club-youtube check-stadium-photos check-stadium-coordinates check-player-wikipedia check-player-photos check-player-posts; do
             echo "::group::${c}"
             if npm run --silent "$c" > "out-${c}.txt" 2>&1; then
               status="ok"

@@ -14,6 +14,7 @@
 import { clubKey, findClub, officialSiteUrl, twitterUrl } from "@/club-core";
 import { instagramUrl } from "@/instagram-core";
 import { wikipediaUrl } from "@/wikipedia-core";
+import { youtubeChannelUrl } from "@/youtube-core";
 import { findMatch } from "@/match-core";
 import { findStadium } from "@/venue-core";
 import { SITE_DESCRIPTION, SITE_NAME, type MetaContext } from "@/page-meta-core";
@@ -105,6 +106,7 @@ export const teamNode = (club: Club, origin: string, nested = true): JsonLd =>
       officialSiteUrl(club.website),
       instagramUrl(club.instagram),
       twitterUrl(club.twitter),
+      youtubeChannelUrl(club.youtube),
       wikipediaUrl(club.wikipedia),
     ].filter(Boolean),
   });

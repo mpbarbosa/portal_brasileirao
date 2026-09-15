@@ -2,9 +2,12 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import {
+  isYoutubeChannelId,
   videoEmbedUrl,
   videoPressedEmbedUrl,
   videoWatchUrl,
+  youtubeChannelHandle,
+  youtubeChannelUrl,
   youtubeVideoId,
 } from "@/youtube-core";
 
@@ -77,4 +80,49 @@ test("the embed address refuses what the watch address refuses", () => {
     assert.equal(videoEmbedUrl(raw), null, `esperava null para ${String(raw)}`);
     assert.equal(videoWatchUrl(raw), null, `esperava null para ${String(raw)}`);
   }
+});
+
+test("a channel handle becomes the canonical channel address", () => {
+  assert.equal(youtubeChannelUrl("BotafogoTV"), "https://www.youtube.com/@BotafogoTV");
+  assert.equal(youtubeChannelUrl("@BotafogoTV"), "https://www.youtube.com/@BotafogoTV");
+});
+
+test("a pasted channel link is reduced to the handle", () => {
+  // What an address bar carries: a tab after the handle, the mobile host, a
+  // share parameter, or no scheme at all.
+  assert.equal(youtubeChannelHandle("https://www.youtube.com/@BotafogoTV/videos"), "BotafogoTV");
+  assert.equal(youtubeChannelHandle("https://m.youtube.com/@TvBahea?si=abc123"), "TvBahea");
+  assert.equal(youtubeChannelHandle("youtube.com/@ChapeTv"), "ChapeTv");
+});
+
+test("older channel addresses are refused rather than converted", () => {
+  // Club websites still link these, and each opens the right channel — measured
+  // on Santos's and Chapecoense's sites — but none is the handle the club page
+  // prints, so storing one would make a link whose words and address differ.
+  assert.equal(youtubeChannelHandle("https://www.youtube.com/c/santosfc"), null);
+  assert.equal(youtubeChannelHandle("https://www.youtube.com/user/santostvoficial"), null);
+  assert.equal(
+    youtubeChannelHandle("https://www.youtube.com/channel/UC5of5voGUqec9K9JqL9al4Q"),
+    null,
+  );
+  // A video is not a channel.
+  assert.equal(youtubeChannelHandle("https://www.youtube.com/watch?v=DiKvx0gRfaQ"), null);
+});
+
+test("anything that is not a channel handle yields no link", () => {
+  // YouTube's own bounds: 3 to 30 characters.
+  assert.equal(youtubeChannelUrl("ab"), null);
+  assert.equal(youtubeChannelUrl("a".repeat(31)), null);
+  assert.equal(youtubeChannelUrl("Flamengo TV"), null);
+  // Another host's address is not a YouTube channel, however it is shaped.
+  assert.equal(youtubeChannelUrl("https://www.instagram.com/@flamengo"), null);
+  assert.equal(youtubeChannelUrl("https://www.youtube.com/"), null);
+  assert.equal(youtubeChannelUrl(""), null);
+  assert.equal(youtubeChannelUrl(undefined), null);
+});
+
+test("a channel id is UC and 22 characters", () => {
+  assert.equal(isYoutubeChannelId("UC5of5voGUqec9K9JqL9al4Q"), true);
+  assert.equal(isYoutubeChannelId("UC5of5voGUqec9K9JqL9al4"), false);
+  assert.equal(isYoutubeChannelId("@ChapeTv"), false);
 });
