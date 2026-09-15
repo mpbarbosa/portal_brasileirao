@@ -280,9 +280,13 @@ test.describe("Clube", () => {
         ":not([href*='google.com/maps'])",
         ":not([href*='reddit.com'])",
         ":not([href*='discord.gg'])",
+        // A prefix and not a substring: `*='x.com'` would also match a site
+        // whose host merely ends in those letters.
+        ":not([href^='https://x.com/'])",
       ].join(""),
     );
   const instagramLink = (page: Page) => page.locator("main header a[href*='instagram.com']");
+  const xLink = (page: Page) => page.locator("main header a[href^='https://x.com/']");
   const hymnLink = (page: Page) => page.locator("main header a[href*='youtube.com']");
   const wikipediaLink = (page: Page) => page.locator("main header a[href*='wikipedia.org']");
   const redditLink = (page: Page) => page.locator("main header a[href*='reddit.com']");
@@ -325,6 +329,20 @@ test.describe("Clube", () => {
     const text = (await instagramLink(page).innerText()).trim();
     expect(text).toMatch(/^@[A-Za-z0-9._]+/);
     expect(text).not.toContain("instagram.com");
+  });
+
+  test("the club page links to its X account, as an official channel", async ({ page }) => {
+    await openClubAt(page, 1);
+
+    const x = xLink(page);
+    await expect(x).toBeVisible();
+    // The profile on x.com, with no share suffix or post path riding along.
+    await expect(x).toHaveAttribute("href", /^https:\/\/x\.com\/[A-Za-z0-9_]{1,15}$/);
+    await expect(x).toHaveAttribute("target", "_blank");
+    await expect(x).toHaveAttribute("rel", /noopener/);
+    // Official like the Instagram line, and unlike the supporters' subreddit.
+    await expect(x).toHaveAccessibleName(/X oficial do clube/);
+    expect((await x.innerText()).trim()).toMatch(/^@[A-Za-z0-9_]{1,15}/);
   });
 
   /* The subreddit is curated for a handful of clubs rather than all twenty, so

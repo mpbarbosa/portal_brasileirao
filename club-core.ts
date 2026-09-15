@@ -7,8 +7,8 @@
  * normaliser with no subject at all, lives in a module named for it —
  * `slug-core`, `youtube-core`, `instagram-core`, `wikipedia-core` — even where a
  * club is one of its callers: players, matches, stadiums and scripts call them
- * as much as clubs do. The subreddit and Discord parsers stay here because only
- * a club carries either.
+ * as much as clubs do. The subreddit, Discord and X parsers stay here because
+ * only a club carries any of them.
  */
 import { compareByKickoff, isConcluded } from "@/matches-core";
 import { slugify } from "@/slug-core";
@@ -458,6 +458,64 @@ export const discordUrl = (raw: string | null | undefined): string | null => {
 };
 
 /**
+ * X's own app paths. Each satisfies the handle rule below and none is an
+ * account, and most answer 200 exactly as an account does — measured
+ * 2026-09-15 without a session: `home`, `search`, `hashtag`, `settings`,
+ * `messages`, `notifications`, `login`, `signup`, `compose`, `share` and `jobs`
+ * all 200. `i` is the one that matters most: a logged-out browser is redirected
+ * to `x.com/i/flow/login?…`, which is the address bar somebody copies from.
+ */
+const X_APP_PATHS = new Set([
+  "about", "compose", "explore", "hashtag", "home", "i", "intent", "jobs", "login",
+  "messages", "notifications", "privacy", "search", "settings", "share", "signup", "tos",
+]);
+
+/**
+ * The X (formerly Twitter) handle alone, from whatever was written down.
+ *
+ * `subredditName`'s shape: accepts a bare handle, an `@handle`, or a pasted
+ * `x.com/…` or `twitter.com/…` address — a post's permalink included, whose
+ * first segment is the account that posted it — and keeps only the handle, so a
+ * pasted link's `?s=20` share suffix does not survive into the file.
+ *
+ * **The casing survives**, for `subredditName`'s reason: X resolves a handle
+ * case-insensitively (`x.com/FLAMENGO` answers byte-for-byte what
+ * `x.com/Flamengo` does) but the account displays one form, and the handle is
+ * what the link *says*.
+ *
+ * **X's app paths are refused**, because they pass the character rule and
+ * answer 200 — so a pasted login redirect would be stored as the handle `i` and
+ * pass `check-club-twitter` too. A refusal that reads as an acceptance is
+ * `discordInvite`'s trap, one host over.
+ *
+ * Returns null for anything that is not a plausible handle — X's rule is
+ * letters, digits and underscores, up to 15 characters.
+ */
+export const twitterHandle = (raw: string | null | undefined): string | null => {
+  const value = raw?.trim();
+  if (!value) return null;
+
+  const afterHost = value.replace(/^(?:https?:\/\/)?(?:www\.|mobile\.)?(?:x|twitter)\.com\//i, "");
+  const handle = afterHost.split(/[/?#]/)[0].replace(/^@/, "");
+
+  if (X_APP_PATHS.has(handle.toLowerCase())) return null;
+  return /^[A-Za-z0-9_]{1,15}$/.test(handle) ? handle : null;
+};
+
+/**
+ * The address for a handle, built from the normalised handle rather than from
+ * the raw value — so the link and the `@handle` printed beside it cannot come to
+ * name two different accounts. `redditUrl`'s rule.
+ *
+ * `x.com` rather than `twitter.com`, because the old host answers every profile
+ * with a redirect to the new one.
+ */
+export const twitterUrl = (raw: string | null | undefined): string | null => {
+  const handle = twitterHandle(raw);
+  return handle && `https://x.com/${handle}`;
+};
+
+/**
  * The canonical watch address for a hymn video.
  *
  * Kept as its own name rather than folded into `videoWatchUrl`, because the two
@@ -472,6 +530,13 @@ export const withInstagram = (clubs: Club[], handles: Record<string, string>): C
   clubs.map((club) => {
     const handle = handles[club.code];
     return handle && !club.instagram ? { ...club, instagram: handle } : club;
+  });
+
+/** Attach curated X handles to a club list, keyed by code. */
+export const withTwitter = (clubs: Club[], handles: Record<string, string>): Club[] =>
+  clubs.map((club) => {
+    const twitter = handles[club.code];
+    return twitter && !club.twitter ? { ...club, twitter } : club;
   });
 
 /** Attach curated hymn video ids to a club list, keyed by code. */
@@ -636,7 +701,8 @@ export const clubMapUrl = (raw: string | null | undefined): string | null => {
  * `reddit` was the eighth, and it was written here in the same commit as the
  * field itself for exactly that reason — the seed branch every suite runs would
  * have rendered the link while production, which builds its clubs from the live
- * payload, quietly rendered nothing.
+ * payload, quietly rendered nothing. `twitter` arrived the same way, in the
+ * commit that added the field.
  */
 /**
  * Replace a club's técnico where the provider names the wrong person.
@@ -670,6 +736,7 @@ export const withClubDetails = (clubs: Club[], known: Club[]): Club[] => {
     const source = byCode.get(club.code);
     const website = club.website ?? source?.website;
     const instagram = club.instagram ?? source?.instagram;
+    const twitter = club.twitter ?? source?.twitter;
     const reddit = club.reddit ?? source?.reddit;
     const discord = club.discord ?? source?.discord;
     const hymn = club.hymn ?? source?.hymn;
@@ -682,6 +749,7 @@ export const withClubDetails = (clubs: Club[], known: Club[]): Club[] => {
       ...club,
       ...(website ? { website } : {}),
       ...(instagram ? { instagram } : {}),
+      ...(twitter ? { twitter } : {}),
       ...(reddit ? { reddit } : {}),
       ...(discord ? { discord } : {}),
       ...(hymn ? { hymn } : {}),

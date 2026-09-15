@@ -31,6 +31,15 @@ export interface Club {
    */
   instagram?: string;
   /**
+   * The club's official X (formerly Twitter) handle, without the `@` and in the
+   * casing the account itself displays ("AthleticoPR"). The address is derived
+   * by `twitterUrl`, so it is written once.
+   *
+   * Named `twitter` and not `x`: `x` is the horizontal coordinate throughout
+   * this app's chart code, and a club field called `x` reads as a position.
+   */
+  twitter?: string;
+  /**
    * The club's subreddit, stored as the **name alone** ("CRFla") in the casing
    * the community uses. The address is derived by `redditUrl`, so a pasted link
    * loses its `?rdt=…` share suffix instead of persisting it.

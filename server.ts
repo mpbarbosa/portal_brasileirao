@@ -57,6 +57,7 @@ import {
   withHymns,
   withInstagram,
   withReddit,
+  withTwitter,
   withWikipedia,
 } from "@/club-core";
 import { slugify } from "@/slug-core";
@@ -139,6 +140,7 @@ import { CLUB_HYMNS } from "@/src/data/club-hymns";
 import { CLUB_INSTAGRAM } from "@/src/data/club-instagram";
 import { CLUB_DISCORD } from "@/src/data/club-discord";
 import { CLUB_REDDIT } from "@/src/data/club-reddit";
+import { CLUB_TWITTER } from "@/src/data/club-twitter";
 import { CLUB_WIKIPEDIA } from "@/src/data/club-wikipedia";
 import { BROADCASTS } from "@/src/data/broadcasts";
 import { GOALS } from "@/src/data/goals";
@@ -234,7 +236,7 @@ const CLUBS = withCoachOverrides(
   withWikipedia(
     withHymns(
       withDiscord(
-        withReddit(withInstagram(SEED_CLUBS, CLUB_INSTAGRAM), CLUB_REDDIT),
+        withReddit(withTwitter(withInstagram(SEED_CLUBS, CLUB_INSTAGRAM), CLUB_TWITTER), CLUB_REDDIT),
         CLUB_DISCORD,
       ),
       CLUB_HYMNS,

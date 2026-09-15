@@ -6,8 +6,8 @@ name: Curated data still resolves
 # WHY IT IS NOT PART OF CI, AND MUST NOT BECOME PART OF CI. CLAUDE.md is
 # explicit: "CI has no network dependency on a third party by design, and a link
 # that rots on someone else's server is not a reason for a red build on a commit
-# that did not touch it." They talk to YouTube, Wikimedia Commons, Wikipedia
-# and Instagram — count the `for c in` line rather than trusting a number
+# that did not touch it." They talk to YouTube, Wikimedia Commons, Wikipedia,
+# Instagram, Discord and X — count the `for c in` line rather than trusting a number
 # written here, which has been wrong before. Wiring them into `check` would mean a contributor's typo fix goes
 # red because somebody deleted a video overnight — and, worse, that a genuinely
 # rotted link is indistinguishable from every other red build.
@@ -31,7 +31,7 @@ on:
     # 06:00 UTC on the 1st. Monthly because these are third-party links that rot
     # over months, not hours, and each run spends someone else's rate limit:
     # ~169 Wikipedia articles, 70 Commons files, 19 stadium photographs, 20
-    # YouTube lookups and one Instagram embed per curated post.
+    # YouTube lookups, 20 X profiles and one Instagram embed per curated post.
     - cron: "0 6 1 * *"
   workflow_dispatch:
 
@@ -91,7 +91,7 @@ jobs:
           failed=""
           : > report.md
 
-          for c in check-hymns check-club-discord check-stadium-photos check-stadium-coordinates check-player-wikipedia check-player-photos check-player-posts; do
+          for c in check-hymns check-club-discord check-club-twitter check-stadium-photos check-stadium-coordinates check-player-wikipedia check-player-photos check-player-posts; do
             echo "::group::${c}"
             if npm run --silent "$c" > "out-${c}.txt" 2>&1; then
               status="ok"
