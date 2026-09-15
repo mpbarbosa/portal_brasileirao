@@ -2194,6 +2194,16 @@ it is unchanged. Note **the widest trailing state flips at `sm`** — signed in
 carries a name above it and is an avatar below — which is why that spec now runs
 both states at 320, 360 and 375.
 
+**Compartilhar spent that slack, and the Entrar pill is a disc below `sm` now.**
+The share button (`ShareButton`, `share-core.ts`) joined the trailing group as a
+third 40dp control, and 48px more put even the *title line* under the pill up to
+411dp — past a 390dp iPhone. So below `sm` all three trailing controls are 40dp
+boxes in both account states, the brand gets `width − 180`, and that clears the
+174px subtitle from 360 up with 6px to spare. Below 360 the share button hides
+rather than the brand giving way, so 320 is the two-control row it always was.
+The word "Entrar" stays in the accessible name at every width, and from `sm` up
+nothing changed.
+
 **The whole suite was green over that, 802 specs, and the spec that should have caught
 it is the one directly above the new one.** "Shows the brand at every width, whole and
 never cut" asserts the subtitle is *visible* — and an element overflowing its box is

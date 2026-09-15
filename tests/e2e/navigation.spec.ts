@@ -106,6 +106,10 @@ test.describe("Navegação", () => {
     // line. Production at `e4bee8a` painted the two lines 30px under the pill
     // at 320 and the subtitle 3px past its box at 360, with this spec green. So
     // it takes the guide's three widths, both lines, and both account states.
+    //
+    // Since Compartilhar the group is three 40dp boxes below `sm` in both
+    // states, which leaves `width − 180`: six pixels of slack at 360. Below 360
+    // the share button hides, so 320 measures the two-control row it always did.
     for (const signedIn of [false, true]) {
       if (signedIn) await devLogin(page, "Marcelo");
       for (const width of [320, 360, 375]) {

@@ -1856,6 +1856,17 @@ already full — see the bound in CLAUDE.md; the **Sites do autor** are outbound
 links and not a second set of destinations, which is why they carry no `<nav>`),
 treating it as the place to park anything with nowhere else to go.
 
+**Compartilhar**:
+The first action in the top app bar: hands the page the reader is on to
+somebody else. On a phone it opens the platform's own share sheet with the page's
+address and title; where there is no sheet it copies the address and says
+**Link copiado**. Decided by `share-core.ts`, drawn by `ShareButton`. It is an
+action on the page, not a destination, so it lives beside the theme toggle and
+never in `NAV_ITEMS`.
+_Avoid_: "enviar" (reads as sending a message, which this does not do),
+"exportar" (a file), "share" in user-facing copy, and the box-with-an-arrow
+glyph (reads as "enviar para cima" beside a theme toggle).
+
 **Sites do autor**:
 The two places this app's author writes, as the middle band of the **Rodapé**:
 `mpbarbosa.com`, the personal and professional site, and
