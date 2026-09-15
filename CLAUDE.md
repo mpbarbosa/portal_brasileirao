@@ -5270,7 +5270,7 @@ not something the check can verify.
 during a paint, a selector nothing matches, a comment: the edit is real and the render is
 identical. `docs/screenshots/CAPTURED` records which commit the images depict, so a refresh
 always leaves something to commit — that is the mechanical answer and it is the right one
-wherever it applies. But it still charges **twenty** captures from a live-data
+wherever it applies. But it still charges **twenty-eight** captures from a live-data
 production build to certify that nothing changed, and records no reason.
 
 **`src/data` is a watched path, and it is the one on the list that reports too
@@ -5367,7 +5367,7 @@ the commit that really added Palmeiras. It fails in the **safe-looking** directi
 this paragraph describes — *you owe a re-shoot* — so nothing downstream ever
 catches it.
 
-**Answer it before reaching for the camera.** Eighteen captures from a live
+**Answer it before reaching for the camera.** Twenty-eight captures from a live
 production build to photograph nothing is exactly what the trailer exists to
 avoid — and the mistake runs the safe-looking way, which is why nothing catches
 it: an unnecessary re-shoot passes the gate, costs an hour, and commits the
@@ -5410,11 +5410,15 @@ established by naming the frame, not by reading the component.
 
 **Count the directory rather than this paragraph.** It said sixteen for as long as there
 were sixteen, `partida-554977-{light,dark}` made it eighteen without anything here
-noticing, and `painel-palmeiras-{light,dark}` has since made it twenty. A number in prose
-has no gate on it — this one has now been wrong twice, and the second time it was wrong
-in a paragraph telling you it would be.
+noticing, and `painel-palmeiras-{light,dark}` made it twenty. On 2026-09-13
+`clube-palmeiras-mobile-{light,dark}` (`af3f134`) and three more clubs' pages,
+`clube-{sao-paulo,botafogo,chapecoense}-{light,dark}` (`e736704`), made it
+**twenty-eight** — and this paragraph went on saying twenty for two days, through a
+re-shoot of all 28 (#629). A number in prose has no gate on it — this one has now been
+wrong three times, and the last two times it was wrong in a paragraph telling you it
+would be.
 
-**Ten of the twenty can no longer be relied on to come back byte-identical, and this
+**Ten of the twenty classified below can no longer be relied on to come back byte-identical, and this
 paragraph has now said fewer than the truth five times.** Six vary for three unrelated
 reasons on three different clocks; the other four vary because somebody else's server
 decides to. **Four of those five understatements were the count rising underneath the
@@ -5469,7 +5473,12 @@ one is the sharpest: the
 Classificação pair moves only when something shipped, the estádio pair when Open-Meteo is
 re-read, while Ao vivo moves while you are looking at it. **Two refreshes of one build are
 expected to disagree on those six images**, and *may* disagree on the four partida ones.
-Disagreeing on any of the other ten is a real difference and worth reading.
+Disagreeing on any of the other ten of those twenty is a real difference and worth reading.
+
+**The eight clube captures added on 2026-09-13 are in neither set.** Nobody has shot
+them twice against one build, so a difference in one of them is *unclassified* — neither
+expected noise nor a known-real change. Place them by measuring, the way the six stable
+images below were found, not by reading `ClubView` and predicting.
 
 **That "twelve" has now been wrong twice, and the second time is the instructive one
 because the repair itself looked like it closed.** The first was staleness from the era of
