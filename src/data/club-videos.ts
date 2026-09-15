@@ -234,11 +234,12 @@ export const CLUB_VIDEOS: Record<ClubCode, ClubVideo[]> = {
   ],
 
   // Clube do Remo. Code 4287, beside Bragantino's 4286 rather than in the 17xx
-  // block, for that entry's reason: the id is upstream's.
+  // block, for that entry's reason: the id is upstream's. REPLACING
+  // `4FmqjHMkRlE` (the 26ª) with the 27ª render.
   "4287": [
     {
-      id: "4FmqjHMkRlE",
-      title: "Clube do Remo: nunca fechou acima do 16º em 26 rodadas | Brasileirão",
+      id: "jq_7zSsUhRk",
+      title: "Clube do Remo: nunca fechou acima do 16º em 27 rodadas | Brasileirão",
       channel: "Marcelo Barbosa",
     },
   ],
@@ -247,26 +248,28 @@ export const CLUB_VIDEOS: Record<ClubCode, ClubVideo[]> = {
   // `tla: "COR"`, which is the collision this file's own header names as the
   // reason the key is the upstream numeric id; a velas filed by abbreviation
   // would put one club's season on the other's page. The codes were read from
-  // `clubs.ts` rather than derived.
+  // `clubs.ts` rather than derived. REPLACING `RgYGW3XIdYI` (the 26ª) with
+  // the 27ª render.
   "1779": [
     {
-      id: "RgYGW3XIdYI",
-      title: "Corinthians em velas: do 5º ao 17º até a 26ª rodada do Brasileirão",
+      id: "KSR_ODmXm3Q",
+      title: "Corinthians em velas: do 5º ao 17º até a 27ª rodada do Brasileirão",
       channel: "Marcelo Barbosa",
     },
   ],
 
-  // Coritiba — 4241, the other half of that collision.
+  // Coritiba — 4241, the other half of that collision. REPLACING
+  // `Ke9ccxusaeQ` (the 26ª) with the 27ª render.
   "4241": [
     {
-      id: "Ke9ccxusaeQ",
-      title: "Coritiba em velas: do 16º ao 7º até a 26ª rodada do Brasileirão",
+      id: "VCB-hZcAPrM",
+      title: "Coritiba em velas: do 16º ao 8º até a 27ª rodada do Brasileirão",
       channel: "Marcelo Barbosa",
     },
   ],
 
   // The six below are the third batch through `npm run upload-video`, and each
-  // is again one club's own campanha em velas through the 26ª — so each sits
+  // is again one club's own campanha em velas, now through the 27ª — so each sits
   // under one code and repeats nowhere, for the reason the Fluminense entry
   // gives. Every code was read out of `clubs.ts` rather than derived from the
   // slug, which matters twice here: Grêmio reports `tla: "FBP"` and São Paulo
@@ -282,11 +285,12 @@ export const CLUB_VIDEOS: Record<ClubCode, ClubVideo[]> = {
   // warning, since one 403 still does not establish that a flip failed.
 
   // Cruzeiro. The one climb in this batch — 20º after the first rodada to 6º at
-  // the 26ª — which is what its title names and what the velas draws.
+  // the 27ª — which is what its title names and what the velas draws.
+  // REPLACING `nOzTbO2YYrs` (the 26ª) with the 27ª render.
   "1771": [
     {
-      id: "nOzTbO2YYrs",
-      title: "Cruzeiro: do 20º ao 6º em 26 rodadas, a campanha em velas",
+      id: "s3mZFbj-N8o",
+      title: "Cruzeiro: do 20º ao 6º em 27 rodadas, a campanha em velas",
       channel: "Marcelo Barbosa",
     },
   ],
@@ -328,12 +332,14 @@ export const CLUB_VIDEOS: Record<ClubCode, ClubVideo[]> = {
   ],
 
   // Santos — 6685, beside Internacional's 6684 and not in the 17xx block, for
-  // that entry's reason. Its campanha never closes outside 12º–18º, which is
-  // the "sem movimento" the title names — the narrowest band in this batch.
+  // that entry's reason. Through the 26ª its campanha never closed outside
+  // 12º–18º, the narrowest band in the batch; the 27ª is the round it broke
+  // out, to 10º, which is what the title now leads with. REPLACING
+  // `qZof-bgho5E` (the 26ª, titled "sem movimento") with the 27ª render.
   "6685": [
     {
-      id: "qZof-bgho5E",
-      title: "Santos em velas: 12º ao 18º em 26 rodadas, uma campanha sem movimento",
+      id: "mKMG4dMTJpg",
+      title: "Santos rompe a faixa estreita e chega ao 10º na 27ª rodada",
       channel: "Marcelo Barbosa",
     },
   ],
@@ -341,10 +347,11 @@ export const CLUB_VIDEOS: Record<ClubCode, ClubVideo[]> = {
   // São Paulo — 1776. The `tla` is `PAU` and not `SAO`, which `CLAUDE.md` names
   // as a live mismatch between upstream's abbreviation and the local seed; the
   // numeric code is what keeps this entry on the right page regardless.
+  // REPLACING `pQ85KZWH2_4` (the 26ª) with the 27ª render.
   "1776": [
     {
-      id: "pQ85KZWH2_4",
-      title: "São Paulo: do 1º ao 10º em 26 rodadas, a campanha em velas",
+      id: "x_hiu5F4Lvc",
+      title: "São Paulo: do 1º ao 11º em 27 rodadas, a campanha em velas",
       channel: "Marcelo Barbosa",
     },
   ],
