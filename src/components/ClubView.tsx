@@ -13,6 +13,8 @@ import {
   resultFor,
   scorersFor,
   standingFor,
+  twitterHandle,
+  twitterUrl,
   videosFor,
 } from "@/club-core";
 import { countNoun } from "@/count-core";
@@ -117,8 +119,9 @@ interface ClubViewProps {
  * describing a file neither of them had seen. `PanelGlyph`'s own "like the three
  * above it" broke in the mirror direction at the same instant. Recount before
  * trusting either — it went from "two" to "three" to "four" when the
- * subreddit's bubble landed and to **five** when the Discord headset did, and
- * each time by hand.
+ * subreddit's bubble landed, to **five** when the Discord headset did and to
+ * **six** when X's mark did — the one of them that *is* the host's mark, for the
+ * reason `XGlyph` gives — and each time by hand.
  */
 
 /** A globe: the club's own site, as distinct from a profile it keeps elsewhere. */
@@ -184,6 +187,28 @@ function DiscordGlyph() {
       <path d="M4 14v-1a8 8 0 0 1 16 0v1" />
       <rect x="2" y="13" width="4" height="7" rx="2" />
       <rect x="18" y="13" width="4" height="7" rx="2" />
+    </svg>
+  );
+}
+
+/**
+ * X's own mark, drawn as its two strokes: the hollow band and the thin line
+ * broken where the band crosses it.
+ *
+ * **Unlike the three marks above, this one IS the host's**, and for the reason
+ * they are not: Snoo, the blurple wordmark and Meta's gradient are artwork with
+ * a fixed colour, while X's mark is monochrome by design and takes
+ * `currentColor` like any outline here. What had to be avoided is the plain
+ * cross it resembles — two equal strokes at 16px read as *fechar*, in a row of
+ * links that open things.
+ *
+ * Local, like the marks around it, because it has one call site.
+ */
+function XGlyph() {
+  return (
+    <svg {...GLYPH}>
+      <path d="M4 4h4.5L20 20h-4.5Z" />
+      <path d="M19.5 4l-6.2 7.1M10.7 12.9 4.5 20" />
     </svg>
   );
 }
@@ -283,6 +308,9 @@ export function ClubView({
   // two different communities — `InstagramLink`'s rule for its `@handle`.
   const subName = subredditName(club.reddit);
   const chat = discordUrl(club.discord);
+  // Printed from the parser for the subreddit's reason, one line up.
+  const xUrl = twitterUrl(club.twitter);
+  const xHandle = twitterHandle(club.twitter);
   const coach = coachOf(club, coaches);
   const mapUrl = clubMapUrl(club.address);
   const videos = videosFor(CLUB_VIDEOS, code);
@@ -378,6 +406,18 @@ export function ClubView({
               </ExternalLink>
             )}
             <InstagramLink handle={club.instagram} subject="oficial do clube" />
+            {/* Official, like the Instagram line beside it and unlike the
+                subreddit after it — so the suffix says "oficial do clube". */}
+            {xUrl && xHandle && (
+              <ExternalLink
+                href={xUrl}
+                suffix="X oficial do clube"
+                className={`truncate ${LINK_UNDERLINE}`}
+              >
+                <XGlyph />
+                @{xHandle}
+              </ExternalLink>
+            )}
             {/* A sub is run by SUPPORTERS, so the suffix says "comunidade de
                 torcedores" rather than the "oficial do clube" the line above
                 it uses. The two sit together because both are places the club

@@ -11,7 +11,7 @@
  * Server-injected, like the rest of `page-meta-core`: a rich-result parser is
  * not obliged to run JavaScript, and the ones that do run it late.
  */
-import { clubKey, findClub, officialSiteUrl } from "@/club-core";
+import { clubKey, findClub, officialSiteUrl, twitterUrl } from "@/club-core";
 import { instagramUrl } from "@/instagram-core";
 import { wikipediaUrl } from "@/wikipedia-core";
 import { findMatch } from "@/match-core";
@@ -104,6 +104,7 @@ export const teamNode = (club: Club, origin: string, nested = true): JsonLd =>
     sameAs: [
       officialSiteUrl(club.website),
       instagramUrl(club.instagram),
+      twitterUrl(club.twitter),
       wikipediaUrl(club.wikipedia),
     ].filter(Boolean),
   });

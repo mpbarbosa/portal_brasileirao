@@ -21,6 +21,7 @@ const FLAMENGO: Club = {
   crest: "https://crests.football-data.org/1783.png",
   website: "https://www.flamengo.com.br/",
   instagram: "flamengo",
+  twitter: "Flamengo",
   wikipedia: "Clube de Regatas do Flamengo",
 };
 
@@ -79,6 +80,7 @@ test("the addresses that identify the club are linked as sameAs", () => {
   assert.deepEqual(team.sameAs, [
     "https://www.flamengo.com.br/",
     "https://www.instagram.com/flamengo/",
+    "https://x.com/Flamengo",
     "https://pt.wikipedia.org/wiki/Clube_de_Regatas_do_Flamengo",
   ]);
 });

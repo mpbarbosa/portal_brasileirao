@@ -6,6 +6,7 @@ import { CLUBS } from "@/src/data/clubs";
 import { CLUB_HYMNS } from "@/src/data/club-hymns";
 import { CLUB_DISCORD } from "@/src/data/club-discord";
 import { CLUB_REDDIT } from "@/src/data/club-reddit";
+import { CLUB_TWITTER } from "@/src/data/club-twitter";
 import { CLUB_WIKIPEDIA } from "@/src/data/club-wikipedia";
 import {
   clubAddress,
@@ -34,11 +35,14 @@ import {
   resultFor,
   scorersFor,
   standingFor,
+  twitterHandle,
+  twitterUrl,
   withClubDetails,
   withCoachOverrides,
   withHymns,
   withInstagram,
   withReddit,
+  withTwitter,
   withWikipedia,
 } from "@/club-core";
 import type { Match, Scorer, StandingsRow } from "@/src/types";
@@ -511,6 +515,84 @@ test("the handle rides along with the website into live payloads", () => {
 
   assert.equal(merged.instagram, "palmeiras");
   assert.equal(merged.website, "https://www.palmeiras.com.br/");
+});
+
+test("an X handle becomes the canonical profile address", () => {
+  assert.equal(twitterUrl("Flamengo"), "https://x.com/Flamengo");
+  assert.equal(twitterUrl("@Flamengo"), "https://x.com/Flamengo");
+});
+
+test("a pasted X or Twitter address is reduced to the handle", () => {
+  // What a person copies: the profile with a share suffix, a post's permalink —
+  // whose first segment is the account that posted it — or an address from
+  // before the rename, which X answers with a redirect.
+  assert.equal(twitterUrl("https://x.com/Flamengo?s=20"), "https://x.com/Flamengo");
+  assert.equal(
+    twitterUrl("https://x.com/Flamengo/status/1835000000000000000?s=46"),
+    "https://x.com/Flamengo",
+  );
+  assert.equal(twitterUrl("https://twitter.com/Flamengo"), "https://x.com/Flamengo");
+  assert.equal(twitterUrl("mobile.twitter.com/Flamengo"), "https://x.com/Flamengo");
+  assert.equal(twitterUrl("www.x.com/Flamengo/"), "https://x.com/Flamengo");
+});
+
+test("an X handle's casing survives, because the handle is what the link says", () => {
+  assert.equal(twitterHandle("AthleticoPR"), "AthleticoPR");
+  assert.equal(twitterHandle("https://x.com/AthleticoPR"), "AthleticoPR");
+});
+
+test("X's own app paths are refused, though each passes the handle rule and answers 200", () => {
+  // The logged-out redirect is the address bar somebody actually copies from;
+  // without the refusal it would be stored as the handle "i".
+  assert.equal(twitterHandle("https://x.com/i/flow/login?redirect_after_login=%2FFlamengo"), null);
+  assert.equal(twitterHandle("x.com/home"), null);
+  assert.equal(twitterHandle("https://x.com/search?q=Flamengo"), null);
+  assert.equal(twitterHandle("https://x.com/hashtag/Flamengo"), null);
+  assert.equal(twitterHandle("https://twitter.com/intent/follow?screen_name=Flamengo"), null);
+  assert.equal(twitterHandle("HOME"), null);
+});
+
+test("anything that is not an X handle yields no link", () => {
+  assert.equal(twitterUrl("with spaces"), null);
+  assert.equal(twitterUrl("https://x.com/"), null);
+  // X's own bound: 15 characters.
+  assert.equal(twitterUrl("a".repeat(16)), null);
+  // Another host's address is not an X handle, however it ends.
+  assert.equal(twitterUrl("https://www.instagram.com/flamengo/"), null);
+  assert.equal(twitterUrl("dots.are.instagram"), null);
+  assert.equal(twitterUrl(""), null);
+  assert.equal(twitterUrl(undefined), null);
+});
+
+test("curated X handles attach to the club list by code", () => {
+  const clubs = [club("1783", "Flamengo", "flamengo"), club("9999", "Outro", "outro")];
+
+  const [flamengo, outro] = withTwitter(clubs, { "1783": "Flamengo" });
+
+  assert.equal(flamengo.twitter, "Flamengo");
+  assert.equal(outro.twitter, undefined);
+});
+
+test("the X handle rides along into live payloads", () => {
+  // Left out of `withClubDetails`, the link would render in every suite and
+  // vanish on the deployed site — the subreddit's test above says why.
+  const known = [{ ...club("1783", "Flamengo", "flamengo"), twitter: "Flamengo" }];
+
+  const [merged] = withClubDetails([club("1783", "Flamengo", "flamengo")], known);
+
+  assert.equal(merged.twitter, "Flamengo");
+  assert.equal(withClubDetails([club("1783", "Flamengo", "flamengo")], [])[0].twitter, undefined);
+});
+
+test("every curated X handle is usable, names a club in the seed, and is claimed once", () => {
+  for (const [code, handle] of Object.entries(CLUB_TWITTER)) {
+    assert.ok(CLUBS.some((entry) => entry.code === code), `${code} is not a club in the seed`);
+    // Stored exactly as the parser keeps it, so the file holds no paste residue.
+    assert.equal(twitterHandle(handle), handle, `${code}: "${handle}" does not survive the parser unchanged`);
+  }
+  // Folded, because X resolves a handle case-insensitively: two casings are one account.
+  const folded = Object.values(CLUB_TWITTER).map((handle) => handle.toLowerCase());
+  assert.equal(new Set(folded).size, folded.length, "one X account is recorded for two clubs");
 });
 
 test("a hymn link is the video id, however it was pasted", () => {

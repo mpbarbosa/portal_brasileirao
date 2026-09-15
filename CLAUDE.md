@@ -2960,6 +2960,36 @@ with the page holding `discord` on the club it was handed and drawing nothing
 while the subreddit beside it drew fine. It prepares both, so the spec does not
 encode which one wins.
 
+`src/data/club-twitter.ts` holds each club's **official X account** (formerly
+Twitter), keyed by club code and storing the **handle alone** in the casing the
+account displays; `twitterUrl` in `club-core.ts` builds `https://x.com/<handle>`.
+Official like `club-instagram.ts`, so the link's suffix says "X oficial do clube"
+and not the supporters' wording `club-reddit.ts` and `club-discord.ts` use, and
+the address joins `sameAs` in the club's JSON-LD beside Instagram's.
+
+```sh
+npm run check-club-twitter    # every handle still names an existing account
+```
+
+**That checker sits between Instagram's absence and Discord's exactness, and both
+halves were measured on 2026-09-15.** X answers a profile address with **200**
+for an account that exists and **404** for an invented handle — with or without
+a browser user agent, and case-insensitively, `x.com/FLAMENGO` being byte-for-byte
+`x.com/Flamengo` — which is the honest answer Instagram never gives. But the 200
+page carries no title, no Open Graph tags and not even the handle in its bytes,
+so nothing a script reads says *whose* account answered: a handle a club abandons
+and somebody else registers passes. **A suspended account passes too**:
+`x.com/Chapecoense` read "Conta suspensa" in a browser and answered 200 to a
+script the same afternoon, which is why that club's entry is `ChapecoenseReal`.
+The run catches deletion and renames; ownership and standing still rest on
+having opened each profile in a browser.
+
+**X's own app paths are the trap, and `twitterHandle` refuses them.** `x.com/home`,
+`/search`, `/hashtag`, `/settings`, `/login`, `/share` and more all answer 200 and
+all satisfy the handle rule, and a logged-out browser is redirected to
+`x.com/i/flow/login?…` — the address bar somebody copies from. Without the
+refusal that paste stores the handle `i` and the checker calls it live.
+
 `src/data/player-instagram.ts` holds players' own Instagram accounts, keyed by
 **player id** and hand-maintained for the same reason `club-instagram.ts` is: no
 provider carries a social account at any tier. Coverage is deliberately

@@ -534,6 +534,29 @@ colour (it would then need a plate in one theme, which is a lot of chrome for on
 mark beside a word), letting the link's underline run under it — an atomic inline
 box is not decorated, which is why the glyph is `inline-block`.
 
+**X do clube**:
+The club's official account on X (formerly Twitter), linked from its page right
+after the **Instagram do clube** and shown as X's mark followed by the bare
+handle (`@Coritiba`). The mark is X's own two strokes — the hollow band and the
+broken line — which makes it the one mark in that row that is the host's rather
+than the thing's: X's is monochrome by design, so it takes `currentColor` like
+the outlines beside it, and the plain cross it would otherwise be reads as
+*fechar*. Drawn inline in `ClubView`, `inline-block`, `aria-hidden`.
+Hand-curated in `src/data/club-twitter.ts`, keyed by club code and stored as the
+handle alone in the casing the account displays; `twitterUrl` derives
+`https://x.com/<handle>`, so a pasted post permalink, its `?s=20` suffix or an
+old `twitter.com` address all reduce to the profile. **Official**, so the
+screen-reader suffix reads "X oficial do clube", like the Instagram line and
+unlike the **Subreddit do clube**'s "comunidade de torcedores". Every handle was
+opened in a real browser; `check-club-twitter` confirms each still names an
+existing account and cannot confirm whose it is.
+_Avoid_: naming the field `x` (a coordinate throughout the chart code), storing
+`twitter.com` addresses (they redirect), accepting X's app paths as handles — a
+logged-out browser shows `x.com/i/flow/login`, and `/home` or `/search` answer
+200 like an account — drawing a plain ×, reading the checker's 200 as proof the
+account is the club's or still in good standing (a suspended account answers 200
+too, which is why Chapecoense's entry is `ChapecoenseReal`).
+
 **Apelido do jogador**:
 The name a player is known by where it is not the one the **Elenco** lists —
 "Gabigol" for the listed "Gabriel Barbosa". Printed **beside** the listed name
