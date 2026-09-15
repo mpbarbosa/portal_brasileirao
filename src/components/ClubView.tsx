@@ -308,7 +308,8 @@ export function ClubView({
   // two different communities — `InstagramLink`'s rule for its `@handle`.
   const subName = subredditName(club.reddit);
   const chat = discordUrl(club.discord);
-  // Printed from the parser for the subreddit's reason, one line up.
+  // The displayed X handle and URL are derived from `twitterHandle`/`twitterUrl`,
+  // so they cannot diverge.
   const xUrl = twitterUrl(club.twitter);
   const xHandle = twitterHandle(club.twitter);
   const coach = coachOf(club, coaches);
