@@ -1440,4 +1440,8 @@ export const HIGHLIGHTS: Record<string, Highlight[]> = {
     { url: "https://www.youtube.com/watch?v=5syvt8cQk-4", channel: "ge tv" },
     { url: "https://www.youtube.com/watch?v=8C4x_xQy5wU", channel: "UOL Esporte" },
   ],
+  // Bahia 2 x 1 Clube do Remo, rodada 27.
+  "555001": [
+    { url: "https://www.youtube.com/watch?v=zNHh-jjGb5M", channel: "ge tv" },
+  ],
 };
