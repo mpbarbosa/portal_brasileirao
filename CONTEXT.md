@@ -1644,24 +1644,27 @@ generated `matches.ts` to add channels, calling any CBF endpoint at request time
 
 **Marca da emissora**:
 A broadcaster shown as its own logo rather than its name, under **Onde assistir**
-and on the **Melhores momentos** buttons. The files come from Wikimedia Commons —
-a deliberate choice over a broadcaster's own site, since everything Commons hosts
-is freely licensed or public domain, and each of these is public domain because a
-plain wordmark is not original enough to copyright.
+and on the **Melhores momentos** buttons. Where FIFA's broadcast guide carries the
+channel — Globo, Globoplay, SporTV, ge tv, CazéTV, SBT — the file is the logo FIFA
+serves for it, which is the picture copa2026.mpbarbosa.com shows, so the two apps
+show one Globo rather than two. Those files carry **no licence**: they are used
+only to identify the broadcaster. The rest (Premiere, Prime Video, YouTube) come
+from Wikimedia Commons and are public domain.
 They are downloaded once by `npm run sync-marks` into `public/marks/` and served
 from our own origin. Hotlinking Commons was the first attempt and it fails in
 production: Commons answers a browser's third or fourth request with 429, so a
 reader sees some marks and empty plates where the rest should be. It is an
-archive, not a CDN. The sync script re-reads each licence and refuses anything
-that is not public domain, so what is served cannot drift from what `CREDITS.md`
-claims.
+archive, not a CDN. The sync script re-reads each Commons licence and refuses
+anything that is not public domain, and `CREDITS.md` names which source each file
+came from.
 Every mark sits on a **plate** — light in both themes, since Globo's circle, the
 YouTube wordmark and CazéTV are dark artwork on a transparent ground and vanish
 against a dark page. A broadcaster with no mark is rendered as its own name on
 the same plate: that is the ordinary case, not a defect, since CBF's feed already
 names ESPN/Disney+, Band and a dozen others we curate nothing for.
-_Avoid_: copying logo artwork from a broadcaster's site (no licence comes with
-it), hotlinking Commons — stadium photographs are vendored the same way, see
+_Avoid_: copying logo artwork from a broadcaster's own site (no licence comes with
+it — the FIFA marks above were a deliberate exception, to match the Copa app, not a
+precedent), hotlinking Commons or FIFA — stadium photographs are vendored the same way, see
 **Foto do estádio**; letting a control's accessible name rest on an image's
 `alt` (they load lazily — carry the name in text and mark the image decorative),
 asserting a mark's `src` instead of whether it painted, showing a mark with no
