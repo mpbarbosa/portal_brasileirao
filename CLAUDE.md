@@ -5573,8 +5573,10 @@ identity here is not a stale file copied three times.
 
 Opening the frames says why. The desktop crop ends at *Artilheiros do clube*, above the
 thumbnails `ClubVideos` hotlinks from `img.youtube.com`, and the mobile one at the
-*Últimos resultados* heading, so neither holds a thumbnail, a countdown, a weather reading
-or the Rodapé. **So the set is ten volatile and eighteen stable.** Two things the
+*Painel do clube* band, so neither holds a thumbnail, a countdown, a weather reading
+or the Rodapé. The mobile crop ended at the *Últimos resultados* heading until #641's X
+handle added a line to the link row, which is the crop sentence below arriving from above:
+a section that grows pushes the next one out of the frame. **So the set is ten volatile and eighteen stable.** Two things the
 measurement does not reach. **A matchday**: the position, the points and *Próximo jogo*
 follow live standings and move mid-build while a club plays — the exposure `jogos` and
 `classificacao-mobile` already carry and are counted stable with. And **the crop**: it
