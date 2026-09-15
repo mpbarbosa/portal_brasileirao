@@ -127,23 +127,24 @@ export function AccountButton({ state }: { state: AccountState }) {
     );
   }
 
-  // **Below 375dp this gives way to the brand, in two steps.** Below `sm` the
-  // brand beside it needs 174px for its subtitle, and at 97px this pill leaves
-  // it `width − 189`, so from 363dp down the two cannot both be whole —
-  // measured on production at `e4bee8a`, the brand's two lines ran 30px under
-  // the pill at 320. It yields where the arithmetic forces it and no further,
-  // the nav indicator's `min-[360px]:` precedent: from 360 to 374 the glyph
-  // goes (71px, 23px of slack at 360), and below 360 the word leaves the
-  // screen as well, for a 40dp disc. The word never leaves the accessible name,
-  // and from 375 up nothing about the control changes.
+  // **Below `sm` this is a 40dp disc, and the word lives only in the accessible
+  // name.** The brand beside it needs 174px for its subtitle. At 97px this
+  // pill left it `width − 189`, already short from 363dp down: measured on
+  // production at `e4bee8a`, the brand's two lines ran 30px under the pill at
+  // 320. It used to give way in two steps below 375. Then **Compartilhar**
+  // joined the trailing group and took another 48px, which moved that
+  // threshold to 411dp for the title line alone — past a 390dp iPhone. So
+  // below `sm` the whole group is three 40dp boxes, the brand gets
+  // `width − 180`, and that clears the subtitle from 360 up; below 360
+  // `ShareButton` hides itself instead. From `sm` up nothing changes.
   return (
     <a
       href="/entrar"
       data-account="signed-out"
-      className={`relative inline-flex h-10 min-w-10 items-center justify-center gap-1.5 rounded-full bg-primary-container text-label-large font-semibold text-on-primary-container min-[360px]:px-4 ${TOUCH_TARGET} ${STATE_LAYER_ON_PRIMARY_CONTAINER}`}
+      className={`relative inline-flex h-10 min-w-10 items-center justify-center gap-1.5 rounded-full bg-primary-container text-label-large font-semibold text-on-primary-container sm:px-4 ${TOUCH_TARGET} ${STATE_LAYER_ON_PRIMARY_CONTAINER}`}
     >
-      <AccountGlyph className="h-5 w-5 min-[360px]:hidden min-[375px]:block" />
-      <span className="sr-only min-[360px]:not-sr-only">Entrar</span>
+      <AccountGlyph className="h-5 w-5" />
+      <span className="sr-only sm:not-sr-only">Entrar</span>
     </a>
   );
 }

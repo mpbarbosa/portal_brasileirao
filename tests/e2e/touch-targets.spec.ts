@@ -44,6 +44,7 @@ const boxes = (page: Page, selector: string) =>
 
 const TOGGLE = "header button[aria-label^='Ativar tema']";
 const ACCOUNT = "header [data-account]";
+const SHARE = "header [data-share]";
 
 test.describe("Alvos de toque na barra", () => {
   test("the trailing group is level, and every target clears 48dp", async ({ page }) => {
@@ -53,14 +54,16 @@ test.describe("Alvos de toque na barra", () => {
 
     const toggle = await boxes(page, TOGGLE);
     const account = await boxes(page, ACCOUNT);
+    const share = await boxes(page, SHARE);
 
     // Level: the whole point. A difference here is the wobble coming back.
     expect(toggle.box.h, "the toggle and the account control must be one height")
       .toBe(account.box.h);
+    expect(share.box.h, "the share button and the toggle must be one height").toBe(toggle.box.h);
     // MD3's top-app-bar container.
     expect(toggle.box.h).toBe(40);
-    // …and MD3's target, on both.
-    for (const [name, m] of [["toggle", toggle], ["account", account]] as const) {
+    // …and MD3's target, on all three.
+    for (const [name, m] of [["toggle", toggle], ["account", account], ["share", share]] as const) {
       expect(m.target.h, `${name} target height`).toBeGreaterThanOrEqual(48);
       expect(m.target.w, `${name} target width`).toBeGreaterThanOrEqual(48);
     }

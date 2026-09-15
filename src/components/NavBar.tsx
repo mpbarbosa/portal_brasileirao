@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { BrandMark } from "@/src/components/BrandMark";
 import { Button } from "@/src/components/Button";
 import { MoonIcon, SunIcon } from "@/src/components/SectionIcons";
+import { ShareButton } from "@/src/components/ShareButton";
 import { FOCUS_RING, STATE_LAYER } from "@/src/components/interaction";
 import { isPlainClick } from "@/src/components/plainClick";
 import { NAV_ITEMS, type SectionId } from "@/src/navigation";
@@ -246,8 +247,8 @@ export function NavBar({
               Portal Brasileirão
             </span>
             {/* Below `sm` only, where the destinations are in the bottom bar and
-                this row holds nothing but the brand and two 40dp controls — the
-                subtitle measures 174px there against acres of room. Above `sm`
+                this row holds the brand and three 40dp controls — the subtitle
+                measures 174px there, which fits with 6px to spare at 360dp. Above `sm`
                 the tab row underneath says what the app is for, and the full
                 name survives in `<title>` and in the page's own `h1`. It was
                 the first thing to truncate at every width. */}
@@ -270,7 +271,12 @@ export function NavBar({
               opening the account, and the account control's effective target
               was 44px wide — under the floor the whole exercise was about.
               Measured on `37bb199`; asserted in `touch-targets.spec.ts`. */}
+          {/* **Compartilhar comes first**: it acts on the page as a whole, where
+              the two after it act on the reader's account and on the page's
+              look. It is the one member of the group that hides, below 360dp,
+              and `ShareButton` carries the arithmetic. */}
           <div className="flex shrink-0 items-center gap-2">
+            <ShareButton />
             {accountControl}
             <Button
               onClick={onToggleTheme}

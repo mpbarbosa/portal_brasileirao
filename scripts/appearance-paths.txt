@@ -28,6 +28,7 @@ rank-history-core.ts
 route-core.ts
 scouts-core.ts
 seo-core.ts
+share-core.ts
 squad-core.ts
 standings-core.ts
 standings-mark-core.ts

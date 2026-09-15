@@ -360,23 +360,25 @@ test.describe("Contas", () => {
     expect(avatarFill, "the two states should not share a colour").not.toBe(outFill);
   });
 
-  test("below 375dp the signed-out control gives way to the brand, never its name", async ({
+  test("below sm the signed-out control gives way to the brand, never its name", async ({
     page,
   }) => {
     // The pill is 97px wide, and below `sm` the brand beside it needs 174px for
-    // its subtitle — so from 363px down the pill and the app's own name cannot
-    // both be whole. Measured on production at `e4bee8a`: at 320 the brand's
-    // two lines ran 30px under the pill. It gives way in two steps and only
-    // where the arithmetic forces it: the glyph leaves from 360 to 374, where
-    // the word alone buys 23px of slack, and below 360 the word leaves the
-    // *screen* as well — the accessible name says "Entrar" at every width.
+    // its subtitle. Measured on production at `e4bee8a`: at 320 the brand's two
+    // lines ran 30px under the pill. It used to give way in two steps below
+    // 375; Compartilhar then took another 48px of the row, which put even the
+    // title line under the pill on a 390dp phone. So below `sm` it is a 40dp
+    // disc at every width. The glyph stays, and the accessible name says
+    // "Entrar" at every width.
     const control = accountControl(page);
     const glyph = control.locator("svg");
 
     for (const [width, word, mark] of [
       [320, false, true],
-      [360, true, false],
-      [375, true, true],
+      [360, false, true],
+      [390, false, true],
+      [639, false, true],
+      [640, true, true],
     ] as const) {
       await page.setViewportSize({ width, height: 800 });
       await page.goto("/");

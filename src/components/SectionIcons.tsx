@@ -129,6 +129,24 @@ export function MoonIcon({ className }: IconProps) {
   );
 }
 
+/**
+ * The **Compartilhar** mark: three nodes joined, Material's share glyph drawn
+ * in this file's stroke rather than imported, for the reason every icon here is.
+ * Not the box-with-an-arrow iOS uses — that one reads as "exportar" or "enviar
+ * para cima" beside a theme toggle, where three joined nodes read as passing a
+ * link on.
+ */
+export function ShareIcon({ className }: IconProps) {
+  return (
+    <svg {...GLYPH_STROKE} className={className}>
+      <circle cx="18" cy="5" r="3" />
+      <circle cx="6" cy="12" r="3" />
+      <circle cx="18" cy="19" r="3" />
+      <path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4" />
+    </svg>
+  );
+}
+
 /** The **Seta de mais conteúdo**: a shaft and its head, pointing down the page. */
 export function ArrowDownIcon({ className }: IconProps) {
   return (
