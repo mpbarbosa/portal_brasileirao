@@ -5357,8 +5357,8 @@ git show -U0 <sha> -- src/data/escalacoes.ts | grep -cE '^[+-][^+-].*"(554951|55
 
 **`-U0` and the `^[+-]` filter are the check, not decoration.** A diff prints
 **context** lines around every change, so a record sitting beside the one that
-changed appears in the output without having been touched — and every curated file
-here is one keyed record per line, which puts the captured record beside
+changed appears in the output without having been touched — and most curated files
+here are one keyed record per line, which puts the captured record beside
 something sooner or later. Measured on `6ceb6b3`, which added Athletico-PR directly
 above Palmeiras in `club-discord.ts`: the plain `grep -c '"1769"'` answered **3**
 for a club that commit never touched, the filtered form answers **0**, and it
@@ -5366,6 +5366,39 @@ answers **1** both for `"1768"` in the same commit and for `"1769"` on `1cfe990`
 the commit that really added Palmeiras. It fails in the **safe-looking** direction
 this paragraph describes — *you owe a re-shoot* — so nothing downstream ever
 catches it.
+
+**`-U0` is right only where a record is ONE line, and `src/data/club-videos.ts` is
+where it fails silently.** There each club is a multi-line list under a key line,
+`"1776": [`, and a video swap edits the `id` and `title` lines *beneath* it — so the
+code is on a line the diff never marks changed, and the filtered grep answers **0**
+for a club whose record did change. Measured on `5a60f6c`, which swapped São Paulo's
+video: `"1776"` counts 0. Across that file's history, **three of the four commits that
+changed Palmeiras' videos count 0** (`df8f4f2`, `0fbbadb`, `f7cd7ff`); only `7a5a757`,
+which added the key, counts 1. This fails in the **reassuring** direction, the
+opposite of the context-line trap above, and it is the one that let `5a60f6c`'s
+trailer name Palmeiras as *"the captured club page"* while changing São Paulo's.
+
+For a multi-line record, compare the record itself at the commit and its parent:
+
+```sh
+rec() { git show "${1}:src/data/club-videos.ts" 2>/dev/null |
+  awk -v k="\"${2}\": [" 'index($0, k) {f=1} f {print} f && /^  \],?$/ {exit}'; }
+[ "$(rec <sha>^ 1776)" = "$(rec <sha> 1776)" ] && echo unchanged || echo CHANGED
+```
+
+On `5a60f6c` that answers CHANGED for `1776`, `4241` and `4287` and unchanged for
+`1769`, `1770` and `1772`, and CHANGED on all four Palmeiras commits above. The braces
+in `${1}:` are not style: the Bash tool runs zsh, which reads `$1:s…` as a modifier
+and fails with *bad substitution* (checked).
+A club absent at both ends compares equal, which is right. The closing pattern is
+this file's two-space layout, so pointing `rec` at another file means reading that
+file's shape first.
+
+**A changed record is still not a moved pixel.** The next question is whether the
+section it feeds is inside the crop, and for `club-videos.ts` it is not: every clube
+capture's frame ends above the videos (measured 2026-09-15, see the clube captures
+under the volatile count below), which is why `5a60f6c` owed no re-shoot despite a
+false reason. Answer both, in that order.
 
 **Answer it before reaching for the camera.** Twenty-eight captures from a live
 production build to photograph nothing is exactly what the trailer exists to
