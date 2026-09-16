@@ -5,13 +5,16 @@ import { COACH_OVERRIDES } from "@/src/data/coach-overrides";
 /**
  * The técnico corrections, checked on every route that can carry one.
  *
- * **This file exists because the correction has four application sites and no
- * compiler can see that it needs all four.** `withCoachOverrides` runs once over
- * the frozen list — covering `/api/clubs`, every seed branch and the `known`
- * fallback — and again at each of `withClubDetails`' three call sites, because
- * that function prefers whatever the live payload carries. Miss one and exactly
- * one route serves the wrong person, which reads as a data problem rather than
- * as a missing line.
+ * **This file exists because the correction has five application sites and no
+ * compiler can see that it needs all five.** `withClubCorrections` runs once
+ * over the frozen list — covering `/api/clubs`, the seed branch of each cache
+ * and the `known` fallback — and again at each of `withClubDetails`' three call
+ * sites, because that function prefers whatever the live payload carries, and
+ * once more in the squads seed branch, which builds its clubs from
+ * `SEED_SQUADS`' own frozen objects and never passes through `CLUBS` at all.
+ * That fifth one is what this file found. Miss one and exactly one route serves
+ * the wrong person, which reads as a data problem rather than as a missing
+ * line.
  *
  * The suite runs the seed branch (`DISABLE_FOOTBALL_DATA=true`), so these assert
  * the offline path. That is the half a fresh clone and an outage both get, and

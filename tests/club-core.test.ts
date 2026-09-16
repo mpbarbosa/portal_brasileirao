@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
+import { CLUB_WEBSITE_OVERRIDES } from "@/src/data/club-website-overrides";
 import { COACH_OVERRIDES } from "@/src/data/coach-overrides";
 import { CLUBS } from "@/src/data/clubs";
 import { CLUB_HYMNS } from "@/src/data/club-hymns";
@@ -45,6 +46,7 @@ import {
   twitterUrl,
   withClubDetails,
   withCoachOverrides,
+  withWebsiteOverrides,
   withFacebook,
   withHymns,
   withInstagram,
@@ -1148,6 +1150,49 @@ test("a blank override is ignored rather than blanking the name", () => {
   assert.equal(club?.coach, "Jéssica Lima");
 });
 
+/* ---------------------------------------------- official site overrides ---- */
+
+const clubSited = (code: string, website?: string) =>
+  ({ code, name: `Club ${code}`, shortName: code, state: "SP", ...(website ? { website } : {}) });
+
+test("an override replaces the provider's website rather than filling a gap", () => {
+  const [club] = withWebsiteOverrides([clubSited("4286", "https://www.bragantino.net/")], {
+    "4286": "https://www.redbullbragantino.com.br/",
+  });
+  assert.equal(club?.website, "https://www.redbullbragantino.com.br/");
+});
+
+test("a club with no website override is returned untouched", () => {
+  const original = clubSited("9999", "https://example.com/");
+  const [club] = withWebsiteOverrides([original], { "4286": "https://www.redbullbragantino.com.br/" });
+  assert.equal(club, original, "the object itself, not a copy — nothing to change");
+});
+
+test("a website override fills a club the provider gives no site for", () => {
+  // The coach correction's rule, and it matters more here: `website` is absent
+  // from every live payload, so a club reaching `withClubDetails` without one
+  // is the ordinary case rather than the exception.
+  const [club] = withWebsiteOverrides([clubSited("4286")], {
+    "4286": "https://www.redbullbragantino.com.br/",
+  });
+  assert.equal(club?.website, "https://www.redbullbragantino.com.br/");
+});
+
+test("a website override naming a club that is not in the list is unused, not an error", () => {
+  const clubs = withWebsiteOverrides([clubSited("9999", "https://example.com/")], {
+    "4286": "https://www.redbullbragantino.com.br/",
+  });
+  assert.equal(clubs.length, 1);
+  assert.equal(clubs[0]?.website, "https://example.com/");
+});
+
+test("a blank website override is ignored rather than blanking the link", () => {
+  const [club] = withWebsiteOverrides([clubSited("4286", "https://www.bragantino.net/")], {
+    "4286": "   ",
+  });
+  assert.equal(club?.website, "https://www.bragantino.net/");
+});
+
 /* --------------------------------------------------- the committed data --- */
 
 test("every coach override names a club in this division, and changes something", () => {
@@ -1166,6 +1211,30 @@ test("every coach override names a club in this division, and changes something"
       coach,
       club?.coach,
       `${code}: the override equals the seed's own value, so upstream has fixed it`,
+    );
+  }
+});
+
+test("every website override names a club in this division, and changes something", () => {
+  const byCode = new Map(CLUBS.map((club) => [club.code, club]));
+
+  for (const [code, website] of Object.entries(CLUB_WEBSITE_OVERRIDES)) {
+    const club = byCode.get(code);
+    assert.ok(club, `${code} is not a club in this division`);
+    assert.notEqual(
+      website,
+      club?.website,
+      `${code}: the override equals the seed's own value, so upstream has fixed it`,
+    );
+
+    // The stored form is what `sync-seed-data` writes — `officialSiteUrl`'s
+    // output, an HTTPS origin with a trailing slash and no path. A path here
+    // survives in the club page's anchor and is stripped from its JSON-LD
+    // `sameAs`, so the page and its structured data would name two addresses.
+    assert.equal(
+      website,
+      officialSiteUrl(website),
+      `${code}: store the origin \`officialSiteUrl\` normalises to, not a path`,
     );
   }
 });
