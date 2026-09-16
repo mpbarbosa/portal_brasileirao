@@ -70,6 +70,54 @@ const withNoCuratedVideos = async (page: import("@playwright/test").Page) => {
   return () => served;
 };
 
+/**
+ * Serve `src/data/club-videos.ts` with **three** cards under Palmeiras.
+ *
+ * Three, because two cannot show the failure the width specs below exist for:
+ * each card's `sr-only` suffix is absolutely positioned, and until the rail was
+ * made its own containing block that span escaped the scroll container's clip.
+ * The second card's suffix still lands inside a phone screen; the third's lands
+ * a rail-width to the right and widened the document to 801px on a 412px
+ * Pixel 7 — at which point Chrome widens the layout viewport and every click
+ * lower on the page misses. It reached `main` through Flamengo gaining a third
+ * video, and was caught by `painel.spec.ts` clicking a link, not by these specs,
+ * which were asserting against Palmeiras' two.
+ *
+ * Prepared rather than found, for `withNoCuratedVideos`' reason: how many
+ * videos a club holds is curated data and moves by hand. The ids are real ones
+ * from the file, so the thumbnails and embeds are well-formed.
+ */
+const withThreeVideos = async (page: import("@playwright/test").Page) => {
+  const ids = new Set<string>();
+  const three = Object.values(CLUB_VIDEOS)
+    .flat()
+    .filter((video) => !ids.has(video.id) && ids.add(video.id))
+    .slice(0, 3);
+  expect(three).toHaveLength(3);
+  const body = `export const CLUB_VIDEOS = ${JSON.stringify({ [PALMEIRAS]: three })};\n`;
+  await page.route("**/src/data/club-videos.ts*", (route) =>
+    route.fulfill({ status: 200, contentType: "text/javascript", body }),
+  );
+};
+
+/**
+ * Whether the page is wider than the screen it is drawn on — asked two ways,
+ * because on a mobile device they fail differently. `scrollWidth` past
+ * `clientWidth` is the document overflowing; `innerWidth` past the viewport is
+ * Chrome having widened the **layout viewport** to swallow that overflow, which
+ * is the half that moves every click target.
+ */
+const pageIsWiderThanScreen = async (page: import("@playwright/test").Page) => {
+  const screen = page.viewportSize();
+  expect(screen).not.toBeNull();
+  const { scroll, client, inner } = await page.evaluate(() => ({
+    scroll: document.documentElement.scrollWidth,
+    client: document.documentElement.clientWidth,
+    inner: window.innerWidth,
+  }));
+  return scroll > client + 1 || inner > screen!.width + 1;
+};
+
 test.describe("Vídeos do clube", () => {
   test("a club with curated videos shows the rail", async ({ page }) => {
     await page.goto("/clube/palmeiras");
@@ -96,7 +144,6 @@ test.describe("Vídeos do clube", () => {
   });
 
   test("pressing a card plays it in the page, in the box it was in", async ({ page }) => {
-    await page.setViewportSize({ width: 1280, height: 900 });
     await page.goto("/clube/palmeiras");
 
     const id = CLUB_VIDEOS[PALMEIRAS][0].id;
@@ -430,26 +477,27 @@ test.describe("Vídeos do clube", () => {
     expect(served()).toBeGreaterThan(0);
   });
 
-  test("the rail scrolls inside itself and never widens the page", async ({ page }) => {
-    await page.setViewportSize({ width: 360, height: 800 });
-    await page.goto("/clube/palmeiras");
-    await expect(page.locator("[data-club-video]").first()).toBeVisible();
+  for (const width of [360, 412]) {
+    test(`the rail scrolls inside itself and never widens the page (${width}px)`, async ({
+      page,
+    }) => {
+      await withThreeVideos(page);
+      await page.setViewportSize({ width, height: 800 });
+      await page.goto("/clube/palmeiras");
+      await expect(page.locator("[data-club-video]")).toHaveCount(3);
 
-    // The whole reason the rail is its own scroll container. A page body that
-    // scrolls sideways on a phone is the failure the Classificação's frozen
-    // columns exist to prevent, one section down.
-    const overflows = () =>
-      page.evaluate(
-        () => document.documentElement.scrollWidth > document.documentElement.clientWidth + 1,
-      );
-    expect(await overflows()).toBe(false);
+      // The whole reason the rail is its own scroll container. A page body that
+      // scrolls sideways on a phone is the failure the Classificação's frozen
+      // columns exist to prevent, one section down.
+      expect(await pageIsWiderThanScreen(page)).toBe(false);
 
-    // And again with a player mounted, since the frame is a second thing able
-    // to set a width — the failure the candles' `grow min-w-0` records.
-    await page.locator("[data-club-video]").first().click();
-    await expect(page.locator("[data-club-video-frame]")).toBeVisible();
-    expect(await overflows()).toBe(false);
-  });
+      // And again with a player mounted, since the frame is a second thing able
+      // to set a width — the failure the candles' `grow min-w-0` records.
+      await page.locator("[data-club-video]").first().click();
+      await expect(page.locator("[data-club-video-frame]")).toBeVisible();
+      expect(await pageIsWiderThanScreen(page)).toBe(false);
+    });
+  }
 });
 
 /**
@@ -549,17 +597,17 @@ test.describe("Vídeos do clube no Painel", () => {
     expect(served()).toBeGreaterThan(0);
   });
 
-  test("the section never widens the painel", async ({ page }) => {
-    await page.setViewportSize({ width: 360, height: 800 });
-    await page.goto("/painel/palmeiras");
-    await expect(page.locator("[data-club-video]").first()).toBeVisible();
+  for (const width of [360, 412]) {
+    test(`the section never widens the painel (${width}px)`, async ({ page }) => {
+      await withThreeVideos(page);
+      await page.setViewportSize({ width, height: 800 });
+      await page.goto("/painel/palmeiras");
+      await expect(page.locator("[data-club-video]")).toHaveCount(3);
 
-    // Asserted on this page as well as on the club page, because the Painel
-    // carries drawings that set their own widths — the candles' svg is
-    // `grow min-w-0` precisely because `w-full` painted outside its card here.
-    const overflows = await page.evaluate(
-      () => document.documentElement.scrollWidth > document.documentElement.clientWidth + 1,
-    );
-    expect(overflows).toBe(false);
-  });
+      // Asserted on this page as well as on the club page, because the Painel
+      // carries drawings that set their own widths — the candles' svg is
+      // `grow min-w-0` precisely because `w-full` painted outside its card here.
+      expect(await pageIsWiderThanScreen(page)).toBe(false);
+    });
+  }
 });
