@@ -758,17 +758,21 @@ different communities.
 **It is the supporters' and not the club's**, which is the whole reason it is
 not a third official channel beside the **Site oficial** and the **Instagram do
 clube**: the screen-reader suffix reads "comunidade de torcedores", where
-Instagram's reads "oficial do clube". Coverage is deliberately partial — seven clubs of
-twenty — and grows by hand, like the **Melhores momentos**. A club with no entry
-renders no link, because `r/<club name>` is exactly the address somebody would
-derive: four of those turned out to name a Mexican club, the Civil Air Patrol, a
-state and a city. The bar is **two independent sources naming the same sub** —
+Instagram's reads "oficial do clube". Coverage reached all twenty clubs on
+2026-09-16 and may shrink again — a community can be abandoned, and then the
+entry goes rather than the page keeping a link to a dead room. A club with no
+entry renders no link, because `r/<club name>` is exactly the address somebody
+would derive: five of those turned out to name a Mexican club, a Portuguese one,
+the Civil Air Patrol, a state and a city. The bar is **two independent sources naming the same sub** —
 Wikidata's P3984 and the sub's own title and description — which is the rule
 **Correção do jogador** already applies to a position. Unlike the **Verbete do clube**
 this cannot be checked by a script: Reddit answers a scripted request with 403,
 `old.reddit.com` redirects, and the in-app browser refuses the domain by policy,
 so a sub is opened in a real browser before it is written down — the
-**Perfil no Sofascore** rule.
+**Perfil no Sofascore** rule. From a signed-in browser the same request does
+answer honestly (a real sub, an unregistered name and a lookalike are three
+different answers, told apart by the payload's `kind` and never by its status),
+which is how a re-check is done by hand; it still cannot run in CI.
 _Avoid_: keying on **tla** (Corinthians and Coritiba share `COR`, so one club's
 supporters land in another's community), storing the full URL, showing the URL
 rather than the name, folding the casing (Reddit resolves case-insensitively but

@@ -59,6 +59,7 @@ import {
   withInstagram,
   withReddit,
   withTwitter,
+  withWebsiteOverrides,
   withWikipedia,
   withYouTube,
 } from "@/club-core";
@@ -153,6 +154,7 @@ import { HIGHLIGHTS } from "@/src/data/highlights";
 import { VENUES } from "@/src/data/venues";
 import { SEED_MATCHES, SNAPSHOT_DATE } from "@/src/data/matches";
 import { COACH_OVERRIDES } from "@/src/data/coach-overrides";
+import { CLUB_WEBSITE_OVERRIDES } from "@/src/data/club-website-overrides";
 import { PLAYER_NICKNAMES } from "@/src/data/player-nicknames";
 import { PLAYER_OVERRIDES } from "@/src/data/player-overrides";
 import { SEED_SCORERS } from "@/src/data/scorers";
@@ -225,18 +227,47 @@ const SNAPSHOT_LABEL = snapshotLabelFor(SNAPSHOT_DATE);
 const cache = new TtlCache();
 const breaker = new CircuitBreaker();
 
+/**
+ * Every correction this app makes to a club the provider described wrongly,
+ * applied as one step.
+ *
+ * **A single composition point rather than a call per correction, and that is
+ * the point of it.** Each correction has to run at five places — the frozen
+ * list here, `withClubDetails`' three call sites, and the squads seed branch,
+ * which reads `SEED_SQUADS`' own frozen club objects and never passes through
+ * `CLUBS` at all — and no compiler can see that any of them is missing. Nesting
+ * one call per correction at each of those five would make the next correction a
+ * five-line change in five places; it is a one-line change here instead, and a
+ * site that forgets the new correction is no longer possible because there is
+ * nothing at a site to forget.
+ *
+ * The functions themselves stay separate and separately named in
+ * `club-core.ts`, because each states the bar its own data file has to clear —
+ * `coach-overrides.ts` wants two sources agreeing on who holds the job, and
+ * `club-website-overrides.ts` wants an address that has stopped being the
+ * club's. A single `Record<ClubCode, Partial<Club>>` would collapse two
+ * different editorial rules into one shape and lose that.
+ *
+ * `tests/e2e/coaches.spec.ts` and `tests/e2e/club-website.spec.ts` assert the
+ * five sites from the outside, one route at a time, which is what found the
+ * squads seed branch when the coach correction shipped without it.
+ */
+const withClubCorrections = (clubs: Club[]): Club[] =>
+  withWebsiteOverrides(withCoachOverrides(clubs, COACH_OVERRIDES), CLUB_WEBSITE_OVERRIDES);
+
 /** The committed club list, plus the handles, subreddits, hymns and articles no
  *  provider supplies. Enriching once here means every payload built from CLUBS carries
  *  them.
  *
- *  `withCoachOverrides` is last and is a *correction* rather than an enrichment:
- *  it covers every path that reads the frozen list — the seed branch of each
- *  cache, `/api/clubs`, and the `known` argument `withClubDetails` falls back
- *  to. It does **not** cover the live provider's own value, because
- *  `withClubDetails` prefers what the payload carries; each of its three call
- *  sites applies the override itself, and `tests/e2e/coaches.spec.ts` is what
- *  makes that a rule rather than something to remember. */
-const CLUBS = withCoachOverrides(
+ *  `withClubCorrections` is last and is a *correction* rather than an
+ *  enrichment: it covers every path that reads the frozen list — the seed
+ *  branch of each cache, `/api/clubs`, and the `known` argument
+ *  `withClubDetails` falls back to. It does **not** cover the live provider's
+ *  own value, because `withClubDetails` prefers what the payload carries; each
+ *  of its three call sites applies the corrections itself, and
+ *  `tests/e2e/coaches.spec.ts` and `tests/e2e/club-website.spec.ts` are what
+ *  make that a rule rather than something to remember. */
+const CLUBS = withClubCorrections(
   withWikipedia(
     withHymns(
       withDiscord(
@@ -253,7 +284,6 @@ const CLUBS = withCoachOverrides(
     ),
     CLUB_WIKIPEDIA,
   ),
-  COACH_OVERRIDES,
 );
 
 const app = express();
@@ -429,12 +459,11 @@ const loadStandings = (): Promise<ApiEnvelope<StandingsRow[]>> =>
       // caching a Classificação with no rows as live. See its comment.
       const rows = requireStandings(await fetchFromProvider<StandingsResponse>(standingsUrl()));
       // Same gap as fixtures: the standings payload has no website either.
-      const enriched = withCoachOverrides(
+      const enriched = withClubCorrections(
         withClubDetails(
           rows.map((row) => row.club),
           CLUBS,
         ),
-        COACH_OVERRIDES,
       );
       return rows.map((row, index) => ({ ...row, club: enriched[index] }));
     },
@@ -531,7 +560,7 @@ const loadMatches = async (): Promise<ApiEnvelope<MatchesPayload>> => {
       // split that would hide a difference.
       matches: withCuratedData(matches),
       // Fixtures carry no website or handle; the committed club list does.
-      clubs: withCoachOverrides(withClubDetails(clubsFromMatches(raw), CLUBS), COACH_OVERRIDES),
+      clubs: withClubCorrections(withClubDetails(clubsFromMatches(raw), CLUBS)),
     };
 
     breaker.recordSuccess();
@@ -1235,12 +1264,11 @@ const loadSquads = (): Promise<ApiEnvelope<Squad[]>> =>
     SQUADS_CACHE_TTL_MS,
     async () => {
       const squads = mapSquads(await fetchFromProvider<TeamsResponse>(teamsUrl()));
-      const enriched = withCoachOverrides(
+      const enriched = withClubCorrections(
         withClubDetails(
           squads.map((squad) => squad.club),
           CLUBS,
         ),
-        COACH_OVERRIDES,
       );
       return withSquadOverrides(
         sortSquads(squads.map((squad, index) => ({ ...squad, club: enriched[index] }))),
@@ -1256,7 +1284,7 @@ const loadSquads = (): Promise<ApiEnvelope<Squad[]>> =>
       withSquadOverrides(
         sortSquads(SEED_SQUADS).map((squad) => ({
           ...squad,
-          club: withCoachOverrides([squad.club], COACH_OVERRIDES)[0] ?? squad.club,
+          club: withClubCorrections([squad.club])[0] ?? squad.club,
         })),
         PLAYER_OVERRIDES,
       ),

@@ -2871,7 +2871,7 @@ the line itself.
 `src/data/club-discord.ts` holds the **supporters' Discord** for a club, keyed
 by club code and storing an **invite and the guild it opens** — `discordUrl` in
 `club-core.ts` builds the address from the invite, and the guild id is never
-rendered. Hand-maintained and partial like `club-reddit.ts`, whose rule it takes
+rendered. Hand-maintained and partial, and it takes `club-reddit.ts`' rule
 whole: a server is the torcida's and not the club's, so the screen-reader suffix
 says "comunidade de torcedores" and the link is not filed beside the Site
 oficial. **Five entries as of 2026-09-13** — Flamengo's **FlaDiscord**,
@@ -4690,6 +4690,26 @@ re-checks it, and why the corruption accelerates at the second hop rather than
 decaying. In that chain the two claims' *writes* were **seconds** apart; only the
 rounded heading made them 65. The number described nothing.
 
+**A MEASURED value dated by a field that is not a clock is the same failure one
+step further in, and it arrives looking like the most solid of the four.**
+Measured 2026-09-16: `/api/health` was read once, honestly, and then reported as
+a reading *"at 00:27:33Z"* — a time nothing had measured. That turn ran no
+`date -u` at all; the stamp was the payload's own `builtAt`, which
+`scripts/build.sh` writes at esbuild time inside `check` and which therefore
+dates the **bundle**, minutes before any deploy installs it. The reading's real
+instant was recoverable and thirteen minutes later: `uptime` (26.18s) against a
+process start of 00:40:20.9Z — itself derived from a later reading taken beside a
+measured clock — puts it at about **00:40:47Z**, *after* the install rather than
+before it. **`uptime` is the one field in that payload measured relative to the
+read**, so it recovers the instant where `builtAt` cannot.
+Two things follow. The cost was not a wrong number in prose: it was a phantom
+disagreement with a peer whose 30s-cadence watch was right all along, and three
+messages between two sessions about a host that had supposedly restarted twice on
+one sha and never had. And the bad half was **inside** a well-formed sentence —
+the sha, the payload and the conclusion drawn from it were all correct, and only
+the four digits nobody had measured were invented, which is why nothing in the
+reading looked wrong.
+
 **Repetition among relayers is not independent corroboration, and it is worse
 than a single relay because volume reads as consensus.** If the first relayer is
 wrong the rest inherit it, so the count measures **circulation, not accuracy**.
@@ -5967,6 +5987,30 @@ is the record of what has actually shipped. It is a **separate job** because it
 needs `contents: write` and `deploy` holds the OIDC token and the payload, and it
 is `continue-on-error` because a bookkeeping failure must not report a good
 release as failed; per the entry above, that still leaves a red check row.
+
+**"If and only if" is wrong in one direction, and it is the direction a reader
+reaches for: the install can happen with NO tag.** The sentence above grants the
+`tag` job permission to fail and then treats its output as an invariant, and
+`continue-on-error` is exactly what breaks the biconditional. Measured
+2026-09-16 on the run for `165eb5d`: `Deploy to production` **succeeded**
+00:25:14 -> 00:26:15 while `Tag the release` **failed** 00:26:18 -> 00:26:39, so a
+release that really did serve carries no `deploy-*` tag at all. A present tag
+still means what that paragraph says; an **absent** one means nothing whatever.
+
+**The run's own job records are what settle it**, and neither the tag list nor
+`gh run list` can — the run's own conclusion is `success`, since the failing job
+is `continue-on-error`:
+
+```sh
+gh api repos/mpbarbosa/portal_brasileirao/actions/runs/<id>/jobs \
+  -q '.jobs[] | "\(.name): \(.conclusion) \(.started_at) \(.completed_at)"'
+```
+
+This was reached from the wrong end and nearly published as *"no tag, so nothing
+installed"* — a missing record read as evidence of a missing deploy. That is
+this file's own rule — *"when a check tells you something alarming about someone
+else's work, run the other form before saying it out loud"* — met at a CI record
+rather than at a `git` command, and the other form here costs one call.
 
 **Those tags are a release inventory that costs no AWS permission**, which matters
 because the other one may not be readable: dispatched with an empty sha on

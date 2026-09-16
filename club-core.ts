@@ -817,6 +817,38 @@ export const withCoachOverrides = (
     return coach ? { ...club, coach } : club;
   });
 
+/**
+ * Replace a club's official site where the provider names an address that is no
+ * longer the club's.
+ *
+ * `withCoachOverrides`' twin, and a *correction* for the same reason: a club's
+ * `website` reaches a reader through `withClubDetails`, which **fills** from the
+ * committed list and lets the payload win every tie. This one overrules both.
+ *
+ * **Today no live payload carries a website at all** — `clubFromTeam` maps id,
+ * name, shortName, tla, slug, crest and coach and drops the `website` the teams
+ * endpoint does serve, which is why `sync-seed-data` has to read that endpoint
+ * itself to write `clubs.ts`. So the override could be applied to the frozen
+ * list alone and every route would be right. It is applied at every site the
+ * coach correction is applied at regardless, because "the mapper happens not to
+ * read this field" is a claim that produces no work while it holds: adding one
+ * line to `clubFromTeam` would put the provider's value back on the live squads
+ * path, and nothing would go red — the suite runs the seed branch.
+ *
+ * A code with no override passes through untouched, and an override naming a
+ * club the caller does not hold is unused rather than an error.
+ * `tests/club-core.test.ts` is where an override naming a club nobody has, or
+ * one that no longer corrects anything, earns its complaint.
+ */
+export const withWebsiteOverrides = (
+  clubs: Club[],
+  overrides: Record<ClubCode, string>,
+): Club[] =>
+  clubs.map((club) => {
+    const website = overrides[club.code]?.trim();
+    return website ? { ...club, website } : club;
+  });
+
 export const withClubDetails = (clubs: Club[], known: Club[]): Club[] => {
   const byCode = new Map(known.map((club) => [club.code, club]));
 

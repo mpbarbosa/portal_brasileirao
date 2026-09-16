@@ -23,12 +23,19 @@ import type { ClubCode } from "@/src/types";
  * torcedores". Nothing here is a club's own statement, and presenting one as if
  * it were is the kind of wrong that looks right.
  *
- * **Coverage is deliberately PARTIAL — seventeen clubs of twenty — and grows by
- * hand**, like `player-instagram.ts` and `broadcasts.ts`. A club with no entry
- * renders no link rather than a guessed one, and the survey below is what that
- * rule is worth: `r/<name>` is exactly the shape somebody would be tempted to
- * derive from a club's name, and four of those addresses are a **different
- * subject entirely**.
+ * **Coverage reached ALL TWENTY on 2026-09-16, and that is a reading rather
+ * than a promise.** A club with no entry renders no link rather than a guessed
+ * one, and the survey below is what that rule is worth: `r/<name>` is exactly
+ * the shape somebody would be tempted to derive from a club's name, and five of
+ * those addresses are a **different subject entirely**.
+ *
+ * **The file must still be able to SHRINK, which is why nothing here gates on
+ * completeness.** A community can be abandoned or go private, and the three
+ * that arrived last are among the smallest; when one dies the entry goes,
+ * rather than the page keeping a link to a room nobody is in. `club-hymns.ts`
+ * and `club-wikipedia.ts` can carry an "every club has one" gate because a
+ * recording and an article do not empty out. This cannot, and
+ * `tests/club-core.test.ts` says so at the test.
  *
  * **There is no `check-club-reddit` script, and that is a property of the HOST
  * rather than of diligence** — the same asymmetry `player-sofascore.ts` and
@@ -55,6 +62,31 @@ import type { ClubCode } from "@/src/types";
  * equally dangerous: a refusal is at least legible as a refusal, where the
  * shell is a success code carrying no subject. Open the sub in a real browser
  * before adding a line, the way Sofascore's ids were opened.
+ *
+ * **Re-measured 2026-09-16: a real BROWSER SESSION answers honestly, and that
+ * is a different instrument rather than Reddit changing its mind.** A scripted
+ * `about.json` still 403s for everything alike — real subs, an invented
+ * control, with and without a browser User-Agent — and the in-app browser pane
+ * still refuses the host by policy. The same request issued from a page already
+ * open on reddit.com, in the maintainer's own Chrome, returns three
+ * DISTINGUISHABLE answers:
+ *
+ *   a real sub                  200, `kind: "t5"`, with display_name,
+ *                               subreddit_type, subscribers, title
+ *   a name nobody registered    404, `{"message": "Not Found", "error": 404}`
+ *   a name that resembles one   200, `kind: "Listing"` — a search result
+ *
+ * So it HAS a failing branch, which is precisely what the paragraph above says
+ * the scripted probe lacks. **Read the `kind`, never the status**: the third
+ * row is a 200 carrying no sub at all, and `RedBullBragantino`, `MassaBruta`
+ * and `RemoOficial` each answer it — names that do not exist while looking
+ * exactly like names that do.
+ *
+ * **It still cannot become `check-club-reddit`**, for `player-sofascore.ts`'
+ * reason: it needs a signed-in browser a workstation has and CI does not. What
+ * it changes is the re-check done BY HAND — all twenty verified in about a
+ * minute, canonical casing included — and not what the monthly workflow can
+ * run. The paragraph above stands as written for every scripted probe.
  *
  * The 200 was found by the session adding `r/Cruzeiro`; the readings above are
  * this workstation's own, re-measured here rather than relayed.
@@ -148,6 +180,17 @@ import type { ClubCode } from "@/src/types";
  * our own club's basketball team — and the club is named *after* the
  * neighbourhood, so `r/bahia`'s and `r/vitoria`'s trap is live here in its
  * strongest form. A bairro has no torcida; that one word settles it.
+ *
+ * **That word is GONE as of 2026-09-16, and the entry now rests on less than
+ * this paragraph claims.** `r/botafogo`'s description reads "Clube que é mais
+ * tradicional!" — a line of the club's own hymn — where it read "Subreddit da
+ * torcida botafoguense! Junte-se a nós!" when the paragraph above was written.
+ * It still says *clube*, so the bairro is still ruled out and the entry is
+ * still right. What is lost is that the word the argument names is no longer
+ * there to check, which is what a description is: a field a moderator edits at
+ * will. The identification now stands on the maintainer's read alone, and the
+ * machine half of it has quietly weakened. Recorded rather than repaired,
+ * because the repair is a second source and nobody has one.
  *
  * What the description does **not** say is *which* Botafogo, since a
  * botafoguense of Ribeirão Preto or of João Pessoa is one too. That half is the
@@ -286,6 +329,17 @@ import type { ClubCode } from "@/src/types";
  * verified against two controls (`crfla` -> `CRFla`, `askreddit` -> `AskReddit`)
  * before being believed.
  *
+ * **That method is available again, and the first thing it did was catch this
+ * file's one wrong casing.** Reading the canonical name back off Reddit is what
+ * a browser session restores, and asked for all seventeen entries at once on
+ * 2026-09-16 it returned the stored spelling verbatim for sixteen — and
+ * `Corinthians` where this file had `corinthians`. Corrected here. Reddit
+ * resolves case-insensitively, so nothing was broken and nobody would have
+ * seen it: the address worked, and the page printed `r/corinthians`, a
+ * spelling the community does not use. That is the exact failure the casing
+ * rule at the top of this file exists to prevent, sitting in the file for as
+ * long as the rule has.
+ *
  * **THE FOUR CLUBS THAT ARE ABSENT, AND WHY — so nobody re-runs this.**
  * Four derived addresses would have been wrong in a way no reader could see,
  * and they are the whole argument against deriving a name from a club's name:
@@ -294,6 +348,7 @@ import type { ClubCode } from "@/src/types";
  *   r/CAP       -> **Civil Air Patrol**
  *   r/bahia     -> the **state** of Bahia, "lar da Baía de Todos os Santos"
  *   r/vitoria   -> **Vitória - ES**, the city, where the club is from Salvador
+ *   r/VitoriaFutebolClube -> **Vitória de Setúbal**, of PORTUGAL
  *
  * That is `club-hymns.ts`' Santos trap exactly — the hymn of the *city* of
  * Santos returned beside the club's — met a second time in a second dataset.
@@ -320,9 +375,48 @@ import type { ClubCode } from "@/src/types";
  * crest, a league table and supporters posting about a match — everything a
  * reader arrives expecting to find, and none of it this club's.
  *
- * Three clubs have a sub that exists and is not a community: Bragantino (49
- * members), Remo (5), Vitória (2). Linking a room
- * with one person in it is worse than the absence, which at least says nothing.
+ * **Those three clubs are now ABOVE, and the numbers that kept them out were
+ * STALE rather than wrong.** Bragantino (49 members), Remo (5) and Vitória (2)
+ * were subredditstats readings, and that source is frozen about a thousand days
+ * back per sub — the freeze this file documents a few paragraphs up, arriving
+ * as a rejection nobody re-derived. Read live from a browser session on
+ * 2026-09-16:
+ *
+ *   r/Bragantino    542 members, public, created 2023-05-04, six posts THAT DAY
+ *   r/ClubeDoRemo   495 members, public, created 2022-01-27, posts that day
+ *   r/EC_Vitoria    215 members, public, created 2021-06-10, posts every week
+ *
+ * That is `mirassolfc`'s case three more times: a crawler catching a community
+ * in its first weeks, and a reader taking the number for the size of the room
+ * today. Linking a room with one person in it is still worse than the absence;
+ * none of these is that room any more.
+ *
+ * **Vitória's `2` was never this sub.** It is `r/ECVitoria` — a different
+ * address, created 2025-08-26, two members, whose whole description reads "time
+ * ruim horrível". The rejection compared a joke sub's count against the club's
+ * name and filed both under one club. The community is `r/EC_Vitoria`, which
+ * describes itself as the "Primeiro subreddit destinado ao ESPORTE CLUBE
+ * VITÓRIA" and its members as the "comunidade do leão".
+ *
+ * **What identified each, since none of the three has a `P3984`** — absent from
+ * `Q541744` (Bragantino, founded 1928, `redbullbragantino.com.br`), `Q2552872`
+ * (Remo, 1905) and `Q274465` (Vitória, 1899), each read 2026-09-16 on an entity
+ * confirmed by inception and official site first, which is `SantosFC`'s rule:
+ *
+ *   Bragantino   "O subreddit do LINGUIÇA MECÂNICA!" beside a bull and Red
+ *                Bull's red — the Bragança Paulista club's own nickname.
+ *   ClubeDoRemo  titled "Clube do Remo", quoting the hymn, calling itself the
+ *                unofficial sub.
+ *   EC_Vitoria   "Primeiro subreddit destinado ao ESPORTE CLUBE VITÓRIA".
+ *
+ * **The posts are the discriminator the `Cruzeiro` paragraph wanted and did not
+ * have.** A name can be shared by four clubs; a week of fixtures against clubs
+ * in THIS division cannot. Read the same day: Bragantino's are Paulista and
+ * Brasileirão sub-17 matches, Remo's name "Bahia 2 x 1 Remo | Brasileirão Série
+ * A" and the sacking of Leo Condé — the técnico `clubs.ts` records for `4287` —
+ * and Vitória's name "Vitória 1x0 Grêmio" and rodada 26. So the pair for each
+ * is the maintainer plus the sub's own posts, which is stronger than the
+ * `Furacao`/`SantosFC` pairing and is the first time this file has had it.
  *
  * **Fluminense stood in that list and is now above, and it is the one club
  * that left it for a reason none of the others can copy.** `Athletico-PR`,
@@ -488,8 +582,18 @@ import type { ClubCode } from "@/src/types";
  * sixteen, this is the one most likely to fall into the empty-room list below,
  * and if it does, it should move there.
  *
- * **With it, no club in this file waits on a source.** The four still absent
- * are subs that exist and hold nobody.
+ * **No club waits on a source, and none is absent: the file covers all twenty
+ * as of 2026-09-16.** The empty-room list below is now a list of addresses
+ * refused rather than of clubs waiting, which is the healthier state and the
+ * more fragile one — the next entry to change will be a deletion.
+ *
+ * **The fifth derived address is the worst of them, and it arrived with
+ * Vitória's own entry.** `r/VitoriaFutebolClube` is a real football club's real
+ * community — Vitória de Setúbal, "Força Sadinos", 290 members, LARGER than our
+ * club's 215 — so it is `r/santos`' trap with the cruelty that the name is not
+ * a coincidence of two languages but the same words in the same one. A reader
+ * arriving there finds a crest, a league table and supporters discussing a
+ * match, none of it this club's.
  */
 export const CLUB_REDDIT: Record<ClubCode, string> = {
   "1765": "nense",
@@ -503,9 +607,12 @@ export const CLUB_REDDIT: Record<ClubCode, string> = {
   "1772": "Chapecoense",
   "1776": "SaoPauloFC",
   "1777": "ecbahia",
-  "1779": "corinthians",
+  "1779": "Corinthians",
   "1780": "vasco",
+  "1782": "EC_Vitoria",
   "1783": "CRFla",
+  "4286": "Bragantino",
+  "4287": "ClubeDoRemo",
   "4364": "mirassolfc",
   "6684": "internacional",
   "6685": "SantosFC",
