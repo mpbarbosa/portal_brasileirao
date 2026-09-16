@@ -75,6 +75,20 @@ import type { ClubCode, ClubVideo } from "@/src/types";
  * check that would have "confirmed" it — pasting the id from the upload page —
  * is exactly the one this file refuses. Wait for the 200.
  *
+ * **One entry is NOT ours, and it is the only one — `aXDwyf9NGmk` under
+ * Flamengo, from the club's own channel.** Read the `channel` rule above in
+ * both directions: it was written to stop this app's render being taken for a
+ * broadcaster's package, and it is the same field that stops a club's package
+ * being taken for ours. Nothing here privileges the twenty-three renders; the
+ * file is *club → what to show*, and what a club publishes about itself is
+ * squarely that.
+ *
+ * **What does NOT belong here is a match's melhores momentos**, however
+ * official the channel. That has its own file, keyed by match id
+ * (`src/data/highlights.ts`), its own section on the Partida page and its own
+ * skill — and the club's channel publishes one per fixture, so this is the
+ * likeliest wrong turn anybody takes from here.
+ *
  * Coverage **grows by hand**, like every curated file here, and a promoted club
  * arrives with no entry. A club with no entry renders no section at all rather
  * than an empty heading.
@@ -134,10 +148,10 @@ export const CLUB_VIDEOS: Record<ClubCode, ClubVideo[]> = {
     },
   ],
 
-  // Flamengo, and the only club carrying THREE entries — every other code holds
-  // one or two (counted, not assumed). The order is this file's usual rule read
-  // one step further: how much of the drawing is this club, and, where that
-  // ties, whether the entry repeats under another code.
+  // Flamengo, and the only club carrying FOUR entries — every other code holds
+  // one or two (counted, not assumed). The order of the first three is this
+  // file's usual rule read one step further: how much of the drawing is this
+  // club, and, where that ties, whether the entry repeats under another code.
   //
   // The **velas** leads because it is the club's own season and sits under this
   // code alone. REPLACING `vU4ntqwfm2M` (the 26ª) with the 27ª render — Flamengo
@@ -162,6 +176,31 @@ export const CLUB_VIDEOS: Record<ClubCode, ClubVideo[]> = {
   // above rather than an omission. It belongs to the division rather than to
   // anybody, so filing it by club would put one video on twenty pages; the
   // focused cut earns a page precisely because a focus names an owner.
+  //
+  // **The fourth is the club's own, and it is APPENDED rather than ranked**,
+  // which is the honest placement rather than the tidy one: the rule above
+  // ranks *drawings* by how much of the drawing is this club, and it has
+  // nothing to say about a video that is not one of ours. So it goes behind
+  // the three that answer this page's own subject — the campanha the
+  // Classificação and the Painel already draw — and no existing order moves.
+  // Whoever ranks it differently should write the rule that did it.
+  //
+  // **It is `Flamengo TV`'s, and the club is established by ID rather than by
+  // name.** The watch payload's `channelId` is `UCOa-WaNwQaoyFHLCDk7qKIw`,
+  // byte-identical to the channel `src/data/club-youtube.ts` already records
+  // for `1783` — the same identity-not-resemblance test `check-club-youtube`
+  // applies to the handle, met here from the video's end. A title naming the
+  // club would have been resemblance, and half this channel's uploads name a
+  // rival in the same breath.
+  //
+  // **Why this video and not the week's:** it is about the club rather than
+  // about a fixture or a news cycle, so it does not go stale on a page that
+  // carries no date for it. A coletiva, a FLAPRESS or a bastidores is read
+  // once and wrong by Saturday; a melhores momentos is not this file's at all
+  // (see the note at the top). Confirmed public, embeddable, family-safe, 16:9
+  // and 8m12s before it was written down, and the title and channel below are
+  // oEmbed's own strings — 200 against an invented id answering 400, so the
+  // 200 is evidence rather than a shape.
   "1783": [
     {
       id: "jEIhdQ9BjD0",
@@ -177,6 +216,11 @@ export const CLUB_VIDEOS: Record<ClubCode, ClubVideo[]> = {
       id: "8Kr9MLphoEc",
       title: "Palmeiras × Flamengo: a campanha rodada a rodada do Brasileirão 2026 (até a 25ª)",
       channel: "Marcelo Barbosa",
+    },
+    {
+      id: "aXDwyf9NGmk",
+      title: "POR QUE A CAMISA DO FLAMENGO É CHAMADA DE MANTO SAGRADO? | CORRE O TEMPO NO OLHAR #2",
+      channel: "Flamengo TV",
     },
   ],
 

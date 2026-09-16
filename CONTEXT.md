@@ -826,8 +826,18 @@ so no two of them can come to disagree about what a `youtu.be` link means, or
 about what YouTube is. `title` and `channel` are both **required**: the title is
 the only thing telling two entries apart and is the one place in the app where a
 video title is the link text, and the channel is what stops this app's own render
-being read as a broadcaster's package. Confirm every id through YouTube's oEmbed
-endpoint before writing it down, the way the hymns were. The thumbnail is
+being read as a broadcaster's package. **That rule reads in both directions, and
+one entry now exercises the other one**: Flamengo carries a video from the club's
+own channel, and the same field is what stops a club's package being taken for
+ours. Nothing privileges this app's renders here — the mapping is *club → what to
+show*, and what a club publishes about itself is squarely that; what earns a place
+is being about the **club** rather than about a fixture or a news cycle, since a
+coletiva is wrong by Saturday on a page that carries no date for it. Confirm every
+id through YouTube's oEmbed endpoint before writing it down, the way the hymns
+were — and where the video is somebody else's, confirm the **channel id** against
+`src/data/club-youtube.ts` rather than reading the club's name out of the title,
+which is `check-club-discord`'s identity-not-resemblance rule met from the video's
+end. The thumbnail is
 **hotlinked** from YouTube's own CDN rather than vendored — the argument that
 vendored the stadium and player photographs is a volunteer host's 429 over
 somebody's copyrighted work, and neither half holds for the platform's own
@@ -863,7 +873,10 @@ is the Partida page's arrangement and this page's whole objection), `autoplay` o
 any address a page mounts unasked, `www.youtube.com` as the embed host, keying on
 **tla**, storing the full URL, printing the id as the link text, `maxresdefault`
 (it 404s for anything uploaded below that resolution, which renders as a broken
-image), a heading over a club with no entries, and inventing entries to fill the
+image), a heading over a club with no entries, a match's **melhores momentos**
+(that is `src/data/highlights.ts`, keyed by match id, with its own section on the
+Partida page — and a club's own channel publishes one per fixture, so it is the
+likeliest wrong turn from here), and inventing entries to fill the
 other eighteen clubs — the sibling repo's social view runs on fabricated
 `SEED_POSTS` and that half does not travel here.
 
