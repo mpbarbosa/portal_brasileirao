@@ -7,7 +7,7 @@
  * normaliser with no subject at all, lives in a module named for it —
  * `slug-core`, `youtube-core`, `instagram-core`, `wikipedia-core` — even where a
  * club is one of its callers: players, matches, stadiums and scripts call them
- * as much as clubs do. The subreddit, Discord and X parsers stay here because
+ * as much as clubs do. The subreddit, Discord, X and Facebook parsers stay here because
  * only a club carries any of them.
  */
 import { compareByKickoff, isConcluded } from "@/matches-core";
@@ -18,6 +18,7 @@ import type {
   Club,
   ClubCode,
   ClubDiscord,
+  ClubFacebook,
   ClubVideo,
   ClubYouTube,
   FormResult,
@@ -517,6 +518,74 @@ export const twitterUrl = (raw: string | null | undefined): string | null => {
 };
 
 /**
+ * Facebook's own routes. Each is a path under `facebook.com` that is not a page
+ * and passes the username rule below, so a pasted link to a group, a video or
+ * the login screen would otherwise be stored as a page called `groups`, `watch`
+ * or `login`. `profile.php` and the other `.php` routes are refused beside this
+ * set rather than listed in it.
+ */
+const FACEBOOK_ROUTES = new Set([
+  "business", "events", "gaming", "groups", "hashtag", "login", "marketplace",
+  "messages", "notifications", "pages", "people", "photo", "photos", "policies",
+  "privacy", "reels", "search", "settings", "share", "sharer", "stories", "watch",
+]);
+
+/**
+ * A Facebook page's username alone, from whatever was written down.
+ *
+ * `twitterHandle`'s shape: a bare username, an `@username`, or a pasted
+ * `facebook.com/…` address — with a tab or a post after the username, a
+ * tracking suffix, or a locale host like `pt-br.facebook.com`, which is what
+ * Chapecoense's own site links — and keeps only the username.
+ *
+ * **The casing survives**, for `twitterHandle`'s reason: Facebook resolves a
+ * username case-insensitively (`VascodaGama` opens the page whose own address
+ * reads `vascodagama`), but each page states one form.
+ *
+ * **Refused rather than salvaged**, each for a reason:
+ *
+ * - Facebook's routes and anything ending `.php`. A page with no username is
+ *   `profile.php?id=…`, which would otherwise be stored as `profile.php`.
+ * - An all-digit value. That is a page **id**, the other half of
+ *   `ClubFacebook`, and stored as the username it would build an address that
+ *   `check-club-facebook` confirms against itself — `discordInvite`'s snowflake
+ *   refusal, one host over.
+ * - A value ending like a domain. Pasted without its scheme, another host's
+ *   address (`instagram.com/flamengo`) would otherwise pass as a dotted
+ *   username, since full stops are legal in one.
+ *
+ * Returns null for anything else that is not a plausible username — letters,
+ * digits and full stops, at least five characters.
+ */
+export const facebookHandle = (raw: string | null | undefined): string | null => {
+  const value = raw?.trim();
+  if (!value) return null;
+
+  const afterHost = value.replace(
+    /^(?:https?:\/\/)?(?:(?:www|m|web|[a-z]{2}-[a-z]{2})\.)?facebook\.com\//i,
+    "",
+  );
+  const handle = afterHost.split(/[/?#]/)[0].replace(/^@/, "");
+
+  if (FACEBOOK_ROUTES.has(handle.toLowerCase()) || /\.php$/i.test(handle)) return null;
+  if (/^[0-9]+$/.test(handle) || /\.(?:com|net|org)(?:\.br)?$/i.test(handle)) return null;
+  return /^[A-Za-z0-9.]{5,50}$/.test(handle) ? handle : null;
+};
+
+/**
+ * The address for a page, built from the normalised username rather than from
+ * the raw value — `redditUrl`'s rule. With the trailing slash, because that is
+ * the form every page states as its own canonical address (`og:url`).
+ */
+export const facebookUrl = (raw: string | null | undefined): string | null => {
+  const handle = facebookHandle(raw);
+  return handle && `https://www.facebook.com/${handle}/`;
+};
+
+/** A Facebook page id: digits only, as a page's own markup states it. */
+export const isFacebookPageId = (value: string): boolean => /^[0-9]{5,20}$/.test(value);
+
+/**
  * The canonical watch address for a hymn video.
  *
  * Kept as its own name rather than folded into `videoWatchUrl`, because the two
@@ -547,6 +616,15 @@ export const withYouTube = (clubs: Club[], channels: Record<string, ClubYouTube>
   clubs.map((club) => {
     const youtube = channels[club.code]?.handle;
     return youtube && !club.youtube ? { ...club, youtube } : club;
+  });
+
+/** Attach curated Facebook usernames to a club list, keyed by code. Only the
+ *  **username** travels onto the club; the page id beside it in the curated
+ *  file is evidence for `check-club-facebook`, for `withDiscord`'s reason. */
+export const withFacebook = (clubs: Club[], pages: Record<string, ClubFacebook>): Club[] =>
+  clubs.map((club) => {
+    const facebook = pages[club.code]?.handle;
+    return facebook && !club.facebook ? { ...club, facebook } : club;
   });
 
 /** Attach curated hymn video ids to a club list, keyed by code. */
@@ -748,6 +826,7 @@ export const withClubDetails = (clubs: Club[], known: Club[]): Club[] => {
     const instagram = club.instagram ?? source?.instagram;
     const twitter = club.twitter ?? source?.twitter;
     const youtube = club.youtube ?? source?.youtube;
+    const facebook = club.facebook ?? source?.facebook;
     const reddit = club.reddit ?? source?.reddit;
     const discord = club.discord ?? source?.discord;
     const hymn = club.hymn ?? source?.hymn;
@@ -762,6 +841,7 @@ export const withClubDetails = (clubs: Club[], known: Club[]): Club[] => {
       ...(instagram ? { instagram } : {}),
       ...(twitter ? { twitter } : {}),
       ...(youtube ? { youtube } : {}),
+      ...(facebook ? { facebook } : {}),
       ...(reddit ? { reddit } : {}),
       ...(discord ? { discord } : {}),
       ...(hymn ? { hymn } : {}),

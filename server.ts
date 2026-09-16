@@ -54,6 +54,7 @@ import {
   withClubDetails,
   withCoachOverrides,
   withDiscord,
+  withFacebook,
   withHymns,
   withInstagram,
   withReddit,
@@ -140,6 +141,7 @@ import { CLUBS as SEED_CLUBS } from "@/src/data/clubs";
 import { CLUB_HYMNS } from "@/src/data/club-hymns";
 import { CLUB_INSTAGRAM } from "@/src/data/club-instagram";
 import { CLUB_DISCORD } from "@/src/data/club-discord";
+import { CLUB_FACEBOOK } from "@/src/data/club-facebook";
 import { CLUB_REDDIT } from "@/src/data/club-reddit";
 import { CLUB_TWITTER } from "@/src/data/club-twitter";
 import { CLUB_YOUTUBE } from "@/src/data/club-youtube";
@@ -239,7 +241,10 @@ const CLUBS = withCoachOverrides(
     withHymns(
       withDiscord(
         withReddit(
-          withYouTube(withTwitter(withInstagram(SEED_CLUBS, CLUB_INSTAGRAM), CLUB_TWITTER), CLUB_YOUTUBE),
+          withFacebook(
+            withYouTube(withTwitter(withInstagram(SEED_CLUBS, CLUB_INSTAGRAM), CLUB_TWITTER), CLUB_YOUTUBE),
+            CLUB_FACEBOOK,
+          ),
           CLUB_REDDIT,
         ),
         CLUB_DISCORD,

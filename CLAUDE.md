@@ -3014,6 +3014,36 @@ publishes as `@coritibaoficial`. Club sites and bios also link older `/c/` and
 `/user/` forms of the right channel — `youtubeChannelHandle` refuses those, so
 resolve each to its handle rather than pasting it.
 
+`src/data/club-facebook.ts` holds each club's **official Facebook page**, keyed
+by club code and storing the **username and the page id** — `ClubFacebook`,
+`ClubYouTube`'s shape for its reason. `facebookUrl` in `club-core.ts` builds
+`https://www.facebook.com/<username>/`, and only the username travels onto the
+club.
+
+```sh
+npm run check-club-facebook   # every username still opens the page it was written against
+```
+
+**This checker is exact about identity and blind about absence, and both halves
+were measured on 2026-09-15.** A real username answers 200 with the page's own
+id in it (`"userID"`), so the run compares ids — which is not caution for its own
+sake: `facebook.com/flamengo` answers 200 with **a stranger's page**. But a
+username nobody holds answers 200 too, with the bare shell Facebook also serves a
+request it declines, so a deleted page and a refused request cannot be told apart
+and both fail the run for a person to open. **Never give it a browser
+User-Agent**: Facebook answered Chrome's with 400 for every page, real or
+invented, while curl's and Node's defaults got the page. No GitHub-hosted runner
+had run it when this was written.
+
+**Every source was wrong somewhere, which is why no single one decided.**
+Athletico-PR's own website links `atleticopr`, a page titled "CAP antiga" with
+293 followers, where its Linktree and Wikidata name `clubathleticoparanaense`.
+Wikidata in turn names `sePalmeiras` for Palmeiras, a supporters' page, where
+the club's Linktree links `Palmeiras`. Vasco's site refuses a script and puts a
+human-verification challenge in front of a browser, so `vascodagama` rests on
+Wikidata and the page's own "Página oficial" — the one entry no club pointer
+decided.
+
 `src/data/player-instagram.ts` holds players' own Instagram accounts, keyed by
 **player id** and hand-maintained for the same reason `club-instagram.ts` is: no
 provider carries a social account at any tier. Coverage is deliberately

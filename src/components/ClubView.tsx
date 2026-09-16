@@ -4,6 +4,8 @@ import {
   clubMatches,
   coachOf,
   discordUrl,
+  facebookHandle,
+  facebookUrl,
   findClub,
   nextFixture,
   hymnUrl,
@@ -233,6 +235,25 @@ function YouTubeGlyph() {
   );
 }
 
+/**
+ * An "f" inside a circle: the club's Facebook page.
+ *
+ * Facebook's own mark is this shape knocked out of a fixed blue disc, so drawn
+ * as an outline it takes `currentColor` like the X and YouTube marks beside it.
+ * The stem runs down to the circle's edge, which is what keeps it reading as
+ * Facebook's "f" rather than as a letter set inside a ring.
+ *
+ * Local, like the marks around it, because it has one call site.
+ */
+function FacebookGlyph() {
+  return (
+    <svg {...GLYPH}>
+      <circle cx="12" cy="12" r="9.5" />
+      <path d="M15.5 7.5H14a2.5 2.5 0 0 0-2.5 2.5v11.5M8.5 13h6" />
+    </svg>
+  );
+}
+
 /** Three candles: the **Painel**. It draws the mark the page it opens is made
  *  of, rather than a generic chart glyph — the row's whole promise is that
  *  particular drawing. Local, like the three above it, because it has one call
@@ -334,6 +355,8 @@ export function ClubView({
   const xHandle = twitterHandle(club.twitter);
   const ytUrl = youtubeChannelUrl(club.youtube);
   const ytHandle = youtubeChannelHandle(club.youtube);
+  const fbUrl = facebookUrl(club.facebook);
+  const fbHandle = facebookHandle(club.facebook);
   const coach = coachOf(club, coaches);
   const mapUrl = clubMapUrl(club.address);
   const videos = videosFor(CLUB_VIDEOS, code);
@@ -452,6 +475,18 @@ export function ClubView({
               >
                 <YouTubeGlyph />
                 @{ytHandle}
+              </ExternalLink>
+            )}
+            {/* Official too, and printed as the username for the X line's
+                reason — Facebook shows a page's username with the same `@`. */}
+            {fbUrl && fbHandle && (
+              <ExternalLink
+                href={fbUrl}
+                suffix="Facebook oficial do clube"
+                className={`truncate ${LINK_UNDERLINE}`}
+              >
+                <FacebookGlyph />
+                @{fbHandle}
               </ExternalLink>
             )}
             {/* A sub is run by SUPPORTERS, so the suffix says "comunidade de

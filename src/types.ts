@@ -49,6 +49,15 @@ export interface Club {
    */
   youtube?: string;
   /**
+   * The club's official Facebook page, stored as the **username alone**
+   * ("FlamengoOficial"). The address is derived by `facebookUrl`.
+   *
+   * Only the username travels onto the club: the page id beside it in
+   * `src/data/club-facebook.ts` is evidence for `check-club-facebook`, which is
+   * `withDiscord`'s rule for the guild id.
+   */
+  facebook?: string;
+  /**
    * The club's subreddit, stored as the **name alone** ("CRFla") in the casing
    * the community uses. The address is derived by `redditUrl`, so a pasted link
    * loses its `?rdt=…` share suffix instead of persisting it.
@@ -284,6 +293,23 @@ export interface ClubYouTube {
   /** The channel's own id (`UC` and 22 characters), as the handle's page stated
    *  it when the entry was written. */
   channel: string;
+}
+
+/**
+ * A club's official Facebook page, as `src/data/club-facebook.ts` records it.
+ *
+ * Two fields for `ClubYouTube`'s reason: the username is what a reader follows,
+ * and the page id is which page that is. A username can change hands, and the
+ * obvious one can already belong to somebody else — `facebook.com/flamengo` is
+ * a person's page — so `check-club-facebook` compares the id the username's own
+ * page states against this one.
+ */
+export interface ClubFacebook {
+  /** The username alone ("FlamengoOficial") — `facebookUrl` builds the address. */
+  handle: string;
+  /** The page's numeric id, as the username's page stated it when the entry was
+   *  written. */
+  page: string;
 }
 
 /**
