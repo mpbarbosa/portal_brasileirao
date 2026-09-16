@@ -124,10 +124,23 @@ export function ClubVideos({ videos, clubName }: { videos: ClubVideo[]; clubName
           tabbed straight to the third card from elsewhere on the page would
           never have heard it. `ClubLinks`' rule is that the suffix travels with
           the anchor, and it is one of the three things that drift when a link
-          is copied. */}
+          is copied.
+
+          **`relative` is what keeps the rail's scroll inside the rail.** A
+          scroll container clips only descendants whose containing block is
+          the container or inside it, and each card's `sr-only` suffix is
+          `position: absolute` with no positioned ancestor short of `body`. So
+          the third card's suffix — parked at x≈799, a rail-width off-screen —
+          escaped the clip and made the *document* 801px wide on a 412px phone.
+          Chrome mobile then widened the layout viewport to fit, and every
+          click lower on the page landed a page-width off target: #654 gave
+          Flamengo a third video and `painel.spec.ts` went red on `main`. Two
+          cards never showed it, because the second suffix still sits inside
+          the screen. Positioning the list makes it the containing block for
+          anything absolute a card carries, now or later. */}
       <ul
         aria-label={`Vídeos sobre ${clubName}`}
-        className="-mx-1 flex snap-x gap-3 overflow-x-auto px-1 pb-1"
+        className="relative -mx-1 flex snap-x gap-3 overflow-x-auto px-1 pb-1"
       >
         {videos.map((video) => {
           const watch = videoWatchUrl(video.id);
