@@ -15,7 +15,7 @@ Texto que acompanha [`velas-athletico-pr.mp4`](velas-athletico-pr.mp4)
 - **Cortes verticais:** `velas-athletico-pr-45.mp4` (1080×1350, feed do Instagram) e `velas-athletico-pr-916.mp4` (1080×1920, Reels e YouTube Short).
 
 > **Os números aqui saem de `scripts/manim/velas-athletico-pr.json`, rodada 27,
-> snapshot de 2026-09-13** — 3º com 46 pts, 13V 7E 7D, e a oscilação entre
+> snapshot de 2026-09-16** — 3º com 46 pts, 13V 7E 7D, e a oscilação entre
 > o 2º e o 13º, que é a faixa que o painel do vídeo imprime. Eles **envelhecem**: um `sync-seed-data` seguido de uma
 > reexportação move o vídeo, e este arquivo não é regerado por nada. Reconferir
 > antes de publicar, contra o JSON e não contra esta página.
@@ -64,7 +64,7 @@ busca, e não é como o clube aparece no vídeo nem na tabela.
 ```
 A campanha do Athletico-PR rodada a rodada, desenhada como vela: o corpo vai da posição em que o clube ABRIU a rodada até onde ele FECHOU, e o pavio cobre a melhor e a pior posição que ele ocupou enquanto a rodada era jogada. Embaixo, no mesmo eixo, os pontos acumulados — a barra é o total e a tampa clara é o que a rodada acrescentou.
 
-Dados até 13/09/2026 (27ª rodada):
+Dados até 16/09/2026 (27ª rodada):
 • Athletico-PR — 3º, 46 pts em 27 jogos
 • 13V · 7E · 7D — 41 gols pró, 31 contra, saldo +10
 • 57% de aproveitamento · oscilou entre o 2º e o 13º

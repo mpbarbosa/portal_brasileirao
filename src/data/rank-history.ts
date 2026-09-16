@@ -5,8 +5,8 @@ import type { ClubRankHistory } from "@/src/types";
  * Regenerate with: npx tsx scripts/sync-rank-history.ts
  *
  * Every club's position in the classificação after each of rounds 1–27,
- * derived from the seed fixtures in src/data/matches.ts (snapshot 2026-09-13).
- * Written 2026-09-13.
+ * derived from the seed fixtures in src/data/matches.ts (snapshot 2026-09-16).
+ * Written 2026-09-16.
  *
  * Positions come from `computeStandings` applied round by round, so they honour
  * the same CBF tie-breakers as the live table and count only FINISHED matches.
@@ -113,7 +113,7 @@ export const RANK_HISTORY: ClubRankHistory[] = [
       { round: 24, position: 6, points: 37, played: 24 },
       { round: 25, position: 5, points: 40, played: 25 },
       { round: 26, position: 5, points: 43, played: 26 },
-      { round: 27, position: 5, points: 43, played: 26 },
+      { round: 27, position: 4, points: 46, played: 27 },
     ],
   },
   {
@@ -245,7 +245,7 @@ export const RANK_HISTORY: ClubRankHistory[] = [
       { round: 24, position: 18, points: 23, played: 24 },
       { round: 25, position: 19, points: 23, played: 25 },
       { round: 26, position: 19, points: 23, played: 26 },
-      { round: 27, position: 19, points: 23, played: 26 },
+      { round: 27, position: 19, points: 23, played: 27 },
     ],
   },
   {
@@ -410,7 +410,7 @@ export const RANK_HISTORY: ClubRankHistory[] = [
       { round: 24, position: 4, points: 41, played: 24 },
       { round: 25, position: 4, points: 42, played: 25 },
       { round: 26, position: 4, points: 45, played: 26 },
-      { round: 27, position: 4, points: 45, played: 27 },
+      { round: 27, position: 5, points: 45, played: 27 },
     ],
   },
   {

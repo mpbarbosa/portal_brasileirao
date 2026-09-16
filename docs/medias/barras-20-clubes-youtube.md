@@ -15,7 +15,7 @@ Texto que acompanha [`barras-20-clubes.mp4`](barras-20-clubes.mp4)
   ali.
 
 > **Os números aqui saem de `scripts/manim/pontos.json`, rodada 27, snapshot de
-> 2026-09-13.** Eles **envelhecem**: um `sync-seed-data` seguido de
+> 2026-09-16.** Eles **envelhecem**: um `sync-seed-data` seguido de
 > `sync-rank-history` e uma reexportação movem o vídeo e as capas, e este arquivo
 > não é regerado por nada. Reconferir antes de publicar, contra o JSON e não
 > contra esta página.
@@ -54,7 +54,7 @@ A corrida do Brasileirão: 27 rodadas em 22 segundos #Shorts
 ```
 Os 20 clubes do Brasileirão Série A, rodada a rodada: o comprimento da barra são os pontos e a altura é a colocação, então ultrapassar é um movimento e não duas curvas se cruzando.
 
-Dados até 13/09/2026 (27ª rodada):
+Dados até 16/09/2026 (27ª rodada):
 • Flamengo — 1º, 57 pts em 27 jogos
 • Palmeiras — 2º, 56 pts, depois de liderar 19 rodadas
 • Chapecoense — 20º, 17 pts, tendo fechado a 1ª rodada em 2º

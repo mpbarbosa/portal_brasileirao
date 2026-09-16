@@ -1,5 +1,5 @@
 {
-  "snapshot": "2026-09-13",
+  "snapshot": "2026-09-16",
   "clubs": [
     {
       "code": "1768",
@@ -499,9 +499,9 @@
         },
         {
           "round": 27,
-          "points": 43,
-          "position": 5,
-          "played": 26
+          "points": 46,
+          "position": 4,
+          "played": 27
         }
       ]
     },
@@ -1173,7 +1173,7 @@
           "round": 27,
           "points": 23,
           "position": 19,
-          "played": 26
+          "played": 27
         }
       ]
     },
@@ -2012,7 +2012,7 @@
         {
           "round": 27,
           "points": 45,
-          "position": 4,
+          "position": 5,
           "played": 27
         }
       ]

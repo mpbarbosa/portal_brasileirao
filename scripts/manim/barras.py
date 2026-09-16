@@ -52,6 +52,43 @@ and another between 16º and 17º is a pattern rather than a colour — the esca
 **Every label goes through `label()` rather than `Text`**, for the reason both
 sibling scenes give: Manim's glyph advances round to the pixel, so below roughly
 20pt the space advance rounds to zero and words run together.
+
+**`BARRAS_FOCUS` é o corte de TORCEDOR, e é um interruptor e não uma segunda
+cena** — a razão do `BARRAS_ASPECT` logo abaixo, e a mesma que o `velas.py` já
+registra: uma cópia do arquivo é onde a divergência começa. Com ele o desenho
+continua sendo a divisão inteira; o que muda é que um clube fica achável em
+todo quadro. Sem ele a cena sai exatamente como saía.
+
+**O relevo é ALTURA e não cor, e isso é o que o torna barato.** A altura da
+barra não carrega dado nenhum aqui — os vinte usam o mesmo `BAR_H`, e quem
+carrega o número é o comprimento —, então gastá-la em foco não tira leitura de
+lugar nenhum. É a regra do `RankCandles` pelo avesso: lá a cor carrega o
+resultado e a geometria a direção, aqui a cor já está toda gasta nos vinte
+clubes e a geometria é o canal que sobrou. Pintar os outros dezenove de cinza
+era a outra saída e foi recusada: a paleta vem do `pontos.py` sem reescrita
+justamente para que dois vídeos deste projeto não discordem da cor de um clube,
+e apagá-la num corte é discordar dela.
+
+**Recuar a opacidade das outras barras foi a terceira saída, foi construída, e
+a medição a matou** — o comentário do `BAND_OPACITY` tem os números. Vale ler
+antes de tentar de novo, porque a ideia é óbvia e o motivo de ela não servir
+não é: o tom mais escuro desta paleta já está no piso com opacidade cheia.
+
+**A faixa atrás da linha é o que responde a pergunta do torcedor**, que não é
+"quem lidera" — é "onde está o meu". Ela anda com o clube a cada rodada, então
+ele é achável mesmo em 14º, que é exatamente quando ninguém acha. Ela vai na
+cor do clube e em opacidade baixa: é uma FAIXA e não tinta de texto, então o
+piso que vale é o de marca.
+
+**O número dos outros dezenove desce para `INK_SOFT`, nunca para `INK_FAINT`.**
+A tentação é apagar mais, e `INK_FAINT` é régua e não texto — é o defeito que
+as três cenas já tiveram uma vez, medido em 2,9–3,3:1 contra o piso de 4,5.
+
+**A nota de fecho passa a ser sobre o clube do foco.** Um vídeo de torcedor que
+fecha falando do líder fecha falando do rival na maioria dos clubes. O ramo de
+quem NÃO lidera é a armadilha armada para depois — hoje o foco é o Flamengo, que
+lidera, então esse ramo não aparece no vídeo commitado: renderize um quadro com
+`BARRAS_FOCUS` num clube do meio da tabela antes de mexer nele.
 """
 
 from __future__ import annotations
@@ -102,6 +139,13 @@ DATA = Path(os.environ.get("BARRAS_JSON", Path(__file__).with_name("pontos.json"
 ASPECT = os.environ.get("BARRAS_ASPECT", "16:9")
 if ASPECT not in ("16:9", "4:5", "9:16"):
     raise SystemExit(f"BARRAS_ASPECT={ASPECT!r}: use 16:9, 4:5 ou 9:16.")
+
+# **O código do clube em foco, ou nada.** Validado contra o payload no
+# `construct` e não aqui, porque a lista de clubes é o `pontos.json` — e como o
+# `BARRAS_ASPECT`, um valor desconhecido ABORTA em vez de cair em silêncio no
+# corte sem foco: um `BARRAS_FOCUS=1738` digitado errado renderizaria o vídeo
+# base inteiro, com nome de arquivo de torcedor, e só apareceria ao assistir.
+FOCUS = os.environ.get("BARRAS_FOCUS") or None
 
 VERTICAL = ASPECT in ("4:5", "9:16")
 REELS = ASPECT == "9:16"
@@ -155,6 +199,28 @@ CLUB_COLOURS = {
 }
 FALLBACK_COLOUR = "#9AA5A0"
 
+# **NENHUMA barra recua no corte de torcedor, e isso foi MEDIDO em vez de
+# escolhido.** A primeira versão apagava os outros dezenove para 0,62 e seis
+# barras caíram abaixo do piso de 3 que uma marca exige — medido no quadro
+# codificado do mp4, contra o `SURFACE`:
+#
+#     Fluminense 1,99 · Vitória 2,30 · Cruzeiro 2,57
+#     Atlético-MG 2,58 · Clube do Remo 2,68 · Bragantino 2,76
+#
+# **A causa é que esta paleta não tem folga nenhuma para gastar.** O grená do
+# Fluminense entrega **3,48** com opacidade 1,0 — já raspando no piso —, então
+# *qualquer* recuo o derruba: 0,90 o põe em 3,06 e não recua nada que se veja.
+# Clarear o tom resolveria e é o que o `README.md` proíbe acima de tudo, porque
+# a paleta vem do `pontos.py` sem reescrita.
+#
+# Então o foco é ALTURA, FAIXA e PESO DO TIPO, três canais que só ACRESCENTAM —
+# nenhum deles tira contraste de ninguém. O recuo que sobra é o do **texto**,
+# de `INK` para `INK_SOFT`, que mede 7,8–8,0 e sobra sobre o piso de 4,5.
+#
+# A faixa atrás da linha do clube em foco. Baixa o bastante para a barra do
+# próprio clube continuar sendo a coisa mais forte da linha.
+BAND_OPACITY = 0.17
+
 CLUBS_IN_DIVISION = 20
 G4_CUT = 4    # entre 4º e 5º: a Libertadores fase de grupos
 Z4_CUT = 16   # entre 16º e 17º: o rebaixamento
@@ -181,6 +247,7 @@ if REELS:
     AXIS_Y_GAP, CREDIT_Y = 0.40, -4.30
     TITLE_SIZE, SUB_SIZE, HEAD_SIZE = 28, 15, 24
     NAME_SIZE, PTS_SIZE, BAR_H, CLOSING_SIZE = 14, 14, 0.176, 15
+    FOCUS_BAR_H = 0.27
 elif VERTICAL:
     TITLE_Y, SUB_Y, HEAD_Y = 4.56, 4.16, 3.74
     CLOSING_Y, CLOSING_LINES = 3.30, 2
@@ -190,6 +257,7 @@ elif VERTICAL:
     AXIS_Y_GAP, CREDIT_Y = 0.40, -4.42
     TITLE_SIZE, SUB_SIZE, HEAD_SIZE = 28, 15, 24
     NAME_SIZE, PTS_SIZE, BAR_H, CLOSING_SIZE = 14, 14, 0.176, 15
+    FOCUS_BAR_H = 0.27
 else:
     TITLE_Y, SUB_Y, HEAD_Y = 3.60, 3.22, 3.44
     CLOSING_Y, CLOSING_LINES = 2.86, 1
@@ -199,6 +267,12 @@ else:
     AXIS_Y_GAP, CREDIT_Y = 0.42, -3.64
     TITLE_SIZE, SUB_SIZE, HEAD_SIZE = 34, 16, 28
     NAME_SIZE, PTS_SIZE, BAR_H, CLOSING_SIZE = 15, 15, 0.185, 16
+    # **O 16:9 é o corte APERTADO e é ele que dita este número.** Os postos
+    # ficam a (2,50 + 2,94)/19 = 0,286 um do outro, então uma barra de foco
+    # acima disso encosta na linha de cima — e encosta primeiro no clube que
+    # está subindo, que é o único quadro em que ninguém repara enquanto mede.
+    # 0,26 deixa 0,026 de folga. Os dois cortes verticais têm 0,31 de vão.
+    FOCUS_BAR_H = 0.26
 
 # O endereço do site. Escrito à mão porque o `APP_URL` mora no `.env` do host,
 # que é gitignored e não existe na estação onde a cena é desenhada.
@@ -226,6 +300,13 @@ class Barras(Scene):
 
         payload = json.loads(DATA.read_text(encoding="utf-8"))
         clubs = payload["clubs"]
+        # Ver o comentário no `FOCUS`: um código que o payload não tem aborta.
+        if FOCUS is not None and FOCUS not in {club["code"] for club in clubs}:
+            raise SystemExit(
+                f"BARRAS_FOCUS={FOCUS!r} não está no payload — "
+                f"use um dos {len(clubs)} códigos de {DATA.name}."
+            )
+        self.focus = FOCUS
         for club in clubs:
             club["colour"] = CLUB_COLOURS.get(club["code"], FALLBACK_COLOUR)
             club["by_round"] = {entry["round"]: entry for entry in club["rounds"]}
@@ -248,8 +329,19 @@ class Barras(Scene):
 
         slots, zones, axis = self.build_frame()
         heading = self.round_heading(1)
+        # **A faixa entra COM a moldura e antes das linhas**, porque o manim
+        # desenha na ordem em que recebe: montada depois, ela ficaria por cima
+        # da própria barra que existe para destacar.
+        band = self.build_band(clubs)
         rows = self.build_rows(clubs)
-        self.play(FadeIn(slots), FadeIn(zones), FadeIn(axis), Create(heading), run_time=0.8)
+        self.play(
+            FadeIn(slots),
+            FadeIn(zones),
+            FadeIn(axis),
+            *([FadeIn(band)] if band is not None else []),
+            Create(heading),
+            run_time=0.8,
+        )
         self.play(
             FadeIn(VGroup(*[part for row in rows.values() for part in row.values()])),
             FadeIn(self.build_credit()),
@@ -265,6 +357,10 @@ class Barras(Scene):
         # O total mal se mexe — a batida encurta na mesma proporção.
         for round_number in range(2, self.last_round + 1):
             animations = self.update_rows(rows, clubs, round_number)
+            if band is not None:
+                animations.append(
+                    band.animate.move_to([band.get_center()[0], self.focus_y(clubs, round_number), 0])
+                )
             animations.append(Transform(heading, self.round_heading(round_number)))
             self.play(*animations, run_time=0.45)
             self.wait(0.16)
@@ -284,6 +380,34 @@ class Barras(Scene):
     def cut_y(self, position: int) -> float:
         """Halfway between a position's slot and the next one down."""
         return (self.slot_y(position) + self.slot_y(position + 1)) / 2
+
+    def slot_gap(self) -> float:
+        """A altura de um posto. Derivada do bloco do corte, nunca escrita à
+        mão a quarta vez — é o que a faixa e a barra de foco medem contra."""
+        return (ROW_TOP - ROW_BOTTOM) / (CLUBS_IN_DIVISION - 1)
+
+    def focus_y(self, clubs, round_number: int) -> float:
+        """Onde a linha do clube em foco está naquela rodada."""
+        club = next(c for c in clubs if c["code"] == self.focus)
+        return self.slot_y(club["by_round"][round_number]["position"])
+
+    def build_band(self, clubs):
+        """A faixa que anda com o clube do torcedor — ver o docstring.
+
+        `None` quando não há foco, que é o corte base: a cena então não ganha
+        um mobject invisível para animar vinte e seis vezes.
+        """
+        if self.focus is None:
+            return None
+        club = next(c for c in clubs if c["code"] == self.focus)
+        left, right = POS_X - 0.34, BAR_RIGHT + 0.06
+        return Rectangle(
+            width=right - left,
+            height=self.slot_gap() * 0.92,
+            stroke_width=0,
+            fill_color=club["colour"],
+            fill_opacity=BAND_OPACITY,
+        ).move_to([(left + right) / 2, self.focus_y(clubs, 1), 0])
 
     def bar_width(self, points: int) -> float:
         return points / self.top_points * (BAR_RIGHT - BAR_LEFT)
@@ -357,12 +481,25 @@ class Barras(Scene):
             rows[club["code"]] = {
                 "name": self.name_label(club, y),
                 "bar": self.bar(club, entry["points"], y),
-                "points": self.points_label(entry["points"], y),
+                "points": self.points_label(club, entry["points"], y),
             }
         return rows
 
     def name_label(self, club, y: float) -> Text:
-        name = label(club["name"], NAME_SIZE, INK)
+        """O nome do clube, e o peso é o que diz de quem é o vídeo.
+
+        No corte base todos os vinte são `INK` normal. Com foco, o clube ganha
+        o **peso** e os outros descem para `INK_SOFT` — que é tom de TEXTO
+        nesta paleta (subtítulo, ordinais, tiques, crédito), ao contrário do
+        `INK_FAINT`, que é régua. Ver o docstring do módulo.
+        """
+        focused = club["code"] == self.focus
+        if self.focus is None:
+            name = label(club["name"], NAME_SIZE, INK)
+        elif focused:
+            name = label(club["name"], NAME_SIZE, INK, "BOLD")
+        else:
+            name = label(club["name"], NAME_SIZE, INK_SOFT)
         name.move_to([NAME_X + name.width / 2, y, 0])
         return name
 
@@ -374,15 +511,19 @@ class Barras(Scene):
         a visible minimum would report a club that had scored. See the docstring.
         """
         width = max(self.bar_width(points), 0.002)
+        focused = club["code"] == self.focus
+        # Zero continua sendo zero em qualquer corte, e a opacidade é a mesma
+        # para os vinte: o foco muda a ALTURA e nada mais aqui — ver o
+        # comentário do `BAND_OPACITY` para o que aconteceu quando recuava.
         return Rectangle(
             width=width,
-            height=BAR_H,
+            height=FOCUS_BAR_H if focused else BAR_H,
             stroke_width=0,
             fill_color=club["colour"],
             fill_opacity=1.0 if points > 0 else 0.0,
         ).move_to([BAR_LEFT + width / 2, y, 0])
 
-    def points_label(self, points: int, y: float) -> Text:
+    def points_label(self, club, points: int, y: float) -> Text:
         """O número na ponta da barra, em `INK` e **nunca na cor do clube**.
 
         A primeira versão pintava cada número na cor da sua barra, e isso foi
@@ -399,8 +540,14 @@ class Barras(Scene):
         de um clube. Então quem muda é o texto: a barra carrega a identidade, o
         número carrega o dado, e a ligação entre os dois é a posição — o número
         encosta na ponta da sua própria barra.
+
+        **No corte de torcedor os outros dezenove descem para `INK_SOFT`**, que
+        é tom de texto nesta paleta, e **nunca para `INK_FAINT`** — esse é
+        régua, e usá-lo como texto é o defeito que as três cenas já tiveram,
+        medido em 2,9–3,3:1 contra o piso de 4,5. O clube em foco fica em `INK`.
         """
-        text = label(str(points), PTS_SIZE, INK, "BOLD")
+        colour = INK if (self.focus is None or club["code"] == self.focus) else INK_SOFT
+        text = label(str(points), PTS_SIZE, colour, "BOLD")
         text.move_to([BAR_LEFT + self.bar_width(points) + 0.12 + text.width / 2, y, 0])
         return text
 
@@ -430,7 +577,7 @@ class Barras(Scene):
                 )
             animations.append(Transform(row["bar"], self.bar(club, entry["points"], y)))
             animations.append(
-                Transform(row["points"], self.points_label(entry["points"], y))
+                Transform(row["points"], self.points_label(club, entry["points"], y))
             )
         return animations
 
@@ -472,26 +619,55 @@ class Barras(Scene):
         que só aparece abrindo o quadro.
         """
         standing = sorted(clubs, key=lambda club: club["by_round"][self.last_round]["position"])
-        leader, second = standing[0], standing[1]
-        leader_at = leader["by_round"][self.last_round]
-        second_at = second["by_round"][self.last_round]
-        gap = leader_at["points"] - second_at["points"]
-        spare = second_at["played"] - leader_at["played"]
 
         def jogos(n: int) -> str:
             return "um jogo" if n == 1 else f"{n} jogos"
 
-        if gap == 0:
-            detail = f"empatado com o {second['name']} nos critérios de desempate"
-        else:
-            detail = f"{gap} à frente do {second['name']}"
+        def spare_clause(other_at, subject_at) -> str:
+            """Quantos jogos o OUTRO tem a mais ou a menos que o sujeito."""
+            spare = other_at["played"] - subject_at["played"]
             if spare < 0:
-                detail += f", que tem {jogos(-spare)} a menos"
-            elif spare > 0:
-                detail += f", que tem {jogos(spare)} a mais"
+                return f", que tem {jogos(-spare)} a menos"
+            if spare > 0:
+                return f", que tem {jogos(spare)} a mais"
+            return ""
 
-        headline = f"{leader['name']} lidera com {leader_at['points']} pontos"
-        headline += f" em {jogos(leader_at['played'])}"
+        # **O sujeito da nota é o clube do foco, e o líder só por acaso.** Um
+        # vídeo de torcedor que fecha falando do líder fecha falando do rival
+        # em dezenove dos vinte clubes.
+        subject = (
+            next(club for club in standing if club["code"] == self.focus)
+            if self.focus is not None
+            else standing[0]
+        )
+        subject_at = subject["by_round"][self.last_round]
+        position = subject_at["position"]
+
+        if position == 1:
+            rival = standing[1]
+            rival_at = rival["by_round"][self.last_round]
+            gap = subject_at["points"] - rival_at["points"]
+            headline = f"{subject['name']} lidera com {subject_at['points']} pontos"
+            if gap == 0:
+                detail = f"empatado com o {rival['name']} nos critérios de desempate"
+            else:
+                detail = f"{gap} à frente do {rival['name']}" + spare_clause(rival_at, subject_at)
+        else:
+            # **Este ramo não aparece no vídeo commitado**, porque o foco de
+            # hoje lidera — é a armadilha armada para depois que o `CLAUDE.md`
+            # registra em outros lugares. Renderize um quadro com o
+            # `BARRAS_FOCUS` num clube do meio da tabela antes de mexer nele.
+            rival = standing[position - 2]
+            rival_at = rival["by_round"][self.last_round]
+            gap = rival_at["points"] - subject_at["points"]
+            headline = f"{subject['name']} em {ordinal(position)} com {subject_at['points']} pontos"
+            if gap == 0:
+                detail = f"empatado com o {rival['name']} nos critérios de desempate"
+            else:
+                detail = f"{gap} atrás do {rival['name']}" + spare_clause(rival_at, subject_at)
+
+        headline += f" em {jogos(subject_at['played'])}"
+        leader = subject
 
         lines = [headline, detail] if CLOSING_LINES == 2 else [f"{headline} — {detail}"]
         # **A nota é RECUADA e o filete ocupa o recuo**, e isso é a borda do

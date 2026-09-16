@@ -15,7 +15,7 @@ Texto que acompanha [`velas-gremio.mp4`](velas-gremio.mp4)
 - **Cortes verticais:** `velas-gremio-45.mp4` (1080×1350, feed do Instagram) e `velas-gremio-916.mp4` (1080×1920, Reels e YouTube Short).
 
 > **Os números aqui saem de `scripts/manim/velas-gremio.json`, rodada 27,
-> snapshot de 2026-09-13** — 16º com 28 pts, 7V 7E 12D, e a oscilação entre
+> snapshot de 2026-09-16** — 16º com 28 pts, 7V 7E 12D, e a oscilação entre
 > o 7º e o 17º, que é a faixa que o painel do vídeo imprime. Eles **envelhecem**: um `sync-seed-data` seguido de uma
 > reexportação move o vídeo, e este arquivo não é regerado por nada. Reconferir
 > antes de publicar, contra o JSON e não contra esta página.
@@ -64,7 +64,7 @@ busca, e não é como o clube aparece no vídeo nem na tabela.
 ```
 A campanha do Grêmio rodada a rodada, desenhada como vela: o corpo vai da posição em que o clube ABRIU a rodada até onde ele FECHOU, e o pavio cobre a melhor e a pior posição que ele ocupou enquanto a rodada era jogada. Embaixo, no mesmo eixo, os pontos acumulados — a barra é o total e a tampa clara é o que a rodada acrescentou.
 
-Dados até 13/09/2026 (27ª rodada):
+Dados até 16/09/2026 (27ª rodada):
 • Grêmio — 16º, 28 pts em 26 jogos
 • 7V · 7E · 12D — 28 gols pró, 35 contra, saldo -7
 • 36% de aproveitamento · oscilou entre o 7º e o 17º
