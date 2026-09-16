@@ -1,8 +1,24 @@
 /**
  * check-player-posts.ts
  * ---------------------
- * Verify every curated Instagram post in src/data/player-posts.ts still exists
- * and is still published by the account recorded beside it.
+ * Verify every curated Instagram post still exists and is still published by
+ * the account recorded beside it.
+ *
+ * ## It covers BOTH tables, and the name says only one of them
+ *
+ * `src/data/player-posts.ts` and `src/data/club-posts.ts` hold the same shape
+ * (`InstagramPost`) and are read from the same page, so everything below — the
+ * pinned locale, the removal sentence, "the publisher is the FIRST line" — is
+ * one copy of a judgement about Instagram's embed rather than about whose
+ * section it is. A second script would be a second copy of exactly that, plus a
+ * second Chromium start in the monthly job.
+ *
+ * So one run walks both, and the name stays `check-player-posts`: it is wired
+ * into `.github/workflows/curated-data.yml`, named in `CLAUDE.md` and in three
+ * data files, and `sync-goals` already sets the precedent for a command named
+ * for one thing that also writes another — the surprise is cheaper than the
+ * churn, and is stated here and in both data files rather than renamed away.
+ * The `who` column says which is which.
  *
  * ## Why this one needs a browser, when no other checker here does
  *
@@ -30,6 +46,13 @@
  *      embed's header;
  *   4. that account is **verified**, which is the bar `player-posts.ts` states.
  *
+ * For a **club** post, (3) is the weaker of two checks rather than the only
+ * one: `tests/club-posts.test.ts` already requires the recorded account to be
+ * the handle `club-instagram.ts` holds for that club, on every commit and with
+ * no network. What this adds there is (2) and (4) — that the post is still up,
+ * and that the account still carries a badge — which is the half only a browser
+ * can reach.
+ *
  * The second is the one worth having. A deleted post renders as an empty white
  * frame inside the player card: the facade still reads correctly, the link
  * still looks right, and only somebody who presses it finds out. It is not
@@ -45,9 +68,11 @@
  * second navigation per entry, because the embed does not carry a date and only
  * the canonical `/p/<code>/` page does.
  *
- * **That the player is still in the division.** `tests/player-posts.test.ts`
- * already refuses an id that has left `squads.ts`, with no network and on every
- * commit. A second copy of that rule here would be one to keep in step.
+ * **That the player is still in the division**, or that a club still is.
+ * `tests/player-posts.test.ts` refuses an id that has left `squads.ts` and
+ * `tests/club-posts.test.ts` a code that has left `clubs.ts`, both with no
+ * network and on every commit. A second copy of either rule here would be one
+ * to keep in step.
  *
  * ## No deploy half, unlike check-hymns
  *
@@ -69,15 +94,18 @@
  *   npx tsx scripts/check-player-posts.ts
  *
  * Exit codes:
- *   0  every post resolves and is published by the account recorded.
+ *   0  every post — player and club — resolves and is published by the account
+ *      recorded.
  *   1  at least one does not — the line says which and why.
  */
 import { chromium, type Browser, type Page } from "@playwright/test";
 
 import { instagramPostCode, instagramPostEmbedUrl } from "@/instagram-core";
+import { CLUBS } from "@/src/data/clubs";
+import { CLUB_POSTS } from "@/src/data/club-posts";
 import { PLAYER_POSTS } from "@/src/data/player-posts";
 import { SEED_SQUADS } from "@/src/data/squads";
-import type { PlayerPost } from "@/src/types";
+import type { InstagramPost } from "@/src/types";
 
 /** Instagram's own words for a post that is gone. Matched loosely because the
  *  sentence is theirs to reword and the two halves are independent. */
@@ -128,11 +156,26 @@ const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 const playerNames = new Map(
   SEED_SQUADS.flatMap((squad) => squad.players.map((player) => [player.id, player.name])),
 );
+const clubNames = new Map(CLUBS.map((club) => [club.code, club.shortName]));
+
+/**
+ * Where an entry came from, printed beside it.
+ *
+ * A **key is not unique across the two tables** and reading it as one is the
+ * trap: both are `Record<string, …>` of provider ids, so a club code and a
+ * player id are the same shape and `"1783"` is a plausible value in either. A
+ * row that printed the key alone, or a name resolved by trying one map and
+ * falling back to the other, would name the wrong subject for any collision —
+ * silently, in the one column a person reads to decide whether to delete an
+ * entry. It is carried explicitly instead.
+ */
+type Table = "jogador" | "clube";
 
 interface Row {
+  table: Table;
   id: string;
   who: string;
-  post: PlayerPost;
+  post: InstagramPost;
   publisher: string;
   followers: string;
   problems: string[];
@@ -175,21 +218,24 @@ const readEmbed = async (page: Page, url: string): Promise<string[]> => {
  * exactly that entry. The first line is the account that published either way,
  * which is what `PlayerPost.account` means.
  */
-const check = async (page: Page, id: string, post: PlayerPost): Promise<Row> => {
-  const who = playerNames.get(id) ?? "(not in squads.ts)";
+const check = async (page: Page, table: Table, id: string, post: InstagramPost): Promise<Row> => {
+  const who =
+    table === "clube"
+      ? clubNames.get(id) ?? "(not in clubs.ts)"
+      : playerNames.get(id) ?? "(not in squads.ts)";
   const problems: string[] = [];
   let publisher = "";
   let followers = "";
 
   if (instagramPostCode(post.code) !== post.code) {
     problems.push(`"${post.code}" is not a bare shortcode`);
-    return { id, who, post, publisher, followers, problems };
+    return { table, id, who, post, publisher, followers, problems };
   }
 
   const url = instagramPostEmbedUrl(post.code);
   if (!url) {
     problems.push(`no embed address for "${post.code}"`);
-    return { id, who, post, publisher, followers, problems };
+    return { table, id, who, post, publisher, followers, problems };
   }
 
   try {
@@ -197,7 +243,7 @@ const check = async (page: Page, id: string, post: PlayerPost): Promise<Row> => 
 
     if (lines.some((line) => GONE.test(line))) {
       problems.push("the post is gone — Instagram says it was removed or the link is broken");
-      return { id, who, post, publisher, followers, problems };
+      return { table, id, who, post, publisher, followers, problems };
     }
 
     publisher = lines[0] ?? "";
@@ -216,7 +262,7 @@ const check = async (page: Page, id: string, post: PlayerPost): Promise<Row> => 
     problems.push((error as Error).message);
   }
 
-  return { id, who, post, publisher, followers, problems };
+  return { table, id, who, post, publisher, followers, problems };
 };
 
 let browser: Browser | undefined;
@@ -232,13 +278,18 @@ try {
 
   // Sequential and paced, like `check-hymns`. One page reused rather than one
   // per entry: a context per post buys nothing and costs a browser start each.
-  const entries = Object.entries(PLAYER_POSTS).flatMap(([id, posts]) =>
-    posts.map((post) => [id, post] as const),
-  );
+  const entries = [
+    ...Object.entries(PLAYER_POSTS).flatMap(([id, posts]) =>
+      posts.map((post) => ["jogador", id, post] as const),
+    ),
+    ...Object.entries(CLUB_POSTS).flatMap(([code, posts]) =>
+      posts.map((post) => ["clube", code, post] as const),
+    ),
+  ] satisfies ReadonlyArray<readonly [Table, string, InstagramPost]>;
 
-  for (const [index, [id, post]] of entries.entries()) {
+  for (const [index, [table, id, post]] of entries.entries()) {
     if (index > 0) await sleep(PACE_MS);
-    rows.push(await check(page, id, post));
+    rows.push(await check(page, table, id, post));
   }
 } catch (error) {
   // A browser that will not start is an environment problem, not rotted data,
@@ -254,7 +305,9 @@ try {
 for (const row of rows) {
   const mark = row.problems.length ? "FAIL" : "ok  ";
   const meta = row.publisher ? `@${row.publisher}${row.followers ? ` · ${row.followers}` : ""}` : "";
-  console.log(`${mark} ${row.who.padEnd(22)} ${row.post.code.padEnd(13)} ${meta}`);
+  console.log(
+    `${mark} ${row.table.padEnd(8)} ${row.who.padEnd(22)} ${row.post.code.padEnd(13)} ${meta}`,
+  );
   for (const problem of row.problems) console.log(`       -> ${problem}`);
 }
 

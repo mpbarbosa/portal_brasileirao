@@ -11,6 +11,7 @@ import {
   hymnUrl,
   redditUrl,
   subredditName,
+  postsFor,
   recentForm,
   resultFor,
   scorersFor,
@@ -31,8 +32,10 @@ import {
 } from "@/standings-core";
 import { ClubCrest } from "@/src/components/ClubCrest";
 import { ClubVideos } from "@/src/components/ClubVideos";
+import { InstagramPosts } from "@/src/components/InstagramPosts";
 import { ExternalLink } from "@/src/components/ExternalLink";
 import { SeasonEvents } from "@/src/components/SeasonEvents";
+import { CLUB_POSTS } from "@/src/data/club-posts";
 import { InstagramLink, MapPinGlyph, WikipediaLink } from "@/src/components/ClubLinks";
 import { GLYPH } from "@/src/components/glyph";
 import { CLUB_VIDEOS } from "@/src/data/club-videos";
@@ -360,6 +363,7 @@ export function ClubView({
   const coach = coachOf(club, coaches);
   const mapUrl = clubMapUrl(club.address);
   const videos = videosFor(CLUB_VIDEOS, code);
+  const posts = postsFor(CLUB_POSTS, code);
 
   return (
     <>
@@ -729,6 +733,40 @@ export function ClubView({
           club, not only the curated ones, because the paralisação touches all
           twenty: this is the one section on the page that is never empty. */}
       <SeasonEvents events={SEASON_EVENTS} clubCode={code} />
+
+      {/* Last of the page's extras, and the placement is the rule the two
+          sections above it already state rather than a new judgement.
+          `screenshot.ts` crops a capture at the last section that fits in 1080
+          CSS px, so content inserted ABOVE a section can evict that section
+          from the frame — which cost `partida-554977` its campanha and 581px.
+          Placed at the foot of the run, the worst this can do is fall outside
+          the crop itself; placed one higher it could take **Acontecimentos** or
+          **Vídeos do clube** out with it. Each new extra therefore goes here,
+          and this comment is the induction step.
+
+          It reads correctly here too. The page's spine is the football and the
+          extras are context for it; of the three, this is the one furthest from
+          a result — a club's own posts are the club talking, where the vídeos
+          are about it and the acontecimentos happened to it.
+
+          **Not folded into the links row in the header**, which is the obvious
+          place and the wrong one. That row is *where to follow this club* — one
+          anchor per destination, Instagram among seven — and it answers a
+          question that does not change all season. This answers *what the club
+          published*, which changes weekly, and an embed in a row of glyphs
+          would be a section disguised as a link.
+
+          Renders nothing at all for a club with no curated entry, which is most
+          of them, so for those pages this is not a decision a reader can
+          see. */}
+      {posts.length > 0 && (
+        <section className="mt-6">
+          <h3 className="mb-2 text-body-medium font-medium text-ink-muted">
+            Publicações do clube
+          </h3>
+          <InstagramPosts posts={posts} label={`Publicações do ${club.shortName}`} />
+        </section>
+      )}
 
       <section className="mt-6">
         <h3 className="mb-2 text-body-medium font-medium text-ink-muted">Jogos disputados</h3>

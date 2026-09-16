@@ -5,6 +5,24 @@ import type { PlayerPost } from "@/src/types";
  * keyed by **our** player id, exactly as `player-instagram.ts` beside it. No
  * provider carries a post at any tier, so this is curated and always will be.
  *
+ * ## It has a club-keyed twin, and this file holds the argument for both
+ *
+ * `src/data/club-posts.ts` is the same shape at a different key — the
+ * **Publicação do clube** on the club page — and it deliberately does not
+ * restate any of what follows, pointing here instead. So an edit to the rules
+ * below is an edit to both sections, and `InstagramPost` in `src/types.ts` is
+ * the one interface both files write.
+ *
+ * Two things genuinely differ there and are written down there: the key is a
+ * club code, and `account` must be the handle `club-instagram.ts` records for
+ * that same club — a comparison between two committed files, which a unit test
+ * makes on every commit. This file cannot do that, because its accounts are
+ * legitimately the club's *or* the player's.
+ *
+ * `npm run check-player-posts` walks **both** tables in one run. The name says
+ * only one of them, for `sync-goals`' reason — it writes `escalacoes.ts`
+ * beside `goals.ts` — and the script's own header states it.
+ *
  * ## What this is, and why it is not the thing `player-photos.ts` refuses
  *
  * That file says in as many words that Instagram is not a source and cannot
@@ -29,7 +47,7 @@ import type { PlayerPost } from "@/src/types";
  *
  * ## Nothing is fetched until a reader asks
  *
- * `PlayerPosts` renders a **facade**: a labelled button carrying the summary
+ * `InstagramPosts` renders a **facade**: a labelled button carrying the summary
  * below, and no frame at all until it is pressed. That is `ClubVideos`' rule
  * and its argument transfers intact — a card is opened for a player's figures
  * and links, so a reader who came for an age and a position must not be charged

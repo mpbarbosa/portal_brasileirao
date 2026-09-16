@@ -394,8 +394,21 @@ export interface PlayerPhoto {
 }
 
 /**
- * A **Publicação do jogador** — one Instagram post shown on the **Card do
- * jogador**, curated in `src/data/player-posts.ts`.
+ * One Instagram post this app shows, curated and drawn by Instagram's own
+ * embed. Two sections render it, and they are the same shape by construction
+ * rather than by coincidence: a **Publicação do jogador** on the **Card do
+ * jogador** (`src/data/player-posts.ts`, keyed by player id) and a
+ * **Publicação do clube** on the **Página do clube** (`src/data/club-posts.ts`,
+ * keyed by club code). `PlayerPost` and `ClubPost` below are the two names, so
+ * a reader greps the one their section uses and lands here.
+ *
+ * **One interface and two aliases, rather than two interfaces.** Every rule
+ * below is about the *post* — what may be stored, why the account is named,
+ * what the summary is for — and none of them is about whose section it is in.
+ * A second copy would be a second place for those rules to be edited, which is
+ * the drift `StatusChip` exists to prevent one component over. The two things
+ * that genuinely differ — the key, and how strictly `account` is bounded — live
+ * in the two data files, where somebody adding an entry is standing.
  *
  * **This is not a photograph, and must not be folded into `PlayerPhoto`** one
  * type up. That one names a file this app has *copied* onto its own origin, so
@@ -415,7 +428,7 @@ export interface PlayerPhoto {
  * with no account is one whose provenance the page cannot state, and a post
  * with no summary is a press target with nothing written on it.
  */
-export interface PlayerPost {
+export interface InstagramPost {
   /**
    * The post's shortcode alone — the `Dc1GBBADkfo` of
    * `instagram.com/p/Dc1GBBADkfo/`. A reel is stored the same way — the code
@@ -450,6 +463,30 @@ export interface PlayerPost {
    */
   summary: string;
 }
+
+/**
+ * A **Publicação do jogador** — an `InstagramPost` curated in
+ * `src/data/player-posts.ts` and keyed by **our** player id.
+ *
+ * There, `account` is frequently *not* the player's own: the seed entry is
+ * Athletico-PR's post with Viveros as a collaborator, which is why the card
+ * names the account on every entry.
+ */
+export type PlayerPost = InstagramPost;
+
+/**
+ * A **Publicação do clube** — an `InstagramPost` curated in
+ * `src/data/club-posts.ts` and keyed by **club code**, never by `tla`:
+ * Corinthians and Coritiba both report `COR`.
+ *
+ * Here `account` is bounded harder than on a player's post, and that is the one
+ * real difference between the two sections. A club's publicação is the club's
+ * **own** account, which this repository already records in
+ * `club-instagram.ts` — so the bar is checkable against a committed file and
+ * not only against Instagram's badge, and `tests/club-posts.test.ts` checks it
+ * there with no network at all.
+ */
+export type ClubPost = InstagramPost;
 
 /**
  * Current conditions at a ground, from Open-Meteo. Everything but the

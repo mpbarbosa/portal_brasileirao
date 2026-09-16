@@ -5,7 +5,7 @@ import { InstagramGlyph } from "@/src/components/ClubLinks";
 import { ExternalLink } from "@/src/components/ExternalLink";
 import { FOCUS_RING, LINK_UNDERLINE, STATE_LAYER } from "@/src/components/interaction";
 import { isPlainClick } from "@/src/components/plainClick";
-import type { PlayerPost } from "@/src/types";
+import type { InstagramPost } from "@/src/types";
 
 /**
  * The height a frame takes before Instagram has said what it needs.
@@ -68,7 +68,7 @@ const OPENING_HEIGHT = 620;
  * what it reports — is a scrollbar rather than a silently cropped photograph.
  * Once the height lands there is nothing to scroll.
  */
-function PostFrame({ post }: { post: PlayerPost }) {
+function PostFrame({ post }: { post: InstagramPost }) {
   const src = instagramPostEmbedUrl(post.code);
   const frameRef = useRef<HTMLIFrameElement>(null);
   const [height, setHeight] = useState(OPENING_HEIGHT);
@@ -130,8 +130,18 @@ function PostFrame({ post }: { post: PlayerPost }) {
 }
 
 /**
- * The **Publicações** section of the player card: curated Instagram posts, each
- * drawn by Instagram's own embed once a reader asks for it.
+ * A list of curated Instagram posts, each drawn by Instagram's own embed once a
+ * reader asks for it.
+ *
+ * **Two sections render it**, which is why it is named for the post rather than
+ * for either of them: **Publicações** on the **Card do jogador**
+ * (`player-posts.ts`, keyed by player) and **Publicações do clube** on the
+ * **Página do clube** (`club-posts.ts`, keyed by club). Every decision below —
+ * the facade, one frame at a time, the `MEASURE` height, the way out beneath —
+ * is about drawing a post and is true of both, so a second copy of this file
+ * would be a second place for the `postMessage` guards to be edited. The two
+ * call sites differ in exactly one thing, which is the accessible name, and
+ * that arrives as `label`.
  *
  * **Nothing is requested from Meta until a card is pressed** — not a frame, not
  * a cookie, not a script. That is `ClubVideos`' facade and its argument carries
@@ -162,11 +172,19 @@ function PostFrame({ post }: { post: PlayerPost }) {
  * post since deleted — leaves a reader looking at a white rectangle with no way
  * out, and this is the way out.
  *
- * Renders **nothing** for a player with no entries. `playerPosts` has already
- * dropped anything whose code will not parse, so this is handed a list it can
- * draw in full.
+ * Renders **nothing** for a subject with no entries. `playerPosts` and
+ * `postsFor` have already dropped anything whose code will not parse, so this
+ * is handed a list it can draw in full — and each caller keeps its own
+ * `<section>` and heading, so neither renders a heading over nothing.
+ *
+ * **`label` is the whole accessible name and is composed by the caller**, not
+ * built here from a subject. The two are not the same sentence: a player's
+ * posts are frequently *about* them and published by somebody else — the seed
+ * entry is Athletico-PR's post about Viveros — where a club's are its own, so
+ * "Publicações sobre X" and "Publicações do X" are two different claims and a
+ * single template here would make one of them false.
  */
-export function PlayerPosts({ posts, playerName }: { posts: PlayerPost[]; playerName: string }) {
+export function InstagramPosts({ posts, label }: { posts: InstagramPost[]; label: string }) {
   /**
    * Which post is open, or `null` for none — the state every reader arrives in
    * and most leave in. Never seeded: the card is remounted per player and a
@@ -178,12 +196,13 @@ export function PlayerPosts({ posts, playerName }: { posts: PlayerPost[]; player
   if (posts.length === 0) return null;
 
   return (
-    <ul aria-label={`Publicações sobre ${playerName}`} className="space-y-3">
+    <ul aria-label={label} className="space-y-3">
       {posts.map((post) => {
         const href = instagramPostUrl(post.code);
-        // `playerPosts` guarantees this, but the component is pure and a caller
-        // may hand it a list that never passed through one — the rule
-        // `ClubVideos` keeps its own `watch`/`thumb` guard under.
+        // `playerPosts` and `postsFor` guarantee this, but the component is
+        // pure and a caller may hand it a list that never passed through
+        // either — the rule `ClubVideos` keeps its own `watch`/`thumb` guard
+        // under.
         if (!href) return null;
 
         return (

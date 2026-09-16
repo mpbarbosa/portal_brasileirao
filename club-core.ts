@@ -12,6 +12,7 @@
  */
 import { compareByKickoff, isConcluded } from "@/matches-core";
 import { slugify } from "@/slug-core";
+import { instagramPostCode } from "@/instagram-core";
 import { countsTowardStandings } from "@/standings-core";
 import { videoWatchUrl, youtubeVideoId } from "@/youtube-core";
 import type {
@@ -19,6 +20,7 @@ import type {
   ClubCode,
   ClubDiscord,
   ClubFacebook,
+  ClubPost,
   ClubVideo,
   ClubYouTube,
   FormResult,
@@ -295,6 +297,26 @@ export const videosFor = (
   videos: Record<ClubCode, ClubVideo[]>,
   code: ClubCode,
 ): ClubVideo[] => (videos[code] ?? []).filter((video) => youtubeVideoId(video.id) !== null);
+
+/**
+ * The curated Instagram posts for a club, already filtered to the ones that can
+ * actually be drawn — `videosFor` directly above, at a second curated file, and
+ * `playerPosts` in `player-core.ts` at the same file's player-keyed twin.
+ *
+ * It lives here rather than beside that one because it is keyed by club, which
+ * is what every selector in this module has in common; the two are deliberately
+ * **not** rewritten in terms of each other, since a shared helper taking a
+ * record and a key is `Record.prototype` with extra steps.
+ *
+ * An entry whose `code` will not reduce to a shortcode is dropped rather than
+ * rendered as a frame pointing nowhere, one at a time, so a single bad line
+ * does not take the rest of a club's section with it. The component is then
+ * handed a list it can draw in full.
+ */
+export const postsFor = (
+  posts: Record<ClubCode, ClubPost[]>,
+  code: ClubCode,
+): ClubPost[] => (posts[code] ?? []).filter((post) => instagramPostCode(post.code) !== null);
 
 
 /**
