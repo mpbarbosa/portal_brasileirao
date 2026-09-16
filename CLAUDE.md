@@ -4699,7 +4699,7 @@ a reading *"at 00:27:33Z"* — a time nothing had measured. That turn ran no
 dates the **bundle**, minutes before any deploy installs it. The reading's real
 instant was recoverable and thirteen minutes later: `uptime` (26.18s) against a
 process start of 00:40:20.9Z — itself derived from a later reading taken beside a
-measured clock — puts it at about **00:40:46Z**, *after* the install rather than
+measured clock — puts it at about **00:40:47Z**, *after* the install rather than
 before it. **`uptime` is the one field in that payload measured relative to the
 read**, so it recovers the instant where `builtAt` cannot.
 Two things follow. The cost was not a wrong number in prose: it was a phantom
