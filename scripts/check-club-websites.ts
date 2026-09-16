@@ -43,7 +43,8 @@
 import { CLUBS } from "@/src/data/clubs";
 import { CLUB_WEBSITE_OVERRIDES } from "@/src/data/club-website-overrides";
 import { withWebsiteOverrides } from "@/club-core";
-import { siteVerdict, type SiteVerdict } from "@/club-website-core";
+import { chromium, type Browser } from "@playwright/test";
+import { isBotChallenge, siteVerdict, type SiteVerdict } from "@/club-website-core";
 import type { Club } from "@/src/types";
 
 // Several club sites answer a scripted request differently from a browser's —
@@ -52,6 +53,18 @@ import type { Club } from "@/src/types";
 // anyone.
 const UA =
   "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36";
+
+/** Pinned, never inherited — see `renderUnsettled`. */
+const LOCALE = "pt-BR";
+const TIMEZONE = "America/Sao_Paulo";
+
+/**
+ * How long a rendered page is given to draw itself after DOMContentLoaded.
+ * Measured: Coritiba and Grêmio both settle well inside this, and `networkidle`
+ * is not usable here — a club site with a carousel or a live widget never goes
+ * idle, which would hang the run on exactly the pages it exists for.
+ */
+const SETTLE_MS = 4000;
 
 const appUrl = process.argv[2];
 
@@ -95,7 +108,15 @@ const check = async (club: Club, live: Map<string, string | undefined> | null): 
       });
       landed = response.url;
 
-      if (!response.ok) {
+      if (isBotChallenge(response.status, response.headers)) {
+        // Told apart from an ordinary refusal because it is permanent by
+        // design: the host is refusing automation, not having a bad minute.
+        verdict = "challenged";
+        problems.push(
+          `HTTP ${response.status}, ${response.headers.get("server") ?? "unknown server"} — the host serves a bot ` +
+            "challenge, so no automated run can verify it. Open it in a browser.",
+        );
+      } else if (!response.ok) {
         // A redirect is the recorded value still working, and is followed
         // above; a 4xx or 5xx tells us nothing about whose site this is.
         verdict = "inconclusive";
@@ -143,9 +164,88 @@ const clubs = withWebsiteOverrides(CLUBS, CLUB_WEBSITE_OVERRIDES).sort((a, b) =>
 const rows: Row[] = [];
 for (const club of clubs) rows.push(await check(club, live));
 
+/**
+ * Render the rows a plain fetch could not settle, and only those.
+ *
+ * **A browser is spent on the few, never on the twenty.** Seventeen clubs are
+ * answered by one `fetch` each; paying a page load for them would make a
+ * two-second run a minute-long one to learn nothing new.
+ *
+ * Measured 2026-09-16, and both numbers are the argument: Coritiba serves a 650
+ * byte Vite shell with no title and no Open Graph — so there is no cheaper
+ * signal than rendering — and rendered it gives 10 861 characters and names
+ * itself. Grêmio goes from 0 bytes to 14 694.
+ *
+ * **The user agent is pinned, and skipping it costs the very club this exists
+ * for.** With Playwright's default agent Grêmio answered 403 where curl had
+ * answered 200: the default says `HeadlessChrome`. Locale and timezone are
+ * pinned for `check-player-posts`' reason — a checker that reads its own
+ * machine's environment answers differently in CI, which is the failure
+ * `rehearse-sync-schedule.sh` records.
+ *
+ * A host that serves a challenge is NOT retried here: it refused automation
+ * once and a second automated request is the same request.
+ */
+const renderUnsettled = async (pending: Row[]): Promise<void> => {
+  if (pending.length === 0) return;
+
+  let browser: Browser;
+  try {
+    browser = await chromium.launch();
+  } catch {
+    for (const row of pending) {
+      row.problems.push(
+        "could not render: this needs Chromium — npx playwright install chromium",
+      );
+    }
+    return;
+  }
+
+  try {
+    const context = await browser.newContext({ locale: LOCALE, timezoneId: TIMEZONE, userAgent: UA });
+    for (const row of pending) {
+      const page = await context.newPage();
+      try {
+        const response = await page.goto(row.website!, {
+          waitUntil: "domcontentloaded",
+          timeout: 30_000,
+        });
+        // The shell arrives before the app has drawn anything into it.
+        await page.waitForTimeout(SETTLE_MS);
+
+        const status = response?.status() ?? 0;
+        if (response && isBotChallenge(status, { get: (n) => response.headers()[n.toLowerCase()] ?? null })) {
+          row.verdict = "challenged";
+          row.problems = [`rendered and still HTTP ${status} — a bot challenge. Open it in a browser.`];
+          continue;
+        }
+
+        row.verdict = siteVerdict(await page.content(), row.club.shortName);
+        row.problems =
+          row.verdict === "no-name"
+            ? [`rendered and never names "${row.club.shortName}" — the domain may have changed hands`]
+            : row.verdict === "names-club"
+              ? []
+              : [`rendered and still said too little to judge (HTTP ${status})`];
+      } catch (error) {
+        row.problems.push(`render failed: ${(error as Error).message.split("\n")[0].slice(0, 80)}`);
+      } finally {
+        await page.close();
+      }
+    }
+  } finally {
+    await browser.close();
+  }
+};
+
+// Only what the cheap pass could not settle. A challenged host is excluded: it
+// refused automation, and rendering is still automation.
+await renderUnsettled(rows.filter((row) => row.verdict === "inconclusive" && row.website));
+
 const MARK: Record<Row["verdict"], string> = {
   "names-club": "ok  ",
   inconclusive: "?   ",
+  challenged: "--  ",
   "no-name": "FAIL",
   error: "FAIL",
   "no-site": "?   ",
@@ -168,10 +268,16 @@ for (const row of rows) {
 }
 
 const failed = rows.filter(isFailure);
+// A challenged host is reported and never failed: it refuses automation by
+// design, so failing on it would redden the monthly run for ever.
 const unsure = rows.filter((row) => !isFailure(row) && row.verdict !== "names-club");
 const named = rows.length - failed.length - unsure.length;
 
-console.log(`\n${named}/${rows.length} sites still name their club, ${unsure.length} inconclusive, ${failed.length} to look at`);
+const challenged = rows.filter((row) => row.verdict === "challenged").length;
+console.log(
+  `\n${named}/${rows.length} sites still name their club, ${unsure.length} unverified ` +
+    `(${challenged} refusing automation), ${failed.length} to look at`,
+);
 console.log("A name match narrows what you have to read. It does not prove the site is the club's —");
 console.log("there is no id to compare, which is why this is a hint where the Discord check is exact.");
 

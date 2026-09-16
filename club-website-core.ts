@@ -12,6 +12,22 @@
  * the page passes. Status codes, redirects and response sizes all looked
  * correct throughout.
  *
+ * **Three of the twenty serve nothing to a plain fetch, and a rendered pass
+ * closes two of them.** Measured 2026-09-16: Coritiba is a Vite SPA shell
+ * (`<div id="app">`, 650 bytes, no title and no Open Graph — so there is no
+ * cheaper signal to read), Grêmio answers 0 bytes, and Vasco answers 403.
+ * Rendered in headless Chromium the first two give 10 861 and 14 694 characters
+ * and name themselves in their own `<title>`; Vasco stays behind a Cloudflare
+ * challenge and is reported as such rather than forced.
+ *
+ * **The user agent is load-bearing and that was found by running it.** With
+ * Playwright's default, Grêmio answered **403** where `curl` had answered 200 —
+ * the default carries `HeadlessChrome`, which is a one-word bot tell. Pinning a
+ * real desktop agent took it to 200 and a verdict. Anything here that sets an
+ * agent, a locale or a zone CONSTRUCTS it rather than inheriting it, which is
+ * `check-player-posts`' recorded trap: it read Instagram in the machine's own
+ * locale and reported three false negatives.
+ *
  * **It is a HINT, like `check-club-twitter` and unlike `check-club-discord`.**
  * Those two compare an id the host states against an id we recorded; a website
  * has no id to compare, so the only question available is whether the page still
@@ -79,7 +95,29 @@ export const readableText = (html: string): string =>
  */
 export const MIN_READABLE_TEXT = 400;
 
-export type SiteVerdict = "names-club" | "no-name" | "inconclusive";
+export type SiteVerdict = "names-club" | "no-name" | "inconclusive" | "challenged";
+
+/**
+ * Whether the host served a bot challenge rather than its site.
+ *
+ * **Structural, never a title match**, and that is the whole reason this is a
+ * function rather than an `includes`. The challenge page is localised — Vasco's
+ * reads "Um momento…" to a pt-BR client and "Just a moment..." to an en one,
+ * measured both ways — so a title rule would be orthography-matching in every
+ * language Cloudflare ships, which is the join this repo refuses everywhere
+ * else. The headers say it outright: `cf-mitigated: challenge`, `server:
+ * cloudflare`, on a 403.
+ *
+ * It matters because it separates two things a reader would otherwise conflate:
+ * **this host refuses automation** — permanent, expected, nothing to fix — from
+ * **this page said nothing about the club**, which is a lead. Reporting the
+ * first as the second is how a monthly run trains its reader to skip it.
+ */
+export const isBotChallenge = (status: number, headers: { get(name: string): string | null }): boolean => {
+  if (status !== 403 && status !== 503 && status !== 429) return false;
+  if (headers.get("cf-mitigated")) return true;
+  return (headers.get("server") ?? "").toLowerCase().includes("cloudflare");
+};
 
 /** The words of a club's name worth looking for — "-PR" and "do" are not. */
 export const clubNameWords = (shortName: string): string[] =>

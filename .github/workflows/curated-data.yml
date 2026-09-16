@@ -68,7 +68,7 @@ jobs:
       # the install fails, the checker fails and is REPORTED as data, exactly
       # like a rotted link — where a failing step here would go red and take the
       # whole design with it.
-      - name: Install the browser check-player-posts needs
+      - name: Install the browser check-player-posts and check-club-websites need
         continue-on-error: true
         run: npx playwright install --with-deps chromium
 
