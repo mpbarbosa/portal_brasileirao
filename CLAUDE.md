@@ -2871,7 +2871,7 @@ the line itself.
 `src/data/club-discord.ts` holds the **supporters' Discord** for a club, keyed
 by club code and storing an **invite and the guild it opens** — `discordUrl` in
 `club-core.ts` builds the address from the invite, and the guild id is never
-rendered. Hand-maintained and partial like `club-reddit.ts`, whose rule it takes
+rendered. Hand-maintained and partial, and it takes `club-reddit.ts`' rule
 whole: a server is the torcida's and not the club's, so the screen-reader suffix
 says "comunidade de torcedores" and the link is not filed beside the Site
 oficial. **Five entries as of 2026-09-13** — Flamengo's **FlaDiscord**,

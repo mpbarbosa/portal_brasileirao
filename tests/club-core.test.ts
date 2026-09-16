@@ -830,8 +830,11 @@ test("no two clubs share an article", () => {
 });
 
 test("every curated subreddit names a club in the division", () => {
-  // Coverage is deliberately partial — unlike the hymn and the article, which
-  // are on all twenty pages — so there is no "every club has one" gate here.
+  // Coverage reached all twenty on 2026-09-16 and there is still no "every club
+  // has one" gate, which is a decision rather than an omission: a hymn and an
+  // article cannot empty out, where a community can be abandoned or go private,
+  // and the honest move then is to delete the entry rather than keep a link to
+  // a dead room. Gating on completeness would make that deletion fail the build.
   // What CAN be checked is that no entry is keyed to nothing: a code that is
   // not in the division renders no link and reports nothing, which is the same
   // silent failure `player-core.test.ts` guards for an id no longer in a squad.
