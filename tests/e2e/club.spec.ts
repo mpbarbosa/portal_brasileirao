@@ -408,35 +408,84 @@ test.describe("Clube", () => {
     expect(text).not.toContain("reddit.com");
   });
 
+  /**
+   * A club with NO subreddit, PRODUCED rather than found.
+   *
+   * **This spec named Palmeiras, then Fluminense, then Mirassol, then Vitória,
+   * and now names nobody**: `club-reddit.ts` reached all twenty clubs on
+   * 2026-09-16, so there is no club left to point it at. The four moves its
+   * previous comment recorded were the warning, and this is the state that
+   * comment predicted, arriving in its strongest form — not "pick another
+   * club", but "no such club exists".
+   *
+   * So the state is prepared, which is `club-discord.spec.ts`' arrangement and
+   * this suite's own rule: produce the state with a payload rather than hunting
+   * the data for a record that happens to hold it. It also ends the moving
+   * subject for good — a later deletion from the curated file cannot redden
+   * this spec, and neither can a later addition.
+   *
+   * **Both payloads, for `club-discord.spec.ts`' measured reason**: `ClubView`
+   * resolves its club from `/api/standings` first and falls back to
+   * `/api/matches`, so stripping the field from one copy leaves the other
+   * rendering the link and the spec passing for the wrong reason.
+   */
+  const withoutSubreddit = async (page: Page) => {
+    const [standings, matches] = await Promise.all([
+      page.request.get("/api/standings").then((r) => r.json()),
+      page.request.get("/api/matches").then((r) => r.json()),
+    ]);
+
+    const rows = (standings as { data: { club: { code: string; slug?: string; reddit?: string } }[] })
+      .data;
+    const clubs = (matches as { data: { clubs?: { code: string; slug?: string; reddit?: string }[] } })
+      .data.clubs;
+
+    if (!rows?.length) throw new Error("/api/standings shipped no rows — the spec's premise is gone");
+    if (!clubs?.length) throw new Error("/api/matches shipped no clubs — the spec's premise is gone");
+
+    // It must CARRY one before it can be stripped of it, or the assertion below
+    // passes against a payload that never had the field — which is the shape of
+    // a test that cannot fail.
+    const row = rows.find((entry) => entry.club.reddit);
+    if (!row) throw new Error("no club in /api/standings carries a subreddit — nothing to remove");
+
+    const code = row.club.code;
+    delete row.club.reddit;
+    for (const club of clubs) if (club.code === code) delete club.reddit;
+
+    // Fulfilled from memory rather than proxied per request, for the reason
+    // `meu-time.spec.ts` records.
+    await page.route("**/api/standings*", (route) =>
+      route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(standings) }),
+    );
+    await page.route("**/api/matches*", (route) =>
+      route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(matches) }),
+    );
+
+    return row.club.slug ?? code;
+  };
+
   test("a club with no curated subreddit renders no link rather than a broken one", async ({
     page,
   }) => {
     // The absence is the point: `r/<club name>` is exactly the address somebody
-    // would be tempted to derive, and the survey in `club-reddit.ts` found four
-    // such addresses naming a different subject entirely — a Mexican club, the
-    // Civil Air Patrol, a state and a city. Without this, emptying the curated
-    // file would leave every assertion above passing on whichever club still
-    // had an entry.
+    // would be tempted to derive, and the survey in `club-reddit.ts` found five
+    // such addresses naming a different subject entirely — a Mexican club, a
+    // Portuguese one, the Civil Air Patrol, a state and a city. Without this,
+    // emptying the curated file would leave every assertion above passing on
+    // whichever club still had an entry.
     //
-    // **This named PALMEIRAS, then FLUMINENSE, then MIRASSOL, and now
-    // Vitória** — which is the cost of picking the subject of a negative
-    // assertion out of a curated file that grows: it goes red on the commit
-    // that widens coverage — correctly, and confirmed by running it each
-    // time — and no club here is guaranteed to stay absent for ever. Four
-    // subjects is enough to stop the next move reading as an accident: budget
-    // for it rather than for a club that stays absent.
-    //
-    // Vitória is the safest available on the criterion this comment has used
-    // throughout — absent by the BAR rather than by nobody looking — and its
-    // absence is the most durable kind the survey in `club-reddit.ts` records.
-    // Fluminense and Mirassol left because each club's community turned out to
-    // be at another address (`r/nense`, `r/mirassolfc`), which a second source
-    // can deliver at any time; the three clubs still filed under that bar
-    // (Bragantino, Remo, Vitória) are subs that exist and hold nobody, which
-    // no second source can fix. `r/vitoria` has the fewest of the three —
-    // TWO members — so nothing but that room filling up can move it.
-    await page.goto("/clube/vitoria");
-    await expect(pageHeading(page)).toContainText("Vitória");
+    // **Confirmed red by mutation** rather than assumed: dropping the delete
+    // above fails both projects on this count, since every club now carries a
+    // subreddit.
+    const key = await withoutSubreddit(page);
+    await page.goto(`/clube/${key}`);
+
+    // Waited on rather than asserted immediately: the club page renders before
+    // its payload lands, so an empty locator here would pass against a page
+    // that had simply not loaded — the trap `allInnerTexts` records one file
+    // over, and `club-discord.spec.ts`' rule.
+    await expect(pageHeading(page)).toBeVisible();
     await expect(redditLink(page)).toHaveCount(0);
   });
 
