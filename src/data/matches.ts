@@ -6,12 +6,12 @@ import type { Match } from "@/src/types";
  *
  * A frozen snapshot of the 2026 season
  * (380 fixtures, played through round 27), taken
- * 2026-09-13 from football-data.org. This is the offline fallback the app
+ * 2026-09-16 from football-data.org. This is the offline fallback the app
  * serves when no token is configured or the upstream is unreachable — real
  * historical data rather than invented scorelines, but **frozen**: it does not
  * reflect anything that happened after the snapshot date.
  */
-export const SNAPSHOT_DATE = "2026-09-13";
+export const SNAPSHOT_DATE = "2026-09-16";
 
 export const SEED_MATCHES: Match[] = [
   { id: "554740", round: 1, kickoff: "2026-01-28T22:00:00Z", status: "FINISHED", homeCode: "1766", awayCode: "1769", homeGoals: 2, awayGoals: 2 },
@@ -282,7 +282,7 @@ export const SEED_MATCHES: Match[] = [
   { id: "555009", round: 27, kickoff: "2026-09-13T00:00:00Z", status: "FINISHED", homeCode: "6685", awayCode: "1771", homeGoals: 2, awayGoals: 1 },
   { id: "555007", round: 27, kickoff: "2026-09-13T19:00:00Z", status: "FINISHED", homeCode: "4364", awayCode: "1782", homeGoals: 2, awayGoals: 2 },
   { id: "555005", round: 27, kickoff: "2026-09-13T20:30:00Z", status: "FINISHED", homeCode: "1783", awayCode: "1779", homeGoals: 2, awayGoals: 1 },
-  { id: "555001", round: 27, kickoff: "2026-09-14T23:00:00Z", status: "SCHEDULED", homeCode: "1777", awayCode: "4287", homeGoals: null, awayGoals: null },
+  { id: "555001", round: 27, kickoff: "2026-09-14T23:00:00Z", status: "FINISHED", homeCode: "1777", awayCode: "4287", homeGoals: 2, awayGoals: 1 },
   { id: "554941", round: 21, kickoff: "2026-09-16T22:30:00Z", status: "SCHEDULED", homeCode: "1770", awayCode: "1767", homeGoals: null, awayGoals: null },
   { id: "555011", round: 28, kickoff: "2026-09-19T19:00:00Z", status: "SCHEDULED", homeCode: "1766", awayCode: "1772", homeGoals: null, awayGoals: null },
   { id: "555015", round: 28, kickoff: "2026-09-19T20:00:00Z", status: "SCHEDULED", homeCode: "4364", awayCode: "1770", homeGoals: null, awayGoals: null },

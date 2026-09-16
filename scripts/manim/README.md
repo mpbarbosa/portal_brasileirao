@@ -67,6 +67,10 @@ npx tsx scripts/manim/export-velas.ts > scripts/manim/velas.json
 BARRAS_ASPECT=4:5  ./.venv-manim/bin/manim -qh scripts/manim/barras.py Barras
 BARRAS_ASPECT=9:16 ./.venv-manim/bin/manim -qh scripts/manim/barras.py Barras
 npx tsx scripts/manim/thumbnail-barras.ts
+
+# e o corte de torcedor, que é a MESMA cena com um clube marcado
+BARRAS_FOCUS=1783 ./.venv-manim/bin/manim -qh scripts/manim/barras.py Barras
+npx tsx scripts/manim/thumbnail-barras.ts --focus 1783
 ```
 
 **Copie cada corte ANTES de renderizar o próximo.** Os três escrevem caminhos
@@ -79,6 +83,27 @@ diferentes (`1080p60`, `1350p60`, `1920p60`), então aqui o atropelo não é o d
 desconhecido **abortando** em vez de cair no 16:9 em silêncio. No 9:16 a nota de
 fecho sobe para dentro da zona segura, porque é conteúdo; só o crédito fica na
 faixa que a UI come.
+
+**O `BARRAS_FOCUS` é o corte de TORCEDOR e é ortogonal ao `BARRAS_ASPECT`** —
+os dois se combinam, então um clube rende três cortes como o vídeo base rende
+três. Ele recebe o **código numérico do provedor**, nunca a `tla` (Corinthians e
+Coritiba compartilham `COR`), e um código que o `pontos.json` não tem **aborta**,
+pela razão do `BARRAS_ASPECT`: renderizar o vídeo base inteiro com nome de
+arquivo de torcedor só apareceria ao assistir. Sem a variável a cena sai
+exatamente como saía — conferido, e é a razão de ele ser um interruptor e não
+uma cópia do arquivo.
+
+**O desenho continua sendo a divisão inteira**, e o `-youtube.md` do corte diz
+isso em voz alta: o que muda é que uma linha fica achável em todo quadro,
+inclusive nas rodadas em que o clube está no meio da tabela — que é exatamente
+quando ninguém acha o próprio time entre vinte barras. O **porquê de cada canal
+do destaque** (altura, faixa, peso do tipo, e por que nenhuma barra recua) está
+no docstring do `barras.py`, com os números medidos.
+
+**`thumbnail-barras.ts --focus <código>` é a capa do mesmo corte**, e o
+vocabulário do destaque tem de ser o mesmo nos dois: uma capa que marca o clube
+de um jeito e um vídeo que marca de outro promete um vídeo que o vídeo não
+entrega.
 
 `export-velas.ts` aceita **um** código de clube (`1765` Fluminense é o padrão) —
 uma vela por rodada só cabe para um clube: duas séries sobrepostas na mesma
@@ -96,8 +121,10 @@ VELAS_JSON=$PWD/scripts/manim/velas-athletico-pr.json \
   ./.venv-manim/bin/manim -qh scripts/manim/velas.py Velas
 ```
 
-Hoje são três: `1765` Fluminense em `velas.json`, `1768` Athletico-PR e `1777`
-Bahia nos seus próprios arquivos — conte os `velas*.json`, não esta frase.
+São os vinte clubes, um payload cada, mais o `velas.json` que repete o `1765`
+Fluminense — **conte os `velas*.json`, não esta frase**, que dizia "três" por
+muito tempo depois de serem vinte e um. É a falha que este arquivo registra em
+outros lugares: um número em prosa não tem portão nenhum em cima dele.
 
 **E a paleta precisa conhecer o clube antes.** `CLUB_COLOURS` no `velas.py`
 mapeia código → tom, e quem não está lá cai no `FALLBACK_COLOUR` — um cinza que
