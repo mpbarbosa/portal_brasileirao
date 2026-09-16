@@ -5075,7 +5075,7 @@ enforces rather than early and carved-out.
   written by hand in a dozen places. `WikipediaLink` owns the rest of its anchor:
   glyph, label and the subject the suffix names. **The facades are the
   exception**, and deliberately: the video cards in `ClubVideos`, the "Também
-  por" row in `MatchHighlights` and the post cards in `PlayerPosts` play in place
+  por" row in `MatchHighlights` and the post cards in `InstagramPosts` play in place
   on a plain click, so "abre em nova aba" would be false of them and they write
   their own anchor. `GLYPH` in `src/components/glyph.ts` holds the shared mark
   attributes, so an icon defined in `ClubView` cannot drift from one defined

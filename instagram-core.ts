@@ -61,7 +61,7 @@ const POST_PATH = /^(?:p|reel)\//;
  * it with its author, the verified badge and the video, and `/p/<code>/` opened
  * it without redirecting. Mounted in the player card in headless Chromium it
  * also reported its own height by `MEASURE` — 899px in the 470px frame, against
- * 953px for Viveros' post in the same run — so `PlayerPosts` sizes it with no
+ * 953px for Viveros' post in the same run — so `InstagramPosts` sizes it with no
  * special case. A reel is therefore stored like any other post and every
  * address below stays `/p/`; nothing downstream needs to know which it was.
  *

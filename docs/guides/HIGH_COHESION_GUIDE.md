@@ -90,7 +90,7 @@ extraction counted callers of the glyph rather than of the anchor.
 
 **Facades are not callers of that contract**, which is why three anchors still
 write `target` by hand: the video cards in `ClubVideos`, the "Também por" row in
-`MatchHighlights` and the post cards in `PlayerPosts` play in place on a plain
+`MatchHighlights` and the post cards in `InstagramPosts` play in place on a plain
 click, and "abre em nova aba" would be false of them.
 
 The same pass found the rest of this guide's warning signs, and each now has one

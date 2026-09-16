@@ -21,7 +21,7 @@ import { InstagramLink, WikipediaLink } from "@/src/components/ClubLinks";
 import { ExternalLink } from "@/src/components/ExternalLink";
 import { GLYPH } from "@/src/components/glyph";
 import { LINK_UNDERLINE } from "@/src/components/interaction";
-import { PlayerPosts } from "@/src/components/PlayerPosts";
+import { InstagramPosts } from "@/src/components/InstagramPosts";
 import { PLAYER_INSTAGRAM } from "@/src/data/player-instagram";
 import { PLAYER_NICKNAMES } from "@/src/data/player-nicknames";
 import { PLAYER_PHOTOS } from "@/src/data/player-photos";
@@ -547,7 +547,7 @@ export function PlayerOverlayCard({ player, scorer, onClose }: PlayerOverlayCard
              an absent post is not a missing value. */
           <section>
             <GroupLabel>Publicações</GroupLabel>
-            <PlayerPosts posts={posts} playerName={enriched.name} />
+            <InstagramPosts posts={posts} label={`Publicações sobre ${enriched.name}`} />
           </section>
         )}
 

@@ -28,7 +28,7 @@ type ExternalLinkProps = Omit<ComponentPropsWithoutRef<"a">, "target" | "rel" | 
  *
  * **A facade is not one of these, and that is why three anchors still write
  * `target` by hand.** The video cards in `ClubVideos`, the "Também por" row in
- * `MatchHighlights` and the post cards in `PlayerPosts` are links for a modified
+ * `MatchHighlights` and the post cards in `InstagramPosts` are links for a modified
  * click and play in place for a plain one, so what they announce depends on
  * which: "tocar aqui na página" is true of them and "abre em nova aba" is not.
  * Forcing them through this would put a false sentence in a screen reader's

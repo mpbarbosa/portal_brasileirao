@@ -906,6 +906,43 @@ the provenance beneath it), "Linha do tempo" (the arrangement, not the thing;
 and it would name a section whose rows are not evenly spaced in time),
 "Histórico" (the **Campanha** already owns the club's own history, on the pitch).
 
+**Publicação do clube**:
+One Instagram post published by a club, shown on the **Página do clube** under the
+heading **Publicações do clube** — the last of that page's extras, below the
+**Acontecimentos** and above **Jogos disputados**. Curated in
+`src/data/club-posts.ts`, keyed by **club code** and never by `tla` (Corinthians and
+Coritiba both report `COR`), and storing the post's **shortcode alone**, exactly as
+the **Publicação do jogador** does and for its reason: Instagram's "copy link"
+appends a `stkn` share token identifying whoever copied it.
+**It is the same thing as a Publicação do jogador at a different key**, which is why
+`InstagramPost` in `src/types.ts` is one interface with two aliases rather than two
+shapes — every rule about *the post* is written once, and the two data files hold
+only what differs. So the facade, the `/embed/captioned/` frame that sizes itself by
+`postMessage`, the refusal of `/reels/` and `/tv/`, and the ban on an `<img>` from
+`cdninstagram.com` all transfer unchanged, and that entry is where they are argued.
+**What differs is the bar on the account, and it is stricter here.** A player's post
+is legitimately published by the club *or* by the player, so only Instagram's badge
+can vouch for it and only a monthly browser run can ask. A club's publicação is the
+club's **own**, which means the handle must be the one `club-instagram.ts` already
+records for that same code — a comparison between two committed files, which
+`tests/club-posts.test.ts` makes on every commit with no network at all. An entry
+filed under the wrong club is refused there even though its post is real and
+verified.
+**It is not a Vídeo do clube and not a Melhor momento.** The first is YouTube and
+about the club; this is Instagram and *by* it. The second is
+`src/data/highlights.ts`, which is **YouTube only** — `isHighlightUrl` drops
+anything else silently — so a club's own melhores-momentos reel belongs here and
+could not go there even if somebody tried.
+**Nor does it belong in the links row** in the page header: that row says *where to
+follow this club*, one anchor per destination and unchanged all season, where this
+says *what the club published* and changes weekly.
+_Avoid_: "Redes sociais" (the links row in the header is already that, and a heading
+naming it would claim both), "Posts" (the pt-BR section is **Publicações**, and the
+glossary keeps one word), "Notícias do clube" (a post is the club talking, not a
+report about it), a section per network (nothing here reads X, Facebook or YouTube
+posts, and a heading promising them would be a promise the data cannot keep), and
+every avoidance the **Publicação do jogador** entry lists, which holds here in full.
+
 **Wikipédia**:
 The club's encyclopedia article, linked from its page as a fourth external link
 beside the **Site oficial**, the **Instagram do clube** and the **Hino do
