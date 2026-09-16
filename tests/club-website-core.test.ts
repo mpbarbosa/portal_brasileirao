@@ -1,7 +1,13 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { MIN_READABLE_TEXT, clubNameWords, readableText, siteVerdict } from "@/club-website-core";
+import {
+  MIN_READABLE_TEXT,
+  clubNameWords,
+  isBotChallenge,
+  readableText,
+  siteVerdict,
+} from "@/club-website-core";
 
 /** Enough readable text to clear `MIN_READABLE_TEXT`, naming nobody. */
 const filler = "lorem ipsum dolor sit amet ".repeat(40);
@@ -102,4 +108,49 @@ test("script and style contents are not readable text", () => {
   // anything to a reader.
   const buried = `<script>var club = "Palmeiras";</script><style>/* Palmeiras */</style>${filler}`;
   assert.equal(siteVerdict(buried, "Palmeiras"), "no-name");
+});
+
+/* ------------------------------------------------------ bot challenges ---- */
+
+/** Just enough of a `Headers` for the structural test. */
+const headers = (pairs: Record<string, string>) => ({
+  get: (name: string) => pairs[name.toLowerCase()] ?? null,
+});
+
+test("a Cloudflare challenge is told apart from an ordinary refusal", () => {
+  // Measured on Vasco 2026-09-16: 403, `cf-mitigated: challenge`, `server:
+  // cloudflare`. Permanent by design, so it must not read as a lead.
+  assert.equal(
+    isBotChallenge(403, headers({ "cf-mitigated": "challenge", server: "cloudflare" })),
+    true,
+  );
+});
+
+test("it reads the HEADERS, never the challenge page's words", () => {
+  // The page is localised — "Um momento…" to a pt-BR client, "Just a moment..."
+  // to an en one, both measured. A title rule would be orthography-matching in
+  // every language the vendor ships, which is the join this repo refuses.
+  const localised = `<title>Um momento…</title><p>Verificando o seu navegador</p>`;
+  assert.equal(isBotChallenge(403, headers({})), false, "no headers, no claim");
+  assert.equal(isBotChallenge(200, headers({ server: "cloudflare" })), false, "a 200 is not a challenge");
+  assert.ok(localised.includes("momento"), "the page says so and is still not the evidence");
+});
+
+test("an ordinary 404 or 500 is not a challenge", () => {
+  // These are the rows that stay INCONCLUSIVE and may be worth a second look;
+  // conflating them with a refusal would hide a dead host.
+  assert.equal(isBotChallenge(404, headers({ server: "nginx" })), false);
+  assert.equal(isBotChallenge(500, headers({ server: "cloudflare" })), false);
+});
+
+test("a cloudflare-fronted site that ANSWERS is not challenged", () => {
+  // Much of the web sits behind this vendor. Only the refusal statuses count,
+  // or every club on the CDN would be reported as refusing automation.
+  assert.equal(isBotChallenge(200, headers({ server: "cloudflare" })), false);
+  assert.equal(isBotChallenge(301, headers({ server: "cloudflare" })), false);
+});
+
+test("the mitigation header alone is enough, whatever the server says", () => {
+  // A vendor may front the site under another name; the header is the claim.
+  assert.equal(isBotChallenge(429, headers({ "cf-mitigated": "challenge" })), true);
 });
