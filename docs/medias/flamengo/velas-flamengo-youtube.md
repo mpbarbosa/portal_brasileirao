@@ -15,7 +15,7 @@ Texto que acompanha [`velas-flamengo.mp4`](velas-flamengo.mp4)
 - **Cortes verticais:** `velas-flamengo-45.mp4` (1080×1350, feed do Instagram) e `velas-flamengo-916.mp4` (1080×1920, Reels e YouTube Short).
 
 > **Os números aqui saem de `scripts/manim/velas-flamengo.json`, rodada 27,
-> snapshot de 2026-09-13** — 1º com 57 pts, 17V 6E 4D, e a oscilação entre
+> snapshot de 2026-09-16** — 1º com 57 pts, 17V 6E 4D, e a oscilação entre
 > o 1º e o 15º, que é a faixa que o painel do vídeo imprime. Eles **envelhecem**: um `sync-seed-data` seguido de uma
 > reexportação move o vídeo, e este arquivo não é regerado por nada. Reconferir
 > antes de publicar, contra o JSON e não contra esta página.
@@ -74,7 +74,7 @@ busca, e não é como o clube aparece no vídeo nem na tabela.
 ```
 A campanha do Flamengo rodada a rodada, desenhada como vela: o corpo vai da posição em que o clube ABRIU a rodada até onde ele FECHOU, e o pavio cobre a melhor e a pior posição que ele ocupou enquanto a rodada era jogada. Embaixo, no mesmo eixo, os pontos acumulados — a barra é o total e a tampa clara é o que a rodada acrescentou.
 
-Dados até 13/09/2026 (27ª rodada):
+Dados até 16/09/2026 (27ª rodada):
 • Flamengo — 1º, 57 pts em 27 jogos
 • 17V · 6E · 4D — 53 gols pró, 22 contra, saldo +31
 • 70% de aproveitamento · oscilou entre o 1º e o 15º

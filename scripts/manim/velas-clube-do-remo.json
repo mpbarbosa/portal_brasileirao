@@ -1,5 +1,5 @@
 {
-  "snapshot": "2026-09-13",
+  "snapshot": "2026-09-16",
   "club": {
     "code": "4287",
     "name": "Clube do Remo",
@@ -506,12 +506,18 @@
       "close": 19,
       "best": 19,
       "worst": 19,
-      "points": null,
+      "points": 0,
       "totalPoints": 23,
-      "played": 26,
-      "result": null,
+      "played": 27,
+      "result": "D",
       "moved": 0,
-      "match": null
+      "match": {
+        "opponent": "Bahia",
+        "home": false,
+        "goalsFor": 1,
+        "goalsAgainst": 2,
+        "result": "D"
+      }
     }
   ],
   "events": [

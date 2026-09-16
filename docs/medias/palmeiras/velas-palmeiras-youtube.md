@@ -15,7 +15,7 @@ Texto que acompanha [`velas-palmeiras.mp4`](velas-palmeiras.mp4)
 - **Cortes verticais:** `velas-palmeiras-45.mp4` (1080×1350, feed do Instagram) e `velas-palmeiras-916.mp4` (1080×1920, Reels e YouTube Short).
 
 > **Os números aqui saem de `scripts/manim/velas-palmeiras.json`, rodada 27,
-> snapshot de 2026-09-13** — 2º com 56 pts, 16V 8E 3D, e a oscilação entre
+> snapshot de 2026-09-16** — 2º com 56 pts, 16V 8E 3D, e a oscilação entre
 > o 1º e o 11º, que é a faixa que o painel do vídeo imprime. Eles **envelhecem**: um `sync-seed-data` seguido de uma
 > reexportação move o vídeo, e este arquivo não é regerado por nada. Reconferir
 > antes de publicar, contra o JSON e não contra esta página.
@@ -64,7 +64,7 @@ busca, e não é como o clube aparece no vídeo nem na tabela.
 ```
 A campanha do Palmeiras rodada a rodada, desenhada como vela: o corpo vai da posição em que o clube ABRIU a rodada até onde ele FECHOU, e o pavio cobre a melhor e a pior posição que ele ocupou enquanto a rodada era jogada. Embaixo, no mesmo eixo, os pontos acumulados — a barra é o total e a tampa clara é o que a rodada acrescentou.
 
-Dados até 13/09/2026 (27ª rodada):
+Dados até 16/09/2026 (27ª rodada):
 • Palmeiras — 2º, 56 pts em 27 jogos
 • 16V · 8E · 3D — 47 gols pró, 21 contra, saldo +26
 • 69% de aproveitamento · oscilou entre o 1º e o 11º
