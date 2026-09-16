@@ -134,18 +134,43 @@ export const CLUB_VIDEOS: Record<ClubCode, ClubVideo[]> = {
     },
   ],
 
-  // Flamengo, and the second club to carry two entries — for exactly the reason
-  // Palmeiras does, and in the same order. The velas is about this club alone
-  // and sits under this code only; the comparação is about a pair this club
-  // happens to be half of, and repeats under Palmeiras above. The velas leads
-  // because it is the club's own season.
-  // REPLACING `vU4ntqwfm2M` (the 26ª) with the 27ª render — Flamengo held the
-  // lead through the round the 26ª ended on and still holds it a round later,
-  // which the title now says.
+  // Flamengo, and the only club carrying THREE entries — every other code holds
+  // one or two (counted, not assumed). The order is this file's usual rule read
+  // one step further: how much of the drawing is this club, and, where that
+  // ties, whether the entry repeats under another code.
+  //
+  // The **velas** leads because it is the club's own season and sits under this
+  // code alone. REPLACING `vU4ntqwfm2M` (the 26ª) with the 27ª render — Flamengo
+  // held the lead through the round the 26ª ended on and still holds it a round
+  // later, which the title now says.
+  //
+  // The **corrida de barras** is second, and it is a third kind rather than a
+  // second velas: the drawing is the WHOLE division, twenty bars, with this
+  // club's row marked — `BARRAS_FOCUS=1783` in `scripts/manim/barras.py`, the
+  // corte de torcedor. It belongs here on the structural test the comparação
+  // fails: it does not repeat, because the cut was made for this torcida and
+  // exists for no other club. **Do not read its presence as a claim that the
+  // video is about Flamengo only** — its own `-youtube.md` says in as many words
+  // that promising one club and delivering twenty is the defect this cut has to
+  // avoid, and the same sentence belongs wherever the video is placed.
+  //
+  // The **comparação** stays last: it is about a pair this club happens to be
+  // half of, and repeats under Palmeiras above.
+  //
+  // `barras-20-clubes` — the unfocused cut of the very same scene — is
+  // deliberately on NO club page, and that is the other half of the argument
+  // above rather than an omission. It belongs to the division rather than to
+  // anybody, so filing it by club would put one video on twenty pages; the
+  // focused cut earns a page precisely because a focus names an owner.
   "1783": [
     {
       id: "jEIhdQ9BjD0",
       title: "Flamengo lidera o Brasileirão na 27ª: a campanha em velas de 2026",
+      channel: "Marcelo Barbosa",
+    },
+    {
+      id: "BnoyC7n40UM",
+      title: "Do 15º à liderança: a corrida do Flamengo no Brasileirão 2026, rodada a rodada",
       channel: "Marcelo Barbosa",
     },
     {
