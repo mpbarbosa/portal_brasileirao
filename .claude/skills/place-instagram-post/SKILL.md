@@ -71,12 +71,12 @@ several sessions have collided on them.
 
 ## Stage 1 — parse before you look at it
 
-Do not read the URL by eye and do not hand-strip the query string. `club-core.ts`
-holds the parsers the app itself uses, and running them is the only way to know
-what the app will make of a value:
+Do not read the URL by eye and do not hand-strip the query string.
+`instagram-core.ts` holds the parsers the app itself uses, and running them is
+the only way to know what the app will make of a value:
 
 ```bash
-npx --no-install tsx -e 'import {instagramPostCode,instagramHandle} from "./club-core";
+npx --no-install tsx -e 'import {instagramPostCode,instagramHandle} from "./instagram-core";
   const u=process.argv[1];
   console.log(JSON.stringify({code:instagramPostCode(u),handle:instagramHandle(u)}));' -- '<url>'
 ```
@@ -84,6 +84,15 @@ npx --no-install tsx -e 'import {instagramPostCode,instagramHandle} from "./club
 Note `process.argv[1]`, not `[2]` — under `tsx -e` the script path is absent, so
 the argument lands one slot earlier than it does in a file. Getting that wrong
 prints `null` for a perfectly good URL and reads as a refusal.
+
+**The module is `instagram-core.ts` and not `club-core.ts`, and this paragraph
+named the wrong one for five days.** It was right when the skill was written
+(`5fab505`, 2026-09-09); `5f03c4e` moved the YouTube, Instagram and Wikipédia
+parsers out of `club-core.ts` two days later, and nothing points at a skill when
+a module moves — `tsc` never reads this file, so no gate here can go red. The
+wrong import throws `TypeError: instagramPostCode is not a function`, which is
+at least loud, where the `argv` slip above fails quietly as a refusal of a URL
+nothing refused. Check the import before trusting any command in a skill.
 
 **Four results, measured, and the handle column is the trap:**
 
@@ -112,7 +121,7 @@ the `/p/` embed serve the first, and the second answered only the login wall whe
 opened logged out. `instagramPostCode` returns null for both, and this file's
 rule is that it refuses rather than guesses: a link of either kind is a **stop**,
 not a value to coerce into `/p/` by hand. Widening it again is a change to
-`club-core.ts` with a check attached.
+`instagram-core.ts` with a check attached.
 
 **Only the shortcode is ever stored.** Instagram's "copy link" appends
 `?utm_source=ig_web_copy_link&stkn=…`, and `stkn` is a **share token identifying
