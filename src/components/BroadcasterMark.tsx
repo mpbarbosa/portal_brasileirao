@@ -1,4 +1,6 @@
-import { broadcasterMarkUrl } from "@/broadcast-core";
+import { broadcasterMarkUrl, broadcasterUrl } from "@/broadcast-core";
+import { ExternalLink } from "@/src/components/ExternalLink";
+import { FOCUS_RING } from "@/src/components/interaction";
 
 interface BroadcasterMarkProps {
   name: string;
@@ -28,8 +30,31 @@ interface BroadcasterMarkProps {
  *
  * The image carries the name as its `alt`, so the marks read aloud exactly as
  * the text they replaced.
+ *
+ * A broadcaster with an address in `BROADCASTER_URLS` is a link to it, opening
+ * in a new tab; one without stays a plain mark rather than a dead link.
  */
 export function BroadcasterMark({ name, size = "md", decorative = false }: BroadcasterMarkProps) {
+  const plate = <Plate name={name} size={size} decorative={decorative} />;
+  const href = broadcasterUrl(name);
+  if (!href) return plate;
+
+  // The plate stays the thing `data-mark` names, so the link wraps it rather
+  // than replacing it. Where the mark is decorative the image says nothing, so
+  // the suffix has to carry the name or the link would have none.
+  return (
+    <ExternalLink
+      href={href}
+      suffix={decorative ? `site de ${name}` : "site da emissora"}
+      className={`inline-flex rounded-x-small align-middle ${FOCUS_RING}`}
+    >
+      {plate}
+    </ExternalLink>
+  );
+}
+
+/** The mark itself, on its plate — see `BroadcasterMark`. */
+function Plate({ name, size = "md", decorative = false }: BroadcasterMarkProps) {
   const src = broadcasterMarkUrl(name);
   const plate =
     "inline-flex items-center rounded-x-small bg-plate ring-1 ring-plate-line align-middle";

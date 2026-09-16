@@ -16,6 +16,8 @@ import {
   withVenues,
   markKey,
   broadcasterMarkUrl,
+  broadcasterUrl,
+  BROADCASTER_URLS,
   fifaStationLogoUrl,
   MARKS,
   WORDMARK_ONLY,
@@ -492,4 +494,31 @@ test("wordmark keys are normalised, and each carries a reason", () => {
     assert.equal(key, markKey(key), `WORDMARK_ONLY key ${key} is not markKey output`);
     assert.ok(reason.trim().length > 20, `WORDMARK_ONLY.${key} needs a real reason, not "${reason}"`);
   }
+});
+
+test("every curated channel links to its broadcaster", () => {
+  // Same guard as the marks, for the same reason: channels are data, and a new
+  // one would otherwise render as an unlinked mark beside linked ones with
+  // nothing on the page saying it was missed.
+  const unlinked = [...new Set(Object.values(BROADCASTS).flat())]
+    .filter((name) => !broadcasterUrl(name))
+    .sort();
+
+  assert.deepEqual(unlinked, [], `add these to BROADCASTER_URLS: ${unlinked.join(", ")}`);
+});
+
+test("broadcaster addresses are normalised keys and https", () => {
+  for (const [key, url] of Object.entries(BROADCASTER_URLS)) {
+    assert.equal(key, markKey(key), `BROADCASTER_URLS key ${key} is not markKey output`);
+    assert.match(url, /^https:\/\//, `BROADCASTER_URLS.${key} is not an https address`);
+  }
+});
+
+test("a broadcaster address resolves whatever the spelling", () => {
+  assert.equal(broadcasterUrl("Cazé TV"), broadcasterUrl("CazéTV"));
+  assert.equal(broadcasterUrl("GE TV"), broadcasterUrl("ge tv"));
+  // Record has no mark and still has an address — the two maps are separate.
+  assert.equal(broadcasterMarkUrl("Record"), null);
+  assert.ok(broadcasterUrl("Record"));
+  assert.equal(broadcasterUrl("SportyNet"), null);
 });

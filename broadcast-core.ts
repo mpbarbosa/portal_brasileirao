@@ -354,6 +354,40 @@ export const broadcasterMarkUrl = (name: string): string | null => {
 };
 
 /**
+ * Where each broadcaster lives, keyed by `markKey` output like `MARKS`.
+ *
+ * **Separate from `MARKS` because the two answer different questions**: Record
+ * has an address and no mark, and a link must not wait on a logo existing.
+ * Each address was opened on 2026-09-15 and answered 200; where it redirected,
+ * the address written here is where it landed (`sportv.globo.com` now lives at
+ * `ge.globo.com/sportv/`, `recordtv.r7.com` at `record.r7.com`), so a reader is
+ * not sent through a hop the broadcaster may drop.
+ *
+ * `YOUTUBE` is YouTube itself, deliberately: CBF names the platform, not the
+ * channel carrying the match, and guessing a channel would send a reader to
+ * the wrong one on the days it is not that one. GE TV, which *is* a channel,
+ * gets its own (`@getv`, whose page titles itself "ge tv").
+ */
+export const BROADCASTER_URLS: Record<string, string> = {
+  GLOBO: "https://redeglobo.globo.com/",
+  GLOBOPLAY: "https://globoplay.globo.com/",
+  SPORTV: "https://ge.globo.com/sportv/",
+  CAZETV: "https://www.youtube.com/@CazeTV",
+  GETV: "https://www.youtube.com/@getv",
+  GE: "https://www.youtube.com/@getv",
+  SBT: "https://www.sbt.com.br/",
+  PREMIERE: "https://premiere.globo.com/",
+  AMAZONPRIME: "https://www.primevideo.com/",
+  PRIMEVIDEO: "https://www.primevideo.com/",
+  YOUTUBE: "https://www.youtube.com/",
+  RECORD: "https://record.r7.com/",
+};
+
+/** The broadcaster's own address, or null when none is recorded. */
+export const broadcasterUrl = (name: string): string | null =>
+  BROADCASTER_URLS[markKey(name)] ?? null;
+
+/**
  * Channels that are deliberately shown as their own wordmark, and why.
  *
  * The set of channels is **data** — `sync-broadcasts` merges whatever CBF names

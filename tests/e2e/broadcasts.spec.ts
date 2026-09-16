@@ -206,6 +206,20 @@ test.describe("Onde assistir", () => {
       .toMatch(/^\d+ marks painted$/);
   });
 
+  test("a broadcaster's mark links to the broadcaster, in a new tab", async ({ page }) => {
+    await openBroadcastLine(page);
+
+    // The picture is the link: the plate `data-mark` names sits inside it.
+    const premiere = page.locator("dd a").filter({ has: page.locator("[data-mark='Premiere']") });
+    await expect(premiere).toHaveAttribute("href", "https://premiere.globo.com/");
+    await expect(premiere).toHaveAttribute("target", "_blank");
+    await expect(premiere).toHaveAttribute("rel", "noopener noreferrer");
+
+    // Record has no mark and still links — the address does not wait on a logo.
+    const record = page.locator("dd a").filter({ has: page.locator("[data-mark='Record']") });
+    await expect(record).toHaveAttribute("href", "https://record.r7.com/");
+  });
+
   test("a broadcaster with no mark still reads as its name", async ({ page }) => {
     await openBroadcastLine(page);
 
