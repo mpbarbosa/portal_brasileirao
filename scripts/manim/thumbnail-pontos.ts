@@ -31,7 +31,7 @@
  *   0  the capas were written.
  *   1  the payload or the palette could not be read, or the capture failed.
  */
-import { readFileSync } from "node:fs";
+import { mkdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -45,7 +45,15 @@ const SCENE_PATH = path.join(HERE, "pontos.py");
 
 /** The video these advertise. The capas are named after it, so `ls` files them together. */
 const VIDEO_BASENAME = "pontos-20-clubes";
-const OUT_DIR = path.join(ROOT, "docs/medias");
+/**
+ * A pasta é a do SUJEITO, exatamente como no `docs/medias/RENDERED`: um corte de
+ * um clube mora em `docs/medias/<clube>/` e a corrida da divisão inteira em
+ * `docs/medias/divisao/`. Derivar aqui em vez de escrever solto e mover à mão é
+ * o que impede a capa de nascer no sítio errado — o mp4 vai para a pasta certa
+ * pelo `cp` do README e a capa ia para o nível de cima, e só o
+ * `tests/manim-renders.test.ts` acusava, depois do commit.
+ */
+const OUT_DIR = path.join(ROOT, "docs/medias/divisao");
 
 const WIDTH = 1280;
 const HEIGHT = 720;
@@ -314,6 +322,8 @@ const main = async () => {
   ].filter((variant) => !wanted || variant.name === wanted);
 
   if (variants.length === 0) fail(`unknown --variant; expected "divisao" or "distancia"`);
+
+  mkdirSync(OUT_DIR, { recursive: true });
 
   await capture(variants, {
     root: ROOT,

@@ -257,13 +257,21 @@ alcança menos; isso é uma escolha de publicação, não uma propriedade da cen
 
 ## Os renders commitados
 
-**A regra é uma só: um vídeo de UM clube mora em `docs/medias/<clube>/`; um
-vídeo que não é de um clube só fica no nível de cima.** Não há mais exceção
-nenhuma, e essa frase custou três correções para poder ser escrita assim.
+**A regra é uma só: uma pasta por SUJEITO.** Um vídeo de um clube mora em
+`docs/medias/<clube>/`; um vídeo da divisão inteira mora em
+`docs/medias/divisao/`. A única coisa solta no nível de cima é o vídeo cujo
+sujeito são DOIS clubes, que não cabe em pasta nenhuma sem afirmar que é de um
+deles — hoje só o **`campanhas-palmeiras-flamengo.mp4`** (23s, 3,3 MB), com os
+links simbólicos que o parágrafo mais abaixo explica.
 
-Soltas ficam as duas cenas que não são de um clube:
-**`campanhas-palmeiras-flamengo.mp4`** (23s, 3,3 MB) e
-**`pontos-20-clubes.mp4`** (21s, 4,4 MB). Em pasta fica **um `<clube>/` para cada
+**A regra anterior era "um vídeo que não é de um clube só fica no nível de
+cima", e o que a derrubou não foi o gosto: era ela que não tinha portão.** Sob
+ela, `pontos-20-clubes` e `barras-20-clubes` ficavam soltos ao lado do
+`campanhas`, e o parágrafo que os listava dizia **"as duas cenas"** enquanto
+eram três — a `barras` entrou pela #444 e a frase nunca foi relida. É a quarta
+contagem errada desta seção, e a primeira que a regra nova torna impossível de
+repetir por omissão: `divisao/` é uma pasta, e uma pasta ou tem o artefato
+dentro ou não tem. Em pasta fica **um `<clube>/` para cada
 clube que tem vídeo**, com o seu `velas-<clube>.mp4` de 21,1s, o gif, a capa e o
 `-youtube.md`. Quantos são e quais são, `ls docs/medias/` responde — esta frase
 de propósito não responde, e o parágrafo abaixo diz por quê. Os vídeos são
@@ -430,7 +438,7 @@ de um frame qualquer da animação (os primeiros segundos são um gráfico vazio
 Uma nomeia o confronto, a outra a história; a segunda envelhece mal de
 propósito, porque `1º` é uma afirmação sobre a rodada 25 em tipo de 96px.
 
-**`docs/medias/pontos-20-clubes-miniatura.png`** e
+**`docs/medias/divisao/pontos-20-clubes-miniatura.png`** e
 **`-miniatura-38-pontos.png`** são as capas do outro vídeo, pelas mesmas regras:
 uma nomeia a divisão, a outra a distância entre o 1º e o 20º, e o nome do
 arquivo da segunda sai do número que ela imprime.
@@ -517,7 +525,7 @@ npx tsx scripts/manim/export-velas.ts 1777 > scripts/manim/velas-bahia.json
 ./.venv-manim/bin/manim -qh scripts/manim/campanhas.py Campanhas
 ./.venv-manim/bin/manim -qh scripts/manim/pontos.py    Pontos
 cp media/videos/campanhas/1080p60/Campanhas.mp4 docs/medias/campanhas-palmeiras-flamengo.mp4
-cp media/videos/pontos/1080p60/Pontos.mp4       docs/medias/pontos-20-clubes.mp4
+cp media/videos/pontos/1080p60/Pontos.mp4       docs/medias/divisao/pontos-20-clubes.mp4
 
 # 3b. TODAS as velas escrevem no MESMO media/videos/velas/1080p60/Velas.mp4: o
 #     arquivo tem o nome da CENA, não o do clube. Copie uma antes de renderizar

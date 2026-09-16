@@ -55,7 +55,7 @@
  *   0  as capas foram escritas.
  *   1  o payload ou a paleta não puderam ser lidos, ou a captura falhou.
  */
-import { readFileSync } from "node:fs";
+import { mkdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -71,7 +71,6 @@ const ROOT = path.resolve(HERE, "../..");
 const DATA_PATH = process.env.BARRAS_JSON ?? path.join(HERE, "pontos.json");
 const SCENE_PATH = path.join(HERE, "barras.py");
 
-const OUT_DIR = path.join(ROOT, "docs/medias");
 
 /**
  * `--focus <código>`: o código numérico do provedor, nunca a `tla` — Corinthians
@@ -129,6 +128,16 @@ const focusClub = (() => {
 
 /** O vídeo que elas anunciam. As capas levam o nome dele, então o `ls` as arquiva juntas. */
 const VIDEO_BASENAME = focusClub ? `barras-${slugify(focusClub.name)}` : "barras-20-clubes";
+
+/**
+ * A pasta é a do SUJEITO, exatamente como no `docs/medias/RENDERED`: um corte de
+ * um clube mora em `docs/medias/<clube>/` e a corrida da divisão inteira em
+ * `docs/medias/divisao/`. Derivar aqui em vez de escrever solto e mover à mão é
+ * o que impede a capa de nascer no sítio errado — o mp4 vai para a pasta certa
+ * pelo `cp` do README e a capa ia para o nível de cima, e só o
+ * `tests/manim-renders.test.ts` acusava, depois do commit.
+ */
+const OUT_DIR = path.join(ROOT, "docs/medias", focusClub ? slugify(focusClub.name) : "divisao");
 
 /**
  * As oito linhas da capa — e o clube do foco está sempre entre elas.
@@ -296,6 +305,8 @@ const chosen = wanted ? variants.filter((v) => fold(v.name) === fold(wanted)) : 
 if (wanted && chosen.length === 0) {
   fail(`--variant ${wanted}: use ${variants.map((v) => fold(v.name)).join(" or ")}`);
 }
+
+mkdirSync(OUT_DIR, { recursive: true });
 
 await capture(chosen, {
   root: ROOT,
