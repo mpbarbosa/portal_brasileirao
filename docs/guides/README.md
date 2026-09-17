@@ -41,6 +41,15 @@ it after the guides are edited.)
 | [REACT_GUIDE.md](./REACT_GUIDE.md) | React 19 with no UI dependency, no data-fetching library and no component test tier. Carries the effect-declaration-order bug that only an end-to-end URL assertion could see. |
 | [MOBILE_FIRST_GUIDE.md](./MOBILE_FIRST_GUIDE.md) | The nav bar is full at MD3's five destinations, and every layout rule here was measured at 320–375 dp after something shipped broken while every spec was green. |
 
+## Written here
+
+Not from the library — no template covers the subject — but in the same shape,
+so it can be cited the same way.
+
+| Guide | Why it earns its place here |
+| --- | --- |
+| [VIDEO_GUIDE.md](./VIDEO_GUIDE.md) | The map from question to published video: which Manim scene, the artefact set, and the checks that catch anything — opening frames, contrast in the encoded frame, and `check-flashes.py`, which the corrida de barras failed at 0.375 of a 10° field against a 0.25 limit. |
+
 ## Not imported
 
 Recorded so the question is not relitigated. A skip is conditional where it says

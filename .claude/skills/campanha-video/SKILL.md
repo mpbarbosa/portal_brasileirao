@@ -153,6 +153,19 @@ colour measured 3.36; and 18px of type on a 1080p frame is about 2 mm on a phone
 `INK_FAINT` is now régua — grid, frame, hairline — and never text. A graphical
 mark has a floor of 3, so pass `--floor 3` for one.
 
+### 5b. Check for photosensitive flashing
+
+```bash
+python3 scripts/manim/check-flashes.py docs/medias/<name>.mp4
+```
+
+Exits 1 past the WCAG 2.3.1 / ITU-R BT.1702 general flash limit (more than
+three flashes a second over 25% of a 10° field). Run it on **every cut** being
+published, and on the 16:9 first — its rows are packed tightest. The corrida de
+barras failed it at a 0.45 s beat: bars crossing the dark gaps between rows are
+moving stripes. A different easing curve does not help; spacing the moves out
+does. `docs/guides/VIDEO_GUIDE.md` has the readings.
+
 ### 6. The gif, one palette per video
 
 The commands are in the README under **O gif**, with the reasoning for every
@@ -310,6 +323,7 @@ not a claim about the video.
 
 - [ ] mp4 in `docs/medias/`, and the frames were opened and read
 - [ ] labels measured in the encoded frame, ≥4.5 for text
+- [ ] `scripts/manim/check-flashes.py` exits 0 for every cut being published
 - [ ] gif beside it, from that mp4, with its own palette
 - [ ] `-youtube.md` with counts measured against the file
 - [ ] every new artefact listed in `docs/medias/RENDERED`

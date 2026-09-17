@@ -285,14 +285,17 @@ else:
 # abaixo de 0,8, pelo WCAG 2.3.1 / ITU-R BT.1702). O limite é três flashes por
 # segundo em no máximo 25% de um campo visual de 10°.
 #
-# Medido quadro a quadro no corte do Flamengo (16:9), pela maior cobertura de
-# um retângulo de 10° com mais de 3 flashes/s:
+# Medido quadro a quadro com `scripts/manim/check-flashes.py`, no corte do
+# Flamengo, pela maior cobertura de um campo de 10° com mais de 3 flashes/s:
 #
-#     0,45 s, smooth             (o vídeo publicado)   0,365   REPROVA
-#     0,45 s, ease_in_out_sine                          0,364   REPROVA
-#     0,70 s + 0,20 s, sine                             0,098
-#     0,90 s + 0,20 s, sine                             0,088
-#     9:16 publicado 0,188 · 9:16 com 0,70 s 0,073
+#     0,45 s + 0,16 s, smooth   (o vídeo publicado)      16:9 0,375   REPROVA
+#                                                         9:16 0,188
+#     0,70 s + 0,20 s, ease_in_out_sine                   16:9 0,105
+#                                                         9:16 0,076
+#
+# Numa leitura amostrada a cada 6 quadros, só trocar a curva por
+# `ease_in_out_sine` mantendo 0,45 s deu 0,364 contra 0,365 — nada — e 0,90 s
+# deu 0,088 contra 0,098 de 0,70 s, ganho que não paga cinco segundos a mais.
 #
 # **A suavização sozinha não resolve, e é a ideia óbvia**: a curva muda a
 # velocidade DENTRO da batida mas não quantas barras cruzam uma faixa por
