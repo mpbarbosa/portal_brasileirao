@@ -1,5 +1,6 @@
 import { parseHealth } from "@/health-core";
 import { drainBody } from "@/src/drainBody";
+import type { ProjectionPayload } from "@/projection-core";
 import type {
   ApiEnvelope,
   Club,
@@ -33,6 +34,8 @@ const getJson = async <T>(url: string): Promise<ApiEnvelope<T>> => {
 export const fetchStandings = () => getJson<StandingsRow[]>("/api/standings");
 export const fetchMatches = () => getJson<MatchesPayload>("/api/matches");
 export const fetchScorers = () => getJson<Scorer[]>("/api/scorers");
+/** Title, G4 and Z4 odds, simulated on the server — see `projection-core.ts`. */
+export const fetchProjection = () => getJson<ProjectionPayload>("/api/projection");
 /** Every club's elenco. One request upstream serves all twenty. */
 export const fetchSquads = () => getJson<Squad[]>("/api/squads");
 /**

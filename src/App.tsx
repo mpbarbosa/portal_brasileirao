@@ -4,6 +4,7 @@ import {
   fetchCoaches,
   fetchHealth,
   fetchMatches,
+  fetchProjection,
   fetchScorers,
   fetchSquads,
   fetchStandings,
@@ -27,6 +28,8 @@ import { ScorersTable } from "@/src/components/ScorersTable";
 import { StadiumView } from "@/src/components/StadiumView";
 import { CampaignFacts } from "@/src/components/CampaignFacts";
 import { LeagueStats } from "@/src/components/LeagueStats";
+import { SeasonProjection } from "@/src/components/SeasonProjection";
+import type { ProjectionPayload } from "@/projection-core";
 import { MoreBelowHint } from "@/src/components/MoreBelowHint";
 import { StandingsTable } from "@/src/components/StandingsTable";
 import { hasLiveMatch } from "@/live-core";
@@ -71,6 +74,8 @@ export function App() {
   /** Null until the Jogadores page is opened — see the lazy fetch below. */
   const [squads, setSquads] = useState<Squad[] | null>(null);
   const [squadsLoading, setSquadsLoading] = useState(false);
+  /** Null until the Classificação is opened — see the lazy fetch below. */
+  const [projection, setProjection] = useState<ProjectionPayload | null>(null);
   /** Null until a club page is opened — see the lazy fetch below. */
   const [coaches, setCoaches] = useState<Record<ClubCode, string> | null>(null);
   /** The round the URL asks for; null means "whatever is current". */
@@ -323,6 +328,34 @@ export function App() {
   }, [route.section, coaches]);
 
   /**
+   * The **Projeção**, fetched when the Classificação is first shown.
+   *
+   * Not in the opening `Promise.all`, for the reason a health reading is not:
+   * that call is `all`, and a projection is a panel beneath the table rather than
+   * a reason to raise the error banner over it. The server computes it (see
+   * `projection-core.ts`), so this is one small request and no main-thread work.
+   * A failure leaves it null — the panel is absent — and the next visit retries.
+   */
+  useEffect(() => {
+    if (route.section !== "classificacao" || projection !== null) return;
+
+    let cancelled = false;
+
+    void (async () => {
+      try {
+        const response = await fetchProjection();
+        if (!cancelled) setProjection(response.data);
+      } catch {
+        // A panel beneath the table; say nothing and try again on the next visit.
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [route.section, projection]);
+
+  /**
    * Open where a signed-in reader asked to be opened.
    *
    * **A redirect rather than rendering another section at `/`**, which is the
@@ -503,6 +536,11 @@ export function App() {
                 plotKind={plotKind}
                 onTogglePlotKind={togglePlotKind}
                 matches={matches?.matches}
+              />
+              <SeasonProjection
+                projection={projection}
+                rows={standings}
+                onSelectClub={(key) => navigate({ section: "clube", key })}
               />
               {matches && (
                 <LeagueStats

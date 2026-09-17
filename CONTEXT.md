@@ -1397,6 +1397,13 @@ produce a **placar**, not a result.
 The headline numbers are derived from `positionOdds`, the club's probability of
 each finishing position, for the reason **Aproveitamento** is derived from points
 and played: two counts of one thing can disagree and one cannot.
+**Where it renders:** beneath the **Classificação**, as three short lists — título,
+G4 and Z4 — naming only the clubs with at least 1% (`projectionBoard` in
+`projection-core.ts`), with a caption that says it is simulado and what it counted.
+**Computed on the server**, served by `/api/projection` and recomputed only when a
+fixture's status or score changes: 10,000 iterations take about 330ms, which is main
+thread a phone would otherwise spend on every load. A percentage never rounds into a
+certainty it lacks — `oddsLabel` prints ">99%" and "<1%" rather than 100% and 0%.
 _Avoid_: "previsão" and "prognóstico" (both claim knowledge of the result;
 "projeção" and "simulado" are what this is), presenting a percentage without the
 simulado framing, a título column that moves on refresh with no match played

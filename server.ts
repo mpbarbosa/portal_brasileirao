@@ -136,7 +136,9 @@ import {
 import { jsonLdScript, structuredData } from "@/structured-data-core";
 import { withPlayerOverrides, withScorerNames, withSquadOverrides } from "@/player-core";
 import { sortSquads } from "@/squad-core";
-import { computeStandings } from "@/standings-core";
+import { computeStandings, countsTowardStandings } from "@/standings-core";
+import { projectSeason } from "@/season-sim-core";
+import { projectionKey, toProjectionPayload, type ProjectionPayload } from "@/projection-core";
 import { buildEnvelope, seedSource, snapshotLabelFor } from "@/envelope-core";
 import { CLUBS as SEED_CLUBS } from "@/src/data/clubs";
 import { CLUB_HYMNS } from "@/src/data/club-hymns";
@@ -1520,6 +1522,40 @@ app.get("/api/standings", async (_req, res) => {
   const payload = await loadStandings();
   res.set("Cache-Control", "public, max-age=60");
   res.json(payload);
+});
+
+/**
+ * The last projection served, and the state of the results it was computed from.
+ *
+ * `projectSeason` is seeded, so an unchanged key is an unchanged answer, and it
+ * costs about 330ms of event loop for 10,000 iterations over a full season —
+ * spent here, once per change in the results, rather than on every reader's
+ * phone on every load. One entry, because only the current state is ever asked
+ * for; nothing expires it but the key, and a key that holds for a week is a week
+ * with no result to re-read.
+ */
+let projectionMemo: { key: string; payload: ProjectionPayload } | null = null;
+
+/**
+ * **Projeção** — title, G4 and Z4 odds, simulated from `/api/matches`.
+ *
+ * It carries that payload's envelope unchanged, because it is a derivation of it
+ * rather than a second source: a projection built from the seed is `placeholder`
+ * or `fallback` for exactly the reason the fixtures are.
+ */
+app.get("/api/projection", async (_req, res) => {
+  const source = await loadMatches();
+  const { clubs, matches } = source.data;
+  const key = projectionKey(
+    clubs.map((club) => club.code),
+    matches,
+  );
+  if (projectionMemo?.key !== key) {
+    const played = matches.filter(countsTowardStandings).length;
+    projectionMemo = { key, payload: toProjectionPayload(projectSeason(clubs, matches), played) };
+  }
+  res.set("Cache-Control", "public, max-age=60");
+  res.json({ ...source, data: projectionMemo.payload });
 });
 
 app.get("/api/matches", async (req, res) => {
