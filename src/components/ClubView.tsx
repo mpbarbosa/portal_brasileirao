@@ -11,6 +11,7 @@ import {
   hymnUrl,
   redditUrl,
   subredditName,
+  newsFor,
   postsFor,
   recentForm,
   resultFor,
@@ -31,10 +32,12 @@ import {
   zoneAt,
 } from "@/standings-core";
 import { ClubCrest } from "@/src/components/ClubCrest";
+import { ClubNews } from "@/src/components/ClubNews";
 import { ClubVideos } from "@/src/components/ClubVideos";
 import { InstagramPosts } from "@/src/components/InstagramPosts";
 import { ExternalLink } from "@/src/components/ExternalLink";
 import { SeasonEvents } from "@/src/components/SeasonEvents";
+import { CLUB_NEWS } from "@/src/data/club-news";
 import { CLUB_POSTS } from "@/src/data/club-posts";
 import { InstagramLink, MapPinGlyph, WikipediaLink } from "@/src/components/ClubLinks";
 import { GLYPH } from "@/src/components/glyph";
@@ -364,6 +367,7 @@ export function ClubView({
   const mapUrl = clubMapUrl(club.address);
   const videos = videosFor(CLUB_VIDEOS, code);
   const posts = postsFor(CLUB_POSTS, code);
+  const news = newsFor(CLUB_NEWS, code);
 
   return (
     <>
@@ -767,6 +771,11 @@ export function ClubView({
           <InstagramPosts posts={posts} label={`Publicações do ${club.shortName}`} />
         </section>
       )}
+
+      {/* At the foot of the extras, by the induction step the comment above
+          states: inserted any higher it could evict a section from a capture's
+          crop. Renders nothing for a club with no curated notícia. */}
+      <ClubNews news={news} clubName={club.shortName} />
 
       <section className="mt-6">
         <h3 className="mb-2 text-body-medium font-medium text-ink-muted">Jogos disputados</h3>

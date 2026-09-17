@@ -20,6 +20,7 @@ import type {
   ClubCode,
   ClubDiscord,
   ClubFacebook,
+  ClubNewsItem,
   ClubPost,
   ClubVideo,
   ClubYouTube,
@@ -317,6 +318,49 @@ export const postsFor = (
   posts: Record<ClubCode, ClubPost[]>,
   code: ClubCode,
 ): ClubPost[] => (posts[code] ?? []).filter((post) => instagramPostCode(post.code) !== null);
+
+/**
+ * Whether a curated news address can be linked as it stands: `https://`, and
+ * carrying **no query string and no fragment**.
+ *
+ * It refuses rather than cleans, so what `src/data/club-news.ts` stores is the
+ * address the page links — `sourceHost`'s rule that the words and the
+ * destination cannot come to name two different things. The query is refused
+ * whole rather than `utm_*` alone, because a news article is addressed by its
+ * path on every site this file has needed and a parameter-by-parameter list of
+ * trackers is one nobody keeps current.
+ */
+export const isNewsUrl = (url: string): boolean => {
+  try {
+    const parsed = new URL(url);
+    // `search` and `hash` are empty for a bare trailing `?` or `#`, so the
+    // characters themselves are what is refused.
+    return parsed.protocol === "https:" && !/[?#]/.test(url) && url === parsed.href;
+  } catch {
+    return false;
+  }
+};
+
+/**
+ * A club's curated news, **newest first**, with any entry `isNewsUrl` refuses
+ * dropped one at a time — `videosFor`' rule, so one bad line does not take the
+ * section with it.
+ *
+ * Ordered here rather than by file position, unlike the vídeos: news is read
+ * by recency, and an entry appended at the foot of a club's list would
+ * otherwise render under reports it supersedes. Dates are ISO days, so a
+ * string comparison is a date comparison; ties break on the address so two
+ * reports of one day do not swap places on an unrelated edit.
+ */
+export const newsFor = (
+  news: Record<ClubCode, ClubNewsItem[]>,
+  code: ClubCode,
+): ClubNewsItem[] =>
+  (news[code] ?? [])
+    .filter((item) => isNewsUrl(item.url))
+    .sort((a, b) =>
+      a.date === b.date ? a.url.localeCompare(b.url) : a.date < b.date ? 1 : -1,
+    );
 
 
 /**

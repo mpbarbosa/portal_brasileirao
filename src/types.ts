@@ -489,6 +489,37 @@ export type PlayerPost = InstagramPost;
 export type ClubPost = InstagramPost;
 
 /**
+ * One **Notícia do clube**: a report about a club, published by the press and
+ * shown on the **Página do clube** under **Notícias do clube**. Curated in
+ * `src/data/club-news.ts`, keyed by club code.
+ *
+ * **The page links to the report and never reproduces it.** `title` is the
+ * headline as the publisher printed it and `summary` its own linha fina, both
+ * copied verbatim: a headline reworded here would put words in a newspaper's
+ * mouth under its own name.
+ */
+export interface ClubNewsItem {
+  /**
+   * The report's address, **with no query string and no fragment**. What a
+   * reader pastes out of an app share carries `utm_source=push…`, which tells
+   * the publisher this site's readers came from a push notification they never
+   * received. `isNewsUrl` refuses the tracked form rather than stripping it, so
+   * the stored string is the address that is linked.
+   */
+  url: string;
+  /** The headline, verbatim. */
+  title: string;
+  /**
+   * The Brazil-local day it was published, ISO `YYYY-MM-DD` — read off the
+   * page's own `datePublished`, never the URL's path, which is when the
+   * address was minted. Not an instant, for `SeasonEventBase.date`'s reason.
+   */
+  date: string;
+  /** The publisher's own subtitle, verbatim. Left out rather than written. */
+  summary?: string;
+}
+
+/**
  * Current conditions at a ground, from Open-Meteo. Everything but the
  * temperature and the description is optional, because the payload is somebody
  * else's and `parseWeather` narrows it field by field rather than trusting a
