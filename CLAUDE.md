@@ -1564,6 +1564,10 @@ touches the shared breaker — see **Caching and failure handling**;
 note its `currentTeam` is often a national team, which is why the card prefers the
 club the page already knew),
 `/api/matches` (optional `?round=` — a non-integer or `< 1` is a 400).
+`/api/projection` (the **Projeção**: título, G4 and Z4 odds from `season-sim-core.ts`,
+carrying `/api/matches`' envelope because it is derived from it; memoised on
+`projectionKey`, so the ~330ms simulation runs once per change in the results rather than
+per request — `projection-core.ts` is the half the client imports).
 `/api/traffic-dashboard` (the traffic snapshots on this host, parsed — see
 **Tráfego** below; cached 5 minutes, because the timer that writes its input
 runs hourly). **It is NOT `Disallow`ed**, and this bullet said it was: `robotsTxt`

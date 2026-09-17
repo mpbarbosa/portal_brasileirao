@@ -45,7 +45,9 @@ function Figure({
   );
 }
 
-function Leaderboard({
+/** A short ranked list of clubs, each with one figure — shared with the
+ *  **Projeção** beneath the table, so the two panels read as one vocabulary. */
+export function Leaderboard({
   title,
   rows,
   value,

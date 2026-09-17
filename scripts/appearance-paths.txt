@@ -23,6 +23,7 @@ next-match-core.ts
 page-meta-core.ts
 player-core.ts
 preferences-core.ts
+projection-core.ts
 rank-candles-core.ts
 rank-history-core.ts
 route-core.ts
