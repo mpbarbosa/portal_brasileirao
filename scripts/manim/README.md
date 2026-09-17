@@ -71,6 +71,10 @@ npx tsx scripts/manim/thumbnail-barras.ts
 # e o corte de torcedor, que é a MESMA cena com um clube marcado
 BARRAS_FOCUS=1783 ./.venv-manim/bin/manim -qh scripts/manim/barras.py Barras
 npx tsx scripts/manim/thumbnail-barras.ts --focus 1783
+
+# a Chapecoense (1772, em 20º) é o corte que exercita a nota de quem NÃO lidera
+BARRAS_FOCUS=1772 ./.venv-manim/bin/manim -qh scripts/manim/barras.py Barras
+npx tsx scripts/manim/thumbnail-barras.ts --focus 1772
 ```
 
 **Copie cada corte ANTES de renderizar o próximo.** Os três escrevem caminhos
