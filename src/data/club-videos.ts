@@ -75,8 +75,8 @@ import type { ClubCode, ClubVideo } from "@/src/types";
  * check that would have "confirmed" it — pasting the id from the upload page —
  * is exactly the one this file refuses. Wait for the 200.
  *
- * **One entry is NOT ours, and it is the only one — `aXDwyf9NGmk` under
- * Flamengo, from the club's own channel.** Read the `channel` rule above in
+ * **Two entries are NOT ours — `aXDwyf9NGmk` under Flamengo and
+ * `ry8aUbRUqpw` under Chapecoense, each from that club's own channel.** Read the `channel` rule above in
  * both directions: it was written to stop this app's render being taken for a
  * broadcaster's package, and it is the same field that stops a club's package
  * being taken for ours. Nothing here privileges the twenty-three renders; the
@@ -148,8 +148,8 @@ export const CLUB_VIDEOS: Record<ClubCode, ClubVideo[]> = {
     },
   ],
 
-  // Flamengo, and the only club carrying FOUR entries — Palmeiras holds two and
-  // every other code one (counted, not assumed). The three drawings of ours
+  // Flamengo, and the only club carrying FOUR entries — Palmeiras and Chapecoense
+  // hold two and every other code one (counted, not assumed). The three drawings of ours
   // follow Palmeiras' rule, read one step further: how much of the drawing is
   // this club, and where that ties, whether the entry repeats under another
   // code. The velas is about this club alone and sits under this code only;
@@ -294,13 +294,50 @@ export const CLUB_VIDEOS: Record<ClubCode, ClubVideo[]> = {
     },
   ],
 
-  // Chapecoense. REPLACING `dsqz7J0pcgA` (the 26ª, itself never registered)
-  // with the 27ª render.
+  // Chapecoense, and the SECOND club carrying a video that is not ours —
+  // Flamengo's `aXDwyf9NGmk` was the first, and the header's rule reads the
+  // same way here: the file is *club → what to show*, and what a club
+  // publishes about itself is squarely that. The velas REPLACES `dsqz7J0pcgA`
+  // (the 26ª, itself never registered) with the 27ª render.
+  //
+  // **It is `ChapeTv`'s, and the club is established by ID rather than by
+  // name.** The watch payload's `channelId` is `UC5of5voGUqec9K9JqL9al4Q`,
+  // byte-identical to the channel `src/data/club-youtube.ts` already records
+  // for `1772` — the same identity-not-resemblance test `check-club-youtube`
+  // applies to the handle, met here from the video's end. The title does name
+  // the club, and that is resemblance rather than evidence: this channel names
+  // an opponent in the same breath on every bastidores it publishes.
+  //
+  // **It is APPENDED rather than ranked**, which is Flamengo's rule and not a
+  // fresh judgement: the drawing of ours answers this page's own subject — the
+  // campanha the Classificação and the Painel already draw — and there is no
+  // written rule ranking a club's own package against one of ours. Whoever
+  // orders it differently should write the rule that did it.
+  //
+  // **It is a BASTIDORES of a fixture, which is the one thing the Flamengo
+  // entry argues against, and it is here on the user's instruction rather than
+  // on that argument.** That comment says a coletiva, a FLAPRESS or a
+  // bastidores «is read once and wrong by Saturday»; this is the bastidores of
+  // `554972` — Chapecoense 1x0 São Paulo, **rodada 24**, published 2026-08-24 —
+  // sitting beside a velas that reads *até a 27ª*, so it arrives three rounds
+  // old on a section that carries no date. The rule is not repealed by this
+  // entry: whoever drops it when it stales is doing what the rule says rather
+  // than reversing a decision.
+  //
+  // Confirmed before it was written down: `isPrivate` and `isUnlisted` both
+  // false, `playableInEmbed` true, `isFamilySafe` true, 1280×720, 14m55s. The
+  // title and channel below are oEmbed's own strings — 200 against an invented
+  // id answering 400, so the 200 is evidence rather than a shape.
   "1772": [
     {
       id: "K6DdI6YDJtc",
       title: "Chapecoense: 15 derrotas em 26 jogos, a campanha em velas até a 27ª",
       channel: "Marcelo Barbosa",
+    },
+    {
+      id: "ry8aUbRUqpw",
+      title: "BASTIDORES | CHAPECOENSE 1 X 0 SÃO PAULO | CAMPEONATO BRASILEIRO SÉRIE A",
+      channel: "ChapeTv",
     },
   ],
 
