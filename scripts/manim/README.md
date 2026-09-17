@@ -588,7 +588,7 @@ viram outros arquivos quando a temporada anda — o antigo tem que sair do
   pontos aqui: os critérios de desempate da CBF é que decidem um lugar, e uma
   segunda implementação deles é como a capa passa a discordar do próprio vídeo.
 
-## Duas regras que valem para as três cenas
+## Três regras que valem para as três cenas
 
 - **As três carregam o endereço do site**, do começo ao fim: um quadro recortado
   por alguém tem de dizer de onde veio. Sem o `https://`, que é como se lê e se
@@ -619,6 +619,29 @@ viram outros arquivos quando a temporada anda — o antigo tem que sair do
   Agora todo rótulo é `INK_SOFT` (7,2 a 7,8:1 remedidos) e `INK_FAINT` ficou com
   grade, moldura e filete. A única exceção é o **ponto de origem** do `pontos.py`,
   que é marca e não texto: 3,2:1 passa o piso de 3 que objetos gráficos têm.
+
+- **O compasso tem um teto que não é estético: FOTOSSENSIBILIDADE.** Pelo WCAG
+  2.3.1 / ITU-R BT.1702 nada pode passar de **três flashes por segundo** em mais
+  de **25% de um campo visual de 10°**, onde um flash é um *par* de variações
+  opostas de luminância relativa de 10% ou mais. Isso prende o compasso de cada
+  cena, porque a troca dos cards é exatamente um desses pares por compasso.
+
+  **A corrida de barras reprovou e a vela passa com a margem máxima, e o motivo
+  da diferença é o desenho e não o compasso.** Vinte barras claras sobre fundo
+  quase preto são listras, e uma troca de postos faz uma faixa da tela ver barra
+  → vão → barra em poucos quadros; a vela desenha cada marca uma vez e ela fica.
+  Medido em 2026-09-17 nos quatro artefatos da Chapecoense — os três cortes e o
+  gif — a pior cobertura de um campo de 10° foi **0,000** contra o limite de
+  0,25, com no máximo **2 flashes/s** num ponto. O mapa de calor por pixel diz
+  onde esses 2 moram: **em glifos de texto dos cards que trocam**, e em mais
+  nada. O plot das velas chega a esse patamar em 0,019% do quadro.
+
+  A restrição está escrita onde ela obriga — `BEAT_S` em `velas.py` e em
+  `barras.py`, cada um com a sua medição — e no `velas.py` ela tem também uma
+  recusa em tempo de execução, porque uma restrição que só existe em prosa é uma
+  frase que ninguém volta a exercer. **Encurtar um compasso é a mudança que
+  parece inofensiva e é a que quebra**; suavizar a curva não resolve nada (a
+  batida continua a mesma: 0,365 → 0,364 medido no `barras.py`).
 
 ## O que é decisão e o que é mecânica
 
