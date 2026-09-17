@@ -284,6 +284,15 @@ export const SEASON_EVENTS: SeasonEvent[] = [
     // "coordenador técnico do clube" in this very sentence was a second match
     // and a strict-mode violation, confirmed by running the full suite before
     // rewording. "assumiu o comando" says the same thing without the word.
+    //
+    // Renato's announcement is folded into this entry rather than filed as
+    // its own, the arrangement every hiring in this file takes (`vasco-diniz`,
+    // `remo-osorio`). Its day, Monday 14 September, is stated by two independent
+    // reports: Jornal do Comércio ("no começo da tarde desta segunda-feira
+    // (14)", datePublished 2026-09-14T14:57-03:00) and Grupo A Hora (URL dated
+    // /2026/09/14/). Nothing is said here about who sat on the bench against
+    // Botafogo on the 16th: A Hora expected Felipão, ge wrote of Renato's
+    // "reestreia", and that is a disagreement this file does not settle.
     id: "gremio-castro",
     scope: "clube",
     clubCode: "1767",
@@ -291,7 +300,30 @@ export const SEASON_EVENTS: SeasonEvent[] = [
     title: "Grêmio demite Luís Castro",
     detail:
       "No domingo, um dia depois da derrota por 2 a 1 para o Vasco, de virada, na Arena, pela 27ª rodada. " +
-      "Luiz Felipe Scolari (Felipão) assumiu o comando interinamente.",
+      "Luiz Felipe Scolari (Felipão) assumiu o comando interinamente, e Renato Portaluppi foi anunciado " +
+      "na segunda-feira (14) para a sua quinta passagem pelo clube.",
     source: "https://www.jornaldocomercio.com/esportes/2026/09/1263141-gremio-demite-tecnico-luis-castro-e-felipao-assume-interinamente.html",
+  },
+  {
+    // Clube do Remo. Bahia 2x1 Remo kicked off `2026-09-14T23:00:00Z` in
+    // `src/data/matches.ts` — 20:00 BRT on Monday — so the departure after it
+    // falls on the 15th, which is what two independent reports say: DOL
+    // ("na madrugada desta terça-feira (15/09)", communiqué at 4h30) and Terra
+    // ("no começo da manhã desta terça-feira, 15"). DOL calls it "comum
+    // acordo"; both headlines read it as a demissão (Terra: "é demitido"),
+    // which is the word this file uses throughout.
+    //
+    // **Carpini's day is deliberately absent.** DOL dates the announcement to
+    // Tuesday 15 and Portal Salvador FM to Wednesday 16, so the two-source bar is
+    // not met and the detail names him without a date.
+    id: "remo-conde",
+    scope: "clube",
+    clubCode: "4287",
+    date: "2026-09-15",
+    title: "Remo demite Léo Condé",
+    detail:
+      "Na madrugada seguinte à derrota por 2 a 1 para o Bahia, na Fonte Nova, pela 27ª rodada — a quarta seguida. " +
+      "Thiago Carpini foi o escolhido para a reta final.",
+    source: "https://dol.com.br/esporte/remo/962786/remo-demite-leo-conde-apos-quarta-derrota-seguida-no-brasileirao",
   },
 ];
