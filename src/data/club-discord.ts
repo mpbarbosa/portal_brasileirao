@@ -53,6 +53,22 @@ import type { ClubCode, ClubDiscord } from "@/src/types";
  * and `broadcasts.ts`. A club with no entry renders no link rather than a
  * guessed one — and there is nothing to guess from here, since a server's
  * invite code is minted rather than derived from the club's name.
+ *
+ * **O comentário de uma entrada fica IMEDIATAMENTE acima da própria entrada, e
+ * as entradas estão por ordem numérica de código.** As duas regras puxam em
+ * sentidos opostos — escrever um comentário é acrescentar ao fim, inserir uma
+ * entrada é pôr no meio — e o resultado é que um comentário acrescentado ao fim
+ * aterra sobre a entrada de OUTRO clube. Aconteceu duas vezes antes de alguém
+ * reparar: o bloco do FlaDiscord, que documenta a guild `956…` do Flamengo,
+ * ficou por cima do Athletico-PR, e o do Palmeiras por cima do Bahia. Nada vai
+ * ao vermelho por isso — um comentário não compila, não renderiza e não é
+ * verificado por checker nenhum — e o custo é exatamente o que este ficheiro
+ * existe para evitar: quem vier a seguir lê a prova do clube errado ao lado de
+ * um id que não é o dela. Depois de inserir, confirme que cada bloco fica sobre
+ * a sua entrada, o que se lê de uma vez:
+ *
+ *     awk '/^  \/\//{if(!c){c=1; first=NR": "$0}} /^  "[0-9]{4}":/{print first" ==> "$1; c=0}' \
+ *       src/data/club-discord.ts
  */
 export const CLUB_DISCORD: Record<ClubCode, ClubDiscord> = {
   // Flucord — "Maior servidor não oficial sobre o Fluminense Football Club no
@@ -63,15 +79,6 @@ export const CLUB_DISCORD: Record<ClubCode, ClubDiscord> = {
   // não a da Palmeiras, que não teve uma segunda ligação a confirmar a
   // primeira.
   "1765": { invite: "fluminense", guild: "964558466712735764" },
-  // FlaDiscord — "O maior servidor não oficial do Flamengo, sendo a casa da
-  // torcida no Discord", 49 862 membros, sem expiração. A vanity, so the code
-  // is a word rather than the usual eight characters.
-  //
-  // **Confirmed by GUILD ID and not by its name**, which is the stronger check
-  // and the one available here: the invite resolves to guild
-  // `956003357129076746`, the same server as the `channels/<guild>` address
-  // this entry was raised from. A name match could not have said that — the
-  // server calls itself *FlaDiscord*, which contains no word of "CR Flamengo".
   // AthletiCord #600 — 622 membros, sem expiração. Um código cunhado, não uma
   // vanity, e **veio da listagem pública do Disboard** em vez de ser cunhado
   // para nós: uma listagem parte-se se o convite morrer, portanto é permanente
@@ -99,6 +106,16 @@ export const CLUB_DISCORD: Record<ClubCode, ClubDiscord> = {
   // `1395888999276613632` via `api/v10/invites`, 617 membros,
   // `expires_at: null`.
   "1768": { invite: "2cgqNvYvBU", guild: "1395888999276613632" },
+  // Palmeiras • ＯＢＳＥＳＳÃＯ — 20 010 membros, sem expiração. Vanity, como a
+  // do Flamengo.
+  //
+  // **Sem âncora independente, ao contrário do Flamengo**, cuja guild foi
+  // confirmada contra o `channels/<guild>` que originou a entrada. Aqui só veio
+  // o convite, portanto a prova de que este é o servidor certo é o próprio
+  // servidor a dizê-lo: "O servidor não oficial da Sociedade Esportiva
+  // Palmeiras é o espaço ideal para os palmeirenses se reunirem…". Nomeia o
+  // clube pelo nome legal E diz **não oficial**, que é precisamente o sufixo
+  // "comunidade de torcedores" que a ligação carrega.
   "1769": { invite: "palmeiras", guild: "794150101504491530" },
   // Cruzeiro E.C. #1,7k — 1 682 membros, sem expiração. **Vanity** (o próprio
   // `vanity_url_code` retornado pela API é igual ao código do convite), o que
@@ -144,22 +161,20 @@ export const CLUB_DISCORD: Record<ClubCode, ClubDiscord> = {
   // estabelecido, e a Chapecoense é um clube pequeno com uma torcida pequena
   // no Discord.
   "1772": { invite: "85ufbuxHbK", guild: "1486146679458496606" },
-  // Palmeiras • ＯＢＳＥＳＳÃＯ — 20 010 membros, sem expiração. Vanity, como a
-  // do Flamengo.
-  //
-  // **Sem âncora independente, ao contrário do Flamengo**, cuja guild foi
-  // confirmada contra o `channels/<guild>` que originou a entrada. Aqui só veio
-  // o convite, portanto a prova de que este é o servidor certo é o próprio
-  // servidor a dizê-lo: "O servidor não oficial da Sociedade Esportiva
-  // Palmeiras é o espaço ideal para os palmeirenses se reunirem…". Nomeia o
-  // clube pelo nome legal E diz **não oficial**, que é precisamente o sufixo
-  // "comunidade de torcedores" que a ligação carrega.
-  //
   // EC Bahia — vanity, 10 286 membros, sem expiração. Mesma forma de prova que
   // a do Palmeiras: só veio o convite, então o que estabelece o servidor certo
   // é ele próprio a dizê-lo — "O servidor não-oficial do Esporte Clube Bahia. O
   // time mais vencedor e popular da região Nordeste do Brasil." Nomeia o clube
   // pelo nome legal E diz **não-oficial**, o mesmo par que o Palmeiras dá.
   "1777": { invite: "bahia", guild: "1297362681409568798" },
+  // FlaDiscord — "O maior servidor não oficial do Flamengo, sendo a casa da
+  // torcida no Discord", 49 862 membros, sem expiração. A vanity, so the code
+  // is a word rather than the usual eight characters.
+  //
+  // **Confirmed by GUILD ID and not by its name**, which is the stronger check
+  // and the one available here: the invite resolves to guild
+  // `956003357129076746`, the same server as the `channels/<guild>` address
+  // this entry was raised from. A name match could not have said that — the
+  // server calls itself *FlaDiscord*, which contains no word of "CR Flamengo".
   "1783": { invite: "flamengo", guild: "956003357129076746" },
 };
