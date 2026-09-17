@@ -54,18 +54,18 @@ import type { ClubCode, ClubDiscord } from "@/src/types";
  * guessed one — and there is nothing to guess from here, since a server's
  * invite code is minted rather than derived from the club's name.
  *
- * **O comentário de uma entrada fica IMEDIATAMENTE acima da própria entrada, e
- * as entradas estão por ordem numérica de código.** As duas regras puxam em
- * sentidos opostos — escrever um comentário é acrescentar ao fim, inserir uma
- * entrada é pôr no meio — e o resultado é que um comentário acrescentado ao fim
- * aterra sobre a entrada de OUTRO clube. Aconteceu duas vezes antes de alguém
- * reparar: o bloco do FlaDiscord, que documenta a guild `956…` do Flamengo,
- * ficou por cima do Athletico-PR, e o do Palmeiras por cima do Bahia. Nada vai
- * ao vermelho por isso — um comentário não compila, não renderiza e não é
- * verificado por checker nenhum — e o custo é exatamente o que este ficheiro
- * existe para evitar: quem vier a seguir lê a prova do clube errado ao lado de
- * um id que não é o dela. Depois de inserir, confirme que cada bloco fica sobre
- * a sua entrada, o que se lê de uma vez:
+ * **An entry's comment sits IMMEDIATELY above its own entry, and the entries are
+ * in numeric order of club code.** Those two rules pull in opposite directions —
+ * writing a comment is appending at the end, inserting an entry is placing it in
+ * the middle — so a comment appended at the end lands on ANOTHER club's entry.
+ * It happened twice before anybody noticed: the FlaDiscord block, which
+ * documents Flamengo's guild `956…`, sat above Athletico-PR, and the Palmeiras
+ * block above Bahia. Nothing goes red for it — a comment does not compile, does
+ * not render and is read by no checker — and the cost is exactly what this file
+ * exists to prevent, since the comment IS an entry's proof of identity: the next
+ * reader meets the wrong club's evidence beside an id that is not its. After
+ * inserting, confirm each block sits above its own entry, which reads in one
+ * line:
  *
  *     awk '/^  \/\//{if(!c){c=1; first=NR": "$0}} /^  "[0-9]{4}":/{print first" ==> "$1; c=0}' \
  *       src/data/club-discord.ts
@@ -168,13 +168,14 @@ export const CLUB_DISCORD: Record<ClubCode, ClubDiscord> = {
   // pelo nome legal E diz **não-oficial**, o mesmo par que o Palmeiras dá.
   "1777": { invite: "bahia", guild: "1297362681409568798" },
   // FlaDiscord — "O maior servidor não oficial do Flamengo, sendo a casa da
-  // torcida no Discord", 49 862 membros, sem expiração. A vanity, so the code
-  // is a word rather than the usual eight characters.
+  // torcida no Discord", 49 862 membros, sem expiração. É uma **vanity**, daí o
+  // código ser uma palavra em vez dos oito caracteres habituais.
   //
-  // **Confirmed by GUILD ID and not by its name**, which is the stronger check
-  // and the one available here: the invite resolves to guild
-  // `956003357129076746`, the same server as the `channels/<guild>` address
-  // this entry was raised from. A name match could not have said that — the
-  // server calls itself *FlaDiscord*, which contains no word of "CR Flamengo".
+  // **Confirmado pela GUILD ID e não pelo nome dela**, que é a verificação mais
+  // forte e a que aqui estava disponível: o convite resolve para a guild
+  // `956003357129076746`, o mesmo servidor do endereço `channels/<guild>` que
+  // originou esta entrada. Uma correspondência por nome não poderia tê-lo dito
+  // — o servidor chama-se *FlaDiscord*, que não contém palavra nenhuma de
+  // "CR Flamengo".
   "1783": { invite: "flamengo", guild: "956003357129076746" },
 };
