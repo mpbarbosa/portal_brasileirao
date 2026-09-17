@@ -956,6 +956,21 @@ report about it), a section per network (nothing here reads X, Facebook or YouTu
 posts, and a heading promising them would be a promise the data cannot keep), and
 every avoidance the **Publicação do jogador** entry lists, which holds here in full.
 
+**Notícia do clube**:
+One press report about a club, shown on the **Página do clube** under the heading
+**Notícias do clube** — the foot of that page's extras, below the **Publicações do
+clube** and above **Jogos disputados**. Curated in `src/data/club-news.ts`, keyed by
+**club code**, storing the report's address with **no query string** (an app share
+carries `utm_*` trackers, and `isNewsUrl` refuses them), the publisher's headline
+and linha fina **verbatim**, and the Brazil-local day read off the page's own
+`datePublished`. The headline is the link; the page reproduces nothing of the report.
+**It is not an Acontecimento.** An acontecimento is a fact this app states, dated to
+a two-source bar, with the report as provenance beneath it; a notícia is somebody
+else's report, and reading it is the errand. Tite joining Botafogo can be both —
+two entries in two files, each held to its own bar.
+_Avoid_: "Imprensa", "Últimas" (a feed word — nothing here is live, and the list is
+only as current as the last hand edit).
+
 **Wikipédia**:
 The club's encyclopedia article, linked from its page as a fourth external link
 beside the **Site oficial**, the **Instagram do clube** and the **Hino do
