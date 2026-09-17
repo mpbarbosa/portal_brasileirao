@@ -108,6 +108,42 @@ export const CLUB_DISCORD: Record<ClubCode, ClubDiscord> = {
   // oficial do Cruzeiro Esporte Clube!" — nomeia o clube e diz **não oficial**,
   // exatamente o par que o sufixo "comunidade de torcedores" carrega.
   "1771": { invite: "cruzeiro-e-c-1k-1168068145848799313", guild: "1168068145848799313" },
+  // Chapecoense — 112 membros, sem expiração. Um código **cunhado**, não uma
+  // vanity (`vanity_url_code` é `null`), portanto a ausência de expiração teve
+  // de ser confirmada à parte, ao contrário da do Cruzeiro, onde a vanity já a
+  // implicava.
+  //
+  // **A confirmação de que «sem expiração» foi escolhido e não é o `null` de um
+  // convite acabado de cunhar: o convite é velho.** O id do objeto do convite
+  // (`1486502306210910208`) decodifica como snowflake para 2026-03-25 e a
+  // guild (`1486146679458496606`) para 2026-03-24 — cerca de seis meses antes
+  // desta leitura. O padrão do Discord é 7 dias, portanto um convite deixado no
+  // padrão estaria morto desde março. É a cláusula de expiração do
+  // `check-club-discord` respondida pelo relógio em vez de pela nossa palavra,
+  // que é o que faltou ao primeiro convite do Athletico-PR.
+  //
+  // **Sem âncora independente**, como o Palmeiras e o Bahia. O URL que originou
+  // a entrada era `discadia.com/chapecoense/`, uma **listagem**, e essa não
+  // serve de segunda ligação por duas razões medidas em 2026-09-17: responde
+  // 200 com ~800 B de desafio JS (`cosmic`) tanto para `chapecoense` como para
+  // um id inventado — o par indistinguível que o `player-instagram.ts` regista
+  // — e a página que de facto renderiza é um portão «Verify to Join» com
+  // captcha, que ninguém aqui atravessa. A listagem corrobora quando muito o
+  // **nome**; não sabe dizer a guild, que é a única coisa que este ficheiro
+  // guarda como identidade.
+  //
+  // Então a prova é o servidor a dizê-lo de si próprio, a forma do Palmeiras:
+  // "O maior servidor **não oficial** da Associação Chapecoense de Futebol."
+  // Nomeia o clube pelo nome legal E diz não oficial — o par exato que o sufixo
+  // "comunidade de torcedores" carrega. As etiquetas do perfil dizem o mesmo
+  // sem ortografia: `Chapecoense`, `Futebol`, `Maior de Santa Catarina`.
+  //
+  // **112 membros é de longe o menor do ficheiro** (o seguinte são os 617 do
+  // Athletico-PR). Está registado aqui para que ninguém leia o número como
+  // sinal de convite mal resolvido mais tarde: a guild responde, o clube está
+  // estabelecido, e a Chapecoense é um clube pequeno com uma torcida pequena
+  // no Discord.
+  "1772": { invite: "85ufbuxHbK", guild: "1486146679458496606" },
   // Palmeiras • ＯＢＳＥＳＳÃＯ — 20 010 membros, sem expiração. Vanity, como a
   // do Flamengo.
   //
