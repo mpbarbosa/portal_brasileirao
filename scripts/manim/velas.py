@@ -412,6 +412,82 @@ EVENT_LABEL_BUFF = 0.10
 # acontecimentos na 17ª e na 18ª rodadas, e o primeiro deles fica um compasso.
 EVENT_LABEL_BEATS = 4
 
+# ---- o compasso, e o teto de FOTOSSENSIBILIDADE sobre ele -----------------
+#
+# **Estes quatro números têm um teto que não é estético, e ele foi MEDIDO no
+# mp4 e não deduzido.** A regra é a do WCAG 2.3.1 / ITU-R BT.1702: um *flash* é
+# um par de variações opostas de luminância relativa, cada uma de pelo menos
+# 10%, com o lado escuro abaixo de 0,8 — e o vídeo não pode passar de **três
+# flashes por segundo** em mais de **25% de um campo visual de 10°**.
+#
+# A troca dos cards é um par desses: a cada compasso o painel antigo some
+# (`SWAP_OUT_S`) e o novo entra (`SWAP_IN_S`), então um pixel que carrega glifo
+# nos dois faz claro -> escuro -> claro uma vez por compasso. Isso é **um flash
+# por compasso**, ou seja `1 / BEAT_S` flashes por segundo. A 0,52 s são 1,92.
+#
+# Medido em 2026-09-17 sobre os quatro artefatos da Chapecoense já commitados
+# (`velas-chapecoense.mp4`, `-45`, `-916` e o gif), pela maior cobertura de um
+# retângulo de 10° com mais de 3 flashes/s:
+#
+#     16:9 1920x1080 60fps    0,000   passa    máx. 2 flashes/s num ponto
+#     4:5  1080x1350 60fps    0,000   passa    máx. 2
+#     9:16 1080x1920 60fps    0,000   passa    máx. 2
+#     gif   960x540  15fps    0,000   passa    máx. 2
+#
+# **A cena passa com a margem máxima, e passa por um motivo estrutural que vale
+# saber antes de mexer no desenho:** o mapa de calor por pixel diz que *todo*
+# pixel que pisca é um **glifo de texto** dos cards. O plot das velas chega a
+# ≥2 flashes/s em 0,019% do quadro — as velas, as barras de pontos, as faixas
+# do G4/Z4 e as réguas não piscam, porque cada uma é desenhada uma vez e fica.
+# Glifo é marca fina e esparsa, então nenhuma janela de 10° junta 25% dela.
+# É o oposto da corrida de barras, que reprovou (0,375) por mover vinte barras
+# claras sobre fundo quase preto — ver `BEAT_S` em `barras.py`.
+#
+# Duas coisas que NÃO consertariam nada aqui, para não serem tentadas de novo:
+# suavizar a curva do compasso (a batida continua a mesma, e o `barras.py` mediu
+# 0,365 -> 0,364), e cruzar o FadeOut com o FadeIn — o cruzamento de fato mata o
+# par, porque cada pixel passaria a ver uma transição só, mas põe os dois
+# placares legíveis ao mesmo tempo na mesma posição, que é exatamente o que o
+# comentário do laço recusa. Com 1,92 contra um limite de 3 não há o que comprar
+# com isso.
+#
+# **Encurtar o compasso é o que quebra**, e é a mudança que parece inofensiva:
+# a recusa abaixo aborta o render para qualquer valor que passe de três ciclos
+# por segundo. Ela é o número da regra, sem folga inventada — a folga de projeto
+# é a distância entre 1,92 e 3, e quem chegar perto dela mede de novo em vez de
+# confiar nesta tabela. O `OPENING_BEAT_S` não é medido porque ele acontece uma
+# vez e é mais LENTO que o compasso: o primeiro compasso não troca card nenhum,
+# ele só faz o primeiro entrar.
+#
+# **O instrumento ainda não está em `main`, e isto é uma leitura e não um
+# ponteiro.** A medida acima saiu de um `check-flashes.py` que existe apenas por
+# commitar noutro worktree desta máquina (`worktree-barras-flash`, dois commits
+# nunca empurrados), escrito pela sessão que consertou a corrida de barras. Ele
+# não foi duplicado aqui de propósito: duas cópias de um medidor é onde a
+# divergência começa — o argumento que o `commons-core.ts` já faz sobre o
+# `scripts/commons-api.ts`. Quando aquele trabalho for publicado, o comando é
+# `python3 scripts/manim/check-flashes.py docs/medias/<clube>/<nome>.mp4`; até
+# lá, refazer a medida é reimplementar a regra citada acima. Ela é uma
+# aproximação de qualquer forma, nunca um laudo Harding/PEAT.
+BEAT_S = 0.52
+OPENING_BEAT_S = 0.80
+SWAP_OUT_S = 0.18
+SWAP_IN_S = 0.34
+
+MAX_FLASHES_PER_SECOND = 3
+if 1 / BEAT_S > MAX_FLASHES_PER_SECOND:
+    raise SystemExit(
+        f"BEAT_S={BEAT_S}: a troca dos cards daria {1 / BEAT_S:.2f} flashes/s, "
+        f"acima do limite de {MAX_FLASHES_PER_SECOND} do WCAG 2.3.1. "
+        "Ver o comentário de BEAT_S, e medir o render antes de baixar isto."
+    )
+if SWAP_OUT_S + SWAP_IN_S > BEAT_S:
+    raise SystemExit(
+        f"SWAP_OUT_S + SWAP_IN_S = {SWAP_OUT_S + SWAP_IN_S:.2f} nao cabe em "
+        f"BEAT_S={BEAT_S}: o `Succession` seria esticado e a troca deixaria de "
+        "ser sequenciada."
+    )
+
 # As duas caixas, em unidades de cena. Tudo dentro delas passa por `at_pos()` e
 # `at_pts()`; elas compartilham o eixo x de propósito, porque as duas leituras
 # são da mesma rodada e ler uma contra a outra é metade do desenho.
@@ -633,7 +709,10 @@ class Velas(Scene):
                 # inteiro e os dois placares ficam legíveis ao mesmo tempo.
                 for old, new in zip(panels, new_panels):
                     animations.append(
-                        Succession(FadeOut(old, run_time=0.18), FadeIn(new, run_time=0.34))
+                        Succession(
+                            FadeOut(old, run_time=SWAP_OUT_S),
+                            FadeIn(new, run_time=SWAP_IN_S),
+                        )
                     )
             panels = new_panels
 
@@ -652,7 +731,7 @@ class Velas(Scene):
                 animations += [FadeIn(rule), FadeIn(naming)]
                 naming_until = index + EVENT_LABEL_BEATS
 
-            self.play(*animations, run_time=0.52 if index else 0.8)
+            self.play(*animations, run_time=BEAT_S if index else OPENING_BEAT_S)
             previous_total = entry["totalPoints"]
 
         self.wait(0.4)
