@@ -111,6 +111,46 @@ paragraph.
 
 ---
 
+## Rodada 27 — the Coritiba reading takes its third vote and holds, and the Bragantino/Vasco shape splits
+
+Written 2026-09-16 against `CLUB_SCOUTS_THROUGH_ROUND = 27`. The third of the three
+votes Rule 3 asked for on the Coritiba reading.
+
+- **Coritiba holds, and this time it moved toward the reading rather than away from
+  it.** Volume is unchanged in shape — still the lowest in the division, still trailing
+  Grêmio by about the same gap as last entry. Conversion did not keep drifting toward
+  the middle, which is what the standing falsification names: it climbed back, past
+  Santos, and retook third. That is a stronger vote than a hold — the round rodada 26
+  called a weaker confirmation is followed by one that recovers the ground it gave up.
+  Three consecutive votes with no per-club judgement needed is exactly what Rule 3 asks
+  before a formulation moves into `scouts-core.ts` and stops being written here; whether
+  to make that move is left for a separate change, since it is a decision about the
+  page rather than about this rodada.
+- **Bragantino and Vasco stop being one shape.** Last entry had them level on both
+  axes — tied at the top of volume, tied at the bottom of conversion. This window pulls
+  them apart on both: Bragantino takes outright first in volume with Vasco now clearly
+  second, and on conversion the two swap which one is worse — Bragantino falls alone to
+  last, while Vasco climbs off the floor to sit beside Mirassol instead. A shape that
+  looked settled for one entry did not survive a second.
+- **Santos does not continue the Athletico-PR shape it took on last round.** Rodada 26
+  read Santos as this entry's version of that reading — rising into the top three
+  converters while its volume sat in the bottom half. Both halves reverse here:
+  conversion drops out of the top three, and volume rises out of the bottom half into
+  the middle of the table. Read as a one-round event rather than a trend, which is the
+  caution the previous entry already attached to it.
+- **Internacional keeps climbing.** Off the floor of conversion for a second entry
+  running, and by more than last time — no longer within touching distance of the
+  bottom pair.
+- **Third place in conversion changes hands for a third consecutive round.** Santos
+  held it last entry, Coritiba held it the entry before, and Coritiba takes it back
+  now. Flamengo and Palmeiras have not moved from first and second across any of the
+  three readings; only the seat below them keeps changing.
+
+**What would falsify the Coritiba reading from here**, unchanged: its conversion
+regressing toward the division's middle while its volume stays at the bottom. It has
+now had three chances to fail that test and has not — the third chance being the
+strongest of the three, since it recovered ground rather than merely holding it.
+
 ## Rodada 26 — Coritiba steps back for the first time, and Bragantino and Vasco become one shape
 
 Written 2026-09-11 against `CLUB_SCOUTS_THROUGH_ROUND = 26`. The second of the three
