@@ -113,6 +113,7 @@ from manim import (
     VGroup,
     config,
 )
+from manim.utils.rate_functions import ease_in_out_sine
 
 DATA = Path(os.environ.get("BARRAS_JSON", Path(__file__).with_name("pontos.json")))
 
@@ -274,6 +275,41 @@ else:
     # 0,26 deixa 0,026 de folga. Os dois cortes verticais têm 0,31 de vão.
     FOCUS_BAR_H = 0.26
 
+# ---- o compasso das rodadas ----------------------------------------------
+#
+# **A batida é 0,70 s e não 0,45 s por causa de FOTOSSENSIBILIDADE, e isso foi
+# MEDIDO no mp4, não deduzido.** Vinte barras claras sobre um fundo quase preto
+# são listras, e quando os clubes do meio da tabela trocam de posto numa rodada,
+# cada faixa da tela vê barra → vão escuro → outra barra → vão em poucos quadros.
+# Isso é um flash (variação de luminância relativa ≥ 10%, com o lado escuro
+# abaixo de 0,8, pelo WCAG 2.3.1 / ITU-R BT.1702). O limite é três flashes por
+# segundo em no máximo 25% de um campo visual de 10°.
+#
+# Medido quadro a quadro com `scripts/manim/check-flashes.py`, no corte do
+# Flamengo, pela maior cobertura de um campo de 10° com mais de 3 flashes/s:
+#
+#     0,45 s + 0,16 s, smooth   (o vídeo publicado)      16:9 0,375   REPROVA
+#                                                         9:16 0,188
+#     0,70 s + 0,20 s, ease_in_out_sine                   16:9 0,105
+#                                                         9:16 0,076
+#
+# Numa leitura amostrada a cada 6 quadros, só trocar a curva por
+# `ease_in_out_sine` mantendo 0,45 s deu 0,364 contra 0,365 — nada — e 0,90 s
+# deu 0,088 contra 0,098 de 0,70 s, ganho que não paga cinco segundos a mais.
+#
+# **A suavização sozinha não resolve, e é a ideia óbvia**: a curva muda a
+# velocidade DENTRO da batida mas não quantas barras cruzam uma faixa por
+# segundo. O que resolve é espaçar as batidas (≈1,6 → ≈1,1 por segundo). O
+# `ease_in_out_sine` fica pelo que ele de fato compra — pico de velocidade
+# 1,57× a média contra ~2,5× do `smooth` —, que é o movimento parecer contínuo.
+# O custo aceito: o vídeo passa de 21,7 s para 29,5 s.
+#
+# Não reduza a batida sem medir de novo: o corte 16:9 é o apertado (postos a
+# 0,286 unidade), e é nele que o limite estoura primeiro.
+BEAT_S = 0.70
+REST_S = 0.20
+BEAT_EASE = ease_in_out_sine
+
 # O endereço do site. Escrito à mão porque o `APP_URL` mora no `.env` do host,
 # que é gitignored e não existe na estação onde a cena é desenhada.
 SITE = "brasileirao.mpbarbosa.com"
@@ -354,7 +390,8 @@ class Barras(Scene):
         # caminho entre dois postos e números a meio caminho entre dois valores,
         # e o leitor não chega a ver a classificação de rodada nenhuma. Medido
         # abrindo o quadro: em `t=3,2s` o desenho é ilegível e o `manim` sai 0.
-        # O total mal se mexe — a batida encurta na mesma proporção.
+        # O compasso (`BEAT_S`, `REST_S`) é limitado por fotossensibilidade — ver
+        # o comentário dele antes de encurtar qualquer um dos dois.
         for round_number in range(2, self.last_round + 1):
             animations = self.update_rows(rows, clubs, round_number)
             if band is not None:
@@ -362,8 +399,8 @@ class Barras(Scene):
                     band.animate.move_to([band.get_center()[0], self.focus_y(clubs, round_number), 0])
                 )
             animations.append(Transform(heading, self.round_heading(round_number)))
-            self.play(*animations, run_time=0.45)
-            self.wait(0.16)
+            self.play(*animations, run_time=BEAT_S, rate_func=BEAT_EASE)
+            self.wait(REST_S)
 
         self.play(FadeIn(self.build_closing(clubs), shift=UP * 0.14), run_time=0.9)
         self.wait(2.8)

@@ -37,7 +37,8 @@ same way). When a structural question isn't answered here, that repo is the refe
 implementation — read it rather than inventing a new pattern.
 
 `docs/guides/` holds twelve engineering guides adapted to this codebase from
-`../doc_template_lib`, with `docs/guides/README.md` as the index — it also records
+`../doc_template_lib`, plus one written here where no template covers the subject
+(`VIDEO_GUIDE.md`), with `docs/guides/README.md` as the index — it also records
 the fourteen guides deliberately **not** imported, and why, so those are not
 re-litigated. They are the citable form of what this file narrates: **this file
 stays authoritative**, and where a guide disagrees with it, the guide is wrong.
