@@ -459,16 +459,16 @@ EVENT_LABEL_BEATS = 4
 # vez e é mais LENTO que o compasso: o primeiro compasso não troca card nenhum,
 # ele só faz o primeiro entrar.
 #
-# **O instrumento ainda não está em `main`, e isto é uma leitura e não um
-# ponteiro.** A medida acima saiu de um `check-flashes.py` que existe apenas por
-# commitar noutro worktree desta máquina (`worktree-barras-flash`, dois commits
-# nunca empurrados), escrito pela sessão que consertou a corrida de barras. Ele
-# não foi duplicado aqui de propósito: duas cópias de um medidor é onde a
-# divergência começa — o argumento que o `commons-core.ts` já faz sobre o
-# `scripts/commons-api.ts`. Quando aquele trabalho for publicado, o comando é
-# `python3 scripts/manim/check-flashes.py docs/medias/<clube>/<nome>.mp4`; até
-# lá, refazer a medida é reimplementar a regra citada acima. Ela é uma
-# aproximação de qualquer forma, nunca um laudo Harding/PEAT.
+# **O instrumento é `scripts/manim/check-flashes.py`, e esta é uma leitura dele
+# e não uma cópia da regra.** Refazer a medida é
+# `python3 scripts/manim/check-flashes.py docs/medias/<clube>/<nome>.mp4`, que
+# sai 1 quando reprova. Ele esteve por commitar noutro worktree quando este
+# compasso foi medido, e deliberadamente não foi duplicado aqui: duas cópias de
+# um medidor é onde a divergência começa — o argumento que o `commons-core.ts`
+# já faz sobre o `scripts/commons-api.ts`. Ele discrimina nos dois sentidos, e
+# vale saber antes de confiar num «passa»: sobre os ficheiros commitados, esta
+# velas dá 0,000 e a corrida de barras renderizada no compasso antigo dá 0,375.
+# É uma aproximação de qualquer forma, nunca um laudo Harding/PEAT.
 BEAT_S = 0.52
 OPENING_BEAT_S = 0.80
 SWAP_OUT_S = 0.18
