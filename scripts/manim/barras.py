@@ -86,9 +86,10 @@ as três cenas já tiveram uma vez, medido em 2,9–3,3:1 contra o piso de 4,5.
 
 **A nota de fecho passa a ser sobre o clube do foco.** Um vídeo de torcedor que
 fecha falando do líder fecha falando do rival na maioria dos clubes. O ramo de
-quem NÃO lidera é a armadilha armada para depois — hoje o foco é o Flamengo, que
-lidera, então esse ramo não aparece no vídeo commitado: renderize um quadro com
-`BARRAS_FOCUS` num clube do meio da tabela antes de mexer nele.
+quem NÃO lidera foi uma armadilha armada até o corte da Chapecoense (`1772`, em
+20º) exercitá-lo — e ele disparou: a frase é mais comprida que a do líder e o
+Pango a quebrou em duas linhas no 16:9, com a segunda em cima da barra do 1º.
+É o que o `one_line_label` existe para impedir.
 """
 
 from __future__ import annotations
@@ -315,15 +316,46 @@ BEAT_EASE = ease_in_out_sine
 SITE = "brasileirao.mpbarbosa.com"
 
 
-def label(text: str, size: float, colour: str, weight: str = "NORMAL") -> Text:
+def label(
+    text: str,
+    size: float,
+    colour: str,
+    weight: str = "NORMAL",
+    oversample: int = TYPE_OVERSAMPLE,
+) -> Text:
     """A line of type, drawn oversized and scaled down. See the module docstring."""
     return Text(
         text,
         font=FONT,
-        font_size=size * TYPE_OVERSAMPLE,
+        font_size=size * oversample,
         color=colour,
         weight=weight,
-    ).scale(1 / TYPE_OVERSAMPLE)
+    ).scale(1 / oversample)
+
+
+def one_line_label(text: str, size: float, colour: str, weight: str = "NORMAL") -> Text:
+    """`label`, garantido numa linha só.
+
+    **O Pango quebra a linha na largura do `config.pixel_width` medida no corpo
+    SOBRE-AMOSTRADO**, então um texto que cabe folgado no quadro quebra mesmo
+    assim: a nota de fecho da Chapecoense em 20º ("… 6 atrás do Clube do Remo,
+    que tem um jogo a mais") terminaria perto de x=1520 de 1920 e saiu em duas
+    linhas, com a segunda em cima da barra do 1º lugar — `manim` saindo 0. Só
+    o ramo de quem NÃO lidera tem frase comprida o bastante para isso.
+
+    Quando quebra, refaz com metade da sobre-amostragem, o que dobra a largura
+    de quebra e mantém o corpo desenhado acima dos 20pt onde o avanço do espaço
+    arredonda para zero. Quando não quebra, devolve o `label` de sempre — então
+    um vídeo cuja nota cabia sai byte a byte como saía.
+    """
+    row = label(text, size, colour, weight)
+    single = label("Ág", size, colour, weight).height
+    if row.height <= single * 1.5:
+        return row
+    row = label(text, size, colour, weight, oversample=max(1, TYPE_OVERSAMPLE // 2))
+    if row.height > single * 1.5:
+        raise SystemExit(f"nota de fecho não cabe numa linha: {text!r}")
+    return row
 
 
 def ordinal(position: int) -> str:
@@ -690,10 +722,9 @@ class Barras(Scene):
             else:
                 detail = f"{gap} à frente do {rival['name']}" + spare_clause(rival_at, subject_at)
         else:
-            # **Este ramo não aparece no vídeo commitado**, porque o foco de
-            # hoje lidera — é a armadilha armada para depois que o `CLAUDE.md`
-            # registra em outros lugares. Renderize um quadro com o
-            # `BARRAS_FOCUS` num clube do meio da tabela antes de mexer nele.
+            # **O corte da Chapecoense (`1772`) é o que desenha este ramo** —
+            # foi a primeira vez, e a nota saiu quebrada em duas linhas até o
+            # `one_line_label`. Renderize um quadro dele antes de mexer aqui.
             rival = standing[position - 2]
             rival_at = rival["by_round"][self.last_round]
             gap = rival_at["points"] - subject_at["points"]
@@ -717,7 +748,7 @@ class Barras(Scene):
         left = POS_X - 0.10
         note = VGroup()
         for index, text in enumerate(lines):
-            row = label(text, CLOSING_SIZE, INK, "BOLD")
+            row = one_line_label(text, CLOSING_SIZE, INK, "BOLD")
             row.move_to([left + row.width / 2, CLOSING_Y - index * 0.26, 0])
             note.add(row)
 
