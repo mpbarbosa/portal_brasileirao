@@ -35,7 +35,7 @@ import type { Goal, GoalEntry } from "@/src/types";
  * `GoalKind` just as it checked the old object literal. Nothing outside this
  * file sees a tuple: `GOALS` is `Goal[]` exactly as it always was.
  *
- * Last synced 2026-09-11.
+ * Last synced 2026-09-21.
  */
 const ENTRIES: Record<string, GoalEntry[]> = {
   "554740": [["1769","Lopez","26'"],["1766","Victor Hugo","44'"],["1766","Khellven","73'","own"],["1769","Vitor Roque","82'"]],
@@ -227,6 +227,7 @@ const ENTRIES: Record<string, GoalEntry[]> = {
   "554937": [["4287","Ze Ivaldo","38'"],["4287","Alef Manga","54'"]],
   "554938": [["6685","Neymar Jr","35'"],["1772","Marcinho","50'"],["1772","João Ananias","62'","own"],["6685","Neymar Jr","90'","penalty"]],
   "554939": [["4364","Igor","29'"],["1780","Hinestroza","79'"]],
+  "554941": [["1770","Danilo Santos","29'"],["1767","Jovane","36'"],["1770","Montoro","51'"],["1770","Danilo Santos","78'"],["1767","G. Martins","87'"]],
   "554944": [["1771","Matheus Pereira","65'"]],
   "554946": [["6684","Vitinho","26'"],["1783","Samuel Lino","79'"]],
   "554947": [["4364","Marllon","30'","own"],["4287","Picco","45'"],["4364","Carroll","53'"]],
@@ -277,6 +278,25 @@ const ENTRIES: Record<string, GoalEntry[]> = {
   "554997": [["1783","Samuel Lino","64'"]],
   "554998": [["1776","Luciano","66'"],["1776","Iago","68'"]],
   "554999": [["1782","Rene","63'"]],
+  "555000": [["1766","Reinier","60'"],["1766","Cuello","63'"],["1766","Vitor Fernandes","80'"],["1765","Castillo","90'"]],
+  "555001": [["1777","Jean Lucas","20'"],["1777","Luciano Juba","90+6'","penalty"],["4287","Vitor Bueno","90+1'","penalty"]],
+  "555002": [["4286","Lucas Monzon","29'","own"],["1770","Vitinho","55'"]],
+  "555003": [["6684","Bruno Henrique","26'"],["1772","Garcez","45+1'"],["6684","Carbonero","66'"]],
+  "555004": [["1768","Luiz Gustavo","13'"],["1768","Arthur Dias","29'"],["4241","Tiago Coser","45+1'"],["1768","Kevin Viveros","62'","penalty"],["4241","Rodrigo Moledo","90+1'"],["4241","Rodrigo Moledo","90+6'"]],
+  "555005": [["1783","Lucas Paquetá","47'"],["1779","Guilherme","77'"],["1783","Bruno Henrique","88'"]],
+  "555006": [["1767","Villasanti","39'"],["1780","Thiago Mendes","75'"],["1780","Facundo","78'"]],
+  "555007": [["1782","Rene","2'"],["1782","Rene","12'"],["4364","Bruno Santos","67'"],["4364","Edson Carioca","90'"]],
+  "555008": [["1769","Murilo","45'"],["1769","Vitor Roque","49'"]],
+  "555009": [["6685","Rollheiser","28'"],["6685","Fabrício Bruno","32'","own"],["1771","Matheus Pereira","90'"]],
+  "555010": [["1768","Lucas Esquivel","15'"],["1777","Erick Pulga","27'"],["1768","Rivaldo","67'"]],
+  "555011": [["1772","Tulio Oliveira","43'"],["1766","Cassierra","68'"]],
+  "555012": [["1765","Hulk","25'"],["1779","Gustavo","56'"],["1765","Hulk","75'"],["1765","Kevin Serna","90+3'"]],
+  "555013": [["1783","Varela","13'"],["1783","Pedro","71'"],["4286","Nacho Sosa","86'"]],
+  "555015": [["4364","Carlos","16'"],["4364","Carlos","45+1'"]],
+  "555016": [["6685","Rony","78'"],["4287","Marllon","82'"],["6685","Gabriel Barbosa","87'"]],
+  "555017": [["1776","Calleri","14'","penalty"]],
+  "555018": [["1780","Facundo","23'"],["1780","Bruno Duarte","43'"],["1780","Lescano","55'","penalty"],["1780","Hinestroza","62'"],["1780","Ramon Rique","73'"]],
+  "555019": [["1782","Rene","38'"],["1771","Arroyo","46'"],["1771","Villalba","65'"],["1771","Matheus Pereira","90+6'"]],
 };
 
 export const GOALS: Record<string, Goal[]> = Object.fromEntries(
