@@ -68,7 +68,7 @@ Dados até 21/09/2026 (28ª rodada):
 • Flamengo — 1º, 60 pontos em 28 jogos
 • Começou a 2ª rodada em 15º, com 1 ponto
 • Ficou 13 rodadas seguidas em 2º, da 10ª à 22ª
-• Assumiu a ponta na 26ª e fechou a 28ª na frente
+• Chegou à ponta na 23ª, perdeu na 24ª, voltou na 26ª e fechou a 28ª na frente
 • Palmeiras — 2º, 57 pontos, depois de liderar 19 rodadas
 
 A virada está perto do fim: o Palmeiras fechou em 1º em 19 das 28 rodadas, e perde a ponta por 1 ponto na 26ª.
