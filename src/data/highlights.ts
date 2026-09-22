@@ -1444,4 +1444,63 @@ export const HIGHLIGHTS: Record<string, Highlight[]> = {
   "555001": [
     { url: "https://www.youtube.com/watch?v=zNHh-jjGb5M", channel: "ge tv" },
   ],
+  // Atlético-MG 1 x 1 Chapecoense, rodada 28.
+  "555011": [
+    { url: "https://www.youtube.com/watch?v=7wWzgXlUD9Q", channel: "ge tv" },
+    { url: "https://www.youtube.com/watch?v=a_yrMMPDYFU", channel: "UOL Esporte" },
+  ],
+  // Mirassol 2 x 0 Botafogo, rodada 28.
+  "555015": [
+    { url: "https://www.youtube.com/watch?v=MGUVkrz2zFo", channel: "ge tv" },
+    { url: "https://www.youtube.com/watch?v=NjSnelxmrrs", channel: "CazéTV" },
+    { url: "https://www.youtube.com/watch?v=4i0nc5a4Di0", channel: "UOL Esporte" },
+  ],
+  // Clube do Remo 1 x 2 Santos, rodada 28.
+  "555016": [
+    { url: "https://www.youtube.com/watch?v=_rlDoyPk5jw", channel: "ge tv" },
+    { url: "https://www.youtube.com/watch?v=g0DBmptELyc", channel: "UOL Esporte" },
+  ],
+  // Vasco da Gama 5 x 0 Coritiba, rodada 28.
+  "555018": [
+    { url: "https://www.youtube.com/watch?v=osrUas-9I5o", channel: "ge tv" },
+    { url: "https://www.youtube.com/watch?v=1inrHmQ6eqM", channel: "CazéTV" },
+    { url: "https://www.youtube.com/watch?v=otR6qHI8b-E", channel: "UOL Esporte" },
+  ],
+  // São Paulo 1 x 0 Internacional, rodada 28.
+  "555017": [
+    { url: "https://www.youtube.com/watch?v=Aje40ZNzVQs", channel: "ge tv" },
+    { url: "https://www.youtube.com/watch?v=M0vAzDhOjRo", channel: "UOL Esporte" },
+  ],
+  // Grêmio 0 x 0 Palmeiras, rodada 28.
+  "555014": [
+    { url: "https://www.youtube.com/watch?v=MINxnJ3nHK0", channel: "ge tv" },
+    { url: "https://www.youtube.com/watch?v=GFTnREgWHsU", channel: "UOL Esporte" },
+  ],
+  // Corinthians 1 x 3 Fluminense, rodada 28.
+  "555012": [
+    { url: "https://www.youtube.com/watch?v=78rS30sszUM", channel: "ge tv" },
+    { url: "https://www.youtube.com/watch?v=YySQvVwdFH8", channel: "CazéTV" },
+    { url: "https://www.youtube.com/watch?v=6pgvZKzjQt0", channel: "UOL Esporte" },
+  ],
+  // Vitória 1 x 3 Cruzeiro, rodada 28.
+  "555019": [
+    { url: "https://www.youtube.com/watch?v=miFUwrs5Rzo", channel: "ge tv" },
+    { url: "https://www.youtube.com/watch?v=gi2AVaiaYDY", channel: "UOL Esporte" },
+  ],
+  // Flamengo 2 x 1 Bragantino, rodada 28.
+  "555013": [
+    { url: "https://www.youtube.com/watch?v=Qw19l7_Tm1Q", channel: "ge tv" },
+    { url: "https://www.youtube.com/watch?v=coPhj-i6TPk", channel: "UOL Esporte" },
+  ],
+  // Athletico-PR 2 x 1 Bahia, rodada 28.
+  "555010": [
+    { url: "https://www.youtube.com/watch?v=CHMG8F-yIik", channel: "ge tv" },
+    { url: "https://www.youtube.com/watch?v=5_w2ddD-qNM", channel: "UOL Esporte" },
+  ],
+  // Botafogo 3 x 2 Grêmio, rodada 21.
+  "554941": [
+    { url: "https://www.youtube.com/watch?v=g6MTdvvUB-c", channel: "ge tv" },
+    { url: "https://www.youtube.com/watch?v=Oy_kJpAnvUM", channel: "CazéTV" },
+    { url: "https://www.youtube.com/watch?v=PmcNJZhDFwk", channel: "UOL Esporte" },
+  ],
 };

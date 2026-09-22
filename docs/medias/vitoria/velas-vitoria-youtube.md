@@ -14,8 +14,8 @@ Texto que acompanha [`velas-vitoria.mp4`](velas-vitoria.mp4)
   própria cena — a regra que o `scripts/manim/README.md` registra para as velas.
 - **Cortes verticais:** `velas-vitoria-45.mp4` (1080×1350, feed do Instagram) e `velas-vitoria-916.mp4` (1080×1920, Reels e YouTube Short).
 
-> **Os números aqui saem de `scripts/manim/velas-vitoria.json`, rodada 27,
-> snapshot de 2026-09-16** — 12º com 33 pts, 9V 6E 12D, e a oscilação entre
+> **Os números aqui saem de `scripts/manim/velas-vitoria.json`, rodada 28,
+> snapshot de 2026-09-21** — 13º com 33 pts, 9V 6E 13D, e a oscilação entre
 > o 1º e o 16º, que é a faixa que o painel do vídeo imprime. Eles **envelhecem**: um `sync-seed-data` seguido de uma
 > reexportação move o vídeo, e este arquivo não é regerado por nada. Reconferir
 > antes de publicar, contra o JSON e não contra esta página.
@@ -45,7 +45,7 @@ Texto que acompanha [`velas-vitoria.mp4`](velas-vitoria.mp4)
 Recomendado (58 caracteres):
 
 ```
-Vitória em velas: 12 derrotas em 27 jogos até a 27ª rodada
+Vitória em velas: 13 derrotas em 28 jogos até a 28ª rodada
 ```
 
 O número que define a campanha; o terceiro maior da divisão — e **data o recorte**, que é a única defesa contra
@@ -54,7 +54,7 @@ alguém assistir daqui a três meses e achar que os números estão errados.
 | | título | caracteres | ângulo |
 |---|---|---|---|
 | 2 | `A campanha do Vitória rodada a rodada \| Brasileirão 2026 em candlestick` | 71 | genérico e buscável |
-| 3 | `Vitória: 33 pontos, 9V 6E 12D e saldo -12` | 41 | o número duro |
+| 3 | `Vitória: 33 pontos, 9V 6E 13D e saldo -14` | 41 | o número duro |
 
 **Os apelidos não estão em nenhum deles, e estão nas tags**: é como o torcedor
 busca, e não é como o clube aparece no vídeo nem na tabela.
@@ -64,12 +64,12 @@ busca, e não é como o clube aparece no vídeo nem na tabela.
 ```
 A campanha do Vitória rodada a rodada, desenhada como vela: o corpo vai da posição em que o clube ABRIU a rodada até onde ele FECHOU, e o pavio cobre a melhor e a pior posição que ele ocupou enquanto a rodada era jogada. Embaixo, no mesmo eixo, os pontos acumulados — a barra é o total e a tampa clara é o que a rodada acrescentou.
 
-Dados até 16/09/2026 (27ª rodada):
-• Vitória — 12º, 33 pts em 27 jogos
-• 9V · 6E · 12D — 27 gols pró, 39 contra, saldo -12
-• 41% de aproveitamento · oscilou entre o 1º e o 16º
+Dados até 21/09/2026 (28ª rodada):
+• Vitória — 13º, 33 pts em 28 jogos
+• 9V · 6E · 13D — 28 gols pró, 42 contra, saldo -14
+• 39% de aproveitamento · oscilou entre o 1º e o 16º
 
-O Vitória é a terceira campanha mais derrotada da Série A, empatada com Mirassol, Vasco da Gama e Grêmio: 12 em 27 jogos, e a maior sequência sem perder tem 3 rodadas. No desenho isso é uma densidade de corpos vermelhos que nenhum outro clube do meio da tabela tem.
+O Vitória é a terceira campanha mais derrotada da Série A, empatada com o Grêmio: 13 em 28 jogos, e a maior sequência sem perder tem 3 rodadas. No desenho isso é uma densidade de corpos vermelhos que nenhum outro clube do meio da tabela tem.
 
 A queda acontece cedo e depois a campanha se estabiliza fechando entre o 8º e o 15º, longe do topo e ainda fora do Z4. O painel diz 1º e 16º, contando as posições ocupadas dentro das rodadas.
 
@@ -96,7 +96,7 @@ carregar o vídeo sozinha.
 Para Short, ou onde a descrição longa não couber.
 
 ```
-A campanha do Vitória em velas: o corpo vai da posição de abertura à de fechamento da rodada, o pavio mostra até onde o clube subiu e desceu dentro dela, e a barra de baixo são os pontos. A régua tracejada marca a parada para a Copa. 12 derrotas e uma invencibilidade máxima de 3 rodadas. Dados até a 27ª: 33 pts, 9V 6E 12D, saldo -12.
+A campanha do Vitória em velas: o corpo vai da posição de abertura à de fechamento da rodada, o pavio mostra até onde o clube subiu e desceu dentro dela, e a barra de baixo são os pontos. A régua tracejada marca a parada para a Copa. 13 derrotas e uma invencibilidade máxima de 3 rodadas. Dados até a 28ª: 33 pts, 9V 6E 13D, saldo -14.
 
 Animação em Manim, dados do Portal Brasileirão: https://brasileirao.mpbarbosa.com
 Código: https://github.com/mpbarbosa/portal_brasileirao
@@ -110,7 +110,7 @@ Medido sobre o bloco como está — separado por `, `, que é o que se cola.
 310 caracteres, 21 tags.
 
 ```
-brasileirão, brasileirao 2026, campeonato brasileiro, série a, serie a, vitória, leão da barra, leao da barra, rubro-negro baiano, ecv, campanha do vitória, campanha rodada a rodada, candlestick, gráfico de velas, futebol brasileiro, visualização de dados, dataviz, manim, python, portal brasileirão, rodada 27
+brasileirão, brasileirao 2026, campeonato brasileiro, série a, serie a, vitória, leão da barra, leao da barra, rubro-negro baiano, ecv, campanha do vitória, campanha rodada a rodada, candlestick, gráfico de velas, futebol brasileiro, visualização de dados, dataviz, manim, python, portal brasileirão, rodada 28
 ```
 
 Nenhuma tag nova: o único acontecimento que o vídeo marca é a paralisação

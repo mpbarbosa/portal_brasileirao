@@ -1,5 +1,5 @@
 {
-  "snapshot": "2026-09-16",
+  "snapshot": "2026-09-21",
   "club": {
     "code": "1777",
     "name": "Bahia",
@@ -389,14 +389,14 @@
     {
       "round": 21,
       "open": 6,
-      "close": 5,
+      "close": 6,
       "best": 5,
       "worst": 6,
       "points": 1,
       "totalPoints": 32,
       "played": 21,
       "result": "E",
-      "moved": 1,
+      "moved": 0,
       "match": {
         "opponent": "Fluminense",
         "home": false,
@@ -407,10 +407,10 @@
     },
     {
       "round": 22,
-      "open": 5,
-      "close": 6,
-      "best": 5,
-      "worst": 6,
+      "open": 6,
+      "close": 7,
+      "best": 6,
+      "worst": 7,
       "points": 1,
       "totalPoints": 33,
       "played": 22,
@@ -426,15 +426,15 @@
     },
     {
       "round": 23,
-      "open": 6,
+      "open": 7,
       "close": 6,
       "best": 5,
-      "worst": 6,
+      "worst": 7,
       "points": 1,
       "totalPoints": 34,
       "played": 23,
       "result": "E",
-      "moved": 0,
+      "moved": 1,
       "match": {
         "opponent": "Chapecoense",
         "home": false,
@@ -517,6 +517,25 @@
         "goalsFor": 2,
         "goalsAgainst": 1,
         "result": "V"
+      }
+    },
+    {
+      "round": 28,
+      "open": 4,
+      "close": 5,
+      "best": 4,
+      "worst": 5,
+      "points": 0,
+      "totalPoints": 46,
+      "played": 28,
+      "result": "D",
+      "moved": -1,
+      "match": {
+        "opponent": "Athletico-PR",
+        "home": false,
+        "goalsFor": 1,
+        "goalsAgainst": 2,
+        "result": "D"
       }
     }
   ],

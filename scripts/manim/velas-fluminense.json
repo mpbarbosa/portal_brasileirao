@@ -1,5 +1,5 @@
 {
-  "snapshot": "2026-09-16",
+  "snapshot": "2026-09-21",
   "club": {
     "code": "1765",
     "name": "Fluminense",
@@ -517,6 +517,25 @@
         "goalsFor": 1,
         "goalsAgainst": 3,
         "result": "D"
+      }
+    },
+    {
+      "round": 28,
+      "open": 5,
+      "close": 4,
+      "best": 3,
+      "worst": 5,
+      "points": 3,
+      "totalPoints": 48,
+      "played": 28,
+      "result": "V",
+      "moved": 1,
+      "match": {
+        "opponent": "Corinthians",
+        "home": false,
+        "goalsFor": 3,
+        "goalsAgainst": 1,
+        "result": "V"
       }
     }
   ],

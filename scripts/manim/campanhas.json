@@ -1,5 +1,5 @@
 {
-  "snapshot": "2026-09-16",
+  "snapshot": "2026-09-21",
   "clubs": [
     {
       "code": "1769",
@@ -383,6 +383,20 @@
             "goalsAgainst": 0,
             "result": "V"
           }
+        },
+        {
+          "round": 28,
+          "position": 2,
+          "points": 57,
+          "played": 28,
+          "match": {
+            "opponent": "Grêmio",
+            "opponentTla": "FBP",
+            "home": false,
+            "goalsFor": 0,
+            "goalsAgainst": 0,
+            "result": "E"
+          }
         }
       ]
     },
@@ -763,6 +777,20 @@
           "match": {
             "opponent": "Corinthians",
             "opponentTla": "COR",
+            "home": true,
+            "goalsFor": 2,
+            "goalsAgainst": 1,
+            "result": "V"
+          }
+        },
+        {
+          "round": 28,
+          "position": 1,
+          "points": 60,
+          "played": 28,
+          "match": {
+            "opponent": "Bragantino",
+            "opponentTla": "RBB",
             "home": true,
             "goalsFor": 2,
             "goalsAgainst": 1,

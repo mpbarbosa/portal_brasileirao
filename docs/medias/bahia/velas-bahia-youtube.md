@@ -14,8 +14,8 @@ Texto que acompanha [`velas-bahia.mp4`](velas-bahia.mp4)
   própria cena — a regra que o `scripts/manim/README.md` registra para as velas.
 - **Cortes verticais:** `velas-bahia-45.mp4` (1080×1350, feed do Instagram) e `velas-bahia-916.mp4` (1080×1920, Reels e YouTube Short).
 
-> **Os números aqui saem de `scripts/manim/velas-bahia.json`, rodada 27,
-> snapshot de 2026-09-16** — 4º com 46 pts, 12V 10E 5D, e a oscilação entre
+> **Os números aqui saem de `scripts/manim/velas-bahia.json`, rodada 28,
+> snapshot de 2026-09-21** — 5º com 46 pts, 12V 10E 6D, e a oscilação entre
 > o 1º e o 8º, que é a faixa que o painel do vídeo imprime. Eles **envelhecem**: um `sync-seed-data` seguido de uma
 > reexportação move o vídeo, e este arquivo não é regerado por nada. Reconferir
 > antes de publicar, contra o JSON e não contra esta página.
@@ -23,8 +23,9 @@ Texto que acompanha [`velas-bahia.mp4`](velas-bahia.mp4)
 > **Este é o clube cujo jogo faltava.** O recorte anterior (2026-09-13)
 > deixou o Bahia deliberadamente em "26ª rodada / 26 jogos", porque o
 > Bahia x Clube do Remo da 27ª ainda não tinha sido jogado e a vela saía
-> oca. Ele foi jogado — 2x1 em casa —, e é ele que leva o clube do 5º ao
-> 4º, para dentro do G4.
+> oca. Ele foi jogado — 2x1 em casa —, e levou o clube do 5º ao 4º, para
+> dentro do G4, na 27ª. A derrota por 2x1 para o Athletico-PR na 28ª o
+> devolve ao 5º.
 >
 > Os mesmos números estão **no quadro do fecho do próprio mp4**, no painel de
 > resumo, que é de onde a capa sai — então uma divergência entre este texto e a
@@ -34,7 +35,7 @@ Texto que acompanha [`velas-bahia.mp4`](velas-bahia.mp4)
 > duas diferem para 15 dos 20 clubes. O painel conta as posições ocupadas
 > enquanto a rodada era jogada — o pavio —, então ele é sempre igual ou mais
 > largo que o intervalo entre o melhor e o pior FECHAMENTO. Este clube fecha
-> entre o 1º e o 6º e o painel diz 1º e 8º.
+> entre o 1º e o 7º e o painel diz 1º e 8º.
 >
 > **O saldo e o aproveitamento vêm do `computeStandings`**, a mesma função que
 > monta a tabela do site, e não somados à mão a partir do JSON.
@@ -51,7 +52,7 @@ Texto que acompanha [`velas-bahia.mp4`](velas-bahia.mp4)
 Recomendado (67 caracteres):
 
 ```
-Bahia em velas: 10 empates, o maior número do Brasileirão até a 27ª
+Bahia em velas: 10 empates, o maior número do Brasileirão até a 28ª
 ```
 
 O fato que separa esta campanha; empatado com o internacional — e **data o recorte**, que é a única defesa contra
@@ -59,8 +60,8 @@ alguém assistir daqui a três meses e achar que os números estão errados.
 
 | | título | caracteres | ângulo |
 |---|---|---|---|
-| 2 | `A campanha do Bahia rodada a rodada: fecha entre o 1º e o 6º` | 60 | a amplitude de fechamento, curta |
-| 3 | `Bahia: 46 pontos, 12V 10E 5D e saldo +9 \| Brasileirão 2026` | 58 | o número duro |
+| 2 | `A campanha do Bahia rodada a rodada: fecha entre o 1º e o 7º` | 60 | a amplitude de fechamento, curta |
+| 3 | `Bahia: 46 pontos, 12V 10E 6D e saldo +8 \| Brasileirão 2026` | 58 | o número duro |
 
 **Os apelidos não estão em nenhum deles, e estão nas tags**: é como o torcedor
 busca, e não é como o clube aparece no vídeo nem na tabela.
@@ -70,14 +71,14 @@ busca, e não é como o clube aparece no vídeo nem na tabela.
 ```
 A campanha do Bahia rodada a rodada, desenhada como vela: o corpo vai da posição em que o clube ABRIU a rodada até onde ele FECHOU, e o pavio cobre a melhor e a pior posição que ele ocupou enquanto a rodada era jogada. Embaixo, no mesmo eixo, os pontos acumulados — a barra é o total e a tampa clara é o que a rodada acrescentou.
 
-Dados até 16/09/2026 (27ª rodada):
-• Bahia — 4º, 46 pts em 27 jogos
-• 12V · 10E · 5D — 42 gols pró, 33 contra, saldo +9
-• 57% de aproveitamento · oscilou entre o 1º e o 8º
+Dados até 21/09/2026 (28ª rodada):
+• Bahia — 5º, 46 pts em 28 jogos
+• 12V · 10E · 6D — 43 gols pró, 35 contra, saldo +8
+• 55% de aproveitamento · oscilou entre o 1º e o 8º
 
-O Bahia é um dos dois clubes com mais empates da Série A: 10 em 27 jogos, o mesmo do Internacional. No desenho isso é uma fileira de corpos amarelos de altura curta — a rodada aconteceu, a posição mal se moveu.
+O Bahia é um dos dois clubes com mais empates da Série A: 10 em 28 jogos, o mesmo do Internacional. No desenho isso é uma fileira de corpos amarelos de altura curta — a rodada aconteceu, a posição mal se moveu.
 
-É também uma campanha que chegou a liderar (1 rodada em 1º) e que fecha sempre entre o 1º e o 6º. 9 rodadas de invencibilidade na maior série, 5 derrotas no total. A estabilidade aqui é causada pelo empate, não pela vitória — e é a vela, não a tabela, que deixa isso à vista.
+É também uma campanha que chegou a liderar (1 rodada em 1º) e que fecha sempre entre o 1º e o 7º. 10 rodadas de invencibilidade na maior série, 6 derrotas no total. A estabilidade aqui é causada pelo empate, não pela vitória — e é a vela, não a tabela, que deixa isso à vista.
 
 A régua tracejada que cruza o desenho é o acontecimento de fora de campo que tocou os vinte clubes: a paralisação para a Copa do Mundo depois da 18ª rodada. Ela cai na FRONTEIRA entre duas rodadas em vez de sobre uma, porque é isso que ela separa — o que veio antes dela e o que veio depois. Aqui o clube parou em 6º com 29 pts.
 
@@ -102,7 +103,7 @@ carregar o vídeo sozinha.
 Para Short, ou onde a descrição longa não couber.
 
 ```
-A campanha do Bahia em velas: o corpo vai da posição de abertura à de fechamento da rodada, o pavio mostra até onde o clube subiu e desceu dentro dela, e a barra de baixo são os pontos. A régua tracejada marca a parada para a Copa. 10 empates, o maior número da divisão junto com o internacional. Dados até a 27ª: 46 pts, 12V 10E 5D, saldo +9.
+A campanha do Bahia em velas: o corpo vai da posição de abertura à de fechamento da rodada, o pavio mostra até onde o clube subiu e desceu dentro dela, e a barra de baixo são os pontos. A régua tracejada marca a parada para a Copa. 10 empates, o maior número da divisão junto com o internacional. Dados até a 28ª: 46 pts, 12V 10E 6D, saldo +8.
 
 Animação em Manim, dados do Portal Brasileirão: https://brasileirao.mpbarbosa.com
 Código: https://github.com/mpbarbosa/portal_brasileirao
@@ -116,7 +117,7 @@ Medido sobre o bloco como está — separado por `, `, que é o que se cola.
 304 caracteres, 22 tags.
 
 ```
-brasileirão, brasileirao 2026, campeonato brasileiro, série a, serie a, bahia, esquadrão, esquadrao, tricolor de aço, bahêa, bahea, campanha do bahia, campanha rodada a rodada, candlestick, gráfico de velas, futebol brasileiro, visualização de dados, dataviz, manim, python, portal brasileirão, rodada 27
+brasileirão, brasileirao 2026, campeonato brasileiro, série a, serie a, bahia, esquadrão, esquadrao, tricolor de aço, bahêa, bahea, campanha do bahia, campanha rodada a rodada, candlestick, gráfico de velas, futebol brasileiro, visualização de dados, dataviz, manim, python, portal brasileirão, rodada 28
 ```
 
 Nenhuma tag nova: o único acontecimento que o vídeo marca é a paralisação

@@ -1,5 +1,5 @@
 {
-  "snapshot": "2026-09-16",
+  "snapshot": "2026-09-21",
   "club": {
     "code": "4364",
     "name": "Mirassol",
@@ -517,6 +517,25 @@
         "goalsFor": 2,
         "goalsAgainst": 2,
         "result": "E"
+      }
+    },
+    {
+      "round": 28,
+      "open": 15,
+      "close": 15,
+      "best": 15,
+      "worst": 15,
+      "points": 3,
+      "totalPoints": 32,
+      "played": 28,
+      "result": "V",
+      "moved": 0,
+      "match": {
+        "opponent": "Botafogo",
+        "home": true,
+        "goalsFor": 2,
+        "goalsAgainst": 0,
+        "result": "V"
       }
     }
   ],

@@ -1,7 +1,7 @@
 # YouTube — a corrida das barras, os 20 clubes
 
 Texto que acompanha [`barras-20-clubes.mp4`](barras-20-clubes.mp4)
-(1920×1080, 60fps, 22s), os dois cortes verticais e as duas capas ao lado dele.
+(1920×1080, 60fps, 30s), os dois cortes verticais e as duas capas ao lado dele.
 
 - **Título:** até 100 caracteres. Os títulos abaixo trazem a contagem medida.
 - **Descrição:** até 5.000 caracteres, mas só as duas primeiras linhas aparecem
@@ -9,13 +9,14 @@ Texto que acompanha [`barras-20-clubes.mp4`](barras-20-clubes.mp4)
 - **Tags:** até 500 caracteres somados. A lista abaixo usa 237, medidos com as
   vírgulas e os espaços exatamente como estão no bloco.
 - **Sem capítulos:** o YouTube exige pelo menos três, o primeiro em 00:00 e cada
-  um com 10s. Um vídeo de 22s não comporta.
+  um com 10s. Um vídeo de 30s fica no limite exato de três capítulos de 10s, e
+  não vale a pena.
 - **O corte 9:16 serve o Short E o Reels**, e é o mesmo arquivo. O Short entra
   como upload separado, com o título curto abaixo — a descrição longa não é lida
   ali.
 
-> **Os números aqui saem de `scripts/manim/pontos.json`, rodada 27, snapshot de
-> 2026-09-16.** Eles **envelhecem**: um `sync-seed-data` seguido de
+> **Os números aqui saem de `scripts/manim/pontos.json`, rodada 28, snapshot de
+> 2026-09-21.** Eles **envelhecem**: um `sync-seed-data` seguido de
 > `sync-rank-history` e uma reexportação movem o vídeo e as capas, e este arquivo
 > não é regerado por nada. Reconferir antes de publicar, contra o JSON e não
 > contra esta página.
@@ -27,7 +28,7 @@ Texto que acompanha [`barras-20-clubes.mp4`](barras-20-clubes.mp4)
 Recomendado (70 caracteres):
 
 ```
-A corrida do Brasileirão 2026: 27 rodadas em 22 segundos, os 20 clubes
+A corrida do Brasileirão 2026: 28 rodadas em 30 segundos, os 20 clubes
 ```
 
 Diz o formato, **data o recorte** — a única defesa contra alguém assistir daqui
@@ -36,9 +37,9 @@ ajuda a retenção.
 
 | | título | caracteres | ângulo |
 |---|---|---|---|
-| 2 | `O Flamengo assume o Brasileirão na 26ª: a corrida de barras dos 20 clubes` | 73 | a virada, que acontece perto do fim do vídeo e se sustenta até a 27ª |
-| 3 | `Do 2º ao 20º: a queda da Chapecoense no Brasileirão 2026, rodada a rodada` | 73 | a queda; a Chapecoense fecha a 1ª rodada em 2º e a 27ª em 20º |
-| 4 | `Corrida de barras: os 20 clubes do Brasileirão rodada a rodada (até a 27ª)` | 74 | nomeia o formato, que é o que se busca no YouTube |
+| 2 | `O Flamengo assume o Brasileirão na 26ª: a corrida de barras dos 20 clubes` | 73 | a virada, que acontece perto do fim do vídeo e se sustenta até a 28ª |
+| 3 | `Do 2º ao 20º: a queda da Chapecoense no Brasileirão 2026, rodada a rodada` | 73 | a queda; a Chapecoense fecha a 1ª rodada em 2º e a 28ª em 20º |
+| 4 | `Corrida de barras: os 20 clubes do Brasileirão rodada a rodada (até a 28ª)` | 74 | nomeia o formato, que é o que se busca no YouTube |
 
 ### Para o Short (9:16)
 
@@ -46,7 +47,7 @@ Recomendado (59 caracteres). Um Short é lido numa linha e no meio de um
 feed, então ele abre pelo formato e não pelo campeonato:
 
 ```
-A corrida do Brasileirão: 27 rodadas em 22 segundos #Shorts
+A corrida do Brasileirão: 28 rodadas em 30 segundos #Shorts
 ```
 
 ## Descrição
@@ -54,17 +55,17 @@ A corrida do Brasileirão: 27 rodadas em 22 segundos #Shorts
 ```
 Os 20 clubes do Brasileirão Série A, rodada a rodada: o comprimento da barra são os pontos e a altura é a colocação, então ultrapassar é um movimento e não duas curvas se cruzando.
 
-Dados até 16/09/2026 (27ª rodada):
-• Flamengo — 1º, 57 pts em 27 jogos
-• Palmeiras — 2º, 56 pts, depois de liderar 19 rodadas
-• Chapecoense — 20º, 17 pts, tendo fechado a 1ª rodada em 2º
-• Cruzeiro — 6º, 42 pts, tendo passado pelo 20º
+Dados até 21/09/2026 (28ª rodada):
+• Flamengo — 1º, 60 pts em 28 jogos
+• Palmeiras — 2º, 57 pts, depois de liderar 19 rodadas
+• Chapecoense — 20º, 18 pts, tendo fechado a 1ª rodada em 2º
+• Cruzeiro — 6º, 45 pts, tendo passado pelo 20º
 
-A ultrapassagem está perto do fim: o Palmeiras fechou em 1º em 19 das 27 rodadas, 15 delas seguidas, e perde a ponta por 1 ponto na 26ª — e o Flamengo segue na frente até o fecho da 27ª.
+A ultrapassagem está perto do fim: o Palmeiras fechou em 1º em 19 das 28 rodadas, 15 delas seguidas, e perde a ponta por 1 ponto na 26ª — e o Flamengo segue na frente até o fecho da 28ª.
 
 Por que o eixo dos pontos NÃO se reescala a cada rodada, que é o contrário do que quase toda corrida de barras faz: reescalando, as barras ficam sempre compridas e um clube pode subir no desenho estando parado. Com o eixo fixo, uma barra que cresce é um clube que pontuou, e duas rodadas quaisquer do vídeo podem ser comparadas entre si. O preço é que a 1ª rodada são vinte tocos — que é o que a 1ª rodada é.
 
-Os filetes marcam o G4 e o Z4. Nem todos os clubes têm o mesmo número de jogos neste recorte, e por isso a linha do fecho diz sobre quantos jogos o líder chegou aos 57.
+Os filetes marcam o G4 e o Z4. Nem todos os clubes têm o mesmo número de jogos neste recorte, e por isso a linha do fecho diz sobre quantos jogos o líder chegou aos 60.
 
 Nenhum número foi digitado à mão. A animação lê o mesmo histórico de classificação que alimenta o Portal Brasileirão, então um valor errado aqui estaria errado no site também.
 
@@ -91,4 +92,4 @@ brasileirão, brasileirão 2026, série a, campeonato brasileiro, classificaçã
 | `barras-20-clubes-45.mp4` | Instagram (feed) | 4:5; o feed não sobrepõe nada, então cabe o desenho inteiro |
 | `barras-20-clubes.gif` | Reddit · README · issue · chat | toca sozinho onde não há player; ver `docs/post-reddit.md` |
 | `barras-20-clubes-miniatura.png` | capa do YouTube | a divisão, oito barras |
-| `barras-20-clubes-miniatura-57-pontos.png` | capa alternativa | a história: quem lidera e por quanto |
+| `barras-20-clubes-miniatura-60-pontos.png` | capa alternativa | a história: quem lidera e por quanto |

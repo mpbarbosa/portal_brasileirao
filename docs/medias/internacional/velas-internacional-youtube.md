@@ -14,8 +14,8 @@ Texto que acompanha [`velas-internacional.mp4`](velas-internacional.mp4)
   própria cena — a regra que o `scripts/manim/README.md` registra para as velas.
 - **Cortes verticais:** `velas-internacional-45.mp4` (1080×1350, feed do Instagram) e `velas-internacional-916.mp4` (1080×1920, Reels e YouTube Short).
 
-> **Os números aqui saem de `scripts/manim/velas-internacional.json`, rodada 27,
-> snapshot de 2026-09-16** — 18º com 28 pts, 6V 10E 11D, e a oscilação entre
+> **Os números aqui saem de `scripts/manim/velas-internacional.json`, rodada 28,
+> snapshot de 2026-09-21** — 18º com 28 pts, 6V 10E 12D, e a oscilação entre
 > o 8º e o 20º, que é a faixa que o painel do vídeo imprime. Eles **envelhecem**: um `sync-seed-data` seguido de uma
 > reexportação move o vídeo, e este arquivo não é regerado por nada. Reconferir
 > antes de publicar, contra o JSON e não contra esta página.
@@ -45,7 +45,7 @@ Texto que acompanha [`velas-internacional.mp4`](velas-internacional.mp4)
 Recomendado (71 caracteres):
 
 ```
-Internacional: 10 empates e 6 vitórias em 27 jogos, a campanha em velas
+Internacional: 10 empates e 6 vitórias em 28 jogos, a campanha em velas
 ```
 
 O contraste, que é o assunto — e **data o recorte**, que é a única defesa contra
@@ -53,7 +53,7 @@ alguém assistir daqui a três meses e achar que os números estão errados.
 
 | | título | caracteres | ângulo |
 |---|---|---|---|
-| 2 | `Internacional em velas: fecha entre o 11º e o 20º até a 27ª rodada` | 66 | a faixa de fechamento |
+| 2 | `Internacional em velas: fecha entre o 11º e o 20º até a 28ª rodada` | 66 | a faixa de fechamento |
 | 3 | `A campanha do Internacional rodada a rodada \| Brasileirão 2026 em candlestick` | 77 | genérico e buscável |
 
 **Os apelidos não estão em nenhum deles, e estão nas tags**: é como o torcedor
@@ -64,14 +64,14 @@ busca, e não é como o clube aparece no vídeo nem na tabela.
 ```
 A campanha do Internacional rodada a rodada, desenhada como vela: o corpo vai da posição em que o clube ABRIU a rodada até onde ele FECHOU, e o pavio cobre a melhor e a pior posição que ele ocupou enquanto a rodada era jogada. Embaixo, no mesmo eixo, os pontos acumulados — a barra é o total e a tampa clara é o que a rodada acrescentou.
 
-Dados até 16/09/2026 (27ª rodada):
-• Internacional — 18º, 28 pts em 27 jogos
-• 6V · 10E · 11D — 30 gols pró, 35 contra, saldo -5
-• 35% de aproveitamento · oscilou entre o 8º e o 20º
+Dados até 21/09/2026 (28ª rodada):
+• Internacional — 18º, 28 pts em 28 jogos
+• 6V · 10E · 12D — 30 gols pró, 36 contra, saldo -6
+• 33% de aproveitamento · oscilou entre o 8º e o 20º
 
-O Internacional empata quase o dobro do que vence: 10 empates contra 6 vitórias em 27 jogos, e os 10 são o maior número da divisão junto com o Bahia. No desenho essa é a assinatura mais legível da Série A — uma fileira de corpos amarelos de altura curta, rodada após rodada, com a posição praticamente parada.
+O Internacional empata quase o dobro do que vence: 10 empates contra 6 vitórias em 28 jogos, e os 10 são o maior número da divisão junto com o Bahia. No desenho essa é a assinatura mais legível da Série A — uma fileira de corpos amarelos de altura curta, rodada após rodada, com a posição praticamente parada.
 
-A campanha fecha entre o 11º e o 20º e termina dentro do Z4. A maior invencibilidade é de 5 rodadas, o que num clube com 11 derrotas diz que o problema não é perder, é não ganhar.
+A campanha fecha entre o 11º e o 20º e termina dentro do Z4. A maior invencibilidade é de 5 rodadas, o que num clube com 12 derrotas diz que o problema não é perder, é não ganhar.
 
 A régua tracejada que cruza o desenho é o acontecimento de fora de campo que tocou os vinte clubes: a paralisação para a Copa do Mundo depois da 18ª rodada. Ela cai na FRONTEIRA entre duas rodadas em vez de sobre uma, porque é isso que ela separa — o que veio antes dela e o que veio depois. Aqui o clube parou em 14º com 21 pts.
 
@@ -96,7 +96,7 @@ carregar o vídeo sozinha.
 Para Short, ou onde a descrição longa não couber.
 
 ```
-A campanha do Internacional em velas: o corpo vai da posição de abertura à de fechamento da rodada, o pavio mostra até onde o clube subiu e desceu dentro dela, e a barra de baixo são os pontos. A régua tracejada marca a parada para a Copa. 10 empates e só 6 vitórias em 27 jogos. Dados até a 27ª: 28 pts, 6V 10E 11D, saldo -5.
+A campanha do Internacional em velas: o corpo vai da posição de abertura à de fechamento da rodada, o pavio mostra até onde o clube subiu e desceu dentro dela, e a barra de baixo são os pontos. A régua tracejada marca a parada para a Copa. 10 empates e só 6 vitórias em 28 jogos. Dados até a 28ª: 28 pts, 6V 10E 12D, saldo -6.
 
 Animação em Manim, dados do Portal Brasileirão: https://brasileirao.mpbarbosa.com
 Código: https://github.com/mpbarbosa/portal_brasileirao
@@ -110,7 +110,7 @@ Medido sobre o bloco como está — separado por `, `, que é o que se cola.
 304 caracteres, 21 tags.
 
 ```
-brasileirão, brasileirao 2026, campeonato brasileiro, série a, serie a, internacional, colorado, inter, sci, clube do povo, campanha do internacional, campanha rodada a rodada, candlestick, gráfico de velas, futebol brasileiro, visualização de dados, dataviz, manim, python, portal brasileirão, rodada 27
+brasileirão, brasileirao 2026, campeonato brasileiro, série a, serie a, internacional, colorado, inter, sci, clube do povo, campanha do internacional, campanha rodada a rodada, candlestick, gráfico de velas, futebol brasileiro, visualização de dados, dataviz, manim, python, portal brasileirão, rodada 28
 ```
 
 Nenhuma tag nova: o único acontecimento que o vídeo marca é a paralisação

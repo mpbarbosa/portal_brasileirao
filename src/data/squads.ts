@@ -5,8 +5,8 @@ import type { Squad } from "@/src/types";
  * GENERATED FILE — do not edit by hand.
  * Regenerate with: npx tsx scripts/sync-seed-data.ts
  *
- * Frozen elencos (20 clubs, 950 players), taken
- * 2026-09-16 from football-data.org. The offline fallback behind
+ * Frozen elencos (20 clubs, 952 players), taken
+ * 2026-09-21 from football-data.org. The offline fallback behind
  * `/api/squads`, so it goes stale the moment a transfer window opens.
  *
  * Clubs are referenced through `CLUBS_BY_CODE` rather than restated, so this
@@ -324,6 +324,7 @@ export const SEED_SQUADS: Squad[] = [
     { id: "1274", name: "Rafael Thyere", position: "Defence", nationality: "Brazil", dateOfBirth: "1993-05-17" },
     { id: "250726", name: "Robert Conceição", position: "Midfield", nationality: "Brazil", dateOfBirth: "2003-07-20" },
     { id: "249466", name: "Rodrigo", position: "Midfield", nationality: "Brazil", dateOfBirth: "2007-07-03" },
+    { id: "301130", name: "Rosivan", nationality: "Brazil", dateOfBirth: "2000-03-20" },
     { id: "203293", name: "Rubens Tadeu", position: "Midfield", nationality: "Brazil", dateOfBirth: "2003-03-28" },
     { id: "294206", name: "Talison", position: "Offence", nationality: "Brazil", dateOfBirth: "2007-04-17" },
     { id: "299250", name: "Túlio Oliveira", nationality: "Brazil", dateOfBirth: "2004-10-27" },
@@ -689,6 +690,7 @@ export const SEED_SQUADS: Squad[] = [
     { id: "292152", name: "Denis Marfo", position: "Defence", nationality: "Ghana", dateOfBirth: "2006-01-28" },
     { id: "249146", name: "Diego Esser", position: "Goalkeeper", nationality: "Brazil", dateOfBirth: "2005-04-13" },
     { id: "24740", name: "Félix Torres", position: "Defence", nationality: "Ecuador", dateOfBirth: "1997-01-11" },
+    { id: "301131", name: "Filipe Sirio", nationality: "Brazil", dateOfBirth: "2007-01-26" },
     { id: "58", name: "Gabriel Mercado", position: "Defence", nationality: "Argentina", dateOfBirth: "1987-03-18" },
     { id: "290705", name: "João Kempes", position: "Midfield", nationality: "Brazil", dateOfBirth: "2009-04-25" },
     { id: "290700", name: "João Pedro", position: "Offence", nationality: "Brazil", dateOfBirth: "2009-06-29" },

@@ -14,8 +14,8 @@ Texto que acompanha [`velas-coritiba.mp4`](velas-coritiba.mp4)
   própria cena — a regra que o `scripts/manim/README.md` registra para as velas.
 - **Cortes verticais:** `velas-coritiba-45.mp4` (1080×1350, feed do Instagram) e `velas-coritiba-916.mp4` (1080×1920, Reels e YouTube Short).
 
-> **Os números aqui saem de `scripts/manim/velas-coritiba.json`, rodada 27,
-> snapshot de 2026-09-16** — 8º com 38 pts, 10V 8E 9D, e a oscilação entre
+> **Os números aqui saem de `scripts/manim/velas-coritiba.json`, rodada 28,
+> snapshot de 2026-09-21** — 9º com 38 pts, 10V 8E 10D, e a oscilação entre
 > o 5º e o 19º, que é a faixa que o painel do vídeo imprime. Eles **envelhecem**: um `sync-seed-data` seguido de uma
 > reexportação move o vídeo, e este arquivo não é regerado por nada. Reconferir
 > antes de publicar, contra o JSON e não contra esta página.
@@ -45,7 +45,7 @@ Texto que acompanha [`velas-coritiba.mp4`](velas-coritiba.mp4)
 Recomendado (63 caracteres):
 
 ```
-Coritiba em velas: do 16º ao 8º até a 27ª rodada do Brasileirão
+Coritiba em velas: do 16º ao 9º até a 28ª rodada do Brasileirão
 ```
 
 A subida, que é o movimento do desenho — e **data o recorte**, que é a única defesa contra
@@ -54,7 +54,7 @@ alguém assistir daqui a três meses e achar que os números estão errados.
 | | título | caracteres | ângulo |
 |---|---|---|---|
 | 2 | `A campanha do Coritiba rodada a rodada \| Brasileirão 2026 em candlestick` | 72 | genérico e buscável |
-| 3 | `Coritiba: 38 pontos, 10V 8E 9D e saldo -1` | 41 | o número duro |
+| 3 | `Coritiba: 38 pontos, 10V 8E 10D e saldo -6` | 42 | o número duro |
 
 **Os apelidos não estão em nenhum deles, e estão nas tags**: é como o torcedor
 busca, e não é como o clube aparece no vídeo nem na tabela.
@@ -64,14 +64,14 @@ busca, e não é como o clube aparece no vídeo nem na tabela.
 ```
 A campanha do Coritiba rodada a rodada, desenhada como vela: o corpo vai da posição em que o clube ABRIU a rodada até onde ele FECHOU, e o pavio cobre a melhor e a pior posição que ele ocupou enquanto a rodada era jogada. Embaixo, no mesmo eixo, os pontos acumulados — a barra é o total e a tampa clara é o que a rodada acrescentou.
 
-Dados até 16/09/2026 (27ª rodada):
-• Coritiba — 8º, 38 pts em 27 jogos
-• 10V · 8E · 9D — 37 gols pró, 38 contra, saldo -1
-• 47% de aproveitamento · oscilou entre o 5º e o 19º
+Dados até 21/09/2026 (28ª rodada):
+• Coritiba — 9º, 38 pts em 28 jogos
+• 10V · 8E · 10D — 37 gols pró, 43 contra, saldo -6
+• 45% de aproveitamento · oscilou entre o 5º e o 19º
 
-O Coritiba fez a campanha de quem sobe devagar: fecha rodadas entre o 7º e o 16º e termina o recorte em 8º, sem passar perto do topo nem do Z4.
+O Coritiba fez a campanha de quem sobe devagar: fecha rodadas entre o 7º e o 16º e termina o recorte em 9º, sem passar perto do topo nem do Z4.
 
-O painel diz 5º e 19º, que é a faixa contando as posições ocupadas dentro das rodadas — o pavio chega mais longe que o fechamento nos dois sentidos. São 9 derrotas em 27 jogos e 4 rodadas de invencibilidade na maior sequência.
+O painel diz 5º e 19º, que é a faixa contando as posições ocupadas dentro das rodadas — o pavio chega mais longe que o fechamento nos dois sentidos. São 10 derrotas em 28 jogos e 4 rodadas de invencibilidade na maior sequência.
 
 A régua tracejada que cruza o desenho é o acontecimento de fora de campo que tocou os vinte clubes: a paralisação para a Copa do Mundo depois da 18ª rodada. Ela cai na FRONTEIRA entre duas rodadas em vez de sobre uma, porque é isso que ela separa — o que veio antes dela e o que veio depois. Aqui o clube parou em 7º com 26 pts.
 
@@ -96,7 +96,7 @@ carregar o vídeo sozinha.
 Para Short, ou onde a descrição longa não couber.
 
 ```
-A campanha do Coritiba em velas: o corpo vai da posição de abertura à de fechamento da rodada, o pavio mostra até onde o clube subiu e desceu dentro dela, e a barra de baixo são os pontos. A régua tracejada marca a parada para a Copa. Subiu do 16º ao 8º sem nunca liderar nem ameaçar cair. Dados até a 27ª: 38 pts, 10V 8E 9D, saldo -1.
+A campanha do Coritiba em velas: o corpo vai da posição de abertura à de fechamento da rodada, o pavio mostra até onde o clube subiu e desceu dentro dela, e a barra de baixo são os pontos. A régua tracejada marca a parada para a Copa. Subiu do 16º ao 9º sem nunca liderar nem ameaçar cair. Dados até a 28ª: 38 pts, 10V 8E 10D, saldo -6.
 
 Animação em Manim, dados do Portal Brasileirão: https://brasileirao.mpbarbosa.com
 Código: https://github.com/mpbarbosa/portal_brasileirao
@@ -110,7 +110,7 @@ Medido sobre o bloco como está — separado por `, `, que é o que se cola.
 289 caracteres, 20 tags.
 
 ```
-brasileirão, brasileirao 2026, campeonato brasileiro, série a, serie a, coritiba, coxa, coxa branca, coritiba fc, campanha do coritiba, campanha rodada a rodada, candlestick, gráfico de velas, futebol brasileiro, visualização de dados, dataviz, manim, python, portal brasileirão, rodada 27
+brasileirão, brasileirao 2026, campeonato brasileiro, série a, serie a, coritiba, coxa, coxa branca, coritiba fc, campanha do coritiba, campanha rodada a rodada, candlestick, gráfico de velas, futebol brasileiro, visualização de dados, dataviz, manim, python, portal brasileirão, rodada 28
 ```
 
 Nenhuma tag nova: o único acontecimento que o vídeo marca é a paralisação

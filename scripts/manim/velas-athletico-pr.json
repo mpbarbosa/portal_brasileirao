@@ -1,5 +1,5 @@
 {
-  "snapshot": "2026-09-16",
+  "snapshot": "2026-09-21",
   "club": {
     "code": "1768",
     "name": "Athletico-PR",
@@ -517,6 +517,25 @@
         "goalsFor": 3,
         "goalsAgainst": 3,
         "result": "E"
+      }
+    },
+    {
+      "round": 28,
+      "open": 3,
+      "close": 3,
+      "best": 3,
+      "worst": 4,
+      "points": 3,
+      "totalPoints": 49,
+      "played": 28,
+      "result": "V",
+      "moved": 0,
+      "match": {
+        "opponent": "Bahia",
+        "home": true,
+        "goalsFor": 2,
+        "goalsAgainst": 1,
+        "result": "V"
       }
     }
   ],
