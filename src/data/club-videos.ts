@@ -163,13 +163,6 @@ export const CLUB_VIDEOS: Record<ClubCode, ClubVideo[]> = {
   //
   // **The corrida de barras is OFF this page for now, and that is a photosensitivity
   // decision rather than an editorial one.** `BnoyC7n40UM` was rendered at the old
-  // 0.45 s beat and fails `scripts/manim/check-flashes.py` — 0.375 of a 10° field
-  // above three flashes a second, against a limit of 0.25 — so it was made PRIVATE
-  // in Studio on 2026-09-21 (oEmbed 403, a public control 200). A private id on
-  // this list renders as a card for a video nobody can play, so it came off until
-  // a render at `BEAT_S = 0.70` (0.098 on the round-28 render) is uploaded and its
-  // oEmbed answers 200. When it returns it goes back between the two drawings
-  // below, for the reasons that follow, which still hold.
   //
   // **The corrida de barras sits between those two, and it is a third kind
   // rather than a second velas**: the drawing is the WHOLE division, twenty
