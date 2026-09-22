@@ -14,8 +14,8 @@ Texto que acompanha [`velas-gremio.mp4`](velas-gremio.mp4)
   própria cena — a regra que o `scripts/manim/README.md` registra para as velas.
 - **Cortes verticais:** `velas-gremio-45.mp4` (1080×1350, feed do Instagram) e `velas-gremio-916.mp4` (1080×1920, Reels e YouTube Short).
 
-> **Os números aqui saem de `scripts/manim/velas-gremio.json`, rodada 27,
-> snapshot de 2026-09-16** — 16º com 28 pts, 7V 7E 12D, e a oscilação entre
+> **Os números aqui saem de `scripts/manim/velas-gremio.json`, rodada 28,
+> snapshot de 2026-09-21** — 17º com 29 pts, 7V 8E 13D, e a oscilação entre
 > o 7º e o 17º, que é a faixa que o painel do vídeo imprime. Eles **envelhecem**: um `sync-seed-data` seguido de uma
 > reexportação move o vídeo, e este arquivo não é regerado por nada. Reconferir
 > antes de publicar, contra o JSON e não contra esta página.
@@ -42,19 +42,19 @@ Texto que acompanha [`velas-gremio.mp4`](velas-gremio.mp4)
 
 ## Título
 
-Recomendado (61 caracteres):
+Recomendado (56 caracteres):
 
 ```
-Grêmio em velas: 28 pontos em 26 jogos, com partida em atraso
+Grêmio em velas: 29 pontos em 28 jogos, e de volta ao Z4
 ```
 
-O denominador, que é o que engana nesta campanha — e **data o recorte**, que é a única defesa contra
+A posição de fechamento, que voltou ao Z4 na última rodada desenhada — e **data o recorte**, que é a única defesa contra
 alguém assistir daqui a três meses e achar que os números estão errados.
 
 | | título | caracteres | ângulo |
 |---|---|---|---|
 | 2 | `A campanha do Grêmio rodada a rodada \| Brasileirão 2026 em candlestick` | 70 | genérico e buscável |
-| 3 | `Grêmio: fecha entre o 8º e o 17º em 27 rodadas do Brasileirão` | 61 | a faixa de fechamento |
+| 3 | `Grêmio: fecha entre o 8º e o 17º em 28 rodadas do Brasileirão` | 61 | a faixa de fechamento |
 
 **Os apelidos não estão em nenhum deles, e estão nas tags**: é como o torcedor
 busca, e não é como o clube aparece no vídeo nem na tabela.
@@ -64,16 +64,16 @@ busca, e não é como o clube aparece no vídeo nem na tabela.
 ```
 A campanha do Grêmio rodada a rodada, desenhada como vela: o corpo vai da posição em que o clube ABRIU a rodada até onde ele FECHOU, e o pavio cobre a melhor e a pior posição que ele ocupou enquanto a rodada era jogada. Embaixo, no mesmo eixo, os pontos acumulados — a barra é o total e a tampa clara é o que a rodada acrescentou.
 
-Dados até 16/09/2026 (27ª rodada):
-• Grêmio — 16º, 28 pts em 26 jogos
-• 7V · 7E · 12D — 28 gols pró, 35 contra, saldo -7
-• 36% de aproveitamento · oscilou entre o 7º e o 17º
+Dados até 21/09/2026 (28ª rodada):
+• Grêmio — 17º, 29 pts em 28 jogos
+• 7V · 8E · 13D — 30 gols pró, 38 contra, saldo -8
+• 35% de aproveitamento · oscilou entre o 7º e o 17º
 
-O Grêmio tem jogo em atraso: 26 jogos contra 27 rodadas, como outros nove clubes da Série A. Isso muda como o vídeo se lê — a barra de pontos embaixo tem um degrau que ainda não veio, e comparar o total com quem já jogou tudo é uma leitura torta. É a mesma armadilha que o painel do fecho evita ao dizer sempre 'em 26 jogos'.
+O vídeo termina com o Grêmio em 17º, a primeira posição do Z4: o empate sem gols com o Palmeiras na 28ª rodada o levou do 16º para lá. Não é a primeira vez — o clube já tinha fechado em 17º na 15ª e na 21ª.
 
-A campanha fecha entre o 8º e o 17º, com 12 derrotas e 4 rodadas de invencibilidade na maior sequência.
+A campanha fecha entre o 8º e o 17º, com 13 derrotas e 4 rodadas de invencibilidade na maior sequência.
 
-Duas réguas tracejadas cruzam o desenho. A primeira é o acontecimento de fora de campo que tocou os vinte clubes: a paralisação para a Copa do Mundo depois da 18ª rodada. A segunda é do próprio Grêmio: a demissão de Luís Castro depois da 27ª, a última rodada que o vídeo desenha. As duas caem na FRONTEIRA entre duas rodadas em vez de sobre uma, porque é isso que elas separam — o que veio antes e o que veio depois. Na primeira o clube parou em 16º com 21 pts; a segunda fecha exatamente onde a campanha termina hoje.
+Duas réguas tracejadas cruzam o desenho. A primeira é o acontecimento de fora de campo que tocou os vinte clubes: a paralisação para a Copa do Mundo depois da 18ª rodada. A segunda é do próprio Grêmio: a demissão de Luís Castro depois da 27ª, uma rodada antes do fim do desenho. As duas caem na FRONTEIRA entre duas rodadas em vez de sobre uma, porque é isso que elas separam — o que veio antes e o que veio depois. Na primeira o clube parou em 16º com 21 pts; quando a segunda aparece, tinha 28 pts em 27 jogos e vinha de fechar em 16º.
 
 O eixo mostra a divisão inteira, 1º no topo e 20º embaixo, com as faixas do G4 e do Z4 ao fundo — é isso que permite comparar este vídeo com o de qualquer outro clube.
 
@@ -96,7 +96,7 @@ carregar o vídeo sozinha.
 Para Short, ou onde a descrição longa não couber.
 
 ```
-A campanha do Grêmio em velas: o corpo vai da posição de abertura à de fechamento da rodada, o pavio mostra até onde o clube subiu e desceu dentro dela, e a barra de baixo são os pontos. A régua tracejada marca a parada para a Copa. 26 jogos contra 27 rodadas: há partida em atraso. Dados até a 27ª: 28 pts, 7V 7E 12D, saldo -7.
+A campanha do Grêmio em velas: o corpo vai da posição de abertura à de fechamento da rodada, o pavio mostra até onde o clube subiu e desceu dentro dela, e a barra de baixo são os pontos. As réguas tracejadas marcam a parada para a Copa e a saída de Luís Castro. Termina em 17º, no Z4. Dados até a 28ª: 29 pts, 7V 8E 13D, saldo -8.
 
 Animação em Manim, dados do Portal Brasileirão: https://brasileirao.mpbarbosa.com
 Código: https://github.com/mpbarbosa/portal_brasileirao
@@ -110,7 +110,7 @@ Medido sobre o bloco como está — separado por `, `, que é o que se cola.
 316 caracteres, 22 tags.
 
 ```
-brasileirão, brasileirao 2026, campeonato brasileiro, série a, serie a, grêmio, imortal, tricolor gaúcho, tricolor gaucho, gfbpa, campanha do grêmio, campanha rodada a rodada, candlestick, gráfico de velas, futebol brasileiro, visualização de dados, dataviz, manim, python, portal brasileirão, rodada 27, luís castro
+brasileirão, brasileirao 2026, campeonato brasileiro, série a, serie a, grêmio, imortal, tricolor gaúcho, tricolor gaucho, gfbpa, campanha do grêmio, campanha rodada a rodada, candlestick, gráfico de velas, futebol brasileiro, visualização de dados, dataviz, manim, python, portal brasileirão, rodada 28, luís castro
 ```
 
 `luís castro` entra porque o vídeo agora **marca** essa saída, e é assim que o

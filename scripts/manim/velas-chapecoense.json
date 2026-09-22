@@ -1,5 +1,5 @@
 {
-  "snapshot": "2026-09-16",
+  "snapshot": "2026-09-21",
   "club": {
     "code": "1772",
     "name": "Chapecoense",
@@ -511,6 +511,25 @@
         "goalsFor": 1,
         "goalsAgainst": 2,
         "result": "D"
+      }
+    },
+    {
+      "round": 28,
+      "open": 20,
+      "close": 20,
+      "best": 20,
+      "worst": 20,
+      "points": 1,
+      "totalPoints": 18,
+      "played": 27,
+      "result": "E",
+      "moved": 0,
+      "match": {
+        "opponent": "Atlético-MG",
+        "home": false,
+        "goalsFor": 1,
+        "goalsAgainst": 1,
+        "result": "E"
       }
     }
   ],

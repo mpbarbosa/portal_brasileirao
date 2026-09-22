@@ -1,5 +1,5 @@
 {
-  "snapshot": "2026-09-16",
+  "snapshot": "2026-09-21",
   "club": {
     "code": "1767",
     "name": "Grêmio",
@@ -392,12 +392,18 @@
       "close": 17,
       "best": 15,
       "worst": 17,
-      "points": null,
+      "points": 0,
       "totalPoints": 22,
-      "played": 20,
-      "result": null,
+      "played": 21,
+      "result": "D",
       "moved": -2,
-      "match": null
+      "match": {
+        "opponent": "Botafogo",
+        "home": false,
+        "goalsFor": 2,
+        "goalsAgainst": 3,
+        "result": "D"
+      }
     },
     {
       "round": 22,
@@ -407,7 +413,7 @@
       "worst": 17,
       "points": 3,
       "totalPoints": 25,
-      "played": 21,
+      "played": 22,
       "result": "V",
       "moved": 3,
       "match": {
@@ -426,7 +432,7 @@
       "worst": 15,
       "points": 0,
       "totalPoints": 25,
-      "played": 22,
+      "played": 23,
       "result": "D",
       "moved": -1,
       "match": {
@@ -445,7 +451,7 @@
       "worst": 15,
       "points": 0,
       "totalPoints": 25,
-      "played": 23,
+      "played": 24,
       "result": "D",
       "moved": 0,
       "match": {
@@ -464,7 +470,7 @@
       "worst": 15,
       "points": 3,
       "totalPoints": 28,
-      "played": 24,
+      "played": 25,
       "result": "V",
       "moved": 0,
       "match": {
@@ -483,7 +489,7 @@
       "worst": 15,
       "points": 0,
       "totalPoints": 28,
-      "played": 25,
+      "played": 26,
       "result": "D",
       "moved": 0,
       "match": {
@@ -502,7 +508,7 @@
       "worst": 16,
       "points": 0,
       "totalPoints": 28,
-      "played": 26,
+      "played": 27,
       "result": "D",
       "moved": -1,
       "match": {
@@ -511,6 +517,25 @@
         "goalsFor": 1,
         "goalsAgainst": 2,
         "result": "D"
+      }
+    },
+    {
+      "round": 28,
+      "open": 16,
+      "close": 17,
+      "best": 16,
+      "worst": 17,
+      "points": 1,
+      "totalPoints": 29,
+      "played": 28,
+      "result": "E",
+      "moved": -1,
+      "match": {
+        "opponent": "Palmeiras",
+        "home": true,
+        "goalsFor": 0,
+        "goalsAgainst": 0,
+        "result": "E"
       }
     }
   ],

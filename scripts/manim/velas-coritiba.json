@@ -1,5 +1,5 @@
 {
-  "snapshot": "2026-09-16",
+  "snapshot": "2026-09-21",
   "club": {
     "code": "4241",
     "name": "Coritiba",
@@ -409,7 +409,7 @@
       "round": 22,
       "open": 11,
       "close": 10,
-      "best": 7,
+      "best": 8,
       "worst": 11,
       "points": 3,
       "totalPoints": 30,
@@ -427,14 +427,14 @@
     {
       "round": 23,
       "open": 10,
-      "close": 10,
-      "best": 9,
-      "worst": 10,
+      "close": 11,
+      "best": 10,
+      "worst": 11,
       "points": 1,
       "totalPoints": 31,
       "played": 23,
       "result": "E",
-      "moved": 0,
+      "moved": -1,
       "match": {
         "opponent": "São Paulo",
         "home": false,
@@ -445,15 +445,15 @@
     },
     {
       "round": 24,
-      "open": 10,
+      "open": 11,
       "close": 8,
       "best": 8,
-      "worst": 10,
+      "worst": 11,
       "points": 3,
       "totalPoints": 34,
       "played": 24,
       "result": "V",
-      "moved": 2,
+      "moved": 3,
       "match": {
         "opponent": "Corinthians",
         "home": true,
@@ -517,6 +517,25 @@
         "goalsFor": 3,
         "goalsAgainst": 3,
         "result": "E"
+      }
+    },
+    {
+      "round": 28,
+      "open": 8,
+      "close": 9,
+      "best": 8,
+      "worst": 9,
+      "points": 0,
+      "totalPoints": 38,
+      "played": 28,
+      "result": "D",
+      "moved": -1,
+      "match": {
+        "opponent": "Vasco da Gama",
+        "home": false,
+        "goalsFor": 0,
+        "goalsAgainst": 5,
+        "result": "D"
       }
     }
   ],

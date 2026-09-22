@@ -1,5 +1,5 @@
 {
-  "snapshot": "2026-09-16",
+  "snapshot": "2026-09-21",
   "club": {
     "code": "1769",
     "name": "Palmeiras",
@@ -517,6 +517,25 @@
         "goalsFor": 2,
         "goalsAgainst": 0,
         "result": "V"
+      }
+    },
+    {
+      "round": 28,
+      "open": 2,
+      "close": 2,
+      "best": 2,
+      "worst": 2,
+      "points": 1,
+      "totalPoints": 57,
+      "played": 28,
+      "result": "E",
+      "moved": 0,
+      "match": {
+        "opponent": "Grêmio",
+        "home": false,
+        "goalsFor": 0,
+        "goalsAgainst": 0,
+        "result": "E"
       }
     }
   ],

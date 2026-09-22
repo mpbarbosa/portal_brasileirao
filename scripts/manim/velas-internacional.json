@@ -1,5 +1,5 @@
 {
-  "snapshot": "2026-09-16",
+  "snapshot": "2026-09-21",
   "club": {
     "code": "6684",
     "name": "Internacional",
@@ -517,6 +517,25 @@
         "goalsFor": 2,
         "goalsAgainst": 1,
         "result": "V"
+      }
+    },
+    {
+      "round": 28,
+      "open": 18,
+      "close": 18,
+      "best": 18,
+      "worst": 18,
+      "points": 0,
+      "totalPoints": 28,
+      "played": 28,
+      "result": "D",
+      "moved": 0,
+      "match": {
+        "opponent": "São Paulo",
+        "home": false,
+        "goalsFor": 0,
+        "goalsAgainst": 1,
+        "result": "D"
       }
     }
   ],

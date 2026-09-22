@@ -1,5 +1,5 @@
 {
-  "snapshot": "2026-09-16",
+  "snapshot": "2026-09-21",
   "club": {
     "code": "4287",
     "name": "Clube do Remo",
@@ -518,6 +518,25 @@
         "goalsAgainst": 2,
         "result": "D"
       }
+    },
+    {
+      "round": 28,
+      "open": 19,
+      "close": 19,
+      "best": 19,
+      "worst": 19,
+      "points": 0,
+      "totalPoints": 23,
+      "played": 28,
+      "result": "D",
+      "moved": 0,
+      "match": {
+        "opponent": "Santos",
+        "home": true,
+        "goalsFor": 1,
+        "goalsAgainst": 2,
+        "result": "D"
+      }
     }
   ],
   "events": [
@@ -536,6 +555,14 @@
       "round": 18,
       "endRound": 18,
       "label": "após a 18ª rodada · Brasileirão paralisado para a Copa do Mundo (1 de junho de 2026)"
+    },
+    {
+      "id": "remo-conde",
+      "title": "Remo demite Léo Condé",
+      "date": "2026-09-15",
+      "round": 27,
+      "endRound": 27,
+      "label": "após a 27ª rodada · Remo demite Léo Condé (15 de setembro de 2026)"
     }
   ]
 }

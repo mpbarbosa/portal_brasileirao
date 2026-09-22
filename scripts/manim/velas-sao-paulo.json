@@ -1,5 +1,5 @@
 {
-  "snapshot": "2026-09-16",
+  "snapshot": "2026-09-21",
   "club": {
     "code": "1776",
     "name": "São Paulo",
@@ -459,14 +459,14 @@
     {
       "round": 25,
       "open": 13,
-      "close": 11,
-      "best": 11,
+      "close": 12,
+      "best": 12,
       "worst": 13,
       "points": 3,
       "totalPoints": 30,
       "played": 24,
       "result": "V",
-      "moved": 2,
+      "moved": 1,
       "match": {
         "opponent": "Bragantino",
         "home": true,
@@ -477,10 +477,10 @@
     },
     {
       "round": 26,
-      "open": 11,
-      "close": 10,
+      "open": 12,
+      "close": 11,
       "best": 10,
-      "worst": 11,
+      "worst": 12,
       "points": 3,
       "totalPoints": 33,
       "played": 25,
@@ -496,10 +496,10 @@
     },
     {
       "round": 27,
-      "open": 10,
-      "close": 11,
-      "best": 10,
-      "worst": 11,
+      "open": 11,
+      "close": 12,
+      "best": 11,
+      "worst": 12,
       "points": 0,
       "totalPoints": 33,
       "played": 26,
@@ -511,6 +511,25 @@
         "goalsFor": 0,
         "goalsAgainst": 2,
         "result": "D"
+      }
+    },
+    {
+      "round": 28,
+      "open": 12,
+      "close": 11,
+      "best": 11,
+      "worst": 12,
+      "points": 3,
+      "totalPoints": 36,
+      "played": 27,
+      "result": "V",
+      "moved": 1,
+      "match": {
+        "opponent": "Internacional",
+        "home": true,
+        "goalsFor": 1,
+        "goalsAgainst": 0,
+        "result": "V"
       }
     }
   ],

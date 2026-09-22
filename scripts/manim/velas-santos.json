@@ -1,5 +1,5 @@
 {
-  "snapshot": "2026-09-16",
+  "snapshot": "2026-09-21",
   "club": {
     "code": "6685",
     "name": "Santos",
@@ -478,14 +478,14 @@
     {
       "round": 26,
       "open": 14,
-      "close": 13,
-      "best": 12,
+      "close": 14,
+      "best": 13,
       "worst": 14,
       "points": 3,
       "totalPoints": 32,
       "played": 25,
       "result": "V",
-      "moved": 1,
+      "moved": 0,
       "match": {
         "opponent": "Internacional",
         "home": false,
@@ -496,18 +496,37 @@
     },
     {
       "round": 27,
-      "open": 13,
+      "open": 14,
       "close": 10,
       "best": 10,
-      "worst": 13,
+      "worst": 14,
       "points": 3,
       "totalPoints": 35,
       "played": 26,
       "result": "V",
-      "moved": 3,
+      "moved": 4,
       "match": {
         "opponent": "Cruzeiro",
         "home": true,
+        "goalsFor": 2,
+        "goalsAgainst": 1,
+        "result": "V"
+      }
+    },
+    {
+      "round": 28,
+      "open": 10,
+      "close": 8,
+      "best": 8,
+      "worst": 10,
+      "points": 3,
+      "totalPoints": 38,
+      "played": 27,
+      "result": "V",
+      "moved": 2,
+      "match": {
+        "opponent": "Clube do Remo",
+        "home": false,
         "goalsFor": 2,
         "goalsAgainst": 1,
         "result": "V"

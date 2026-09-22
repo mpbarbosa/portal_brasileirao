@@ -1,5 +1,5 @@
 {
-  "snapshot": "2026-09-16",
+  "snapshot": "2026-09-21",
   "club": {
     "code": "1782",
     "name": "Vitória",
@@ -484,14 +484,14 @@
     {
       "round": 26,
       "open": 13,
-      "close": 11,
-      "best": 11,
+      "close": 12,
+      "best": 12,
       "worst": 14,
       "points": 3,
       "totalPoints": 32,
       "played": 26,
       "result": "V",
-      "moved": 2,
+      "moved": 1,
       "match": {
         "opponent": "Grêmio",
         "home": true,
@@ -502,10 +502,10 @@
     },
     {
       "round": 27,
-      "open": 11,
-      "close": 12,
-      "best": 11,
-      "worst": 12,
+      "open": 12,
+      "close": 13,
+      "best": 12,
+      "worst": 13,
       "points": 1,
       "totalPoints": 33,
       "played": 27,
@@ -517,6 +517,25 @@
         "goalsFor": 2,
         "goalsAgainst": 2,
         "result": "E"
+      }
+    },
+    {
+      "round": 28,
+      "open": 13,
+      "close": 13,
+      "best": 13,
+      "worst": 13,
+      "points": 0,
+      "totalPoints": 33,
+      "played": 28,
+      "result": "D",
+      "moved": 0,
+      "match": {
+        "opponent": "Cruzeiro",
+        "home": true,
+        "goalsFor": 1,
+        "goalsAgainst": 3,
+        "result": "D"
       }
     }
   ],
