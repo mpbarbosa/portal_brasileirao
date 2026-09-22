@@ -79,7 +79,7 @@ import type { ClubCode, ClubVideo } from "@/src/types";
  * `ry8aUbRUqpw` under Chapecoense, each from that club's own channel.** Read the `channel` rule above in
  * both directions: it was written to stop this app's render being taken for a
  * broadcaster's package, and it is the same field that stops a club's package
- * being taken for ours. Nothing here privileges the twenty-three renders; the
+ * being taken for ours. Nothing here privileges the twenty-two renders; the
  * file is *club → what to show*, and what a club publishes about itself is
  * squarely that.
  *
@@ -116,7 +116,8 @@ export const CLUB_VIDEOS: Record<ClubCode, ClubVideo[]> = {
     },
   ],
 
-  // Palmeiras, and the one club carrying two entries. They are not a duplicate
+  // Palmeiras, one of the two clubs carrying two entries (Chapecoense is the
+  // other, for a different reason — see its block). They are not a duplicate
   // of each other: the velas is about this club and appears under this code
   // alone, while the campanha render is a comparação and sits here *and* under
   // Flamengo below — see the note on repetition above. The velas leads because
@@ -148,8 +149,8 @@ export const CLUB_VIDEOS: Record<ClubCode, ClubVideo[]> = {
     },
   ],
 
-  // Flamengo, and the only club carrying FOUR entries — Palmeiras and Chapecoense
-  // hold two and every other code one (counted, not assumed). The three drawings of ours
+  // Flamengo, and the only club carrying THREE entries — Palmeiras and Chapecoense
+  // hold two and every other code one (counted, not assumed). The two drawings of ours
   // follow Palmeiras' rule, read one step further: how much of the drawing is
   // this club, and where that ties, whether the entry repeats under another
   // code. The velas is about this club alone and sits under this code only;
@@ -159,6 +160,9 @@ export const CLUB_VIDEOS: Record<ClubCode, ClubVideo[]> = {
   // REPLACING `vU4ntqwfm2M` (the 26ª) with the 27ª render — Flamengo held the
   // lead through the round the 26ª ended on and still holds it a round later,
   // which the title now says.
+  //
+  // **The corrida de barras is OFF this page for now, and that is a photosensitivity
+  // decision rather than an editorial one.** `BnoyC7n40UM` was rendered at the old
   //
   // **The corrida de barras sits between those two, and it is a third kind
   // rather than a second velas**: the drawing is the WHOLE division, twenty
@@ -176,15 +180,16 @@ export const CLUB_VIDEOS: Record<ClubCode, ClubVideo[]> = {
   // the cause was not the data: it was the first club with three cards, and
   // each card's `sr-only` suffix escaped the rail's scroll clip and widened
   // the page on mobile, which #660 fixed with `relative` on the rail. That is
-  // why a fourth card is safe here now and was not then.
+  // why a third and fourth card are safe here now and were not then.
   //
   // **The club's own video is APPENDED rather than ranked**,
   // which is the honest placement rather than the tidy one: the rule above
   // ranks *drawings* by how much of the drawing is this club, and it has
   // nothing to say about a video that is not one of ours. So it goes behind
-  // the three drawings of ours that answer this page's own subject — the
-  // campanha the Classificação and the Painel already draw, and the division
-  // this club leads — and the order among the drawings is theirs, not its.
+  // the drawings of ours that answer this page's own subject — the campanha
+  // the Classificação and the Painel already draw, and (when the barras is
+  // back) the division this club leads — and the order among the drawings is
+  // theirs, not its.
   // Whoever ranks it differently should write the rule that did it.
   //
   // **It is `Flamengo TV`'s, and the club is established by ID rather than by
@@ -207,11 +212,6 @@ export const CLUB_VIDEOS: Record<ClubCode, ClubVideo[]> = {
     {
       id: "jEIhdQ9BjD0",
       title: "Flamengo lidera o Brasileirão na 27ª: a campanha em velas de 2026",
-      channel: "Marcelo Barbosa",
-    },
-    {
-      id: "BnoyC7n40UM",
-      title: "Do 15º à liderança: a corrida do Flamengo no Brasileirão 2026, rodada a rodada",
       channel: "Marcelo Barbosa",
     },
     {
