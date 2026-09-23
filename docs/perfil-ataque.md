@@ -111,6 +111,50 @@ paragraph.
 
 ---
 
+## Rodada 28 — Palmeiras drops out of the top pair in conversão for the first time, and the Coritiba reading takes a fourth vote
+
+Written 2026-09-23 against `CLUB_SCOUTS_THROUGH_ROUND = 28`.
+
+- **The top two in conversão change for the first time across these readings.**
+  Flamengo and Palmeiras had held first and second through rodadas 25, 26 and 27,
+  with only the seat below them moving. This window breaks that: Flamengo holds the
+  top on its own, and the club beside it is now Coritiba, with Palmeiras falling to
+  share third with Athletico-PR. Palmeiras is the club that moved — it converted
+  worse than in any of the three previous readings while Coritiba edged up — so read
+  this as Palmeiras stepping back rather than as Coritiba overtaking it.
+- **Coritiba takes a fourth vote, and it is the strongest yet.** Volume is still the
+  lowest in the division, by the same clear margin over Grêmio; conversion did not
+  regress toward the middle, it climbed past Palmeiras. Rule 3 asked for three
+  consecutive votes before a formulation moves into `scouts-core.ts`, and it now has
+  four, the last two of which improved rather than held. Whether to make that move is
+  still a decision about the page rather than about this rodada.
+- **Vasco takes outright first in volume, and the Bragantino split widens.** Last
+  entry pulled the two apart; this one pushes further in the same direction. Vasco
+  passes Bragantino at the top of volume and climbs off the floor of conversion for a
+  second entry running, while Bragantino stays alone at the bottom of conversion and
+  gives up the volume lead. The pair that read as one shape two entries ago now sits
+  at opposite ends of what a high-volume club can be.
+- **Internacional reverses, and the previous entry's claim does not survive.** Rodada
+  27 read it as climbing off the floor of conversion for a second running, by more
+  than the entry before. It fell back this window, past both clubs it had overtaken,
+  and is once again within touching distance of the bottom. Two entries of movement in
+  one direction were not a trend — which is the caution rodada 27 attached to Santos
+  and did not attach here.
+- **Atlético-MG splits its two axes.** It rose three places in volume — as far as any
+  club moved up that axis this window, level with Vitória and Corinthians — and gave
+  up three in conversion, which is the largest fall on that axis this round. So it
+  shoots more than the entry before and scores less from it. A shape worth a second
+  look next round rather than a reading on one window.
+
+**What would falsify the Coritiba reading from here**, unchanged since rodada 25: its
+conversion regressing toward the division's middle while its volume stays at the
+bottom. Four chances to fail it, none taken.
+
+**What would falsify the Vasco/Bragantino split**: the two converging again on either
+axis — Bragantino climbing off the bottom of conversion, or Vasco falling back behind
+it in volume. Both moved further apart this window, so a single round of convergence
+is the test.
+
 ## Rodada 27 — the Coritiba reading takes its third vote and holds, and the Bragantino/Vasco shape splits
 
 Written 2026-09-16 against `CLUB_SCOUTS_THROUGH_ROUND = 27`. The third of the three
