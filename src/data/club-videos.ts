@@ -150,7 +150,7 @@ export const CLUB_VIDEOS: Record<ClubCode, ClubVideo[]> = {
   ],
 
   // Flamengo, and the only club carrying FOUR entries — Palmeiras and Chapecoense
-  // hold two and the other seventeen codes one (counted, not assumed). The two drawings of ours
+  // hold two and the other seventeen codes one (counted, not assumed). The three drawings of ours
   // follow Palmeiras' rule, read one step further: how much of the drawing is
   // this club, and where that ties, whether the entry repeats under another
   // code. The velas is about this club alone and sits under this code only;
