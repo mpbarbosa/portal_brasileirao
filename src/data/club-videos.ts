@@ -149,8 +149,8 @@ export const CLUB_VIDEOS: Record<ClubCode, ClubVideo[]> = {
     },
   ],
 
-  // Flamengo, and the only club carrying THREE entries — Palmeiras and Chapecoense
-  // hold two and every other code one (counted, not assumed). The two drawings of ours
+  // Flamengo, and the only club carrying FOUR entries — Palmeiras and Chapecoense
+  // hold two and the other seventeen codes one (counted, not assumed). The three drawings of ours
   // follow Palmeiras' rule, read one step further: how much of the drawing is
   // this club, and where that ties, whether the entry repeats under another
   // code. The velas is about this club alone and sits under this code only;
@@ -161,8 +161,19 @@ export const CLUB_VIDEOS: Record<ClubCode, ClubVideo[]> = {
   // lead through the round the 26ª ended on and still holds it a round later,
   // which the title now says.
   //
-  // **The corrida de barras is OFF this page for now, and that is a photosensitivity
-  // decision rather than an editorial one.** `BnoyC7n40UM` was rendered at the old
+  // **The corrida de barras is BACK, under a new id, and the old one must not
+  // come back with it.** `BnoyC7n40UM` was rendered at the 0.45 s beat and fails
+  // `scripts/manim/check-flashes.py` — 0.375 of a 10 degree field above three
+  // flashes a second, against a limit of 0.25 — so it was made private in Studio
+  // and #674 took it off this page rather than leave a card nobody could play.
+  // `EDhMoPEUuhg` is the round-28 render at `BEAT_S = 0.70`, which measures 0.098
+  // on the same checker, uploaded from the file committed in #675. It was PRIVATE
+  // for two days and this entry waited on that: oEmbed answered 403 at 18:18Z on
+  // 2026-09-23 and 12:13Z today, then 200 at 12:16:16Z, with two known-public
+  // controls answering 200 throughout — so the 200 is evidence about this video
+  // rather than about the endpoint. The title and channel below are oEmbed's own
+  // strings, which is this file's rule and the only way to tell a video from a
+  // reupload of it.
   //
   // **The corrida de barras sits between those two, and it is a third kind
   // rather than a second velas**: the drawing is the WHOLE division, twenty
@@ -187,9 +198,8 @@ export const CLUB_VIDEOS: Record<ClubCode, ClubVideo[]> = {
   // ranks *drawings* by how much of the drawing is this club, and it has
   // nothing to say about a video that is not one of ours. So it goes behind
   // the drawings of ours that answer this page's own subject — the campanha
-  // the Classificação and the Painel already draw, and (when the barras is
-  // back) the division this club leads — and the order among the drawings is
-  // theirs, not its.
+  // the Classificação and the Painel already draw, and the division this club
+  // leads — and the order among the drawings is theirs, not its.
   // Whoever ranks it differently should write the rule that did it.
   //
   // **It is `Flamengo TV`'s, and the club is established by ID rather than by
@@ -212,6 +222,11 @@ export const CLUB_VIDEOS: Record<ClubCode, ClubVideo[]> = {
     {
       id: "jEIhdQ9BjD0",
       title: "Flamengo lidera o Brasileirão na 27ª: a campanha em velas de 2026",
+      channel: "Marcelo Barbosa",
+    },
+    {
+      id: "EDhMoPEUuhg",
+      title: "Do 15º à liderança: a corrida do Flamengo no Brasileirão 2026, rodada a rodada",
       channel: "Marcelo Barbosa",
     },
     {
