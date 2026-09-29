@@ -116,16 +116,17 @@ export const CLUB_VIDEOS: Record<ClubCode, ClubVideo[]> = {
     },
   ],
 
-  // Palmeiras, one of the two clubs carrying two entries (Chapecoense is the
-  // other, for a different reason — see its block). They are not a duplicate
+  // Palmeiras, the only club carrying exactly two entries — Flamengo holds
+  // four, Chapecoense three, and the other seventeen codes one (recounted from
+  // the file, not assumed). They are not a duplicate
   // of each other: the velas is about this club and appears under this code
   // alone, while the campanha render is a comparação and sits here *and* under
   // Flamengo below — see the note on repetition above. The velas leads because
   // it is the club's own season; the comparação is about a pair this club
   // happens to be half of.
   //
-  // **The velas is the 27ª render, REPLACING `vYD1n_TiXYA` (the 26ª)**, which
-  // itself replaced the 25ª (`xc8kDALBFnM`). Same substitution rule as
+  // **The velas is the 28ª render, REPLACING `mVabGcXrGek` (the 27ª)**, which
+  // itself replaced the 26ª (`vYD1n_TiXYA`). Same substitution rule as
   // Fluminense above: the two are one drawing at two moments, and a club page
   // offering both would be asking a reader to pick a rodada, which is not a
   // question the section poses anywhere else. The superseded videos are still
@@ -134,32 +135,41 @@ export const CLUB_VIDEOS: Record<ClubCode, ClubVideo[]> = {
   //
   // Note the title carries no rodada, unlike the five below. That is the copy
   // in `velas-palmeiras-youtube.md` as it stands, not a transcription choice:
-  // this file only ever writes oEmbed's own string, and the 27ª's oEmbed
-  // returned this exact title unchanged from the 26ª's.
+  // this file only ever writes oEmbed's own string, and the 28ª's oEmbed
+  // returned this exact title unchanged from the 27ª's.
+  //
+  // **So the title cannot date the render, and the REPLACING line above is the
+  // only record that can.** That is not a curiosity. A session deciding what
+  // was superseded by reading the titles alone re-uploaded `barras-flamengo` —
+  // already at the 28ª under `EDhMoPEUuhg`, whose title carries no rodada
+  // either — and spent 1600 of the day's 10.000 units on a duplicate nothing
+  // needed. Four of our titles state no rodada: this one, the corrida de
+  // barras, Botafogo's and Mirassol's. Read the comment, never the title.
   "1769": [
     {
-      id: "mVabGcXrGek",
+      id: "c7G4rh-_yVw",
       title: "Palmeiras liderou 19 rodadas e perdeu a ponta: a campanha em velas",
       channel: "Marcelo Barbosa",
     },
     {
-      id: "8Kr9MLphoEc",
-      title: "Palmeiras × Flamengo: a campanha rodada a rodada do Brasileirão 2026 (até a 25ª)",
+      id: "Fovcq-MjHO4",
+      title: "Palmeiras × Flamengo: a campanha rodada a rodada do Brasileirão 2026 (até a 28ª)",
       channel: "Marcelo Barbosa",
     },
   ],
 
-  // Flamengo, and the only club carrying FOUR entries — Palmeiras and Chapecoense
-  // hold two and the other seventeen codes one (counted, not assumed). The three drawings of ours
+  // Flamengo, and the only club carrying FOUR entries — Chapecoense holds three,
+  // Palmeiras two, and the other seventeen codes one (recounted from the file,
+  // not assumed). The three drawings of ours
   // follow Palmeiras' rule, read one step further: how much of the drawing is
   // this club, and where that ties, whether the entry repeats under another
   // code. The velas is about this club alone and sits under this code only;
   // the comparação is about a pair this club happens to be half of, and
   // repeats under Palmeiras above. The velas leads because it is the club's
   // own season.
-  // REPLACING `vU4ntqwfm2M` (the 26ª) with the 27ª render — Flamengo held the
-  // lead through the round the 26ª ended on and still holds it a round later,
-  // which the title now says.
+  // REPLACING `jEIhdQ9BjD0` (the 27ª) with the 28ª render — Flamengo took the
+  // lead on the 26ª and still holds it two rounds later, having won both the
+  // 27ª and the 28ª, which the title now says.
   //
   // **The corrida de barras is BACK, under a new id, and the old one must not
   // come back with it.** `BnoyC7n40UM` was rendered at the 0.45 s beat and fails
@@ -220,8 +230,8 @@ export const CLUB_VIDEOS: Record<ClubCode, ClubVideo[]> = {
   // 200 is evidence rather than a shape.
   "1783": [
     {
-      id: "jEIhdQ9BjD0",
-      title: "Flamengo lidera o Brasileirão na 27ª: a campanha em velas de 2026",
+      id: "O6hvkCMT1Q0",
+      title: "Flamengo lidera o Brasileirão na 28ª: a campanha em velas de 2026",
       channel: "Marcelo Barbosa",
     },
     {
@@ -230,8 +240,8 @@ export const CLUB_VIDEOS: Record<ClubCode, ClubVideo[]> = {
       channel: "Marcelo Barbosa",
     },
     {
-      id: "8Kr9MLphoEc",
-      title: "Palmeiras × Flamengo: a campanha rodada a rodada do Brasileirão 2026 (até a 25ª)",
+      id: "Fovcq-MjHO4",
+      title: "Palmeiras × Flamengo: a campanha rodada a rodada do Brasileirão 2026 (até a 28ª)",
       channel: "Marcelo Barbosa",
     },
     {
@@ -343,10 +353,28 @@ export const CLUB_VIDEOS: Record<ClubCode, ClubVideo[]> = {
   // false, `playableInEmbed` true, `isFamilySafe` true, 1280×720, 14m55s. The
   // title and channel below are oEmbed's own strings — 200 against an invented
   // id answering 400, so the 200 is evidence rather than a shape.
+  //
+  // **A corrida de barras joins as the THIRD entry, and it earns the place on
+  // the test the comparação fails**: `BARRAS_FOCUS` marks this club's row in a
+  // drawing of the whole division, so the cut was made for this torcida and
+  // repeats under no other code — the rule is stated in Flamengo's block above.
+  // It sits between the velas and ChapeTv's bastidores, because the ordering
+  // among our own drawings is how much of the drawing is this club, and the
+  // club's own season leads.
+  //
+  // Note the velas above is still the 27ª render while this one is the 28ª, and
+  // that is not an oversight: the two are different drawings rather than one
+  // drawing at two moments, so the substitution rule does not bind them to each
+  // other. The velas is superseded and awaits an upload of its own.
   "1772": [
     {
       id: "K6DdI6YDJtc",
       title: "Chapecoense: 15 derrotas em 26 jogos, a campanha em velas até a 27ª",
+      channel: "Marcelo Barbosa",
+    },
+    {
+      id: "RE1LSo-0CU8",
+      title: "A corrida da Chapecoense no Brasileirão 2026: 28 rodadas contra os outros 19",
       channel: "Marcelo Barbosa",
     },
     {
