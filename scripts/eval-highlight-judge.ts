@@ -267,6 +267,9 @@ const show = (label: string, list: Row[]) => {
 show("MODEL PASSED A NEGATIVE — would publish a wrong link", wrongPass);
 show("MODEL REJECTED A POSITIVE — would lose a right link", wrongReject);
 show("Judges disagree", disagree.filter((row) => !wrongPass.includes(row) && !wrongReject.includes(row)));
+// Not an error — held means a person looks — but the reason is the only
+// place the model's own uncertainty shows, and a tally hides it.
+show("Held by the model", rows.filter((row) => held(row.model)));
 
 // $0.042 per million input tokens, output free — docs.typesafe.ai/models.md, read 2026-09-29.
 console.log(
