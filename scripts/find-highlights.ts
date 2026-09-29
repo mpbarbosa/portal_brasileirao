@@ -14,6 +14,10 @@
  *   npx tsx scripts/find-highlights.ts --round 24          # a whole round
  *   npx tsx scripts/find-highlights.ts --round 24 --write  # merge into the data file
  *   npx tsx scripts/find-highlights.ts 554976 --window 168  # widen the upload window
+ *   npx tsx scripts/find-highlights.ts --round 24 --dump v.json  # also save every verdict
+ *
+ * --dump writes every candidate and its verdict, rejected ones included, for
+ * scripts/eval-highlight-judge.ts --from-dump to put before a second judge.
  *
  * --write only adds matches the file does not already carry, so hand-written
  * entries and their comments survive.
@@ -56,6 +60,8 @@ const round = roundFlag === -1 ? null : Number(args[roundFlag + 1]);
 const windowFlag = args.indexOf("--window");
 const windowHours =
   windowFlag === -1 ? DEFAULT_WINDOW_HOURS : Number(args[windowFlag + 1]);
+const dumpFlag = args.indexOf("--dump");
+const dumpPath = dumpFlag === -1 ? null : args[dumpFlag + 1];
 const consumed = new Set([String(round), String(windowHours)]);
 const ids = args.filter((arg) => /^\d+$/.test(arg) && !consumed.has(arg));
 
@@ -168,6 +174,8 @@ const loadSeason = async (): Promise<{ matches: Match[]; clubs: Club[] }> => {
   return { matches: data.matches, clubs: data.clubs };
 };
 
+const dumped: { fixture: Fixture; verdicts: Verdict[] }[] = [];
+
 const label = (fixture: Fixture) =>
   `${fixture.homeCodeName} ${fixture.match.homeGoals} x ${fixture.match.awayGoals} ${fixture.awayCodeName}`;
 
@@ -213,6 +221,8 @@ const investigate = async (fixture: Fixture): Promise<Verdict[]> => {
     console.log(`  ${mark} [${who}] ${verdict.candidate.title.slice(0, 62)}`);
     console.log(`      ${verdict.reason}`);
   }
+
+  dumped.push({ fixture, verdicts: final });
 
   const picked = bestPerChannel(final);
   if (picked.length === 0) console.log("  → nothing accepted; the page keeps its search fallback");
@@ -279,6 +289,11 @@ for (const match of playable) {
   }
 
   await sleep(PACE_MS);
+}
+
+if (dumpPath) {
+  writeFileSync(dumpPath, JSON.stringify(dumped, null, 1));
+  console.log(`\nWrote ${dumped.length} fixture(s) of verdicts to ${dumpPath}`);
 }
 
 console.log(`\n${"=".repeat(60)}`);
