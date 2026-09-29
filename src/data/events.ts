@@ -51,12 +51,23 @@ import type { SeasonEvent } from "@/src/types";
  *
  * ## What is deliberately absent
  *
- * **Rounds 29 to 38 carry placeholder kickoffs** — every fixture at exactly
- * `00:00Z`, which is football-data serving a date with no time — so the
- * calendar gaps in that stretch are artefacts of the placeholder and not
- * evidence of a pause. The 17-day hole before round 29 and the 14-day hole
- * before round 35 look exactly like the Copa do Mundo hole below and are
- * nothing of the kind. No entry may be derived from them.
+ * **A round the provider has dated but not timed carries placeholder
+ * kickoffs** — the whole round at exactly `00:00Z`, football-data serving a
+ * date with no time — so a calendar gap beside one is an artefact and not
+ * evidence of a pause. No entry may be derived from such a gap. **Rounds 31 to
+ * 38 as of 2026-09-28**; it was 29 to 38 when this was written, and the
+ * boundary climbs as the CBF times another round, so re-measure rather than
+ * trusting the numbers here.
+ *
+ * **The marker is the round and never the hour.** `00:00Z` is 21:00 BRT, an
+ * ordinary kickoff slot — round 28's `2026-09-20T00:00:00Z` is FINISHED with a
+ * score. `withKickoffPrecision` in `matches-core.ts` is the implementation and
+ * its comment is the argument.
+ *
+ * The 14-day hole before round 35 still sits between two untimed rounds and is
+ * an artefact. **The 17-day hole before round 29 is now real** — round 28
+ * finished 2026-09-20 and round 29 kicks off 2026-10-07, both times genuine —
+ * so it is a stretch without football, and an entry may be derived from it.
  *
  * **The Copa do Mundo itself is not a second entry beside the paralisação.**
  * The tournament is the *cause*; the halt is what touched the twenty clubs, and

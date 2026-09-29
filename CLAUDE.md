@@ -977,10 +977,26 @@ what makes the logic testable without mocking HTTP.
   and `tests/events-core.test.ts` asserts that a club with two exists so the
   point cannot be quietly lost.
 
-  **Rounds 29 to 38 carry placeholder kickoffs** — every fixture at exactly
-  `00:00Z` — so the 17-day and 14-day calendar holes in that stretch look
-  exactly like the Copa do Mundo hole and are artefacts of the placeholder. No
-  entry may be derived from them.
+  **A round the provider has dated but not timed carries placeholder
+  kickoffs**, and a calendar hole beside one is an artefact rather than a
+  stretch without football — so no entry may be derived from it. **Rounds 31 to
+  38 as of 2026-09-28**, measured against the seed; it was 29 to 38 when this
+  paragraph was written and the boundary climbs as the calendar firms up, so
+  re-measure rather than citing the numbers here.
+
+  **The marker is the ROUND, never the hour, and reading it per fixture is the
+  trap.** `00:00Z` is 21:00 BRT, one of the commonest kickoff times in Brazil —
+  round 28's `2026-09-20T00:00:00Z` is FINISHED and carries a score, and round
+  30 has two among eight real times. `withKickoffPrecision` in `matches-core.ts`
+  is the implementation and its comment is the argument; this paragraph exists
+  only to say the same rule binds an acontecimento's date.
+
+  **The two holes are no longer the same kind, which is what moved first.** The
+  14-day one (r34 to r35) still sits between two untimed rounds and is an
+  artefact. The 17-day one is now r28 to r29 with **real times on both sides** —
+  round 28 finished 2026-09-20 and round 29 genuinely kicks off 2026-10-07 — so
+  it is a real gap in the calendar, and the blanket refusal above does not cover
+  it.
 
 - `squad-core.ts` — the **Jogadores** page: every club's elenco, grouped into
   the lines a squad is read in. It exists because the provider reports a
@@ -3558,9 +3574,12 @@ the reading `docs/perfil-ataque.md` asks for.
 
 **It computes the schedule rather than storing it, because two of the three
 inputs move.** The fixture calendar is refreshed by every `sync-seed-data`, and
-rodadas 29-38 currently carry **placeholder kickoffs** — every fixture at
+the tail of the season carries **placeholder kickoffs** — a whole round at
 exactly 00:00Z, which is football-data serving a date with no time, so the day is
-real and the hour is not. And caRtola's publish day drifts: Wednesday for the
+real and the hour is not. **Rodadas 31-38 on 2026-09-28**, having been 29-38 when
+this was written: the boundary climbs every time the CBF times another round, so
+it is a reading and not a constant. The test is the round's and not the
+fixture's — `withKickoffPrecision` in `matches-core.ts` carries why. And caRtola's publish day drifts: Wednesday for the
 last three, Tuesday and Friday before that. A table of dates written today is
 wrong by November.
 
