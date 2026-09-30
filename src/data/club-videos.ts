@@ -99,8 +99,8 @@ export const CLUB_VIDEOS: Record<ClubCode, ClubVideo[]> = {
   // and what the Painel already shows this club on its own page. So it appears
   // under one code, and that is the file working as much as the repetition is.
   "1765": [
-    // **The 27ª render, REPLACING `Vdz1qJwHYYc` (the 26ª)**, which itself
-    // replaced the 25ª (`doMq2ELvtrc`) — the same substitution Palmeiras took
+    // **The 28ª render, REPLACING `bqiwNjdp0KE` (the 27ª)**, which itself
+    // replaced the 26ª (`Vdz1qJwHYYc`) — the same substitution Palmeiras took
     // one entry down, for the same reason and on the same grounds: the two are
     // one drawing at two moments, and a club page offering both would ask a
     // reader to pick a rodada, which is not a question the section poses
@@ -110,8 +110,8 @@ export const CLUB_VIDEOS: Record<ClubCode, ClubVideo[]> = {
     // them, since this app holds only `youtube.upload` and `videos.update`
     // refuses that scope. It is a Studio action.
     {
-      id: "bqiwNjdp0KE",
-      title: "Fluminense: 3º ao 6º em 27 rodadas, a campanha mais confinada da Série A",
+      id: "wCeJ-SM3HUM",
+      title: "Fluminense: 3º ao 6º em 28 rodadas, a campanha mais confinada da Série A",
       channel: "Marcelo Barbosa",
     },
   ],
@@ -390,11 +390,11 @@ export const CLUB_VIDEOS: Record<ClubCode, ClubVideo[]> = {
 
   // Clube do Remo. Code 4287, beside Bragantino's 4286 rather than in the 17xx
   // block, for that entry's reason: the id is upstream's. REPLACING
-  // `4FmqjHMkRlE` (the 26ª) with the 27ª render.
+  // `jq_7zSsUhRk` (the 27ª) with the 28ª render.
   "4287": [
     {
-      id: "jq_7zSsUhRk",
-      title: "Clube do Remo: nunca fechou acima do 16º em 27 rodadas | Brasileirão",
+      id: "DOJeJpOIL7s",
+      title: "Clube do Remo: nunca fechou acima do 16º em 28 rodadas | Brasileirão",
       channel: "Marcelo Barbosa",
     },
   ],
@@ -403,22 +403,22 @@ export const CLUB_VIDEOS: Record<ClubCode, ClubVideo[]> = {
   // `tla: "COR"`, which is the collision this file's own header names as the
   // reason the key is the upstream numeric id; a velas filed by abbreviation
   // would put one club's season on the other's page. The codes were read from
-  // `clubs.ts` rather than derived. REPLACING `RgYGW3XIdYI` (the 26ª) with
-  // the 27ª render.
+  // `clubs.ts` rather than derived. REPLACING `KSR_ODmXm3Q` (the 27ª) with
+  // the 28ª render.
   "1779": [
     {
-      id: "KSR_ODmXm3Q",
-      title: "Corinthians em velas: do 5º ao 17º até a 27ª rodada do Brasileirão",
+      id: "XeSn-Zc7sIo",
+      title: "Corinthians em velas: do 5º ao 17º até a 28ª rodada do Brasileirão",
       channel: "Marcelo Barbosa",
     },
   ],
 
   // Coritiba — 4241, the other half of that collision. REPLACING
-  // `Ke9ccxusaeQ` (the 26ª) with the 27ª render.
+  // `VCB-hZcAPrM` (the 27ª) with the 28ª render.
   "4241": [
     {
-      id: "VCB-hZcAPrM",
-      title: "Coritiba em velas: do 16º ao 8º até a 27ª rodada do Brasileirão",
+      id: "A4Bof2FQlIQ",
+      title: "Coritiba em velas: do 16º ao 9º até a 28ª rodada do Brasileirão",
       channel: "Marcelo Barbosa",
     },
   ],
@@ -440,47 +440,54 @@ export const CLUB_VIDEOS: Record<ClubCode, ClubVideo[]> = {
   // warning, since one 403 still does not establish that a flip failed.
 
   // Cruzeiro. The one climb in this batch — 20º after the first rodada to 6º at
-  // the 27ª — which is what its title names and what the velas draws.
-  // REPLACING `nOzTbO2YYrs` (the 26ª) with the 27ª render.
+  // the 28ª — which is what its title names and what the velas draws.
+  // REPLACING `s3mZFbj-N8o` (the 27ª) with the 28ª render.
   "1771": [
     {
-      id: "s3mZFbj-N8o",
-      title: "Cruzeiro: do 20º ao 6º em 27 rodadas, a campanha em velas",
+      id: "Uu3XnfAkmSw",
+      title: "Cruzeiro: do 20º ao 6º em 28 rodadas, a campanha em velas",
       channel: "Marcelo Barbosa",
     },
   ],
 
-  // Grêmio — 1767, and the one title in the file that names a number of JOGOS
-  // rather than of rodadas, because this club has one fixture in arrears (it
-  // had two at the 26ª): 26 played inside 27 rodadas. The velas draws that as
-  // a round the club did not play, which `rank-candles-core.ts` renders hollow
-  // rather than grey. REPLACING `KwEJKDlZhEA` (the 26ª) with the 27ª render.
+  // Grêmio — 1767. Its title still counts JOGOS rather than rodadas, and at the
+  // 28ª that is no longer because of arrears: two fixtures were outstanding at
+  // the 26ª and one at the 27ª, and the club has now played all 28 — so this
+  // velas draws no hollow candle at all, where the previous two did. What the
+  // title leads with instead is the Z4: 17º with 29 pontos, back in the drop
+  // zone. REPLACING `l4Xk1gXeeXc` (the 27ª) with the 28ª render.
   "1767": [
     {
-      id: "l4Xk1gXeeXc",
-      title: "Grêmio em velas: 28 pontos em 26 jogos, com partida em atraso",
+      id: "Bi3XVKPjpdQ",
+      title: "Grêmio em velas: 29 pontos em 28 jogos, e de volta ao Z4",
       channel: "Marcelo Barbosa",
     },
   ],
 
   // Internacional — 6684, a code outside the 17xx block like Bragantino's and
   // Clube do Remo's, and upstream's rather than ours to tidy. Ten empates is
-  // the most of any club in this batch, which is the fact its title leads
-  // with. REPLACING `1ogVcWlYPYk` (the 26ª) with the 27ª render.
+  // the most in the division, level with Bahia — whose own title says the same
+  // thing from the other side and whose description names this club. That is
+  // the fact its title leads with. REPLACING `03FAincqshA` (the 27ª) with the
+  // 28ª render.
   "6684": [
     {
-      id: "03FAincqshA",
-      title: "Internacional: 10 empates e 6 vitórias em 27 jogos, a campanha em velas",
+      id: "T0leV1xSIVU",
+      title: "Internacional: 10 empates e 6 vitórias em 28 jogos, a campanha em velas",
       channel: "Marcelo Barbosa",
     },
   ],
 
   // Mirassol — 4364. Its title states a subtraction rather than a range: the
   // club's best fechamento was 4º and it ends 15º, and 11 is that difference.
-  // REPLACING `GXk_VFdV8Uw` (the 26ª) with the 27ª render.
+  // REPLACING `CsVBZfPCbWU` (the 27ª) with the 28ª render. **Its title is
+  // byte-identical across those two renders**, so no part of the string can
+  // date it and this line is the only record that can. That is the trap that
+  // cost a duplicate upload at the corrida de barras: matching a title is not
+  // evidence that an entry is current.
   "4364": [
     {
-      id: "CsVBZfPCbWU",
+      id: "0nbtCIT20Yg",
       title: "Mirassol: do 4º ao 15º, 11 posições perdidas | Brasileirão em velas",
       channel: "Marcelo Barbosa",
     },
@@ -488,13 +495,13 @@ export const CLUB_VIDEOS: Record<ClubCode, ClubVideo[]> = {
 
   // Santos — 6685, beside Internacional's 6684 and not in the 17xx block, for
   // that entry's reason. Through the 26ª its campanha never closed outside
-  // 12º–18º, the narrowest band in the batch; the 27ª is the round it broke
-  // out, to 10º, which is what the title now leads with. REPLACING
-  // `qZof-bgho5E` (the 26ª, titled "sem movimento") with the 27ª render.
+  // 12º–18º, the narrowest band in the batch; it broke out at the 27ª to 10º and
+  // has gone on to 8º at the 28ª, which is what the title now leads with.
+  // REPLACING `mKMG4dMTJpg` (the 27ª) with the 28ª render.
   "6685": [
     {
-      id: "mKMG4dMTJpg",
-      title: "Santos rompe a faixa estreita e chega ao 10º na 27ª rodada",
+      id: "v72v03WL80c",
+      title: "Santos rompe a faixa estreita e chega ao 8º na 28ª rodada",
       channel: "Marcelo Barbosa",
     },
   ],
@@ -502,11 +509,11 @@ export const CLUB_VIDEOS: Record<ClubCode, ClubVideo[]> = {
   // São Paulo — 1776. The `tla` is `PAU` and not `SAO`, which `CLAUDE.md` names
   // as a live mismatch between upstream's abbreviation and the local seed; the
   // numeric code is what keeps this entry on the right page regardless.
-  // REPLACING `pQ85KZWH2_4` (the 26ª) with the 27ª render.
+  // REPLACING `x_hiu5F4Lvc` (the 27ª) with the 28ª render.
   "1776": [
     {
-      id: "x_hiu5F4Lvc",
-      title: "São Paulo: do 1º ao 11º em 27 rodadas, a campanha em velas",
+      id: "ug1Mkt9Il64",
+      title: "São Paulo: do 1º ao 11º em 28 rodadas, a campanha em velas",
       channel: "Marcelo Barbosa",
     },
   ],
@@ -520,28 +527,39 @@ export const CLUB_VIDEOS: Record<ClubCode, ClubVideo[]> = {
   // Both answered 200 on the FIRST oEmbed read, three batches running now. The
   // header keeps its warning about the 403 lag for the reason it gives.
 
-  // Vasco da Gama — 1780. 25 pontos em 25 jogos, exactly a point a game, which
-  // is what the title leads with. 25 jogos inside 26 rodadas because the club
-  // did not play the 21ª, which `rank-candles-core.ts` draws as a hollow candle
-  // rather than a grey one. Two réguas: Fernando Diniz after the 3ª, and the
-  // paralisação para a Copa after the 18ª.
+  // Vasco da Gama — 1780. 31 pontos em 27 jogos at the 28ª, and 16º: the first
+  // place outside the Z4, which is what the title leads with now that the
+  // point-a-game symmetry of the 26ª has gone. Still fewer jogos than rodadas,
+  // and for the same reason as then — the club did not play the 21ª, which
+  // `rank-candles-core.ts` draws as a hollow candle rather than a grey one. Two
+  // réguas: Fernando Diniz after the 3ª, and the paralisação para a Copa after
+  // the 18ª.
+  //
+  // REPLACING `XUrSeih-NPE` (**the 26ª**) with the 28ª render. This entry skips
+  // a round because no 27ª was ever uploaded for it — worth knowing before
+  // reading the jump as a missing render.
   "1780": [
     {
-      id: "XUrSeih-NPE",
-      title: "Vasco em velas: 25 pontos em 25 jogos e o 17º lugar até a 26ª",
+      id: "wHrZph3AIME",
+      title: "Vasco em velas: 31 pontos em 27 jogos e o 16º lugar até a 28ª",
       channel: "Marcelo Barbosa",
     },
   ],
 
-  // Vitória — 1782. Also 25 jogos in 26 rodadas, but the round it did not play
-  // is the LAST one, the 26ª — so this velas ends on a hollow candle and its
-  // closing card reads «sem jogo nesta rodada» where every other video shows a
-  // scoreline. That is the data and not a render fault. One régua, the
-  // paralisação para a Copa after the 18ª.
+  // Vitória — 1782. At the 26ª this was the entry whose velas ended on a HOLLOW
+  // candle, because the one round it had not played was the last one: the closing
+  // card read «sem jogo nesta rodada» where every other video shows a scoreline.
+  // That is gone. The club has played all 28, the fixture in arrears was made up,
+  // and this render closes on a real result — so do not read the old note as a
+  // render fault that got fixed. It was the data, and the data moved. One régua,
+  // the paralisação para a Copa after the 18ª.
+  //
+  // REPLACING `2RWACTCVIOY` (**the 26ª**) with the 28ª render. Like Vasco above,
+  // this entry skips a round: no 27ª was ever uploaded for it.
   "1782": [
     {
-      id: "2RWACTCVIOY",
-      title: "Vitória em velas: 12 derrotas em 25 jogos até a 26ª rodada",
+      id: "mHQLFRzdYPk",
+      title: "Vitória em velas: 13 derrotas em 28 jogos até a 28ª rodada",
       channel: "Marcelo Barbosa",
     },
   ],

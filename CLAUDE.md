@@ -2620,12 +2620,33 @@ comentário à mão dizendo por que aquele vídeo é daquele clube, e um coment�
 gerado seria enchimento no lugar de um motivo. Conferido: para `doMq2ELvtrc` a
 entrada impressa sai **idêntica** à que já está commitada.
 
-**Duas coisas decidem se vale automatizar, e nenhuma é código.** Um projeto que
-não passou pela auditoria do YouTube tem os uploads da API travados em privado,
-então o padrão aqui é `--privacy private` e o teste que decide tudo é subir um
-descartável e tentar torná-lo público. E `videos.insert` custa **1600** das
-10.000 unidades/dia: seis uploads é o orçamento inteiro, o que importa antes de
-apontar isto para vinte clubes.
+**As duas coisas que decidiam se valia automatizar foram medidas, e nenhuma
+delas prende.**
+
+A primeira era a auditoria: um projeto que não passou por ela teria os uploads da
+API travados em privado, e o padrão daqui era `--privacy private` precisamente
+porque ninguém havia tentado o contrário. Foi tentado em 2026-09-29 —
+**`--privacy public` é honrado.** O vídeo responde oEmbed **200 com o próprio
+título** na hora, contra **403** para um privado e **400** para um id inventado;
+três braços, então o 200 é evidência e não um formato. Consequência prática: o
+`register` roda na mesma sessão em vez de esperar dias por uma ação no Studio.
+Note que um upload privado **não** é prova de bloqueio — o de 2026-09-25 ficou
+privado porque pediram privado, e isso foi lido como auditoria por dois dias.
+
+A segunda era o orçamento. Esta página dizia que `videos.insert` custa **1600**
+das 10.000 unidades/dia e que **seis uploads é o orçamento inteiro**, e essa frase
+pautou dois dias de trabalho em lotes de seis. Medido em 2026-09-30: **dezoito
+uploads no mesmo dia de cota, sem um único `quotaExceeded`** — seis por volta das
+02:00 PDT e doze entre 03:25 e 03:45. A 1600 cada, seriam 28.800 de 10.000.
+**Qual das duas premissas está errada não foi estabelecido daqui:** o custo por
+chamada pode ser menor, ou a cota deste projeto pode ser maior que a padrão, e só
+a página de cotas do Cloud console separa as duas. O que está medido é que o teto
+de seis não existe — então não pace um lote por causa dele; tente e leia a recusa,
+que chega limpa quando chega.
+
+**A cota zera à meia-noite do Pacífico**, e não no fuso de quem roda o script. Os
+seis da manhã de 2026-09-30 e os doze de minutos depois caíram no mesmo dia de
+cota, que é o que faz da medição acima uma medição e não duas.
 
 **Sem `googleapis`.** São dezenas de megabytes e um cliente gerado para alcançar
 dois endpoints, num repositório que não embarca nem dependência de UI e escreve
