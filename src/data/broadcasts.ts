@@ -13,7 +13,7 @@
  * are not unique across competitions (one day's page showed `ATH` as both
  * Athletic Club in Série B and Athletico-PR in Série A).
  *
- * Last synced 2026-09-14.
+ * Last synced 2026-09-29.
  */
 export const BROADCASTS: Record<string, string[]> = {
   "554740": ["Premiere", "SporTV"],
@@ -308,4 +308,17 @@ export const BROADCASTS: Record<string, string[]> = {
   "555037": ["Globo", "Premiere"],
   "555038": ["Premiere", "SporTV"],
   "555039": ["Premiere", "Record", "YouTube", "Cazé TV"],
+  "555040": ["Amazon Prime"],
+  "555041": ["Premiere"],
+  "555043": ["Premiere", "Record", "YouTube", "Cazé TV"],
+  "555047": ["Premiere", "SporTV"],
+  "555049": ["Premiere", "SporTV"],
+  "555050": ["Amazon Prime"],
+  "555052": ["Premiere", "SporTV"],
+  "555054": ["Globo", "Premiere"],
+  "555055": ["Globo", "Premiere"],
+  "555056": ["Premiere"],
+  "555057": ["Premiere", "SporTV"],
+  "555058": ["Premiere", "Record", "YouTube", "Cazé TV"],
+  "555059": ["GE TV"],
 };
