@@ -49,13 +49,15 @@ Texto que acompanha [`velas-bahia.mp4`](velas-bahia.mp4)
 
 ## Título
 
-Recomendado (67 caracteres):
+Recomendado (77 caracteres):
 
 ```
-Bahia em velas: 10 empates, o maior número do Brasileirão até a 28ª
+Bahia em velas: 10 empates até a 28ª, o maior número ao lado do Internacional
 ```
 
-O fato que separa esta campanha; empatado com o internacional — e **data o recorte**, que é a única defesa contra
+O fato que separa esta campanha, **dito com o empate**: o Internacional também
+tem 10, e um título que chamasse o número de único seria desmentido pela tabela
+na página ao lado. E **data o recorte**, que é a única defesa contra
 alguém assistir daqui a três meses e achar que os números estão errados.
 
 | | título | caracteres | ângulo |
