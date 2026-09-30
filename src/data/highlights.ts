@@ -503,7 +503,16 @@ export const HIGHLIGHTS: Record<string, Highlight[]> = {
     { url: "https://www.youtube.com/watch?v=glrx0DYYZDI", channel: "UOL Esporte" },
   ],
   // Athletico-PR 1 x 1 Flamengo, rodada 16.
+  //
+  // The ge tv entry was added by hand, and it is the second typo in this file
+  // that no rule can reach: the title reads "AHLETICO-PR 1 X 1 FLAMENGO", one
+  // letter short of ATHLETICO, so `namesClub` finds none of the club's names in
+  // it and the candidate is refused as "different clubs" — see 554938, where
+  // the same thing happened to SANTOS. It is this match: the channel id is ge
+  // tv's, the scoreline and the round are right, and the upload is 2.3h after
+  // kickoff. Confirmed through oEmbed.
   "554890": [
+    { url: "https://www.youtube.com/watch?v=wRrJQH7gIIw", channel: "ge tv" },
     { url: "https://www.youtube.com/watch?v=NGvbqX9u9dU", channel: "CazéTV" },
     { url: "https://www.youtube.com/watch?v=UdmS_uc94_E", channel: "UOL Esporte" },
   ],
@@ -1309,9 +1318,12 @@ export const HIGHLIGHTS: Record<string, Highlight[]> = {
     { url: "https://www.youtube.com/watch?v=bMrDLCuUbWw", channel: "CazéTV" },
     { url: "https://www.youtube.com/watch?v=pv88kIBjZYM", channel: "UOL Esporte" },
   ],
-  // Mirassol 1 x 1 Palmeiras, rodada 25.
+  // Mirassol 1 x 1 Palmeiras, rodada 25. CazéTV added by hand, and this one
+  // find-highlights.ts accepts on its own rules — see 554970 for why --write
+  // cannot add a channel to a fixture the file already carries.
   "554986": [
     { url: "https://www.youtube.com/watch?v=z3J2HPWvJZI", channel: "ge tv" },
+    { url: "https://www.youtube.com/watch?v=u3-nqP0pmDw", channel: "CazéTV" },
     { url: "https://www.youtube.com/watch?v=WdWqybj-mVA", channel: "UOL Esporte" },
   ],
   // Flamengo 3 x 0 Botafogo, rodada 25.
@@ -1404,9 +1416,13 @@ export const HIGHLIGHTS: Record<string, Highlight[]> = {
     { url: "https://www.youtube.com/watch?v=X9Ea5L6Yk-Y", channel: "CazéTV" },
     { url: "https://www.youtube.com/watch?v=FXb2GD3OOtg", channel: "UOL Esporte" },
   ],
-  // Athletico-PR 3 x 3 Fluminense, rodada 25.
+  // Athletico-PR 3 x 3 Fluminense, rodada 25. CazéTV added by hand: its title
+  // carries no scoreline ("MELHORES MOMENTOS: ATHLÉTICO-PR X FLUMINENSE |
+  // BRASILEIRÃO 2026 | 25ª RODADA"), which is the shape 554993 records — the
+  // rules refuse it for that reason alone. Upload 2.9h after kickoff.
   "554980": [
     { url: "https://www.youtube.com/watch?v=6poZINPng44", channel: "ge tv" },
+    { url: "https://www.youtube.com/watch?v=VTNwu73pZFY", channel: "CazéTV" },
     { url: "https://www.youtube.com/watch?v=Q310laU_l0o", channel: "UOL Esporte" },
   ],
   // Corinthians 0 x 1 Santos, rodada 25.
