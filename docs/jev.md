@@ -154,6 +154,36 @@ O que eles mediram em 2026-09-29, nas rodadas 24 e 28:
 tinham achado, então um título que só o Jev leria não pode aparecer ali. É por
 isso que o segundo script existe.
 
+## O limite que a varredura das 24 rodadas mediu
+
+Em 2026-09-30 os dois scripts rodaram sobre as **24 rodadas restantes**: 237
+partidas, 7.722 candidatos, 5.513 recusados de canais conhecidos ao Jev, US$
+0,19. O resultado muda o que se pode dizer do modelo.
+
+**Aceitou seis, e nenhum estava errado** — todos eram grafias que `namesClub`
+não alcança: quatro títulos escrevendo **"ATHLETICO"** sem o `-PR`, e dois com
+erro de digitação de uma letra (`SANTOX`, `AHLETICO-PR`). **Quatro dos seis já
+estavam no arquivo, curados à mão**, o que é a medida do custo: essa lacuna já
+tinha cobrado trabalho manual quatro vezes.
+
+**A leitura confiante do modelo sobre QUAL partida é, isolada, não é
+confiável** — e este é o limite a conhecer antes de subir qualquer limiar. Nos
+293 candidatos recusados por *título sem placar legível* cujo canal a partida
+não tinha, 35 vieram com pacote ≥ 0,90 **e** partida ≥ 0,90; abertos um a um, a
+maioria é falso positivo:
+
+- `ATHLETICO 1 X 2 VITÓRIA | 32ª RODADA` lido como Atlético-MG x Vitória da
+  rodada 25 — outro clube, outra rodada, outro placar;
+- `MIRASSOL E CRUZEIRO EMPATAM EM 1 A 1` lido como o 2x2 daquelas equipes;
+- `BOTAFOGO 3 X 1 FLAMENGO | BRASILEIRÃO SUB-20` lido como o jogo profissional.
+
+Nada disso chega a ser aceito, porque `judgeVerdict` retém todo título sem
+placar que o código possa conferir — o desenho segura. O que a medição diz é
+**por que** ele segura: sem o placar no estado, por decisão, o modelo casa
+nomes de clube e responde "esta partida" com convicção mesmo quando o placar do
+próprio título contradiz a partida. Um limiar sobre a resposta dele, sozinho,
+publicaria links errados.
+
 ## Custo
 
 Preço publicado (`docs.typesafe.ai/models.md`, lido em 2026-09-29): **US$ 0,042
