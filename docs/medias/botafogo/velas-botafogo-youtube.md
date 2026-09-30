@@ -42,13 +42,15 @@ Texto que acompanha [`velas-botafogo.mp4`](velas-botafogo.mp4)
 
 ## Título
 
-Recomendado (69 caracteres):
+Recomendado (79 caracteres):
 
 ```
-Botafogo: do 1º ao 12º, a segunda maior queda do Brasileirão em velas
+Botafogo em velas: do 1º ao 12º, a segunda maior queda, empatada com o Mirassol
 ```
 
-A queda, conferida contra os vinte clubes — e **data o recorte**, que é a única defesa contra
+A queda, conferida contra os vinte clubes **e dita com o empate**: são 11
+posições, e o Mirassol cai as mesmas 11 (4º → 15º), portanto o segundo lugar é
+partilhado. E **data o recorte**, que é a única defesa contra
 alguém assistir daqui a três meses e achar que os números estão errados.
 
 | | título | caracteres | ângulo |
@@ -69,7 +71,7 @@ Dados até 21/09/2026 (28ª rodada):
 • 9V · 8E · 11D — 41 gols pró, 45 contra, saldo -4
 • 42% de aproveitamento · oscilou entre o 1º e o 18º
 
-O Botafogo tem a segunda maior queda do desenho: fecha a 1ª rodada em 1º e chega à 28ª em 12º — 11 posições, atrás só das 18 da Chapecoense. Descontadas as duas primeiras rodadas, onde os empatados em nada são ordenados por nome, a campanha ainda fecha entre o 5º e o 18º, então a queda é real e não um artefato da ordenação.
+O Botafogo tem a segunda maior queda do desenho, empatada: fecha a 1ª rodada em 1º e chega à 28ª em 12º — 11 posições, atrás só das 18 da Chapecoense e do mesmo tamanho da do Mirassol, que cai do 4º ao 15º. Descontadas as duas primeiras rodadas, onde os empatados em nada são ordenados por nome, a campanha ainda fecha entre o 5º e o 18º, então a queda é real e não um artefato da ordenação.
 
 São 11 derrotas em 28 jogos e 6 rodadas de invencibilidade na maior sequência.
 
