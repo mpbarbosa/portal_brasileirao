@@ -233,8 +233,25 @@ export const HIGHLIGHTS: Record<string, Highlight[]> = {
     { url: "https://www.youtube.com/watch?v=NoltITB7fIw", channel: "UOL Esporte" },
   ],
   // Santos 2 x 2 Chapecoense, rodada 20.
+  //
+  // The UOL entry was added by hand, and it is the one case in this file that
+  // no rule could have found: the title reads "SANTOX 2 X 2 CHAPECOENSE", a
+  // one-letter typo for SANTOS. `namesClub` asks whether the title's club text
+  // contains one of the club's names, and "SANTOX" contains none of them, so
+  // the candidate is refused as "different clubs" — correctly, by a rule that
+  // exists because a fragment match would make Atlético-GO pass as Atlético-MG.
+  //
+  // It is this match: the channel id is UOL Esporte's, the scoreline is 2x2,
+  // Chapecoense is spelled correctly, and the upload is 2.2h after kickoff.
+  // Confirmed through oEmbed.
+  //
+  // Do not add a typo tolerance (edit distance, fuzzy matching) to `namesClub`.
+  // One letter is what separates Atlético-MG from Athletico-PR, and the
+  // division really does carry both. A broadcaster's typo is rare enough to be
+  // worth a hand entry; a fuzzy rule would be wrong every week.
   "554938": [
     { url: "https://www.youtube.com/watch?v=F3fp9y9dz6U", channel: "ge tv" },
+    { url: "https://www.youtube.com/watch?v=axUcFKHGxRY", channel: "UOL Esporte" },
   ],
   // Vasco da Gama 1 x 1 Mirassol, rodada 20.
   "554939": [
@@ -1280,8 +1297,17 @@ export const HIGHLIGHTS: Record<string, Highlight[]> = {
   // Do not relax the score check to accommodate this. A broadcaster's typo is
   // rare; a previous season's identical fixture is not, and that check is the
   // only thing standing between the two.
+  // The CazéTV and UOL entries were added later, by hand for a duller reason:
+  // find-highlights.ts accepts both on its own rules, and the entry above was
+  // written by hand while the run that would have picked them up never happened
+  // again for this fixture. --write never adds a channel to a fixture the file
+  // already carries, which is right — it protects this comment — and means a
+  // fixture that gains a broadcaster after its first sync stays short until
+  // somebody looks.
   "554970": [
     { url: "https://www.youtube.com/watch?v=pJBVrWUNq-s", channel: "ge tv" },
+    { url: "https://www.youtube.com/watch?v=bMrDLCuUbWw", channel: "CazéTV" },
+    { url: "https://www.youtube.com/watch?v=pv88kIBjZYM", channel: "UOL Esporte" },
   ],
   // Mirassol 1 x 1 Palmeiras, rodada 25.
   "554986": [
@@ -1414,9 +1440,12 @@ export const HIGHLIGHTS: Record<string, Highlight[]> = {
     { url: "https://www.youtube.com/watch?v=isA8GtW3KYo", channel: "ge tv" },
     { url: "https://www.youtube.com/watch?v=XeIfQS_6L-8", channel: "UOL Esporte" },
   ],
-  // Mirassol 2 x 2 Vitória, rodada 27.
+  // Mirassol 2 x 2 Vitória, rodada 27. CazéTV and UOL added by hand; both pass
+  // find-highlights.ts' own rules — see 554970 for why --write cannot add them.
   "555007": [
     { url: "https://www.youtube.com/watch?v=v-TnCvXG8BQ", channel: "ge tv" },
+    { url: "https://www.youtube.com/watch?v=oOZpSavNs78", channel: "CazéTV" },
+    { url: "https://www.youtube.com/watch?v=_MnkFdSv08c", channel: "UOL Esporte" },
   ],
   // Santos 2 x 1 Cruzeiro, rodada 27.
   "555009": [
@@ -1456,9 +1485,11 @@ export const HIGHLIGHTS: Record<string, Highlight[]> = {
     { url: "https://www.youtube.com/watch?v=5syvt8cQk-4", channel: "ge tv" },
     { url: "https://www.youtube.com/watch?v=8C4x_xQy5wU", channel: "UOL Esporte" },
   ],
-  // Bahia 2 x 1 Clube do Remo, rodada 27.
+  // Bahia 2 x 1 Clube do Remo, rodada 27. UOL added by hand; it passes
+  // find-highlights.ts' own rules — see 554970 for why --write cannot add it.
   "555001": [
     { url: "https://www.youtube.com/watch?v=zNHh-jjGb5M", channel: "ge tv" },
+    { url: "https://www.youtube.com/watch?v=kagbiiFCrIk", channel: "UOL Esporte" },
   ],
   // Atlético-MG 1 x 1 Chapecoense, rodada 28.
   "555011": [
