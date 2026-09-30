@@ -144,7 +144,9 @@ export const CLUB_VIDEOS: Record<ClubCode, ClubVideo[]> = {
   // already at the 28ª under `EDhMoPEUuhg`, whose title carries no rodada
   // either — and spent 1600 of the day's 10.000 units on a duplicate nothing
   // needed. Four of our titles state no rodada: this one, the corrida de
-  // barras, Botafogo's and Mirassol's. Read the comment, never the title.
+  // barras, Botafogo's and Mirassol's — and of those, only Botafogo's changes
+  // between renders at all, because it names the position the club has fallen
+  // to. Read the comment, never the title.
   "1769": [
     {
       id: "c7G4rh-_yVw",
@@ -264,57 +266,58 @@ export const CLUB_VIDEOS: Record<ClubCode, ClubVideo[]> = {
   // Athletico-PR. Not Atlético-MG below: `athletico-pr` and `atletico-mg` differ
   // by one letter and are two real clubs, which is the collision `slugify` is
   // documented against — here the codes keep them apart, 1768 against 1766.
-  // REPLACING `bPUhuQ7w7Pw` (the 26ª) with the 27ª render — the round-26
-  // upload of `worktree-replace-velas-videos` (2026-09-11) never made it into
-  // this file before round-27 superseded it, so this entry skips straight
-  // from whatever it held before to the 27ª.
+  // REPLACING `Blritj12rmU` (the 27ª) with the 28ª render. The round-26 upload
+  // of `worktree-replace-velas-videos` (2026-09-11) never made it into this
+  // file before round 27 superseded it, and that branch still stands unmerged —
+  // nothing here waits on it.
   "1768": [
     {
-      id: "Blritj12rmU",
-      title: "Athletico-PR: 10 rodadas invicto e o 3º lugar até a 27ª rodada",
+      id: "Zf1qDT1qrPM",
+      title: "Athletico-PR: 10 rodadas invicto e o 3º lugar até a 28ª rodada",
       channel: "Marcelo Barbosa",
     },
   ],
 
-  // Atlético-MG. REPLACING `tEvdFjdFKRU` (the 26ª, itself never registered)
-  // with the 27ª render.
+  // Atlético-MG. REPLACING `a4NvONbQrag` (the 27ª) with the 28ª render.
   "1766": [
     {
-      id: "a4NvONbQrag",
-      title: "Atlético-MG em velas: fecha entre o 7º e o 17º até a 27ª rodada",
+      id: "qaxv_fHC2m0",
+      title: "Atlético-MG em velas: fecha entre o 7º e o 17º até a 28ª rodada",
       channel: "Marcelo Barbosa",
     },
   ],
 
-  // Bahia. REPLACING `wmT_kLbpKn4` (the 26ª, itself never registered) with the
-  // 27ª render.
+  // Bahia. REPLACING `Lc0NIBaAr_w` (the 27ª) with the 28ª render. The title
+  // states the largest number of empates in the division and the description
+  // discloses that Internacional is level on 10 — both held 10 at the 26ª as
+  // well, so the tie is not new and the title is not claiming it alone.
   "1777": [
     {
-      id: "Lc0NIBaAr_w",
-      title: "Bahia em velas: 10 empates, o maior número do Brasileirão até a 26ª",
+      id: "eLwOtS7_Gjk",
+      title: "Bahia em velas: 10 empates, o maior número do Brasileirão até a 28ª",
       channel: "Marcelo Barbosa",
     },
   ],
 
   // Botafogo. Its title carries no rodada either, for `velas-palmeiras`'
-  // reason. REPLACING `X-Ly45in7qc` (the 26ª, itself never registered) with
-  // the 27ª render.
+  // reason — but unlike Mirassol's it does move between renders, because it
+  // names the position the club has fallen to: 14º at the 27ª, 12º at the 28ª.
+  // REPLACING `cGHpyZcFyqI` (the 27ª) with the 28ª render.
   "1770": [
     {
-      id: "cGHpyZcFyqI",
-      title: "Botafogo: do 1º ao 14º, a segunda maior queda do Brasileirão em velas",
+      id: "j5cFQuOZ1Hc",
+      title: "Botafogo: do 1º ao 12º, a segunda maior queda do Brasileirão em velas",
       channel: "Marcelo Barbosa",
     },
   ],
 
   // Bragantino. Code 4286 rather than a 17xx like its neighbours — the club
   // entered the division later, and the id is upstream's, never ours to tidy.
-  // REPLACING `wPcIydfzJZU` (the 26ª, itself never registered) with the 27ª
-  // render.
+  // REPLACING `md8895JaaSQ` (the 27ª) with the 28ª render.
   "4286": [
     {
-      id: "md8895JaaSQ",
-      title: "Bragantino liderou na 2ª e fechou em 9º: a campanha em velas até a 27ª",
+      id: "GPd46WzpXHQ",
+      title: "Bragantino liderou na 2ª e fechou em 10º: a campanha em velas até a 28ª",
       channel: "Marcelo Barbosa",
     },
   ],
@@ -362,14 +365,15 @@ export const CLUB_VIDEOS: Record<ClubCode, ClubVideo[]> = {
   // among our own drawings is how much of the drawing is this club, and the
   // club's own season leads.
   //
-  // Note the velas above is still the 27ª render while this one is the 28ª, and
-  // that is not an oversight: the two are different drawings rather than one
-  // drawing at two moments, so the substitution rule does not bind them to each
-  // other. The velas is superseded and awaits an upload of its own.
+  // The velas and the corrida de barras are bound by nothing: they are
+  // different drawings rather than one drawing at two moments, so the
+  // substitution rule applies to each on its own. Both are the 28ª now — the
+  // barras arrived first and the velas caught up a batch later, REPLACING
+  // `K6DdI6YDJtc` (the 27ª).
   "1772": [
     {
-      id: "K6DdI6YDJtc",
-      title: "Chapecoense: 15 derrotas em 26 jogos, a campanha em velas até a 27ª",
+      id: "otilkVlqj4I",
+      title: "Chapecoense: 15 derrotas em 27 jogos, a campanha em velas até a 28ª",
       channel: "Marcelo Barbosa",
     },
     {
