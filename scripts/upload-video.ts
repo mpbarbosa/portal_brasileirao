@@ -36,6 +36,7 @@ import {
   isVideoId,
   parseOembed,
   parseVideoCopy,
+  sceneDataFile,
   tagsLine,
   LIMITS,
   type InsertBody,
@@ -186,7 +187,12 @@ const runUpload = async (
 
   if (options.dryRun) {
     console.log("\n✓ --dry-run: nada foi enviado.\n");
-    console.log("  Reconfira os números contra `scripts/manim/" + base + ".json` antes de publicar —");
+    const source = sceneDataFile(base);
+    console.log(
+      source === null
+        ? "  Reconfira os números contra o JSON da cena antes de publicar —"
+        : `  Reconfira os números contra \`${source}\` antes de publicar —`,
+    );
     console.log("  o `-youtube.md` é escrito à mão e nada o regenera.\n");
     return;
   }

@@ -260,6 +260,34 @@ const quote = (value: string): string => JSON.stringify(value);
  * standing where a reason is supposed to be, and choosing where a new key goes
  * among those paragraphs is editing prose, not data.
  */
+/**
+ * The JSON a render's numbers came from, for the line the uploader prints before
+ * publishing — and `null` where this module cannot name one.
+ *
+ * **It maps the SCENE, never the base name**, which is the whole reason it
+ * exists. The uploader used to interpolate `scripts/manim/<base>.json`. That is
+ * right for a velas, because `velas.py` reads one file per club, and wrong for
+ * every other scene: `barras.py` and `pontos.py` both read `pontos.json`, and
+ * `campanhas.py` reads `campanhas.json`. So publishing the corrida de barras
+ * printed `scripts/manim/barras-20-clubes.json` — a file that has never
+ * existed — and the one instruction standing between a hand-written number and
+ * YouTube pointed at nothing. It survived three reports before being fixed,
+ * because a wrong path in an advisory line produces no work while it holds.
+ *
+ * **An unknown prefix answers `null` rather than guessing a path.** Naming a
+ * file that is not there is precisely what this replaces, so inventing one for a
+ * scene nobody has mapped would reintroduce the defect under a new name. That is
+ * `isKnownGoalResult`'s rule rather than `positionLabel`'s: rendering an
+ * unmapped value verbatim is right where the cost is an English word on a page,
+ * and wrong where it is an instruction a reader cannot follow.
+ */
+export const sceneDataFile = (base: string): string | null => {
+  if (base.startsWith("velas-")) return `scripts/manim/${base}.json`;
+  if (base.startsWith("barras-") || base.startsWith("pontos-")) return "scripts/manim/pontos.json";
+  if (base.startsWith("campanhas-")) return "scripts/manim/campanhas.json";
+  return null;
+};
+
 export const clubVideoEntry = (id: string, facts: OembedFacts): string =>
   [
     "    {",

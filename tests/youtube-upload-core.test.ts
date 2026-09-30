@@ -1,6 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync, globSync } from "node:fs";
+import { existsSync, readFileSync, globSync } from "node:fs";
+import { basename } from "node:path";
 import {
   CATEGORY_SPORTS,
   LIMITS,
@@ -11,6 +12,7 @@ import {
   isVideoId,
   parseOembed,
   parseVideoCopy,
+  sceneDataFile,
   tagsLine,
 } from "@/youtube-upload-core";
 
@@ -289,5 +291,41 @@ test("every committed -youtube.md parses and would be accepted", () => {
     assert.deepEqual(copyProblems(copy), [], `${file} tem texto que o YouTube recusaria`);
     assert.ok(copy.title.length > 0, `${file} sem título`);
     assert.ok(copy.tags.length > 0, `${file} sem tags`);
+  }
+});
+
+test("the scene's data file is mapped from the scene, not from the base name", () => {
+  // A velas is the one scene with a file per club, which is why interpolating
+  // the base looked right for as long as nobody published anything else.
+  assert.equal(sceneDataFile("velas-flamengo"), "scripts/manim/velas-flamengo.json");
+  assert.equal(sceneDataFile("velas-clube-do-remo"), "scripts/manim/velas-clube-do-remo.json");
+
+  // These four are the ones the old line got wrong.
+  assert.equal(sceneDataFile("barras-20-clubes"), "scripts/manim/pontos.json");
+  assert.equal(sceneDataFile("barras-flamengo"), "scripts/manim/pontos.json");
+  assert.equal(sceneDataFile("pontos-20-clubes"), "scripts/manim/pontos.json");
+  assert.equal(sceneDataFile("campanhas-palmeiras-flamengo"), "scripts/manim/campanhas.json");
+
+  // An unmapped scene answers null, so the uploader prints no path rather than
+  // an invented one. Guessing here is the defect this function replaced.
+  assert.equal(sceneDataFile("bolhas-20-clubes"), null);
+  assert.equal(sceneDataFile(""), null);
+});
+
+/**
+ * The gate, and the half that makes the mapping worth having: the file it names
+ * has to be there. `scripts/manim/barras-20-clubes.json` was printed for months
+ * and never existed, which nothing could see because a wrong path in an advisory
+ * line produces no work while it holds. A scene added without a mapping — or a
+ * JSON renamed under one — now goes red on the commit that does it.
+ */
+test("every committed -youtube.md names a scene JSON that exists", () => {
+  const files = globSync("docs/medias/**/*-youtube.md").sort();
+  assert.ok(files.length >= 20, `esperava ao menos 20 arquivos, achei ${files.length}`);
+  for (const file of files) {
+    const base = basename(file).replace(/-youtube\.md$/, "");
+    const source = sceneDataFile(base);
+    assert.ok(source !== null, `${base} não tem cena mapeada em sceneDataFile`);
+    assert.ok(existsSync(source!), `${base} aponta para ${source}, que não existe`);
   }
 });
