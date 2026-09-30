@@ -1315,8 +1315,24 @@ export const HIGHLIGHTS: Record<string, Highlight[]> = {
     { url: "https://www.youtube.com/watch?v=0dht9FEF9BI", channel: "UOL Esporte" },
   ],
   // Coritiba 1 x 2 Mirassol, rodada 26.
+  //
+  // The CazéTV entry was added by hand: find-highlights.ts refused it, and
+  // correctly by its own rule — the title carries no scoreline at all
+  // ("MELHORES MOMENTOS: CORITIBA X MIRASSOL | BRASILEIRÃO 2026 | 26ª RODADA"),
+  // so `parseTitle` cannot read HOME n x n AWAY and the candidate never reaches
+  // the checks that would have cleared it. It is this match: the channel id is
+  // CazéTV's, the title names both clubs, the season and the round, and the
+  // upload is 8.0h after kickoff, well inside DEFAULT_WINDOW_HOURS.
+  //
+  // Do not relax `parseTitle` to accept a title with no score. The scoreline is
+  // what separates this fixture from the same two clubs meeting in another
+  // season, which is the near-miss highlight-search-core.ts exists for; a
+  // title without one has to be read by a person. This one was surfaced by the
+  // TypeSafe prototype (docs/jev.md) holding it for review among 11 candidates
+  // out of 141 the rules had refused.
   "554993": [
     { url: "https://www.youtube.com/watch?v=NF7Z9UK9vKo", channel: "ge tv" },
+    { url: "https://www.youtube.com/watch?v=5ko-F4_203g", channel: "CazéTV" },
     { url: "https://www.youtube.com/watch?v=0mTHSeF8wt8", channel: "UOL Esporte" },
   ],
   // Cruzeiro 3 x 1 Athletico-PR, rodada 26.
