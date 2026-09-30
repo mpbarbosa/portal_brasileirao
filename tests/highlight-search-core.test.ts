@@ -85,6 +85,31 @@ test("a title naming a club only by a fragment of its name is not accepted", () 
   assert.equal(namesClub("SÃO PAULO FC", "1776", "São Paulo"), true);
 });
 
+test("a bare ATHLETICO is Athletico-PR, because the H is unique in this division", () => {
+  // Broadcasters drop the -PR routinely; four such packages were refused and
+  // then added to highlights.ts by hand before this alias existed.
+  assert.equal(namesClub("ATHLETICO", "1768", "Athletico-PR"), true);
+  assert.equal(namesClub("ATHLETICO ", "1768", "Athletico-PR"), true);
+  // And it must not widen to the H-less spelling, which is two other clubs'.
+  assert.equal(namesClub("ATLETICO", "1768", "Athletico-PR"), false);
+});
+
+test("a misspelled Athlético Mineiro is refused for Athletico-PR", () => {
+  // The collision the alias above would otherwise open: this text contains
+  // ATHLETICO, and Atlético-MG's own aliases all spell it without the H, so
+  // nothing else in the module would catch the mistake. Measured at zero
+  // occurrences across 9775 candidates — CLUB_REFUSALS is what makes it
+  // impossible rather than merely unobserved.
+  assert.equal(namesClub("ATHLÉTICO MINEIRO", "1768", "Athletico-PR"), false);
+  assert.equal(namesClub("ATHLÉTICO-MG", "1768", "Athletico-PR"), false);
+  // The refusal costs Athletico-PR nothing: no spelling of it carries either.
+  for (const text of ["ATHLETICO", "ATHLETICO-PR", "ATHLETICO PARANAENSE", "FURACÃO"]) {
+    assert.equal(namesClub(text, "1768", "Athletico-PR"), true, text);
+  }
+  // And it is scoped to that one club, never applied to Atlético-MG itself.
+  assert.equal(namesClub("ATLÉTICO MINEIRO", "1766", "Atlético-MG"), true);
+});
+
 test("clubs that look alike are kept apart", () => {
   // COR is both of these upstream, which is why club identity is the numeric id.
   assert.equal(namesClub("CORITIBA", "1779", "Corinthians"), false);

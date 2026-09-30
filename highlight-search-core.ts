@@ -63,7 +63,15 @@ const rankOf = (label: string): number => {
  */
 export const CLUB_ALIASES: Record<string, string[]> = {
   "1766": ["ATLETICOMINEIRO", "ATLETICOMG", "GALO"],
-  "1768": ["ATHLETICOPARANAENSE", "ATHLETICOPR", "FURACAO"],
+  // `ATHLETICO` is the one bare word in this table, and the **H** is the whole
+  // of what makes it safe: no other club in the division spells itself that
+  // way, where a bare `ATLETICO` would also be Atlético-MG and Atlético-GO.
+  // Measured before adding it — 823 of 9775 candidate titles across the season
+  // carry `ATHLETICO` normalised, and **none** of them spells Atlético-MG with
+  // an H. It earns its place because broadcasters drop the `-PR` routinely: the
+  // rules refused four such packages, and all four had already been added to
+  // `highlights.ts` by hand, so this gap had cost manual work four times.
+  "1768": ["ATHLETICOPARANAENSE", "ATHLETICOPR", "FURACAO", "ATHLETICO"],
   "4286": ["REDBULLBRAGANTINO", "RBBRAGANTINO"],
   "4287": ["REMO"],
   "1780": ["VASCO"],
@@ -172,9 +180,32 @@ export const parseTitle = (title: string): ParsedTitle | null => {
  * name a club by a fragment is now held for a person rather than accepted, which
  * is the direction a wrong melhores-momentos link should fail in.
  */
+/**
+ * Spellings that **disqualify** a club, read before its aliases are tried.
+ *
+ * This exists for one entry and would not be worth a table otherwise. A bare
+ * `ATHLETICO` is Athletico-PR in this division, and nothing was measured
+ * against it — but a broadcaster writing *Athlético Mineiro* produces a club
+ * text containing `ATHLETICO`, while Atlético-MG's own aliases all spell it
+ * without the H and so would match nothing. Neither club's rules would catch
+ * the mistake, and the fixture would be judged as Athletico-PR's.
+ *
+ * `MINEIRO` and `MG` are the two ways Atlético-MG is ever qualified, and no
+ * spelling of Athletico-PR contains either — `ATHLETICO`, `ATHLETICOPR`,
+ * `ATHLETICOPARANAENSE`, `FURACAO`. So the refusal costs that club nothing and
+ * makes the collision **impossible rather than merely unobserved**, which is
+ * the difference between a rule a test can fail on and a measurement that
+ * silently stops being true next season.
+ */
+const CLUB_REFUSALS: Record<string, string[]> = {
+  "1768": ["MINEIRO", "MG"],
+};
+
 export const namesClub = (text: string, code: string, shortName: string): boolean => {
   const found = normalize(text);
   if (!found) return false;
+
+  if ((CLUB_REFUSALS[code] ?? []).some((name) => found.includes(name))) return false;
 
   const wanted = [normalize(shortName), ...(CLUB_ALIASES[code] ?? [])];
   return wanted.some((name) => found.includes(name));
