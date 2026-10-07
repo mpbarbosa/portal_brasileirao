@@ -53,15 +53,56 @@ server {
     error_log  /var/log/nginx/${SITE_NAME}.error.log;
 
     gzip on;
-    gzip_types text/css application/javascript application/json image/svg+xml;
+    # gzip_types matches the response Content-Type EXACTLY. This app serves JS as
+    # text/javascript (charset utf-8) via Express/mime-types, so the older list --
+    # which named only application/javascript -- never matched, and the bundle
+    # shipped raw at 485,770 B while only JSON compressed. Both spellings are
+    # listed because the sibling site (agora_na_copa_2026) serves
+    # application/javascript, and Phase 2 of the devops fleet roadmap puts both
+    # behind one nginx.
+    #
+    # NOTE: a server-level gzip_types REPLACES an http-level one rather than
+    # merging with it, so this list must stay complete on its own. A shared
+    # /etc/nginx/conf.d/ drop-in will not rescue it.
+    #
+    # text/html is omitted on purpose: nginx always gzips it and rejects the
+    # config with "duplicate MIME type text/html" if listed.
+    gzip_types
+        text/plain
+        text/css
+        text/javascript
+        application/javascript
+        application/json
+        application/manifest+json
+        application/xml
+        text/xml
+        image/svg+xml;
+    gzip_vary on;
+    gzip_proxied any;
+    gzip_comp_level 6;
     gzip_min_length 1024;
 
     # Vite emits content-hashed filenames, so assets can cache indefinitely.
+    #
+    # The expires directive is deliberately NOT used: it sets a Cache-Control of
+    # its own, and add_header APPENDS rather than replaces, so expires 1y plus an
+    # add_header emitted TWO conflicting Cache-Control headers (measured
+    # 2026-10-06: max-age=31536000 and public, immutable together). The
+    # upstream's own public, max-age=0 has to be hidden for the same reason.
+    #
+    # Backticks must never appear in these comments: this heredoc is unquoted, so
+    # the shell would run them as command substitution when the script executes.
     location /assets/ {
         proxy_pass http://127.0.0.1:${APP_PORT};
+        proxy_http_version 1.1;
         proxy_set_header Host \$host;
-        expires 1y;
-        add_header Cache-Control "public, immutable";
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+
+        proxy_hide_header Cache-Control;
+        proxy_hide_header Expires;
+        add_header Cache-Control "public, max-age=31536000, immutable" always;
     }
 
     location / {
