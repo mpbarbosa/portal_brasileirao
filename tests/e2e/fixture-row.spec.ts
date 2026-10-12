@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@/tests/e2e/clock";
+import { readMatches, serveMatches } from "@/tests/e2e/matches-payload";
 
 /**
  * The fixture row's width, which #310 bought and nothing defended.
@@ -73,14 +74,74 @@ const openRounds = async (page: Page) => {
  * than the envelope under the suite's workers, green in isolation.
  */
 const withLongNames = async (page: Page) => {
-  const body = await (await page.request.get("/api/matches")).json();
-  body.data.clubs = body.data.clubs.map((club: Record<string, unknown>) => ({
+  const body = await readMatches(page);
+  body.data.clubs = body.data.clubs.map((club) => ({
     ...club,
     shortName: `Associação Atlética ${club.tla}`,
   }));
-  await page.route("**/api/matches*", (route) =>
-    route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(body) }),
-  );
+  await serveMatches(page, body);
+};
+
+/**
+ * Serve a season in which every fixture is the division's two widest names,
+ * played, so the row renders the widest line it is ever asked to.
+ *
+ * **Widest by rendered pixels, measured in the page**, by cloning the font off
+ * a name the row has already drawn — the row's own type step, weight and
+ * letter spacing, whatever they become. Sorting the strings by `length` picks
+ * the wrong pair: three club names are thirteen characters and they differ by
+ * 18px.
+ *
+ * **It renames nothing** — it points the fixtures at the clubs that already
+ * hold those names, so the crest, the code and the `tla` stay each other's.
+ *
+ * **Played and 0-0, because an unplayed row is 26px narrower**: `fixtureScore`
+ * renders a bare `×` until there is a score, and the scoreline is `shrink-0`,
+ * so the fixture that truncates is a finished one. Every digit is the same
+ * width under `tabular-nums`, so any single-digit score measures the same; a
+ * two-digit one would be wider and is not a thing this league produces, which
+ * is the line between producing a real state and inventing one.
+ *
+ * Every fixture rather than the first, so the helper does not have to know
+ * which round `currentRound` lands on or which fixture `compareForFeed` puts
+ * at the top — the same reason `withLongNames` renames every club.
+ */
+const widestPairing = async (page: Page) => {
+  const body = await readMatches(page);
+  const widest = await fixtureLine(page)
+    .first()
+    .locator("span.truncate")
+    .first()
+    .evaluate(
+      (drawn, names) => {
+        const probe = document.createElement("span");
+        const style = getComputedStyle(drawn as HTMLElement);
+        probe.style.font = style.font;
+        probe.style.letterSpacing = style.letterSpacing;
+        probe.style.position = "absolute";
+        probe.style.visibility = "hidden";
+        probe.style.whiteSpace = "nowrap";
+        document.body.append(probe);
+        const measured = (names as string[]).map((name) => {
+          probe.textContent = name;
+          return [name, probe.getBoundingClientRect().width] as [string, number];
+        });
+        probe.remove();
+        return measured.sort((a, b) => b[1] - a[1]).map(([name]) => name);
+      },
+      body.data.clubs.map((club) => club.shortName),
+    );
+
+  const codeOf = new Map(body.data.clubs.map((club) => [club.shortName, club.code]));
+  const [home, away] = [codeOf.get(widest[0]), codeOf.get(widest[1])];
+  for (const match of body.data.matches) {
+    match.homeCode = home;
+    match.awayCode = away;
+    match.homeGoals = 0;
+    match.awayGoals = 0;
+    match.status = "FINISHED";
+  }
+  await serveMatches(page, body);
 };
 
 test.describe("Fixture row", () => {
@@ -109,7 +170,10 @@ test.describe("Fixture row", () => {
       // What separates the two layouts is therefore how much room the line
       // *could* have had: side by side it is capped at the row's content box
       // less the chip and the gap, and stacked it is not capped by the chip at
-      // all. `px-4` plus the border is the 34px.
+      // all. The 26px is the card's own chrome: `px-3` plus the border, both
+      // widths here being below `sm`. It read 34 while that padding was
+      // `px-4` at every width, and the number is the card's and not this
+      // spec's — read it off `MatchList` rather than trusting this line.
       //
       // **The names are supplied rather than borrowed from the season**, which
       // is what `withLongNames` is for and why this stopped being a spec that
@@ -124,7 +188,7 @@ test.describe("Fixture row", () => {
       const line = (await fixtureLine(page).first().boundingBox())!;
       const status = (await chip(page).first().boundingBox())!;
 
-      expect(line.width).toBeGreaterThan(row.width - 34 - status.width);
+      expect(line.width).toBeGreaterThan(row.width - 26 - status.width);
     });
   }
 
@@ -154,6 +218,44 @@ test.describe("Fixture row", () => {
     // asserted: four names legitimately clip there, and pinning that count
     // would be asserting how much curated data exists.
     await page.setViewportSize({ width: 375, height: 800 });
+    await openRounds(page);
+
+    const overflow = await fixtureLine(page)
+      .locator("span.truncate")
+      .evaluateAll((els) => els.map((el) => el.scrollWidth - el.clientWidth));
+
+    expect(overflow.length).toBeGreaterThan(0);
+    expect(overflow.filter((px) => px > 0)).toEqual([]);
+  });
+
+  test("the division's widest pairing is not truncated at 375dp", async ({ page }) => {
+    // **The spec above reads the snapshot, and on 2026-10-12 the snapshot was
+    // the only thing keeping it green while production was broken.** It opens
+    // whatever round the committed fixtures put first, and that was round 21,
+    // `São Paulo × Santos` — two short names that fit with room to spare. The
+    // live site, reading the provider, was on round 30, which opens
+    // `Vasco da Gama 0 × 0 Clube do Remo`: measured against production at
+    // `fe95911`, 320px of content in a 309px line, 5px off one name and 6px
+    // off the other. The seed catching up is what would finally have reddened
+    // it — days after a reader met it, and only until the round rolled on.
+    //
+    // So this one **produces** the worst case instead of waiting for the
+    // season to supply it, which is the rule the rest of this suite already
+    // follows and `withLongNames` above already applies to its own assertion.
+    // The two are kept apart rather than merged: that one is the honest report
+    // that *today's* board fits, and this one is the claim that **no** board
+    // can fail, which is the thing a fix can actually be held to.
+    //
+    // **The pairing is derived, never named.** Hard-coding Vasco and Remo
+    // would be a claim about which clubs are in this division — they are
+    // promoted and relegated every year, and the seed generator already
+    // refuses duplicate display names, so the two widest are always two
+    // distinct clubs. The widths come from the browser rather than from
+    // character counts: `Vasco da Gama`, `Clube do Remo` and `Internacional`
+    // are all thirteen characters and measure 112.25, 108.77 and 93.77.
+    await page.setViewportSize({ width: 375, height: 800 });
+    await openRounds(page);
+    await widestPairing(page);
     await openRounds(page);
 
     const overflow = await fixtureLine(page)
