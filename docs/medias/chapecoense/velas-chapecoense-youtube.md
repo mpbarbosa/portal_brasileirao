@@ -1,7 +1,7 @@
 # YouTube — velas do Chapecoense
 
 Texto que acompanha [`velas-chapecoense.mp4`](velas-chapecoense.mp4)
-(1920×1080, 60fps, 22s).
+(1920×1080, 60fps, 24s).
 
 - **Título:** até 100 caracteres. Os títulos abaixo trazem a contagem medida.
 - **Descrição:** até 5.000 caracteres, mas só as duas primeiras linhas aparecem
@@ -9,12 +9,12 @@ Texto que acompanha [`velas-chapecoense.mp4`](velas-chapecoense.mp4)
 - **Tags:** até 500 caracteres somados, medidos com as vírgulas e os espaços
   exatamente como estão no bloco.
 - **Sem capítulos:** o YouTube exige pelo menos três, o primeiro em 00:00 e cada
-  um com 10s. Um vídeo de 22s não comporta.
+  um com 10s. Um vídeo de 24s não comporta.
 - **Com capa:** `velas-chapecoense-miniatura.png`, 1280×720, o quadro do fecho da
   própria cena — a regra que o `scripts/manim/README.md` registra para as velas.
 
-> **Os números aqui saem de `scripts/manim/velas-chapecoense.json`, rodada 28,
-> snapshot de 2026-09-21** — 20º com 18 pts, 3V 9E 15D, e a oscilação entre
+> **Os números aqui saem de `scripts/manim/velas-chapecoense.json`, rodada 30,
+> snapshot de 2026-10-12** — 20º com 18 pts, 3V 9E 16D, e a oscilação entre
 > o 1º e o 20º, que é a faixa que o painel do vídeo imprime. Eles **envelhecem**: um `sync-seed-data` seguido de uma
 > reexportação move o vídeo, e este arquivo não é regerado por nada. Reconferir
 > antes de publicar, contra o JSON e não contra esta página.
@@ -44,10 +44,10 @@ Texto que acompanha [`velas-chapecoense.mp4`](velas-chapecoense.mp4)
 Recomendado (67 caracteres):
 
 ```
-Chapecoense: 15 derrotas em 27 jogos, a campanha em velas até a 28ª
+Chapecoense: 16 derrotas em 28 jogos, a campanha em velas até a 30ª
 ```
 
-O número duro, o maior da divisão, igualado pelo Clube do Remo — e **data o recorte**, que é a única defesa contra
+O número duro, o maior da divisão e agora sem igual — o Clube do Remo tem 15 — e **data o recorte**, que é a única defesa contra
 alguém assistir daqui a três meses e achar que os números estão errados.
 
 | | título | caracteres | ângulo |
@@ -63,14 +63,14 @@ busca, e não é como o clube aparece no vídeo nem na tabela.
 ```
 A campanha do Chapecoense rodada a rodada, desenhada como vela: o corpo vai da posição em que o clube ABRIU a rodada até onde ele FECHOU, e o pavio cobre a melhor e a pior posição que ele ocupou enquanto a rodada era jogada. Embaixo, no mesmo eixo, os pontos acumulados — a barra é o total e a tampa clara é o que a rodada acrescentou.
 
-Dados até 21/09/2026 (28ª rodada):
-• Chapecoense — 20º, 18 pts em 27 jogos
-• 3V · 9E · 15D — 29 gols pró, 53 contra, saldo -24
-• 22% de aproveitamento · oscilou entre o 1º e o 20º
+Dados até 12/10/2026 (30ª rodada):
+• Chapecoense — 20º, 18 pts em 28 jogos
+• 3V · 9E · 16D — 29 gols pró, 57 contra, saldo -28
+• 21% de aproveitamento · oscilou entre o 1º e o 20º
 
-A maior queda da temporada, conferida contra os vinte clubes: a Chapecoense fecha a 1ª rodada em 2º e chega à 28ª em 20º — 18 posições. A ressalva honesta é que esse 2º está nas duas primeiras rodadas, onde os empatados em nada são ordenados por NOME, então ele é alfabeto e não futebol. Descontadas elas, a campanha ainda fecha entre o 8º e o 20º.
+A maior queda da temporada, conferida contra os vinte clubes: a Chapecoense fecha a 1ª rodada em 2º e chega à 30ª em 20º — 18 posições. A ressalva honesta é que esse 2º está nas duas primeiras rodadas, onde os empatados em nada são ordenados por NOME, então ele é alfabeto e não futebol. Descontadas elas, a campanha ainda fecha entre o 8º e o 20º.
 
-O que não precisa de ressalva são as 15 derrotas em 27 jogos, o maior número da Série A, igualado pelo Clube do Remo em 28, e a invencibilidade máxima de 3 rodadas. A barra de pontos embaixo é a mais plana do conjunto.
+O que não precisa de ressalva são as 16 derrotas em 28 jogos, o maior número da Série A e agora sem igual — o segundo é o Clube do Remo, com 15 em 30 —, e a invencibilidade máxima de 3 rodadas. São 28 jogos contra 30 rodadas: este é o clube com mais partidas em atraso do recorte, duas, e comparar o total de pontos com quem jogou tudo é uma leitura torta. A barra de pontos embaixo é a mais plana do conjunto.
 
 As réguas tracejadas que cruzam o desenho são acontecimentos de fora de campo, e cada uma cai na FRONTEIRA entre duas rodadas em vez de sobre uma: a demissão de Gilmar Dal Pozzo depois da 9ª rodada, a demissão de Fábio Matias depois da 17ª rodada, e a paralisação para a Copa do Mundo depois da 18ª rodada. Quando a primeira aparece, o clube vinha de fechar a 9ª em 18º com 7 pts.
 
@@ -95,7 +95,7 @@ carregar o vídeo sozinha.
 Para Short, ou onde a descrição longa não couber.
 
 ```
-A campanha do Chapecoense em velas: o corpo vai da posição de abertura à de fechamento da rodada, o pavio mostra até onde o clube subiu e desceu dentro dela, e a barra de baixo são os pontos. As réguas tracejadas marcam as saídas de Gilmar Dal Pozzo e Fábio Matias, e a parada para a Copa. Fechou a 1ª rodada em 2º e terminou o recorte em 20º. Dados até a 28ª: 18 pts, 3V 9E 15D, saldo -24.
+A campanha do Chapecoense em velas: o corpo vai da posição de abertura à de fechamento da rodada, o pavio mostra até onde o clube subiu e desceu dentro dela, e a barra de baixo são os pontos. As réguas tracejadas marcam as saídas de Gilmar Dal Pozzo e Fábio Matias, e a parada para a Copa. Fechou a 1ª rodada em 2º e terminou o recorte em 20º. Dados até a 30ª: 18 pts, 3V 9E 16D, saldo -28.
 
 Animação em Manim, dados do Portal Brasileirão: https://brasileirao.mpbarbosa.com
 Código: https://github.com/mpbarbosa/portal_brasileirao
@@ -109,7 +109,7 @@ Medido sobre o bloco como está — separado por `, `, que é o que se cola.
 334 caracteres, 23 tags.
 
 ```
-brasileirão, brasileirao 2026, campeonato brasileiro, série a, serie a, chapecoense, chape, verdão do oeste, verdao do oeste, acf, campanha do chapecoense, campanha rodada a rodada, candlestick, gráfico de velas, futebol brasileiro, visualização de dados, dataviz, manim, python, portal brasileirão, rodada 28, dal pozzo, fábio matias
+brasileirão, brasileirao 2026, campeonato brasileiro, série a, serie a, chapecoense, chape, verdão do oeste, verdao do oeste, acf, campanha do chapecoense, campanha rodada a rodada, candlestick, gráfico de velas, futebol brasileiro, visualização de dados, dataviz, manim, python, portal brasileirão, rodada 30, dal pozzo, fábio matias
 ```
 
 `dal pozzo` e `fábio matias` entram porque o vídeo agora **marca** essa saída, e é assim que o torcedor

@@ -1,7 +1,7 @@
 # YouTube — velas do Bragantino
 
 Texto que acompanha [`velas-bragantino.mp4`](velas-bragantino.mp4)
-(1920×1080, 60fps, 22s).
+(1920×1080, 60fps, 24s).
 
 - **Título:** até 100 caracteres. Os títulos abaixo trazem a contagem medida.
 - **Descrição:** até 5.000 caracteres, mas só as duas primeiras linhas aparecem
@@ -9,13 +9,13 @@ Texto que acompanha [`velas-bragantino.mp4`](velas-bragantino.mp4)
 - **Tags:** até 500 caracteres somados, medidos com as vírgulas e os espaços
   exatamente como estão no bloco.
 - **Sem capítulos:** o YouTube exige pelo menos três, o primeiro em 00:00 e cada
-  um com 10s. Um vídeo de 22s não comporta.
+  um com 10s. Um vídeo de 24s não comporta.
 - **Com capa:** `velas-bragantino-miniatura.png`, 1280×720, o quadro do fecho da
   própria cena — a regra que o `scripts/manim/README.md` registra para as velas.
 - **Cortes verticais:** `velas-bragantino-45.mp4` (1080×1350, feed do Instagram) e `velas-bragantino-916.mp4` (1080×1920, Reels e YouTube Short).
 
-> **Os números aqui saem de `scripts/manim/velas-bragantino.json`, rodada 28,
-> snapshot de 2026-09-21** — 10º com 36 pts, 10V 6E 11D, e a oscilação entre
+> **Os números aqui saem de `scripts/manim/velas-bragantino.json`, rodada 30,
+> snapshot de 2026-10-12** — 11º com 37 pts, 10V 7E 12D, e a oscilação entre
 > o 1º e o 16º, que é a faixa que o painel do vídeo imprime. Eles **envelhecem**: um `sync-seed-data` seguido de uma
 > reexportação move o vídeo, e este arquivo não é regerado por nada. Reconferir
 > antes de publicar, contra o JSON e não contra esta página.
@@ -45,7 +45,7 @@ Texto que acompanha [`velas-bragantino.mp4`](velas-bragantino.mp4)
 Recomendado (71 caracteres):
 
 ```
-Bragantino liderou na 2ª e fechou em 10º: a campanha em velas até a 28ª
+Bragantino liderou na 2ª e fechou em 11º: a campanha em velas até a 30ª
 ```
 
 A queda desde a liderança — e **data o recorte**, que é a única defesa contra
@@ -53,7 +53,7 @@ alguém assistir daqui a três meses e achar que os números estão errados.
 
 | | título | caracteres | ângulo |
 |---|---|---|---|
-| 2 | `Bragantino em velas: 36 pontos, 10V 6E 11D \| Brasileirão 2026` | 61 | o número duro |
+| 2 | `Bragantino em velas: 37 pontos, 10V 7E 12D \| Brasileirão 2026` | 61 | o número duro |
 | 3 | `A campanha do Bragantino rodada a rodada \| Brasileirão 2026 em candlestick` | 74 | genérico e buscável |
 
 **Os apelidos não estão em nenhum deles, e estão nas tags**: é como o torcedor
@@ -64,14 +64,14 @@ busca, e não é como o clube aparece no vídeo nem na tabela.
 ```
 A campanha do Bragantino rodada a rodada, desenhada como vela: o corpo vai da posição em que o clube ABRIU a rodada até onde ele FECHOU, e o pavio cobre a melhor e a pior posição que ele ocupou enquanto a rodada era jogada. Embaixo, no mesmo eixo, os pontos acumulados — a barra é o total e a tampa clara é o que a rodada acrescentou.
 
-Dados até 21/09/2026 (28ª rodada):
-• Bragantino — 10º, 36 pts em 27 jogos
-• 10V · 6E · 11D — 33 gols pró, 31 contra, saldo +2
-• 44% de aproveitamento · oscilou entre o 1º e o 16º
+Dados até 12/10/2026 (30ª rodada):
+• Bragantino — 11º, 37 pts em 29 jogos
+• 10V · 7E · 12D — 34 gols pró, 33 contra, saldo +1
+• 43% de aproveitamento · oscilou entre o 1º e o 16º
 
 O Bragantino é o caso em que o começo engana: ele fecha a 2ª rodada em 1º e nunca mais volta ao topo. Descontadas as duas primeiras rodadas, onde os empatados em nada são ordenados por nome, a campanha fecha entre o 5º e o 14º.
 
-São 11 derrotas em 27 jogos, e a maior invencibilidade é de 5 rodadas. A vela do início e a do fim contam histórias diferentes, que é exatamente o que este desenho existe para mostrar.
+São 12 derrotas em 29 jogos — 29 contra 30 rodadas, então há partida em atraso —, e a maior invencibilidade é de 5 rodadas. A vela do início e a do fim contam histórias diferentes, que é exatamente o que este desenho existe para mostrar.
 
 A régua tracejada que cruza o desenho é o acontecimento de fora de campo que tocou os vinte clubes: a paralisação para a Copa do Mundo depois da 18ª rodada. Ela cai na FRONTEIRA entre duas rodadas em vez de sobre uma, porque é isso que ela separa — o que veio antes dela e o que veio depois. Aqui o clube parou em 5º com 29 pts.
 
@@ -96,7 +96,7 @@ carregar o vídeo sozinha.
 Para Short, ou onde a descrição longa não couber.
 
 ```
-A campanha do Bragantino em velas: o corpo vai da posição de abertura à de fechamento da rodada, o pavio mostra até onde o clube subiu e desceu dentro dela, e a barra de baixo são os pontos. A régua tracejada marca a parada para a Copa. Liderou na 2ª rodada e fechou o recorte em 10º. Dados até a 28ª: 36 pts, 10V 6E 11D, saldo +2.
+A campanha do Bragantino em velas: o corpo vai da posição de abertura à de fechamento da rodada, o pavio mostra até onde o clube subiu e desceu dentro dela, e a barra de baixo são os pontos. A régua tracejada marca a parada para a Copa. Liderou na 2ª rodada e fechou o recorte em 10º. Dados até a 30ª: 37 pts, 10V 7E 12D, saldo +1.
 
 Animação em Manim, dados do Portal Brasileirão: https://brasileirao.mpbarbosa.com
 Código: https://github.com/mpbarbosa/portal_brasileirao
@@ -110,7 +110,7 @@ Medido sobre o bloco como está — separado por `, `, que é o que se cola.
 317 caracteres, 21 tags.
 
 ```
-brasileirão, brasileirao 2026, campeonato brasileiro, série a, serie a, bragantino, massa bruta, braga, red bull bragantino, rb bragantino, campanha do bragantino, campanha rodada a rodada, candlestick, gráfico de velas, futebol brasileiro, visualização de dados, dataviz, manim, python, portal brasileirão, rodada 28
+brasileirão, brasileirao 2026, campeonato brasileiro, série a, serie a, bragantino, massa bruta, braga, red bull bragantino, rb bragantino, campanha do bragantino, campanha rodada a rodada, candlestick, gráfico de velas, futebol brasileiro, visualização de dados, dataviz, manim, python, portal brasileirão, rodada 30
 ```
 
 Nenhuma tag nova: o único acontecimento que o vídeo marca é a paralisação

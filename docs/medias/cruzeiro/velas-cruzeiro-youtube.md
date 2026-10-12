@@ -1,7 +1,7 @@
 # YouTube — velas do Cruzeiro
 
 Texto que acompanha [`velas-cruzeiro.mp4`](velas-cruzeiro.mp4)
-(1920×1080, 60fps, 22s).
+(1920×1080, 60fps, 24s).
 
 - **Título:** até 100 caracteres. Os títulos abaixo trazem a contagem medida.
 - **Descrição:** até 5.000 caracteres, mas só as duas primeiras linhas aparecem
@@ -9,14 +9,14 @@ Texto que acompanha [`velas-cruzeiro.mp4`](velas-cruzeiro.mp4)
 - **Tags:** até 500 caracteres somados, medidos com as vírgulas e os espaços
   exatamente como estão no bloco.
 - **Sem capítulos:** o YouTube exige pelo menos três, o primeiro em 00:00 e cada
-  um com 10s. Um vídeo de 22s não comporta.
+  um com 10s. Um vídeo de 24s não comporta.
 - **Com capa:** `velas-cruzeiro-miniatura.png`, 1280×720, o quadro do fecho da
   própria cena — a regra que o `scripts/manim/README.md` registra para as velas.
 - **Cortes verticais:** `velas-cruzeiro-45.mp4` (1080×1350, feed do Instagram) e `velas-cruzeiro-916.mp4` (1080×1920, Reels e YouTube Short).
 
-> **Os números aqui saem de `scripts/manim/velas-cruzeiro.json`, rodada 28,
-> snapshot de 2026-09-21** — 6º com 45 pts, 13V 6E 9D, e a oscilação entre
-> o 5º e o 20º, que é a faixa que o painel do vídeo imprime. Eles **envelhecem**: um `sync-seed-data` seguido de uma
+> **Os números aqui saem de `scripts/manim/velas-cruzeiro.json`, rodada 30,
+> snapshot de 2026-10-12** — 6º com 48 pts, 14V 6E 9D, e a oscilação entre
+> o 4º e o 20º, que é a faixa que o painel do vídeo imprime. Eles **envelhecem**: um `sync-seed-data` seguido de uma
 > reexportação move o vídeo, e este arquivo não é regerado por nada. Reconferir
 > antes de publicar, contra o JSON e não contra esta página.
 >
@@ -46,7 +46,7 @@ Texto que acompanha [`velas-cruzeiro.mp4`](velas-cruzeiro.mp4)
 Recomendado (57 caracteres):
 
 ```
-Cruzeiro: do 20º ao 6º em 28 rodadas, a campanha em velas
+Cruzeiro: do 20º ao 6º em 30 rodadas, a campanha em velas
 ```
 
 A subida, medida do pior fechamento até o atual — e **data o recorte**, que é a única defesa contra
@@ -65,16 +65,16 @@ busca, e não é como o clube aparece no vídeo nem na tabela.
 ```
 A campanha do Cruzeiro rodada a rodada, desenhada como vela: o corpo vai da posição em que o clube ABRIU a rodada até onde ele FECHOU, e o pavio cobre a melhor e a pior posição que ele ocupou enquanto a rodada era jogada. Embaixo, no mesmo eixo, os pontos acumulados — a barra é o total e a tampa clara é o que a rodada acrescentou.
 
-Dados até 21/09/2026 (28ª rodada):
-• Cruzeiro — 6º, 45 pts em 28 jogos
-• 13V · 6E · 9D — 42 gols pró, 40 contra, saldo +2
-• 54% de aproveitamento · oscilou entre o 5º e o 20º
+Dados até 12/10/2026 (30ª rodada):
+• Cruzeiro — 6º, 48 pts em 29 jogos
+• 14V · 6E · 9D — 44 gols pró, 40 contra, saldo +4
+• 55% de aproveitamento · oscilou entre o 4º e o 20º
 
 O Cruzeiro esteve em 20º e fecha o recorte em 6º — 14 posições ganhas desde o fundo da campanha. Nas velas isso é uma escada, e é o desenho oposto ao de quem lidera.
 
-Uma ressalva que a maioria dos clubes não precisa dar, e que aqui vale a favor: a amplitude do Cruzeiro NÃO vem das duas primeiras rodadas, onde os empatados em nada são ordenados por nome. Descontadas elas, ele oscila 15 posições — atrás apenas de Chapecoense e Mirassol, e empatado com o Bragantino pela terceira maior faixa real da divisão.
+Uma ressalva que a maioria dos clubes não precisa dar, e que aqui vale a favor: a amplitude do Cruzeiro NÃO vem das duas primeiras rodadas, onde os empatados em nada são ordenados por nome. Descontadas elas, ele oscila 15 posições — **a maior faixa real da divisão**, à frente das 13 do Botafogo e do São Paulo. (Esta frase dizia o contrário, «atrás apenas de Chapecoense e Mirassol»; estava errada já no recorte anterior, onde a conta dá os mesmos 15 contra 12 da Chapecoense e 11 do Mirassol.)
 
-O preço está nas 9 derrotas em 28 jogos, o número alto de quem começou mal, e a barra de pontos embaixo muda de inclinação e não volta.
+O preço está nas 9 derrotas em 29 jogos — 29 contra 30 rodadas, então há partida em atraso —, o número alto de quem começou mal, e a barra de pontos embaixo muda de inclinação e não volta.
 
 As duas réguas tracejadas que cruzam o desenho são acontecimentos de fora de campo, e cada uma cai na FRONTEIRA entre duas rodadas em vez de sobre uma: a saída de Tite depois da 6ª rodada, e a paralisação para a Copa do Mundo depois da 18ª. A primeira é a explicação da escada — o clube estava em 19º quando ela aparece.
 
@@ -99,7 +99,7 @@ carregar o vídeo sozinha.
 Para Short, ou onde a descrição longa não couber.
 
 ```
-A campanha do Cruzeiro em velas: o corpo vai da posição de abertura à de fechamento da rodada, o pavio mostra até onde o clube subiu e desceu dentro dela, e a barra de baixo são os pontos. As réguas tracejadas marcam a saída de Tite e a parada para a Copa. Do 20º ao 6º: 14 posições de subida. Dados até a 28ª: 45 pts, 13V 6E 9D, saldo +2.
+A campanha do Cruzeiro em velas: o corpo vai da posição de abertura à de fechamento da rodada, o pavio mostra até onde o clube subiu e desceu dentro dela, e a barra de baixo são os pontos. As réguas tracejadas marcam a saída de Tite e a parada para a Copa. Do 20º ao 6º: 14 posições de subida. Dados até a 30ª: 48 pts, 14V 6E 9D, saldo +4.
 
 Animação em Manim, dados do Portal Brasileirão: https://brasileirao.mpbarbosa.com
 Código: https://github.com/mpbarbosa/portal_brasileirao
@@ -113,7 +113,7 @@ Medido sobre o bloco como está — separado por `, `, que é o que se cola.
 286 caracteres, 21 tags.
 
 ```
-brasileirão, brasileirao 2026, campeonato brasileiro, série a, serie a, cruzeiro, raposa, cabuloso, cec, campanha do cruzeiro, campanha rodada a rodada, candlestick, gráfico de velas, futebol brasileiro, visualização de dados, dataviz, manim, python, portal brasileirão, rodada 28, tite
+brasileirão, brasileirao 2026, campeonato brasileiro, série a, serie a, cruzeiro, raposa, cabuloso, cec, campanha do cruzeiro, campanha rodada a rodada, candlestick, gráfico de velas, futebol brasileiro, visualização de dados, dataviz, manim, python, portal brasileirão, rodada 30, tite
 ```
 
 `tite` entra porque o vídeo agora **marca** a saída dele, e é assim que o

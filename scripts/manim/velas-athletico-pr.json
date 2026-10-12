@@ -1,5 +1,5 @@
 {
-  "snapshot": "2026-09-21",
+  "snapshot": "2026-10-12",
   "club": {
     "code": "1768",
     "name": "Athletico-PR",
@@ -537,6 +537,38 @@
         "goalsAgainst": 1,
         "result": "V"
       }
+    },
+    {
+      "round": 29,
+      "open": 3,
+      "close": 4,
+      "best": 3,
+      "worst": 4,
+      "points": 1,
+      "totalPoints": 50,
+      "played": 29,
+      "result": "E",
+      "moved": -1,
+      "match": {
+        "opponent": "Atlético-MG",
+        "home": true,
+        "goalsFor": 2,
+        "goalsAgainst": 2,
+        "result": "E"
+      }
+    },
+    {
+      "round": 30,
+      "open": 4,
+      "close": 4,
+      "best": 4,
+      "worst": 4,
+      "points": null,
+      "totalPoints": 50,
+      "played": 29,
+      "result": null,
+      "moved": 0,
+      "match": null
     }
   ],
   "events": [

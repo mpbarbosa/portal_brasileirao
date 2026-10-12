@@ -1,5 +1,5 @@
 {
-  "snapshot": "2026-09-21",
+  "snapshot": "2026-10-12",
   "club": {
     "code": "1779",
     "name": "Corinthians",
@@ -389,14 +389,14 @@
     {
       "round": 21,
       "open": 9,
-      "close": 9,
+      "close": 10,
       "best": 8,
-      "worst": 9,
+      "worst": 10,
       "points": 1,
       "totalPoints": 29,
       "played": 21,
       "result": "E",
-      "moved": 0,
+      "moved": -1,
       "match": {
         "opponent": "Athletico-PR",
         "home": true,
@@ -407,9 +407,9 @@
     },
     {
       "round": 22,
-      "open": 9,
-      "close": 8,
-      "best": 8,
+      "open": 10,
+      "close": 9,
+      "best": 9,
       "worst": 11,
       "points": 3,
       "totalPoints": 32,
@@ -426,15 +426,15 @@
     },
     {
       "round": 23,
-      "open": 8,
+      "open": 9,
       "close": 10,
-      "best": 8,
+      "best": 9,
       "worst": 10,
       "points": 0,
       "totalPoints": 32,
       "played": 23,
       "result": "D",
-      "moved": -2,
+      "moved": -1,
       "match": {
         "opponent": "Cruzeiro",
         "home": true,
@@ -484,14 +484,14 @@
     {
       "round": 26,
       "open": 11,
-      "close": 13,
+      "close": 14,
       "best": 11,
-      "worst": 13,
+      "worst": 14,
       "points": 0,
       "totalPoints": 32,
       "played": 26,
       "result": "D",
-      "moved": -2,
+      "moved": -3,
       "match": {
         "opponent": "Chapecoense",
         "home": true,
@@ -502,15 +502,15 @@
     },
     {
       "round": 27,
-      "open": 13,
+      "open": 14,
       "close": 14,
-      "best": 13,
+      "best": 14,
       "worst": 14,
       "points": 0,
       "totalPoints": 32,
       "played": 27,
       "result": "D",
-      "moved": -1,
+      "moved": 0,
       "match": {
         "opponent": "Flamengo",
         "home": false,
@@ -535,6 +535,44 @@
         "home": true,
         "goalsFor": 1,
         "goalsAgainst": 3,
+        "result": "D"
+      }
+    },
+    {
+      "round": 29,
+      "open": 14,
+      "close": 16,
+      "best": 14,
+      "worst": 16,
+      "points": 0,
+      "totalPoints": 32,
+      "played": 29,
+      "result": "D",
+      "moved": -2,
+      "match": {
+        "opponent": "Internacional",
+        "home": false,
+        "goalsFor": 1,
+        "goalsAgainst": 2,
+        "result": "D"
+      }
+    },
+    {
+      "round": 30,
+      "open": 16,
+      "close": 16,
+      "best": 16,
+      "worst": 16,
+      "points": 0,
+      "totalPoints": 32,
+      "played": 30,
+      "result": "D",
+      "moved": 0,
+      "match": {
+        "opponent": "Palmeiras",
+        "home": false,
+        "goalsFor": 1,
+        "goalsAgainst": 4,
         "result": "D"
       }
     }

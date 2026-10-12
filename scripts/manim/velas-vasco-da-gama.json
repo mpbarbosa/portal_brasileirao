@@ -1,5 +1,5 @@
 {
-  "snapshot": "2026-09-21",
+  "snapshot": "2026-10-12",
   "club": {
     "code": "1780",
     "name": "Vasco da Gama",
@@ -530,6 +530,44 @@
         "goalsFor": 5,
         "goalsAgainst": 0,
         "result": "V"
+      }
+    },
+    {
+      "round": 29,
+      "open": 16,
+      "close": 14,
+      "best": 14,
+      "worst": 16,
+      "points": 3,
+      "totalPoints": 34,
+      "played": 28,
+      "result": "V",
+      "moved": 2,
+      "match": {
+        "opponent": "Botafogo",
+        "home": false,
+        "goalsFor": 2,
+        "goalsAgainst": 1,
+        "result": "V"
+      }
+    },
+    {
+      "round": 30,
+      "open": 14,
+      "close": 14,
+      "best": 14,
+      "worst": 14,
+      "points": 1,
+      "totalPoints": 35,
+      "played": 29,
+      "result": "E",
+      "moved": 0,
+      "match": {
+        "opponent": "Clube do Remo",
+        "home": true,
+        "goalsFor": 0,
+        "goalsAgainst": 0,
+        "result": "E"
       }
     }
   ],

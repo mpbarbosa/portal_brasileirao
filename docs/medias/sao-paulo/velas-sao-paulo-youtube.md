@@ -1,7 +1,7 @@
 # YouTube — velas do São Paulo
 
 Texto que acompanha [`velas-sao-paulo.mp4`](velas-sao-paulo.mp4)
-(1920×1080, 60fps, 22s).
+(1920×1080, 60fps, 24s).
 
 - **Título:** até 100 caracteres. Os títulos abaixo trazem a contagem medida.
 - **Descrição:** até 5.000 caracteres, mas só as duas primeiras linhas aparecem
@@ -9,13 +9,13 @@ Texto que acompanha [`velas-sao-paulo.mp4`](velas-sao-paulo.mp4)
 - **Tags:** até 500 caracteres somados, medidos com as vírgulas e os espaços
   exatamente como estão no bloco.
 - **Sem capítulos:** o YouTube exige pelo menos três, o primeiro em 00:00 e cada
-  um com 10s. Um vídeo de 22s não comporta.
+  um com 10s. Um vídeo de 24s não comporta.
 - **Com capa:** `velas-sao-paulo-miniatura.png`, 1280×720, o quadro do fecho da
   própria cena — a regra que o `scripts/manim/README.md` registra para as velas.
 - **Cortes verticais:** `velas-sao-paulo-45.mp4` (1080×1350, feed do Instagram) e `velas-sao-paulo-916.mp4` (1080×1920, Reels e YouTube Short).
 
-> **Os números aqui saem de `scripts/manim/velas-sao-paulo.json`, rodada 28,
-> snapshot de 2026-09-21** — 11º com 36 pts, 10V 6E 11D, e a oscilação entre
+> **Os números aqui saem de `scripts/manim/velas-sao-paulo.json`, rodada 30,
+> snapshot de 2026-10-12** — 9º com 39 pts, 11V 6E 13D, e a oscilação entre
 > o 1º e o 16º, que é a faixa que o painel do vídeo imprime. Eles **envelhecem**: um `sync-seed-data` seguido de uma
 > reexportação move o vídeo, e este arquivo não é regerado por nada. Reconferir
 > antes de publicar, contra o JSON e não contra esta página.
@@ -42,10 +42,10 @@ Texto que acompanha [`velas-sao-paulo.mp4`](velas-sao-paulo.mp4)
 
 ## Título
 
-Recomendado (58 caracteres):
+Recomendado (57 caracteres):
 
 ```
-São Paulo: do 1º ao 11º em 28 rodadas, a campanha em velas
+São Paulo: do 1º ao 9º em 30 rodadas, a campanha em velas
 ```
 
 A queda, que é o assunto — e **data o recorte**, que é a única defesa contra
@@ -53,7 +53,7 @@ alguém assistir daqui a três meses e achar que os números estão errados.
 
 | | título | caracteres | ângulo |
 |---|---|---|---|
-| 2 | `São Paulo em velas: 36 pontos em 27 jogos, 10V 6E 11D` | 53 | o número duro, com o denominador certo |
+| 2 | `São Paulo em velas: 39 pontos em 30 jogos, 11V 6E 13D` | 53 | o número duro |
 | 3 | `A campanha do São Paulo rodada a rodada \| Brasileirão 2026 em candlestick` | 73 | genérico e buscável |
 
 **Os apelidos não estão em nenhum deles, e estão nas tags**: é como o torcedor
@@ -64,14 +64,14 @@ busca, e não é como o clube aparece no vídeo nem na tabela.
 ```
 A campanha do São Paulo rodada a rodada, desenhada como vela: o corpo vai da posição em que o clube ABRIU a rodada até onde ele FECHOU, e o pavio cobre a melhor e a pior posição que ele ocupou enquanto a rodada era jogada. Embaixo, no mesmo eixo, os pontos acumulados — a barra é o total e a tampa clara é o que a rodada acrescentou.
 
-Dados até 21/09/2026 (28ª rodada):
-• São Paulo — 11º, 36 pts em 27 jogos
-• 10V · 6E · 11D — 32 gols pró, 30 contra, saldo +2
-• 44% de aproveitamento · oscilou entre o 1º e o 16º
+Dados até 12/10/2026 (30ª rodada):
+• São Paulo — 9º, 39 pts em 30 jogos
+• 11V · 6E · 13D — 35 gols pró, 35 contra, saldo 0
+• 43% de aproveitamento · oscilou entre o 1º e o 16º
 
-O São Paulo fechou 2 rodadas em 1º e termina o recorte em 11º. A amplitude vai do 1º ao 13º e, diferente de quase todos os clubes, ela NÃO vem só das duas primeiras rodadas: descontadas elas a faixa ainda é do 1º ao 13º, uma das maiores da divisão.
+O São Paulo fechou 2 rodadas em 1º e termina o recorte em 9º. A amplitude vai do 1º ao 14º e, diferente de quase todos os clubes, ela NÃO vem só das duas primeiras rodadas: descontadas elas a faixa ainda é do 1º ao 14º, a segunda maior da divisão nessa medida, ao lado da do Botafogo.
 
-São 11 derrotas em 27 jogos — e 27 contra 28 rodadas, então há jogo em atraso e a comparação direta de pontos engana. 6 rodadas de invencibilidade na maior sequência.
+São 13 derrotas em 30 jogos — o jogo em atraso que havia no recorte anterior foi disputado, então o total de pontos já é comparável com o de quem jogou tudo. 6 rodadas de invencibilidade na maior sequência.
 
 As réguas tracejadas que cruzam o desenho são acontecimentos de fora de campo, e cada uma cai na FRONTEIRA entre duas rodadas em vez de sobre uma: a demissão de Hernán Crespo depois da 4ª rodada, e a paralisação para a Copa do Mundo depois da 18ª rodada. Quando a primeira aparece, o clube vinha de fechar a 4ª em 3º com 10 pts.
 
@@ -96,7 +96,7 @@ carregar o vídeo sozinha.
 Para Short, ou onde a descrição longa não couber.
 
 ```
-A campanha do São Paulo em velas: o corpo vai da posição de abertura à de fechamento da rodada, o pavio mostra até onde o clube subiu e desceu dentro dela, e a barra de baixo são os pontos. As réguas tracejadas marcam a saída de Hernán Crespo e a parada para a Copa. 2 rodadas em 1º no começo e o 11º lugar no fim do recorte. Dados até a 28ª: 36 pts, 10V 6E 11D, saldo +2.
+A campanha do São Paulo em velas: o corpo vai da posição de abertura à de fechamento da rodada, o pavio mostra até onde o clube subiu e desceu dentro dela, e a barra de baixo são os pontos. As réguas tracejadas marcam a saída de Hernán Crespo e a parada para a Copa. 2 rodadas em 1º no começo e o 9º lugar no fim do recorte. Dados até a 30ª: 39 pts, 11V 6E 13D, saldo 0.
 
 Animação em Manim, dados do Portal Brasileirão: https://brasileirao.mpbarbosa.com
 Código: https://github.com/mpbarbosa/portal_brasileirao
@@ -110,7 +110,7 @@ Medido sobre o bloco como está — separado por `, `, que é o que se cola.
 316 caracteres, 22 tags.
 
 ```
-brasileirão, brasileirao 2026, campeonato brasileiro, série a, serie a, são paulo, tricolor paulista, spfc, soberano, são paulo fc, campanha do são paulo, campanha rodada a rodada, candlestick, gráfico de velas, futebol brasileiro, visualização de dados, dataviz, manim, python, portal brasileirão, rodada 28, crespo
+brasileirão, brasileirao 2026, campeonato brasileiro, série a, serie a, são paulo, tricolor paulista, spfc, soberano, são paulo fc, campanha do são paulo, campanha rodada a rodada, candlestick, gráfico de velas, futebol brasileiro, visualização de dados, dataviz, manim, python, portal brasileirão, rodada 30, crespo
 ```
 
 `crespo` entra porque o vídeo agora **marca** essa saída, e é assim que o torcedor
