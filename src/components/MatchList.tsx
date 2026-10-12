@@ -100,12 +100,32 @@ export function MatchList({
          * does not save it — as a flex item it is blockified. Confirmed by
          * forcing `align-items: stretch` in the page: the chip went 72px to
          * 309px and stopped reading as a chip at all.
+         *
+         * **`px-3` below `sm` and `px-4` from there up, and the 8px it returns
+         * belongs to the club names.** Stacking the chip was not enough on its
+         * own: measured at 375dp on production at `fe95911`, the fixture line
+         * gets **309px** — the screen less the page's own 16dp gutter, this
+         * card's 16dp and its border — and the division's widest pair needs
+         * **320**, so round 30's `Vasco da Gama 0 × 0 Clube do Remo` lost 5px
+         * off one name and 6px off the other. `FIXTURE_ROW`'s own comment
+         * carries the arithmetic and the levers that were measured and
+         * rejected; the other 4px of the fix is its gap, and neither half
+         * closes 11px alone.
+         *
+         * **It is the card's padding that gives way rather than a mark or a
+         * type step**, which is the Classificação's rule one surface over:
+         * below 360dp that table hides the UF and takes 4px off the crest's
+         * margin, reallocating chrome to content rather than dropping any of
+         * it. 12dp is a step on the spacing scale and it moves the kickoff
+         * line and the broadcaster marks with the fixture, so the card stays
+         * one block; from `sm` up nothing changes at all, which is why no
+         * desktop capture can see this.
          */
         <Surface
           as="li"
           filled
           key={match.id}
-          className="flex flex-col items-start gap-1.5 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4"
+          className="flex flex-col items-start gap-1.5 px-3 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:px-4"
         >
           <div className="min-w-0 max-w-full">
             {onSelectMatch ? (

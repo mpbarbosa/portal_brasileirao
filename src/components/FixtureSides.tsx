@@ -111,5 +111,29 @@ export function FixtureSides({
  * A constant rather than a wrapper element because the caller's element is
  * load-bearing in a way a wrapper cannot be: in a `MatchList` row the flex
  * container **is** the `<a>`, so the whole line is the target.
+ *
+ * **The gap is 4px below `sm` and 6px from there up, and the 8px that buys is
+ * two thirds of a real deficit rather than tidying.** Measured at 375dp on
+ * production at `fe95911`: the row's content box is **309px** and the
+ * division's widest pair needs **320** — `Vasco da Gama` 112.25, two 20px
+ * marks, `0 × 0` 34.83, `Clube do Remo` 108.77 and four 6px gaps — so round
+ * 30's own opening fixture lost 5px off one name and 6px off the other. The
+ * other 8px is the card's padding, in `MatchList`, and the two are owed to
+ * each other: neither closes 11px alone, and the next-worst pair in the
+ * division (`Vasco da Gama` × `Chapecoense`) fits today by **0.3px**, so any
+ * round pairing the top two reproduced it.
+ *
+ * **Chrome gave way rather than content, which is the half worth keeping.**
+ * Shrinking the marks to 18px is 4px and leaves 1px of headroom — not a fix
+ * anybody can stand behind — and 16px takes the monogram's type to 7px, below
+ * the 8px floor `ClubCrest`'s own comment records as checked. Dropping the
+ * names a type step is 28px and gives up the one thing the row is for. The
+ * gap and the padding are the only levers that remove nothing, and together
+ * they leave **5.1px** at the widest pair the division can field.
+ *
+ * It is scoped below `sm` because that is where the deficit is: from `sm` up
+ * the row is beside its chip on a wide line and has never been short. That
+ * also keeps all twenty-four desktop captures out of it, which is a
+ * consequence rather than the reason.
  */
-export const FIXTURE_ROW = "flex items-center gap-1.5";
+export const FIXTURE_ROW = "flex items-center gap-1 sm:gap-1.5";

@@ -9,7 +9,10 @@ import { E2E_NOW, type Page } from "@/tests/e2e/clock";
 export interface MatchesPayload {
   data: {
     matches: Record<string, any>[];
-    clubs: { code: string; shortName: string }[];
+    // Loose for the matches' own reason, one line up: the payload carries a
+    // crest, a `tla` and a state beside these two, and a spec that rewrites a
+    // club name reads the `tla` to build one.
+    clubs: (Record<string, any> & { code: string; shortName: string })[];
   };
 }
 
