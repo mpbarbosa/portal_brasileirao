@@ -1,7 +1,7 @@
 # YouTube — velas do Botafogo
 
 Texto que acompanha [`velas-botafogo.mp4`](velas-botafogo.mp4)
-(1920×1080, 60fps, 22s).
+(1920×1080, 60fps, 24s).
 
 - **Título:** até 100 caracteres. Os títulos abaixo trazem a contagem medida.
 - **Descrição:** até 5.000 caracteres, mas só as duas primeiras linhas aparecem
@@ -9,13 +9,13 @@ Texto que acompanha [`velas-botafogo.mp4`](velas-botafogo.mp4)
 - **Tags:** até 500 caracteres somados, medidos com as vírgulas e os espaços
   exatamente como estão no bloco.
 - **Sem capítulos:** o YouTube exige pelo menos três, o primeiro em 00:00 e cada
-  um com 10s. Um vídeo de 22s não comporta.
+  um com 10s. Um vídeo de 24s não comporta.
 - **Com capa:** `velas-botafogo-miniatura.png`, 1280×720, o quadro do fecho da
   própria cena — a regra que o `scripts/manim/README.md` registra para as velas.
 - **Cortes verticais:** `velas-botafogo-45.mp4` (1080×1350, feed do Instagram) e `velas-botafogo-916.mp4` (1080×1920, Reels e YouTube Short).
 
-> **Os números aqui saem de `scripts/manim/velas-botafogo.json`, rodada 28,
-> snapshot de 2026-09-21** — 12º com 35 pts, 9V 8E 11D, e a oscilação entre
+> **Os números aqui saem de `scripts/manim/velas-botafogo.json`, rodada 30,
+> snapshot de 2026-10-12** — 13º com 35 pts, 9V 8E 12D, e a oscilação entre
 > o 1º e o 18º, que é a faixa que o painel do vídeo imprime. Eles **envelhecem**: um `sync-seed-data` seguido de uma
 > reexportação move o vídeo, e este arquivo não é regerado por nada. Reconferir
 > antes de publicar, contra o JSON e não contra esta página.
@@ -42,20 +42,22 @@ Texto que acompanha [`velas-botafogo.mp4`](velas-botafogo.mp4)
 
 ## Título
 
-Recomendado (79 caracteres):
+Recomendado (65 caracteres):
 
 ```
-Botafogo em velas: do 1º ao 12º, a segunda maior queda, empatada com o Mirassol
+Botafogo em velas: do 1º ao 13º, a segunda maior queda da divisão
 ```
 
-A queda, conferida contra os vinte clubes **e dita com o empate**: são 11
-posições, e o Mirassol cai as mesmas 11 (4º → 15º), portanto o segundo lugar é
-partilhado. E **data o recorte**, que é a única defesa contra
+A queda, conferida contra os vinte clubes: são 12 posições, atrás só das 18 da
+Chapecoense. **O título anterior partilhava esse segundo lugar com o Mirassol e
+já não o partilha**: a queda do Botafogo cresceu de 11 para 12 posições e a do
+Mirassol é de 9 (6º → 15º), então o posto é agora dele sozinho. E **data o
+recorte**, que é a única defesa contra
 alguém assistir daqui a três meses e achar que os números estão errados.
 
 | | título | caracteres | ângulo |
 |---|---|---|---|
-| 2 | `Botafogo em velas: 35 pontos em 28 jogos, 9V 8E 11D` | 51 | o número duro, com o denominador certo |
+| 2 | `Botafogo em velas: 35 pontos em 29 jogos, 9V 8E 12D` | 51 | o número duro, com o denominador certo |
 | 3 | `A campanha do Botafogo rodada a rodada \| Brasileirão 2026 em candlestick` | 72 | genérico e buscável |
 
 **Os apelidos não estão em nenhum deles, e estão nas tags**: é como o torcedor
@@ -66,14 +68,14 @@ busca, e não é como o clube aparece no vídeo nem na tabela.
 ```
 A campanha do Botafogo rodada a rodada, desenhada como vela: o corpo vai da posição em que o clube ABRIU a rodada até onde ele FECHOU, e o pavio cobre a melhor e a pior posição que ele ocupou enquanto a rodada era jogada. Embaixo, no mesmo eixo, os pontos acumulados — a barra é o total e a tampa clara é o que a rodada acrescentou.
 
-Dados até 21/09/2026 (28ª rodada):
-• Botafogo — 12º, 35 pts em 28 jogos
-• 9V · 8E · 11D — 41 gols pró, 45 contra, saldo -4
-• 42% de aproveitamento · oscilou entre o 1º e o 18º
+Dados até 12/10/2026 (30ª rodada):
+• Botafogo — 13º, 35 pts em 29 jogos
+• 9V · 8E · 12D — 42 gols pró, 47 contra, saldo -5
+• 40% de aproveitamento · oscilou entre o 1º e o 18º
 
-O Botafogo tem a segunda maior queda do desenho, empatada: fecha a 1ª rodada em 1º e chega à 28ª em 12º — 11 posições, atrás só das 18 da Chapecoense e do mesmo tamanho da do Mirassol, que cai do 4º ao 15º. Descontadas as duas primeiras rodadas, onde os empatados em nada são ordenados por nome, a campanha ainda fecha entre o 5º e o 18º, então a queda é real e não um artefato da ordenação.
+O Botafogo tem a segunda maior queda do desenho, agora sozinho nesse posto: fecha a 1ª rodada em 1º e chega à 30ª em 13º — 12 posições, atrás só das 18 da Chapecoense. Descontadas as duas primeiras rodadas, onde os empatados em nada são ordenados por nome, a campanha ainda fecha entre o 5º e o 18º, então a queda é real e não um artefato da ordenação.
 
-São 11 derrotas em 28 jogos e 6 rodadas de invencibilidade na maior sequência.
+São 12 derrotas em 29 jogos e 6 rodadas de invencibilidade na maior sequência — e 29 jogos contra 30 rodadas, então há partida em atraso.
 
 As réguas tracejadas que cruzam o desenho são acontecimentos de fora de campo, e cada uma cai na FRONTEIRA entre duas rodadas em vez de sobre uma: a demissão de Martín Anselmi depois da 8ª rodada, a paralisação para a Copa do Mundo depois da 18ª rodada, e a demissão de Franclim Carvalho depois da 23ª rodada. Quando a primeira aparece, o clube vinha de fechar a 8ª em 15º com 7 pts.
 
@@ -98,7 +100,7 @@ carregar o vídeo sozinha.
 Para Short, ou onde a descrição longa não couber.
 
 ```
-A campanha do Botafogo em velas: o corpo vai da posição de abertura à de fechamento da rodada, o pavio mostra até onde o clube subiu e desceu dentro dela, e a barra de baixo são os pontos. As réguas tracejadas marcam as saídas de Martín Anselmi e Franclim Carvalho, e a parada para a Copa. Liderou a 1ª rodada e caiu 11 posições até o 12º. Dados até a 28ª: 35 pts, 9V 8E 11D, saldo -4.
+A campanha do Botafogo em velas: o corpo vai da posição de abertura à de fechamento da rodada, o pavio mostra até onde o clube subiu e desceu dentro dela, e a barra de baixo são os pontos. As réguas tracejadas marcam as saídas de Martín Anselmi e Franclim Carvalho, e a parada para a Copa. Liderou a 1ª rodada e caiu 11 posições até o 12º. Dados até a 30ª: 35 pts, 9V 8E 12D, saldo -5.
 
 Animação em Manim, dados do Portal Brasileirão: https://brasileirao.mpbarbosa.com
 Código: https://github.com/mpbarbosa/portal_brasileirao
@@ -112,7 +114,7 @@ Medido sobre o bloco como está — separado por `, `, que é o que se cola.
 319 caracteres, 23 tags.
 
 ```
-brasileirão, brasileirao 2026, campeonato brasileiro, série a, serie a, botafogo, fogão, fogao, glorioso, alvinegro carioca, campanha do botafogo, campanha rodada a rodada, candlestick, gráfico de velas, futebol brasileiro, visualização de dados, dataviz, manim, python, portal brasileirão, rodada 28, anselmi, franclim
+brasileirão, brasileirao 2026, campeonato brasileiro, série a, serie a, botafogo, fogão, fogao, glorioso, alvinegro carioca, campanha do botafogo, campanha rodada a rodada, candlestick, gráfico de velas, futebol brasileiro, visualização de dados, dataviz, manim, python, portal brasileirão, rodada 30, anselmi, franclim
 ```
 
 `anselmi` e `franclim` entram porque o vídeo agora **marca** essa saída, e é assim que o torcedor

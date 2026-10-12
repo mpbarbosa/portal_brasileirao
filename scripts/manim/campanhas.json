@@ -1,5 +1,5 @@
 {
-  "snapshot": "2026-09-21",
+  "snapshot": "2026-10-12",
   "clubs": [
     {
       "code": "1769",
@@ -396,6 +396,34 @@
             "goalsFor": 0,
             "goalsAgainst": 0,
             "result": "E"
+          }
+        },
+        {
+          "round": 29,
+          "position": 2,
+          "points": 60,
+          "played": 29,
+          "match": {
+            "opponent": "Bahia",
+            "opponentTla": "BAH",
+            "home": true,
+            "goalsFor": 1,
+            "goalsAgainst": 0,
+            "result": "V"
+          }
+        },
+        {
+          "round": 30,
+          "position": 2,
+          "points": 63,
+          "played": 30,
+          "match": {
+            "opponent": "Corinthians",
+            "opponentTla": "COR",
+            "home": true,
+            "goalsFor": 4,
+            "goalsAgainst": 1,
+            "result": "V"
           }
         }
       ]
@@ -794,6 +822,34 @@
             "home": true,
             "goalsFor": 2,
             "goalsAgainst": 1,
+            "result": "V"
+          }
+        },
+        {
+          "round": 29,
+          "position": 1,
+          "points": 61,
+          "played": 29,
+          "match": {
+            "opponent": "Santos",
+            "opponentTla": "SAN",
+            "home": false,
+            "goalsFor": 2,
+            "goalsAgainst": 2,
+            "result": "E"
+          }
+        },
+        {
+          "round": 30,
+          "position": 1,
+          "points": 64,
+          "played": 30,
+          "match": {
+            "opponent": "Fluminense",
+            "opponentTla": "FLU",
+            "home": true,
+            "goalsFor": 1,
+            "goalsAgainst": 0,
             "result": "V"
           }
         }

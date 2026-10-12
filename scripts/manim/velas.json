@@ -1,5 +1,5 @@
 {
-  "snapshot": "2026-09-21",
+  "snapshot": "2026-10-12",
   "club": {
     "code": "1765",
     "name": "Fluminense",
@@ -536,6 +536,44 @@
         "goalsFor": 3,
         "goalsAgainst": 1,
         "result": "V"
+      }
+    },
+    {
+      "round": 29,
+      "open": 4,
+      "close": 3,
+      "best": 3,
+      "worst": 5,
+      "points": 3,
+      "totalPoints": 51,
+      "played": 29,
+      "result": "V",
+      "moved": 1,
+      "match": {
+        "opponent": "Coritiba",
+        "home": true,
+        "goalsFor": 4,
+        "goalsAgainst": 0,
+        "result": "V"
+      }
+    },
+    {
+      "round": 30,
+      "open": 3,
+      "close": 3,
+      "best": 3,
+      "worst": 3,
+      "points": 0,
+      "totalPoints": 51,
+      "played": 30,
+      "result": "D",
+      "moved": 0,
+      "match": {
+        "opponent": "Flamengo",
+        "home": false,
+        "goalsFor": 0,
+        "goalsAgainst": 1,
+        "result": "D"
       }
     }
   ],

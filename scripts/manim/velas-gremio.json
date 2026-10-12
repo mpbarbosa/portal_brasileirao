@@ -1,5 +1,5 @@
 {
-  "snapshot": "2026-09-21",
+  "snapshot": "2026-10-12",
   "club": {
     "code": "1767",
     "name": "Grêmio",
@@ -535,6 +535,44 @@
         "home": true,
         "goalsFor": 0,
         "goalsAgainst": 0,
+        "result": "E"
+      }
+    },
+    {
+      "round": 29,
+      "open": 17,
+      "close": 18,
+      "best": 17,
+      "worst": 18,
+      "points": 1,
+      "totalPoints": 30,
+      "played": 29,
+      "result": "E",
+      "moved": -1,
+      "match": {
+        "opponent": "Clube do Remo",
+        "home": false,
+        "goalsFor": 1,
+        "goalsAgainst": 1,
+        "result": "E"
+      }
+    },
+    {
+      "round": 30,
+      "open": 18,
+      "close": 18,
+      "best": 18,
+      "worst": 18,
+      "points": 1,
+      "totalPoints": 31,
+      "played": 30,
+      "result": "E",
+      "moved": 0,
+      "match": {
+        "opponent": "Internacional",
+        "home": true,
+        "goalsFor": 1,
+        "goalsAgainst": 1,
         "result": "E"
       }
     }

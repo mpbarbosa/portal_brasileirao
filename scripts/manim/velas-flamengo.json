@@ -1,5 +1,5 @@
 {
-  "snapshot": "2026-09-21",
+  "snapshot": "2026-10-12",
   "club": {
     "code": "1783",
     "name": "Flamengo",
@@ -535,6 +535,44 @@
         "home": true,
         "goalsFor": 2,
         "goalsAgainst": 1,
+        "result": "V"
+      }
+    },
+    {
+      "round": 29,
+      "open": 1,
+      "close": 1,
+      "best": 1,
+      "worst": 1,
+      "points": 1,
+      "totalPoints": 61,
+      "played": 29,
+      "result": "E",
+      "moved": 0,
+      "match": {
+        "opponent": "Santos",
+        "home": false,
+        "goalsFor": 2,
+        "goalsAgainst": 2,
+        "result": "E"
+      }
+    },
+    {
+      "round": 30,
+      "open": 1,
+      "close": 1,
+      "best": 1,
+      "worst": 1,
+      "points": 3,
+      "totalPoints": 64,
+      "played": 30,
+      "result": "V",
+      "moved": 0,
+      "match": {
+        "opponent": "Fluminense",
+        "home": true,
+        "goalsFor": 1,
+        "goalsAgainst": 0,
         "result": "V"
       }
     }

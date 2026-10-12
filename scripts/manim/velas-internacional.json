@@ -1,5 +1,5 @@
 {
-  "snapshot": "2026-09-21",
+  "snapshot": "2026-10-12",
   "club": {
     "code": "6684",
     "name": "Internacional",
@@ -408,14 +408,14 @@
     {
       "round": 22,
       "open": 16,
-      "close": 16,
+      "close": 17,
       "best": 16,
       "worst": 17,
       "points": 1,
       "totalPoints": 23,
       "played": 22,
       "result": "E",
-      "moved": 0,
+      "moved": -1,
       "match": {
         "opponent": "Palmeiras",
         "home": false,
@@ -426,7 +426,7 @@
     },
     {
       "round": 23,
-      "open": 16,
+      "open": 17,
       "close": 16,
       "best": 16,
       "worst": 17,
@@ -434,7 +434,7 @@
       "totalPoints": 24,
       "played": 23,
       "result": "E",
-      "moved": 0,
+      "moved": 1,
       "match": {
         "opponent": "Clube do Remo",
         "home": true,
@@ -536,6 +536,44 @@
         "goalsFor": 0,
         "goalsAgainst": 1,
         "result": "D"
+      }
+    },
+    {
+      "round": 29,
+      "open": 18,
+      "close": 17,
+      "best": 17,
+      "worst": 18,
+      "points": 3,
+      "totalPoints": 31,
+      "played": 29,
+      "result": "V",
+      "moved": 1,
+      "match": {
+        "opponent": "Corinthians",
+        "home": true,
+        "goalsFor": 2,
+        "goalsAgainst": 1,
+        "result": "V"
+      }
+    },
+    {
+      "round": 30,
+      "open": 17,
+      "close": 17,
+      "best": 17,
+      "worst": 17,
+      "points": 1,
+      "totalPoints": 32,
+      "played": 30,
+      "result": "E",
+      "moved": 0,
+      "match": {
+        "opponent": "Grêmio",
+        "home": false,
+        "goalsFor": 1,
+        "goalsAgainst": 1,
+        "result": "E"
       }
     }
   ],
