@@ -62,7 +62,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       AWS_REGION: sa-east-1
-      INSTANCE_ID: i-03a9afc8a469edc89
+      INSTANCE_ID: i-0ca13c62d0d9d0d00
       SITE_URL: https://brasileirao.mpbarbosa.com
       HEALTH_ATTEMPTS: ${{ github.event.inputs.health_attempts || '5' }}
       MODE: ${{ github.event.inputs.mode || 'health' }}
@@ -190,7 +190,7 @@ jobs:
             "echo PATCHED=$n",
             "if [ \"$n\" != 1 ]; then echo ABORTED_AT_GATE; rm -rf \"$S\"; echo SEVEN_EXIT=9; exit 0; fi",
             "rc=0",
-            "sudo -u ubuntu env HEALTH_ATTEMPTS=\($ha) bash \"$S/shell_scripts/07_install_release.sh\" \"$S\" || rc=$?",
+            "sudo -u ubuntu env PATH=/opt/node-brasileirao/bin:$PATH HEALTH_ATTEMPTS=\($ha) bash \"$S/shell_scripts/07_install_release.sh\" \"$S\" || rc=$?",
             "echo SEVEN_EXIT=$rc",
             "rm -rf \"$S\""
           ]}')

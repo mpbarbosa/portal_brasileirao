@@ -43,7 +43,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       AWS_REGION: sa-east-1
-      INSTANCE_ID: i-03a9afc8a469edc89
+      INSTANCE_ID: i-0ca13c62d0d9d0d00
       ARTIFACT_BUCKET: portal-brasileirao-deploy-655139684612
       SITE_URL: https://brasileirao.mpbarbosa.com
       TARGET_SHA: ${{ github.event.inputs.sha }}
@@ -180,7 +180,7 @@ jobs:
               "trap 'rm -rf \"$STAGING\"' EXIT INT TERM",
               "sudo -u ubuntu aws s3 cp \"s3://$BUCKET/$KEY\" \"$STAGING/release.tar.gz\" --region \($region)",
               "sudo -u ubuntu tar -xzf \"$STAGING/release.tar.gz\" -C \"$STAGING\"",
-              "sudo -u ubuntu bash \"$STAGING/shell_scripts/07_install_release.sh\" \"$STAGING\""
+              "sudo -u ubuntu env PATH=/opt/node-brasileirao/bin:$PATH bash \"$STAGING/shell_scripts/07_install_release.sh\" \"$STAGING\""
             ]
           }')
 
