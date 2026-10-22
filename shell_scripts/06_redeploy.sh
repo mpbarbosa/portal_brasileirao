@@ -20,7 +20,9 @@
 # Environment variables:
 #   DEPLOY_DIR        Default: /var/www/portal_brasileirao
 #   DEPLOY_SERVICE    Default: portal-brasileirao
-#   HEALTH_URL        Default: http://127.0.0.1:3000/api/health
+#   HEALTH_URL        Default: derived from PORT in $DEPLOY_DIR/.env as
+#                     http://127.0.0.1:$PORT/api/health. NOT hardcoded -- see
+#                     the derivation below for why guessing is unsafe.
 #   HEALTH_ATTEMPTS   Health poll attempts, one per second. Default: 30
 #   ROLLBACK_FROM     A directory holding dist/, package.json and
 #                     package-lock.json to flip back to. Unset disables
@@ -37,7 +39,7 @@ set -euo pipefail
 
 DEPLOY_DIR="${DEPLOY_DIR:-/var/www/portal_brasileirao}"
 SERVICE_NAME="${DEPLOY_SERVICE:-portal-brasileirao}"
-HEALTH_URL="${HEALTH_URL:-http://127.0.0.1:3000/api/health}"
+HEALTH_URL="${HEALTH_URL:-}"
 HEALTH_ATTEMPTS="${HEALTH_ATTEMPTS:-30}"
 ROLLBACK_FROM="${ROLLBACK_FROM:-}"
 
@@ -64,10 +66,15 @@ install_and_restart() {
     sudo systemctl restart "$SERVICE_NAME" || return 1
 }
 
+# Two conditions, and the second is the one that was missing. `"status":"ok"`
+# says SOMETHING is healthy at that URL; `"sha"` says it is THIS application.
+# No other service in the fleet reports a build sha from /api/health, so the
+# pair cannot be satisfied by a neighbour that happens to share a port.
 wait_for_health() {
-    local _
+    local _ body
     for _ in $(seq 1 "$HEALTH_ATTEMPTS"); do
-        if curl -sf "$HEALTH_URL" 2>/dev/null | grep -q '"status":"ok"'; then
+        body="$(curl -sf "$HEALTH_URL" 2>/dev/null || true)"
+        if [[ "$body" == *'"status":"ok"'* && "$body" == *'"sha"'* ]]; then
             return 0
         fi
         sleep 1
@@ -101,6 +108,28 @@ if [[ ! -f "$DEPLOY_DIR/.env" ]]; then
     echo "Error: $DEPLOY_DIR/.env not found. Run 02_create_env.sh first." >&2
     exit 1
 fi
+
+# The port is whatever .env tells systemd to give the app, and on a host that
+# runs more than one service it cannot be assumed. This script used to default
+# to 3000. After the 2026-10-22 consolidation brasileirao listens on 3002 on a
+# host where 3000 belongs to busca_vagas_api -- which answers /api/health with
+# 200 and "status":"OK". One letter of case is all that stopped this gate from
+# certifying a neighbouring service's health as this release's own, reporting a
+# green deploy over an arbitrarily broken app and never firing the flip-back.
+#
+# So: read the port, and refuse rather than guess. A gate that guesses wrong in
+# the passing direction is worse than no gate, because it is believed.
+if [[ -z "$HEALTH_URL" ]]; then
+    app_port="$(sed -n 's/^PORT=["'"'"']\{0,1\}\([0-9]\{1,\}\)["'"'"']\{0,1\}[[:space:]]*$/\1/p' \
+                "$DEPLOY_DIR/.env" | tail -n 1)"
+    if [[ -z "$app_port" ]]; then
+        echo "Error: no PORT in $DEPLOY_DIR/.env and HEALTH_URL is unset." >&2
+        echo "Refusing to guess a port: see the comment above this check." >&2
+        exit 1
+    fi
+    HEALTH_URL="http://127.0.0.1:${app_port}/api/health"
+fi
+echo "==> Health gate: ${HEALTH_URL}"
 
 cd "$DEPLOY_DIR"
 
