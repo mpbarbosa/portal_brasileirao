@@ -1,5 +1,24 @@
 # Production environment memory
 
+> **SUPERSEDED IN PART — 2026-10-22.** The host described below is no longer the
+> production host. `brasileirao.mpbarbosa.com` was consolidated onto
+> `i-0ca13c62d0d9d0d00` (t3.small, `18.229.20.196`), which also serves
+> copa2026.mpbarbosa.com and mpbarbosa.com. `i-03a9afc8a469edc89` /
+> `54.232.242.45` still exists but serves no name.
+>
+> The capture below is left intact rather than edited, because it is a
+> point-in-time record and rewriting it would destroy the provenance the next
+> paragraph is at pains to establish. Read every machine figure here as
+> historical.
+>
+> **One figure has changed in kind, not just in value.** The new host runs
+> **two Node majors at once**: `/usr/local/bin/node` is 25.2.1 for the
+> mpbarbosa.com stack, which requires `>=25.2.1`, while this app requires
+> `22.x` and runs from `/opt/node-brasileirao` (-> `/opt/node-v22.23.2`). The
+> note below that `node -v` on the host agrees with `.nvmrc` is no longer
+> true of the host's default `node` — only of the one this app's unit and
+> deploy path invoke explicitly.
+
 Captured: 2026-08-27T07:40-03:00. Imported from the sibling repo
 `agora_na_copa_2026` and rewritten for this project's host and pipeline.
 

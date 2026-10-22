@@ -25,8 +25,15 @@ SERVER_NAME=brasileirao.mpbarbosa.com CERTBOT_EMAIL=you@example.com \
 
 ## The live host
 
-Instance `i-03a9afc8a469edc89` (t3.micro, sa-east-1a) at `54.232.242.45`, serving
-https://brasileirao.mpbarbosa.com. The address is an Elastic IP (`eipalloc-07c282fdbbf3a18f6`), so it survives a stop/start.
+Instance `i-0ca13c62d0d9d0d00` (t3.small, sa-east-1) at `18.229.20.196`, serving
+https://brasileirao.mpbarbosa.com alongside copa2026.mpbarbosa.com and
+mpbarbosa.com. Consolidated onto this host on 2026-10-22; the former host
+`i-03a9afc8a469edc89` (t3.micro at `54.232.242.45`) no longer serves any name.
+
+**This host runs two Node majors.** `/usr/local/bin/node` is 25.2.1 for the
+mpbarbosa.com stack, which requires it. This app requires 22.x, so Node 22.23.2
+lives at `/opt/node-v22.23.2` with a stable symlink `/opt/node-brasileirao`.
+The systemd unit and every deploy path must use that symlink, not `PATH`.
 
 ## Deploying
 
@@ -34,7 +41,7 @@ Pushing to `main` deploys automatically once CI is green — see the `deploy` jo
 `.github/workflows/ci.yml`. To deploy by hand from your workstation:
 
 ```sh
-DEPLOY_HOST=ubuntu@54.232.242.45 DEPLOY_SSH_KEY=~/.ssh/portal-brasileirao.pem npm run deploy
+DEPLOY_HOST=ubuntu@18.229.20.196 DEPLOY_SSH_KEY=~/.ssh/portal-brasileirao.pem npm run deploy
 ```
 
 Preview exactly what would change without touching the host:
@@ -96,7 +103,7 @@ If that still fails, the instance carries an SSM instance profile, so this works
 regardless of IP or security group:
 
 ```sh
-AWS_PROFILE=mpb aws ssm start-session --target i-03a9afc8a469edc89
+AWS_PROFILE=mpb aws ssm start-session --target i-0ca13c62d0d9d0d00
 ```
 
 ## Monitoring — currently OFF

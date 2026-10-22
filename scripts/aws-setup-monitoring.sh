@@ -26,7 +26,7 @@
 #
 # Environment variables:
 #   ALERT_EMAIL   Where alerts go. Default: mpbarbosa@gmail.com
-#   INSTANCE_ID   Default: i-03a9afc8a469edc89
+#   INSTANCE_ID   Default: i-0ca13c62d0d9d0d00
 #   DOMAIN        Default: brasileirao.mpbarbosa.com
 #
 # Cost: roughly US$2-3/month — alarms at US$0.10 each, the health check at
@@ -44,7 +44,7 @@ if [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then
 fi
 
 ALERT_EMAIL="${ALERT_EMAIL:-mpbarbosa@gmail.com}"
-INSTANCE_ID="${INSTANCE_ID:-i-03a9afc8a469edc89}"
+INSTANCE_ID="${INSTANCE_ID:-i-0ca13c62d0d9d0d00}"
 DOMAIN="${DOMAIN:-brasileirao.mpbarbosa.com}"
 APP_REGION="sa-east-1"
 GLOBAL_REGION="us-east-1"
