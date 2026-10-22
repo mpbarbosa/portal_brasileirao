@@ -115,7 +115,13 @@ class H(http.server.BaseHTTPRequestHandler):
             running = io.open(os.path.join(STATE, "running"), encoding="utf-8").read().strip()
         except OSError:
             running = ""
-        if running.startswith("GOOD"):
+        # A different service sharing the port: answers 200 and "status":"ok",
+        # but reports no build sha. This is busca_vagas_api's shape, which is
+        # what port 3000 actually serves on the consolidated host.
+        if os.path.exists(os.path.join(STATE, "neighbour")):
+            body = b'{"status":"ok","version":"1.5.0","name":"busca_vagas_api"}'
+            self.send_response(200)
+        elif running.startswith("GOOD"):
             sha = running.split()[-1].replace("sha=", "")
             body = ('{"status":"ok","sha":"%s","builtAt":"2026-08-27T00:00:00Z"}' % sha).encode()
             self.send_response(200)
@@ -373,9 +379,54 @@ check "exit code" 0 "$RC"
 check "did restart the service" yes "$(grep -q 'systemctl restart' "$STUB_LOG" && echo yes || echo no)"
 stop_env
 
+# -------------------------------------------------------------------------
+# 9. THE GATE MUST KNOW WHICH PORT IT IS GATING. Hardcoding 3000 pointed it at
+#    a neighbouring service once the fleet was consolidated onto one host.
+# -------------------------------------------------------------------------
+echo "9  HEALTH_URL unset, port read from .env                 -> exit 0, gate on that port"
+start_env
+rehearsal_port="$(cat "$STATE/port")"
+printf 'APP_URL=http://example.invalid\nPORT="%s"\n' "$rehearsal_port" > "$DEPLOY_DIR/.env"
+unset HEALTH_URL
+make_release "$WORK/old" GOOD aaaa1111
+install_as_current "$WORK/old"
+make_release "$WORK/new" GOOD bbbb2222
+deploy_release "$WORK/new"
+check "exit code" 0 "$RC"
+check "announces the derived gate" yes "$(said "Health gate: http://127.0.0.1:$rehearsal_port/api/health")"
+stop_env
+
+echo "9b no PORT in .env and no HEALTH_URL                     -> exit 1, refuses to guess"
+start_env
+echo "APP_URL=http://example.invalid" > "$DEPLOY_DIR/.env"
+unset HEALTH_URL
+make_release "$WORK/new" GOOD bbbb2222
+deploy_release "$WORK/new"
+check "exit code" 1 "$RC"
+check "refuses rather than guessing" yes "$(said 'Refusing to guess a port')"
+stop_env
+
+# -------------------------------------------------------------------------
+# 10. THE CASE THAT MOTIVATED ALL OF THIS. A neighbouring service answering
+#     200 with "status":"ok" must not satisfy this release's health gate.
+#     In production the only thing that prevented it was that busca_vagas_api
+#     spells it "OK" -- a letter of case, not a guard.
+# -------------------------------------------------------------------------
+echo "10 a neighbour answers ok but reports no sha             -> not this app, not healthy"
+start_env
+: > "$STATE/neighbour"
+make_release "$WORK/old" GOOD aaaa1111
+install_as_current "$WORK/old"
+make_release "$WORK/new" GOOD bbbb2222
+deploy_release "$WORK/new"
+check "exit code" 3 "$RC"
+check "never certified the neighbour" no "$(said 'Healthy:')"
+check "did attempt the flip-back" yes "$(said 'Flipping back')"
+stop_env
+
 echo ""
 if [[ "$FAIL" -eq 0 ]]; then
-    echo "All $PASS assertions held across 10 branches."
+    echo "All $PASS assertions held across 13 branches."
 else
     echo "$PASS passed, $FAIL FAILED."
 fi
