@@ -50,6 +50,18 @@ permissions:
 jobs:
   reconcile:
     name: Deploy main if production is behind it
+    # 42-68 seconds across the last twenty successful runs: this job curls
+    # /api/health, compares two commits and may dispatch ci.yml. It does not
+    # wait for that deploy, so it has no reason to run long.
+    #
+    # The cap matters more here than the duration suggests. With
+    # `cancel-in-progress: false` on the reconcile-production group, GitHub
+    # keeps at most one PENDING run, so a single stuck run does not merely burn
+    # 360 billed minutes against a 2,000/month quota -- it blocks the group,
+    # and every */15 tick behind it queues and is replaced. Drift detection
+    # would be silently off for six hours while the schedule still looked
+    # healthy, which is precisely the failure this workflow exists to catch.
+    timeout-minutes: 10
     runs-on: ubuntu-latest
     env:
       SITE_URL: https://brasileirao.mpbarbosa.com
