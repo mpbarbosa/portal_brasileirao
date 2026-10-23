@@ -19,6 +19,16 @@ permissions:
 jobs:
   check:
     name: Type-check, unit tests, build
+    # Every job here carries a timeout because none did, and the default is
+    # GitHub's 6-hour ceiling. On a private repo that is 360 billed minutes
+    # from one stuck job, against a 2,000/month quota -- 18 percent of the
+    # month spent going nowhere. Noticed on 2026-10-22 when an e2e step sat at
+    # 21 minutes and had to be cancelled by hand to find out whether it was
+    # slow or hung.
+    #
+    # Values are set from measured durations across six successful runs, not
+    # guessed. This job: 1.1-1.4 min observed.
+    timeout-minutes: 10
     runs-on: ubuntu-latest
     outputs:
       # The digest of the payload this job proved. `deploy` asserts the artifact
@@ -275,6 +285,8 @@ jobs:
 
   screenshots:
     name: README screenshots are current
+    # 0.8-1.1 min observed.
+    timeout-minutes: 10
     runs-on: ubuntu-latest
     # Deliberately NOT in `deploy`'s `needs`. This reports a documentation debt,
     # and a documentation debt must never be able to stop a release. A stale
@@ -395,6 +407,12 @@ jobs:
 
   e2e:
     name: End-to-end (Playwright)
+    # 9.4-20.7 min observed, and that spread is real rather than noise: the
+    # 20.7 was a legitimate PASS in which `playwright install-deps` alone took
+    # 9m53s on slow package mirrors. A 25-minute cap would have killed a run
+    # that was working. 35 leaves roughly 70 percent headroom over the worst
+    # success while still capping the damage at a seventeenth of the default.
+    timeout-minutes: 35
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -476,6 +494,12 @@ jobs:
 
   deploy:
     name: Deploy to production
+    # 1.2-2.0 min observed on the happy path. The ceiling is set well above
+    # that because the slow path is the one worth surviving: an unhealthy
+    # release spends HEALTH_ATTEMPTS seconds failing, flips back, reinstalls
+    # dependencies and waits again. Timing that path out midway would leave the
+    # host in exactly the state the flip-back exists to prevent.
+    timeout-minutes: 15
     needs: [check, e2e]
     # Any run *for main*, not only a push-triggered one. The event gate this
     # replaces made workflow_dispatch useless precisely when it was needed: with
@@ -764,6 +788,8 @@ jobs:
 
   tag:
     name: Tag the release
+    # 0.2-0.6 min observed.
+    timeout-minutes: 10
     # `needs: deploy` is the whole invariant: a deploy tag exists if and only if
     # a release reached production and answered from it. A pull_request run
     # skips `deploy`, so this skips with it — no `if:` of its own is needed, and
