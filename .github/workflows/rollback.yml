@@ -40,6 +40,17 @@ permissions:
 jobs:
   rollback:
     name: Install a stored release over what is live
+    # REASONED, not measured, and the distinction matters. All three recorded
+    # runs took 13-15 seconds, but every one of them stopped at "Stop here when
+    # no sha was given" and skipped the install and verify steps entirely. They
+    # measure the refusal path, which touches no host. A cap derived from them
+    # would abort a real rollback within seconds of it starting.
+    #
+    # So this is matched to ci.yml's deploy job instead, which performs the
+    # same host work -- S3 download, npm ci, restart, health wait -- and is
+    # observed at 1.2-2.0 min. A rollback is run when something is already
+    # wrong, so the cap errs generous.
+    timeout-minutes: 15
     runs-on: ubuntu-latest
     env:
       AWS_REGION: sa-east-1

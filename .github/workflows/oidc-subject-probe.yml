@@ -31,6 +31,8 @@ permissions:
 jobs:
   ref-form:
     name: Subject with NO environment (what rollback.yml and the drill send)
+    # 5s both runs. This job assumes a role and prints the subject claim.
+    timeout-minutes: 10
     runs-on: ubuntu-latest
     steps:
       - name: Print the subject claim
@@ -51,6 +53,8 @@ jobs:
 
   environment-form:
     name: Subject WITH environment production (what a gap-B deploy would send)
+    # 2s and 4s.
+    timeout-minutes: 10
     runs-on: ubuntu-latest
     environment:
       name: production

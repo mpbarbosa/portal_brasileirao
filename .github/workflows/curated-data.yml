@@ -47,6 +47,10 @@ concurrency:
 jobs:
   check:
     name: Check the curated data
+    # 116s and 326s -- only two runs, and nearly 3x apart. With a sample that
+    # small and that wide, a tight cap would be guessing. It runs monthly, so
+    # headroom costs nothing and a false timeout would cost a month.
+    timeout-minutes: 20
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
