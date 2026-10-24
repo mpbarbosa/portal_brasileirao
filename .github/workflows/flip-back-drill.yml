@@ -59,6 +59,16 @@ permissions:
 jobs:
   drill:
     name: Install a deliberately unhealthy release and prove the flip-back
+    # 32s and 36s for the two runs that actually drilled; the other five took
+    # 6-17s and skipped "Run the drill" because DRILL was not typed. Only the
+    # first pair measures anything.
+    #
+    # Capped well above that because the drill deliberately exercises the slow
+    # path -- install an unhealthy release, burn health_attempts, flip back,
+    # verify -- and health_attempts is a workflow input that can be raised.
+    # Cutting a drill off midway would leave the host in the state the drill
+    # exists to prove recoverable.
+    timeout-minutes: 20
     runs-on: ubuntu-latest
     env:
       AWS_REGION: sa-east-1

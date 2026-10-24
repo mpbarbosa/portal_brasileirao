@@ -24,6 +24,9 @@ permissions:
 jobs:
   sync:
     name: Refresh src/data/broadcasts.ts
+    # 26s and 31s on the two successful runs; the nine failures ran 26-58s,
+    # so even the slow paths are well inside a minute.
+    timeout-minutes: 15
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
