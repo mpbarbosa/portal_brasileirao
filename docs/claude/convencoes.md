@@ -471,10 +471,32 @@ enforces rather than early and carved-out.
   like `text-ink` against the base's `text-ink-soft` is a coin flip. Change the base, or
   live with it.
 - **Brazilian Portuguese copy** — all user-facing text and error messages are pt-BR in the
-  football-broadcast voice. `CONTEXT.md` is the domain glossary: read it before naming a new
-  concept, and add the term there in the same commit that introduces it. Each entry carries
-  an `_Avoid_` line recording names that were considered and rejected, so a rejected name
-  does not quietly come back.
+  football-broadcast voice. `CONTEXT.md` is the domain glossary: **consult it before naming
+  a new concept, and add the term there in the same commit that introduces it.** Each entry
+  carries an `_Avoid_` line recording names that were considered and rejected, so a rejected
+  name does not quietly come back.
+
+  **Consult it by term — do not read it whole.** It is 146.701 bytes in one flat
+  `## Language` section, 108 entries and no subsections, so there is no "relevant part" to
+  open: the unit of lookup is the headword. `cat` costs ~36k tokens that are then re-sent on
+  every later tool call of that session; one lookup costs ~0,5k. Measured 2026-11-14:
+
+      grep -n -A6 '^\*\*Campanha\*\*:' CONTEXT.md     # 506 bytes
+      cat CONTEXT.md                                   # 146.701 bytes
+
+  Every entry begins at column 1 as `**Term**:`, so anchoring on `^\*\*` is what stops a
+  lookup matching the dozens of bold run-ins mid-paragraph. To survey the vocabulary instead
+  of one word, `grep -n '^\*\*[^*]*\*\*:' CONTEXT.md` lists all 108 headwords for 2.746
+  bytes.
+
+  **The headwords are Portuguese and the definitions are English, and that mismatch has
+  already cost a session real time.** PR #461 grepped `fachada` — the word from its own
+  commit message — got 0 hits, and read the silence as a bad deploy when it was a bad
+  instrument: the term is filed under its Portuguese headword and described in English, so
+  `facade` was the hit (`fachada` 0, `facade` 4, re-measured 2026-11-14). **A 0 from this
+  file means "wrong word", not "absent".** Confirm with a known-negative — run the same
+  search for something you know *is* there, and if that also returns 0 your pattern is
+  broken, not the glossary.
 - **Path alias `@/*` maps to the repo root**, declared in both `tsconfig.json` and
   `vite.config.ts`. Imports read `@/standings-core`, `@/src/types`.
 - **Server dependencies go in `dependencies`, not `devDependencies`** — the build bundles
