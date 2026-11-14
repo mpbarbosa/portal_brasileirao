@@ -37,66 +37,68 @@ const CONTROLS: { page: string; label: string; selector: string }[] = [
 ];
 
 /**
- * Measure a control, and only once the page it sits on has settled.
+ * Measure a control, and refuse to measure a detached node.
  *
- * **The wait is the point, and it is not defensive padding.** This spec failed
- * in CI on 2026-11-14 (run 43622584813, both the attempt and its retry) with
- * `back link is 0px tall` — and the trace's action snapshot, not a guess, shows
- * what `main` held at the instant of the measurement:
+ * **The cause, and it is a test defect rather than a product one.** This spec
+ * failed in CI on 2026-11-14 (run 43622584813, both the attempt and its retry)
+ * with `back link is 0px tall`. `/partida/:id` opens on `NotFoundScreen` while
+ * `loading`, which renders *the same* `← Voltar` button, and `main
+ * button:has-text('Voltar')` matches it as readily as `MatchPage`'s. A locator
+ * resolves to a handle and the `evaluate` runs a round-trip later; if React
+ * swaps the node in between, the handle stays valid but points at nothing in the
+ * document, and `getBoundingClientRect()` on a detached node answers **all
+ * zeros**. A zero then reads exactly like a control that lost its 48dp floor,
+ * which is the one thing this spec exists to report.
  *
- *     ["MAIN", {}, ["BUTTON", {class: "inline-flex min-h-12 …"}, "← Voltar"],
- *                  ["P", {role: "status"}, "Carregando página…"]]
+ * **Measured, holding one handle across the loading→match swap** (PR #714, whose
+ * finding and fix this carries): `{h: 48, connected: true}` before, `{h: 0,
+ * connected: false}` after, and a node re-queried at that same instant `{h: 48,
+ * connected: true}`. The back link is never short; it was never attached.
  *
- * So it measured the control on a page still loading. `/partida/:id` draws its
- * back link from `NotFoundScreen` while `loading` and from `MatchPage` once the
- * fixture arrives — two different components, so React swaps the node — and the
- * spec's own subject is the settled control, never whatever stands in for it
- * mid-flight.
+ * **A correction, recorded because the wrong version shipped in PR #713 and the
+ * next session would have read it as settled.** That commit's comment said this
+ * node-swap reading had been "probed and disproved", on the grounds that a
+ * locator re-resolves on every call. The re-resolution is real and the
+ * refutation was not: the probe behind it waited two seconds and *then*
+ * measured, so it re-queried after the swap had already happened and never
+ * exercised the window between resolve and evaluate, which is the only window
+ * where the staleness lives. #714 measured that window directly. A probe that
+ * cannot observe the mechanism it is aimed at proves nothing about it.
  *
- * **What is honest about this:** the 0 itself was never reproduced locally, and
- * two readings of why were PROBED AND DISPROVED rather than left as plausible.
- * A Playwright locator re-resolves on every call, so a React node swap is not
- * it — the probe measured the new node and returned 48. And `evaluate` does not
- * gate on visibility: what made a `display:none` probe wait ~3s was the text
- * engine, which does not match hidden subtrees, so the selector simply found
- * nothing until it appeared. So what is measured is the *condition* at failure
- * time, and this removes it.
- *
- * **There is deliberately no `toBeVisible()` gate here, and that is a finding
- * rather than an omission.** Adding one was the first version of this fix; a
- * mutation — `height: 0 !important` on the control — showed it fails *first*,
- * with Playwright's generic "element is not visible", which pre-empts the throw
- * below and throws away the one thing a future 0 needs to carry. Playwright
- * counts a zero-height box as not visible, so the gate and the diagnostic
- * cannot both fire, and the diagnostic is worth more.
+ * **There is deliberately no `toBeVisible()` gate, and that one is still a
+ * finding.** It was the first attempt at a fix; a mutation — `height: 0
+ * !important` on the control — showed it fails *first*, with Playwright's
+ * generic "element is not visible", pre-empting the diagnostic below. Playwright
+ * counts a zero-height box as not visible, so the gate and the diagnostic cannot
+ * both fire, and the diagnostic is worth more.
  */
 const boxOf = async (page: Page, selector: string) => {
-  // Every page in CONTROLS renders this paragraph while it waits for data, and
-  // drops it when the data lands; `toHaveCount(0)` therefore reads "settled".
-  await expect(page.getByText(/^Carregando/)).toHaveCount(0);
+  const box = await page
+    .locator(selector)
+    .first()
+    .evaluate((el) => {
+      // Refusing beats reporting: a detached node's rect is all zeros, and a
+      // zero is indistinguishable from the real defect this spec watches for.
+      if (!el.isConnected) throw new Error("the element detached while being measured");
+      const r = el.getBoundingClientRect();
+      const cs = getComputedStyle(el);
+      return {
+        h: Math.round(r.height),
+        w: Math.round(r.width),
+        display: cs.display,
+        minHeight: cs.minHeight,
+        html: el.outerHTML.slice(0, 120),
+      };
+    });
 
-  const control = page.locator(selector).first();
-
-  const box = await control.evaluate((el) => {
-    const r = el.getBoundingClientRect();
-    const cs = getComputedStyle(el);
-    return {
-      h: Math.round(r.height),
-      w: Math.round(r.width),
-      display: cs.display,
-      minHeight: cs.minHeight,
-      connected: el.isConnected,
-      html: el.outerHTML.slice(0, 120),
-    };
-  });
-
-  // A zero box here is not an assertion failure, it is a measurement that did
-  // not happen — `min-h-12` cannot resolve to 0 on a laid-out element. Say so
-  // with the evidence attached, rather than letting it read as a 47px control.
+  // A zero box on an *attached* element is a different failure, and one nobody
+  // has seen yet: `min-h-12` cannot resolve to 0 once the element has layout.
+  // If it ever happens, say so with the evidence — the `min-height` beside the
+  // `min-h-12` in the class list names an unapplied stylesheet on sight.
   if (box.h === 0 || box.w === 0) {
     throw new Error(
       `measured a ${box.w}x${box.h} box for ${selector}: display=${box.display} ` +
-        `min-height=${box.minHeight} connected=${box.connected} — ${box.html}`,
+        `min-height=${box.minHeight} — ${box.html}`,
     );
   }
 
@@ -110,9 +112,15 @@ test.describe("Alvos de toque", () => {
       await page.goto(path);
       await page.locator("main").waitFor();
 
-      const box = await boxOf(page, selector);
-      expect(box.h, `${label} is ${box.h}px tall`).toBeGreaterThanOrEqual(48);
-      expect(box.w, `${label} is ${box.w}px wide`).toBeGreaterThanOrEqual(48);
+      // Retried, not slept on: `toPass` re-resolves the locator each attempt, so a
+      // node that detached mid-measurement is re-queried instead of being reported
+      // as 0px. A control that genuinely sits below the floor never reaches 48 and
+      // still fails — the retry changes how long the red takes, not whether it comes.
+      await expect(async () => {
+        const box = await boxOf(page, selector);
+        expect(box.h, `${label} is ${box.h}px tall`).toBeGreaterThanOrEqual(48);
+        expect(box.w, `${label} is ${box.w}px wide`).toBeGreaterThanOrEqual(48);
+      }).toPass({ timeout: 5_000 });
     });
   }
 
