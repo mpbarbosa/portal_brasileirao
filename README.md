@@ -251,7 +251,9 @@ circuit breaker opens after 3 consecutive failures and stays open for 60s.
 ## Working with Claude Code
 
 This repository is developed by directing Claude Code rather than by hand.
-[CLAUDE.md](CLAUDE.md) carries the architecture and conventions;
+[CLAUDE.md](CLAUDE.md) is the index — it carries the rules a session needs before
+its first action, and points at [`docs/claude/`](docs/claude/) for the architecture,
+the conventions, the CI and the deploy, read on demand;
 [CONTEXT.md](CONTEXT.md) is the domain glossary — what each Portuguese term means in
 this codebase, and which near-synonyms were rejected and why. Read both before changing
 behaviour, and update them in the same commit when a convention or a term changes.
