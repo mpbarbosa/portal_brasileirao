@@ -36,8 +36,24 @@ const CONTROLS: { page: string; label: string; selector: string }[] = [
   { page: `/partida/${ANY_FIXTURE.id}`, label: "back link", selector: "main button:has-text('Voltar')" },
 ];
 
+/**
+ * **Refuses a detached node instead of measuring one**, and that refusal is the
+ * whole point rather than defensiveness. A locator resolves to a handle and the
+ * `evaluate` runs a round-trip later; if React swaps the node in between, the
+ * handle is still valid but points at nothing in the document, and
+ * `getBoundingClientRect()` on a detached node answers **all zeros**. A zero
+ * then reads exactly like a control that lost its floor, which is the one thing
+ * this spec exists to report — a false negative wearing the costume of a true one.
+ *
+ * Measured 2026-11-14 on `/partida/<id>`, holding one handle across the
+ * loading→match swap: `{h:48, connected:true}` before, `{h:0, connected:false}`
+ * after, and a node re-queried at that same instant `{h:48, connected:true}`.
+ * The back link is never short; it was never attached. This is why the throw is
+ * here and why the caller retries rather than waiting a fixed time.
+ */
 const boxOf = (page: Page, selector: string) =>
   page.locator(selector).first().evaluate((el) => {
+    if (!el.isConnected) throw new Error("the element detached while being measured");
     const r = el.getBoundingClientRect();
     return { h: Math.round(r.height), w: Math.round(r.width) };
   });
@@ -49,9 +65,15 @@ test.describe("Alvos de toque", () => {
       await page.goto(path);
       await page.locator("main").waitFor();
 
-      const box = await boxOf(page, selector);
-      expect(box.h, `${label} is ${box.h}px tall`).toBeGreaterThanOrEqual(48);
-      expect(box.w, `${label} is ${box.w}px wide`).toBeGreaterThanOrEqual(48);
+      // Retried, not slept on: `toPass` re-resolves the locator each attempt, so a
+      // node that detached mid-measurement is re-queried rather than reported as
+      // 0px. A control that genuinely sits below the floor never reaches 48 and
+      // still fails — the retry changes how long the red takes, not whether it comes.
+      await expect(async () => {
+        const box = await boxOf(page, selector);
+        expect(box.h, `${label} is ${box.h}px tall`).toBeGreaterThanOrEqual(48);
+        expect(box.w, `${label} is ${box.w}px wide`).toBeGreaterThanOrEqual(48);
+      }).toPass({ timeout: 5_000 });
     });
   }
 
