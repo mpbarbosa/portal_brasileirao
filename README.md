@@ -255,8 +255,11 @@ This repository is developed by directing Claude Code rather than by hand.
 its first action, and points at [`docs/claude/`](docs/claude/) for the architecture,
 the conventions, the CI and the deploy, read on demand;
 [CONTEXT.md](CONTEXT.md) is the domain glossary — what each Portuguese term means in
-this codebase, and which near-synonyms were rejected and why. Read both before changing
-behaviour, and update them in the same commit when a convention or a term changes.
+this codebase, and which near-synonyms were rejected and why. Read the index and the area
+doc for what you are touching before changing behaviour; the glossary is 146.701 bytes of
+flat entries, so **look a term up in it rather than reading it through** —
+`grep -n -A6 '^\*\*Term\*\*:' CONTEXT.md`. Update both in the same commit when a
+convention or a term changes.
 
 ## License
 
