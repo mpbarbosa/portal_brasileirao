@@ -36,11 +36,72 @@ const CONTROLS: { page: string; label: string; selector: string }[] = [
   { page: `/partida/${ANY_FIXTURE.id}`, label: "back link", selector: "main button:has-text('Voltar')" },
 ];
 
-const boxOf = (page: Page, selector: string) =>
-  page.locator(selector).first().evaluate((el) => {
+/**
+ * Measure a control, and only once the page it sits on has settled.
+ *
+ * **The wait is the point, and it is not defensive padding.** This spec failed
+ * in CI on 2026-11-14 (run 43622584813, both the attempt and its retry) with
+ * `back link is 0px tall` — and the trace's action snapshot, not a guess, shows
+ * what `main` held at the instant of the measurement:
+ *
+ *     ["MAIN", {}, ["BUTTON", {class: "inline-flex min-h-12 …"}, "← Voltar"],
+ *                  ["P", {role: "status"}, "Carregando página…"]]
+ *
+ * So it measured the control on a page still loading. `/partida/:id` draws its
+ * back link from `NotFoundScreen` while `loading` and from `MatchPage` once the
+ * fixture arrives — two different components, so React swaps the node — and the
+ * spec's own subject is the settled control, never whatever stands in for it
+ * mid-flight.
+ *
+ * **What is honest about this:** the 0 itself was never reproduced locally, and
+ * two readings of why were PROBED AND DISPROVED rather than left as plausible.
+ * A Playwright locator re-resolves on every call, so a React node swap is not
+ * it — the probe measured the new node and returned 48. And `evaluate` does not
+ * gate on visibility: what made a `display:none` probe wait ~3s was the text
+ * engine, which does not match hidden subtrees, so the selector simply found
+ * nothing until it appeared. So what is measured is the *condition* at failure
+ * time, and this removes it.
+ *
+ * **There is deliberately no `toBeVisible()` gate here, and that is a finding
+ * rather than an omission.** Adding one was the first version of this fix; a
+ * mutation — `height: 0 !important` on the control — showed it fails *first*,
+ * with Playwright's generic "element is not visible", which pre-empts the throw
+ * below and throws away the one thing a future 0 needs to carry. Playwright
+ * counts a zero-height box as not visible, so the gate and the diagnostic
+ * cannot both fire, and the diagnostic is worth more.
+ */
+const boxOf = async (page: Page, selector: string) => {
+  // Every page in CONTROLS renders this paragraph while it waits for data, and
+  // drops it when the data lands; `toHaveCount(0)` therefore reads "settled".
+  await expect(page.getByText(/^Carregando/)).toHaveCount(0);
+
+  const control = page.locator(selector).first();
+
+  const box = await control.evaluate((el) => {
     const r = el.getBoundingClientRect();
-    return { h: Math.round(r.height), w: Math.round(r.width) };
+    const cs = getComputedStyle(el);
+    return {
+      h: Math.round(r.height),
+      w: Math.round(r.width),
+      display: cs.display,
+      minHeight: cs.minHeight,
+      connected: el.isConnected,
+      html: el.outerHTML.slice(0, 120),
+    };
   });
+
+  // A zero box here is not an assertion failure, it is a measurement that did
+  // not happen — `min-h-12` cannot resolve to 0 on a laid-out element. Say so
+  // with the evidence attached, rather than letting it read as a 47px control.
+  if (box.h === 0 || box.w === 0) {
+    throw new Error(
+      `measured a ${box.w}x${box.h} box for ${selector}: display=${box.display} ` +
+        `min-height=${box.minHeight} connected=${box.connected} — ${box.html}`,
+    );
+  }
+
+  return box;
+};
 
 test.describe("Alvos de toque", () => {
   for (const { page: path, label, selector } of CONTROLS) {
