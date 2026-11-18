@@ -1,5 +1,5 @@
 {
-  "snapshot": "2026-10-12",
+  "snapshot": "2026-11-18",
   "clubs": [
     {
       "code": "1769",
@@ -425,6 +425,69 @@
             "goalsAgainst": 1,
             "result": "V"
           }
+        },
+        {
+          "round": 31,
+          "position": 2,
+          "points": 66,
+          "played": 31,
+          "match": {
+            "opponent": "Athletico-PR",
+            "opponentTla": "CAP",
+            "home": false,
+            "goalsFor": 2,
+            "goalsAgainst": 0,
+            "result": "V"
+          }
+        },
+        {
+          "round": 32,
+          "position": 2,
+          "points": 69,
+          "played": 32,
+          "match": {
+            "opponent": "Bragantino",
+            "opponentTla": "RBB",
+            "home": true,
+            "goalsFor": 2,
+            "goalsAgainst": 0,
+            "result": "V"
+          }
+        },
+        {
+          "round": 33,
+          "position": 2,
+          "points": 70,
+          "played": 33,
+          "match": {
+            "opponent": "Santos",
+            "opponentTla": "SAN",
+            "home": false,
+            "goalsFor": 0,
+            "goalsAgainst": 0,
+            "result": "E"
+          }
+        },
+        {
+          "round": 34,
+          "position": 2,
+          "points": 73,
+          "played": 34,
+          "match": {
+            "opponent": "Clube do Remo",
+            "opponentTla": "CRE",
+            "home": true,
+            "goalsFor": 6,
+            "goalsAgainst": 1,
+            "result": "V"
+          }
+        },
+        {
+          "round": 35,
+          "position": 2,
+          "points": 73,
+          "played": 34,
+          "match": null
         }
       ]
     },
@@ -852,6 +915,69 @@
             "goalsAgainst": 0,
             "result": "V"
           }
+        },
+        {
+          "round": 31,
+          "position": 1,
+          "points": 67,
+          "played": 31,
+          "match": {
+            "opponent": "Bahia",
+            "opponentTla": "BAH",
+            "home": false,
+            "goalsFor": 3,
+            "goalsAgainst": 0,
+            "result": "V"
+          }
+        },
+        {
+          "round": 32,
+          "position": 1,
+          "points": 70,
+          "played": 32,
+          "match": {
+            "opponent": "Atlético-MG",
+            "opponentTla": "CAM",
+            "home": true,
+            "goalsFor": 3,
+            "goalsAgainst": 2,
+            "result": "V"
+          }
+        },
+        {
+          "round": 33,
+          "position": 1,
+          "points": 73,
+          "played": 33,
+          "match": {
+            "opponent": "Vasco da Gama",
+            "opponentTla": "VAS",
+            "home": false,
+            "goalsFor": 4,
+            "goalsAgainst": 1,
+            "result": "V"
+          }
+        },
+        {
+          "round": 34,
+          "position": 1,
+          "points": 76,
+          "played": 34,
+          "match": {
+            "opponent": "Grêmio",
+            "opponentTla": "FBP",
+            "home": true,
+            "goalsFor": 3,
+            "goalsAgainst": 1,
+            "result": "V"
+          }
+        },
+        {
+          "round": 35,
+          "position": 1,
+          "points": 76,
+          "played": 34,
+          "match": null
         }
       ]
     }

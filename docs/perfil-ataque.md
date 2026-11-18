@@ -111,6 +111,73 @@ paragraph.
 
 ---
 
+## Rodada 34 — three falsification tests are met in one window: Coritiba leaves the top of conversão, Palmeiras returns to it, and Bragantino passes Vasco in volume
+
+Written 2026-11-18 against `CLUB_SCOUTS_THROUGH_ROUND = 34`. Thirty-seven days
+after the rodada-29 reading and **five rodadas on from it** — the log has no
+entry for rodadas thirty to thirty-three, because nothing synced in that stretch.
+So every movement below is five rounds wide, where each earlier entry read one,
+and a change that looks abrupt here may have been gradual in windows nobody
+wrote down.
+
+- **The Coritiba reading fails its sixth vote, on the test as written.** Volume
+  is still the lowest in the division and the gap to Grêmio above it is still
+  there; conversion left the top pair and now sits in the upper middle, behind
+  Flamengo, Palmeiras, Fluminense, Cruzeiro, Santos, Athletico-PR and Bahia. It
+  took the largest fall on the conversion axis of any club this window. Rodada
+  twenty-nine called its small step down "a step or a wobble" and asked this
+  entry to say which: it was a step. What survives is narrower than the reading
+  claimed — a side that shoots least and converts better than most, no longer
+  one that converts like the leaders.
+- **Palmeiras returns to the top pair in conversion, which is the test its own
+  reading set for itself.** Second behind Flamengo again, and a place up in
+  volume as well. The two windows of falling conversion that rodadas twenty-eight
+  and twenty-nine recorded are noise by that entry's own definition, and the
+  caution it kept about calling them a trend was the right call.
+- **Bragantino passes Vasco in volume, so the split is over and the two are one
+  shape again.** Bragantino now shoots more than any club in the division and is
+  still alone at the bottom of conversion; Vasco is second in volume and climbed
+  one more place off the conversion floor without leaving the bottom five.
+  Rodada twenty-six named them one shape, twenty-seven split them, and this
+  window puts them back together in the opposite order.
+- **Cruzeiro is the clearest improvement on the board.** Up on both axes, into
+  the top five of each, and the only club to gain more than a place on both.
+  Internacional also climbed on both, from much further down, and is off the
+  bottom pair in conversion.
+- **Fluminense gave back the volume it had gained and kept climbing in
+  conversion.** It fell out of the top three in finalizações and climbed into
+  the top three in conversão. Rodada twenty-nine recorded it as the one club
+  improving on both axes; only half of that held.
+- **Corinthians took the largest climb in volume and converted worse for it.**
+  Out of the bottom third in finalizações, and down into the bottom three in
+  conversion: more shots, and a smaller share of them goals. That is the
+  Bragantino shape at a lower volume, one window old.
+- **Santos is out of the top three in conversion, and this time it moved.**
+  Rodada twenty-nine put it there "without moving" because the clubs above it
+  fell; this window its own rate dropped while Palmeiras, Fluminense and
+  Cruzeiro passed it.
+- **Vitória's mirror of Palmeiras did not survive, as that entry expected.** Its
+  conversion place is unchanged and its volume slipped by one.
+
+**A note on the sample rather than a reading of it.** Nineteen of the twenty
+clubs' counters cover fewer matches than the fixture list says they have played
+— Palmeiras is the only one fully covered — and four clubs are short by four.
+The rates divide by what is covered, so each club is described correctly on a
+sample whose size differs from its neighbours'; with a window this wide that
+matters less than it did for the single-place movements of the entry below.
+
+**What would falsify what is left of the Coritiba reading**: conversion falling
+into the bottom half while volume stays last. The original test — regression
+toward the middle — is met, and this entry does not pretend otherwise.
+
+**What would falsify the Palmeiras reading as it now stands**: leaving the top
+pair in conversion again inside two windows, which would make *this* window the
+noise rather than the two before it.
+
+**What would falsify the Bragantino/Vasco shape**: either one climbing into the
+top half of conversion while keeping its volume, which is the only way out of
+the shape that is not simply shooting less.
+
 ## Rodada 29 — Palmeiras steps back a second window running, Coritiba takes a fifth vote without improving, and Vitória is this round's inverse
 
 Written 2026-10-12 against `CLUB_SCOUTS_THROUGH_ROUND = 29`. Nineteen days after

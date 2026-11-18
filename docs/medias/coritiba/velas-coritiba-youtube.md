@@ -1,7 +1,7 @@
 # YouTube — velas do Coritiba
 
 Texto que acompanha [`velas-coritiba.mp4`](velas-coritiba.mp4)
-(1920×1080, 60fps, 24s).
+(1920×1080, 60fps, 26s).
 
 - **Título:** até 100 caracteres. Os títulos abaixo trazem a contagem medida.
 - **Descrição:** até 5.000 caracteres, mas só as duas primeiras linhas aparecem
@@ -9,16 +9,22 @@ Texto que acompanha [`velas-coritiba.mp4`](velas-coritiba.mp4)
 - **Tags:** até 500 caracteres somados, medidos com as vírgulas e os espaços
   exatamente como estão no bloco.
 - **Sem capítulos:** o YouTube exige pelo menos três, o primeiro em 00:00 e cada
-  um com 10s. Um vídeo de 24s não comporta.
+  um com 10s. Um vídeo de 26s não comporta.
 - **Com capa:** `velas-coritiba-miniatura.png`, 1280×720, o quadro do fecho da
   própria cena — a regra que o `scripts/manim/README.md` registra para as velas.
 - **Cortes verticais:** `velas-coritiba-45.mp4` (1080×1350, feed do Instagram) e `velas-coritiba-916.mp4` (1080×1920, Reels e YouTube Short).
 
-> **Os números aqui saem de `scripts/manim/velas-coritiba.json`, rodada 30,
-> snapshot de 2026-10-12** — 10º com 38 pts, 10V 8E 11D, e a oscilação entre
+> **Os números aqui saem de `scripts/manim/velas-coritiba.json`, rodada 35,
+> snapshot de 2026-11-18** — 13º com 42 pts, 11V 9E 14D, e a oscilação entre
 > o 5º e o 19º, que é a faixa que o painel do vídeo imprime. Eles **envelhecem**: um `sync-seed-data` seguido de uma
 > reexportação move o vídeo, e este arquivo não é regerado por nada. Reconferir
 > antes de publicar, contra o JSON e não contra esta página.
+>
+> **A última vela é oca.** Da 35ª rodada só um jogo foi disputado até o
+> snapshot (Mirassol 0x0 Atlético-MG), então este clube, como outros dezessete,
+> fecha o desenho numa rodada em que ainda não jogou — o card do vídeo diz
+> «sem jogo nesta rodada». Os 34 jogos são as 34 primeiras rodadas, sem partida
+> em atraso, e é por isso que a cópia abaixo data o recorte na 34ª.
 >
 > Os mesmos números estão **no quadro do fecho do próprio mp4**, no painel de
 > resumo, que é de onde a capa sai — então uma divergência entre este texto e a
@@ -42,19 +48,19 @@ Texto que acompanha [`velas-coritiba.mp4`](velas-coritiba.mp4)
 
 ## Título
 
-Recomendado (64 caracteres):
+Recomendado (60 caracteres):
 
 ```
-Coritiba em velas: do 16º ao 10º até a 30ª rodada do Brasileirão
+Coritiba em velas: fecha entre o 7º e o 16º até a 34ª rodada
 ```
 
-A subida, que é o movimento do desenho — e **data o recorte**, que é a única defesa contra
+A faixa de fechamento — a subida que dava o título anterior se desfez: o clube era 9º na 29ª e é 13º agora — e **data o recorte**, que é a única defesa contra
 alguém assistir daqui a três meses e achar que os números estão errados.
 
 | | título | caracteres | ângulo |
 |---|---|---|---|
 | 2 | `A campanha do Coritiba rodada a rodada \| Brasileirão 2026 em candlestick` | 72 | genérico e buscável |
-| 3 | `Coritiba: 38 pontos, 10V 8E 11D e saldo -10` | 43 | o número duro |
+| 3 | `Coritiba: 42 pontos, 11V 9E 14D e saldo -11` | 43 | o número duro |
 
 **Os apelidos não estão em nenhum deles, e estão nas tags**: é como o torcedor
 busca, e não é como o clube aparece no vídeo nem na tabela.
@@ -64,14 +70,14 @@ busca, e não é como o clube aparece no vídeo nem na tabela.
 ```
 A campanha do Coritiba rodada a rodada, desenhada como vela: o corpo vai da posição em que o clube ABRIU a rodada até onde ele FECHOU, e o pavio cobre a melhor e a pior posição que ele ocupou enquanto a rodada era jogada. Embaixo, no mesmo eixo, os pontos acumulados — a barra é o total e a tampa clara é o que a rodada acrescentou.
 
-Dados até 12/10/2026 (30ª rodada):
-• Coritiba — 10º, 38 pts em 29 jogos
-• 10V · 8E · 11D — 37 gols pró, 47 contra, saldo -10
-• 44% de aproveitamento · oscilou entre o 5º e o 19º
+Dados até 18/11/2026 (34ª rodada):
+• Coritiba — 13º, 42 pts em 34 jogos
+• 11V · 9E · 14D — 40 gols pró, 51 contra, saldo -11
+• 41% de aproveitamento · oscilou entre o 5º e o 19º
 
-O Coritiba fez a campanha de quem sobe devagar: fecha rodadas entre o 7º e o 16º e termina o recorte em 9º, sem passar perto do topo nem do Z4.
+O Coritiba subiu cedo e vem devolvendo devagar: fecha rodadas entre o 7º e o 16º, passou dez delas em 7º até a parada para a Copa e termina o recorte em 13º, sem nunca fechar no G4 nem no Z4.
 
-O painel diz 5º e 19º, que é a faixa contando as posições ocupadas dentro das rodadas — o pavio chega mais longe que o fechamento nos dois sentidos. São 11 derrotas em 29 jogos — 29 contra 30 rodadas, então há partida em atraso — e 4 rodadas de invencibilidade na maior sequência.
+O painel diz 5º e 19º, que é a faixa contando as posições ocupadas dentro das rodadas — o pavio chega mais longe que o fechamento nos dois sentidos. São 14 derrotas em 34 jogos, cinco delas nas últimas sete rodadas, e 4 rodadas de invencibilidade na maior sequência.
 
 A régua tracejada que cruza o desenho é o acontecimento de fora de campo que tocou os vinte clubes: a paralisação para a Copa do Mundo depois da 18ª rodada. Ela cai na FRONTEIRA entre duas rodadas em vez de sobre uma, porque é isso que ela separa — o que veio antes dela e o que veio depois. Aqui o clube parou em 7º com 26 pts.
 
@@ -96,7 +102,7 @@ carregar o vídeo sozinha.
 Para Short, ou onde a descrição longa não couber.
 
 ```
-A campanha do Coritiba em velas: o corpo vai da posição de abertura à de fechamento da rodada, o pavio mostra até onde o clube subiu e desceu dentro dela, e a barra de baixo são os pontos. A régua tracejada marca a parada para a Copa. Subiu do 16º ao 10º sem nunca liderar nem ameaçar cair. Dados até a 30ª: 38 pts, 10V 8E 11D, saldo -10.
+A campanha do Coritiba em velas: o corpo vai da posição de abertura à de fechamento da rodada, o pavio mostra até onde o clube subiu e desceu dentro dela, e a barra de baixo são os pontos. A régua tracejada marca a parada para a Copa. Fecha entre o 7º e o 16º: subiu cedo e termina o recorte em 13º. Dados até a 34ª: 42 pts, 11V 9E 14D, saldo -11.
 
 Animação em Manim, dados do Portal Brasileirão: https://brasileirao.mpbarbosa.com
 Código: https://github.com/mpbarbosa/portal_brasileirao
@@ -110,7 +116,7 @@ Medido sobre o bloco como está — separado por `, `, que é o que se cola.
 289 caracteres, 20 tags.
 
 ```
-brasileirão, brasileirao 2026, campeonato brasileiro, série a, serie a, coritiba, coxa, coxa branca, coritiba fc, campanha do coritiba, campanha rodada a rodada, candlestick, gráfico de velas, futebol brasileiro, visualização de dados, dataviz, manim, python, portal brasileirão, rodada 30
+brasileirão, brasileirao 2026, campeonato brasileiro, série a, serie a, coritiba, coxa, coxa branca, coritiba fc, campanha do coritiba, campanha rodada a rodada, candlestick, gráfico de velas, futebol brasileiro, visualização de dados, dataviz, manim, python, portal brasileirão, rodada 34
 ```
 
 Nenhuma tag nova: o único acontecimento que o vídeo marca é a paralisação

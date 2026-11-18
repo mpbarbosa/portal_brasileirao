@@ -99,6 +99,7 @@ const NATIONALITY_LABELS: Record<string, string> = {
   Peru: "Peru",
   Portugal: "Portugal",
   Spain: "Espanha",
+  Sweden: "Suécia",
   Ukraine: "Ucrânia",
   Uruguay: "Uruguai",
   Venezuela: "Venezuela",

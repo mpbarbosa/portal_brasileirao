@@ -1,5 +1,5 @@
 {
-  "snapshot": "2026-10-12",
+  "snapshot": "2026-11-18",
   "club": {
     "code": "6684",
     "name": "Internacional",
@@ -389,14 +389,14 @@
     {
       "round": 21,
       "open": 16,
-      "close": 16,
+      "close": 17,
       "best": 16,
-      "worst": 16,
+      "worst": 17,
       "points": 1,
       "totalPoints": 22,
       "played": 21,
       "result": "E",
-      "moved": 0,
+      "moved": -1,
       "match": {
         "opponent": "Flamengo",
         "home": true,
@@ -407,10 +407,10 @@
     },
     {
       "round": 22,
-      "open": 16,
-      "close": 17,
-      "best": 16,
-      "worst": 17,
+      "open": 17,
+      "close": 18,
+      "best": 17,
+      "worst": 18,
       "points": 1,
       "totalPoints": 23,
       "played": 22,
@@ -426,10 +426,10 @@
     },
     {
       "round": 23,
-      "open": 17,
-      "close": 16,
-      "best": 16,
-      "worst": 17,
+      "open": 18,
+      "close": 17,
+      "best": 17,
+      "worst": 18,
       "points": 1,
       "totalPoints": 24,
       "played": 23,
@@ -445,10 +445,10 @@
     },
     {
       "round": 24,
-      "open": 16,
-      "close": 16,
-      "best": 16,
-      "worst": 16,
+      "open": 17,
+      "close": 17,
+      "best": 17,
+      "worst": 17,
       "points": 1,
       "totalPoints": 25,
       "played": 24,
@@ -464,15 +464,15 @@
     },
     {
       "round": 25,
-      "open": 16,
+      "open": 17,
       "close": 18,
-      "best": 16,
+      "best": 17,
       "worst": 18,
       "points": 0,
       "totalPoints": 25,
       "played": 25,
       "result": "D",
-      "moved": -2,
+      "moved": -1,
       "match": {
         "opponent": "Bahia",
         "home": false,
@@ -575,6 +575,95 @@
         "goalsAgainst": 1,
         "result": "E"
       }
+    },
+    {
+      "round": 31,
+      "open": 17,
+      "close": 17,
+      "best": 17,
+      "worst": 17,
+      "points": 0,
+      "totalPoints": 32,
+      "played": 31,
+      "result": "D",
+      "moved": 0,
+      "match": {
+        "opponent": "Mirassol",
+        "home": false,
+        "goalsFor": 0,
+        "goalsAgainst": 2,
+        "result": "D"
+      }
+    },
+    {
+      "round": 32,
+      "open": 17,
+      "close": 16,
+      "best": 16,
+      "worst": 17,
+      "points": 3,
+      "totalPoints": 35,
+      "played": 32,
+      "result": "V",
+      "moved": 1,
+      "match": {
+        "opponent": "Botafogo",
+        "home": true,
+        "goalsFor": 3,
+        "goalsAgainst": 0,
+        "result": "V"
+      }
+    },
+    {
+      "round": 33,
+      "open": 16,
+      "close": 18,
+      "best": 16,
+      "worst": 18,
+      "points": 0,
+      "totalPoints": 35,
+      "played": 33,
+      "result": "D",
+      "moved": -2,
+      "match": {
+        "opponent": "Fluminense",
+        "home": false,
+        "goalsFor": 1,
+        "goalsAgainst": 2,
+        "result": "D"
+      }
+    },
+    {
+      "round": 34,
+      "open": 18,
+      "close": 16,
+      "best": 16,
+      "worst": 18,
+      "points": 3,
+      "totalPoints": 38,
+      "played": 34,
+      "result": "V",
+      "moved": 2,
+      "match": {
+        "opponent": "Coritiba",
+        "home": true,
+        "goalsFor": 1,
+        "goalsAgainst": 0,
+        "result": "V"
+      }
+    },
+    {
+      "round": 35,
+      "open": 16,
+      "close": 16,
+      "best": 16,
+      "worst": 16,
+      "points": null,
+      "totalPoints": 38,
+      "played": 34,
+      "result": null,
+      "moved": 0,
+      "match": null
     }
   ],
   "events": [

@@ -1,5 +1,5 @@
 {
-  "snapshot": "2026-10-12",
+  "snapshot": "2026-11-18",
   "club": {
     "code": "1777",
     "name": "Bahia",
@@ -575,6 +575,95 @@
         "goalsAgainst": 0,
         "result": "V"
       }
+    },
+    {
+      "round": 31,
+      "open": 5,
+      "close": 7,
+      "best": 5,
+      "worst": 7,
+      "points": 0,
+      "totalPoints": 49,
+      "played": 31,
+      "result": "D",
+      "moved": -2,
+      "match": {
+        "opponent": "Flamengo",
+        "home": true,
+        "goalsFor": 0,
+        "goalsAgainst": 3,
+        "result": "D"
+      }
+    },
+    {
+      "round": 32,
+      "open": 7,
+      "close": 7,
+      "best": 7,
+      "worst": 7,
+      "points": 1,
+      "totalPoints": 50,
+      "played": 32,
+      "result": "E",
+      "moved": 0,
+      "match": {
+        "opponent": "Santos",
+        "home": false,
+        "goalsFor": 1,
+        "goalsAgainst": 1,
+        "result": "E"
+      }
+    },
+    {
+      "round": 33,
+      "open": 7,
+      "close": 6,
+      "best": 6,
+      "worst": 7,
+      "points": 3,
+      "totalPoints": 53,
+      "played": 33,
+      "result": "V",
+      "moved": 1,
+      "match": {
+        "opponent": "São Paulo",
+        "home": true,
+        "goalsFor": 3,
+        "goalsAgainst": 2,
+        "result": "V"
+      }
+    },
+    {
+      "round": 34,
+      "open": 6,
+      "close": 6,
+      "best": 6,
+      "worst": 6,
+      "points": 0,
+      "totalPoints": 53,
+      "played": 34,
+      "result": "D",
+      "moved": 0,
+      "match": {
+        "opponent": "Cruzeiro",
+        "home": false,
+        "goalsFor": 2,
+        "goalsAgainst": 3,
+        "result": "D"
+      }
+    },
+    {
+      "round": 35,
+      "open": 6,
+      "close": 6,
+      "best": 6,
+      "worst": 6,
+      "points": null,
+      "totalPoints": 53,
+      "played": 34,
+      "result": null,
+      "moved": 0,
+      "match": null
     }
   ],
   "events": [
