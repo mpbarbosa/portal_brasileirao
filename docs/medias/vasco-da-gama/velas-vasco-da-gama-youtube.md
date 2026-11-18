@@ -1,7 +1,7 @@
 # YouTube — velas do Vasco da Gama
 
 Texto que acompanha [`velas-vasco-da-gama.mp4`](velas-vasco-da-gama.mp4)
-(1920×1080, 60fps, 24s).
+(1920×1080, 60fps, 26s).
 
 - **Título:** até 100 caracteres. Os títulos abaixo trazem a contagem medida.
 - **Descrição:** até 5.000 caracteres, mas só as duas primeiras linhas aparecem
@@ -9,16 +9,22 @@ Texto que acompanha [`velas-vasco-da-gama.mp4`](velas-vasco-da-gama.mp4)
 - **Tags:** até 500 caracteres somados, medidos com as vírgulas e os espaços
   exatamente como estão no bloco.
 - **Sem capítulos:** o YouTube exige pelo menos três, o primeiro em 00:00 e cada
-  um com 10s. Um vídeo de 24s não comporta.
+  um com 10s. Um vídeo de 26s não comporta.
 - **Com capa:** `velas-vasco-da-gama-miniatura.png`, 1280×720, o quadro do fecho da
   própria cena — a regra que o `scripts/manim/README.md` registra para as velas.
 - **Cortes verticais:** `velas-vasco-da-gama-45.mp4` (1080×1350, feed do Instagram) e `velas-vasco-da-gama-916.mp4` (1080×1920, Reels e YouTube Short).
 
-> **Os números aqui saem de `scripts/manim/velas-vasco-da-gama.json`, rodada 30,
-> snapshot de 2026-10-12** — 14º com 35 pts, 9V 8E 12D, e a oscilação entre
+> **Os números aqui saem de `scripts/manim/velas-vasco-da-gama.json`, rodada 35,
+> snapshot de 2026-11-18** — 11º com 44 pts, 12V 8E 14D, e a oscilação entre
 > o 8º e o 20º, que é a faixa que o painel do vídeo imprime. Eles **envelhecem**: um `sync-seed-data` seguido de uma
 > reexportação move o vídeo, e este arquivo não é regerado por nada. Reconferir
 > antes de publicar, contra o JSON e não contra esta página.
+>
+> **A última vela é oca.** Da 35ª rodada só um jogo foi disputado até o
+> snapshot (Mirassol 0x0 Atlético-MG), então este clube, como outros dezessete,
+> fecha o desenho numa rodada em que ainda não jogou — o card do vídeo diz
+> «sem jogo nesta rodada». Os 34 jogos são as 34 primeiras rodadas, sem partida
+> em atraso, e é por isso que a cópia abaixo data o recorte na 34ª.
 >
 > Os mesmos números estão **no quadro do fecho do próprio mp4**, no painel de
 > resumo, que é de onde a capa sai — então uma divergência entre este texto e a
@@ -45,7 +51,7 @@ Texto que acompanha [`velas-vasco-da-gama.mp4`](velas-vasco-da-gama.mp4)
 Recomendado (61 caracteres):
 
 ```
-Vasco em velas: 35 pontos em 29 jogos e o 14º lugar até a 30ª
+Vasco em velas: 44 pontos em 34 jogos e o 11º lugar até a 34ª
 ```
 
 O número duro e a posição — e **data o recorte**, que é a única defesa contra
@@ -54,7 +60,7 @@ alguém assistir daqui a três meses e achar que os números estão errados.
 | | título | caracteres | ângulo |
 |---|---|---|---|
 | 2 | `A campanha do Vasco da Gama rodada a rodada \| Brasileirão 2026 em candlestick` | 77 | genérico e buscável |
-| 3 | `Vasco: do 20º ao 14º, a campanha em candlestick` | 47 | o movimento |
+| 3 | `Vasco: do 20º ao 11º, a campanha em candlestick` | 47 | o movimento |
 
 **Os apelidos não estão em nenhum deles, e estão nas tags**: é como o torcedor
 busca, e não é como o clube aparece no vídeo nem na tabela.
@@ -64,14 +70,14 @@ busca, e não é como o clube aparece no vídeo nem na tabela.
 ```
 A campanha do Vasco da Gama rodada a rodada, desenhada como vela: o corpo vai da posição em que o clube ABRIU a rodada até onde ele FECHOU, e o pavio cobre a melhor e a pior posição que ele ocupou enquanto a rodada era jogada. Embaixo, no mesmo eixo, os pontos acumulados — a barra é o total e a tampa clara é o que a rodada acrescentou.
 
-Dados até 12/10/2026 (30ª rodada):
-• Vasco da Gama — 14º, 35 pts em 29 jogos
-• 9V · 8E · 12D — 36 gols pró, 42 contra, saldo -6
-• 40% de aproveitamento · oscilou entre o 8º e o 20º
+Dados até 18/11/2026 (34ª rodada):
+• Vasco da Gama — 11º, 44 pts em 34 jogos
+• 12V · 8E · 14D — 45 gols pró, 50 contra, saldo -5
+• 43% de aproveitamento · oscilou entre o 8º e o 20º
 
-O Vasco esteve em 20º e fecha o recorte em 14º, três posições acima do Z4. A faixa de fechamento vai do 8º ao 20º e, ao contrário da maioria, ela não é inflada pelas duas primeiras rodadas — depois delas continua igual, o que faz dela uma amplitude real.
+O Vasco esteve em 20º e fecha o recorte em 11º, seis posições acima do Z4. A faixa de fechamento vai do 8º ao 20º e, ao contrário da maioria, ela não é inflada pelas duas primeiras rodadas — depois delas continua igual, o que faz dela uma amplitude real.
 
-São 12 derrotas em 29 jogos, com 5 rodadas de invencibilidade na maior série, e há partida em atraso: 29 contra 30 rodadas.
+São 14 derrotas em 34 jogos, com 5 rodadas de invencibilidade na maior série — e a partida em atraso do recorte anterior, a da 21ª rodada contra a Chapecoense, foi disputada em 14 de novembro.
 
 As réguas tracejadas que cruzam o desenho são acontecimentos de fora de campo, e cada uma cai na FRONTEIRA entre duas rodadas em vez de sobre uma: a demissão de Fernando Diniz depois da 3ª rodada, e a paralisação para a Copa do Mundo depois da 18ª rodada. Quando a primeira aparece, o clube vinha de fechar a 3ª em 17º com 1 pts.
 
@@ -96,7 +102,7 @@ carregar o vídeo sozinha.
 Para Short, ou onde a descrição longa não couber.
 
 ```
-A campanha do Vasco da Gama em velas: o corpo vai da posição de abertura à de fechamento da rodada, o pavio mostra até onde o clube subiu e desceu dentro dela, e a barra de baixo são os pontos. As réguas tracejadas marcam a saída de Fernando Diniz e a parada para a Copa. Passou pelo 20º e fecha o recorte em 14º, fora do Z4. Dados até a 30ª: 35 pts, 9V 8E 12D, saldo -6.
+A campanha do Vasco da Gama em velas: o corpo vai da posição de abertura à de fechamento da rodada, o pavio mostra até onde o clube subiu e desceu dentro dela, e a barra de baixo são os pontos. As réguas tracejadas marcam a saída de Fernando Diniz e a parada para a Copa. Passou pelo 20º e fecha o recorte em 11º, fora do Z4. Dados até a 34ª: 44 pts, 12V 8E 14D, saldo -5.
 
 Animação em Manim, dados do Portal Brasileirão: https://brasileirao.mpbarbosa.com
 Código: https://github.com/mpbarbosa/portal_brasileirao
@@ -110,7 +116,7 @@ Medido sobre o bloco como está — separado por `, `, que é o que se cola.
 319 caracteres, 22 tags.
 
 ```
-brasileirão, brasileirao 2026, campeonato brasileiro, série a, serie a, vasco da gama, gigante da colina, cruzmaltino, vasco, crvg, campanha do vasco da gama, campanha rodada a rodada, candlestick, gráfico de velas, futebol brasileiro, visualização de dados, dataviz, manim, python, portal brasileirão, rodada 30, diniz
+brasileirão, brasileirao 2026, campeonato brasileiro, série a, serie a, vasco da gama, gigante da colina, cruzmaltino, vasco, crvg, campanha do vasco da gama, campanha rodada a rodada, candlestick, gráfico de velas, futebol brasileiro, visualização de dados, dataviz, manim, python, portal brasileirão, rodada 34, diniz
 ```
 
 `diniz` entra porque o vídeo agora **marca** essa saída, e é assim que o torcedor

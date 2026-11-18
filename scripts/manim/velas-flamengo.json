@@ -1,5 +1,5 @@
 {
-  "snapshot": "2026-10-12",
+  "snapshot": "2026-11-18",
   "club": {
     "code": "1783",
     "name": "Flamengo",
@@ -575,6 +575,95 @@
         "goalsAgainst": 0,
         "result": "V"
       }
+    },
+    {
+      "round": 31,
+      "open": 1,
+      "close": 1,
+      "best": 1,
+      "worst": 2,
+      "points": 3,
+      "totalPoints": 67,
+      "played": 31,
+      "result": "V",
+      "moved": 0,
+      "match": {
+        "opponent": "Bahia",
+        "home": false,
+        "goalsFor": 3,
+        "goalsAgainst": 0,
+        "result": "V"
+      }
+    },
+    {
+      "round": 32,
+      "open": 1,
+      "close": 1,
+      "best": 1,
+      "worst": 2,
+      "points": 3,
+      "totalPoints": 70,
+      "played": 32,
+      "result": "V",
+      "moved": 0,
+      "match": {
+        "opponent": "Atlético-MG",
+        "home": true,
+        "goalsFor": 3,
+        "goalsAgainst": 2,
+        "result": "V"
+      }
+    },
+    {
+      "round": 33,
+      "open": 1,
+      "close": 1,
+      "best": 1,
+      "worst": 1,
+      "points": 3,
+      "totalPoints": 73,
+      "played": 33,
+      "result": "V",
+      "moved": 0,
+      "match": {
+        "opponent": "Vasco da Gama",
+        "home": false,
+        "goalsFor": 4,
+        "goalsAgainst": 1,
+        "result": "V"
+      }
+    },
+    {
+      "round": 34,
+      "open": 1,
+      "close": 1,
+      "best": 1,
+      "worst": 1,
+      "points": 3,
+      "totalPoints": 76,
+      "played": 34,
+      "result": "V",
+      "moved": 0,
+      "match": {
+        "opponent": "Grêmio",
+        "home": true,
+        "goalsFor": 3,
+        "goalsAgainst": 1,
+        "result": "V"
+      }
+    },
+    {
+      "round": 35,
+      "open": 1,
+      "close": 1,
+      "best": 1,
+      "worst": 1,
+      "points": null,
+      "totalPoints": 76,
+      "played": 34,
+      "result": null,
+      "moved": 0,
+      "match": null
     }
   ],
   "events": [

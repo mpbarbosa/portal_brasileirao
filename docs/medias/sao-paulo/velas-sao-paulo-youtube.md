@@ -1,7 +1,7 @@
 # YouTube — velas do São Paulo
 
 Texto que acompanha [`velas-sao-paulo.mp4`](velas-sao-paulo.mp4)
-(1920×1080, 60fps, 24s).
+(1920×1080, 60fps, 26s).
 
 - **Título:** até 100 caracteres. Os títulos abaixo trazem a contagem medida.
 - **Descrição:** até 5.000 caracteres, mas só as duas primeiras linhas aparecem
@@ -9,16 +9,22 @@ Texto que acompanha [`velas-sao-paulo.mp4`](velas-sao-paulo.mp4)
 - **Tags:** até 500 caracteres somados, medidos com as vírgulas e os espaços
   exatamente como estão no bloco.
 - **Sem capítulos:** o YouTube exige pelo menos três, o primeiro em 00:00 e cada
-  um com 10s. Um vídeo de 24s não comporta.
+  um com 10s. Um vídeo de 26s não comporta.
 - **Com capa:** `velas-sao-paulo-miniatura.png`, 1280×720, o quadro do fecho da
   própria cena — a regra que o `scripts/manim/README.md` registra para as velas.
 - **Cortes verticais:** `velas-sao-paulo-45.mp4` (1080×1350, feed do Instagram) e `velas-sao-paulo-916.mp4` (1080×1920, Reels e YouTube Short).
 
-> **Os números aqui saem de `scripts/manim/velas-sao-paulo.json`, rodada 30,
-> snapshot de 2026-10-12** — 9º com 39 pts, 11V 6E 13D, e a oscilação entre
+> **Os números aqui saem de `scripts/manim/velas-sao-paulo.json`, rodada 35,
+> snapshot de 2026-11-18** — 10º com 44 pts, 12V 8E 14D, e a oscilação entre
 > o 1º e o 16º, que é a faixa que o painel do vídeo imprime. Eles **envelhecem**: um `sync-seed-data` seguido de uma
 > reexportação move o vídeo, e este arquivo não é regerado por nada. Reconferir
 > antes de publicar, contra o JSON e não contra esta página.
+>
+> **A última vela é oca.** Da 35ª rodada só um jogo foi disputado até o
+> snapshot (Mirassol 0x0 Atlético-MG), então este clube, como outros dezessete,
+> fecha o desenho numa rodada em que ainda não jogou — o card do vídeo diz
+> «sem jogo nesta rodada». Os 34 jogos são as 34 primeiras rodadas, sem partida
+> em atraso, e é por isso que a cópia abaixo data o recorte na 34ª.
 >
 > Os mesmos números estão **no quadro do fecho do próprio mp4**, no painel de
 > resumo, que é de onde a capa sai — então uma divergência entre este texto e a
@@ -28,7 +34,7 @@ Texto que acompanha [`velas-sao-paulo.mp4`](velas-sao-paulo.mp4)
 > duas diferem para 15 dos 20 clubes. O painel conta as posições ocupadas
 > enquanto a rodada era jogada — o pavio —, então ele é sempre igual ou mais
 > largo que o intervalo entre o melhor e o pior FECHAMENTO. Este clube fecha
-> entre o 1º e o 13º e o painel diz 1º e 16º.
+> entre o 1º e o 14º e o painel diz 1º e 16º.
 >
 > **O saldo e o aproveitamento vêm do `computeStandings`**, a mesma função que
 > monta a tabela do site, e não somados à mão a partir do JSON.
@@ -42,10 +48,10 @@ Texto que acompanha [`velas-sao-paulo.mp4`](velas-sao-paulo.mp4)
 
 ## Título
 
-Recomendado (57 caracteres):
+Recomendado (58 caracteres):
 
 ```
-São Paulo: do 1º ao 9º em 30 rodadas, a campanha em velas
+São Paulo: do 1º ao 10º em 34 rodadas, a campanha em velas
 ```
 
 A queda, que é o assunto — e **data o recorte**, que é a única defesa contra
@@ -53,7 +59,7 @@ alguém assistir daqui a três meses e achar que os números estão errados.
 
 | | título | caracteres | ângulo |
 |---|---|---|---|
-| 2 | `São Paulo em velas: 39 pontos em 30 jogos, 11V 6E 13D` | 53 | o número duro |
+| 2 | `São Paulo em velas: 44 pontos em 34 jogos, 12V 8E 14D` | 53 | o número duro |
 | 3 | `A campanha do São Paulo rodada a rodada \| Brasileirão 2026 em candlestick` | 73 | genérico e buscável |
 
 **Os apelidos não estão em nenhum deles, e estão nas tags**: é como o torcedor
@@ -64,14 +70,14 @@ busca, e não é como o clube aparece no vídeo nem na tabela.
 ```
 A campanha do São Paulo rodada a rodada, desenhada como vela: o corpo vai da posição em que o clube ABRIU a rodada até onde ele FECHOU, e o pavio cobre a melhor e a pior posição que ele ocupou enquanto a rodada era jogada. Embaixo, no mesmo eixo, os pontos acumulados — a barra é o total e a tampa clara é o que a rodada acrescentou.
 
-Dados até 12/10/2026 (30ª rodada):
-• São Paulo — 9º, 39 pts em 30 jogos
-• 11V · 6E · 13D — 35 gols pró, 35 contra, saldo 0
+Dados até 18/11/2026 (34ª rodada):
+• São Paulo — 10º, 44 pts em 34 jogos
+• 12V · 8E · 14D — 39 gols pró, 39 contra, saldo 0
 • 43% de aproveitamento · oscilou entre o 1º e o 16º
 
-O São Paulo fechou 2 rodadas em 1º e termina o recorte em 9º. A amplitude vai do 1º ao 14º e, diferente de quase todos os clubes, ela NÃO vem só das duas primeiras rodadas: descontadas elas a faixa ainda é do 1º ao 14º, a segunda maior da divisão nessa medida, ao lado da do Botafogo.
+O São Paulo fechou 2 rodadas em 1º e termina o recorte em 10º. A amplitude vai do 1º ao 14º e, diferente de quase todos os clubes, ela NÃO vem só das duas primeiras rodadas: descontadas elas a faixa ainda é do 1º ao 14º, a segunda maior da divisão nessa medida, ao lado das do Botafogo e do Corinthians.
 
-São 13 derrotas em 30 jogos — o jogo em atraso que havia no recorte anterior foi disputado, então o total de pontos já é comparável com o de quem jogou tudo. 6 rodadas de invencibilidade na maior sequência.
+São 14 derrotas em 34 jogos. A maior invencibilidade, de 6 rodadas, é a do começo; a maior série sem vencer, de 11, vai da 14ª à 24ª e é a terceira maior da divisão, atrás das 22 da Chapecoense e das 12 do Clube do Remo.
 
 As réguas tracejadas que cruzam o desenho são acontecimentos de fora de campo, e cada uma cai na FRONTEIRA entre duas rodadas em vez de sobre uma: a demissão de Hernán Crespo depois da 4ª rodada, e a paralisação para a Copa do Mundo depois da 18ª rodada. Quando a primeira aparece, o clube vinha de fechar a 4ª em 3º com 10 pts.
 
@@ -96,7 +102,7 @@ carregar o vídeo sozinha.
 Para Short, ou onde a descrição longa não couber.
 
 ```
-A campanha do São Paulo em velas: o corpo vai da posição de abertura à de fechamento da rodada, o pavio mostra até onde o clube subiu e desceu dentro dela, e a barra de baixo são os pontos. As réguas tracejadas marcam a saída de Hernán Crespo e a parada para a Copa. 2 rodadas em 1º no começo e o 9º lugar no fim do recorte. Dados até a 30ª: 39 pts, 11V 6E 13D, saldo 0.
+A campanha do São Paulo em velas: o corpo vai da posição de abertura à de fechamento da rodada, o pavio mostra até onde o clube subiu e desceu dentro dela, e a barra de baixo são os pontos. As réguas tracejadas marcam a saída de Hernán Crespo e a parada para a Copa. 2 rodadas em 1º no começo e o 10º lugar no fim do recorte. Dados até a 34ª: 44 pts, 12V 8E 14D, saldo 0.
 
 Animação em Manim, dados do Portal Brasileirão: https://brasileirao.mpbarbosa.com
 Código: https://github.com/mpbarbosa/portal_brasileirao
@@ -110,7 +116,7 @@ Medido sobre o bloco como está — separado por `, `, que é o que se cola.
 316 caracteres, 22 tags.
 
 ```
-brasileirão, brasileirao 2026, campeonato brasileiro, série a, serie a, são paulo, tricolor paulista, spfc, soberano, são paulo fc, campanha do são paulo, campanha rodada a rodada, candlestick, gráfico de velas, futebol brasileiro, visualização de dados, dataviz, manim, python, portal brasileirão, rodada 30, crespo
+brasileirão, brasileirao 2026, campeonato brasileiro, série a, serie a, são paulo, tricolor paulista, spfc, soberano, são paulo fc, campanha do são paulo, campanha rodada a rodada, candlestick, gráfico de velas, futebol brasileiro, visualização de dados, dataviz, manim, python, portal brasileirão, rodada 34, crespo
 ```
 
 `crespo` entra porque o vídeo agora **marca** essa saída, e é assim que o torcedor

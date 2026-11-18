@@ -1,7 +1,7 @@
 # YouTube — velas do Mirassol
 
 Texto que acompanha [`velas-mirassol.mp4`](velas-mirassol.mp4)
-(1920×1080, 60fps, 24s).
+(1920×1080, 60fps, 26s).
 
 - **Título:** até 100 caracteres. Os títulos abaixo trazem a contagem medida.
 - **Descrição:** até 5.000 caracteres, mas só as duas primeiras linhas aparecem
@@ -9,15 +9,20 @@ Texto que acompanha [`velas-mirassol.mp4`](velas-mirassol.mp4)
 - **Tags:** até 500 caracteres somados, medidos com as vírgulas e os espaços
   exatamente como estão no bloco.
 - **Sem capítulos:** o YouTube exige pelo menos três, o primeiro em 00:00 e cada
-  um com 10s. Um vídeo de 24s não comporta.
+  um com 10s. Um vídeo de 26s não comporta.
 - **Com capa:** `velas-mirassol-miniatura.png`, 1280×720, o quadro do fecho da
   própria cena — a regra que o `scripts/manim/README.md` registra para as velas.
 
-> **Os números aqui saem de `scripts/manim/velas-mirassol.json`, rodada 30,
-> snapshot de 2026-10-12** — 15º com 33 pts, 8V 9E 13D, e a oscilação entre
+> **Os números aqui saem de `scripts/manim/velas-mirassol.json`, rodada 35,
+> snapshot de 2026-11-18** — 14º com 41 pts, 10V 11E 14D, e a oscilação entre
 > o 2º e o 20º, que é a faixa que o painel do vídeo imprime. Eles **envelhecem**: um `sync-seed-data` seguido de uma
 > reexportação move o vídeo, e este arquivo não é regerado por nada. Reconferir
 > antes de publicar, contra o JSON e não contra esta página.
+>
+> **Este clube jogou a 35ª**, o único jogo da rodada disputado até o snapshot
+> (Mirassol 0x0 Atlético-MG). O desenho dele fecha numa vela cheia e o dos
+> outros dezoito numa vela oca; são 35 jogos contra 34 da maioria, e a cópia
+> abaixo data o recorte na 35ª.
 >
 > Os mesmos números estão **no quadro do fecho do próprio mp4**, no painel de
 > resumo, que é de onde a capa sai — então uma divergência entre este texto e a
@@ -44,7 +49,7 @@ Texto que acompanha [`velas-mirassol.mp4`](velas-mirassol.mp4)
 Recomendado (67 caracteres):
 
 ```
-Mirassol: do 4º ao 15º, 11 posições perdidas | Brasileirão em velas
+Mirassol: do 4º ao 14º, 10 posições perdidas | Brasileirão em velas
 ```
 
 A queda, conferida contra os vinte clubes — e **data o recorte**, que é a única defesa contra
@@ -53,7 +58,7 @@ alguém assistir daqui a três meses e achar que os números estão errados.
 | | título | caracteres | ângulo |
 |---|---|---|---|
 | 2 | `A campanha do Mirassol rodada a rodada \| Brasileirão 2026 em candlestick` | 72 | genérico e buscável |
-| 3 | `Mirassol em velas: 33 pontos, 8V 9E 13D até a 30ª rodada` | 56 | o número duro |
+| 3 | `Mirassol em velas: 41 pontos, 10V 11E 14D até a 35ª rodada` | 58 | o número duro |
 
 **Os apelidos não estão em nenhum deles, e estão nas tags**: é como o torcedor
 busca, e não é como o clube aparece no vídeo nem na tabela.
@@ -63,14 +68,14 @@ busca, e não é como o clube aparece no vídeo nem na tabela.
 ```
 A campanha do Mirassol rodada a rodada, desenhada como vela: o corpo vai da posição em que o clube ABRIU a rodada até onde ele FECHOU, e o pavio cobre a melhor e a pior posição que ele ocupou enquanto a rodada era jogada. Embaixo, no mesmo eixo, os pontos acumulados — a barra é o total e a tampa clara é o que a rodada acrescentou.
 
-Dados até 12/10/2026 (30ª rodada):
-• Mirassol — 15º, 33 pts em 30 jogos
-• 8V · 9E · 13D — 34 gols pró, 44 contra, saldo -10
-• 37% de aproveitamento · oscilou entre o 2º e o 20º
+Dados até 18/11/2026 (35ª rodada):
+• Mirassol — 14º, 41 pts em 35 jogos
+• 10V · 11E · 14D — 39 gols pró, 48 contra, saldo -9
+• 39% de aproveitamento · oscilou entre o 2º e o 20º
 
-O Mirassol abre a temporada perto do G4 e fecha o recorte na borda do Z4: 11 posições perdidas desde o seu melhor fechamento, a segunda maior queda da divisão, empatada com a do Botafogo e atrás só das 18 da Chapecoense.
+O Mirassol abre a temporada perto do G4 e fecha o recorte em 14º: 10 posições perdidas desde o seu melhor fechamento, o 4º da 2ª rodada. Já foram mais — o clube fechou em 20º na 10ª e na 11ª e passou 17 rodadas dentro do Z4 antes de sair dele de vez na 26ª.
 
-A amplitude total de fechamento é do 4º ao 20º, e o painel diz 2º e 20º porque conta também o que aconteceu dentro das rodadas. São 13 derrotas em 30 jogos, com invencibilidade máxima de 6 rodadas — da 24ª à 29ª, quebrada pelo 0x1 em Salvador na 30ª.
+A amplitude total de fechamento é do 4º ao 20º, e o painel diz 2º e 20º porque conta também o que aconteceu dentro das rodadas. São 14 derrotas em 35 jogos — este é um dos dois clubes que já jogaram a 35ª, um 0x0 em casa com o Atlético-MG, o único jogo disputado da rodada —, com invencibilidade máxima de 6 rodadas, da 24ª à 29ª.
 
 A régua tracejada que cruza o desenho é o acontecimento de fora de campo que tocou os vinte clubes: a paralisação para a Copa do Mundo depois da 18ª rodada. Ela cai na FRONTEIRA entre duas rodadas em vez de sobre uma, porque é isso que ela separa — o que veio antes dela e o que veio depois. Aqui o clube parou em 19º com 16 pts.
 
@@ -95,7 +100,7 @@ carregar o vídeo sozinha.
 Para Short, ou onde a descrição longa não couber.
 
 ```
-A campanha do Mirassol em velas: o corpo vai da posição de abertura à de fechamento da rodada, o pavio mostra até onde o clube subiu e desceu dentro dela, e a barra de baixo são os pontos. A régua tracejada marca a parada para a Copa. Do 4º ao 15º: 11 posições perdidas desde o melhor fechamento. Dados até a 30ª: 33 pts, 8V 9E 13D, saldo -10.
+A campanha do Mirassol em velas: o corpo vai da posição de abertura à de fechamento da rodada, o pavio mostra até onde o clube subiu e desceu dentro dela, e a barra de baixo são os pontos. A régua tracejada marca a parada para a Copa. Do 4º ao 14º: 10 posições perdidas desde o melhor fechamento. Dados até a 35ª: 41 pts, 10V 11E 14D, saldo -9.
 
 Animação em Manim, dados do Portal Brasileirão: https://brasileirao.mpbarbosa.com
 Código: https://github.com/mpbarbosa/portal_brasileirao
@@ -109,7 +114,7 @@ Medido sobre o bloco como está — separado por `, `, que é o que se cola.
 300 caracteres, 21 tags.
 
 ```
-brasileirão, brasileirao 2026, campeonato brasileiro, série a, serie a, mirassol, leão, leao, mirassol fc, time do interior, campanha do mirassol, campanha rodada a rodada, candlestick, gráfico de velas, futebol brasileiro, visualização de dados, dataviz, manim, python, portal brasileirão, rodada 30
+brasileirão, brasileirao 2026, campeonato brasileiro, série a, serie a, mirassol, leão, leao, mirassol fc, time do interior, campanha do mirassol, campanha rodada a rodada, candlestick, gráfico de velas, futebol brasileiro, visualização de dados, dataviz, manim, python, portal brasileirão, rodada 35
 ```
 
 Nenhuma tag nova: o único acontecimento que o vídeo marca é a paralisação

@@ -417,7 +417,6 @@
 export const PLAYER_INSTAGRAM: Record<string, string> = {
   "211606": "dudukogitzki",      // Dudu · Athletico-PR
   "192070": "kevinviveros9",     // Kevin Viveros · Athletico-PR
-  "278568": "voronov_maksym06",  // Maksym Voronov · Athletico-PR
   "249158": "matheuss_s012",     // Matheus Soares · Athletico-PR
   "187426": "mycaelmoreira",     // Mycael · Athletico-PR
   "1662": "goleirosantosoficial", // Santos · Athletico-PR
@@ -438,7 +437,6 @@ export const PLAYER_INSTAGRAM: Record<string, string> = {
   "250493": "alvaro_montoro10",  // Alvaro Montoro · Botafogo
   "154595": "criistian_medina",  // Cristian Medina · Botafogo
   "1580": "edenilson",           // Edenilson · Botafogo
-  "77": "tucucorrea",            // Joaquín Correa · Botafogo
   "12653": "jr.santos.oficial",  // Júnior Santos · Botafogo
   "286833": "kadirbarria_18",    // Kadir Barría · Botafogo
   "160792": "mateoponte_04",     // Mateo Ponte · Botafogo
@@ -461,17 +459,14 @@ export const PLAYER_INSTAGRAM: Record<string, string> = {
   "8472": "memphisdepay",        // Memphis Depay · Corinthians
   "1325": "yurialberto",         // Yuri Alberto · Corinthians
   "169022": "brenolopesoficial", // Breno Lopes · Coritiba
-  "249479": "jp_chermont",       // João Pedro Chermont · Coritiba
   "30539": "maiconroque",        // Maicon · Coritiba
   "16154": "pedrorocha32",       // Pedro Rocha · Coritiba
   "1572": "rodrigomoledo13",     // Rodrigo Moledo · Coritiba
   "19958": "rodrigor09",         // Rodrigo Rodrigues · Coritiba
   "1266": "fabriciobruno96",     // Fabrício Bruno · Cruzeiro
   "1815": "gersonsantoss",       // Gerson · Cruzeiro
-  "181633": "kaikibrunos",       // Kaiki Bruno · Cruzeiro
   "91310": "kaiojorge",          // Kaio Jorge · Cruzeiro
   "178822": "matheuscunha_01",   // Matheus Cunha · Cruzeiro
-  "6532": "walacesouza08",       // Walace · Cruzeiro
   "2028": "alxsndro12",          // Alex Sandro · Flamengo
   "1074": "ayrtonlucas",         // Ayrton Lucas · Flamengo
   "7881": "daniluiz2",           // Danilo Luiz da Silva · Flamengo
@@ -487,12 +482,10 @@ export const PLAYER_INSTAGRAM: Record<string, string> = {
   "178710": "osamuellino",       // Samuel Lino · Flamengo
   "118": "saulniguez",           // Saúl · Flamengo
   "28614": "agus_cano7",         // Agustín Canobbio · Fluminense
-  "245200": "facubernal_08",     // Facundo Bernal · Fluminense
   "15929": "guiarana",           // Guilherme Arana · Fluminense
   "21689": "hulkparaiba",        // Hulk · Fluminense
   "1215": "igorrabellooficial",  // Igor Rabello · Fluminense
   "157533": "jkennedy",          // John Kennedy · Fluminense
-  "179177": "martinelli.08",     // Martinelli · Fluminense
   "23333": "yefersonsoteldo1006", // Yeferson Soteldo · Fluminense
   "1148": "arthurhmelo",         // Arthur · Grêmio
   "37833": "carlosvinicius95",   // Carlos Vinícius · Grêmio
@@ -525,7 +518,6 @@ export const PLAYER_INSTAGRAM: Record<string, string> = {
   "1086": "luanperes94",         // Luan Peres · Santos
   "292398": "nadsonjuan_09",     // Nadson Maia · Santos
   "8491": "neymarjr",            // Neymar · Santos
-  "2295": "tomasrincon8",        // Tomás Rincón · Santos
   "1192": "arturvictor",         // Artur Guimaraes · São Paulo
   "3244": "cedricsoares41",      // Cédric · São Paulo
   "276282": "luccamalencar",     // Lucca Marques · São Paulo

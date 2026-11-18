@@ -26,20 +26,6 @@ import type { ClubCode } from "@/src/types";
  * that added it rather than summarised here, where it would go stale.
  */
 export const COACH_OVERRIDES: Record<ClubCode, string> = {
-  // Fluminense. Served as "Luis Zubeldía", demitido em 2026-08-13 — ver
-  // `events.ts`'s `fluminense-zubeldia`. Marcão (Marco Aurélio de Oliveira),
-  // auxiliar permanente do clube desde 2014, assumiu interinamente no dia
-  // seguinte e foi **efetivado** — não apenas interino — em 2026-08-22, no
-  // Maracanã, logo depois da vitória de virada por 2x1 sobre o Remo pela 24ª
-  // rodada. Confirmado por múltiplas fontes de imprensa independentes, todas
-  // nomeando a mesma data e o mesmo anúncio do presidente Mattheus Montenegro:
-  // Gazeta Esportiva ("Fluminense oficializa Marcão"), Folha do Leste
-  // ("Fluminense efetiva Marcão"), CNN Brasil, Goal.com. `events.ts` só
-  // registava a fase interina; a efetivação é um acontecimento mais recente
-  // que este ficheiro escolhe não duplicar lá — a correcção aqui já é a
-  // resposta que interessa a um leitor do cartão do clube.
-  "1765": "Marcão",
-
   // Grêmio. Served as "Jéssica Lima", who is not the men's first-team técnico.
   //
   // **Updated 2026-09-14, and this is the file's own predicted failure mode
@@ -58,12 +44,6 @@ export const COACH_OVERRIDES: Record<ClubCode, string> = {
   // "where they disagree, the provider stands" clause — the provider (still
   // serving "Jéssica Lima") is not a candidate answer either way.
   "1767": "Luiz Felipe Scolari",
-
-  // Athletico-PR. Served as "João Eduardo Louro Baptista Cr" — a different
-  // person, and cut short. pt.wikipedia and en.wikipedia both name Odair
-  // Hellmann. Wikidata is the outlier and stale: its preferred P286 still says
-  // Maurício Barbieri, from 2024-12-16.
-  "1768": "Odair Hellmann",
 
   // Botafogo. Served as "Franclim Carvalho", demitido em 2026-08-18 — ver
   // `events.ts`'s `botafogo-franclim`. Rodrigo Bellão, treinador do sub-20 do

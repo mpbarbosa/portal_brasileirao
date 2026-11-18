@@ -1,7 +1,7 @@
 # YouTube — velas do Fluminense
 
 Texto que acompanha [`velas-fluminense.mp4`](velas-fluminense.mp4)
-(1920×1080, 60fps, 24s).
+(1920×1080, 60fps, 26s).
 
 - **Título:** até 100 caracteres. Os títulos abaixo trazem a contagem medida.
 - **Descrição:** até 5.000 caracteres, mas só as duas primeiras linhas aparecem
@@ -9,16 +9,22 @@ Texto que acompanha [`velas-fluminense.mp4`](velas-fluminense.mp4)
 - **Tags:** até 500 caracteres somados, medidos com as vírgulas e os espaços
   exatamente como estão no bloco.
 - **Sem capítulos:** o YouTube exige pelo menos três, o primeiro em 00:00 e cada
-  um com 10s. Um vídeo de 24s não comporta.
+  um com 10s. Um vídeo de 26s não comporta.
 - **Com capa:** `velas-fluminense-miniatura.png`, 1280×720, o quadro do fecho da
   própria cena — a regra que o `scripts/manim/README.md` registra para as velas.
 - **Cortes verticais:** `velas-fluminense-45.mp4` (1080×1350, feed do Instagram) e `velas-fluminense-916.mp4` (1080×1920, Reels e YouTube Short).
 
-> **Os números aqui saem de `scripts/manim/velas-fluminense.json`, rodada 30,
-> snapshot de 2026-10-12** — 3º com 51 pts, 14V 9E 7D, e a oscilação entre
+> **Os números aqui saem de `scripts/manim/velas-fluminense.json`, rodada 35,
+> snapshot de 2026-11-18** — 4º com 57 pts, 16V 9E 9D, e a oscilação entre
 > o 2º e o 12º, que é a faixa que o painel do vídeo imprime. Eles **envelhecem**: um `sync-seed-data` seguido de uma
 > reexportação move o vídeo, e este arquivo não é regerado por nada. Reconferir
 > antes de publicar, contra o JSON e não contra esta página.
+>
+> **A última vela é oca.** Da 35ª rodada só um jogo foi disputado até o
+> snapshot (Mirassol 0x0 Atlético-MG), então este clube, como outros dezessete,
+> fecha o desenho numa rodada em que ainda não jogou — o card do vídeo diz
+> «sem jogo nesta rodada». Os 34 jogos são as 34 primeiras rodadas, sem partida
+> em atraso, e é por isso que a cópia abaixo data o recorte na 34ª.
 >
 > Os mesmos números estão **no quadro do fecho do próprio mp4**, no painel de
 > resumo, que é de onde a capa sai — então uma divergência entre este texto e a
@@ -45,7 +51,7 @@ Texto que acompanha [`velas-fluminense.mp4`](velas-fluminense.mp4)
 Recomendado (72 caracteres):
 
 ```
-Fluminense: 3º ao 6º em 30 rodadas, a campanha mais confinada da Série A
+Fluminense: 3º ao 6º em 34 rodadas, a campanha mais confinada da Série A
 ```
 
 A amplitude de fechamento, a menor da divisão — e **data o recorte**, que é a única defesa contra
@@ -53,7 +59,7 @@ alguém assistir daqui a três meses e achar que os números estão errados.
 
 | | título | caracteres | ângulo |
 |---|---|---|---|
-| 2 | `Fluminense em velas: 51 pontos, 14V 9E 7D até a 30ª rodada` | 58 | o número duro |
+| 2 | `Fluminense em velas: 57 pontos, 16V 9E 9D até a 34ª rodada` | 58 | o número duro |
 | 3 | `O que a vela mostra e a linha não: Fluminense do 3º ao 6º \| Brasileirão` | 71 | o argumento da cena, com este clube como o melhor exemplo |
 
 **Os apelidos não estão em nenhum deles, e estão nas tags**: é como o torcedor
@@ -64,16 +70,16 @@ busca, e não é como o clube aparece no vídeo nem na tabela.
 ```
 A campanha do Fluminense rodada a rodada, desenhada como vela: o corpo vai da posição em que o clube ABRIU a rodada até onde ele FECHOU, e o pavio cobre a melhor e a pior posição que ele ocupou enquanto a rodada era jogada. Embaixo, no mesmo eixo, os pontos acumulados — a barra é o total e a tampa clara é o que a rodada acrescentou.
 
-Dados até 12/10/2026 (30ª rodada):
-• Fluminense — 3º, 51 pts em 30 jogos
-• 14V · 9E · 7D — 48 gols pró, 37 contra, saldo +11
-• 57% de aproveitamento · oscilou entre o 2º e o 12º
+Dados até 18/11/2026 (34ª rodada):
+• Fluminense — 4º, 57 pts em 34 jogos
+• 16V · 9E · 9D — 55 gols pró, 42 contra, saldo +13
+• 56% de aproveitamento · oscilou entre o 2º e o 12º
 
-É a campanha mais confinada da Série A no fechamento das rodadas: em 30 rodadas o Fluminense nunca fechou acima do 3º nem abaixo do 6º. Quatro posições — a menor amplitude da divisão, conferida contra os vinte clubes.
+É a campanha mais confinada da Série A no fechamento das rodadas: em 34 rodadas o Fluminense nunca fechou acima do 3º nem abaixo do 6º. Quatro posições — a menor amplitude da divisão, conferida contra os vinte clubes.
 
 O painel do vídeo diz 2º e 12º, e a diferença não é erro: ali entram as posições ocupadas DENTRO de cada rodada, que é o que o pavio desenha. Um clube pode passar pelo 12º num sábado à noite e fechar o domingo em 6º — e essa distância é a razão de a vela existir ao lado da linha.
 
-São 7 derrotas em 30 jogos, o terceiro menor número da divisão, empatado com os do Athletico-PR e do Bahia, e 9 rodadas de invencibilidade na maior sequência.
+São 9 derrotas em 34 jogos, o terceiro menor número da divisão, empatado com o do Bahia, e 9 rodadas de invencibilidade na maior sequência.
 
 As réguas tracejadas que cruzam o desenho são acontecimentos de fora de campo, e cada uma cai na FRONTEIRA entre duas rodadas em vez de sobre uma: a paralisação para a Copa do Mundo depois da 18ª rodada, e a demissão de Luis Zubeldía depois da 22ª rodada. Quando a primeira aparece, o clube vinha de fechar a 18ª em 3º com 31 pts.
 
@@ -98,7 +104,7 @@ carregar o vídeo sozinha.
 Para Short, ou onde a descrição longa não couber.
 
 ```
-A campanha do Fluminense em velas: o corpo vai da posição de abertura à de fechamento da rodada, o pavio mostra até onde o clube subiu e desceu dentro dela, e a barra de baixo são os pontos. As réguas tracejadas marcam a saída de Luis Zubeldía e a parada para a Copa. Fechou 30 rodadas sem sair do 3º ao 6º. Dados até a 30ª: 51 pts, 14V 9E 7D, saldo +11.
+A campanha do Fluminense em velas: o corpo vai da posição de abertura à de fechamento da rodada, o pavio mostra até onde o clube subiu e desceu dentro dela, e a barra de baixo são os pontos. As réguas tracejadas marcam a saída de Luis Zubeldía e a parada para a Copa. Fechou 34 rodadas sem sair do 3º ao 6º. Dados até a 34ª: 57 pts, 16V 9E 9D, saldo +13.
 
 Animação em Manim, dados do Portal Brasileirão: https://brasileirao.mpbarbosa.com
 Código: https://github.com/mpbarbosa/portal_brasileirao
@@ -112,7 +118,7 @@ Medido sobre o bloco como está — separado por `, `, que é o que se cola.
 310 caracteres, 22 tags.
 
 ```
-brasileirão, brasileirao 2026, campeonato brasileiro, série a, serie a, fluminense, flu, tricolor carioca, fluzão, fluzao, campanha do fluminense, campanha rodada a rodada, candlestick, gráfico de velas, futebol brasileiro, visualização de dados, dataviz, manim, python, portal brasileirão, rodada 30, zubeldía
+brasileirão, brasileirao 2026, campeonato brasileiro, série a, serie a, fluminense, flu, tricolor carioca, fluzão, fluzao, campanha do fluminense, campanha rodada a rodada, candlestick, gráfico de velas, futebol brasileiro, visualização de dados, dataviz, manim, python, portal brasileirão, rodada 34, zubeldía
 ```
 
 `zubeldía` entra porque o vídeo agora **marca** essa saída, e é assim que o torcedor

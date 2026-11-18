@@ -1,5 +1,5 @@
 {
-  "snapshot": "2026-10-12",
+  "snapshot": "2026-11-18",
   "club": {
     "code": "1771",
     "name": "Cruzeiro",
@@ -563,11 +563,106 @@
       "close": 6,
       "best": 5,
       "worst": 6,
-      "points": null,
+      "points": 0,
       "totalPoints": 48,
-      "played": 29,
-      "result": null,
+      "played": 30,
+      "result": "D",
       "moved": -1,
+      "match": {
+        "opponent": "Bragantino",
+        "home": false,
+        "goalsFor": 2,
+        "goalsAgainst": 4,
+        "result": "D"
+      }
+    },
+    {
+      "round": 31,
+      "open": 6,
+      "close": 4,
+      "best": 4,
+      "worst": 7,
+      "points": 3,
+      "totalPoints": 51,
+      "played": 31,
+      "result": "V",
+      "moved": 2,
+      "match": {
+        "opponent": "Grêmio",
+        "home": false,
+        "goalsFor": 4,
+        "goalsAgainst": 2,
+        "result": "V"
+      }
+    },
+    {
+      "round": 32,
+      "open": 4,
+      "close": 3,
+      "best": 3,
+      "worst": 4,
+      "points": 3,
+      "totalPoints": 54,
+      "played": 32,
+      "result": "V",
+      "moved": 1,
+      "match": {
+        "opponent": "Clube do Remo",
+        "home": true,
+        "goalsFor": 1,
+        "goalsAgainst": 0,
+        "result": "V"
+      }
+    },
+    {
+      "round": 33,
+      "open": 3,
+      "close": 3,
+      "best": 3,
+      "worst": 3,
+      "points": 3,
+      "totalPoints": 57,
+      "played": 33,
+      "result": "V",
+      "moved": 0,
+      "match": {
+        "opponent": "Atlético-MG",
+        "home": false,
+        "goalsFor": 1,
+        "goalsAgainst": 0,
+        "result": "V"
+      }
+    },
+    {
+      "round": 34,
+      "open": 3,
+      "close": 3,
+      "best": 3,
+      "worst": 3,
+      "points": 3,
+      "totalPoints": 60,
+      "played": 34,
+      "result": "V",
+      "moved": 0,
+      "match": {
+        "opponent": "Bahia",
+        "home": true,
+        "goalsFor": 3,
+        "goalsAgainst": 2,
+        "result": "V"
+      }
+    },
+    {
+      "round": 35,
+      "open": 3,
+      "close": 3,
+      "best": 3,
+      "worst": 3,
+      "points": null,
+      "totalPoints": 60,
+      "played": 34,
+      "result": null,
+      "moved": 0,
       "match": null
     }
   ],

@@ -1,5 +1,5 @@
 {
-  "snapshot": "2026-10-12",
+  "snapshot": "2026-11-18",
   "club": {
     "code": "1770",
     "name": "Botafogo",
@@ -541,14 +541,14 @@
     {
       "round": 29,
       "open": 12,
-      "close": 13,
+      "close": 14,
       "best": 12,
-      "worst": 13,
+      "worst": 14,
       "points": 0,
       "totalPoints": 35,
       "played": 29,
       "result": "D",
-      "moved": -1,
+      "moved": -2,
       "match": {
         "opponent": "Vasco da Gama",
         "home": true,
@@ -559,13 +559,108 @@
     },
     {
       "round": 30,
-      "open": 13,
+      "open": 14,
+      "close": 14,
+      "best": 14,
+      "worst": 14,
+      "points": 1,
+      "totalPoints": 36,
+      "played": 30,
+      "result": "E",
+      "moved": 0,
+      "match": {
+        "opponent": "Coritiba",
+        "home": false,
+        "goalsFor": 1,
+        "goalsAgainst": 1,
+        "result": "E"
+      }
+    },
+    {
+      "round": 31,
+      "open": 14,
+      "close": 11,
+      "best": 11,
+      "worst": 14,
+      "points": 3,
+      "totalPoints": 39,
+      "played": 31,
+      "result": "V",
+      "moved": 3,
+      "match": {
+        "opponent": "Chapecoense",
+        "home": true,
+        "goalsFor": 1,
+        "goalsAgainst": 0,
+        "result": "V"
+      }
+    },
+    {
+      "round": 32,
+      "open": 11,
+      "close": 12,
+      "best": 11,
+      "worst": 12,
+      "points": 0,
+      "totalPoints": 39,
+      "played": 32,
+      "result": "D",
+      "moved": -1,
+      "match": {
+        "opponent": "Internacional",
+        "home": false,
+        "goalsFor": 0,
+        "goalsAgainst": 3,
+        "result": "D"
+      }
+    },
+    {
+      "round": 33,
+      "open": 12,
       "close": 13,
-      "best": 13,
+      "best": 12,
       "worst": 13,
+      "points": 0,
+      "totalPoints": 39,
+      "played": 33,
+      "result": "D",
+      "moved": -1,
+      "match": {
+        "opponent": "Clube do Remo",
+        "home": false,
+        "goalsFor": 1,
+        "goalsAgainst": 2,
+        "result": "D"
+      }
+    },
+    {
+      "round": 34,
+      "open": 13,
+      "close": 12,
+      "best": 12,
+      "worst": 14,
+      "points": 3,
+      "totalPoints": 42,
+      "played": 34,
+      "result": "V",
+      "moved": 1,
+      "match": {
+        "opponent": "Atlético-MG",
+        "home": true,
+        "goalsFor": 1,
+        "goalsAgainst": 0,
+        "result": "V"
+      }
+    },
+    {
+      "round": 35,
+      "open": 12,
+      "close": 12,
+      "best": 12,
+      "worst": 12,
       "points": null,
-      "totalPoints": 35,
-      "played": 29,
+      "totalPoints": 42,
+      "played": 34,
       "result": null,
       "moved": 0,
       "match": null

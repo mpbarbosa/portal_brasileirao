@@ -1,7 +1,7 @@
 # YouTube — velas do Atlético-MG
 
 Texto que acompanha [`velas-atletico-mg.mp4`](velas-atletico-mg.mp4)
-(1920×1080, 60fps, 24s).
+(1920×1080, 60fps, 26s).
 
 - **Título:** até 100 caracteres. Os títulos abaixo trazem a contagem medida.
 - **Descrição:** até 5.000 caracteres, mas só as duas primeiras linhas aparecem
@@ -9,16 +9,21 @@ Texto que acompanha [`velas-atletico-mg.mp4`](velas-atletico-mg.mp4)
 - **Tags:** até 500 caracteres somados, medidos com as vírgulas e os espaços
   exatamente como estão no bloco.
 - **Sem capítulos:** o YouTube exige pelo menos três, o primeiro em 00:00 e cada
-  um com 10s. Um vídeo de 24s não comporta.
+  um com 10s. Um vídeo de 26s não comporta.
 - **Com capa:** `velas-atletico-mg-miniatura.png`, 1280×720, o quadro do fecho da
   própria cena — a regra que o `scripts/manim/README.md` registra para as velas.
 - **Cortes verticais:** `velas-atletico-mg-45.mp4` (1080×1350, feed do Instagram) e `velas-atletico-mg-916.mp4` (1080×1920, Reels e YouTube Short).
 
-> **Os números aqui saem de `scripts/manim/velas-atletico-mg.json`, rodada 30,
-> snapshot de 2026-10-12** — 7º com 47 pts, 13V 8E 9D, e a oscilação entre
+> **Os números aqui saem de `scripts/manim/velas-atletico-mg.json`, rodada 35,
+> snapshot de 2026-11-18** — 7º com 51 pts, 14V 9E 12D, e a oscilação entre
 > o 4º e o 17º, que é a faixa que o painel do vídeo imprime. Eles **envelhecem**: um `sync-seed-data` seguido de uma
 > reexportação move o vídeo, e este arquivo não é regerado por nada. Reconferir
 > antes de publicar, contra o JSON e não contra esta página.
+>
+> **Este clube jogou a 35ª**, o único jogo da rodada disputado até o snapshot
+> (Mirassol 0x0 Atlético-MG). O desenho dele fecha numa vela cheia e o dos
+> outros dezoito numa vela oca; são 35 jogos contra 34 da maioria, e a cópia
+> abaixo data o recorte na 35ª.
 >
 > Os mesmos números estão **no quadro do fecho do próprio mp4**, no painel de
 > resumo, que é de onde a capa sai — então uma divergência entre este texto e a
@@ -28,7 +33,7 @@ Texto que acompanha [`velas-atletico-mg.mp4`](velas-atletico-mg.mp4)
 > duas diferem para 15 dos 20 clubes. O painel conta as posições ocupadas
 > enquanto a rodada era jogada — o pavio —, então ele é sempre igual ou mais
 > largo que o intervalo entre o melhor e o pior FECHAMENTO. Este clube fecha
-> entre o 7º e o 17º e o painel diz 4º e 17º.
+> entre o 6º e o 17º e o painel diz 4º e 17º.
 >
 > **O saldo e o aproveitamento vêm do `computeStandings`**, a mesma função que
 > monta a tabela do site, e não somados à mão a partir do JSON.
@@ -45,7 +50,7 @@ Texto que acompanha [`velas-atletico-mg.mp4`](velas-atletico-mg.mp4)
 Recomendado (63 caracteres):
 
 ```
-Atlético-MG em velas: fecha entre o 6º e o 17º até a 30ª rodada
+Atlético-MG em velas: fecha entre o 6º e o 17º até a 35ª rodada
 ```
 
 A faixa de fechamento, que é o que a campanha é — e **data o recorte**, que é a única defesa contra
@@ -54,7 +59,7 @@ alguém assistir daqui a três meses e achar que os números estão errados.
 | | título | caracteres | ângulo |
 |---|---|---|---|
 | 2 | `A campanha do Atlético-MG rodada a rodada \| Brasileirão 2026 em candlestick` | 75 | genérico e buscável |
-| 3 | `Atlético-MG: 47 pontos em 30 jogos, 13V 8E 9D` | 45 | o número duro |
+| 3 | `Atlético-MG: 51 pontos em 35 jogos, 14V 9E 12D` | 46 | o número duro |
 
 **Os apelidos não estão em nenhum deles, e estão nas tags**: é como o torcedor
 busca, e não é como o clube aparece no vídeo nem na tabela.
@@ -64,14 +69,14 @@ busca, e não é como o clube aparece no vídeo nem na tabela.
 ```
 A campanha do Atlético-MG rodada a rodada, desenhada como vela: o corpo vai da posição em que o clube ABRIU a rodada até onde ele FECHOU, e o pavio cobre a melhor e a pior posição que ele ocupou enquanto a rodada era jogada. Embaixo, no mesmo eixo, os pontos acumulados — a barra é o total e a tampa clara é o que a rodada acrescentou.
 
-Dados até 12/10/2026 (30ª rodada):
-• Atlético-MG — 7º, 47 pts em 30 jogos
-• 13V · 8E · 9D — 41 gols pró, 35 contra, saldo +6
-• 52% de aproveitamento · oscilou entre o 4º e o 17º
+Dados até 18/11/2026 (35ª rodada):
+• Atlético-MG — 7º, 51 pts em 35 jogos
+• 14V · 9E · 12D — 44 gols pró, 40 contra, saldo +4
+• 49% de aproveitamento · oscilou entre o 4º e o 17º
 
 O Atlético-MG atravessa a temporada fechando rodadas entre o 6º e o 17º, sem fechar nenhuma no G4 e tocando o Z4 uma vez só, no 17º da 4ª rodada. É a campanha do meio, e o desenho a mostra como uma faixa larga de corpos curtos. O painel diz 4º e 17º porque conta o que aconteceu dentro das rodadas.
 
-O jogo em atraso que este clube tinha no recorte anterior foi disputado: são 30 jogos em 30 rodadas, então o total de pontos já é comparável com o de quem jogou tudo. 9 derrotas e 8 rodadas de invencibilidade na maior série.
+Este é um dos dois clubes que já jogaram a 35ª — o 0x0 fora de casa contra o Mirassol, o único jogo disputado da rodada —, então são 35 jogos contra os 34 dos outros dezoito, e o total de pontos tem um jogo a mais que o da maioria. 12 derrotas, três delas nos últimos quatro jogos, e 8 rodadas de invencibilidade na maior série.
 
 As réguas tracejadas que cruzam o desenho são acontecimentos de fora de campo, e cada uma cai na FRONTEIRA entre duas rodadas em vez de sobre uma: a demissão de Jorge Sampaoli depois da 3ª rodada, e a paralisação para a Copa do Mundo depois da 18ª rodada. Quando a primeira aparece, o clube vinha de fechar a 3ª em 15º com 2 pts.
 
@@ -96,7 +101,7 @@ carregar o vídeo sozinha.
 Para Short, ou onde a descrição longa não couber.
 
 ```
-A campanha do Atlético-MG em velas: o corpo vai da posição de abertura à de fechamento da rodada, o pavio mostra até onde o clube subiu e desceu dentro dela, e a barra de baixo são os pontos. As réguas tracejadas marcam a saída de Jorge Sampaoli e a parada para a Copa. Fecha entre o 7º e o 17º, e tem jogo a menos que a maioria. Dados até a 30ª: 47 pts, 13V 8E 9D, saldo +6.
+A campanha do Atlético-MG em velas: o corpo vai da posição de abertura à de fechamento da rodada, o pavio mostra até onde o clube subiu e desceu dentro dela, e a barra de baixo são os pontos. As réguas tracejadas marcam a saída de Jorge Sampaoli e a parada para a Copa. Fecha entre o 6º e o 17º, e tem um jogo a mais que a maioria. Dados até a 35ª: 51 pts, 14V 9E 12D, saldo +4.
 
 Animação em Manim, dados do Portal Brasileirão: https://brasileirao.mpbarbosa.com
 Código: https://github.com/mpbarbosa/portal_brasileirao
@@ -110,7 +115,7 @@ Medido sobre o bloco como está — separado por `, `, que é o que se cola.
 320 caracteres, 22 tags.
 
 ```
-brasileirão, brasileirao 2026, campeonato brasileiro, série a, serie a, atlético-mg, galo, atlético mineiro, atletico mineiro, cam, campanha do atlético-mg, campanha rodada a rodada, candlestick, gráfico de velas, futebol brasileiro, visualização de dados, dataviz, manim, python, portal brasileirão, rodada 30, sampaoli
+brasileirão, brasileirao 2026, campeonato brasileiro, série a, serie a, atlético-mg, galo, atlético mineiro, atletico mineiro, cam, campanha do atlético-mg, campanha rodada a rodada, candlestick, gráfico de velas, futebol brasileiro, visualização de dados, dataviz, manim, python, portal brasileirão, rodada 35, sampaoli
 ```
 
 `sampaoli` entra porque o vídeo agora **marca** essa saída, e é assim que o torcedor

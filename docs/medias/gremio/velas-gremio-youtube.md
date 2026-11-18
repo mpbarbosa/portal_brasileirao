@@ -1,7 +1,7 @@
 # YouTube — velas do Grêmio
 
 Texto que acompanha [`velas-gremio.mp4`](velas-gremio.mp4)
-(1920×1080, 60fps, 24s).
+(1920×1080, 60fps, 26s).
 
 - **Título:** até 100 caracteres. Os títulos abaixo trazem a contagem medida.
 - **Descrição:** até 5.000 caracteres, mas só as duas primeiras linhas aparecem
@@ -9,16 +9,22 @@ Texto que acompanha [`velas-gremio.mp4`](velas-gremio.mp4)
 - **Tags:** até 500 caracteres somados, medidos com as vírgulas e os espaços
   exatamente como estão no bloco.
 - **Sem capítulos:** o YouTube exige pelo menos três, o primeiro em 00:00 e cada
-  um com 10s. Um vídeo de 24s não comporta.
+  um com 10s. Um vídeo de 26s não comporta.
 - **Com capa:** `velas-gremio-miniatura.png`, 1280×720, o quadro do fecho da
   própria cena — a regra que o `scripts/manim/README.md` registra para as velas.
 - **Cortes verticais:** `velas-gremio-45.mp4` (1080×1350, feed do Instagram) e `velas-gremio-916.mp4` (1080×1920, Reels e YouTube Short).
 
-> **Os números aqui saem de `scripts/manim/velas-gremio.json`, rodada 30,
-> snapshot de 2026-10-12** — 18º com 31 pts, 7V 10E 13D, e a oscilação entre
+> **Os números aqui saem de `scripts/manim/velas-gremio.json`, rodada 35,
+> snapshot de 2026-11-18** — 18º com 37 pts, 9V 10E 15D, e a oscilação entre
 > o 7º e o 18º, que é a faixa que o painel do vídeo imprime. Eles **envelhecem**: um `sync-seed-data` seguido de uma
 > reexportação move o vídeo, e este arquivo não é regerado por nada. Reconferir
 > antes de publicar, contra o JSON e não contra esta página.
+>
+> **A última vela é oca.** Da 35ª rodada só um jogo foi disputado até o
+> snapshot (Mirassol 0x0 Atlético-MG), então este clube, como outros dezessete,
+> fecha o desenho numa rodada em que ainda não jogou — o card do vídeo diz
+> «sem jogo nesta rodada». Os 34 jogos são as 34 primeiras rodadas, sem partida
+> em atraso, e é por isso que a cópia abaixo data o recorte na 34ª.
 >
 > Os mesmos números estão **no quadro do fecho do próprio mp4**, no painel de
 > resumo, que é de onde a capa sai — então uma divergência entre este texto e a
@@ -45,16 +51,16 @@ Texto que acompanha [`velas-gremio.mp4`](velas-gremio.mp4)
 Recomendado (56 caracteres):
 
 ```
-Grêmio em velas: 31 pontos em 30 jogos, e de volta ao Z4
+Grêmio em velas: 37 pontos em 34 jogos, e de volta ao Z4
 ```
 
-A posição de fechamento, que está no Z4 nas duas últimas rodadas desenhadas — e **data o recorte**, que é a única defesa contra
+A posição de fechamento, que voltou ao Z4 na última rodada jogada depois de uma rodada fora dele — e **data o recorte**, que é a única defesa contra
 alguém assistir daqui a três meses e achar que os números estão errados.
 
 | | título | caracteres | ângulo |
 |---|---|---|---|
 | 2 | `A campanha do Grêmio rodada a rodada \| Brasileirão 2026 em candlestick` | 70 | genérico e buscável |
-| 3 | `Grêmio: fecha entre o 8º e o 18º em 30 rodadas do Brasileirão` | 61 | a faixa de fechamento |
+| 3 | `Grêmio: fecha entre o 8º e o 18º em 34 rodadas do Brasileirão` | 61 | a faixa de fechamento |
 
 **Os apelidos não estão em nenhum deles, e estão nas tags**: é como o torcedor
 busca, e não é como o clube aparece no vídeo nem na tabela.
@@ -64,16 +70,16 @@ busca, e não é como o clube aparece no vídeo nem na tabela.
 ```
 A campanha do Grêmio rodada a rodada, desenhada como vela: o corpo vai da posição em que o clube ABRIU a rodada até onde ele FECHOU, e o pavio cobre a melhor e a pior posição que ele ocupou enquanto a rodada era jogada. Embaixo, no mesmo eixo, os pontos acumulados — a barra é o total e a tampa clara é o que a rodada acrescentou.
 
-Dados até 12/10/2026 (30ª rodada):
-• Grêmio — 18º, 31 pts em 30 jogos
-• 7V · 10E · 13D — 32 gols pró, 40 contra, saldo -8
-• 34% de aproveitamento · oscilou entre o 7º e o 18º
+Dados até 18/11/2026 (34ª rodada):
+• Grêmio — 18º, 37 pts em 34 jogos
+• 9V · 10E · 15D — 38 gols pró, 47 contra, saldo -9
+• 36% de aproveitamento · oscilou entre o 7º e o 18º
 
-O vídeo termina com o Grêmio em 18º, dentro do Z4: o 0x0 com o Palmeiras na 28ª o levou do 16º ao 17º, o 1x1 em Belém na 29ª ao 18º, e o 1x1 com o Internacional na 30ª o deixou ali. Não é a primeira vez no Z4 — o clube já tinha fechado em 17º na 15ª, na 21ª e na 28ª.
+O vídeo termina com o Grêmio em 18º, dentro do Z4: duas vitórias seguidas, o 1x0 sobre o Coritiba fora de casa na 32ª e o 2x0 sobre o Athletico-PR na 33ª, o tinham levado ao 15º, e o 1x3 para o Flamengo fora de casa na 34ª o devolveu ao 18º. Não é novidade — o clube fechou no Z4 em nove das 34 rodadas, a primeira delas a 15ª.
 
-A campanha fecha entre o 8º e o 17º, com 13 derrotas e 4 rodadas de invencibilidade na maior sequência.
+A campanha fecha entre o 8º e o 18º, com 15 derrotas e 4 rodadas de invencibilidade na maior sequência.
 
-Duas réguas tracejadas cruzam o desenho. A primeira é o acontecimento de fora de campo que tocou os vinte clubes: a paralisação para a Copa do Mundo depois da 18ª rodada. A segunda é do próprio Grêmio: a demissão de Luís Castro depois da 27ª, três rodadas antes do fim do desenho. As duas caem na FRONTEIRA entre duas rodadas em vez de sobre uma, porque é isso que elas separam — o que veio antes e o que veio depois. Na primeira o clube parou em 16º com 21 pts; quando a segunda aparece, tinha 28 pts em 27 jogos e vinha de fechar em 16º.
+Duas réguas tracejadas cruzam o desenho. A primeira é o acontecimento de fora de campo que tocou os vinte clubes: a paralisação para a Copa do Mundo depois da 18ª rodada. A segunda é do próprio Grêmio: a demissão de Luís Castro depois da 27ª, sete rodadas antes do fim do recorte. As duas caem na FRONTEIRA entre duas rodadas em vez de sobre uma, porque é isso que elas separam — o que veio antes e o que veio depois. Na primeira o clube parou em 16º com 21 pts; quando a segunda aparece, tinha 28 pts em 27 jogos e vinha de fechar em 17º.
 
 O eixo mostra a divisão inteira, 1º no topo e 20º embaixo, com as faixas do G4 e do Z4 ao fundo — é isso que permite comparar este vídeo com o de qualquer outro clube.
 
@@ -96,7 +102,7 @@ carregar o vídeo sozinha.
 Para Short, ou onde a descrição longa não couber.
 
 ```
-A campanha do Grêmio em velas: o corpo vai da posição de abertura à de fechamento da rodada, o pavio mostra até onde o clube subiu e desceu dentro dela, e a barra de baixo são os pontos. As réguas tracejadas marcam a parada para a Copa e a saída de Luís Castro. Termina em 17º, no Z4. Dados até a 30ª: 31 pts, 7V 10E 13D, saldo -8.
+A campanha do Grêmio em velas: o corpo vai da posição de abertura à de fechamento da rodada, o pavio mostra até onde o clube subiu e desceu dentro dela, e a barra de baixo são os pontos. As réguas tracejadas marcam a parada para a Copa e a saída de Luís Castro. Termina em 18º, no Z4. Dados até a 34ª: 37 pts, 9V 10E 15D, saldo -9.
 
 Animação em Manim, dados do Portal Brasileirão: https://brasileirao.mpbarbosa.com
 Código: https://github.com/mpbarbosa/portal_brasileirao
@@ -110,7 +116,7 @@ Medido sobre o bloco como está — separado por `, `, que é o que se cola.
 316 caracteres, 22 tags.
 
 ```
-brasileirão, brasileirao 2026, campeonato brasileiro, série a, serie a, grêmio, imortal, tricolor gaúcho, tricolor gaucho, gfbpa, campanha do grêmio, campanha rodada a rodada, candlestick, gráfico de velas, futebol brasileiro, visualização de dados, dataviz, manim, python, portal brasileirão, rodada 30, luís castro
+brasileirão, brasileirao 2026, campeonato brasileiro, série a, serie a, grêmio, imortal, tricolor gaúcho, tricolor gaucho, gfbpa, campanha do grêmio, campanha rodada a rodada, candlestick, gráfico de velas, futebol brasileiro, visualização de dados, dataviz, manim, python, portal brasileirão, rodada 34, luís castro
 ```
 
 `luís castro` entra porque o vídeo agora **marca** essa saída, e é assim que o

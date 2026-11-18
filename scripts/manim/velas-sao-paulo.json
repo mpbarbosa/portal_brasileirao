@@ -1,5 +1,5 @@
 {
-  "snapshot": "2026-10-12",
+  "snapshot": "2026-11-18",
   "club": {
     "code": "1776",
     "name": "São Paulo",
@@ -524,7 +524,7 @@
       "open": 12,
       "close": 11,
       "best": 11,
-      "worst": 12,
+      "worst": 13,
       "points": 3,
       "totalPoints": 36,
       "played": 28,
@@ -541,14 +541,14 @@
     {
       "round": 29,
       "open": 11,
-      "close": 11,
+      "close": 12,
       "best": 11,
-      "worst": 11,
+      "worst": 12,
       "points": 0,
       "totalPoints": 36,
       "played": 29,
       "result": "D",
-      "moved": 0,
+      "moved": -1,
       "match": {
         "opponent": "Cruzeiro",
         "home": false,
@@ -559,10 +559,10 @@
     },
     {
       "round": 30,
-      "open": 11,
-      "close": 9,
+      "open": 12,
+      "close": 10,
       "best": 9,
-      "worst": 11,
+      "worst": 12,
       "points": 3,
       "totalPoints": 39,
       "played": 30,
@@ -575,6 +575,95 @@
         "goalsAgainst": 1,
         "result": "V"
       }
+    },
+    {
+      "round": 31,
+      "open": 10,
+      "close": 9,
+      "best": 8,
+      "worst": 10,
+      "points": 3,
+      "totalPoints": 42,
+      "played": 31,
+      "result": "V",
+      "moved": 1,
+      "match": {
+        "opponent": "Vasco da Gama",
+        "home": true,
+        "goalsFor": 1,
+        "goalsAgainst": 0,
+        "result": "V"
+      }
+    },
+    {
+      "round": 32,
+      "open": 9,
+      "close": 9,
+      "best": 9,
+      "worst": 9,
+      "points": 1,
+      "totalPoints": 43,
+      "played": 32,
+      "result": "E",
+      "moved": 0,
+      "match": {
+        "opponent": "Mirassol",
+        "home": false,
+        "goalsFor": 1,
+        "goalsAgainst": 1,
+        "result": "E"
+      }
+    },
+    {
+      "round": 33,
+      "open": 9,
+      "close": 10,
+      "best": 9,
+      "worst": 10,
+      "points": 0,
+      "totalPoints": 43,
+      "played": 33,
+      "result": "D",
+      "moved": -1,
+      "match": {
+        "opponent": "Bahia",
+        "home": false,
+        "goalsFor": 2,
+        "goalsAgainst": 3,
+        "result": "D"
+      }
+    },
+    {
+      "round": 34,
+      "open": 10,
+      "close": 10,
+      "best": 10,
+      "worst": 11,
+      "points": 1,
+      "totalPoints": 44,
+      "played": 34,
+      "result": "E",
+      "moved": 0,
+      "match": {
+        "opponent": "Corinthians",
+        "home": true,
+        "goalsFor": 0,
+        "goalsAgainst": 0,
+        "result": "E"
+      }
+    },
+    {
+      "round": 35,
+      "open": 10,
+      "close": 10,
+      "best": 10,
+      "worst": 10,
+      "points": null,
+      "totalPoints": 44,
+      "played": 34,
+      "result": null,
+      "moved": 0,
+      "match": null
     }
   ],
   "events": [

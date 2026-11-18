@@ -1,5 +1,5 @@
 {
-  "snapshot": "2026-10-12",
+  "snapshot": "2026-11-18",
   "clubs": [
     {
       "code": "1768",
@@ -181,9 +181,39 @@
         },
         {
           "round": 30,
-          "points": 50,
+          "points": 53,
+          "position": 3,
+          "played": 30
+        },
+        {
+          "round": 31,
+          "points": 53,
+          "position": 3,
+          "played": 31
+        },
+        {
+          "round": 32,
+          "points": 54,
           "position": 4,
-          "played": 29
+          "played": 32
+        },
+        {
+          "round": 33,
+          "points": 54,
+          "position": 5,
+          "played": 33
+        },
+        {
+          "round": 34,
+          "points": 54,
+          "position": 5,
+          "played": 34
+        },
+        {
+          "round": 35,
+          "points": 54,
+          "position": 5,
+          "played": 34
         }
       ]
     },
@@ -370,6 +400,36 @@
           "points": 47,
           "position": 7,
           "played": 30
+        },
+        {
+          "round": 31,
+          "points": 50,
+          "position": 6,
+          "played": 31
+        },
+        {
+          "round": 32,
+          "points": 50,
+          "position": 6,
+          "played": 32
+        },
+        {
+          "round": 33,
+          "points": 50,
+          "position": 7,
+          "played": 33
+        },
+        {
+          "round": 34,
+          "points": 50,
+          "position": 7,
+          "played": 34
+        },
+        {
+          "round": 35,
+          "points": 51,
+          "position": 7,
+          "played": 35
         }
       ]
     },
@@ -556,6 +616,36 @@
           "points": 49,
           "position": 5,
           "played": 30
+        },
+        {
+          "round": 31,
+          "points": 49,
+          "position": 7,
+          "played": 31
+        },
+        {
+          "round": 32,
+          "points": 50,
+          "position": 7,
+          "played": 32
+        },
+        {
+          "round": 33,
+          "points": 53,
+          "position": 6,
+          "played": 33
+        },
+        {
+          "round": 34,
+          "points": 53,
+          "position": 6,
+          "played": 34
+        },
+        {
+          "round": 35,
+          "points": 53,
+          "position": 6,
+          "played": 34
         }
       ]
     },
@@ -734,14 +824,44 @@
         {
           "round": 29,
           "points": 35,
-          "position": 13,
+          "position": 14,
           "played": 29
         },
         {
           "round": 30,
-          "points": 35,
+          "points": 36,
+          "position": 14,
+          "played": 30
+        },
+        {
+          "round": 31,
+          "points": 39,
+          "position": 11,
+          "played": 31
+        },
+        {
+          "round": 32,
+          "points": 39,
+          "position": 12,
+          "played": 32
+        },
+        {
+          "round": 33,
+          "points": 39,
           "position": 13,
-          "played": 29
+          "played": 33
+        },
+        {
+          "round": 34,
+          "points": 42,
+          "position": 12,
+          "played": 34
+        },
+        {
+          "round": 35,
+          "points": 42,
+          "position": 12,
+          "played": 34
         }
       ]
     },
@@ -925,9 +1045,39 @@
         },
         {
           "round": 30,
-          "points": 37,
-          "position": 11,
-          "played": 29
+          "points": 40,
+          "position": 9,
+          "played": 30
+        },
+        {
+          "round": 31,
+          "points": 41,
+          "position": 10,
+          "played": 31
+        },
+        {
+          "round": 32,
+          "points": 41,
+          "position": 10,
+          "played": 32
+        },
+        {
+          "round": 33,
+          "points": 44,
+          "position": 9,
+          "played": 33
+        },
+        {
+          "round": 34,
+          "points": 47,
+          "position": 8,
+          "played": 34
+        },
+        {
+          "round": 35,
+          "points": 47,
+          "position": 8,
+          "played": 34
         }
       ]
     },
@@ -1059,61 +1209,91 @@
           "round": 21,
           "points": 10,
           "position": 20,
-          "played": 20
+          "played": 21
         },
         {
           "round": 22,
           "points": 10,
           "position": 20,
-          "played": 21
+          "played": 22
         },
         {
           "round": 23,
           "points": 11,
           "position": 20,
-          "played": 22
+          "played": 23
         },
         {
           "round": 24,
           "points": 14,
           "position": 20,
-          "played": 23
+          "played": 24
         },
         {
           "round": 25,
           "points": 14,
           "position": 20,
-          "played": 24
+          "played": 25
         },
         {
           "round": 26,
           "points": 17,
           "position": 20,
-          "played": 25
+          "played": 26
         },
         {
           "round": 27,
           "points": 17,
           "position": 20,
-          "played": 26
+          "played": 27
         },
         {
           "round": 28,
           "points": 18,
           "position": 20,
-          "played": 27
+          "played": 28
         },
         {
           "round": 29,
           "points": 18,
           "position": 20,
-          "played": 28
+          "played": 29
         },
         {
           "round": 30,
           "points": 18,
           "position": 20,
-          "played": 28
+          "played": 30
+        },
+        {
+          "round": 31,
+          "points": 18,
+          "position": 20,
+          "played": 31
+        },
+        {
+          "round": 32,
+          "points": 21,
+          "position": 20,
+          "played": 32
+        },
+        {
+          "round": 33,
+          "points": 21,
+          "position": 20,
+          "played": 33
+        },
+        {
+          "round": 34,
+          "points": 21,
+          "position": 20,
+          "played": 34
+        },
+        {
+          "round": 35,
+          "points": 21,
+          "position": 20,
+          "played": 34
         }
       ]
     },
@@ -1256,13 +1436,13 @@
         {
           "round": 23,
           "points": 23,
-          "position": 18,
+          "position": 19,
           "played": 23
         },
         {
           "round": 24,
           "points": 23,
-          "position": 18,
+          "position": 19,
           "played": 24
         },
         {
@@ -1300,6 +1480,36 @@
           "points": 25,
           "position": 19,
           "played": 30
+        },
+        {
+          "round": 31,
+          "points": 26,
+          "position": 19,
+          "played": 31
+        },
+        {
+          "round": 32,
+          "points": 26,
+          "position": 19,
+          "played": 32
+        },
+        {
+          "round": 33,
+          "points": 29,
+          "position": 19,
+          "played": 33
+        },
+        {
+          "round": 34,
+          "points": 29,
+          "position": 19,
+          "played": 34
+        },
+        {
+          "round": 35,
+          "points": 29,
+          "position": 19,
+          "played": 34
         }
       ]
     },
@@ -1472,7 +1682,7 @@
         {
           "round": 28,
           "points": 32,
-          "position": 14,
+          "position": 15,
           "played": 28
         },
         {
@@ -1486,6 +1696,36 @@
           "points": 32,
           "position": 16,
           "played": 30
+        },
+        {
+          "round": 31,
+          "points": 33,
+          "position": 16,
+          "played": 31
+        },
+        {
+          "round": 32,
+          "points": 33,
+          "position": 18,
+          "played": 32
+        },
+        {
+          "round": 33,
+          "points": 36,
+          "position": 17,
+          "played": 33
+        },
+        {
+          "round": 34,
+          "points": 37,
+          "position": 17,
+          "played": 34
+        },
+        {
+          "round": 35,
+          "points": 37,
+          "position": 17,
+          "played": 34
         }
       ]
     },
@@ -1669,9 +1909,39 @@
         },
         {
           "round": 30,
-          "points": 38,
-          "position": 10,
-          "played": 29
+          "points": 39,
+          "position": 11,
+          "played": 30
+        },
+        {
+          "round": 31,
+          "points": 39,
+          "position": 12,
+          "played": 31
+        },
+        {
+          "round": 32,
+          "points": 39,
+          "position": 13,
+          "played": 32
+        },
+        {
+          "round": 33,
+          "points": 42,
+          "position": 11,
+          "played": 33
+        },
+        {
+          "round": 34,
+          "points": 42,
+          "position": 13,
+          "played": 34
+        },
+        {
+          "round": 35,
+          "points": 42,
+          "position": 13,
+          "played": 34
         }
       ]
     },
@@ -1857,7 +2127,37 @@
           "round": 30,
           "points": 48,
           "position": 6,
-          "played": 29
+          "played": 30
+        },
+        {
+          "round": 31,
+          "points": 51,
+          "position": 4,
+          "played": 31
+        },
+        {
+          "round": 32,
+          "points": 54,
+          "position": 3,
+          "played": 32
+        },
+        {
+          "round": 33,
+          "points": 57,
+          "position": 3,
+          "played": 33
+        },
+        {
+          "round": 34,
+          "points": 60,
+          "position": 3,
+          "played": 34
+        },
+        {
+          "round": 35,
+          "points": 60,
+          "position": 3,
+          "played": 34
         }
       ]
     },
@@ -2044,6 +2344,36 @@
           "points": 64,
           "position": 1,
           "played": 30
+        },
+        {
+          "round": 31,
+          "points": 67,
+          "position": 1,
+          "played": 31
+        },
+        {
+          "round": 32,
+          "points": 70,
+          "position": 1,
+          "played": 32
+        },
+        {
+          "round": 33,
+          "points": 73,
+          "position": 1,
+          "played": 33
+        },
+        {
+          "round": 34,
+          "points": 76,
+          "position": 1,
+          "played": 34
+        },
+        {
+          "round": 35,
+          "points": 76,
+          "position": 1,
+          "played": 34
         }
       ]
     },
@@ -2228,8 +2558,38 @@
         {
           "round": 30,
           "points": 51,
-          "position": 3,
+          "position": 4,
           "played": 30
+        },
+        {
+          "round": 31,
+          "points": 51,
+          "position": 5,
+          "played": 31
+        },
+        {
+          "round": 32,
+          "points": 51,
+          "position": 5,
+          "played": 32
+        },
+        {
+          "round": 33,
+          "points": 54,
+          "position": 4,
+          "played": 33
+        },
+        {
+          "round": 34,
+          "points": 57,
+          "position": 4,
+          "played": 34
+        },
+        {
+          "round": 35,
+          "points": 57,
+          "position": 4,
+          "played": 34
         }
       ]
     },
@@ -2360,7 +2720,7 @@
         {
           "round": 21,
           "points": 22,
-          "position": 17,
+          "position": 18,
           "played": 21
         },
         {
@@ -2396,7 +2756,7 @@
         {
           "round": 27,
           "points": 28,
-          "position": 16,
+          "position": 17,
           "played": 27
         },
         {
@@ -2416,6 +2776,36 @@
           "points": 31,
           "position": 18,
           "played": 30
+        },
+        {
+          "round": 31,
+          "points": 31,
+          "position": 18,
+          "played": 31
+        },
+        {
+          "round": 32,
+          "points": 34,
+          "position": 17,
+          "played": 32
+        },
+        {
+          "round": 33,
+          "points": 37,
+          "position": 15,
+          "played": 33
+        },
+        {
+          "round": 34,
+          "points": 37,
+          "position": 18,
+          "played": 34
+        },
+        {
+          "round": 35,
+          "points": 37,
+          "position": 18,
+          "played": 34
         }
       ]
     },
@@ -2546,25 +2936,25 @@
         {
           "round": 21,
           "points": 22,
-          "position": 16,
+          "position": 17,
           "played": 21
         },
         {
           "round": 22,
           "points": 23,
-          "position": 17,
+          "position": 18,
           "played": 22
         },
         {
           "round": 23,
           "points": 24,
-          "position": 16,
+          "position": 17,
           "played": 23
         },
         {
           "round": 24,
           "points": 25,
-          "position": 16,
+          "position": 17,
           "played": 24
         },
         {
@@ -2602,6 +2992,36 @@
           "points": 32,
           "position": 17,
           "played": 30
+        },
+        {
+          "round": 31,
+          "points": 32,
+          "position": 17,
+          "played": 31
+        },
+        {
+          "round": 32,
+          "points": 35,
+          "position": 16,
+          "played": 32
+        },
+        {
+          "round": 33,
+          "points": 35,
+          "position": 18,
+          "played": 33
+        },
+        {
+          "round": 34,
+          "points": 38,
+          "position": 16,
+          "played": 34
+        },
+        {
+          "round": 35,
+          "points": 38,
+          "position": 16,
+          "played": 34
         }
       ]
     },
@@ -2732,31 +3152,31 @@
         {
           "round": 21,
           "points": 23,
-          "position": 15,
+          "position": 16,
           "played": 21
         },
         {
           "round": 22,
           "points": 23,
-          "position": 16,
+          "position": 17,
           "played": 22
         },
         {
           "round": 23,
           "points": 23,
-          "position": 17,
+          "position": 18,
           "played": 23
         },
         {
           "round": 24,
           "points": 24,
-          "position": 17,
+          "position": 18,
           "played": 24
         },
         {
           "round": 25,
           "points": 25,
-          "position": 16,
+          "position": 17,
           "played": 25
         },
         {
@@ -2768,13 +3188,13 @@
         {
           "round": 27,
           "points": 29,
-          "position": 15,
+          "position": 16,
           "played": 27
         },
         {
           "round": 28,
           "points": 32,
-          "position": 15,
+          "position": 16,
           "played": 28
         },
         {
@@ -2788,6 +3208,36 @@
           "points": 33,
           "position": 15,
           "played": 30
+        },
+        {
+          "round": 31,
+          "points": 36,
+          "position": 15,
+          "played": 31
+        },
+        {
+          "round": 32,
+          "points": 37,
+          "position": 15,
+          "played": 32
+        },
+        {
+          "round": 33,
+          "points": 37,
+          "position": 16,
+          "played": 33
+        },
+        {
+          "round": 34,
+          "points": 40,
+          "position": 14,
+          "played": 34
+        },
+        {
+          "round": 35,
+          "points": 41,
+          "position": 14,
+          "played": 35
         }
       ]
     },
@@ -2974,6 +3424,36 @@
           "points": 63,
           "position": 2,
           "played": 30
+        },
+        {
+          "round": 31,
+          "points": 66,
+          "position": 2,
+          "played": 31
+        },
+        {
+          "round": 32,
+          "points": 69,
+          "position": 2,
+          "played": 32
+        },
+        {
+          "round": 33,
+          "points": 70,
+          "position": 2,
+          "played": 33
+        },
+        {
+          "round": 34,
+          "points": 73,
+          "position": 2,
+          "played": 34
+        },
+        {
+          "round": 35,
+          "points": 73,
+          "position": 2,
+          "played": 34
         }
       ]
     },
@@ -3160,6 +3640,36 @@
           "points": 42,
           "position": 8,
           "played": 30
+        },
+        {
+          "round": 31,
+          "points": 45,
+          "position": 8,
+          "played": 31
+        },
+        {
+          "round": 32,
+          "points": 46,
+          "position": 8,
+          "played": 32
+        },
+        {
+          "round": 33,
+          "points": 47,
+          "position": 8,
+          "played": 33
+        },
+        {
+          "round": 34,
+          "points": 47,
+          "position": 9,
+          "played": 34
+        },
+        {
+          "round": 35,
+          "points": 47,
+          "position": 9,
+          "played": 34
         }
       ]
     },
@@ -3338,14 +3848,44 @@
         {
           "round": 29,
           "points": 36,
-          "position": 11,
+          "position": 12,
           "played": 29
         },
         {
           "round": 30,
           "points": 39,
-          "position": 9,
+          "position": 10,
           "played": 30
+        },
+        {
+          "round": 31,
+          "points": 42,
+          "position": 9,
+          "played": 31
+        },
+        {
+          "round": 32,
+          "points": 43,
+          "position": 9,
+          "played": 32
+        },
+        {
+          "round": 33,
+          "points": 43,
+          "position": 10,
+          "played": 33
+        },
+        {
+          "round": 34,
+          "points": 44,
+          "position": 10,
+          "played": 34
+        },
+        {
+          "round": 35,
+          "points": 44,
+          "position": 10,
+          "played": 34
         }
       ]
     },
@@ -3475,63 +4015,93 @@
         },
         {
           "round": 21,
-          "points": 21,
-          "position": 18,
-          "played": 20
-        },
-        {
-          "round": 22,
-          "points": 22,
-          "position": 18,
+          "points": 24,
+          "position": 15,
           "played": 21
         },
         {
-          "round": 23,
-          "points": 22,
-          "position": 19,
+          "round": 22,
+          "points": 25,
+          "position": 16,
           "played": 22
         },
         {
-          "round": 24,
-          "points": 22,
-          "position": 19,
+          "round": 23,
+          "points": 25,
+          "position": 16,
           "played": 23
         },
         {
-          "round": 25,
+          "round": 24,
           "points": 25,
-          "position": 17,
+          "position": 16,
           "played": 24
         },
         {
-          "round": 26,
-          "points": 25,
-          "position": 17,
+          "round": 25,
+          "points": 28,
+          "position": 16,
           "played": 25
         },
         {
-          "round": 27,
+          "round": 26,
           "points": 28,
           "position": 17,
           "played": 26
         },
         {
-          "round": 28,
+          "round": 27,
           "points": 31,
-          "position": 16,
+          "position": 15,
           "played": 27
         },
         {
-          "round": 29,
+          "round": 28,
           "points": 34,
-          "position": 14,
+          "position": 13,
           "played": 28
         },
         {
-          "round": 30,
-          "points": 35,
-          "position": 14,
+          "round": 29,
+          "points": 37,
+          "position": 11,
           "played": 29
+        },
+        {
+          "round": 30,
+          "points": 38,
+          "position": 12,
+          "played": 30
+        },
+        {
+          "round": 31,
+          "points": 38,
+          "position": 13,
+          "played": 31
+        },
+        {
+          "round": 32,
+          "points": 41,
+          "position": 11,
+          "played": 32
+        },
+        {
+          "round": 33,
+          "points": 41,
+          "position": 12,
+          "played": 33
+        },
+        {
+          "round": 34,
+          "points": 44,
+          "position": 11,
+          "played": 34
+        },
+        {
+          "round": 35,
+          "points": 44,
+          "position": 11,
+          "played": 34
         }
       ]
     },
@@ -3704,20 +4274,50 @@
         {
           "round": 28,
           "points": 33,
-          "position": 13,
+          "position": 14,
           "played": 28
         },
         {
           "round": 29,
           "points": 36,
-          "position": 12,
+          "position": 13,
           "played": 29
         },
         {
           "round": 30,
           "points": 36,
-          "position": 12,
+          "position": 13,
           "played": 30
+        },
+        {
+          "round": 31,
+          "points": 37,
+          "position": 14,
+          "played": 31
+        },
+        {
+          "round": 32,
+          "points": 38,
+          "position": 14,
+          "played": 32
+        },
+        {
+          "round": 33,
+          "points": 38,
+          "position": 14,
+          "played": 33
+        },
+        {
+          "round": 34,
+          "points": 38,
+          "position": 15,
+          "played": 34
+        },
+        {
+          "round": 35,
+          "points": 38,
+          "position": 15,
+          "played": 34
         }
       ]
     }

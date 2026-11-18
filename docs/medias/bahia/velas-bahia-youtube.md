@@ -1,7 +1,7 @@
 # YouTube — velas do Bahia
 
 Texto que acompanha [`velas-bahia.mp4`](velas-bahia.mp4)
-(1920×1080, 60fps, 24s).
+(1920×1080, 60fps, 26s).
 
 - **Título:** até 100 caracteres. Os títulos abaixo trazem a contagem medida.
 - **Descrição:** até 5.000 caracteres, mas só as duas primeiras linhas aparecem
@@ -9,28 +9,32 @@ Texto que acompanha [`velas-bahia.mp4`](velas-bahia.mp4)
 - **Tags:** até 500 caracteres somados, medidos com as vírgulas e os espaços
   exatamente como estão no bloco.
 - **Sem capítulos:** o YouTube exige pelo menos três, o primeiro em 00:00 e cada
-  um com 10s. Um vídeo de 24s não comporta.
+  um com 10s. Um vídeo de 26s não comporta.
 - **Com capa:** `velas-bahia-miniatura.png`, 1280×720, o quadro do fecho da
   própria cena — a regra que o `scripts/manim/README.md` registra para as velas.
 - **Cortes verticais:** `velas-bahia-45.mp4` (1080×1350, feed do Instagram) e `velas-bahia-916.mp4` (1080×1920, Reels e YouTube Short).
 
-> **Os números aqui saem de `scripts/manim/velas-bahia.json`, rodada 30,
-> snapshot de 2026-10-12** — 5º com 49 pts, 13V 10E 7D, e a oscilação entre
+> **Os números aqui saem de `scripts/manim/velas-bahia.json`, rodada 35,
+> snapshot de 2026-11-18** — 6º com 53 pts, 14V 11E 9D, e a oscilação entre
 > o 1º e o 8º, que é a faixa que o painel do vídeo imprime. Eles **envelhecem**: um `sync-seed-data` seguido de uma
 > reexportação move o vídeo, e este arquivo não é regerado por nada. Reconferir
 > antes de publicar, contra o JSON e não contra esta página.
 >
-> **O clube jogou as 30 rodadas do recorte**, então não há vela oca nem
-> denominador torto aqui — ao contrário de seis clubes da divisão, que ainda
-> não disputaram a 30ª. O recorte fecha com um 1x0 em casa sobre o Mirassol,
-> que manteve o 5º lugar.
+> **A última vela é oca.** Da 35ª rodada só um jogo foi disputado até o
+> snapshot (Mirassol 0x0 Atlético-MG), então este clube, como outros dezessete,
+> fecha o desenho numa rodada em que ainda não jogou — o card do vídeo diz
+> «sem jogo nesta rodada». Os 34 jogos são as 34 primeiras rodadas, sem partida
+> em atraso, e é por isso que a cópia abaixo data o recorte na 34ª.
+>
+> **O recorte fecha com um 2x3 fora de casa contra o Cruzeiro**, na 34ª, que
+> manteve o 6º lugar.
 >
 > Os mesmos números estão **no quadro do fecho do próprio mp4**, no painel de
 > resumo, que é de onde a capa sai — então uma divergência entre este texto e a
 > imagem que o acompanha é visível a olho nu.
 >
 > **A oscilação do painel é INTRA-rodada e não a faixa de fechamento**, e as
-> duas diferem para 16 dos 20 clubes. O painel conta as posições ocupadas
+> duas diferem para 15 dos 20 clubes. O painel conta as posições ocupadas
 > enquanto a rodada era jogada — o pavio —, então ele é sempre igual ou mais
 > largo que o intervalo entre o melhor e o pior FECHAMENTO. Este clube fecha
 > entre o 1º e o 7º e o painel diz 1º e 8º.
@@ -50,21 +54,21 @@ Texto que acompanha [`velas-bahia.mp4`](velas-bahia.mp4)
 Recomendado (60 caracteres):
 
 ```
-Bahia em velas: 30 rodadas fechando sempre entre o 1º e o 7º
+Bahia em velas: 34 rodadas fechando sempre entre o 1º e o 7º
 ```
 
-O fato que separa esta campanha, medido contra os vinte: só o Fluminense fecha
-numa faixa mais estreita (3º-6º), e a do Bahia é a única faixa estreita que
-inclui a liderança. **O título anterior era sobre os empates e foi retirado por
-estar errado**: dizia 10, "o maior número ao lado do Internacional", e o
-Internacional tem agora 11 — a tabela na página ao lado desmentiria o título.
+O fato que separa esta campanha, medido contra os vinte: só o Fluminense
+(3º-6º) e o Clube do Remo (16º-20º) fecham numa faixa mais estreita, e a do
+Bahia é a única faixa estreita que inclui a liderança. **Um título anterior era
+sobre os empates e foi retirado por estar errado** — e o número segue mudando
+de dono: hoje são 11, o maior da divisão, dividido com outros quatro clubes.
 E **data o recorte**, que é a única defesa contra
 alguém assistir daqui a três meses e achar que os números estão errados.
 
 | | título | caracteres | ângulo |
 |---|---|---|---|
-| 2 | `Bahia: 10 empates em 30 jogos, atrás só dos 11 do Internacional` | 63 | o empate, dito com o número certo |
-| 3 | `Bahia: 49 pontos, 13V 10E 7D e saldo +8 \| Brasileirão 2026` | 58 | o número duro |
+| 2 | `Bahia: 11 empates em 34 jogos, o maior número da Série A ao lado de mais quatro` | 79 | o empate, dito com o número certo |
+| 3 | `Bahia: 53 pontos, 14V 11E 9D e saldo +5 \| Brasileirão 2026` | 58 | o número duro |
 
 **Os apelidos não estão em nenhum deles, e estão nas tags**: é como o torcedor
 busca, e não é como o clube aparece no vídeo nem na tabela.
@@ -74,14 +78,14 @@ busca, e não é como o clube aparece no vídeo nem na tabela.
 ```
 A campanha do Bahia rodada a rodada, desenhada como vela: o corpo vai da posição em que o clube ABRIU a rodada até onde ele FECHOU, e o pavio cobre a melhor e a pior posição que ele ocupou enquanto a rodada era jogada. Embaixo, no mesmo eixo, os pontos acumulados — a barra é o total e a tampa clara é o que a rodada acrescentou.
 
-Dados até 12/10/2026 (30ª rodada):
-• Bahia — 5º, 49 pts em 30 jogos
-• 13V · 10E · 7D — 44 gols pró, 36 contra, saldo +8
-• 54% de aproveitamento · oscilou entre o 1º e o 8º
+Dados até 18/11/2026 (34ª rodada):
+• Bahia — 6º, 53 pts em 34 jogos
+• 14V · 11E · 9D — 50 gols pró, 45 contra, saldo +5
+• 52% de aproveitamento · oscilou entre o 1º e o 8º
 
-O Bahia tem 10 empates em 30 jogos, o segundo maior número da Série A — atrás dos 11 do Internacional, e ao lado do Grêmio e do Clube do Remo. No desenho isso é uma fileira de corpos amarelos de altura curta — a rodada aconteceu, a posição mal se moveu.
+O Bahia tem 11 empates em 34 jogos, o maior número da Série A — dividido com Clube do Remo, Internacional, Mirassol e Santos. No desenho isso é uma fileira de corpos amarelos de altura curta — a rodada aconteceu, a posição mal se moveu.
 
-É também uma campanha que chegou a liderar (1 rodada em 1º, a 7ª) e que fecha sempre entre o 1º e o 7º. 10 rodadas de invencibilidade na maior série, 7 derrotas no total. A estabilidade aqui é causada pelo empate, não pela vitória — e é a vela, não a tabela, que deixa isso à vista.
+É também uma campanha que chegou a liderar (1 rodada em 1º, a 7ª) e que fecha sempre entre o 1º e o 7º. 10 rodadas de invencibilidade na maior série, 9 derrotas no total. A estabilidade aqui é causada pelo empate, não pela vitória — e é a vela, não a tabela, que deixa isso à vista.
 
 A régua tracejada que cruza o desenho é o acontecimento de fora de campo que tocou os vinte clubes: a paralisação para a Copa do Mundo depois da 18ª rodada. Ela cai na FRONTEIRA entre duas rodadas em vez de sobre uma, porque é isso que ela separa — o que veio antes dela e o que veio depois. Aqui o clube parou em 6º com 29 pts.
 
@@ -106,7 +110,7 @@ carregar o vídeo sozinha.
 Para Short, ou onde a descrição longa não couber.
 
 ```
-A campanha do Bahia em velas: o corpo vai da posição de abertura à de fechamento da rodada, o pavio mostra até onde o clube subiu e desceu dentro dela, e a barra de baixo são os pontos. A régua tracejada marca a parada para a Copa. 10 empates, o segundo maior número da divisão. Dados até a 30ª: 49 pts, 13V 10E 7D, saldo +8.
+A campanha do Bahia em velas: o corpo vai da posição de abertura à de fechamento da rodada, o pavio mostra até onde o clube subiu e desceu dentro dela, e a barra de baixo são os pontos. A régua tracejada marca a parada para a Copa. 11 empates, o maior número da divisão ao lado de outros quatro clubes. Dados até a 34ª: 53 pts, 14V 11E 9D, saldo +5.
 
 Animação em Manim, dados do Portal Brasileirão: https://brasileirao.mpbarbosa.com
 Código: https://github.com/mpbarbosa/portal_brasileirao
@@ -120,7 +124,7 @@ Medido sobre o bloco como está — separado por `, `, que é o que se cola.
 304 caracteres, 22 tags.
 
 ```
-brasileirão, brasileirao 2026, campeonato brasileiro, série a, serie a, bahia, esquadrão, esquadrao, tricolor de aço, bahêa, bahea, campanha do bahia, campanha rodada a rodada, candlestick, gráfico de velas, futebol brasileiro, visualização de dados, dataviz, manim, python, portal brasileirão, rodada 30
+brasileirão, brasileirao 2026, campeonato brasileiro, série a, serie a, bahia, esquadrão, esquadrao, tricolor de aço, bahêa, bahea, campanha do bahia, campanha rodada a rodada, candlestick, gráfico de velas, futebol brasileiro, visualização de dados, dataviz, manim, python, portal brasileirão, rodada 34
 ```
 
 Nenhuma tag nova: o único acontecimento que o vídeo marca é a paralisação

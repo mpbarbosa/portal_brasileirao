@@ -1,7 +1,7 @@
 # YouTube — velas do Internacional
 
 Texto que acompanha [`velas-internacional.mp4`](velas-internacional.mp4)
-(1920×1080, 60fps, 24s).
+(1920×1080, 60fps, 26s).
 
 - **Título:** até 100 caracteres. Os títulos abaixo trazem a contagem medida.
 - **Descrição:** até 5.000 caracteres, mas só as duas primeiras linhas aparecem
@@ -9,16 +9,22 @@ Texto que acompanha [`velas-internacional.mp4`](velas-internacional.mp4)
 - **Tags:** até 500 caracteres somados, medidos com as vírgulas e os espaços
   exatamente como estão no bloco.
 - **Sem capítulos:** o YouTube exige pelo menos três, o primeiro em 00:00 e cada
-  um com 10s. Um vídeo de 24s não comporta.
+  um com 10s. Um vídeo de 26s não comporta.
 - **Com capa:** `velas-internacional-miniatura.png`, 1280×720, o quadro do fecho da
   própria cena — a regra que o `scripts/manim/README.md` registra para as velas.
 - **Cortes verticais:** `velas-internacional-45.mp4` (1080×1350, feed do Instagram) e `velas-internacional-916.mp4` (1080×1920, Reels e YouTube Short).
 
-> **Os números aqui saem de `scripts/manim/velas-internacional.json`, rodada 30,
-> snapshot de 2026-10-12** — 17º com 32 pts, 7V 11E 12D, e a oscilação entre
+> **Os números aqui saem de `scripts/manim/velas-internacional.json`, rodada 35,
+> snapshot de 2026-11-18** — 16º com 38 pts, 9V 11E 14D, e a oscilação entre
 > o 8º e o 20º, que é a faixa que o painel do vídeo imprime. Eles **envelhecem**: um `sync-seed-data` seguido de uma
 > reexportação move o vídeo, e este arquivo não é regerado por nada. Reconferir
 > antes de publicar, contra o JSON e não contra esta página.
+>
+> **A última vela é oca.** Da 35ª rodada só um jogo foi disputado até o
+> snapshot (Mirassol 0x0 Atlético-MG), então este clube, como outros dezessete,
+> fecha o desenho numa rodada em que ainda não jogou — o card do vídeo diz
+> «sem jogo nesta rodada». Os 34 jogos são as 34 primeiras rodadas, sem partida
+> em atraso, e é por isso que a cópia abaixo data o recorte na 34ª.
 >
 > Os mesmos números estão **no quadro do fecho do próprio mp4**, no painel de
 > resumo, que é de onde a capa sai — então uma divergência entre este texto e a
@@ -45,7 +51,7 @@ Texto que acompanha [`velas-internacional.mp4`](velas-internacional.mp4)
 Recomendado (71 caracteres):
 
 ```
-Internacional: 11 empates e 7 vitórias em 30 jogos, a campanha em velas
+Internacional: 11 empates e 9 vitórias em 34 jogos, a campanha em velas
 ```
 
 O contraste, que é o assunto — e **data o recorte**, que é a única defesa contra
@@ -53,7 +59,7 @@ alguém assistir daqui a três meses e achar que os números estão errados.
 
 | | título | caracteres | ângulo |
 |---|---|---|---|
-| 2 | `Internacional em velas: fecha entre o 11º e o 20º até a 30ª rodada` | 66 | a faixa de fechamento |
+| 2 | `Internacional em velas: fecha entre o 11º e o 20º até a 34ª rodada` | 66 | a faixa de fechamento |
 | 3 | `A campanha do Internacional rodada a rodada \| Brasileirão 2026 em candlestick` | 77 | genérico e buscável |
 
 **Os apelidos não estão em nenhum deles, e estão nas tags**: é como o torcedor
@@ -64,14 +70,14 @@ busca, e não é como o clube aparece no vídeo nem na tabela.
 ```
 A campanha do Internacional rodada a rodada, desenhada como vela: o corpo vai da posição em que o clube ABRIU a rodada até onde ele FECHOU, e o pavio cobre a melhor e a pior posição que ele ocupou enquanto a rodada era jogada. Embaixo, no mesmo eixo, os pontos acumulados — a barra é o total e a tampa clara é o que a rodada acrescentou.
 
-Dados até 12/10/2026 (30ª rodada):
-• Internacional — 17º, 32 pts em 30 jogos
-• 7V · 11E · 12D — 33 gols pró, 38 contra, saldo -5
-• 36% de aproveitamento · oscilou entre o 8º e o 20º
+Dados até 18/11/2026 (34ª rodada):
+• Internacional — 16º, 38 pts em 34 jogos
+• 9V · 11E · 14D — 38 gols pró, 42 contra, saldo -4
+• 37% de aproveitamento · oscilou entre o 8º e o 20º
 
-O Internacional empata mais do que vence: 11 empates contra 7 vitórias em 30 jogos, e os 11 são o maior número da divisão, agora sem igual — o segundo número é 10, do Bahia, do Grêmio e do Clube do Remo. No desenho essa é a assinatura mais legível da Série A — uma fileira de corpos amarelos de altura curta, rodada após rodada, com a posição praticamente parada.
+O Internacional empata mais do que vence: 11 empates contra 9 vitórias em 34 jogos, e os 11 são o maior número da divisão — dividido agora com Bahia, Clube do Remo, Mirassol e Santos. No desenho essa é uma assinatura legível — uma fileira de corpos amarelos de altura curta, rodada após rodada, com a posição praticamente parada.
 
-A campanha fecha entre o 11º e o 20º e termina dentro do Z4. A maior invencibilidade é de 5 rodadas, o que num clube com 12 derrotas diz que o problema não é perder, é não ganhar.
+A campanha fecha entre o 11º e o 20º e termina uma posição acima do Z4, de onde saiu na 34ª com um 1x0 sobre o Coritiba — depois de fechar ali 12 das 13 rodadas entre a 21ª e a 33ª. A maior invencibilidade é de 5 rodadas, e a maior série sem vencer, de 10, da 17ª à 26ª.
 
 A régua tracejada que cruza o desenho é o acontecimento de fora de campo que tocou os vinte clubes: a paralisação para a Copa do Mundo depois da 18ª rodada. Ela cai na FRONTEIRA entre duas rodadas em vez de sobre uma, porque é isso que ela separa — o que veio antes dela e o que veio depois. Aqui o clube parou em 14º com 21 pts.
 
@@ -96,7 +102,7 @@ carregar o vídeo sozinha.
 Para Short, ou onde a descrição longa não couber.
 
 ```
-A campanha do Internacional em velas: o corpo vai da posição de abertura à de fechamento da rodada, o pavio mostra até onde o clube subiu e desceu dentro dela, e a barra de baixo são os pontos. A régua tracejada marca a parada para a Copa. 11 empates e só 7 vitórias em 30 jogos. Dados até a 30ª: 32 pts, 7V 11E 12D, saldo -5.
+A campanha do Internacional em velas: o corpo vai da posição de abertura à de fechamento da rodada, o pavio mostra até onde o clube subiu e desceu dentro dela, e a barra de baixo são os pontos. A régua tracejada marca a parada para a Copa. 11 empates e 9 vitórias em 34 jogos. Dados até a 34ª: 38 pts, 9V 11E 14D, saldo -4.
 
 Animação em Manim, dados do Portal Brasileirão: https://brasileirao.mpbarbosa.com
 Código: https://github.com/mpbarbosa/portal_brasileirao
@@ -110,7 +116,7 @@ Medido sobre o bloco como está — separado por `, `, que é o que se cola.
 304 caracteres, 21 tags.
 
 ```
-brasileirão, brasileirao 2026, campeonato brasileiro, série a, serie a, internacional, colorado, inter, sci, clube do povo, campanha do internacional, campanha rodada a rodada, candlestick, gráfico de velas, futebol brasileiro, visualização de dados, dataviz, manim, python, portal brasileirão, rodada 30
+brasileirão, brasileirao 2026, campeonato brasileiro, série a, serie a, internacional, colorado, inter, sci, clube do povo, campanha do internacional, campanha rodada a rodada, candlestick, gráfico de velas, futebol brasileiro, visualização de dados, dataviz, manim, python, portal brasileirão, rodada 34
 ```
 
 Nenhuma tag nova: o único acontecimento que o vídeo marca é a paralisação

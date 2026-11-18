@@ -1,5 +1,5 @@
 {
-  "snapshot": "2026-10-12",
+  "snapshot": "2026-11-18",
   "club": {
     "code": "1766",
     "name": "Atlético-MG",
@@ -574,6 +574,101 @@
         "goalsFor": 2,
         "goalsAgainst": 1,
         "result": "V"
+      }
+    },
+    {
+      "round": 31,
+      "open": 7,
+      "close": 6,
+      "best": 5,
+      "worst": 7,
+      "points": 3,
+      "totalPoints": 50,
+      "played": 31,
+      "result": "V",
+      "moved": 1,
+      "match": {
+        "opponent": "Coritiba",
+        "home": true,
+        "goalsFor": 1,
+        "goalsAgainst": 0,
+        "result": "V"
+      }
+    },
+    {
+      "round": 32,
+      "open": 6,
+      "close": 6,
+      "best": 6,
+      "worst": 6,
+      "points": 0,
+      "totalPoints": 50,
+      "played": 32,
+      "result": "D",
+      "moved": 0,
+      "match": {
+        "opponent": "Flamengo",
+        "home": false,
+        "goalsFor": 2,
+        "goalsAgainst": 3,
+        "result": "D"
+      }
+    },
+    {
+      "round": 33,
+      "open": 6,
+      "close": 7,
+      "best": 6,
+      "worst": 7,
+      "points": 0,
+      "totalPoints": 50,
+      "played": 33,
+      "result": "D",
+      "moved": -1,
+      "match": {
+        "opponent": "Cruzeiro",
+        "home": true,
+        "goalsFor": 0,
+        "goalsAgainst": 1,
+        "result": "D"
+      }
+    },
+    {
+      "round": 34,
+      "open": 7,
+      "close": 7,
+      "best": 7,
+      "worst": 7,
+      "points": 0,
+      "totalPoints": 50,
+      "played": 34,
+      "result": "D",
+      "moved": 0,
+      "match": {
+        "opponent": "Botafogo",
+        "home": false,
+        "goalsFor": 0,
+        "goalsAgainst": 1,
+        "result": "D"
+      }
+    },
+    {
+      "round": 35,
+      "open": 7,
+      "close": 7,
+      "best": 7,
+      "worst": 7,
+      "points": 1,
+      "totalPoints": 51,
+      "played": 35,
+      "result": "E",
+      "moved": 0,
+      "match": {
+        "opponent": "Mirassol",
+        "home": false,
+        "goalsFor": 0,
+        "goalsAgainst": 0,
+        "result": "E"
       }
     }
   ],

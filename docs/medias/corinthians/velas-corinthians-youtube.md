@@ -1,7 +1,7 @@
 # YouTube — velas do Corinthians
 
 Texto que acompanha [`velas-corinthians.mp4`](velas-corinthians.mp4)
-(1920×1080, 60fps, 24s).
+(1920×1080, 60fps, 26s).
 
 - **Título:** até 100 caracteres. Os títulos abaixo trazem a contagem medida.
 - **Descrição:** até 5.000 caracteres, mas só as duas primeiras linhas aparecem
@@ -9,16 +9,22 @@ Texto que acompanha [`velas-corinthians.mp4`](velas-corinthians.mp4)
 - **Tags:** até 500 caracteres somados, medidos com as vírgulas e os espaços
   exatamente como estão no bloco.
 - **Sem capítulos:** o YouTube exige pelo menos três, o primeiro em 00:00 e cada
-  um com 10s. Um vídeo de 24s não comporta.
+  um com 10s. Um vídeo de 26s não comporta.
 - **Com capa:** `velas-corinthians-miniatura.png`, 1280×720, o quadro do fecho da
   própria cena — a regra que o `scripts/manim/README.md` registra para as velas.
 - **Cortes verticais:** `velas-corinthians-45.mp4` (1080×1350, feed do Instagram) e `velas-corinthians-916.mp4` (1080×1920, Reels e YouTube Short).
 
-> **Os números aqui saem de `scripts/manim/velas-corinthians.json`, rodada 30,
-> snapshot de 2026-10-12** — 16º com 32 pts, 8V 8E 14D, e a oscilação entre
+> **Os números aqui saem de `scripts/manim/velas-corinthians.json`, rodada 35,
+> snapshot de 2026-11-18** — 17º com 37 pts, 9V 10E 15D, e a oscilação entre
 > o 3º e o 19º, que é a faixa que o painel do vídeo imprime. Eles **envelhecem**: um `sync-seed-data` seguido de uma
 > reexportação move o vídeo, e este arquivo não é regerado por nada. Reconferir
 > antes de publicar, contra o JSON e não contra esta página.
+>
+> **A última vela é oca.** Da 35ª rodada só um jogo foi disputado até o
+> snapshot (Mirassol 0x0 Atlético-MG), então este clube, como outros dezessete,
+> fecha o desenho numa rodada em que ainda não jogou — o card do vídeo diz
+> «sem jogo nesta rodada». Os 34 jogos são as 34 primeiras rodadas, sem partida
+> em atraso, e é por isso que a cópia abaixo data o recorte na 34ª.
 >
 > Os mesmos números estão **no quadro do fecho do próprio mp4**, no painel de
 > resumo, que é de onde a capa sai — então uma divergência entre este texto e a
@@ -28,7 +34,7 @@ Texto que acompanha [`velas-corinthians.mp4`](velas-corinthians.mp4)
 > duas diferem para 15 dos 20 clubes. O painel conta as posições ocupadas
 > enquanto a rodada era jogada — o pavio —, então ele é sempre igual ou mais
 > largo que o intervalo entre o melhor e o pior FECHAMENTO. Este clube fecha
-> entre o 5º e o 17º e o painel diz 3º e 19º.
+> entre o 5º e o 18º e o painel diz 3º e 19º.
 >
 > **O saldo e o aproveitamento vêm do `computeStandings`**, a mesma função que
 > monta a tabela do site, e não somados à mão a partir do JSON.
@@ -45,7 +51,7 @@ Texto que acompanha [`velas-corinthians.mp4`](velas-corinthians.mp4)
 Recomendado (66 caracteres):
 
 ```
-Corinthians em velas: do 5º ao 17º até a 30ª rodada do Brasileirão
+Corinthians em velas: do 5º ao 18º até a 34ª rodada do Brasileirão
 ```
 
 A amplitude de fechamento, que é o que a campanha tem — e **data o recorte**, que é a única defesa contra
@@ -54,7 +60,7 @@ alguém assistir daqui a três meses e achar que os números estão errados.
 | | título | caracteres | ângulo |
 |---|---|---|---|
 | 2 | `A campanha do Corinthians rodada a rodada \| Brasileirão 2026 em candlestick` | 75 | genérico e buscável |
-| 3 | `Corinthians: 32 pontos, 8V 8E 14D e saldo -7` | 44 | o número duro |
+| 3 | `Corinthians: 37 pontos, 9V 10E 15D e saldo -6` | 45 | o número duro |
 
 **Os apelidos não estão em nenhum deles, e estão nas tags**: é como o torcedor
 busca, e não é como o clube aparece no vídeo nem na tabela.
@@ -64,14 +70,14 @@ busca, e não é como o clube aparece no vídeo nem na tabela.
 ```
 A campanha do Corinthians rodada a rodada, desenhada como vela: o corpo vai da posição em que o clube ABRIU a rodada até onde ele FECHOU, e o pavio cobre a melhor e a pior posição que ele ocupou enquanto a rodada era jogada. Embaixo, no mesmo eixo, os pontos acumulados — a barra é o total e a tampa clara é o que a rodada acrescentou.
 
-Dados até 12/10/2026 (30ª rodada):
-• Corinthians — 16º, 32 pts em 30 jogos
-• 8V · 8E · 14D — 31 gols pró, 38 contra, saldo -7
+Dados até 18/11/2026 (34ª rodada):
+• Corinthians — 17º, 37 pts em 34 jogos
+• 9V · 10E · 15D — 36 gols pró, 42 contra, saldo -6
 • 36% de aproveitamento · oscilou entre o 3º e o 19º
 
-O Corinthians passou a temporada fechando rodadas entre o 5º e o 17º sem se fixar em lugar nenhum: nunca fechou no G4, e no Z4 só em três rodadas, sempre no 17º. No desenho isso é uma sucessão de corpos de altura média em direções alternadas — o oposto da fileira quieta de quem lidera —, até as 8 derrotas seguidas da 23ª à 30ª, a maior sequência negativa da divisão e agora com folga — a segunda é a do Mirassol, com 6 —, que levam o clube do 9º ao 16º.
+O Corinthians passou a temporada fechando rodadas entre o 5º e o 18º sem se fixar em lugar nenhum: nunca fechou no G4, e até a 31ª só tinha fechado no Z4 em três rodadas, sempre no 17º. No desenho isso é uma sucessão de corpos de altura média em direções alternadas — o oposto da fileira quieta de quem lidera —, até as 8 derrotas seguidas da 23ª à 30ª, a maior sequência negativa da divisão — a segunda é a do Mirassol, com 6 —, que levam o clube do 9º ao 16º. O recorte termina com ele dentro do Z4 há três rodadas: 18º na 32ª, 17º na 33ª e na 34ª.
 
-O painel diz 3º e 19º, contando o que aconteceu dentro das rodadas. São 14 derrotas em 30 jogos e 6 rodadas de invencibilidade na maior série.
+O painel diz 3º e 19º, contando o que aconteceu dentro das rodadas. São 15 derrotas em 34 jogos e 6 rodadas de invencibilidade na maior série.
 
 As réguas tracejadas que cruzam o desenho são acontecimentos de fora de campo, e cada uma cai na FRONTEIRA entre duas rodadas em vez de sobre uma: a demissão de Dorival Júnior depois da 10ª rodada, e a paralisação para a Copa do Mundo depois da 18ª rodada. Quando a primeira aparece, o clube vinha de fechar a 10ª em 16º com 10 pts.
 
@@ -96,7 +102,7 @@ carregar o vídeo sozinha.
 Para Short, ou onde a descrição longa não couber.
 
 ```
-A campanha do Corinthians em velas: o corpo vai da posição de abertura à de fechamento da rodada, o pavio mostra até onde o clube subiu e desceu dentro dela, e a barra de baixo são os pontos. As réguas tracejadas marcam a saída de Dorival Júnior e a parada para a Copa. Fecha entre o 5º e o 17º sem nunca decidir a temporada. Dados até a 30ª: 32 pts, 8V 8E 14D, saldo -7.
+A campanha do Corinthians em velas: o corpo vai da posição de abertura à de fechamento da rodada, o pavio mostra até onde o clube subiu e desceu dentro dela, e a barra de baixo são os pontos. As réguas tracejadas marcam a saída de Dorival Júnior e a parada para a Copa. Fecha entre o 5º e o 18º e termina o recorte dentro do Z4. Dados até a 34ª: 37 pts, 9V 10E 15D, saldo -6.
 
 Animação em Manim, dados do Portal Brasileirão: https://brasileirao.mpbarbosa.com
 Código: https://github.com/mpbarbosa/portal_brasileirao
@@ -110,7 +116,7 @@ Medido sobre o bloco como está — separado por `, `, que é o que se cola.
 319 caracteres, 23 tags.
 
 ```
-brasileirão, brasileirao 2026, campeonato brasileiro, série a, serie a, corinthians, timão, timao, coringão, coringao, sccp, campanha do corinthians, campanha rodada a rodada, candlestick, gráfico de velas, futebol brasileiro, visualização de dados, dataviz, manim, python, portal brasileirão, rodada 30, dorival júnior
+brasileirão, brasileirao 2026, campeonato brasileiro, série a, serie a, corinthians, timão, timao, coringão, coringao, sccp, campanha do corinthians, campanha rodada a rodada, candlestick, gráfico de velas, futebol brasileiro, visualização de dados, dataviz, manim, python, portal brasileirão, rodada 34, dorival júnior
 ```
 
 `dorival júnior` entra porque o vídeo agora **marca** essa saída, e é assim que o torcedor

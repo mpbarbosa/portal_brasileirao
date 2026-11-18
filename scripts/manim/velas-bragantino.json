@@ -1,5 +1,5 @@
 {
-  "snapshot": "2026-10-12",
+  "snapshot": "2026-11-18",
   "club": {
     "code": "4286",
     "name": "Bragantino",
@@ -560,14 +560,109 @@
     {
       "round": 30,
       "open": 10,
-      "close": 11,
-      "best": 10,
-      "worst": 11,
-      "points": null,
-      "totalPoints": 37,
-      "played": 29,
-      "result": null,
+      "close": 9,
+      "best": 9,
+      "worst": 12,
+      "points": 3,
+      "totalPoints": 40,
+      "played": 30,
+      "result": "V",
+      "moved": 1,
+      "match": {
+        "opponent": "Cruzeiro",
+        "home": true,
+        "goalsFor": 4,
+        "goalsAgainst": 2,
+        "result": "V"
+      }
+    },
+    {
+      "round": 31,
+      "open": 9,
+      "close": 10,
+      "best": 9,
+      "worst": 10,
+      "points": 1,
+      "totalPoints": 41,
+      "played": 31,
+      "result": "E",
       "moved": -1,
+      "match": {
+        "opponent": "Clube do Remo",
+        "home": false,
+        "goalsFor": 1,
+        "goalsAgainst": 1,
+        "result": "E"
+      }
+    },
+    {
+      "round": 32,
+      "open": 10,
+      "close": 10,
+      "best": 10,
+      "worst": 10,
+      "points": 0,
+      "totalPoints": 41,
+      "played": 32,
+      "result": "D",
+      "moved": 0,
+      "match": {
+        "opponent": "Palmeiras",
+        "home": false,
+        "goalsFor": 0,
+        "goalsAgainst": 2,
+        "result": "D"
+      }
+    },
+    {
+      "round": 33,
+      "open": 10,
+      "close": 9,
+      "best": 9,
+      "worst": 10,
+      "points": 3,
+      "totalPoints": 44,
+      "played": 33,
+      "result": "V",
+      "moved": 1,
+      "match": {
+        "opponent": "Chapecoense",
+        "home": true,
+        "goalsFor": 3,
+        "goalsAgainst": 0,
+        "result": "V"
+      }
+    },
+    {
+      "round": 34,
+      "open": 9,
+      "close": 8,
+      "best": 8,
+      "worst": 9,
+      "points": 3,
+      "totalPoints": 47,
+      "played": 34,
+      "result": "V",
+      "moved": 1,
+      "match": {
+        "opponent": "Santos",
+        "home": true,
+        "goalsFor": 2,
+        "goalsAgainst": 1,
+        "result": "V"
+      }
+    },
+    {
+      "round": 35,
+      "open": 8,
+      "close": 8,
+      "best": 8,
+      "worst": 8,
+      "points": null,
+      "totalPoints": 47,
+      "played": 34,
+      "result": null,
+      "moved": 0,
       "match": null
     }
   ],

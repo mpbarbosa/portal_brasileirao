@@ -1,5 +1,5 @@
 {
-  "snapshot": "2026-10-12",
+  "snapshot": "2026-11-18",
   "club": {
     "code": "1779",
     "name": "Corinthians",
@@ -522,14 +522,14 @@
     {
       "round": 28,
       "open": 14,
-      "close": 14,
+      "close": 15,
       "best": 14,
-      "worst": 14,
+      "worst": 15,
       "points": 0,
       "totalPoints": 32,
       "played": 28,
       "result": "D",
-      "moved": 0,
+      "moved": -1,
       "match": {
         "opponent": "Fluminense",
         "home": true,
@@ -540,15 +540,15 @@
     },
     {
       "round": 29,
-      "open": 14,
+      "open": 15,
       "close": 16,
-      "best": 14,
+      "best": 15,
       "worst": 16,
       "points": 0,
       "totalPoints": 32,
       "played": 29,
       "result": "D",
-      "moved": -2,
+      "moved": -1,
       "match": {
         "opponent": "Internacional",
         "home": false,
@@ -575,6 +575,95 @@
         "goalsAgainst": 4,
         "result": "D"
       }
+    },
+    {
+      "round": 31,
+      "open": 16,
+      "close": 16,
+      "best": 16,
+      "worst": 16,
+      "points": 1,
+      "totalPoints": 33,
+      "played": 31,
+      "result": "E",
+      "moved": 0,
+      "match": {
+        "opponent": "Vitória",
+        "home": true,
+        "goalsFor": 1,
+        "goalsAgainst": 1,
+        "result": "E"
+      }
+    },
+    {
+      "round": 32,
+      "open": 16,
+      "close": 18,
+      "best": 16,
+      "worst": 18,
+      "points": 0,
+      "totalPoints": 33,
+      "played": 32,
+      "result": "D",
+      "moved": -2,
+      "match": {
+        "opponent": "Vasco da Gama",
+        "home": false,
+        "goalsFor": 2,
+        "goalsAgainst": 3,
+        "result": "D"
+      }
+    },
+    {
+      "round": 33,
+      "open": 18,
+      "close": 17,
+      "best": 17,
+      "worst": 18,
+      "points": 3,
+      "totalPoints": 36,
+      "played": 33,
+      "result": "V",
+      "moved": 1,
+      "match": {
+        "opponent": "Mirassol",
+        "home": true,
+        "goalsFor": 2,
+        "goalsAgainst": 0,
+        "result": "V"
+      }
+    },
+    {
+      "round": 34,
+      "open": 17,
+      "close": 17,
+      "best": 17,
+      "worst": 18,
+      "points": 1,
+      "totalPoints": 37,
+      "played": 34,
+      "result": "E",
+      "moved": 0,
+      "match": {
+        "opponent": "São Paulo",
+        "home": false,
+        "goalsFor": 0,
+        "goalsAgainst": 0,
+        "result": "E"
+      }
+    },
+    {
+      "round": 35,
+      "open": 17,
+      "close": 17,
+      "best": 17,
+      "worst": 17,
+      "points": null,
+      "totalPoints": 37,
+      "played": 34,
+      "result": null,
+      "moved": 0,
+      "match": null
     }
   ],
   "events": [

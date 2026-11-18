@@ -1,5 +1,5 @@
 {
-  "snapshot": "2026-10-12",
+  "snapshot": "2026-11-18",
   "club": {
     "code": "1768",
     "name": "Athletico-PR",
@@ -560,12 +560,107 @@
     {
       "round": 30,
       "open": 4,
-      "close": 4,
-      "best": 4,
+      "close": 3,
+      "best": 3,
       "worst": 4,
+      "points": 3,
+      "totalPoints": 53,
+      "played": 30,
+      "result": "V",
+      "moved": 1,
+      "match": {
+        "opponent": "Chapecoense",
+        "home": false,
+        "goalsFor": 4,
+        "goalsAgainst": 1,
+        "result": "V"
+      }
+    },
+    {
+      "round": 31,
+      "open": 3,
+      "close": 3,
+      "best": 3,
+      "worst": 3,
+      "points": 0,
+      "totalPoints": 53,
+      "played": 31,
+      "result": "D",
+      "moved": 0,
+      "match": {
+        "opponent": "Palmeiras",
+        "home": true,
+        "goalsFor": 0,
+        "goalsAgainst": 2,
+        "result": "D"
+      }
+    },
+    {
+      "round": 32,
+      "open": 3,
+      "close": 4,
+      "best": 3,
+      "worst": 4,
+      "points": 1,
+      "totalPoints": 54,
+      "played": 32,
+      "result": "E",
+      "moved": -1,
+      "match": {
+        "opponent": "Vitória",
+        "home": false,
+        "goalsFor": 1,
+        "goalsAgainst": 1,
+        "result": "E"
+      }
+    },
+    {
+      "round": 33,
+      "open": 4,
+      "close": 5,
+      "best": 4,
+      "worst": 5,
+      "points": 0,
+      "totalPoints": 54,
+      "played": 33,
+      "result": "D",
+      "moved": -1,
+      "match": {
+        "opponent": "Grêmio",
+        "home": false,
+        "goalsFor": 0,
+        "goalsAgainst": 2,
+        "result": "D"
+      }
+    },
+    {
+      "round": 34,
+      "open": 5,
+      "close": 5,
+      "best": 5,
+      "worst": 5,
+      "points": 0,
+      "totalPoints": 54,
+      "played": 34,
+      "result": "D",
+      "moved": 0,
+      "match": {
+        "opponent": "Vasco da Gama",
+        "home": true,
+        "goalsFor": 1,
+        "goalsAgainst": 3,
+        "result": "D"
+      }
+    },
+    {
+      "round": 35,
+      "open": 5,
+      "close": 5,
+      "best": 5,
+      "worst": 5,
       "points": null,
-      "totalPoints": 50,
-      "played": 29,
+      "totalPoints": 54,
+      "played": 34,
       "result": null,
       "moved": 0,
       "match": null
